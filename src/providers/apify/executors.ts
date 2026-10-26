@@ -12,6 +12,7 @@ import {
 } from "../../core/cast.ts";
 import { defineApiKeyProviderExecutors } from "../provider-executors.ts";
 import { defineProviderProxy } from "../provider-proxy.ts";
+import { runProviderRequest } from "../provider-runtime.ts";
 import { providerInputError, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
 
 const service = "apify";
@@ -144,6 +145,7 @@ async function getRun(input: Record<string, unknown>, context: ApiKeyProviderCon
   const payload = await requestApifyJson({
     apiKey: context.apiKey,
     path: `/v2/actor-runs/${encodeURIComponent(runId)}`,
+    timeoutMs: input.waitForFinishSeconds ? 70_000 : undefined,
     query: compactObject({
       waitForFinish: readOptionalInteger(input.waitForFinishSeconds, "waitForFinishSeconds"),
     }),
@@ -194,10 +196,9 @@ async function requestApifyJson(input: {
   signal?: AbortSignal;
   phase: ApifyRequestPhase;
   notFoundAsInvalidInput?: boolean;
+  timeoutMs?: number;
 }): Promise<unknown> {
-  let response: Response;
-  let payload: unknown;
-  try {
+  return runProviderRequest({ label: "Apify", timeoutMs: input.timeoutMs, signal: input.signal }, async (signal) => {
     const headers: Record<string, string> = {
       accept: "application/json",
       authorization: `Bearer ${input.apiKey}`,
@@ -207,25 +208,16 @@ async function requestApifyJson(input: {
       headers["content-type"] = "application/json";
     }
 
-    response = await input.fetcher(buildApifyUrl(input.path, input.query), {
+    const response = await input.fetcher(buildApifyUrl(input.path, input.query), {
       method: input.method ?? "GET",
       headers,
       body: input.body ? JSON.stringify(input.body) : undefined,
-      signal: input.signal,
+      signal,
     });
-    payload = await readApifyPayload(response);
-  } catch (error) {
-    throw new ProviderRequestError(
-      502,
-      error instanceof Error ? `Apify request failed: ${error.message}` : "Apify request failed",
-    );
-  }
-
-  if (!response.ok) {
-    throw createApifyError(response, payload, input.phase, input.notFoundAsInvalidInput);
-  }
-
-  return payload;
+    const payload = await readApifyPayload(response);
+    if (!response.ok) throw createApifyError(response, payload, input.phase, input.notFoundAsInvalidInput);
+    return payload;
+  });
 }
 
 function buildApifyUrl(path: string, query: Record<string, ApifyQueryValue> = {}): URL {

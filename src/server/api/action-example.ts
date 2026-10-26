@@ -194,7 +194,7 @@ function seedRequirementBranches(
     return;
   }
   const merged = mergeBranch(schema, branch, keyword);
-  const mergedProperties = { ...properties, ...readSchemaProperties(merged) };
+  const mergedProperties = readSchemaProperties(mergeExampleSchemas({ properties }, merged));
   const required = readSchemaRequired(merged);
   for (const name of required) {
     input[name] = exampleValue(mergedProperties[name]);

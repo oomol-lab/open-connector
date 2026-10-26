@@ -1,3 +1,4 @@
+import { Validator } from "@cfworker/json-schema";
 import { describe, expect, it } from "vitest";
 import { describeSchemaType, jsonSchema, readSchemaProperties, readSchemaRequired } from "./json-schema.ts";
 
@@ -244,5 +245,25 @@ describe("schema constraints used by provider inputs", () => {
     const amount = new Validator(jsonSchema.number("Amount.", { multipleOf: 0.5 }));
     expect(amount.validate(1.5).valid).toBe(true);
     expect(amount.validate(1.2).valid).toBe(false);
+  });
+});
+
+describe("conditional and strict numeric constraints", () => {
+  it("enforces dependent fields and exclusive upper bounds through the runtime validator", () => {
+    const schema = jsonSchema.object(
+      "Request.",
+      {
+        duration: jsonSchema.number("Duration.", { exclusiveMaximum: 10 }),
+        count: jsonSchema.integer("Count.", { exclusiveMaximum: 4 }),
+        key: jsonSchema.string("Key."),
+        signature: jsonSchema.string("Signature."),
+      },
+      { optional: ["duration", "count", "key", "signature"], dependentRequired: { key: ["signature"] } },
+    );
+    const validator = new Validator(schema, "2020-12");
+    expect(validator.validate({ duration: 9.9, count: 3, key: "k", signature: "s" }).valid).toBe(true);
+    for (const value of [{ duration: 10 }, { count: 4 }, { key: "k" }]) {
+      expect(validator.validate(value).valid).toBe(false);
+    }
   });
 });

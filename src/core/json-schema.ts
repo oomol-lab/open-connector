@@ -20,6 +20,7 @@ type ObjectOptions = JsonSchemaOptions & {
   minProperties?: number;
   maxProperties?: number;
   propertyNames?: JsonSchema;
+  dependentRequired?: Record<string, readonly string[]>;
   allOf?: JsonSchema[];
   anyOf?: JsonSchema[];
   oneOf?: JsonSchema[];
@@ -42,6 +43,7 @@ type NumberOptions = JsonSchemaOptions & {
   minimum?: number;
   maximum?: number;
   exclusiveMinimum?: number;
+  exclusiveMaximum?: number;
   multipleOf?: number;
 };
 
@@ -81,7 +83,15 @@ export const jsonSchema = {
     };
     if (required && required.length > 0) schema.required = required;
     if (options.defs) schema.$defs = options.defs;
-    for (const key of ["minProperties", "maxProperties", "propertyNames", "allOf", "anyOf", "oneOf"] as const) {
+    for (const key of [
+      "minProperties",
+      "maxProperties",
+      "propertyNames",
+      "dependentRequired",
+      "allOf",
+      "anyOf",
+      "oneOf",
+    ] as const) {
       if (options[key] !== undefined) schema[key] = options[key];
     }
     return withOptions(schema, options);
@@ -220,6 +230,7 @@ export const jsonSchema = {
     if (options.minimum != null) schema.minimum = options.minimum;
     if (options.maximum != null) schema.maximum = options.maximum;
     if (options.exclusiveMinimum != null) schema.exclusiveMinimum = options.exclusiveMinimum;
+    if (options.exclusiveMaximum != null) schema.exclusiveMaximum = options.exclusiveMaximum;
     if (options.multipleOf != null) schema.multipleOf = options.multipleOf;
     return withOptions(schema, options);
   },
@@ -244,6 +255,7 @@ export const jsonSchema = {
     if (options.minimum != null) schema.minimum = options.minimum;
     if (options.maximum != null) schema.maximum = options.maximum;
     if (options.exclusiveMinimum != null) schema.exclusiveMinimum = options.exclusiveMinimum;
+    if (options.exclusiveMaximum != null) schema.exclusiveMaximum = options.exclusiveMaximum;
     if (options.multipleOf != null) schema.multipleOf = options.multipleOf;
     return withOptions(schema, options);
   },

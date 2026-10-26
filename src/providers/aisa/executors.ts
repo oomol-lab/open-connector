@@ -8,6 +8,8 @@ import { defineApiKeyProviderExecutors } from "../provider-executors.ts";
 import { defineProviderProxy } from "../provider-proxy.ts";
 import { requiredResponseRecord } from "../provider-runtime.ts";
 import { providerInputError, ProviderRequestError, runProviderRequest } from "../provider-runtime.ts";
+import { dataForSeoReferencePaths } from "./dataforseo-reference-actions.ts";
+import { dataForSeoResearchContracts } from "./dataforseo-research-actions.ts";
 import { aisaFirecrawlFamilies } from "./firecrawl-actions.ts";
 const service = "aisa";
 const aisaApiOrigin = "https://api.aisa.one";
@@ -84,6 +86,59 @@ const similarwebRowsQuery = {
   trafficSource: "traffic_source",
 };
 const aisaActionRoutes: Record<string, AisaActionRoute> = {
+  search_firecrawl: {
+    path: "/apis/v1/firecrawl/search",
+    method: "POST",
+    query: {},
+    body: { query: "query", limit: "limit" },
+    bodyDefaults: { enterprise: false, sources: ["web"] },
+  },
+  search_akta_companies: { path: "/apis/v1/akta/company/search", query: { query: "query" } },
+  enrich_akta_company: {
+    path: "/apis/v1/akta/company/enrichment",
+    query: { company: "company", sections: "sections" },
+  },
+  search_akta_industries: {
+    path: "/apis/v1/akta/industry/search",
+    query: { query: "query", level: "level" },
+  },
+  search_akta_company_list: {
+    path: "/apis/v1/akta/list/generate/companies",
+    method: "POST",
+    query: {},
+    body: {
+      query: "query",
+      filters: "filters",
+      sections: "sections",
+      limit: "limit",
+      offset: "offset",
+      sortBy: "sort_by",
+      sortOrder: "sort_order",
+    },
+  },
+  get_dataforseo_reference_data: { path: "/apis/v1/dataforseo", query: {} },
+  get_ahrefs_domain_rating: {
+    path: "/apis/v1/ahrefs/site-explorer/domain-rating",
+    query: { target: "target", date: "date" },
+  },
+  get_ahrefs_site_metrics: {
+    path: "/apis/v1/ahrefs/site-explorer/metrics",
+    query: { target: "target", date: "date" },
+  },
+  ...Object.fromEntries(
+    dataForSeoResearchContracts.map((contract) => [
+      contract.name,
+      {
+        path: contract.path,
+        method: "POST" as const,
+        query: {},
+        bodyArray: true,
+        body: Object.fromEntries(
+          Object.keys(contract.inputSchema.properties).map((key) => [key, camelToSnakeCase(key)]),
+        ),
+      },
+    ]),
+  ),
   ...Object.fromEntries(
     aisaFirecrawlFamilies.flatMap((family) => {
       const base = `/apis/v1/firecrawl/${family.path}`;
@@ -1080,7 +1135,13 @@ const handlers: Record<string, Handler> = Object.fromEntries(
         if (maxPriceUsd !== undefined) headers["X-AISA-Max-Price-USD"] = maxPriceUsd;
       }
       const payload = await requestAisa(
-        buildAisaPath(route.path, normalized, route.pathParams),
+        buildAisaPath(
+          name === "get_dataforseo_reference_data"
+            ? `${route.path}/${dataForSeoReferencePaths[String(normalized.resource)]}`
+            : route.path,
+          normalized,
+          route.pathParams,
+        ),
         buildAisaQuery(
           normalized,
           route.query,

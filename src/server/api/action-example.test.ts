@@ -304,3 +304,25 @@ it("satisfies URI patterns and positive choices written as double negation", () 
   };
   expect(validateActionInput({ ...action, inputSchema }, buildExampleInput(inputSchema)).valid).toBe(true);
 });
+
+it("retains parent field types when an allOf choice only excludes null", () => {
+  const inputSchema: JsonSchema = {
+    type: "object",
+    properties: {
+      locationCode: { type: ["integer", "null"], minimum: 1 },
+      locationName: { type: "string", minLength: 1 },
+    },
+    additionalProperties: false,
+    allOf: [
+      {
+        anyOf: [
+          { required: ["locationCode"], properties: { locationCode: { not: { type: "null" } } } },
+          { required: ["locationName"] },
+        ],
+      },
+    ],
+  };
+  const example = buildExampleInput(inputSchema);
+  expect(example).toEqual({ locationCode: 1 });
+  expect(validateActionInput({ ...action, inputSchema }, example).valid).toBe(true);
+});

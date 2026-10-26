@@ -229,6 +229,7 @@
       "src/providers/stack_ai/executors.ts": 1,
       "src/providers/tanium/executors.ts": 1,
       "src/providers/tencent_docs/executors.ts": 1,
+      "src/providers/tendata/executors.ts": 1,
       "src/providers/textmagic/executors.ts": 1,
       "src/providers/tidb/executors.ts": 1,
       "src/providers/tinypng/executors.ts": 1,

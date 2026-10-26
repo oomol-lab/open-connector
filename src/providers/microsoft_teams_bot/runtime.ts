@@ -367,16 +367,23 @@ async function createTokenError(
   phase: TeamsBotRequestPhase,
   signal: AbortSignal,
 ): Promise<ProviderRequestError> {
-  const message = readErrorMessage(await readProviderErrorTextBody(response, "token error response", signal));
-  const detail = message === undefined ? "" : `: ${message}`;
-  if (response.status >= 500 || response.status === 429) {
-    return new ProviderRequestError(response.status, `Microsoft token request failed${detail}`);
-  }
-  // A rejected app registration is a credential problem: a field error while
-  // connecting, a reconnect prompt once the connection exists.
+  const text = await readProviderErrorTextBody(response, "token error response", signal);
+  const message = readErrorMessage(text);
+  let invalidSecret = false;
+  try {
+    invalidSecret = optionalRecord(JSON.parse(text))?.error === "invalid_client";
+  } catch {}
   return new ProviderRequestError(
-    phase === "validate" ? 400 : 401,
-    `Microsoft rejected the Teams bot credentials${detail}`,
+    invalidSecret ? (phase === "validate" ? 400 : 401) : response.status,
+    message ?? `Microsoft token request failed with HTTP ${response.status}`,
+    undefined,
+    invalidSecret
+      ? phase === "validate"
+        ? "invalid_input"
+        : "authorization_failed"
+      : response.status === 429
+        ? "rate_limited"
+        : "provider_error",
   );
 }
 
@@ -404,6 +411,8 @@ async function requestConnector(input: TeamsBotConnectorRequest): Promise<unknow
       throw new ProviderRequestError(
         response.status,
         message ?? `Microsoft Teams Bot request failed with HTTP ${response.status}`,
+        undefined,
+        response.status === 429 ? "rate_limited" : "provider_error",
       );
     }
     return readProviderJsonBody(response, {

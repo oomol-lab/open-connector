@@ -2,10 +2,14 @@ import type { ActionDefinition } from "../../core/types.ts";
 
 import { s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
+import { ahrefsActions } from "./ahrefs-actions.ts";
+import { aktaActions } from "./akta-actions.ts";
 import { apolloActions } from "./apollo-actions.ts";
 import { creatorActions } from "./creator-actions.ts";
 import { cryptoActions } from "./crypto-actions.ts";
 import { dataForSeoActions } from "./dataforseo-actions.ts";
+import { dataForSeoReferenceAction } from "./dataforseo-reference-actions.ts";
+import { dataForSeoResearchActions } from "./dataforseo-research-actions.ts";
 import { financialActions } from "./financial-actions.ts";
 import { aisaFirecrawlActions } from "./firecrawl-actions.ts";
 import { seoActions } from "./seo-actions.ts";
@@ -284,6 +288,10 @@ const usageAction = defineProviderAction(service, {
   outputSchema: s.looseObject("AIsa usage totals and daily buckets for the requested time window."),
 });
 export const aisaActions: ActionDefinition[] = [
+  ...ahrefsActions,
+  ...aktaActions,
+  dataForSeoReferenceAction,
+  ...dataForSeoResearchActions,
   ...webActions,
   ...aisaFirecrawlActions,
   creditsBalanceAction,

@@ -70,7 +70,9 @@ export const allratestodayActionHandlers: ProviderActionHandlers<"allratestoday"
     if (rate === undefined) {
       throw providerInputError(`AllRatesToday open rates do not include ${to}.`);
     }
-    return { from, to, amount, rate, result: amount * rate, date: latest.date, attribution: latest.attribution };
+    const result = amount * rate;
+    if (!Number.isFinite(result)) throw providerInputError("The converted amount is too large to represent.");
+    return { from, to, amount, rate, result, date: latest.date, attribution: latest.attribution };
   },
 };
 

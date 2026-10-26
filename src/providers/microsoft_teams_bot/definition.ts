@@ -51,7 +51,7 @@ export const provider: ProviderDefinition = {
           secret: false,
           placeholder: "https://smba.trafficmanager.net/teams/",
           description:
-            "Optional fallback Bot Connector endpoint used when an action does not pass serviceUrl. Only Microsoft Teams Bot Connector hosts are accepted (public cloud, GCC, GCC High, DoD).",
+            "Optional fallback Bot Connector endpoint used when an action does not pass serviceUrl. Only Microsoft Teams Bot Connector hosts are accepted (public cloud, GCC, GCC High, DoD). Set this field when connecting a GCC High or DoD bot so token validation uses the government cloud.",
         },
       ],
     },

@@ -63,6 +63,39 @@ const tavilyCommon = {
 };
 export const webActions: readonly ActionDefinition[] = [
   defineProviderAction("aisa", {
+    name: "search_firecrawl",
+    operationType: "read",
+    requiredScopes: [],
+    description: "Search the web through Firecrawl and return ranked URLs, titles, and snippets.",
+    inputSchema: s.object(
+      "A web search query and result limit.",
+      {
+        query: s.string("The web search query.", { minLength: 1, maxLength: 2000 }),
+        limit: s.integer("The maximum number of results; upstream default 10.", {
+          minimum: 1,
+          maximum: 100,
+        }),
+      },
+      {
+        optional: ["limit"],
+      },
+    ),
+    outputSchema: s.looseObject("The Firecrawl web search result.", {
+      success: s.boolean("Whether the search succeeded."),
+      creditsUsed: s.integer("Supplier credits consumed by the request."),
+      data: s.looseObject("The search result groups.", {
+        web: s.array(
+          "Ranked web search results.",
+          s.looseObject("A web search result.", {
+            title: s.string("The result title."),
+            url: s.string("The result URL."),
+            description: s.string("The result snippet."),
+          }),
+        ),
+      }),
+    }),
+  }),
+  defineProviderAction("aisa", {
     name: "search_exa",
     operationType: "read",
     requiredScopes: [],
