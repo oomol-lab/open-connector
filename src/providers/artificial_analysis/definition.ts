@@ -1,6 +1,7 @@
 import type { ProviderDefinition } from "../../core/types.ts";
 
 import { artificialAnalysisActions } from "./actions.ts";
+
 export const provider: ProviderDefinition = {
   service: "artificial_analysis",
   displayName: "Artificial Analysis",

@@ -17,7 +17,6 @@ import {
 } from "../provider-runtime.ts";
 
 export const allratestodayApiBaseUrl = "https://allratestoday.com/api/open";
-
 const defaultBase = "USD";
 
 export interface AllRatesTodayRuntimeContext {

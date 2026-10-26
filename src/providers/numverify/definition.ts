@@ -1,6 +1,7 @@
 import type { ProviderDefinition } from "../../core/types.ts";
 
 import { numverifyActions } from "./actions.ts";
+
 export const provider: ProviderDefinition = {
   service: "numverify",
   displayName: "Numverify",

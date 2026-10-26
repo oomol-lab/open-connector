@@ -2,10 +2,12 @@ import type { ActionDefinition, JsonSchema } from "../../core/types.ts";
 
 import { jsonSchema as s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
+
 const page = s.integer("Page number, starting at 1. Defaults to 1.", {
   minimum: 1,
   maximum: 10000,
 });
+
 const promptType = s.stringEnum("Benchmark preset. Defaults to long (10,000 input tokens, one query).", [
   "medium",
   "long",
@@ -13,10 +15,12 @@ const promptType = s.stringEnum("Benchmark preset. Defaults to long (10,000 inpu
   "vision_single_image",
   "medium_parallel",
 ]);
+
 const slug = s.string("Model or API provider slug from the corresponding list action.", {
   minLength: 1,
   not: { enum: [".", ".."] },
 });
+
 const period = {
   window: s.stringEnum("Lookback period. Defaults to 90d.", ["7d", "30d", "90d"]),
   interval: s.stringEnum("Aggregation interval. Defaults to daily for 7d/30d, weekly for 90d.", [
@@ -26,6 +30,7 @@ const period = {
   ]),
   prompt_type: promptType,
 };
+
 const model = s.looseObject("Model metadata, evaluations, pricing and performance. Unmeasured values remain null.", {
   id: s.string("Stable model ID."),
   name: s.string("Model display name."),
@@ -34,11 +39,13 @@ const model = s.looseObject("Model metadata, evaluations, pricing and performanc
   evaluations: s.looseObject("Benchmark scores and capability indices.", {}),
   pricing: s.looseObject("Model pricing reported by Artificial Analysis.", {}),
 });
+
 const provider = s.looseObject("API provider identity and available model data.", {
   id: s.string("Stable API provider ID."),
   name: s.string("API provider display name."),
   slug: s.string("API provider URL slug."),
 });
+
 const pagination = s.object(
   "Pagination metadata; request the next page while has_more is true.",
   {
@@ -52,6 +59,7 @@ const pagination = s.object(
     additionalProperties: true,
   },
 );
+
 function output(data: JsonSchema, paginated = false, versioned = false) {
   const properties: Record<string, JsonSchema> = {
     tier: s.string("Subscription tier serving this response."),
@@ -68,6 +76,7 @@ function output(data: JsonSchema, paginated = false, versioned = false) {
     },
   );
 }
+
 const detailInput = s.object(
   "Model or provider lookup parameters.",
   { slug, prompt_type: promptType },
@@ -75,6 +84,7 @@ const detailInput = s.object(
     optional: ["prompt_type"],
   },
 );
+
 const performanceInput = s.object(
   "Performance history parameters.",
   { slug, ...period },
@@ -82,6 +92,7 @@ const performanceInput = s.object(
     optional: Object.keys(period),
   },
 );
+
 const history = s.looseObject(
   "Identity and performance series grouped by model or API provider, preserving endpoint labels.",
   {
@@ -90,10 +101,12 @@ const history = s.looseObject(
     slug: s.string("Model or API provider URL slug."),
   },
 );
+
 interface ArtificialAnalysisEndpoint {
   path: string;
   action: ActionDefinition;
 }
+
 function endpoint(
   name: string,
   path: string,
@@ -113,6 +126,7 @@ function endpoint(
     }),
   };
 }
+
 const endpoints = [
   endpoint(
     "list_free_models",
@@ -211,7 +225,9 @@ const endpoints = [
     ),
   ),
 ];
+
 export const artificialAnalysisActions: ActionDefinition[] = endpoints.map((item) => item.action);
+
 export const artificialAnalysisEndpointByName: Map<string, ArtificialAnalysisEndpoint> = new Map(
   endpoints.map((item) => [item.action.name, item]),
 );

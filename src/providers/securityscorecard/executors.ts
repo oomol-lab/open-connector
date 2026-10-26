@@ -13,12 +13,14 @@ import {
   runProviderRequest,
 } from "../provider-runtime.ts";
 import { securityscorecardActions } from "./actions.ts";
+
 const baseUrl = "https://api.securityscorecard.io";
 function segment(value: unknown, field: string) {
   const text = requiredInputString(value, field);
   if (text === "." || text === "..") throw providerInputError(`${field} must not be a dot path segment`);
   return encodeURIComponent(text);
 }
+
 async function request(
   fetcher: typeof fetch,
   apiKey: string,
@@ -79,6 +81,7 @@ async function request(
     return requiredResponseRecord(payload, "SecurityScorecard response");
   });
 }
+
 async function execute(
   actionName: string,
   values: Record<string, unknown>,
@@ -160,12 +163,14 @@ async function execute(
       throw providerInputError("Unknown SecurityScorecard action");
   }
 }
+
 export const executors: ProviderExecutors = defineApiKeyProviderExecutors(
   "securityscorecard",
   Object.fromEntries(
     securityscorecardActions.map((action) => [action.name, (values, context) => execute(action.name, values, context)]),
   ),
 );
+
 export const credentialValidators: CredentialValidators = {
   async apiKey(input, { fetcher, signal }) {
     await request(fetcher, input.apiKey, "/portfolios", undefined, undefined, signal);
@@ -176,6 +181,7 @@ export const credentialValidators: CredentialValidators = {
     };
   },
 };
+
 export const proxy: ProviderProxyExecutor = defineProviderProxy({
   service: "securityscorecard",
   baseUrl: baseUrl,

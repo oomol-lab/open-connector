@@ -2,6 +2,7 @@ import type { ActionDefinition } from "../../core/types.ts";
 
 import { jsonSchema as s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
+
 export const streamwishEndpoints: {
   path: string;
   action: ActionDefinition;
@@ -533,4 +534,5 @@ export const streamwishEndpoints: {
     }),
   },
 ];
+
 export const streamwishActions: ActionDefinition[] = streamwishEndpoints.map(({ action }) => action);

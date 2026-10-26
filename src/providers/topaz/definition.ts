@@ -1,6 +1,7 @@
 import type { ProviderDefinition } from "../../core/types.ts";
 
 import { topazActions } from "./actions.ts";
+
 export const provider: ProviderDefinition = {
   service: "topaz",
   displayName: "Topaz",

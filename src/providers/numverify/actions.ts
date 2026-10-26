@@ -2,6 +2,7 @@ import type { ActionDefinition } from "../../core/types.ts";
 
 import { jsonSchema as s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
+
 export const numverifyActions: ActionDefinition[] = [
   defineProviderAction("numverify", {
     name: "validate_phone_number",

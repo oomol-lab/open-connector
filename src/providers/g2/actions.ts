@@ -7,12 +7,14 @@ import { buyerEndpoints } from "./buyer-endpoints.ts";
 import { catalogEndpoints } from "./catalog-endpoints.ts";
 import { dataSolutionsEndpoints } from "./data-solutions-endpoints.ts";
 import { intelligenceEndpoints } from "./intelligence-endpoints.ts";
+
 const resource = s.looseObject("A G2 JSON:API resource. Sparse fields and newly added attributes are preserved.", {
   id: s.string("The resource identifier."),
   type: s.string("The JSON:API resource type."),
   attributes: s.looseObject("Resource attributes, including review answers and attribution when returned."),
   relationships: s.looseObject("Relationships to other G2 resources."),
 });
+
 function outputSchema(list: boolean) {
   return s.object(
     "The G2 JSON:API response with normalized pagination cursors. Unknown upstream fields are preserved.",
@@ -32,6 +34,7 @@ function outputSchema(list: boolean) {
     },
   );
 }
+
 const list_products = {
   path: "/api/v2/products",
   list: true,
@@ -172,6 +175,7 @@ const list_products = {
     outputSchema: outputSchema(true),
   }),
 };
+
 const get_product = {
   path: "/api/v2/products/{product_id}",
   list: false,
@@ -232,6 +236,7 @@ const get_product = {
     outputSchema: outputSchema(false),
   }),
 };
+
 const list_categories = {
   path: "/api/v2/categories",
   list: true,
@@ -319,6 +324,7 @@ const list_categories = {
     outputSchema: outputSchema(true),
   }),
 };
+
 const get_category = {
   path: "/api/v2/categories/{id}",
   list: false,
@@ -365,6 +371,7 @@ const get_category = {
     outputSchema: outputSchema(false),
   }),
 };
+
 const list_product_reviews = {
   path: "/api/v2/products/{product_id}/reviews",
   list: true,
@@ -523,6 +530,7 @@ const list_product_reviews = {
     outputSchema: outputSchema(true),
   }),
 };
+
 const list_market_intelligence_reviews = {
   path: "/api/v2/products/{product_id}/market_intelligence/reviews",
   list: true,
@@ -663,6 +671,7 @@ const list_market_intelligence_reviews = {
     outputSchema: outputSchema(true),
   }),
 };
+
 const coreEndpoints = [
   list_products,
   get_product,
@@ -671,6 +680,7 @@ const coreEndpoints = [
   list_product_reviews,
   list_market_intelligence_reviews,
 ];
+
 const g2Endpoints: G2Endpoint[] = [
   ...coreEndpoints.map((endpoint): G2Endpoint => ({
     path: endpoint.path,
@@ -689,7 +699,9 @@ const g2Endpoints: G2Endpoint[] = [
   ...buyerEndpoints,
   ...dataSolutionsEndpoints,
 ];
+
 export const g2Actions: ActionDefinition[] = g2Endpoints.map((endpoint) => endpoint.action);
+
 export const g2EndpointByName: Map<string, G2Endpoint> = new Map(
   g2Endpoints.map((endpoint) => [endpoint.action.name, endpoint]),
 );

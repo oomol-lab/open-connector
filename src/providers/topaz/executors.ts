@@ -15,6 +15,7 @@ import {
 import { topazActions } from "./actions.ts";
 import { additionalEndpointByName } from "./additional-actions.ts";
 import { imageOperationByName } from "./image-operations.ts";
+
 const baseUrl = "https://api.topazlabs.com";
 const imageFields: Record<string, string> = {
   imageUrl: "source_url",
@@ -26,16 +27,28 @@ const imageFields: Record<string, string> = {
   cropToFill: "crop_to_fill",
   webhookUrl: "webhook_url",
 };
-async function request(
-  apiKey: string,
-  path: string,
-  method: string,
-  body: BodyInit | undefined,
-  fetcher: typeof fetch,
+
+interface TopazRequestOptions {
+  apiKey: string;
+  path: string;
+  method: string;
+  body?: BodyInit;
+  fetcher: typeof fetch;
+  allowEmpty?: boolean;
+  arrayField?: "data" | "results";
+  signal?: AbortSignal;
+}
+
+async function request({
+  apiKey,
+  path,
+  method,
+  body,
+  fetcher,
   allowEmpty = false,
-  arrayField?: "data" | "results",
-  parentSignal?: AbortSignal,
-) {
+  arrayField,
+  signal: parentSignal,
+}: TopazRequestOptions): Promise<Record<string, unknown>> {
   return runProviderRequest({ signal: parentSignal, label: "Topaz" }, async (signal) => {
     const headers = new Headers({ "X-API-Key": apiKey, accept: "application/json" });
     if (typeof body === "string") headers.set("content-type", "application/json");
@@ -61,6 +74,7 @@ async function request(
     return requiredResponseRecord(payload, "Topaz response");
   });
 }
+
 function imageForm(input: Record<string, unknown>) {
   const form = new FormData();
   const settings = optionalRecord(input.modelSettings) ?? {};
@@ -74,12 +88,14 @@ function imageForm(input: Record<string, unknown>) {
   }
   return form;
 }
+
 function requireResultString(result: Record<string, unknown>, field: string) {
   if (!optionalString(result[field])?.trim()) {
     throw providerResponseError(`Topaz response is missing ${field}`);
   }
   return result;
 }
+
 function estimateBody(input: Record<string, unknown>) {
   const { modelSettings, ...parameters } = input;
   const settings = optionalRecord(modelSettings) ?? {};
@@ -98,6 +114,7 @@ function estimateBody(input: Record<string, unknown>) {
   }
   return { ...settings, ...parameters };
 }
+
 async function execute(
   actionName: string,
   values: Record<string, unknown>,
@@ -121,16 +138,14 @@ async function execute(
   const imageOperation = imageOperationByName.get(actionName);
   if (imageOperation) {
     return requireResultString(
-      await request(
-        key,
-        `/image/v1/${imageOperation.path}/async`,
-        "POST",
-        imageForm(data),
+      await request({
+        apiKey: key,
+        path: `/image/v1/${imageOperation.path}/async`,
+        method: "POST",
+        body: imageForm(data),
         fetcher,
-        undefined,
-        undefined,
-        context.signal,
-      ),
+        signal: context.signal,
+      }),
       "process_id",
     );
   }
@@ -171,16 +186,16 @@ async function execute(
       endpoint.method === "POST" || (endpoint.method === "PATCH" && actionName === "complete_video_upload")
         ? JSON.stringify(payload)
         : undefined;
-    const result = await request(
-      key,
+    const result = await request({
+      apiKey: key,
       path,
-      endpoint.method,
+      method: endpoint.method,
       body,
       fetcher,
-      endpoint.mode === "ack",
-      endpoint.mode === "bulk" ? "results" : endpoint.mode === "imageList" ? "data" : undefined,
-      context.signal,
-    );
+      allowEmpty: endpoint.mode === "ack",
+      arrayField: endpoint.mode === "bulk" ? "results" : endpoint.mode === "imageList" ? "data" : undefined,
+      signal: context.signal,
+    });
     if (endpoint.mode === "imageList" && !Array.isArray(result.data))
       throw providerResponseError("Topaz image list response is missing data");
     if (actionName === "get_image_input_download") return requireResultString(result, "download_url");
@@ -190,120 +205,110 @@ async function execute(
   }
   switch (actionName) {
     case "get_credit_balance":
-      return request(
-        key,
-        "/account/v1/credits/balance",
-        "GET",
-        undefined,
+      return request({
+        apiKey: key,
+        path: "/account/v1/credits/balance",
+        method: "GET",
         fetcher,
-        undefined,
-        undefined,
-        context.signal,
-      );
+        signal: context.signal,
+      });
     case "get_image_job":
       return requireResultString(
-        await request(
-          key,
-          `/image/v1/status/${encodeURIComponent(String(data.processId))}`,
-          "GET",
-          undefined,
+        await request({
+          apiKey: key,
+          path: `/image/v1/status/${encodeURIComponent(String(data.processId))}`,
+          method: "GET",
           fetcher,
-          undefined,
-          undefined,
-          context.signal,
-        ),
+          signal: context.signal,
+        }),
         "status",
       );
     case "get_image_download":
       return requireResultString(
-        await request(
-          key,
-          `/image/v1/download/${encodeURIComponent(String(data.processId))}`,
-          "GET",
-          undefined,
+        await request({
+          apiKey: key,
+          path: `/image/v1/download/${encodeURIComponent(String(data.processId))}`,
+          method: "GET",
           fetcher,
-          undefined,
-          undefined,
-          context.signal,
-        ),
+          signal: context.signal,
+        }),
         "download_url",
       );
     case "cancel_image_job":
-      await request(
-        key,
-        `/image/v1/cancel/${encodeURIComponent(String(data.processId))}`,
-        "DELETE",
-        undefined,
+      await request({
+        apiKey: key,
+        path: `/image/v1/cancel/${encodeURIComponent(String(data.processId))}`,
+        method: "DELETE",
         fetcher,
-        true,
-        undefined,
-        context.signal,
-      );
+        allowEmpty: true,
+        signal: context.signal,
+      });
       return { accepted: true };
     case "submit_video_enhancement":
       return requireResultString(
-        await request(
-          key,
-          "/video/express",
-          "POST",
-          JSON.stringify(data),
+        await request({
+          apiKey: key,
+          path: "/video/express",
+          method: "POST",
+          body: JSON.stringify(data),
           fetcher,
-          undefined,
-          undefined,
-          context.signal,
-        ),
+          signal: context.signal,
+        }),
         "requestId",
       );
     case "get_video_job":
       return requireResultString(
-        await request(
-          key,
-          `/video/${encodeURIComponent(String(data.requestId))}/status`,
-          "GET",
-          undefined,
+        await request({
+          apiKey: key,
+          path: `/video/${encodeURIComponent(String(data.requestId))}/status`,
+          method: "GET",
           fetcher,
-          undefined,
-          undefined,
-          context.signal,
-        ),
+          signal: context.signal,
+        }),
         "status",
       );
     case "cancel_video_job":
       return {
-        ...(await request(
-          key,
-          `/video/${encodeURIComponent(String(data.requestId))}`,
-          "DELETE",
-          undefined,
+        ...(await request({
+          apiKey: key,
+          path: `/video/${encodeURIComponent(String(data.requestId))}`,
+          method: "DELETE",
           fetcher,
-          true,
-          undefined,
-          context.signal,
-        )),
+          allowEmpty: true,
+          signal: context.signal,
+        })),
         accepted: true,
       };
     default:
       throw providerInputError("Unknown Topaz action");
   }
 }
+
 export const executors: ProviderExecutors = defineApiKeyProviderExecutors(
   "topaz",
   Object.fromEntries(
     topazActions.map((action) => [action.name, (values, context) => execute(action.name, values, context)]),
   ),
 );
+
 export const credentialValidators: CredentialValidators = {
   async apiKey(input, { fetcher, signal }) {
-    await request(input.apiKey, "/account/v1/credits/balance", "GET", undefined, fetcher, undefined, undefined, signal);
+    await request({
+      apiKey: input.apiKey,
+      path: "/account/v1/credits/balance",
+      method: "GET",
+      fetcher,
+      signal,
+    });
     return { profile: { displayName: "Topaz API Account" }, grantedScopes: [], metadata: {} };
   },
 };
+
 export const proxy: ProviderProxyExecutor = defineProviderProxy({
   service: "topaz",
-  baseUrl: baseUrl,
+  baseUrl,
   auth: { type: "api_key_header", name: "X-API-Key" },
-  async customizeRequest({ headers: proxyHeaders }) {
-    for (const [name, value] of Object.entries({ accept: "application/json" }))
-      if (!proxyHeaders.has(name)) proxyHeaders.set(name, value);
+  customizeRequest({ headers }) {
+    if (!headers.has("accept")) headers.set("accept", "application/json");
   },
 });

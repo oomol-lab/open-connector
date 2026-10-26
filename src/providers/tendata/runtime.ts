@@ -13,10 +13,14 @@ import {
   runProviderRequest,
 } from "../provider-runtime.ts";
 import { tendataEndpoints } from "./actions.ts";
+
 export const tendataApiBaseUrl = "https://open-api.tendata.cn/v2";
 const tokenCache = new Map<string, Promise<AccessToken>>();
+
 const tokenCacheMaxEntries = 500;
+
 const rangeFields = ["weight", "quantity", "sumOfUSD", "weightUnitPriceUSD", "quantityUnitPriceUSD"];
+
 const conflictingFields = [
   "productDesc",
   "hsCode",
@@ -29,10 +33,12 @@ const conflictingFields = [
   "searchMode",
   ...rangeFields,
 ];
+
 interface AccessToken {
   accessToken: string;
   expiresAt: number;
 }
+
 export async function validateTendataCredential(
   apiKey: string,
   fetcher: typeof fetch,
@@ -46,6 +52,7 @@ export async function validateTendataCredential(
     metadata: { apiBaseUrl: tendataApiBaseUrl, validationEndpoint: "/access-token" },
   };
 }
+
 export async function executeTendataAction(
   actionName: string,
   input: Record<string, unknown>,
@@ -110,6 +117,7 @@ export async function executeTendataAction(
     return payload;
   }
 }
+
 async function fetchJsonWithToken(
   url: URL,
   init: RequestInit,
@@ -127,6 +135,7 @@ async function fetchJsonWithToken(
     throw redactError(error, [apiKey, accessToken]);
   });
 }
+
 export async function getAccessToken(
   apiKey: string,
   fetcher: typeof fetch,
@@ -144,6 +153,7 @@ export async function getAccessToken(
   cacheToken(key, pending);
   return pending;
 }
+
 function cacheToken(key: string, pending: Promise<AccessToken>) {
   tokenCache.set(key, pending);
   if (tokenCache.size > tokenCacheMaxEntries) {
@@ -154,6 +164,7 @@ function cacheToken(key: string, pending: Promise<AccessToken>) {
     if (tokenCache.get(key) === pending) tokenCache.delete(key);
   });
 }
+
 async function fetchAccessToken(apiKey: string, fetcher: typeof fetch): Promise<AccessToken> {
   const url = new URL(`${tendataApiBaseUrl}/access-token`);
   url.searchParams.set("apiKey", apiKey);
@@ -184,6 +195,7 @@ async function fetchAccessToken(apiKey: string, fetcher: typeof fetch): Promise<
     throw redactError(error, [apiKey]);
   });
 }
+
 async function readEnvelope(response: Response) {
   let payload: unknown;
   try {
@@ -199,10 +211,12 @@ async function readEnvelope(response: Response) {
   }
   return requiredResponseRecord(payload, "Tendata response");
 }
+
 export function isInvalidToken(payload: unknown): boolean {
   const envelope = optionalRecord(payload);
   return envelope?.success === false && String(envelope.code) === "40302";
 }
+
 function assertSuccess(response: Response, payload: Record<string, unknown>, secrets: string[]) {
   if (response.ok && payload.success === true) return;
   const code = optionalString(payload.code) ?? optionalNumber(payload.code)?.toString();
@@ -219,6 +233,7 @@ function assertSuccess(response: Response, payload: Record<string, unknown>, sec
     errorCode,
   );
 }
+
 function redactText(text: string, secrets: string[]) {
   let result = text;
   for (const secret of secrets) {
@@ -233,12 +248,14 @@ function redactText(text: string, secrets: string[]) {
   }
   return result;
 }
+
 export function redactError(error: unknown, secrets: string[]): ProviderRequestError {
   if (error instanceof ProviderRequestError) {
     return new ProviderRequestError(error.status, redactText(error.message, secrets), error.details, error.code);
   }
   return providerResponseError("Tendata request failed");
 }
+
 function validateTradeInput(input: Record<string, unknown>) {
   const pageNo = optionalNumber(input.pageNo);
   const pageSize = optionalNumber(input.pageSize);

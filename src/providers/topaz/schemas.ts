@@ -1,6 +1,7 @@
 import type { JsonSchema } from "../../core/types.ts";
 
 import { readSchemaProperties, jsonSchema as s } from "../../core/json-schema.ts";
+
 function caseInsensitiveVideoEnum(description: string, values: readonly string[]) {
   const alternatives = values
     .map((value) =>
@@ -13,9 +14,13 @@ function caseInsensitiveVideoEnum(description: string, values: readonly string[]
 }
 
 const processId: JsonSchema = s.string("Image processing job UUID.", { format: "uuid" });
+
 export const requestId: JsonSchema = s.string("Video enhancement request UUID.", { format: "uuid" });
+
 export const imageHandle: JsonSchema = s.requiredObject("Image job request.", { processId });
+
 export const videoHandle: JsonSchema = s.requiredObject("Video job request.", { requestId });
+
 export const imageInput: JsonSchema = s.object(
   "Submit an image URL or reuse an existing source image.",
   {
@@ -56,6 +61,7 @@ export const imageInput: JsonSchema = s.object(
     oneOf: [{ required: ["imageUrl"] }, { required: ["sourceId"] }],
   },
 );
+
 export const imageSubmission: JsonSchema = s.object(
   "Submitted image job.",
   {
@@ -68,10 +74,12 @@ export const imageSubmission: JsonSchema = s.object(
     optional: ["source_id", "eta"],
   },
 );
+
 export const estimates: JsonSchema = s.looseObject("Estimated credit cost and processing time.", {
   cost: s.array("Lower and upper credit cost estimates.", s.number("Credit estimate.")),
   time: s.array("Lower and upper duration estimates in seconds.", s.number("Duration estimate.")),
 });
+
 const external: JsonSchema = s.object(
   "S3 external storage access. Use a presigned URL or an AWS role with bucket and key.",
   {
@@ -104,6 +112,7 @@ const external: JsonSchema = s.object(
     ],
   },
 );
+
 const destinationExternal: JsonSchema = {
   ...external,
   description: "Output S3 storage, also supporting caller-provided multipart upload URLs.",
@@ -131,6 +140,7 @@ const destinationExternal: JsonSchema = {
     },
   ],
 };
+
 const videoFilter: JsonSchema = s.object(
   "Model filter with official model-specific parameters such as fps, slowmo or strength.",
   {
@@ -246,6 +256,7 @@ const videoFilter: JsonSchema = s.object(
     ],
   },
 );
+
 export const videoInput: JsonSchema = s.object(
   "Submit a video using Topaz Express and external S3 storage; processing starts immediately and reserves credits.",
   {

@@ -9,25 +9,31 @@ import {
   runProviderRequest,
 } from "../provider-runtime.ts";
 import { anyapiOperations } from "./actions.ts";
+
 export const anyapiBaseUrl = "https://api.getanyapi.com";
 const operationsByName = new Map(anyapiOperations.map((operation) => [operation.name, operation]));
-export async function requestAnyapi(
-  path: string,
-  apiKey: string,
-  fetcher: typeof fetch,
-  options: {
-    body?: Record<string, unknown>;
-    query?: Record<string, unknown>;
-    idempotencyKey?: string;
-    durable?: boolean;
-    signal?: AbortSignal;
-  } = {},
-): Promise<{
+
+interface AnyapiRequestOptions {
+  body?: Record<string, unknown>;
+  query?: Record<string, unknown>;
+  idempotencyKey?: string;
+  durable?: boolean;
+  signal?: AbortSignal;
+}
+
+interface AnyapiResponse {
   payload: Record<string, unknown>;
   status: number;
   idempotencyReplayed: boolean | null;
   requestId: string | undefined;
-}> {
+}
+
+export async function requestAnyapi(
+  path: string,
+  apiKey: string,
+  fetcher: typeof fetch,
+  options: AnyapiRequestOptions = {},
+): Promise<AnyapiResponse> {
   return runProviderRequest({ label: "AnyAPI", signal: options.signal }, async (signal) => {
     const url = new URL(path, anyapiBaseUrl);
     for (const [key, value] of Object.entries(options.query ?? {})) {
@@ -85,6 +91,7 @@ export async function requestAnyapi(
     };
   });
 }
+
 export async function executeAnyapiAction(
   name: string,
   input: Record<string, unknown>,

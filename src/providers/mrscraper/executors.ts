@@ -12,6 +12,7 @@ import {
   runProviderRequest,
 } from "../provider-runtime.ts";
 import { mrscraperActions } from "./actions.ts";
+
 const baseUrl = "https://api.mrscraper.com/";
 const bodyKeys = new Set([
   "url",
@@ -24,6 +25,7 @@ const bodyKeys = new Set([
   "tokenCap",
   "maxRetries",
 ]);
+
 async function readResponse(response: Response, html = false): Promise<Record<string, unknown>> {
   const text = await response.text();
   if (response.ok && html && !response.headers.get("content-type")?.includes("application/json")) return { html: text };
@@ -51,6 +53,7 @@ async function readResponse(response: Response, html = false): Promise<Record<st
   if (html) throw providerResponseError("MrScraper returned JSON instead of HTML");
   return record;
 }
+
 async function execute(
   actionName: string,
   values: Record<string, unknown>,
@@ -92,12 +95,14 @@ async function execute(
       ),
   );
 }
+
 export const executors: ProviderExecutors = defineApiKeyProviderExecutors(
   "mrscraper",
   Object.fromEntries(
     mrscraperActions.map((action) => [action.name, (values, context) => execute(action.name, values, context)]),
   ),
 );
+
 export const credentialValidators: CredentialValidators = {
   async apiKey(input, { fetcher, signal }) {
     const payload = await runProviderRequest({ label: "MrScraper", signal }, async (signal) =>
@@ -117,6 +122,7 @@ export const credentialValidators: CredentialValidators = {
     };
   },
 };
+
 export const proxy: ProviderProxyExecutor = defineProviderProxy({
   service: "mrscraper",
   baseUrl: baseUrl,

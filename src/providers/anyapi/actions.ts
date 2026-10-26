@@ -3,7 +3,9 @@ import type { ActionDefinition, JsonSchema } from "../../core/types.ts";
 import { jsonSchema as s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
 import operations from "./operations.json" with { type: "json" };
+
 export const anyapiOperations: typeof operations = operations;
+
 const responseControls = {
   fields: s.string("Comma-separated output fields to retain; this does not reduce charges."),
   max_items: s.integer("Maximum returned rows after execution; this does not reduce charges.", {
@@ -12,6 +14,7 @@ const responseControls = {
   summary: s.boolean("Return a structural outline instead of the full output; charges are unchanged."),
   jq: s.string("A jq expression shaping output, which may become an array or scalar; charges are unchanged."),
 };
+
 const requestOptions = s.object(
   "Optional request budget, output shaping, and retry identity.",
   {
@@ -26,12 +29,15 @@ const requestOptions = s.object(
     optional: [...Object.keys(responseControls), "max_cost_usd", "idempotencyKey"],
   },
 );
+
 const resultRequired = ["output", "provider", "costUsd", "items", "replayed"];
+
 const idempotencyReplayedSchema = s.nullable(
   s.boolean(
     "Upstream Idempotency-Replayed header: false confirms a fresh execution with an accepted key, true confirms a replay, and null means idempotency support was not confirmed. A sent key alone does not guarantee a free retry.",
   ),
 );
+
 const resultProperties = {
   output: s.unknown(
     "AnyAPI business output, normally {found, data, reason?}; jq or summary may change its shape. Unknown upstream fields are preserved.",
@@ -45,6 +51,7 @@ const resultProperties = {
   hint: s.string("Upstream completeness, pagination, or query guidance."),
   jqError: s.string("Output shaping error; the unshaped result is retained when shaping fails."),
 };
+
 const anyapiResultSchema: JsonSchema = s.object(
   "AnyAPI execution envelope with original billing and source information.",
   {
@@ -58,6 +65,7 @@ const anyapiResultSchema: JsonSchema = s.object(
     required: resultRequired,
   },
 );
+
 const requestSchema = s.object(
   "Durable request state and retained execution result.",
   {
@@ -84,6 +92,7 @@ const requestSchema = s.object(
     required: ["requestId", "sku", "status", "createdAt"],
   },
 );
+
 const submitSchema: JsonSchema = {
   ...requestSchema,
   description: "Accepted request snapshot or an immediately completed execution with its result.",
@@ -93,6 +102,7 @@ const submitSchema: JsonSchema = {
     { properties: { status: { const: "succeeded" } }, required: ["result"] },
   ],
 };
+
 export const anyapiActions: ActionDefinition[] = [
   ...operations.map((operation) =>
     defineProviderAction("anyapi", {

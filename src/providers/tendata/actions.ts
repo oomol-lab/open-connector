@@ -2,11 +2,13 @@ import type { ActionDefinition, JsonSchema } from "../../core/types.ts";
 
 import { jsonSchema as s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
+
 interface TendataEndpoint {
   method: "GET" | "POST";
   path: string;
   trade: boolean;
 }
+
 export const tendataEndpoints: Record<string, TendataEndpoint> = {
   count_trades: { method: "POST", path: "/trade/row-count", trade: true },
   list_trades: { method: "POST", path: "/trade", trade: true },
@@ -29,6 +31,7 @@ export const tendataEndpoints: Record<string, TendataEndpoint> = {
   get_account: { method: "GET", path: "/account", trade: false },
   list_charge_records: { method: "POST", path: "/billing/charges/query", trade: false },
 };
+
 const conditionFields = [
   "productDesc",
   "hsCode",
@@ -42,7 +45,9 @@ const conditionFields = [
   "transportType",
   "quantityUnit",
 ] as const;
+
 const rangeFields = ["weight", "quantity", "sumOfUSD", "weightUnitPriceUSD", "quantityUnitPriceUSD"] as const;
+
 const conditionGroups = s.array(
   "Alternative condition groups joined by OR. Conditions within each group use AND. Each group needs a CONTAINS condition; omit operator for CONTAINS. At most 25 conditions across all groups. Do not combine with regular text or range filters; global origin and destination filters remain usable.",
   s.object(
@@ -92,6 +97,7 @@ const conditionGroups = s.array(
   ),
   { minItems: 1, maxItems: 5 },
 );
+
 function range(description: string) {
   return s.array(
     description,
@@ -105,6 +111,7 @@ function range(description: string) {
     { minItems: 2, maxItems: 2 },
   );
 }
+
 const tradeFilters = {
   importer: s.string(
     "Importer names, at least two characters each. Separate multiple names with semicolons; batches of at most 20 are recommended.",
@@ -151,6 +158,7 @@ const tradeFilters = {
   ]),
   conditionGroups,
 };
+
 interface TradeInputOptions {
   paginated?: boolean;
   specific?: boolean;
@@ -158,6 +166,7 @@ interface TradeInputOptions {
   sort?: boolean;
   period?: boolean;
 }
+
 function tradeInput(options: TradeInputOptions = {}) {
   const properties: Record<string, JsonSchema> = {
     catalog: s.stringEnum(
@@ -216,6 +225,7 @@ function tradeInput(options: TradeInputOptions = {}) {
     ["hsCode", "productDesc", "importer", "exporter", "conditionGroups"],
   );
 }
+
 function envelope(data: JsonSchema) {
   return s.object(
     "Tendata response envelope, retaining upstream fields and request trace information.",
@@ -235,6 +245,7 @@ function envelope(data: JsonSchema) {
     },
   );
 }
+
 function page(item: JsonSchema, extra: Record<string, JsonSchema> = {}) {
   return s.object(
     "One page of matching records.",
@@ -251,6 +262,7 @@ function page(item: JsonSchema, extra: Record<string, JsonSchema> = {}) {
     },
   );
 }
+
 const tradeRecord = s.looseObject("A trade record. Fields depend on the data source and can be absent or null.", {
   id: s.nullable(s.string("Trade record identifier.")),
   date: s.nullable(s.string("Trade date; records are ordered by descending date.")),
@@ -288,9 +300,11 @@ const tradeRecord = s.looseObject("A trade record. Fields depend on the data sou
   hsCode: s.nullable(s.array("HS codes.", s.string("A returned text value."))),
   productTag: s.nullable(s.array("Product tags.", s.string("A returned text value."))),
 });
+
 const tradePage = page(tradeRecord, {
   stats: s.nullable(s.looseObject("Reserved statistics field; currently null.")),
 });
+
 const tradeCount = s.object(
   "Count of matching trade records.",
   { total: s.number("Total matching trade records.") },
@@ -299,6 +313,7 @@ const tradeCount = s.object(
     required: ["total"],
   },
 );
+
 const summaryMetrics = {
   weight: s.nullable(s.number("Total weight in kilograms.")),
   quantity: s.nullable(s.number("Total quantity.")),
@@ -307,13 +322,16 @@ const summaryMetrics = {
   quantityAvgPrice: s.nullable(s.number("Average USD price per quantity unit.")),
   tradeCount: s.nullable(s.number("Number of trades.")),
 };
+
 const companyStats = s.looseObject("Aggregate company counts, trade volume, and prices.", {
   companyCount: s.nullable(s.number("Number of matching companies.")),
   ...summaryMetrics,
 });
+
 const companyNamePage = page(
   s.looseObject("A matching company name.", { name: s.nullable(s.string("Company name.")) }),
 );
+
 const companySummaryPage = page(
   s.looseObject("A company with aggregated trade metrics.", {
     name: s.nullable(s.string("Company name.")),
@@ -321,6 +339,7 @@ const companySummaryPage = page(
     ...summaryMetrics,
   }),
 );
+
 const countrySummaryPage = page(
   s.looseObject("Trade metrics grouped by country.", {
     countryCode: s.nullable(s.string("Country or region code.")),
@@ -328,12 +347,14 @@ const countrySummaryPage = page(
     amountSharePct: s.nullable(s.number("Share of the total trade amount as returned by Tendata.")),
   }),
 );
+
 const trendPage = page(
   s.looseObject("Trade metrics for one time period.", {
     date: s.nullable(s.string("Time period identifier, such as 2025-01.")),
     ...summaryMetrics,
   }),
 );
+
 const hsCodePage = page(
   s.looseObject("Trade metrics grouped by HS code.", {
     hsCode: s.nullable(s.string("HS code.")),
@@ -343,6 +364,7 @@ const hsCodePage = page(
     amountSharePct: s.nullable(s.number("Share of the total trade amount as returned by Tendata.")),
   }),
 );
+
 const companyRecord = s.looseObject(
   "Company profile. A null id indicates that no company profile was found; other fields can still contain supplemental information.",
   {
@@ -394,6 +416,7 @@ const companyRecord = s.looseObject(
     ),
   },
 );
+
 const contactRecord = s.looseObject(
   "A matching contact. Verify companyName before using the contact; name searches can match other companies.",
   {
@@ -427,6 +450,7 @@ const contactRecord = s.looseObject(
     ),
   },
 );
+
 const chargePage = s.object(
   "One cursor-based page of monthly charge records.",
   {
@@ -453,6 +477,7 @@ const chargePage = s.object(
     required: ["billingMonth", "hasMore", "nextCursor", "list"],
   },
 );
+
 function action(name: string, description: string, inputSchema: JsonSchema, data: JsonSchema) {
   return defineProviderAction("tendata", {
     name,
@@ -463,6 +488,7 @@ function action(name: string, description: string, inputSchema: JsonSchema, data
     outputSchema: envelope(data),
   });
 }
+
 export const tendataActions: ActionDefinition[] = [
   action(
     "count_trades",

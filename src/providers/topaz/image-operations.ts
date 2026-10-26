@@ -2,14 +2,17 @@ import type { JsonSchema } from "../../core/types.ts";
 
 import { readSchemaProperties, jsonSchema as s } from "../../core/json-schema.ts";
 import { imageInput } from "./schemas.ts";
-export const imageOperations: {
+
+interface ImageOperation {
   name: string;
   path: string;
   model: string;
   sizing: boolean;
   png: boolean;
   description: string;
-}[] = [
+}
+
+export const imageOperations: ImageOperation[] = [
   {
     name: "submit_image_enhancement",
     path: "enhance",
@@ -83,16 +86,12 @@ export const imageOperations: {
     description: "Submit transparency-preserving image upscaling using the Tool API.",
   },
 ];
-export const imageOperationByName: Map<
-  string,
-  { name: string; path: string; model: string; sizing: boolean; png: boolean; description: string }
-> = new Map(imageOperations.map((operation) => [operation.name, operation]));
-export function imageOperationInput(operation: {
-  path: string;
-  model: string;
-  sizing: boolean;
-  png: boolean;
-}): JsonSchema {
+
+export const imageOperationByName: Map<string, ImageOperation> = new Map(
+  imageOperations.map((operation) => [operation.name, operation]),
+);
+
+export function imageOperationInput(operation: ImageOperation): JsonSchema {
   const properties = Object.fromEntries(
     Object.entries(readSchemaProperties(imageInput)).filter(
       ([key]) => operation.sizing || !["outputWidth", "outputHeight", "cropToFill"].includes(key),

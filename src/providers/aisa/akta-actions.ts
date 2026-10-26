@@ -2,13 +2,16 @@ import type { ActionDefinition } from "../../core/types.ts";
 
 import { jsonSchema as s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
+
 const company = s.looseObject("A company record with its identity and returned enrichment sections.");
+
 const listOutput = s.looseObject("The company research result returned by Akta.", {
   data: s.array("The matching company records.", company),
   count: s.integer("The number of returned companies."),
   total_count: s.integer("The total matching companies, capped at 500 by Akta."),
   credits_consumed: s.number("The Akta credits consumed by the request."),
 });
+
 export const aktaActions: readonly ActionDefinition[] = [
   defineProviderAction("aisa", {
     name: "search_akta_companies",

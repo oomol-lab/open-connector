@@ -2,10 +2,12 @@ import type { ActionDefinition, JsonSchema } from "../../core/types.ts";
 
 import { jsonSchema as s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
+
 interface G2QueryParameter {
   name: string;
   encoding?: "repeat" | "comma" | "deepObject";
 }
+
 export interface G2Endpoint {
   path: string;
   method: "GET" | "POST" | "PUT" | "PATCH" | "DELETE";
@@ -21,6 +23,7 @@ export interface G2Endpoint {
   emptyResponse?: boolean;
   action: ActionDefinition;
 }
+
 interface EndpointDefinition extends Omit<G2Endpoint, "action"> {
   name: string;
   description: string;
@@ -28,6 +31,7 @@ interface EndpointDefinition extends Omit<G2Endpoint, "action"> {
   inputSchema: JsonSchema;
   outputSchema: JsonSchema;
 }
+
 export function defineG2Endpoint(definition: EndpointDefinition): G2Endpoint {
   const { name, description, operationType, inputSchema, outputSchema, ...endpoint } = definition;
   return {
@@ -42,6 +46,7 @@ export function defineG2Endpoint(definition: EndpointDefinition): G2Endpoint {
     }),
   };
 }
+
 export function g2ResponseSchema(data: JsonSchema): JsonSchema {
   return s.object(
     "The G2 response, preserving upstream fields and exposing pagination cursors.",

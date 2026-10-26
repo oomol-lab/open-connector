@@ -6,6 +6,7 @@ import { defineProviderProxy } from "../provider-proxy.ts";
 import { providerResponseError, providerUserAgent } from "../provider-runtime.ts";
 import { anyapiActions } from "./actions.ts";
 import { anyapiBaseUrl, executeAnyapiAction, requestAnyapi } from "./runtime.ts";
+
 export const executors: ProviderExecutors = defineApiKeyProviderExecutors(
   "anyapi",
   Object.fromEntries(
@@ -15,6 +16,7 @@ export const executors: ProviderExecutors = defineApiKeyProviderExecutors(
     ]),
   ),
 );
+
 export const credentialValidators: CredentialValidators = {
   async apiKey(input, { fetcher, signal }) {
     const { payload } = await requestAnyapi("/v1/balance", input.apiKey, fetcher, { signal });
@@ -27,6 +29,7 @@ export const credentialValidators: CredentialValidators = {
     };
   },
 };
+
 export const proxy: ProviderProxyExecutor = defineProviderProxy({
   service: "anyapi",
   baseUrl: anyapiBaseUrl,

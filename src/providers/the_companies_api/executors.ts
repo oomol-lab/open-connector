@@ -12,6 +12,7 @@ import {
   runProviderRequest,
 } from "../provider-runtime.ts";
 import { theCompaniesApiActions, theCompaniesApiEndpointByName } from "./actions.ts";
+
 const baseUrl = "https://api.thecompaniesapi.com";
 async function request(
   apiKey: string,
@@ -54,6 +55,7 @@ async function request(
     return requiredResponseRecord(body, "The Companies API response");
   });
 }
+
 async function execute(
   actionName: string,
   values: Record<string, unknown>,
@@ -71,12 +73,14 @@ async function execute(
   }
   return request(context.apiKey, path, endpoint.method, parameters, context.fetcher, context.signal);
 }
+
 export const executors: ProviderExecutors = defineApiKeyProviderExecutors(
   "the_companies_api",
   Object.fromEntries(
     theCompaniesApiActions.map((action) => [action.name, (values, context) => execute(action.name, values, context)]),
   ),
 );
+
 export const credentialValidators: CredentialValidators = {
   async apiKey(input, { fetcher, signal }) {
     const user = await request(input.apiKey, "/v2/user", "GET", {}, fetcher, signal);
@@ -89,12 +93,12 @@ export const credentialValidators: CredentialValidators = {
     };
   },
 };
+
 export const proxy: ProviderProxyExecutor = defineProviderProxy({
   service: "the_companies_api",
-  baseUrl: baseUrl,
+  baseUrl,
   auth: { type: "api_key_authorization", prefix: "Basic " },
-  async customizeRequest({ headers: proxyHeaders }) {
-    for (const [name, value] of Object.entries({ accept: "application/json" }))
-      if (!proxyHeaders.has(name)) proxyHeaders.set(name, value);
+  customizeRequest({ headers }) {
+    if (!headers.has("accept")) headers.set("accept", "application/json");
   },
 });

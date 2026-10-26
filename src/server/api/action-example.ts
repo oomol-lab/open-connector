@@ -1,3 +1,5 @@
+// Support schema shapes used by the current action catalog; full JSON Schema coverage is not required.
+
 import type { JsonSchema } from "../../core/types.ts";
 import type { Schema } from "@cfworker/json-schema";
 

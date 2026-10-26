@@ -2,6 +2,7 @@ import type { ActionDefinition } from "../../core/types.ts";
 
 import { s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
+
 const searchMode = s.stringEnum("Retrieval mode; deep modes may take longer to complete.", [
   "auto",
   "fast",
@@ -10,17 +11,24 @@ const searchMode = s.stringEnum("Retrieval mode; deep modes may take longer to c
   "deep",
   "deep-reasoning",
 ]);
+
 const stream = s.literal(false, {
   description: "Streaming is not supported by this JSON action; must be false.",
 });
+
 const text = s.boolean("Return the full page text; defaults to true for get_exa_contents.");
+
 const highlights = s.boolean("Return highlighted relevant snippets.");
+
 const summary = s.boolean("Return an AI-generated summary of the page.");
+
 const outputSchema = s.looseObject("JSON Schema for a structured output.");
+
 const urls = s.stringArray("The URLs to retrieve.", {
   minItems: 1,
   itemDescription: "A page URL.",
 });
+
 const exaPage = s.looseObject("An Exa page, including additional upstream content fields.", {
   id: s.string("The Exa result identifier, normally the page URL."),
   url: s.string("The page URL."),
@@ -33,19 +41,27 @@ const exaPage = s.looseObject("An Exa page, including additional upstream conten
   }),
   summary: s.string("The generated page summary."),
 });
+
 const exaCommon = {
   requestId: s.string("The Exa request identifier."),
   costDollars: s.unknown("Informational Exa cost; not the AIsa customer charge."),
 };
+
 const format = s.stringEnum("The extracted content format.", ["markdown", "text"]);
+
 const extractDepth = s.stringEnum("Extraction depth; advanced may take longer and cost more.", ["basic", "advanced"]);
+
 const chunksPerSource = s.integer("Maximum relevant chunks per source when an intent is provided.", {
   minimum: 1,
   maximum: 5,
 });
+
 const includeImages = s.boolean("Include extracted image URLs.");
+
 const includeFavicon = s.boolean("Include the page favicon URL.");
+
 const includeUsage = s.boolean("Include upstream credit usage; this is not the AIsa customer charge.");
+
 const tavilyPage = s.looseObject("A Tavily page with extracted content and optional metadata.", {
   url: s.string("The page URL."),
   title: s.string("The page title."),
@@ -53,6 +69,7 @@ const tavilyPage = s.looseObject("A Tavily page with extracted content and optio
   images: s.stringArray("Extracted image URLs.", { itemDescription: "An image URL." }),
   favicon: s.nullable(s.string("The page favicon URL.")),
 });
+
 const tavilyCommon = {
   request_id: s.string("The Tavily request identifier."),
   response_time: s.number("The upstream execution time in seconds."),
@@ -61,6 +78,7 @@ const tavilyCommon = {
     credits: s.integer("Upstream credits consumed."),
   }),
 };
+
 export const webActions: readonly ActionDefinition[] = [
   defineProviderAction("aisa", {
     name: "search_firecrawl",

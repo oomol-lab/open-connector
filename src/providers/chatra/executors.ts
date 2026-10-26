@@ -14,13 +14,16 @@ import {
   runProviderRequest,
 } from "../provider-runtime.ts";
 import { chatraActions } from "./actions.ts";
+
 const baseUrl = "https://app.chatra.io/api";
 const defaultHeaders = { accept: "application/json", "content-type": "application/json" };
+
 interface Route {
   method: string;
   resource: string;
   idField?: string;
 }
+
 const routes: Record<string, Route> = {
   send_message: { method: "POST", resource: "messages" },
   get_message: { method: "GET", resource: "messages", idField: "id" },
@@ -33,6 +36,7 @@ const routes: Record<string, Route> = {
   get_client: { method: "GET", resource: "clients", idField: "clientId" },
   update_client: { method: "PUT", resource: "clients", idField: "clientId" },
 };
+
 async function execute(actionName: string, values: Record<string, unknown>, context: ChatraContext): Promise<unknown> {
   const route = routes[actionName];
   if (!route) throw providerInputError(`Unknown Chatra action: ${actionName}`);
@@ -70,9 +74,11 @@ async function execute(actionName: string, values: Record<string, unknown>, cont
     return requiredResponseRecord(payload, "Chatra response");
   });
 }
+
 interface ChatraContext extends ApiKeyProviderContext {
   publicKey: string;
 }
+
 export const executors: ProviderExecutors = defineProviderExecutors({
   service: "chatra",
   handlers: Object.fromEntries(
@@ -91,6 +97,7 @@ export const executors: ProviderExecutors = defineProviderExecutors({
     };
   },
 });
+
 export const credentialValidators: CredentialValidators = {
   async apiKey(input) {
     requiredInputString(input.apiKey, "apiKey");
@@ -102,6 +109,7 @@ export const credentialValidators: CredentialValidators = {
     };
   },
 };
+
 export const proxy: ProviderProxyExecutor = defineProviderProxy({
   service: "chatra",
   baseUrl: baseUrl,

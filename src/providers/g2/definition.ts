@@ -1,6 +1,7 @@
 import type { ProviderDefinition } from "../../core/types.ts";
 
 import { g2Actions } from "./actions.ts";
+
 export const provider: ProviderDefinition = {
   service: "g2",
   displayName: "G2",

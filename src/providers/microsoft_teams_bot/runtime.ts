@@ -18,7 +18,9 @@ import {
 } from "../provider-runtime.ts";
 
 const service = "microsoft_teams_bot";
+
 const tokenRefreshSkewMs = 60_000;
+
 const defaultTextFormat = "markdown";
 
 /**

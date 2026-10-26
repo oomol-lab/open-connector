@@ -2,6 +2,7 @@ import type { G2Endpoint } from "./endpoint.ts";
 
 import { jsonSchema as s } from "../../core/json-schema.ts";
 import { defineG2Endpoint, g2ResponseSchema } from "./endpoint.ts";
+
 export const buyerEndpoints: G2Endpoint[] = [
   defineG2Endpoint({
     name: "list_research_boards",

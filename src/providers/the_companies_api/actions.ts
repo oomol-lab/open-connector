@@ -2,10 +2,12 @@ import type { ActionDefinition, JsonSchema } from "../../core/types.ts";
 
 import { jsonSchema as s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
+
 const refreshOptions = {
   refresh: s.boolean("Request a real-time refresh of company data for 10 additional credits."),
   simplified: s.boolean("Return the simplified company representation."),
 };
+
 const company = s.looseObject("Company profile. Available fields depend on the data and simplified option.", {
   id: s.string("Company ID."),
   about: s.looseObject("Company identity, industry and workforce information.", {}),
@@ -15,6 +17,7 @@ const company = s.looseObject("Company profile. Available fields depend on the d
   socials: s.looseObject("Company social profiles.", {}),
   technologies: s.looseObject("Company technology information.", {}),
 });
+
 const segmentationCondition = s.object(
   "Company segmentation condition.",
   {
@@ -67,6 +70,7 @@ const segmentationCondition = s.object(
     optional: ["blockedOperator"],
   },
 );
+
 const filter = {
   actionId: s.number("Existing action ID used as the search source."),
   query: s.array("Company segmentation conditions.", segmentationCondition),
@@ -76,6 +80,7 @@ const filter = {
     s.stringEnum("Searchable company field.", ["about.name", "domain.domain"]),
   ),
 };
+
 const sortKey = s.stringEnum("Company field used for sorting.", [
   "about.businessType",
   "about.industries",
@@ -101,7 +106,9 @@ const sortKey = s.stringEnum("Company field used for sorting.", [
   "technologies.active",
   "urls",
 ]);
+
 const sortOrder = s.stringEnum("Sort direction.", ["asc", "desc"]);
+
 const searchProperties = {
   ...filter,
   domainsToExclude: s.string("Comma-separated company domains to exclude."),
@@ -129,6 +136,7 @@ const searchProperties = {
   sortKey,
   sortOrder,
 };
+
 const pagination = s.object(
   "Pagination and credit usage for this response.",
   {
@@ -147,6 +155,7 @@ const pagination = s.object(
     optional: ["maxScrollResultsReached"],
   },
 );
+
 const socialProperties: Record<string, JsonSchema> = {
   angellist: s.string("angellist company profile URL.", { format: "uri" }),
   dribbble: s.string("dribbble company profile URL.", { format: "uri" }),
@@ -164,11 +173,13 @@ const socialProperties: Record<string, JsonSchema> = {
   wellfound: s.string("wellfound company profile URL.", { format: "uri" }),
   youtube: s.string("youtube company profile URL.", { format: "uri" }),
 };
+
 interface TheCompaniesApiEndpoint {
   path: string;
   method: "GET" | "POST";
   action: ActionDefinition;
 }
+
 function endpoint(
   name: string,
   path: string,
@@ -191,6 +202,7 @@ function endpoint(
     }),
   };
 }
+
 const endpoints = [
   endpoint(
     "get_company",
@@ -301,7 +313,9 @@ const endpoints = [
     "read",
   ),
 ];
+
 export const theCompaniesApiActions: ActionDefinition[] = endpoints.map((item) => item.action);
+
 export const theCompaniesApiEndpointByName: Map<string, TheCompaniesApiEndpoint> = new Map(
   endpoints.map((item) => [item.action.name, item]),
 );

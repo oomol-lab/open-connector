@@ -3,6 +3,7 @@ import type { ActionDefinition } from "../../core/types.ts";
 import { readSchemaProperties, jsonSchema as s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
 import { estimates, imageHandle, requestId, videoHandle, videoInput } from "./schemas.ts";
+
 const ack = s.object(
   "Operation acknowledgement.",
   {
@@ -14,11 +15,13 @@ const ack = s.object(
     optional: ["message"],
   },
 );
+
 const download = s.looseObject("Temporary download information.", {
   url: s.url("Presigned download URL."),
   expiresAt: s.integer("URL expiration in Unix milliseconds."),
   expiresIn: s.integer("URL lifetime in milliseconds."),
 });
+
 const record = s.looseObject("Full video request record, including corrected source metrics and credit transactions.", {
   id: s.string("Video request ID."),
   status: s.string("Video request state."),
@@ -39,6 +42,7 @@ const record = s.looseObject("Full video request record, including corrected sou
     errorCode: s.string("Pipeline failure code."),
   }),
 });
+
 const imageEstimate = s.object(
   "Image processing estimate parameters; this does not start a job.",
   {
@@ -73,10 +77,12 @@ const imageEstimate = s.object(
     optional: ["category", "model", "output_height", "output_width", "crop_to_fill", "output_format", "modelSettings"],
   },
 );
+
 const estimateResult = s.looseObject("Estimated image processing cost and duration.", {
   duration: s.number("Estimated processing duration in seconds."),
   credits: s.number("Estimated credit cost."),
 });
+
 const createVideoInput = s.object(
   "Create a video request and obtain estimates without charging credits or starting processing. Accept the request after reviewing the estimate.",
   {
@@ -112,13 +118,15 @@ const createVideoInput = s.object(
     optional: ["destination", "notifications"],
   },
 );
-type Endpoint = {
+
+interface Endpoint {
   name: string;
   path: string;
   method: "GET" | "POST" | "PATCH" | "DELETE";
   mode?: "query" | "estimate" | "bulk" | "ack" | "imageList";
   definition: Omit<Parameters<typeof defineProviderAction>[1], "service" | "name" | "requiredScopes">;
-};
+}
+
 const endpoints: Endpoint[] = [
   {
     name: "list_image_jobs",
@@ -486,9 +494,11 @@ const endpoints: Endpoint[] = [
     },
   },
 ];
+
 export const additionalEndpointByName: Map<string, Endpoint> = new Map(
   endpoints.map((endpoint) => [endpoint.name, endpoint]),
 );
+
 export const additionalActions: ActionDefinition[] = endpoints.map(({ name, definition }) =>
   defineProviderAction("topaz", {
     name,

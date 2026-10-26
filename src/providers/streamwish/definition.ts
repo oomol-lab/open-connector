@@ -1,6 +1,7 @@
 import type { ProviderDefinition } from "../../core/types.ts";
 
 import { streamwishActions } from "./actions.ts";
+
 export const provider: ProviderDefinition = {
   service: "streamwish",
   displayName: "StreamWish",

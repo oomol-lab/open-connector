@@ -14,29 +14,33 @@ import {
   runProviderRequest,
 } from "../provider-runtime.ts";
 import { g2Actions, g2EndpointByName } from "./actions.ts";
+
 const baseUrl = "https://data.g2.com";
+interface G2RequestBody {
+  contentType: string;
+  value: unknown;
+}
+
 async function request(
   apiKey: string,
   path: string,
   query: URLSearchParams,
   fetcher: typeof fetch,
   method = "GET",
-  bodyInput?: {
-    contentType: string;
-    value: unknown;
-  },
+  bodyInput?: G2RequestBody,
   parentSignal?: AbortSignal,
 ) {
   return runProviderRequest({ signal: parentSignal, label: "G2" }, async (signal) => {
     const url = new URL(path, baseUrl);
     url.search = query.toString();
+    const headers = new Headers({
+      authorization: `Bearer ${apiKey}`,
+      accept: "application/vnd.api+json",
+    });
+    if (bodyInput) headers.set("content-type", bodyInput.contentType);
     const response = await fetcher(url, {
       method,
-      headers: {
-        authorization: `Bearer ${apiKey}`,
-        accept: "application/vnd.api+json",
-        ...(bodyInput ? { "content-type": bodyInput.contentType } : {}),
-      },
+      headers,
       body: bodyInput ? JSON.stringify(bodyInput.value) : undefined,
       signal,
     });
@@ -62,6 +66,7 @@ async function request(
     return requiredResponseRecord(body, "G2 response");
   });
 }
+
 function cursor(link: unknown, parameter: string): string | null {
   const href = optionalString(link) ?? optionalString(optionalRecord(link)?.href);
   if (!href) return null;
@@ -71,6 +76,7 @@ function cursor(link: unknown, parameter: string): string | null {
     return null;
   }
 }
+
 function buildBody(body: NonNullable<G2Endpoint["body"]>, input: Record<string, unknown>) {
   const values = Object.fromEntries(
     Object.entries(body.fields)
@@ -89,6 +95,7 @@ function buildBody(body: NonNullable<G2Endpoint["body"]>, input: Record<string, 
   if (body.mode === "resource") return { data: { type: body.resourceType, id: values.id } };
   return { data: (values.id as string[]).map((id) => ({ type: body.resourceType, id })) };
 }
+
 async function execute(
   actionName: string,
   values: Record<string, unknown>,
@@ -134,12 +141,14 @@ async function execute(
     previousCursor: cursor(links?.prev, "page[before]"),
   };
 }
+
 export const executors: ProviderExecutors = defineApiKeyProviderExecutors(
   "g2",
   Object.fromEntries(
     g2Actions.map((action) => [action.name, (values, context) => execute(action.name, values, context)]),
   ),
 );
+
 export const credentialValidators: CredentialValidators = {
   async apiKey(input, { fetcher, signal }) {
     const body = await request(
@@ -157,12 +166,12 @@ export const credentialValidators: CredentialValidators = {
     return { profile: { displayName: "G2 API Token" }, grantedScopes: [], metadata: {} };
   },
 };
+
 export const proxy: ProviderProxyExecutor = defineProviderProxy({
   service: "g2",
-  baseUrl: baseUrl,
+  baseUrl,
   auth: { type: "api_key_authorization", prefix: "Bearer " },
-  async customizeRequest({ headers: proxyHeaders }) {
-    for (const [name, value] of Object.entries({ accept: "application/vnd.api+json" }))
-      if (!proxyHeaders.has(name)) proxyHeaders.set(name, value);
+  customizeRequest({ headers }) {
+    if (!headers.has("accept")) headers.set("accept", "application/vnd.api+json");
   },
 });

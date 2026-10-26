@@ -5,18 +5,19 @@ import { defineProviderAction } from "../../core/provider-definition.ts";
 import { additionalActions } from "./additional-actions.ts";
 import { imageOperationInput, imageOperations } from "./image-operations.ts";
 import { estimates, imageHandle, imageSubmission, videoHandle, videoInput } from "./schemas.ts";
+
 export const topazActions: ActionDefinition[] = [
   ...additionalActions,
-  ...imageOperations.map(({ name, description, path, model, sizing, png }) =>
+  ...imageOperations.map((operation) =>
     defineProviderAction("topaz", {
-      name,
+      name: operation.name,
       operationType: "write",
       requiredScopes: [],
-      description,
-      inputSchema: imageOperationInput({ path, model, sizing, png }),
+      description: operation.description,
+      inputSchema: imageOperationInput(operation),
       outputSchema: imageSubmission,
       asyncLifecycle: {
-        startActionId: `topaz.${name}`,
+        startActionId: `topaz.${operation.name}`,
         statusActionId: "topaz.get_image_job",
         cancelActionId: "topaz.cancel_image_job",
       },

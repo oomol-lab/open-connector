@@ -2,6 +2,7 @@ import type { ActionDefinition, JsonSchema } from "../../core/types.ts";
 
 import { jsonSchema as s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
+
 const common = {
   url: s.string("The full URL to scrape, including the protocol.", { format: "uri" }),
   super: s.boolean("Use additional resources to bypass anti-bot protection."),
@@ -18,11 +19,13 @@ const common = {
   geoCode: s.string("Geographic code for the proxy location."),
   proxyCountry: s.string("Country code of the proxy server."),
 };
+
 const fetching = {
   blockResources: s.boolean("Block images, fonts, and stylesheets."),
   waitForSelector: s.string("Wait for this CSS selector before extracting content."),
   returnCookie: s.boolean("Include browser session cookies in the response."),
 };
+
 const budget = {
   tokenCap: s.integer(
     "Token budget for the scrape and retries; omit for no limit. An individual attempt may exceed the cap.",
@@ -30,16 +33,20 @@ const budget = {
   ),
   maxRetries: s.integer("Maximum number of retries for the request.", { minimum: 0 }),
 };
+
 const saved = {
   saveResult: s.boolean("Save the result to the Result tab; the upstream default is true."),
 };
+
 const prompt = s.string(
   "Describe the data to extract. This only parses content; it cannot instruct browser navigation. Append a Json Schema: section to specify a JSON schema.",
 );
+
 const maxPages = s.integer(
   "Maximum pages to process; a batch from infinite scroll or Load More counts as one page. The upstream default is 3.",
   { minimum: 1 },
 );
+
 const outputProperties = {
   data: s.unknown("Extracted data in the upstream-defined shape."),
   html: s.string("Scraped HTML when included by the upstream API."),
@@ -49,6 +56,7 @@ const outputProperties = {
   data_path: s.nullable(s.string("Upstream result storage path; not necessarily a public URL.")),
   html_path: s.nullable(s.string("Upstream HTML storage path; not necessarily a public URL.")),
 };
+
 function action(
   name: string,
   description: string,
@@ -76,6 +84,7 @@ function action(
         ),
   });
 }
+
 export const mrscraperActions: ActionDefinition[] = [
   action(
     "fetch_html",

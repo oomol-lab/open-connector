@@ -16,10 +16,12 @@ import { isAbortLikeError, isAbortSignalError, runProviderRequest } from "../pro
 import { providerInputError, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
 
 const service = "apify";
+
 const apifyApiBaseUrl = "https://api.apify.com";
 const apifyValidationPath = "/v2/users/me";
 
 type ApifyQueryValue = number | string | undefined;
+
 type ApifyRequestPhase = "validate" | "execute";
 
 type ApifyActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;

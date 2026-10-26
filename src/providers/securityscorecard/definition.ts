@@ -1,6 +1,7 @@
 import type { ProviderDefinition } from "../../core/types.ts";
 
 import { securityscorecardActions } from "./actions.ts";
+
 export const provider: ProviderDefinition = {
   service: "securityscorecard",
   displayName: "SecurityScorecard",

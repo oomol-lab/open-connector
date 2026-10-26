@@ -1,6 +1,7 @@
 import type { ProviderDefinition } from "../../core/types.ts";
 
 import { tendataActions } from "./actions.ts";
+
 export const provider: ProviderDefinition = {
   service: "tendata",
   displayName: "Tendata",

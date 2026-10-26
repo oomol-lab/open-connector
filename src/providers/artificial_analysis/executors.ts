@@ -12,6 +12,7 @@ import {
   runProviderRequest,
 } from "../provider-runtime.ts";
 import { artificialAnalysisActions, artificialAnalysisEndpointByName } from "./actions.ts";
+
 const baseUrl = "https://artificialanalysis.ai/api/v2";
 async function request(
   apiKey: string,
@@ -45,6 +46,7 @@ async function request(
     return requiredResponseRecord(body, "Artificial Analysis response");
   });
 }
+
 async function execute(
   actionName: string,
   values: Record<string, unknown>,
@@ -54,6 +56,7 @@ async function execute(
   if (!endpoint) throw providerInputError(`Unknown Artificial Analysis action: ${actionName}`);
   return request(context.apiKey, endpoint.path, values, context.fetcher, context.signal);
 }
+
 export const executors: ProviderExecutors = defineApiKeyProviderExecutors(
   "artificial_analysis",
   Object.fromEntries(
@@ -63,6 +66,7 @@ export const executors: ProviderExecutors = defineApiKeyProviderExecutors(
     ]),
   ),
 );
+
 export const credentialValidators: CredentialValidators = {
   async apiKey(input, { fetcher, signal }) {
     await request(input.apiKey, "/language/models/free", { page: 1 }, fetcher, signal);
@@ -73,12 +77,12 @@ export const credentialValidators: CredentialValidators = {
     };
   },
 };
+
 export const proxy: ProviderProxyExecutor = defineProviderProxy({
   service: "artificial_analysis",
-  baseUrl: baseUrl,
+  baseUrl,
   auth: { type: "api_key_header", name: "x-api-key" },
-  async customizeRequest({ headers: proxyHeaders }) {
-    for (const [name, value] of Object.entries({ accept: "application/json" }))
-      if (!proxyHeaders.has(name)) proxyHeaders.set(name, value);
+  customizeRequest({ headers }) {
+    if (!headers.has("accept")) headers.set("accept", "application/json");
   },
 });

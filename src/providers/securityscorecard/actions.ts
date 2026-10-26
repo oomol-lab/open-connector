@@ -2,17 +2,24 @@ import type { ActionDefinition } from "../../core/types.ts";
 
 import { jsonSchema as s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
+
 const portfolioId = s.nonEmptyString("The portfolio ID.");
+
 const identifier = s.nonEmptyString(
   "The company domain or custom scorecard identifier. Add the company to a portfolio before querying its scorecard.",
 );
+
 const domain = s.nonEmptyString("The company domain, normalized to lowercase.");
+
 const name = s.nonEmptyString("The human-readable portfolio name.");
+
 const description = s.string("The human-readable portfolio description.");
+
 const privacy = s.stringEnum(
   "Portfolio visibility: private to its owner, shared with the organization, or restricted to a team.",
   ["private", "shared", "team"],
 );
+
 const portfolio = s.object(
   "The portfolio returned by SecurityScorecard.",
   {
@@ -26,6 +33,7 @@ const portfolio = s.object(
     required: ["name"],
   },
 );
+
 const company = s.object(
   "The company scorecard summary. Scores may be absent while calculation is pending.",
   {
@@ -40,9 +48,11 @@ const company = s.object(
     required: [],
   },
 );
+
 const success = s.requiredObject("The completed deletion result.", {
   success: s.boolean("Whether the deletion succeeded."),
 });
+
 export const securityscorecardActions: ActionDefinition[] = [
   defineProviderAction("securityscorecard", {
     name: "list_portfolios",

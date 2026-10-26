@@ -1,6 +1,7 @@
 import type { G2Endpoint } from "./endpoint.ts";
 
 import { defineG2Endpoint, g2ResponseSchema } from "./endpoint.ts";
+
 export const dataSolutionsEndpoints: G2Endpoint[] = [
   defineG2Endpoint({
     name: "list_data_solutions_reviews",

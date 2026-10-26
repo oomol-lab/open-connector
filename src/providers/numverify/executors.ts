@@ -14,8 +14,10 @@ import {
   runProviderRequest,
 } from "../provider-runtime.ts";
 import { numverifyActions } from "./actions.ts";
+
 const baseUrl = "https://apilayer.net/api";
 const headers = { accept: "application/json", "user-agent": providerUserAgent };
+
 async function requestNumverify(
   endpoint: string,
   query: Record<string, string | undefined>,
@@ -65,6 +67,7 @@ async function requestNumverify(
     return body;
   });
 }
+
 async function execute(
   actionName: string,
   values: Record<string, unknown>,
@@ -86,12 +89,14 @@ async function execute(
     context.signal,
   );
 }
+
 export const executors: ProviderExecutors = defineApiKeyProviderExecutors(
   "numverify",
   Object.fromEntries(
     numverifyActions.map((action) => [action.name, (values, context) => execute(action.name, values, context)]),
   ),
 );
+
 export const credentialValidators: CredentialValidators = {
   async apiKey(input, { fetcher, signal }) {
     await requestNumverify("/countries", {}, input.apiKey, fetcher, signal);
@@ -102,6 +107,7 @@ export const credentialValidators: CredentialValidators = {
     };
   },
 };
+
 export const proxy: ProviderProxyExecutor = defineProviderProxy({
   service: "numverify",
   baseUrl: baseUrl,

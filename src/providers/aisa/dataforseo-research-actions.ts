@@ -4,6 +4,7 @@ import type { JsonSchema } from "../../core/types.ts";
 import { jsonSchema as s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
 import contracts from "./dataforseo-research-contracts.json" with { type: "json" };
+
 interface ResearchContract {
   name: string;
   path: string;
@@ -12,7 +13,9 @@ interface ResearchContract {
     properties: Record<string, unknown>;
   };
 }
+
 export const dataForSeoResearchContracts: readonly ResearchContract[] = contracts;
+
 const outputSchema = s.looseObject(
   "The DataForSEO response, preserving task statuses, costs, results, and additional fields.",
   {
@@ -28,6 +31,7 @@ const outputSchema = s.looseObject(
     ),
   },
 );
+
 export const dataForSeoResearchActions: readonly ActionDefinition[] = dataForSeoResearchContracts.map((contract) =>
   defineProviderAction("aisa", {
     name: contract.name,

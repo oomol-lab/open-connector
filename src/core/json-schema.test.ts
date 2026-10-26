@@ -214,8 +214,7 @@ describe("describeSchemaType", () => {
 });
 
 describe("schema constraints used by provider inputs", () => {
-  it("preserves object alternatives, property limits and enum defaults", async () => {
-    const { Validator } = await import("@cfworker/json-schema");
+  it("preserves object alternatives, property limits and enum defaults", () => {
     const schema = jsonSchema.object(
       "Choose one identifier.",
       {
@@ -236,8 +235,7 @@ describe("schema constraints used by provider inputs", () => {
     expect(validator.validate({ id: "x", url: "y" }).valid).toBe(false);
     expect(jsonSchema.stringEnum("Sort.", ["new", "old"], { default: "new" }).default).toBe("new");
   });
-  it("validates null literals, excluded values and numeric increments", async () => {
-    const { Validator } = await import("@cfworker/json-schema");
+  it("validates null literals, excluded values and numeric increments", () => {
     expect(new Validator(jsonSchema.literal(null)).validate(null).valid).toBe(true);
     const value = new Validator(jsonSchema.string("Path.", { not: { enum: [".", ".."] } }));
     expect(value.validate("..").valid).toBe(false);

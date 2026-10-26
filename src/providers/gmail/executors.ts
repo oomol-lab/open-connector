@@ -58,6 +58,7 @@ import { gmailOAuthScopes } from "./scopes.ts";
 import { gmailMessageReceived } from "./trigger-on-message-received.ts";
 
 const service = "gmail";
+
 const gmailApiBaseUrl = "https://gmail.googleapis.com/gmail/v1";
 const detailHydrationBatchSize = 10;
 // Hydration fans out one detail request per listed id, which can exceed Gmail's per-user quota.
@@ -65,6 +66,7 @@ const detailHydrationBatchSize = 10;
 // Six attempts let the backoff climb 1, 2, 4, 8, 16 s (about 31 s of waiting per message at most),
 // long enough for the moving average to drain, without retrying one message forever.
 const hydrationMaxAttempts = 6;
+
 const hydrationBaseBackoffMs = 1_000;
 // Total time one action may spend waiting out rate limits. It stays well below the few minutes a
 // caller typically allows one action call, so a persistent limit still comes back as rate_limited
@@ -73,6 +75,7 @@ const hydrationRetryBudgetMs = 120_000;
 // Attachments may reach Gmail's 25 MB cap, and the base64 JSON envelope is a third larger again;
 // the default 30 s request budget covers fetch, decode, and disk write, so give this transfer longer.
 const attachmentDownloadTimeoutMs = 120_000;
+
 const defaultFetchEmailsMaxResults = 20;
 
 interface ActionContext {
@@ -1391,6 +1394,7 @@ async function assertGmailResponse(response: Response): Promise<void> {
 // Gmail answers both of these with a 403, which would otherwise read as an authorization failure.
 // Per-user rate limits clear within seconds; exhausted daily or project quotas do not.
 const gmailRateLimitReasons = new Set(["rateLimitExceeded", "userRateLimitExceeded"]);
+
 const gmailExhaustedQuotaReasons = new Set(["dailyLimitExceeded", "quotaExceeded"]);
 
 /** A Gmail API failure that also records whether the upstream reason was an exhausted quota. */

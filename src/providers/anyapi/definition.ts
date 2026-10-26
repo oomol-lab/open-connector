@@ -1,6 +1,7 @@
 import type { ProviderDefinition } from "../../core/types.ts";
 
 import { anyapiActions } from "./actions.ts";
+
 export const provider: ProviderDefinition = {
   service: "anyapi",
   displayName: "AnyAPI",

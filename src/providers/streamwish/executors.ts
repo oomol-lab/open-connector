@@ -12,6 +12,7 @@ import {
   runProviderRequest,
 } from "../provider-runtime.ts";
 import { streamwishActions, streamwishEndpoints } from "./actions.ts";
+
 const baseUrl = "https://api.streamwish.com/api";
 async function request(
   path: string,
@@ -45,6 +46,7 @@ async function request(
     return requiredResponseRecord(payload, "StreamWish response");
   });
 }
+
 async function execute(
   actionName: string,
   values: Record<string, unknown>,
@@ -54,12 +56,14 @@ async function execute(
   if (!endpoint) throw providerInputError(`Unknown StreamWish action: ${actionName}`);
   return request(endpoint.path, values, context.apiKey, context.fetcher, context.signal);
 }
+
 export const executors: ProviderExecutors = defineApiKeyProviderExecutors(
   "streamwish",
   Object.fromEntries(
     streamwishActions.map((action) => [action.name, (values, context) => execute(action.name, values, context)]),
   ),
 );
+
 export const credentialValidators: CredentialValidators = {
   async apiKey(input, { fetcher, signal }) {
     const payload = await request("/account/info", {}, input.apiKey, fetcher, signal);
@@ -71,12 +75,12 @@ export const credentialValidators: CredentialValidators = {
     };
   },
 };
+
 export const proxy: ProviderProxyExecutor = defineProviderProxy({
   service: "streamwish",
-  baseUrl: baseUrl,
+  baseUrl,
   auth: { type: "api_key_query", name: "key" },
-  async customizeRequest({ headers: proxyHeaders }) {
-    for (const [name, value] of Object.entries({ accept: "application/json" }))
-      if (!proxyHeaders.has(name)) proxyHeaders.set(name, value);
+  customizeRequest({ headers }) {
+    if (!headers.has("accept")) headers.set("accept", "application/json");
   },
 });

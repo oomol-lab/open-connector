@@ -2,15 +2,19 @@ import type { ActionDefinition } from "../../core/types.ts";
 
 import { jsonSchema as s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
+
 const id = s.string("Resource ID.", {
   minLength: 1,
   not: { enum: [".", ".."] },
 });
+
 const clientId = s.string("Secret visitor ID from a webhook or your bound user account.", {
   minLength: 1,
   not: { enum: [".", ".."] },
 });
+
 const text = s.string("Message text.", { minLength: 1 });
+
 const message = s.object(
   "Chatra message, including additional upstream fields.",
   {
@@ -29,6 +33,7 @@ const message = s.object(
     required: ["id"],
   },
 );
+
 const client = s.object(
   "Chatra visitor information, including additional upstream fields.",
   {
@@ -46,6 +51,7 @@ const client = s.object(
     required: ["id"],
   },
 );
+
 export const chatraActions: ActionDefinition[] = [
   defineProviderAction("chatra", {
     name: "send_message",

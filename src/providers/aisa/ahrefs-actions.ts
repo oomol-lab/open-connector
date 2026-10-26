@@ -2,10 +2,12 @@ import type { ActionDefinition } from "../../core/types.ts";
 
 import { jsonSchema as s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
+
 const inputSchema = s.requiredObject("The target domain and historical snapshot date.", {
   target: s.string("The target domain, for example ahrefs.com.", { minLength: 1 }),
   date: s.string("The snapshot date in YYYY-MM-DD format.", { format: "date" }),
 });
+
 export const ahrefsActions: readonly ActionDefinition[] = [
   defineProviderAction("aisa", {
     name: "get_ahrefs_domain_rating",

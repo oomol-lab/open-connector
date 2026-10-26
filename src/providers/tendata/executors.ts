@@ -26,6 +26,7 @@ import {
   tendataApiBaseUrl,
   validateTendataCredential,
 } from "./runtime.ts";
+
 export const executors: ProviderExecutors = defineApiKeyProviderExecutors(
   "tendata",
   Object.fromEntries(
@@ -35,6 +36,7 @@ export const executors: ProviderExecutors = defineApiKeyProviderExecutors(
     ]),
   ),
 );
+
 export const credentialValidators: CredentialValidators = {
   apiKey: (input, { fetcher }) => validateTendataCredential(input.apiKey, fetcher),
 };

@@ -2,6 +2,7 @@ import type { ProviderActionDefinition } from "../../core/provider-definition.ts
 
 import { jsonSchema as s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
+
 export const dataForSeoReferencePaths: Record<string, string> = {
   chatgptModels: "ai_optimization/chat_gpt/llm_responses/models",
   geminiModels: "ai_optimization/gemini/llm_responses/models",
@@ -25,6 +26,7 @@ export const dataForSeoReferencePaths: Record<string, string> = {
   seznamLocations: "serp/seznam/locations",
   youtubeLocations: "serp/youtube/locations",
 };
+
 export const dataForSeoReferenceAction: ProviderActionDefinition<"get_dataforseo_reference_data"> =
   defineProviderAction("aisa", {
     name: "get_dataforseo_reference_data",
