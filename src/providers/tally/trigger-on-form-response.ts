@@ -9,6 +9,7 @@ import { bytes, verifyBase64Hmac } from "../../triggers/signature.ts";
 import { snapshot } from "./trigger-on-form-response.definition.ts";
 
 export const tallyFormResponse: IntegrationDefinition = {
+  callback: { headers: ["tally-signature"], query: [] },
   snapshot,
   initialState: { checkpoint: null, subscription: {} },
   async configOptions(context) {

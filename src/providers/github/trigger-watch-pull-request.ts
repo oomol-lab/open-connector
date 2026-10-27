@@ -16,6 +16,7 @@ function hookConfig(config: Readonly<Record<string, JsonValue>>) {
 }
 
 export const githubPullRequestListener: IntegrationDefinition = {
+  callback: githubRepoEvent.callback,
   snapshot,
   initialState: { checkpoint: null, subscription: {} },
   async reconcile(context) {

@@ -26,14 +26,24 @@ export const snapshot: TriggerKeySnapshot & { readonly type: "poll" } = {
   configInputs: [
     {
       handle: "teamId",
-      jsonSchema: { ...s.string({ pattern: uuidPattern }), title: "Team ID" },
+      jsonSchema: {
+        type: "string",
+        pattern: "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$",
+        title: "Team ID",
+      },
       nullable: false,
       description: "Linear Team UUID. Use Copy model UUID in Linear to find it.",
     },
     {
       handle: "stateIds",
       jsonSchema: {
-        ...s.array(s.string({ pattern: uuidPattern }), { uniqueItems: true, maxItems: 50 }),
+        type: "array",
+        items: {
+          type: "string",
+          pattern: "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$",
+        },
+        maxItems: 50,
+        uniqueItems: true,
         title: "Issue statuses",
       },
       nullable: false,
@@ -42,13 +52,13 @@ export const snapshot: TriggerKeySnapshot & { readonly type: "poll" } = {
         "Choose statuses from the selected Team. Empty means all statuses. Matches the current status, not every transition into it.",
     },
   ],
-  definitionVersion: 2,
+  definitionVersion: 3,
   description:
     "Watches new and updated issues in a Linear team with periodic checks. Starts from now without running existing issues. Reports observed current states, not deletions or every intermediate status change.",
   displayName: "Issue Created or Updated",
   key: "linear.on_issue_changed",
   name: "on_issue_changed",
-  outputs: [{ handle: "events", jsonSchema: s.array(issueSchema), nullable: false }],
+  outputs: [{ handle: "event", jsonSchema: issueSchema, nullable: false }],
   provider: "linear",
   type: "poll",
 };

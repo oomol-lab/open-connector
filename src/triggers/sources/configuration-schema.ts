@@ -23,6 +23,16 @@ const createFeishuEventSourceSchema = z.strictObject({
   manageSubscriptions: z.boolean(),
 });
 
+const slackInput = z.strictObject({
+  appId: z.string().regex(/^A[A-Z0-9]+$/),
+  workspaceId: z.string().regex(/^T[A-Z0-9]+$/),
+  signingSecret: secret,
+  eventTypes: z
+    .array(z.enum(["app_mention", "message.im"]))
+    .min(1)
+    .max(2)
+    .refine((values) => new Set(values).size === values.length),
+});
 const createSchema = z.union([
   createFeishuEventSourceSchema,
   z.strictObject({
@@ -93,14 +103,7 @@ const createSchema = z.union([
     name,
     connectionId: id,
     teamId: id.nullable(),
-    appId: z.string().regex(/^A[A-Z0-9]+$/),
-    workspaceId: z.string().regex(/^T[A-Z0-9]+$/),
-    signingSecret: secret,
-    eventTypes: z
-      .array(z.enum(["app_mention", "message.im"]))
-      .min(1)
-      .max(2)
-      .refine((values) => new Set(values).size === values.length),
+    ...slackInput.shape,
   }),
 ]);
 

@@ -113,6 +113,15 @@ export async function executeSubscription(
     existing.providerAccountId !== owner.providerAccountId
   )
     throw new ExecutionError("trigger_not_found", "Subscription not found", "not_found");
+  if (
+    input.operation === "receive" &&
+    existing.status === "active" &&
+    input.query.connector_subscription === existing.callbackNonce
+  ) {
+    const result = definition.handshake?.(input);
+    if (result)
+      return { result, checkpoint: existing.checkpoint, subscription: { id }, reconcileAt: existing.reconcileAt };
+  }
   return withSubscription(store, id, signal, async (record, save) => {
     return executeSubscriptionOperation(record, save, definition, input, proxy, signal);
   });
@@ -187,6 +196,7 @@ export async function executeSubscriptionOperation(
       throw new ExecutionError("invalid_input", "Subscription is being deleted", "conflict");
     const callback = new URL(record.endpointUrl);
     callback.searchParams.set("connector_subscription", record.callbackNonce);
+    callback.searchParams.set("connector_reference", record.id);
     const result = await definition.reconcile({
       active: input.active,
       config: record.config,

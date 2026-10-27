@@ -1,7 +1,7 @@
 import type { IntegrationDefinition } from "../common/integration.ts";
 import type { ConnectorProxy } from "../common/proxy.ts";
 import type { JsonValue } from "../common/types.ts";
-import type { SourceConfiguration } from "./definition.ts";
+import type { SourceConfiguration, SourceEvent, SourceSubscription } from "./definition.ts";
 
 import { z } from "zod";
 import { IntegrationConnectionError, PermanentIntegrationError } from "../common/integration.ts";
@@ -15,6 +15,24 @@ const configuration = z.object({
   secrets: jsonObject,
   state: jsonObject,
 });
+export const sourceCallbackFields: {
+  headers: z.ZodType<Record<string, string>>;
+  rawBody: z.ZodType<string>;
+  consumers: z.ZodType<Extract<SourceOperation, { action: "receive" }>["consumers"]>;
+} = {
+  headers: z
+    .record(z.string(), z.string().max(8192))
+    .refine(
+      (headers) => new Set(Object.keys(headers).map((name) => name.toLowerCase())).size === Object.keys(headers).length,
+      "Duplicate webhook header.",
+    ),
+  rawBody: z
+    .string()
+    .max(90000)
+    .regex(/^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/),
+  consumers: z.array(z.object({ id: z.string(), config: jsonObject })).max(10000),
+};
+
 export const sourceOperationSchema: z.ZodType<SourceOperation> = z.discriminatedUnion("action", [
   z.strictObject({ action: z.literal("initialize"), input: jsonObject }),
   z.strictObject({ action: z.literal("update"), source: configuration, input: jsonObject }),
@@ -28,18 +46,7 @@ export const sourceOperationSchema: z.ZodType<SourceOperation> = z.discriminated
   z.strictObject({
     action: z.literal("receive"),
     source: configuration,
-    headers: z
-      .record(z.string(), z.string().max(8192))
-      .refine(
-        (headers) =>
-          new Set(Object.keys(headers).map((name) => name.toLowerCase())).size === Object.keys(headers).length,
-        "Duplicate webhook header.",
-      ),
-    rawBody: z
-      .string()
-      .max(90000)
-      .regex(/^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/),
-    consumers: z.array(z.object({ id: z.string(), config: jsonObject })).max(10000),
+    ...sourceCallbackFields,
   }),
 ]);
 export type SourceOperation =
@@ -90,13 +97,20 @@ export function sourceMetadata(definition: IntegrationDefinition):
   };
 }
 
+interface SourceOperationResult {
+  source?: SourceConfiguration;
+  subscriptions?: readonly SourceSubscription[];
+  response?: { status: number; body: string; headers: Record<string, string> };
+  event?: SourceEvent & { matches: string[] };
+}
+
 export async function executeSourceOperation(
   definition: IntegrationDefinition,
   request: SourceOperation,
   connector: ConnectorProxy,
   signal: AbortSignal,
   now: number = Date.now(),
-): Promise<unknown> {
+): Promise<SourceOperationResult> {
   const source = definition.source;
   if (source == null) throw new PermanentIntegrationError("This Trigger has no shared event source protocol.");
   const execute = async (operation: {

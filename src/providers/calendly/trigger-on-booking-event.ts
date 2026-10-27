@@ -17,6 +17,7 @@ function webhookId(uri: unknown): string {
 }
 
 export const calendlyBookingEvent: IntegrationDefinition = {
+  callback: { headers: ["calendly-webhook-signature"], query: [] },
   snapshot,
   initialState: { checkpoint: null, subscription: {} },
   async reconcile(context) {

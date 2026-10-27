@@ -20,6 +20,7 @@ for (const { definition: provider } of await loadProviderSources()) {
       throw new Error(`Trigger metadata drift: ${trigger.snapshot.key}`);
     entries.push({
       snapshot,
+      callback: "receive" in trigger ? trigger.callback : undefined,
       source: "receive" in trigger ? sourceMetadata(trigger) : undefined,
       options: trigger.configOptions != null,
       intervalMs: "listener" in trigger ? trigger.listener?.intervalMs : undefined,

@@ -9,6 +9,7 @@ import { firefliesAccount } from "../../triggers/sources/fireflies.ts";
 import { snapshot } from "./trigger-on-meeting-ready.definition.ts";
 
 export const firefliesMeetingReady: IntegrationDefinition = {
+  callback: { headers: [], query: [] },
   snapshot,
   eventSource: "fireflies",
   source: firefliesAccount,

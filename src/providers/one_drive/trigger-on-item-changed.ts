@@ -4,7 +4,6 @@ import type { JsonValue } from "../../triggers/common/types.ts";
 
 import { canonicalJsonBytes, digestBytes } from "../../triggers/common/encoding.ts";
 import {
-  eventsPollOutputs,
   maximumPollEventsPerPage,
   PermanentPollError,
   PollConnectionError,
@@ -55,7 +54,7 @@ interface Page {
 }
 
 export const oneDriveItemChanged: PollDefinition = {
-  buildOutputs: eventsPollOutputs,
+  buildOutputs: (events) => ({ event: events[0]!.payload }),
   snapshot,
   async poll(context) {
     const config = resolveConfig(context.config);

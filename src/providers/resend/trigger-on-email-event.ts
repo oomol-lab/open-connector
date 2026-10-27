@@ -25,6 +25,7 @@ function webhook(value: unknown): ManagedWebhook {
 }
 
 export const resendEmailEvent: IntegrationDefinition = {
+  callback: { headers: ["svix-id", "svix-signature", "svix-timestamp"], query: [] },
   snapshot,
   initialState: { checkpoint: null, subscription: {} },
   async reconcile(context) {

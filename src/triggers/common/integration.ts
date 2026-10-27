@@ -133,6 +133,11 @@ export type ResourceDefinition =
   | { readonly reconcile: (context: IntegrationReconcileContext) => Promise<IntegrationReconcileResult> };
 
 export interface IntegrationDefinition {
+  readonly callback?: { readonly headers: readonly string[]; readonly query: readonly string[] };
+  readonly handshake?: (input: {
+    readonly method: string;
+    readonly headers: Readonly<Record<string, string>>;
+  }) => Extract<IntegrationReceiveResult, { outcome: "respond" }> | undefined;
   readonly source?: EventSourceDefinition<CreateEventSource, UpdateEventSource, Partial<EventSource>>;
   readonly sourceReceive?: (
     context: Omit<ListenerReadContext, "checkpoint"> & {

@@ -6,6 +6,7 @@ import { bytes, verifyBase64Hmac } from "../../triggers/signature.ts";
 import { snapshot } from "./trigger-on-form-response.definition.ts";
 
 export const typeformResponse: IntegrationDefinition = {
+  callback: { headers: ["typeform-signature"], query: [] },
   snapshot,
   initialState: { checkpoint: null, subscription: {} },
   async reconcile(context) {

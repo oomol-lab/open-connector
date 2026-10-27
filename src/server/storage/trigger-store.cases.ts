@@ -16,6 +16,24 @@ function credential(accountId: string): ResolvedCredential {
 }
 
 export function triggerStoreTests(getDatabase: () => RuntimeDatabase): void {
+  it("isolates Source application state and atomically fences concurrent writers", async () => {
+    const store = getDatabase().triggerStore;
+    const application = { secrets: { signingSecret: "private-source-key" }, state: {}, sources: {} };
+    expect(await store.saveSourceApplication("owner", "application", null, application)).toBe(true);
+    expect(await store.saveSourceApplication("other", "application", null, application)).toBe(false);
+    expect(await store.getSourceApplication("other", "application")).toBeNull();
+    const writes = await Promise.all(
+      [1, 2].map((verifiedAt) =>
+        store.saveSourceApplication("owner", "application", 1, { ...application, state: { verifiedAt } }),
+      ),
+    );
+    expect(writes.filter(Boolean)).toHaveLength(1);
+    expect(await store.saveSourceApplication("owner", "application", 1, application)).toBe(false);
+    const current = await store.getSourceApplication("owner", "application");
+    expect(current?.revision).toBe(2);
+    expect(current?.application.state.verifiedAt).toBe(writes[0] ? 1 : 2);
+  });
+
   async function fixture() {
     const database = getDatabase();
     const connection = await database.connectionStore.set("github", "trigger-account", credential("original"));

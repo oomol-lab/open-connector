@@ -2,12 +2,7 @@ import type { PollContext, PollDefinition, PollEvent } from "../../triggers/comm
 import type { ConnectorProxyResult } from "../../triggers/common/proxy.ts";
 import type { JsonValue } from "../../triggers/common/types.ts";
 
-import {
-  eventsPollOutputs,
-  PermanentPollError,
-  PollConnectionError,
-  TransientPollError,
-} from "../../triggers/common/poll.ts";
+import { PermanentPollError, PollConnectionError, TransientPollError } from "../../triggers/common/poll.ts";
 import { snapshot } from "./trigger-on-message-received.definition.ts";
 
 interface Config {
@@ -53,7 +48,7 @@ const select =
   "id,internetMessageId,conversationId,subject,bodyPreview,from,toRecipients,receivedDateTime,hasAttachments,isRead,isDraft,importance,categories,parentFolderId,webLink";
 
 export const outlookMessageReceived: PollDefinition = {
-  buildOutputs: eventsPollOutputs,
+  buildOutputs: (events) => ({ event: events[0]!.payload }),
   snapshot,
   async poll(context) {
     const config = resolveConfig(context.config);

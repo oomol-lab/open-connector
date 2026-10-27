@@ -27,6 +27,7 @@ const optInUpdates = new Set(["chat_member", "message_reaction", "message_reacti
 const defaultUpdates = updateTypes.filter((value) => value != "*" && !optInUpdates.has(value));
 
 export const telegramUpdate: IntegrationDefinition = {
+  callback: { headers: ["x-telegram-bot-api-secret-token"], query: [] },
   snapshot,
   receive(context) {
     if (!sameSecret(context.header("x-telegram-bot-api-secret-token"), context.callbackSecret)) {

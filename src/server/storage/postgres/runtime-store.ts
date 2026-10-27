@@ -137,6 +137,7 @@ export class PostgresRuntimeDatabase implements RuntimeDatabase {
         delete from oauth_sources;
         delete from saas_cleanup;
         delete from managed_project;
+        delete from trigger_source_applications;
         delete from trigger_subscriptions;
       delete from connections;
         delete from oauth_client_configs;
@@ -156,7 +157,7 @@ export class PostgresRuntimeDatabase implements RuntimeDatabase {
     await runInTransaction(this.pool, async (client) => {
       await client.query("select pg_advisory_xact_lock(1326382671, 2)");
       await client.query(
-        "lock table connections, oauth_client_configs, oauth_states, connection_requests, idempotency_records, managed_project, oauth_sources, saas_cleanup, instance_identity, trigger_subscriptions in access exclusive mode",
+        "lock table connections, oauth_client_configs, oauth_states, connection_requests, idempotency_records, managed_project, oauth_sources, saas_cleanup, instance_identity, trigger_subscriptions, trigger_source_applications in access exclusive mode",
       );
 
       const project = await client.query<RuntimeRow>("select value from managed_project where id = 1");
@@ -189,6 +190,12 @@ export class PostgresRuntimeDatabase implements RuntimeDatabase {
       const triggerRows = await client.query<RuntimeRow>("select id, value from trigger_subscriptions");
       for (const row of triggerRows.rows)
         await client.query("update trigger_subscriptions set value = $1 where id = $2", [
+          await nextSecretCodec.encode(await this.secretCodec.decode(readString(row, "value"))),
+          readString(row, "id"),
+        ]);
+      const sourceRows = await client.query<RuntimeRow>("select id, value from trigger_source_applications");
+      for (const row of sourceRows.rows)
+        await client.query("update trigger_source_applications set value = $1 where id = $2", [
           await nextSecretCodec.encode(await this.secretCodec.decode(readString(row, "value"))),
           readString(row, "id"),
         ]);

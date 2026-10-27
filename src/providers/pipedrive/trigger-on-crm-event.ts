@@ -9,6 +9,7 @@ import { basicAuthorizationHeader } from "../provider-runtime.ts";
 import { snapshot } from "./trigger-on-crm-event.definition.ts";
 
 export const pipedriveCrmEvent: IntegrationDefinition = {
+  callback: { headers: ["authorization"], query: [] },
   snapshot,
   initialState: { checkpoint: null, subscription: {} },
   async reconcile(context) {

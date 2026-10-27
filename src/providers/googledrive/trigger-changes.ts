@@ -58,6 +58,18 @@ const changeFields =
   "nextPageToken,newStartPageToken,changes(fileId,kind,changeType,removed,time,driveId,file(id,name,mimeType,webViewLink,createdTime,modifiedTime,size,driveId,parents,shared,starred,trashed))";
 
 export const googleDriveChanges: IntegrationDefinition = {
+  callback: {
+    headers: [
+      "x-goog-changed",
+      "x-goog-channel-id",
+      "x-goog-channel-token",
+      "x-goog-message-number",
+      "x-goog-resource-id",
+      "x-goog-resource-state",
+      "x-goog-resource-uri",
+    ],
+    query: [],
+  },
   initialState: { checkpoint: null, subscription: { channels: [] } },
   snapshot,
   async receive(context) {
@@ -531,6 +543,18 @@ async function receiveNotification(context: IntegrationReceiveContext): Promise<
 }
 
 export const googleDriveChangeListener: IntegrationDefinition = {
+  callback: {
+    headers: [
+      "x-goog-changed",
+      "x-goog-channel-id",
+      "x-goog-channel-token",
+      "x-goog-message-number",
+      "x-goog-resource-id",
+      "x-goog-resource-state",
+      "x-goog-resource-uri",
+    ],
+    query: [],
+  },
   initialState: googleDriveChanges.initialState,
   reconcile: googleDriveChanges.reconcile,
   receive: receiveNotification,

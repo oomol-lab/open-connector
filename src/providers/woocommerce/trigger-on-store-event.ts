@@ -20,6 +20,18 @@ interface Config {
 }
 
 export const wooCommerceStoreEvent: IntegrationDefinition = {
+  callback: {
+    headers: [
+      "x-wc-webhook-delivery-id",
+      "x-wc-webhook-event",
+      "x-wc-webhook-id",
+      "x-wc-webhook-resource",
+      "x-wc-webhook-signature",
+      "x-wc-webhook-source",
+      "x-wc-webhook-topic",
+    ],
+    query: [],
+  },
   initialState: { checkpoint: null, subscription: {} },
   snapshot,
   async receive(context) {

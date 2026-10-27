@@ -1,3 +1,4 @@
+import type { SourceApplication } from "../../triggers/sources/persistent.ts";
 import type { TriggerSubscription, TriggerStore } from "../../triggers/store.ts";
 import type { ISecretCodec } from "../secrets/secret-codec-core.ts";
 import type { RequestTransaction } from "./connection-request-store.ts";
@@ -11,6 +12,45 @@ export class SqlTriggerStore implements TriggerStore {
   constructor(transaction: RequestTransaction, codec: ISecretCodec) {
     this.transaction = transaction;
     this.codec = codec;
+  }
+
+  async getSourceApplication(
+    owner: string,
+    id: string,
+  ): Promise<{ revision: number; application: SourceApplication } | null> {
+    const [[row]] = await this.transaction([
+      {
+        sql: "select revision, value from trigger_source_applications where owner = ? and id = ?",
+        values: [owner, id],
+      },
+    ]);
+    return row
+      ? {
+          revision: Number(row.revision),
+          application: JSON.parse(await this.codec.decode(row.value as string)) as SourceApplication,
+        }
+      : null;
+  }
+
+  async saveSourceApplication(
+    owner: string,
+    id: string,
+    revision: number | null,
+    application: SourceApplication,
+  ): Promise<boolean> {
+    const value = await this.codec.encode(JSON.stringify(application));
+    const [[row]] = await this.transaction([
+      revision === null
+        ? {
+            sql: "insert into trigger_source_applications (id, owner, revision, value) values (?, ?, 1, ?) on conflict (id) do nothing returning id",
+            values: [id, owner, value],
+          }
+        : {
+            sql: "update trigger_source_applications set revision = revision + 1, value = ? where id = ? and owner = ? and revision = ? returning id",
+            values: [value, id, owner, revision],
+          },
+    ]);
+    return !!row;
   }
 
   private async read(row: RuntimeRow): Promise<TriggerSubscription> {

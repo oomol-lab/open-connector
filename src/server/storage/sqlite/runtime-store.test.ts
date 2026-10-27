@@ -61,6 +61,7 @@ describe("SqliteRuntimeDatabase", () => {
       "0016_trigger_policy.sql",
       "0017_trigger_subscriptions.sql",
       "0018_connection_retirement.sql",
+      "0019_trigger_sources.sql",
     ];
     expect(entries.filter((entry) => entry.message === "sqlite migration started")).toEqual(
       migrations.map((migration) => ({ fields: { migration }, message: "sqlite migration started" })),

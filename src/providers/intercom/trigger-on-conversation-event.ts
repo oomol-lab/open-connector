@@ -6,6 +6,7 @@ import { intercomApplication } from "../../triggers/sources/intercom.ts";
 import { snapshot } from "./trigger-on-conversation-event.definition.ts";
 
 export const intercomConversationEvents: IntegrationDefinition = {
+  callback: { headers: [], query: [] },
   snapshot,
   eventSource: "intercom",
   source: intercomApplication,

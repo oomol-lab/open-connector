@@ -7,6 +7,7 @@ import { sentryApplication } from "../../triggers/sources/sentry.ts";
 import { snapshot } from "./trigger-on-issue-alert.definition.ts";
 
 export const sentryIssueAlert: IntegrationDefinition = {
+  callback: { headers: [], query: [] },
   snapshot,
   eventSource: "sentry",
   source: sentryApplication,

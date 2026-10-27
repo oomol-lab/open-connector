@@ -52,29 +52,56 @@ export const snapshot: TriggerKeySnapshot & { readonly type: "poll" } = {
   configInputs: [
     {
       handle: "calendarId",
-      jsonSchema: s.string({ maxLength: 1024, minLength: 1 }),
+      jsonSchema: {
+        type: "string",
+        minLength: 1,
+        maxLength: 1024,
+      },
       nullable: false,
     },
     {
       handle: "changes",
-      jsonSchema: s.array(s.stringEnum(changes), { minItems: 1, uniqueItems: true }),
+      jsonSchema: {
+        type: "array",
+        items: {
+          type: "string",
+          enum: ["created", "updated", "cancelled"],
+        },
+        minItems: 1,
+        uniqueItems: true,
+      },
       nullable: false,
-      value: changes,
+      value: ["created", "updated", "cancelled"],
     },
-    { handle: "matchTerm", jsonSchema: s.string(), nullable: false, value: "" },
+    {
+      handle: "matchTerm",
+      jsonSchema: {
+        type: "string",
+      },
+      nullable: false,
+      value: "",
+    },
+    {
+      group: "Advanced settings",
+      collapsed: true,
+    },
     {
       handle: "maxEventsPerPoll",
-      jsonSchema: s.integer({ maximum: 500, minimum: 1 }),
+      jsonSchema: {
+        type: "integer",
+        minimum: 1,
+        maximum: 500,
+      },
       nullable: false,
       value: 100,
     },
   ],
-  definitionVersion: 2,
+  definitionVersion: 3,
   description: "Polls a Google Calendar and triggers when an event is created, updated or cancelled.",
   displayName: "Event Changed",
   key: "googlecalendar.on_event_changed",
   name: "on_event_changed",
-  outputs: [{ handle: "events", jsonSchema: s.array(eventSchema), nullable: false }],
+  outputs: [{ handle: "event", jsonSchema: eventSchema, nullable: false }],
   provider: "googlecalendar",
   type: "poll",
 };

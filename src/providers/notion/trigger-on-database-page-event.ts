@@ -2,12 +2,7 @@ import type { PollContext, PollDefinition, PollEvent, PollResult } from "../../t
 import type { ConnectorProxyRequest, ConnectorProxyResult } from "../../triggers/common/proxy.ts";
 import type { JsonValue } from "../../triggers/common/types.ts";
 
-import {
-  eventsPollOutputs,
-  PermanentPollError,
-  PollConnectionError,
-  TransientPollError,
-} from "../../triggers/common/poll.ts";
+import { PermanentPollError, PollConnectionError, TransientPollError } from "../../triggers/common/poll.ts";
 import { snapshot } from "./trigger-on-database-page-event.definition.ts";
 
 type EventKind = "page_added" | "page_updated";
@@ -49,7 +44,7 @@ interface QueryPage {
 }
 
 export const notionDatabasePageEvent: PollDefinition = {
-  buildOutputs: eventsPollOutputs,
+  buildOutputs: (events) => ({ event: events[0]!.payload }),
   snapshot,
   async poll(context) {
     const config = resolveConfig(context.config);

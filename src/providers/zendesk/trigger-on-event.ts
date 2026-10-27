@@ -17,6 +17,7 @@ import { snapshot, endpoint } from "./trigger-on-event.definition.ts";
 const signatureToleranceMs = 5 * 60 * 1_000;
 
 export const zendeskEvent: IntegrationDefinition = {
+  callback: { headers: ["x-zendesk-webhook-signature", "x-zendesk-webhook-signature-timestamp"], query: [] },
   initialState: { checkpoint: null, subscription: {} },
   snapshot,
   async receive(context) {

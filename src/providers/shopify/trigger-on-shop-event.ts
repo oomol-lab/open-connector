@@ -15,6 +15,17 @@ import { sameSecret } from "../../triggers/signature.ts";
 import { snapshot } from "./trigger-on-shop-event.definition.ts";
 
 export const shopifyShopEvent: IntegrationDefinition = {
+  callback: {
+    headers: [
+      "x-shopify-api-version",
+      "x-shopify-event-id",
+      "x-shopify-shop-domain",
+      "x-shopify-topic",
+      "x-shopify-triggered-at",
+      "x-shopify-webhook-id",
+    ],
+    query: ["open_flow_callback"],
+  },
   initialState: { checkpoint: null, subscription: {} },
   snapshot,
   receive(context) {

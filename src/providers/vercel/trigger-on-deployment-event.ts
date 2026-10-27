@@ -8,6 +8,7 @@ import { verifyHexHmac } from "../../triggers/signature.ts";
 import { snapshot, events } from "./trigger-on-deployment-event.definition.ts";
 
 export const vercelDeploymentEvent: IntegrationDefinition = {
+  callback: { headers: ["x-vercel-signature"], query: [] },
   snapshot,
   initialState: { checkpoint: null, subscription: {} },
   async reconcile(context) {

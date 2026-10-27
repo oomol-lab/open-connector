@@ -7,6 +7,7 @@ import { zoomApplication } from "../../triggers/sources/zoom.ts";
 import { snapshot } from "./trigger-on-recording-ready.definition.ts";
 
 export const zoomRecordingReady: IntegrationDefinition = {
+  callback: { headers: [], query: [] },
   snapshot,
   eventSource: "zoom",
   source: zoomApplication,

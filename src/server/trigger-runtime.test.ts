@@ -350,6 +350,21 @@ describe("Trigger runtime HTTP boundary", () => {
     expect((await request(reconcile(), legacy.token)).status).toBe(403);
     expect((await request({ ...reconcile(), accessGrant: { allowedTriggers: ["*"] } })).status).toBe(400);
     expect((await request(reconcile(), "environment-token")).status).toBe(403);
+    expect(
+      (
+        await request(
+          {
+            operation: "sourceReference",
+            request: {
+              action: "get",
+              deploymentId: "deployment",
+              reference: { applicationId: "application", sourceId: "source" },
+            },
+          },
+          "environment-token",
+        )
+      ).status,
+    ).toBe(403);
     expect(calls).toEqual([]);
   });
 

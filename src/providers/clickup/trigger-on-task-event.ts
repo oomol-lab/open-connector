@@ -20,6 +20,7 @@ function webhook(value: unknown): ManagedWebhook {
 }
 
 export const clickupTaskEvent: IntegrationDefinition = {
+  callback: { headers: ["x-signature"], query: [] },
   snapshot,
   initialState: { checkpoint: null, subscription: {} },
   async reconcile(context) {

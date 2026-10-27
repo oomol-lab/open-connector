@@ -28,6 +28,7 @@ const endpoints = "/v1/webhook_endpoints";
 const formHeaders = { "Content-Type": "application/x-www-form-urlencoded" };
 
 export const stripeEvent: IntegrationDefinition = {
+  callback: { headers: ["stripe-signature"], query: [] },
   initialState: { checkpoint: null, subscription: {} },
   snapshot,
   async receive(context) {

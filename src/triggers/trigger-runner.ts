@@ -75,6 +75,41 @@ export class TriggerRunner {
         "forbidden",
       );
     const definition = await this.definition(input.service, input.triggerId);
+    if (input.request.operation === "sourceReference" && input.request.request.action === "route") {
+      if (!("source" in definition) || !definition.source)
+        throw new ExecutionError("invalid_input", "This Trigger has no shared Source protocol.");
+      const { routeSourceApplication } = await import("./sources/persistent.ts");
+      return routeSourceApplication(
+        this.options.store,
+        definition,
+        input.grant!.tokenId,
+        input.request.request,
+        (connectionId) => {
+          const decision = input.policy.evaluateConnection(connectionId);
+          if (!decision.allowed) throw new ExecutionError(decision.code, decision.message, "forbidden");
+        },
+        input.signal,
+      );
+    }
+    if (input.request.operation === "sourceReference" && input.request.request.action === "delete") {
+      if (!("source" in definition) || !definition.source)
+        throw new ExecutionError("invalid_input", "This Trigger has no shared source protocol.");
+      const { deleteSourceReference } = await import("./sources/persistent.ts");
+      return deleteSourceReference(
+        this.options.store,
+        definition,
+        input.grant!.tokenId,
+        input.connectionId,
+        input.request.request,
+        (connectionId) => {
+          if (input.connectionId !== connectionId)
+            throw new ExecutionError("trigger_not_found", "Select the Source connection by ID.", "not_found");
+          const decision = input.policy.evaluateConnection(connectionId);
+          if (!decision.allowed) throw new ExecutionError(decision.code, decision.message, "forbidden");
+        },
+        input.signal,
+      );
+    }
     const target = await this.target(
       input.service,
       input.connectionName,
@@ -91,6 +126,32 @@ export class TriggerRunner {
     if (!cleanup && alternatives && !alternatives.some((scope) => target.scopes.includes(scope)))
       throw new ExecutionError("scope_missing", "The Trigger requires additional provider permissions.", "forbidden");
     const request = input.request;
+    if (request.operation === "sourceReference") {
+      const { executePersistentSource } = await import("./sources/persistent.ts");
+      if (!("source" in definition) || !definition.source)
+        throw new ExecutionError("invalid_input", "This Trigger has no shared source protocol.");
+      return this.providerOperation(input.service, () =>
+        executePersistentSource(
+          this.options.store,
+          definition,
+          { scope: input.grant!.tokenId, connectionId: target.owner.connectionId },
+          request.request,
+          target.proxy,
+          input.signal,
+          definition.resources == null
+            ? undefined
+            : (config, requestKey, active) =>
+                executeResourceSubscription(
+                  this.options.store,
+                  definition.resources!,
+                  { ...target.owner, tokenId: input.grant!.tokenId, triggerId: input.triggerId },
+                  { operation: "resource", config, requestKey, active },
+                  target.proxy,
+                  input.signal,
+                ),
+        ),
+      );
+    }
     if (request.operation === "source") {
       const { executeSourceOperation } = await import("./sources/operation.ts");
       if (!("source" in definition) || !definition.source)

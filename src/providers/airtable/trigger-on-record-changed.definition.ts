@@ -21,40 +21,80 @@ export const snapshot: TriggerKeySnapshot & { readonly type: "poll" } = {
   configInputs: [
     {
       handle: "baseId",
-      jsonSchema: s.string({ pattern: "^app[A-Za-z0-9]{14}$" }),
+      jsonSchema: {
+        type: "string",
+        pattern: "^app[A-Za-z0-9]{14}$",
+      },
       nullable: false,
     },
     {
-      handle: "fields",
-      jsonSchema: s.array(s.string({ minLength: 1 })),
+      handle: "formula",
+      jsonSchema: {
+        type: "string",
+      },
       nullable: false,
-      value: [],
-    },
-    { handle: "formula", jsonSchema: s.string(), nullable: false, value: "" },
-    {
-      handle: "maxRecordsPerPoll",
-      jsonSchema: s.integer({ maximum: 1_000, minimum: 1 }),
-      nullable: false,
-      value: 200,
+      value: "",
     },
     {
       handle: "tableIdOrName",
-      jsonSchema: s.string({ maxLength: 255, minLength: 1 }),
+      jsonSchema: {
+        type: "string",
+        minLength: 1,
+        maxLength: 255,
+      },
       nullable: false,
     },
     {
       handle: "triggerField",
-      jsonSchema: s.string({ maxLength: 255, minLength: 1, pattern: "^[^}]*$" }),
+      jsonSchema: {
+        type: "string",
+        minLength: 1,
+        maxLength: 255,
+        pattern: "^[^}]*$",
+      },
       nullable: false,
     },
-    { handle: "view", jsonSchema: s.string(), nullable: false, value: "" },
+    {
+      handle: "view",
+      jsonSchema: {
+        type: "string",
+      },
+      nullable: false,
+      value: "",
+    },
+    {
+      group: "Advanced settings",
+      collapsed: true,
+    },
+    {
+      handle: "fields",
+      jsonSchema: {
+        type: "array",
+        items: {
+          type: "string",
+          minLength: 1,
+        },
+      },
+      nullable: false,
+      value: [],
+    },
+    {
+      handle: "maxRecordsPerPoll",
+      jsonSchema: {
+        type: "integer",
+        minimum: 1,
+        maximum: 1000,
+      },
+      nullable: false,
+      value: 200,
+    },
   ],
-  definitionVersion: 2,
+  definitionVersion: 3,
   description: "Polls an Airtable table and triggers when a record is created or updated, ordered by a time field.",
   displayName: "Record Created or Updated",
   key: "airtable.on_record_changed",
   name: "on_record_changed",
-  outputs: [{ handle: "events", jsonSchema: s.array(eventSchema), nullable: false }],
+  outputs: [{ handle: "event", jsonSchema: eventSchema, nullable: false }],
   provider: "airtable",
   type: "poll",
 };

@@ -38,47 +38,85 @@ export const snapshot: TriggerKeySnapshot & { readonly type: "poll" } = {
   configInputs: [
     {
       handle: "changeType",
-      jsonSchema: s.stringEnum(["created", "updated"]),
+      jsonSchema: {
+        type: "string",
+        enum: ["created", "updated"],
+      },
       nullable: false,
     },
     {
       handle: "driveId",
-      jsonSchema: s.string({ pattern: "^[A-Za-z0-9_-]{0,512}$" }),
+      jsonSchema: {
+        type: "string",
+        pattern: "^[A-Za-z0-9_-]{0,512}$",
+      },
       nullable: false,
       value: "",
     },
     {
       handle: "folderId",
-      jsonSchema: s.string({ pattern: "^[A-Za-z0-9_-]{2,512}$" }),
+      jsonSchema: {
+        type: "string",
+        pattern: "^[A-Za-z0-9_-]{2,512}$",
+      },
       nullable: false,
     },
     {
       handle: "itemTypes",
-      jsonSchema: s.array(s.stringEnum(["file", "folder"]), { minItems: 1, uniqueItems: true }),
+      jsonSchema: {
+        type: "array",
+        items: {
+          type: "string",
+          enum: ["file", "folder"],
+        },
+        minItems: 1,
+        uniqueItems: true,
+      },
       nullable: false,
       value: ["file"],
     },
     {
-      handle: "maxFilesPerPoll",
-      jsonSchema: s.integer({ maximum: 200, minimum: 1 }),
-      nullable: false,
-      value: 50,
-    },
-    {
       handle: "mimeTypes",
-      jsonSchema: s.array(s.string({ minLength: 1 })),
+      jsonSchema: {
+        type: "array",
+        items: {
+          type: "string",
+          minLength: 1,
+        },
+      },
       nullable: false,
       value: [],
     },
-    { handle: "namePrefix", jsonSchema: s.string(), nullable: false, value: "" },
+    {
+      handle: "namePrefix",
+      jsonSchema: {
+        type: "string",
+      },
+      nullable: false,
+      value: "",
+    },
+    {
+      group: "Advanced settings",
+      collapsed: true,
+    },
+    {
+      handle: "maxFilesPerPoll",
+      jsonSchema: {
+        type: "integer",
+        minimum: 1,
+        maximum: 200,
+      },
+      nullable: false,
+      value: 50,
+    },
   ],
-  definitionVersion: 2,
+  definitionVersion: 3,
   description:
     "Polls one Google Drive folder and triggers when a file or folder directly inside it is created or updated.",
   displayName: "File or Folder Change in a Folder",
   key: "googledrive.on_file_change",
   name: "on_file_change",
-  outputs: [{ handle: "events", jsonSchema: s.array(eventSchema), nullable: false }],
+  outputs: [{ handle: "event", jsonSchema: eventSchema, nullable: false }],
   provider: "googledrive",
   type: "poll",
 };

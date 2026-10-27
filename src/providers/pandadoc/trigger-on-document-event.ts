@@ -21,6 +21,7 @@ function webhook(value: unknown): ManagedWebhook {
 }
 
 export const pandadocDocumentEvent: IntegrationDefinition = {
+  callback: { headers: [], query: ["signature"] },
   snapshot,
   initialState: { checkpoint: null, subscription: {} },
   async reconcile(context) {

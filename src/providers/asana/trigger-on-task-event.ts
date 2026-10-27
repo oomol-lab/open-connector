@@ -9,8 +9,22 @@ import { bytes, verifyHexHmac } from "../../triggers/signature.ts";
 import { snapshot } from "./trigger-on-task-event.definition.ts";
 
 export const asanaTaskEvent: IntegrationDefinition = {
+  callback: { headers: ["x-hook-secret", "x-hook-signature"], query: [] },
   snapshot,
   initialState: { checkpoint: null, subscription: {} },
+  handshake(input) {
+    const secret = input.headers["x-hook-secret"];
+    if (secret == null) return undefined;
+    if (input.method !== "POST" || !/^[a-fA-F0-9]{32,256}$/.test(secret))
+      return { outcome: "respond", status: 400, body: "", contentType: "text/plain" };
+    return {
+      outcome: "respond",
+      status: 200,
+      body: "",
+      contentType: "text/plain",
+      headers: { "x-hook-secret": secret },
+    };
+  },
   async reconcile(context) {
     const projectId = String(context.config.projectId);
     const selected = context.config.eventTypes as string[];

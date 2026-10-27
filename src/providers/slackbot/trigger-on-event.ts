@@ -6,6 +6,7 @@ import { slackApplication } from "../../triggers/sources/slack.ts";
 import { snapshot } from "./trigger-on-event.definition.ts";
 
 export const slackBotEvents: IntegrationDefinition = {
+  callback: { headers: [], query: [] },
   snapshot,
   eventSource: "slack",
   source: slackApplication,

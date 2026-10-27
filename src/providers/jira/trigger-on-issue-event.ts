@@ -11,6 +11,7 @@ import { snapshot } from "./trigger-on-issue-event.definition.ts";
 import { reconcileJiraResource, requireJiraCloud, jiraEvents } from "./trigger-resource.ts";
 
 export const jiraIssueEvents: IntegrationDefinition = {
+  callback: { headers: [], query: [] },
   snapshot,
   eventSource: "jira",
   source: jiraProject,

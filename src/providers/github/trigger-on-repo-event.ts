@@ -22,6 +22,7 @@ interface Config {
 }
 
 export const githubRepoEvent: IntegrationDefinition = {
+  callback: { headers: ["x-github-delivery", "x-github-event", "x-hub-signature-256"], query: [] },
   initialState: { checkpoint: null, subscription: {} },
   snapshot,
   async receive(context) {

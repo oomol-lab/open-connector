@@ -42,6 +42,7 @@ const eventNames = new Map([
 ]);
 
 export const gitlabProjectEvent: IntegrationDefinition = {
+  callback: { headers: ["idempotency-key", "x-gitlab-event", "x-gitlab-token"], query: [] },
   initialState: { checkpoint: null, subscription: {} },
   snapshot,
   receive(context) {

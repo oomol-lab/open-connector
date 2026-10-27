@@ -165,6 +165,7 @@ describe("PostgreSQL migrations with PGlite", () => {
           { name: "0016_trigger_policy.sql" },
           { name: "0017_trigger_subscriptions.sql" },
           { name: "0018_connection_retirement.sql" },
+          { name: "0019_trigger_sources.sql" },
         ],
       });
 
@@ -228,6 +229,7 @@ describe("PostgreSQL migrations with a custom migration source", () => {
           { name: "0016_trigger_policy.sql" },
           { name: "0017_trigger_subscriptions.sql" },
           { name: "0018_connection_retirement.sql" },
+          { name: "0019_trigger_sources.sql" },
           { name: "9998_custom.sql" },
         ],
       });
@@ -555,6 +557,8 @@ describe("PostgresRuntimeDatabase with PGlite", () => {
       status: "active" as const,
     };
     await database.triggerStore.insertFlowTrigger(triggerRecord);
+    const application = { secrets: { signingSecret: "source-secret" }, state: {}, sources: {} };
+    await database.triggerStore.saveSourceApplication("owner", "application", null, application);
 
     await database.oauthClientConfigStore.set({
       service: "gmail",
@@ -586,6 +590,7 @@ describe("PostgresRuntimeDatabase with PGlite", () => {
     });
     await expect(withOldKey.connectionStore.get("github", "default")).rejects.toThrow();
     await expect(withOldKey.triggerStore.getFlowTrigger(triggerRecord.id)).rejects.toThrow();
+    await expect(withOldKey.triggerStore.getSourceApplication("owner", "application")).rejects.toThrow();
     await withOldKey.close();
 
     database = await PostgresRuntimeDatabase.open(testServer.url, {
@@ -595,6 +600,10 @@ describe("PostgresRuntimeDatabase with PGlite", () => {
       credential: { apiKey: "github-token" },
     });
     await expect(database.triggerStore.getFlowTrigger(triggerRecord.id)).resolves.toEqual(triggerRecord);
+    await expect(database.triggerStore.getSourceApplication("owner", "application")).resolves.toEqual({
+      revision: 1,
+      application,
+    });
     await expect(database.oauthClientConfigStore.get("gmail")).resolves.toMatchObject({
       clientSecret: "client-secret",
     });
@@ -609,6 +618,7 @@ describe("PostgresRuntimeDatabase with PGlite", () => {
     await database.resetRuntimeData();
     await expect(database.connectionStore.list()).resolves.toEqual([]);
     await expect(database.triggerStore.list()).resolves.toEqual([]);
+    await expect(database.triggerStore.getSourceApplication("owner", "application")).resolves.toBeNull();
     const pool = new Pool({ connectionString: testServer.url, max: 1 });
     try {
       await expect(assertPostgresSchemaReady(pool)).resolves.toBeUndefined();

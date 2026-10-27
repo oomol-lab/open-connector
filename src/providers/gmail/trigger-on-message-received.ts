@@ -3,7 +3,6 @@ import type { ConnectorProxyResult } from "../../triggers/common/proxy.ts";
 import type { JsonValue } from "../../triggers/common/types.ts";
 
 import {
-  eventsPollOutputs,
   maximumPollEventsPerPage,
   PermanentPollError,
   PollConnectionError,
@@ -52,7 +51,7 @@ interface Header {
 }
 
 export const gmailMessageReceived: PollDefinition = {
-  buildOutputs: eventsPollOutputs,
+  buildOutputs: (events) => ({ event: events[0]!.payload }),
   snapshot,
   async poll(context) {
     const config = resolveConfig(context.config);
