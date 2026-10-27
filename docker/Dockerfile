@@ -3,6 +3,7 @@ WORKDIR /app
 COPY package.json package-lock.json tsconfig.json vitest.config.ts ./
 COPY web ./web
 COPY src ./src
+COPY contracts ./contracts
 COPY scripts ./scripts
 COPY examples ./examples
 RUN npm ci --ignore-scripts
