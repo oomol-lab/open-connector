@@ -4,7 +4,7 @@
 
 [English](../README.md) | [简体中文](README.zh-CN.md) | [繁體中文](README.zh-TW.md) | [日本語](README.ja.md) | [한국어](README.ko.md) | [Русский](README.ru.md) | [Français](README.fr.md) | [Español](README.es.md)
 
-[![License: Apache-2.0](https://img.shields.io/badge/License-Apache--2.0-blue.svg)](../LICENSE.txt)
+[![License: FSL-1.1-ALv2](https://img.shields.io/badge/License-FSL--1.1--ALv2-blue.svg)](../LICENSE.txt)
 [![npm](https://img.shields.io/npm/v/@oomol-lab/open-connector.svg)](https://www.npmjs.com/package/@oomol-lab/open-connector)
 ![Node.js 22+](https://img.shields.io/badge/Node.js-22%2B-339933)
 ![Cloudflare compatible](https://img.shields.io/badge/Cloudflare-compatible-F38020)
@@ -16,7 +16,7 @@
 
 </div>
 
-OpenConnector は AI Agent 向けのオープンソース connector gateway であり、Pipedream/Composio の代替です。
+OpenConnector は AI Agent 向けの source-available な connector gateway であり、Pipedream/Composio の代替です。
 ユーザーのアプリアカウントを一度接続すれば、1,000+ の provider と 10,000+ の事前定義済み Action を含む共有
 catalog を Agent とアプリケーションに公開できます。
 
@@ -44,7 +44,7 @@ MCP、custom client には HTTP/OpenAPI、管理とデバッグにはローカ�
 
 - credential、scope、schema、policy、実行ログを検査可能な runtime 内に保持します。
 - ローカル、自分の infrastructure、または OOMOL hosted runtime で実行できます。
-- オープンソース版と commercial SaaS 版で同じ provider id、Action id、schema、contract を使います。
+- self-hosted 版と commercial SaaS 版で同じ provider id、Action id、schema、contract を使います。
 
 ## 提供するもの
 
@@ -106,7 +106,7 @@ flowchart LR
   Agent["AI Agent / App"] -->|"SDK / CLI / MCP / HTTP"| Gateway["OpenConnector Gateway"]
   Gateway --> Auth["Credential & OAuth Boundary"]
   Gateway --> Catalog["Provider Catalog"]
-  Gateway --> Actions["Open-source Action Executors"]
+  Gateway --> Actions["Built-in Action Executors"]
   Gateway --> Policy["Tokens, Scopes, Allow/Block Policy"]
   Gateway --> Logs["Run Logs"]
   Actions --> Providers["1,000+ Providers"]
@@ -119,10 +119,10 @@ App と Agent は Action を発見し、schema と scope を確認し、connecti
 
 ## 利用パス
 
-| パス                        | 適している対象                             | 含まれるもの                                                                                                                                                        |
-| --------------------------- | ------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| オープンソース self-host    | 完全な制御を求める開発者とチーム           | ローカル Docker または Node runtime、SQLite storage、MCP、HTTP、OpenAPI、Web Console                                                                                |
-| [OOMOL](https://oomol.com/) | OAuth 承認やローンチ期限に制約があるチーム | Hosted auth と runtime infrastructure。同じ provider と Action contract を使い、後で private または self-hosted deployment へ移行できるオープンソース互換 interface |
+| パス                        | 適している対象                             | 含まれるもの                                                                                                                                                       |
+| --------------------------- | ------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| self-host                   | 完全な制御を求める開発者とチーム           | ローカル Docker または Node runtime、SQLite storage、MCP、HTTP、OpenAPI、Web Console                                                                               |
+| [OOMOL](https://oomol.com/) | OAuth 承認やローンチ期限に制約があるチーム | Hosted auth と runtime infrastructure。同じ provider と Action contract を使い、後で private または self-hosted deployment へ移行できる self-hosted 互換 interface |
 
 ## クイックスタート
 
@@ -241,9 +241,13 @@ Provider code は `src/providers/<service>` 配下にあります。Provider con
 ## ライセンス範囲
 
 特に明記されていない限り、この repository の source code、script、生成された project scaffolding、test、
-documentation は Apache License, Version 2.0 の下でライセンスされています。[LICENSE.txt](../LICENSE.txt) を参照してください。
+documentation は Functional Source License, Version 1.1, ALv2 Future License (FSL-1.1-ALv2) の下でライセンスされています。[LICENSE.txt](../LICENSE.txt) を参照してください。
 
-この repository の Apache-2.0 license は、各権利者が所有する third-party product、provider、app、API、
+Competing Use (OpenConnector または OpenConnector を基にした OOMOL の提供物を代替する商用 product や service として提供すること) 以外であれば、
+OpenConnector を任意の目的で使用、変更、self-host できます。各 release は公開から 2 年後に Apache License, Version 2.0 でも利用可能になります。
+v1.9.4 以前の release は引き続き Apache License, Version 2.0 です。詳細は [NOTICE.md](../NOTICE.md) を参照してください。
+
+この repository の license は、各権利者が所有する third-party product、provider、app、API、
 trademark、service mark、trade name、logo、icon、brand asset、documentation、screenshot、その他の copyrighted
 material に対する権利を付与するものではありません。
 

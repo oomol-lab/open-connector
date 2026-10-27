@@ -4,7 +4,7 @@
 
 [English](../README.md) | [简体中文](README.zh-CN.md) | [繁體中文](README.zh-TW.md) | [日本語](README.ja.md) | [한국어](README.ko.md) | [Русский](README.ru.md) | [Français](README.fr.md) | [Español](README.es.md)
 
-[![License: Apache-2.0](https://img.shields.io/badge/License-Apache--2.0-blue.svg)](../LICENSE.txt)
+[![License: FSL-1.1-ALv2](https://img.shields.io/badge/License-FSL--1.1--ALv2-blue.svg)](../LICENSE.txt)
 [![npm](https://img.shields.io/npm/v/@oomol-lab/open-connector.svg)](https://www.npmjs.com/package/@oomol-lab/open-connector)
 ![Node.js 22+](https://img.shields.io/badge/Node.js-22%2B-339933)
 ![Cloudflare compatible](https://img.shields.io/badge/Cloudflare-compatible-F38020)
@@ -16,7 +16,7 @@
 
 </div>
 
-OpenConnector 是面向 AI Agent 的开源 connector gateway，也是 Pipedream/Composio 的开源替代方案。
+OpenConnector 是面向 AI Agent 的源码可用 (source-available) connector gateway，也是 Pipedream/Composio 的可自托管替代方案。
 连接一次用户应用账号，就可以把包含 1,000+ 个 provider 和 10,000+ 个预置 Action 的共享 catalog 暴露给
 Agent 和应用。
 
@@ -44,7 +44,7 @@ HTTP/OpenAPI；管理和调试使用本地 Web 控制台。
 
 - 把 credential、scope、schema、policy 和运行日志保留在可检查的 runtime 里。
 - 支持本地运行、自有基础设施部署，也可以使用 OOMOL 托管 runtime。
-- 开源版和商业 SaaS 版共享同一套 provider id、Action id、schema 和契约。
+- 自托管版和商业 SaaS 版共享同一套 provider id、Action id、schema 和契约。
 
 ## 提供什么
 
@@ -101,7 +101,7 @@ flowchart LR
   Agent["AI Agent / App"] -->|"SDK / CLI / MCP / HTTP"| Gateway["OpenConnector Gateway"]
   Gateway --> Auth["Credential & OAuth Boundary"]
   Gateway --> Catalog["Provider Catalog"]
-  Gateway --> Actions["Open-source Action Executors"]
+  Gateway --> Actions["Built-in Action Executors"]
   Gateway --> Policy["Tokens, Scopes, Allow/Block Policy"]
   Gateway --> Logs["Run Logs"]
   Actions --> Providers["1,000+ Providers"]
@@ -116,7 +116,7 @@ secret 保留在运行时边界内；Agent 拿到本次运行所需的 metadata�
 
 | 路径                            | 适合谁                             | 提供什么                                                                                                                                                 |
 | ------------------------------- | ---------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 开源自托管                      | 希望完全掌控基础设施的开发者和团队 | 本地 Docker 或 Node runtime、SQLite 存储、MCP、HTTP、OpenAPI 和 Web 控制台                                                                               |
+| 自托管                          | 希望完全掌控基础设施的开发者和团队 | 本地 Docker 或 Node runtime、SQLite 存储、MCP、HTTP、OpenAPI 和 Web 控制台                                                                               |
 | [OOMOL](https://oomol.com/apps) | 希望用户立即授权账号的团队         | OOMOL 为支持的 provider 提供 OAuth 应用、每月赠送的 Connect 点数和托管 runtime；继续使用同一套 provider 和 Action 契约，后续仍可迁移到私有化或自托管部署 |
 
 ## 快速开始
@@ -234,10 +234,14 @@ Provider 代码位于 `src/providers/<service>`。Provider 贡献规则见
 
 ## 许可证范围
 
-除非另有说明，本仓库中的源代码、脚本、生成的项目脚手架、测试和文档均基于 Apache License, Version
-2.0 授权。见 [LICENSE.txt](../LICENSE.txt)。
+除非另有说明，本仓库中的源代码、脚本、生成的项目脚手架、测试和文档均基于 Functional Source License,
+Version 1.1, ALv2 Future License (FSL-1.1-ALv2) 授权。见 [LICENSE.txt](../LICENSE.txt)。
 
-本仓库的 Apache-2.0 许可证不授予任何第三方产品、provider、app、API、商标、服务标识、商号、logo、
+除竞争性使用 (Competing Use，即把 OpenConnector 放进替代 OpenConnector 或 OOMOL 基于它的产品的商业产品或服务中提供) 外，
+你可以出于任何目的使用、修改和自托管 OpenConnector。每个版本在发布两年后同时以 Apache License, Version 2.0 授权。
+v1.9.4 及之前的版本仍以 Apache License, Version 2.0 授权。详见 [NOTICE.md](../NOTICE.md)。
+
+本仓库的许可证不授予任何第三方产品、provider、app、API、商标、服务标识、商号、logo、
 icon、品牌资产、文档、截图或其它归属于相应权利人的版权材料的使用权。
 
 Provider 和 app 名称、metadata、链接、scope、permission 以及可选 logo/icon 仅用于识别服务和实现互操作。

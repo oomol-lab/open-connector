@@ -54,7 +54,15 @@ brand assets unless you have the right to do so.
 Provider names, app names, trademarks, logos, and brand assets belong to their respective owners.
 This project uses such references only for identification and interoperability.
 
-## Contribution License
+## Contributor License Agreement
 
-By submitting a pull request, you agree that your contribution is provided under the Apache License,
-Version 2.0, unless you clearly mark it otherwise in writing.
+OpenConnector is licensed under the Functional Source License, Version 1.1, ALv2 Future License
+(FSL-1.1-ALv2). Before we can merge your first pull request, you need to sign the
+[Contributor License Agreement](CLA.md) (CLA).
+
+The CLA check on your pull request links to the agreement. Sign it once with your GitHub account
+and the check passes for this and every later pull request. You keep the copyright in your
+contribution; the CLA grants OOMOL the rights to license it as part of OpenConnector.
+
+Every commit author on a pull request must sign. If a commit was authored with an email address
+that is not linked to your GitHub account, add that address to your account or amend the commit.

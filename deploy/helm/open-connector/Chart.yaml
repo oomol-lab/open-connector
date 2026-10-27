@@ -1,7 +1,7 @@
 apiVersion: v2
 name: open-connector
 description: |
-  OpenConnector is an open-source connector gateway for AI agents. Provides
+  OpenConnector is a source-available connector gateway for AI agents. Provides
   virtual credentials for 1,000+ providers and 10,000+ Actions so AI agents
   never hold the real OAuth/API-key secrets. This chart deploys the Node
   runtime container on Kubernetes with sensible "easy try" defaults that
@@ -28,4 +28,4 @@ maintainers:
     email: dev@timoa.com
 annotations:
   category: AI Infrastructure
-  licenses: Apache-2.0
+  licenses: FSL-1.1-ALv2

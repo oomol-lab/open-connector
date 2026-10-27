@@ -4,7 +4,7 @@
 
 [English](../README.md) | [简体中文](README.zh-CN.md) | [繁體中文](README.zh-TW.md) | [日本語](README.ja.md) | [한국어](README.ko.md) | [Русский](README.ru.md) | [Français](README.fr.md) | [Español](README.es.md)
 
-[![License: Apache-2.0](https://img.shields.io/badge/License-Apache--2.0-blue.svg)](../LICENSE.txt)
+[![License: FSL-1.1-ALv2](https://img.shields.io/badge/License-FSL--1.1--ALv2-blue.svg)](../LICENSE.txt)
 [![npm](https://img.shields.io/npm/v/@oomol-lab/open-connector.svg)](https://www.npmjs.com/package/@oomol-lab/open-connector)
 ![Node.js 22+](https://img.shields.io/badge/Node.js-22%2B-339933)
 ![Cloudflare compatible](https://img.shields.io/badge/Cloudflare-compatible-F38020)
@@ -16,7 +16,7 @@
 
 </div>
 
-OpenConnector est un connector gateway open source pour AI agents, et une alternative à Pipedream/Composio.
+OpenConnector est un connector gateway source-available pour AI agents, et une alternative à Pipedream/Composio.
 Connectez les comptes d'apps utilisateur une fois, puis exposez un catalog partagé de 1,000+
 providers et 10 000+ Actions prêtes à l'emploi aux agents et applications.
 
@@ -114,7 +114,7 @@ flowchart LR
   Agent["AI Agent / App"] -->|"SDK / CLI / MCP / HTTP"| Gateway["OpenConnector Gateway"]
   Gateway --> Auth["Credential & OAuth Boundary"]
   Gateway --> Catalog["Provider Catalog"]
-  Gateway --> Actions["Open-source Action Executors"]
+  Gateway --> Actions["Built-in Action Executors"]
   Gateway --> Policy["Tokens, Scopes, Allow/Block Policy"]
   Gateway --> Logs["Run Logs"]
   Actions --> Providers["1,000+ Providers"]
@@ -131,8 +131,8 @@ nécessaires à la run.
 
 | Parcours                    | Idéal pour                                                          | Inclus                                                                                                                                                                           |
 | --------------------------- | ------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Open source self-host       | Développeurs et équipes qui veulent un contrôle total               | Runtime Docker ou Node local, stockage SQLite, MCP, HTTP, OpenAPI et Web Console                                                                                                 |
-| [OOMOL](https://oomol.com/) | Équipes bloquées par l'approbation OAuth ou les délais de lancement | Auth hébergée et infrastructure runtime avec les mêmes provider et Action contracts ; compatible avec l'interface open source pour un déploiement privé ou self-hosted ultérieur |
+| Self-host                   | Développeurs et équipes qui veulent un contrôle total               | Runtime Docker ou Node local, stockage SQLite, MCP, HTTP, OpenAPI et Web Console                                                                                                 |
+| [OOMOL](https://oomol.com/) | Équipes bloquées par l'approbation OAuth ou les délais de lancement | Auth hébergée et infrastructure runtime avec les mêmes provider et Action contracts ; compatible avec l'interface self-hosted pour un déploiement privé ou self-hosted ultérieur |
 
 ## Démarrage Rapide
 
@@ -254,10 +254,16 @@ providers.
 ## Portée De La Licence
 
 Sauf indication contraire, le code source, les scripts, les échafaudages de projet générés, les
-tests et la documentation rédigés pour ce repository sont sous Apache License, Version 2.0. Consultez
-[LICENSE.txt](../LICENSE.txt).
+tests et la documentation rédigés pour ce repository sont sous Functional Source License, Version 1.1,
+ALv2 Future License (FSL-1.1-ALv2). Consultez [LICENSE.txt](../LICENSE.txt).
 
-La licence Apache-2.0 de ce repository n'accorde aucun droit sur les produits, providers, apps,
+Vous pouvez utiliser, modifier et auto-héberger OpenConnector pour tout usage autre qu'un usage
+concurrent (Competing Use), c'est-à-dire le proposer dans un produit ou service commercial qui se
+substitue à OpenConnector ou aux offres OOMOL construites dessus. Chaque version devient disponible
+sous Apache License, Version 2.0, deux ans après sa publication. Les versions jusqu'à v1.9.4
+incluse restent sous Apache License, Version 2.0. Consultez [NOTICE.md](../NOTICE.md).
+
+La licence de ce repository n'accorde aucun droit sur les produits, providers, apps,
 APIs, trademarks, service marks, trade names, logos, icons, brand assets, documentation,
 screenshots ou autres contenus protégés appartenant à leurs détenteurs respectifs.
 

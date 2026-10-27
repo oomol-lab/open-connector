@@ -1,6 +1,6 @@
 # OpenConnector Helm chart
 
-A production-grade Helm chart for [OpenConnector](https://github.com/oomol-lab/open-connector) - the open-source connector gateway for AI agents.
+A production-grade Helm chart for [OpenConnector](https://github.com/oomol-lab/open-connector) - the source-available connector gateway for AI agents.
 
 The chart defaults mirror `docker compose up`. The only required input is an admin token (`secret.adminToken` or `secret.existingSecret`) - the chart refuses to install without one unless you explicitly pass `insecureDevelopment=true` for loopback-only experimentation. Flip a handful of switches in your prod values overlay to enable Ingress, autoscaling, network policy, and PostgreSQL-backed migrations.
 
@@ -210,4 +210,5 @@ Before going to production, **set `secret.encryptionKey` and `secret.adminToken`
 
 ## License
 
-Apache-2.0, matching the upstream OpenConnector project.
+FSL-1.1-ALv2, matching the upstream OpenConnector project. See the upstream
+[LICENSE.txt](../../../LICENSE.txt) and [NOTICE.md](../../../NOTICE.md).
