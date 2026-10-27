@@ -4,7 +4,8 @@
 [![Node.js](https://img.shields.io/node/v/@oomol-lab/open-connector.svg)](https://nodejs.org)
 [![License: Apache-2.0](https://img.shields.io/badge/License-Apache--2.0-blue.svg)](https://github.com/oomol-lab/open-connector/blob/main/LICENSE.txt)
 
-Embeddable Open Connector runtime for Node.js 22.18+ and Bun 1.4+.
+Embeddable Open Connector runtime for Node.js 22.23.4+, 24.22.1+, or 26.12.1+ within those release
+lines, and Bun 1.4.4+. These minimums include the CVE-2026-111497 Brotli decoder fix.
 
 This package is the headless runtime library. It owns providers, authorization,
 credentials, and storage. Your application owns the HTTP server, configuration,

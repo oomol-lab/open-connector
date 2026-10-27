@@ -258,7 +258,8 @@ Use it in Slack, Microsoft Teams, Discord, or Telegram to find information, comp
 
 ## Development
 
-Use Node.js 22 or newer:
+Use Node.js 22.23.4+, 24.22.1+, or 26.12.1+ within those release lines. See the
+[runtime security baseline](SECURITY.md#runtime-security-baseline) before deploying:
 
 ```bash
 npm install

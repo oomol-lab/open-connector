@@ -39,7 +39,7 @@ await writeFile(
         "./build": { types: "./src/server/connector-build.d.ts", import: "./src/server/connector-build.js" },
       },
       dependencies: source.dependencies,
-      engines: { node: ">=22.18.0" },
+      engines: source.engines,
       keywords: ["connector", "oauth", "mcp", "agents", "integrations"],
       homepage: "https://github.com/oomol-lab/open-connector#readme",
       bugs: { url: "https://github.com/oomol-lab/open-connector/issues" },

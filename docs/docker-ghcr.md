@@ -134,3 +134,10 @@ updates `tip` and adds the `<short-sha>` tag, and every published release adds `
 release version. Each tag is a multi-arch manifest built natively for `linux/amd64` and
 `linux/arm64`. The build is defined in
 [`.github/workflows/publish-docker.yml`](../.github/workflows/publish-docker.yml).
+
+## Runtime security updates
+
+The Dockerfile pins Node.js 24.22.1 to include the CVE-2026-111497 Brotli decoder fix.
+Pull a release built with this fix and recreate the container; pulling alone does not update a
+running container. Verify it with `docker exec open-connector node --version`. See the
+[runtime security baseline](../SECURITY.md#runtime-security-baseline) for other deployment modes.

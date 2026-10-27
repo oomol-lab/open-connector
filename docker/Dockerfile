@@ -1,4 +1,4 @@
-FROM node:24-alpine AS build
+FROM node:24.22.1-alpine AS build
 WORKDIR /app
 COPY package.json package-lock.json tsconfig.json vitest.config.ts ./
 COPY web ./web
@@ -10,7 +10,7 @@ RUN npm run generate:catalog
 RUN npm run build
 RUN npm run build --workspace web
 
-FROM node:24-alpine
+FROM node:24.22.1-alpine
 WORKDIR /app
 ENV NODE_ENV=production
 ENV PORT=3000

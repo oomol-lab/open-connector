@@ -152,11 +152,44 @@ responsibility for securing their deployment. At minimum:
   include the selected connection's ID, including the default connection used by unnamed requests. Denied connections
   return `403 connection_not_allowed` before lookup so connection existence is not leaked. Virtual
   `no_auth` connections do not require a grant.
-- **Stay current.** Run a supported Node.js (22.18+ / 24) and update to the latest OpenConnector
+- **Stay current.** Run a patched runtime meeting the [baseline below](#runtime-security-baseline) and update to the latest OpenConnector
   release for security fixes.
 
 See [docs/credentials.md](docs/credentials.md), [docs/configuration.md](docs/configuration.md), and
 [docs/cloudflare.md](docs/cloudflare.md) for full guidance.
+
+## Runtime Security Baseline
+
+CVE-2026-111497 affects the native Brotli decoder bundled with Node.js and Bun. Use Node.js
+**22.23.4+**, **24.22.1+**, or **26.12.1+** within those release lines, or **Bun 1.4.4+**.
+Use a supported release line and keep installing subsequent security updates.
+See the [Node.js advisory](https://nodejs.org/en/blog/vulnerability/october-2026-security-releases)
+and [Bun advisory](https://github.com/oven-sh/bun/security/advisories/GHSA-663w-cv8g-jj2p).
+
+- **Docker:** both build and runtime stages pin Node 24.22.1. Rebuild and redeploy images;
+  existing containers and previously published images do not update automatically. Check the
+  running container with `docker exec open-connector node --version`.
+- **Source and npm deployments:** upgrade the runtime and restart the application. The npm
+  package declares the patched versions in `engines`; package managers may only warn about
+  mismatches, so operators must verify the actual runtime with `node --version` or `bun --version`.
+- **Single binaries:** rebuild with the Bun version in `.bun-version` and replace deployed
+  executables. They embed Bun, so upgrading the host runtime does not repair an older binary.
+- **Cloudflare Workers:** the deployed decoder belongs to Cloudflare's managed runtime, not the
+  Node.js used to build the application. Verify its patch status with Cloudflare separately;
+  `compressApiResponses: false` does not prove that upstream response decoding is safe.
+  Local Wrangler development also uses a separate workerd runtime whose patch status must be checked.
+
+Provider actions, downloads, and proxy requests use guarded fetch, whose underlying runtime
+can automatically decode upstream `Content-Encoding: br` responses. The SSRF guard restricts
+network destinations; it does not prevent a public upstream from sending malicious compressed
+bytes. Encoding negotiation remains unchanged: requesting only gzip/deflate cannot stop a
+malicious upstream from returning Brotli, and checking response headers after `fetch` is not a
+reliable barrier before native decoding. A patched runtime is required.
+
+The application's inbound request path does not install a Brotli decompressor. Hono's
+`compress()` middleware encodes outbound API responses using gzip/deflate; it does not decode
+request bodies. No blanket rejection of incoming `Content-Encoding: br` is added. Operators
+must independently update any reverse proxy or middleware that decompresses inbound bodies.
 
 ## Handling Credentials in the Codebase
 

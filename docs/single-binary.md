@@ -46,6 +46,10 @@ build script exits with an error under any other Bun version. Compile on Linux o
 Cross-compiling on a Windows host fails upstream
 ([oven-sh/bun#11198](https://github.com/oven-sh/bun/issues/11198)).
 
+Bun 1.4.4 fixes CVE-2026-111497 in the embedded Brotli decoder. Executables built with an older
+Bun must be rebuilt and replaced; upgrading the host Node.js or Bun installation does not patch
+an existing executable.
+
 ```bash
 npm install
 npm run build:binary

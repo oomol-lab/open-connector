@@ -126,3 +126,10 @@ curl http://localhost:3000/health
 标签，每次发布 release 会新增 `latest` 和 release 版本号。每个标签都是为 `linux/amd64` 和 `linux/arm64`
 原生构建的多架构 manifest。构建定义见
 [`.github/workflows/publish-docker.yml`](../.github/workflows/publish-docker.yml)。
+
+## 运行时安全更新
+
+Dockerfile 固定使用 Node.js 24.22.1，包含 CVE-2026-111497 的 Brotli 解码器修复。
+请拉取包含此修复的新版本镜像并重新创建容器；只拉取镜像不会更新正在运行的容器。
+使用 `docker exec open-connector node --version` 核实实际版本。其他部署方式见
+[运行时安全基线](../SECURITY.md#runtime-security-baseline)。

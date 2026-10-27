@@ -18,8 +18,8 @@ env:
   # This project runs TypeScript directly with `node` (native type stripping) and
   # forbids `tsx` / `--experimental-strip-types` (see AGENTS.md). Type stripping is
   # on by default only on Node >= 22.18 / >= 23.6, so pin an LTS that supports it.
-  # Do NOT downgrade below 22.18 — `npm ci` (postinstall codegen) and typecheck fail.
-  NODE_VERSION: "24"
+  # Node 24.22.1 includes the Brotli decoder fix for CVE-2026-111497.
+  NODE_VERSION: "24.22.1"
 
 jobs:
   ci:
