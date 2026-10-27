@@ -40,11 +40,10 @@ SQLite/D1 or PostgreSQL `0019_trigger_sources.sql` migration with the Connector 
 before switching consumers to references. A Source with active or uncertain resources must
 complete resource cleanup before deletion.
 
-Poll catalog definitions now use `definitionVersion: 3` and an `event` object output.
-The `read` operation still returns an event sequence and checkpoint. Consumers must admit
-each event separately for the new definition and preserve version-2 batch behavior for
-existing published flows. Updating a catalog must not rewrite historical definitions or
-silently map `events[]` references to `event`.
+Poll catalog definitions retain `definitionVersion: 2` and the `events` array output.
+The `read` operation returns an event sequence and checkpoint. Consumers preserve batch
+delivery: all fresh events from a page belong to one Run. Source ownership changes do not
+change Poll execution granularity or require output remapping.
 
 Integration catalog entries declare required callback headers and query parameters.
 Creation callback URLs include the persisted subscription reference and callback nonce;

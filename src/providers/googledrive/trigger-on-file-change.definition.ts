@@ -110,13 +110,13 @@ export const snapshot: TriggerKeySnapshot & { readonly type: "poll" } = {
       value: 50,
     },
   ],
-  definitionVersion: 3,
+  definitionVersion: 2,
   description:
     "Polls one Google Drive folder and triggers when a file or folder directly inside it is created or updated.",
   displayName: "File or Folder Change in a Folder",
   key: "googledrive.on_file_change",
   name: "on_file_change",
-  outputs: [{ handle: "event", jsonSchema: eventSchema, nullable: false }],
+  outputs: [{ handle: "events", jsonSchema: s.array(eventSchema), nullable: false }],
   provider: "googledrive",
   type: "poll",
 };

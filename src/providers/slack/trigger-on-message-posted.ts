@@ -3,7 +3,12 @@ import type { ConnectorProxyResult } from "../../triggers/common/proxy.ts";
 import type { JsonValue } from "../../triggers/common/types.ts";
 
 import { HttpRequestError } from "../../server/api/http-utils.ts";
-import { PermanentPollError, PollConnectionError, TransientPollError } from "../../triggers/common/poll.ts";
+import {
+  eventsPollOutputs,
+  PermanentPollError,
+  PollConnectionError,
+  TransientPollError,
+} from "../../triggers/common/poll.ts";
 import { snapshot } from "./trigger-on-message-posted.definition.ts";
 
 interface Config {
@@ -76,7 +81,7 @@ const permanentErrors = new Set([
 ]);
 
 export const slackMessagePosted: PollDefinition = {
-  buildOutputs: (events) => ({ event: events[0]!.payload }),
+  buildOutputs: eventsPollOutputs,
   snapshot,
   async poll(context) {
     const config = resolveConfig(context.config);

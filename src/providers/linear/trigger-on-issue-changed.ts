@@ -3,7 +3,12 @@ import type { PollContext, PollDefinition } from "../../triggers/common/poll.ts"
 import type { JsonValue } from "../../triggers/common/types.ts";
 
 import { isJsonObject } from "../../triggers/common/json.ts";
-import { PermanentPollError, PollConnectionError, TransientPollError } from "../../triggers/common/poll.ts";
+import {
+  eventsPollOutputs,
+  PermanentPollError,
+  PollConnectionError,
+  TransientPollError,
+} from "../../triggers/common/poll.ts";
 import { snapshot, uuidPattern } from "./trigger-on-issue-changed.definition.ts";
 
 const uuid = new RegExp(uuidPattern);
@@ -18,7 +23,7 @@ interface Checkpoint {
 }
 
 export const linearIssueChanged: PollDefinition = {
-  buildOutputs: (events) => ({ event: events[0]!.payload }),
+  buildOutputs: eventsPollOutputs,
   snapshot,
   configOptions: options,
   async poll(context) {

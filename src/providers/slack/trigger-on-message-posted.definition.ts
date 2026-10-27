@@ -81,34 +81,36 @@ export const snapshot: TriggerKeySnapshot & { readonly type: "poll" } = {
       description: "Maximum number of messages processed per poll.",
     },
   ],
-  definitionVersion: 3,
+  definitionVersion: 2,
   description: "Polls one Slack conversation and triggers when a new message is posted to it.",
   displayName: "New Channel Message",
   key: "slack.on_message_posted",
   name: "on_message_posted",
   outputs: [
     {
-      handle: "event",
-      jsonSchema: s.object(
-        {
-          botId: { type: ["string", "null"] },
-          channelId: s.string(),
-          files: s.array(
-            s.object(
-              { id: s.string(), mimetype: s.string(), name: s.string() },
-              { additionalProperties: false, required: ["id", "name", "mimetype"] },
+      handle: "events",
+      jsonSchema: s.array(
+        s.object(
+          {
+            botId: { type: ["string", "null"] },
+            channelId: s.string(),
+            files: s.array(
+              s.object(
+                { id: s.string(), mimetype: s.string(), name: s.string() },
+                { additionalProperties: false, required: ["id", "name", "mimetype"] },
+              ),
             ),
-          ),
-          messageTs: s.string(),
-          subtype: { type: ["string", "null"] },
-          text: s.string(),
-          threadTs: { type: ["string", "null"] },
-          userId: { type: ["string", "null"] },
-        },
-        {
-          additionalProperties: false,
-          required: ["channelId", "messageTs", "threadTs", "userId", "botId", "subtype", "text", "files"],
-        },
+            messageTs: s.string(),
+            subtype: { type: ["string", "null"] },
+            text: s.string(),
+            threadTs: { type: ["string", "null"] },
+            userId: { type: ["string", "null"] },
+          },
+          {
+            additionalProperties: false,
+            required: ["channelId", "messageTs", "threadTs", "userId", "botId", "subtype", "text", "files"],
+          },
+        ),
       ),
       nullable: false,
     },
