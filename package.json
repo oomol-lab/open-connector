@@ -2,7 +2,7 @@
   "name": "@oomol-lab/open-connector",
   "version": "0.0.0-development",
   "private": true,
-  "license": "FSL-1.1-ALv2",
+  "license": "SEE LICENSE IN LICENSE.txt",
   "workspaces": [
     "web"
   ],

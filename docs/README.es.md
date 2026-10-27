@@ -4,7 +4,7 @@
 
 [English](../README.md) | [简体中文](README.zh-CN.md) | [繁體中文](README.zh-TW.md) | [日本語](README.ja.md) | [한국어](README.ko.md) | [Русский](README.ru.md) | [Français](README.fr.md) | [Español](README.es.md)
 
-[![Licencia: FSL-1.1-ALv2](https://img.shields.io/badge/License-FSL--1.1--ALv2-blue.svg)](../LICENSE.txt)
+[![Licencia: Modified Apache-2.0](https://img.shields.io/badge/License-Modified%20Apache--2.0-blue.svg)](../LICENSE.txt)
 [![npm](https://img.shields.io/npm/v/@oomol-lab/open-connector.svg)](https://www.npmjs.com/package/@oomol-lab/open-connector)
 ![Node.js 22+](https://img.shields.io/badge/Node.js-22%2B-339933)
 ![Compatible con Cloudflare](https://img.shields.io/badge/Cloudflare-compatible-F38020)
@@ -16,7 +16,7 @@
 
 </div>
 
-OpenConnector es una pasarela de conectores de código fuente disponible (source-available) para agentes de IA y una alternativa a Pipedream/Composio.
+OpenConnector es una pasarela de conectores de código abierto para agentes de IA y una alternativa a Pipedream/Composio.
 Conecta una sola vez las cuentas de las aplicaciones de los usuarios y ofrece a los agentes y las aplicaciones
 un catálogo compartido de más de 1000 proveedores y más de 10 000 acciones predefinidas.
 
@@ -44,7 +44,7 @@ que ejecutan agentes, HTTP/OpenAPI desde clientes personalizados y la consola we
 
 - Mantén las credenciales, los permisos, los esquemas, las políticas y los registros de ejecución en un entorno que puedas inspeccionar.
 - Ejecuta el servicio en local, en tu propia infraestructura o en el entorno alojado de OOMOL.
-- Usa los mismos identificadores de proveedores y acciones, esquemas y contratos en los despliegues autoalojados y de SaaS comercial.
+- Usa los mismos identificadores de proveedores y acciones, esquemas y contratos en los despliegues de código abierto y de SaaS comercial.
 
 ## Qué ofrece
 
@@ -105,7 +105,7 @@ flowchart LR
   Agent["Agente de IA / Aplicación"] -->|"SDK / CLI / MCP / HTTP"| Gateway["Pasarela OpenConnector"]
   Gateway --> Auth["Capa de credenciales y OAuth"]
   Gateway --> Catalog["Catálogo de proveedores"]
-  Gateway --> Actions["Ejecutores de acciones integrados"]
+  Gateway --> Actions["Ejecutores de acciones de código abierto"]
   Gateway --> Policy["Tokens, permisos y políticas de acceso"]
   Gateway --> Logs["Registros de ejecución"]
   Actions --> Providers["Más de 1000 proveedores"]
@@ -122,7 +122,7 @@ los resultados que necesitan para la ejecución.
 
 | Modalidad                                                    | Ideal para                                                              | Incluye                                                                                                                                                                                                                                                       |
 | ------------------------------------------------------------ | ----------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| En tu propia infraestructura                                 | Desarrolladores y equipos que quieren control total                     | Entorno local con Docker o Node.js, estado en SQLite o PostgreSQL, archivos temporales locales o compatibles con S3, MCP, HTTP, OpenAPI y consola web                                                                                                         |
+| Código abierto en tu propia infraestructura                  | Desarrolladores y equipos que quieren control total                     | Entorno local con Docker o Node.js, estado en SQLite o PostgreSQL, archivos temporales locales o compatibles con S3, MCP, HTTP, OpenAPI y consola web                                                                                                         |
 | [Kubernetes (Helm)](../deploy/helm/open-connector/README.md) | Equipos que gestionan sus propios clústeres                             | Chart de Helm con seguridad reforzada, SQLite respaldado por PVC o PostgreSQL, hooks de migración, Ingress, escalado automático y opciones de NetworkPolicy                                                                                                   |
 | [OOMOL](https://oomol.com/apps)                              | Equipos que quieren que los usuarios autoricen sus cuentas de inmediato | Aplicaciones OAuth proporcionadas por OOMOL, créditos de Connect incluidos cada mes e infraestructura de ejecución alojada; los mismos contratos de proveedores y acciones permiten pasar más adelante a un despliegue privado o en tu propia infraestructura |
 
@@ -262,14 +262,14 @@ El código de los proveedores se encuentra en `src/providers/<service>`. Consult
 ## Alcance de la licencia
 
 Salvo que se indique lo contrario, el código fuente, los scripts, las estructuras de proyecto generadas,
-las pruebas y la documentación creados para este repositorio se distribuyen bajo la Functional Source
-License, versión 1.1, ALv2 Future License (FSL-1.1-ALv2). Consulta [LICENSE.txt](../LICENSE.txt).
+las pruebas y la documentación creados para este repositorio se distribuyen bajo la OpenConnector
+License, una versión modificada de la licencia Apache 2.0. Consulta [LICENSE.txt](../LICENSE.txt).
 
-Puedes usar, modificar y autoalojar OpenConnector para cualquier fin distinto de un uso competidor
-(Competing Use), es decir, ofrecerlo en un producto o servicio comercial que sustituya a
-OpenConnector o a las ofertas de OOMOL basadas en él. Cada versión pasa a estar disponible bajo la
-licencia Apache, versión 2.0, dos años después de su publicación. Las versiones hasta la v1.9.4,
-inclusive, siguen bajo la licencia Apache, versión 2.0. Consulta [NOTICE.md](../NOTICE.md).
+Puedes usar, modificar y autoalojar OpenConnector para cualquier fin, incluido el uso comercial y su
+integración en tus propios productos. La única condición añadida es que ofrecer OpenConnector a
+terceros como servicio de conectores alojado requiere una licencia comercial de OOMOL. Las versiones
+hasta la v1.9.4, inclusive, siguen bajo la licencia Apache 2.0 sin modificar. Consulta
+[NOTICE.md](../NOTICE.md).
 
 La licencia de este repositorio no concede derechos sobre productos, proveedores,
 aplicaciones, API, marcas comerciales, marcas de servicio, nombres comerciales, logotipos, iconos,

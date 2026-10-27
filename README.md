@@ -4,7 +4,7 @@
 
 [English](README.md) | [简体中文](docs/README.zh-CN.md) | [繁體中文](docs/README.zh-TW.md) | [日本語](docs/README.ja.md) | [한국어](docs/README.ko.md) | [Русский](docs/README.ru.md) | [Français](docs/README.fr.md) | [Español](docs/README.es.md)
 
-[![License: FSL-1.1-ALv2](https://img.shields.io/badge/License-FSL--1.1--ALv2-blue.svg)](LICENSE.txt)
+[![License: Modified Apache-2.0](https://img.shields.io/badge/License-Modified%20Apache--2.0-blue.svg)](LICENSE.txt)
 [![npm](https://img.shields.io/npm/v/@oomol-lab/open-connector.svg)](https://www.npmjs.com/package/@oomol-lab/open-connector)
 ![Node.js 22+](https://img.shields.io/badge/Node.js-22%2B-339933)
 ![Cloudflare compatible](https://img.shields.io/badge/Cloudflare-compatible-F38020)
@@ -16,7 +16,7 @@
 
 </div>
 
-OpenConnector is a source-available connector gateway for AI agents and an alternative to Pipedream/Composio.
+OpenConnector is an open-source connector gateway for AI agents and an alternative to Pipedream/Composio.
 Connect user app accounts once, then expose a shared catalog of 1,000+ providers and 10,000+
 prebuilt Actions to agents and applications.
 
@@ -44,7 +44,7 @@ HTTP/OpenAPI from custom clients, and the Web Console for administration and deb
 
 - Keep credentials, scopes, schemas, policies, and run logs inside an inspectable runtime.
 - Run locally, on your own infrastructure, or through OOMOL's hosted runtime.
-- Use the same provider ids, Action ids, schemas, and contracts across self-hosted and commercial
+- Use the same provider ids, Action ids, schemas, and contracts across open-source and commercial
   SaaS deployments.
 
 ## What It Provides
@@ -113,7 +113,7 @@ flowchart LR
   Agent["AI Agent / App"] -->|"SDK / CLI / MCP / HTTP"| Gateway["OpenConnector Gateway"]
   Gateway --> Auth["Credential & OAuth Boundary"]
   Gateway --> Catalog["Provider Catalog"]
-  Gateway --> Actions["Built-in Action Executors"]
+  Gateway --> Actions["Open-source Action Executors"]
   Gateway --> Policy["Tokens, Scopes, Allow/Block Policy"]
   Gateway --> Logs["Run Logs"]
   Actions --> Providers["1,000+ Providers"]
@@ -129,7 +129,7 @@ safe account labels, and execution results needed for the run.
 
 | Path                                                      | Best for                                                | Includes                                                                                                                                                                                           |
 | --------------------------------------------------------- | ------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Self-host                                                 | Developers and teams that want full control             | Local Docker or Node runtime, SQLite or PostgreSQL state, local or S3-compatible transit files, MCP, HTTP, OpenAPI, and Web Console                                                                |
+| Open-source self-host                                     | Developers and teams that want full control             | Local Docker or Node runtime, SQLite or PostgreSQL state, local or S3-compatible transit files, MCP, HTTP, OpenAPI, and Web Console                                                                |
 | [Kubernetes (Helm)](deploy/helm/open-connector/README.md) | Teams that run their own clusters                       | Hardened Helm chart with PVC-backed SQLite or PostgreSQL plus migration hooks, Ingress, autoscaling, and NetworkPolicy toggles                                                                     |
 | [OOMOL](https://oomol.com/apps)                           | Teams that want users to authorize accounts immediately | OOMOL-provided OAuth apps, monthly included Connect credits, and hosted runtime infrastructure; the same provider and Action contracts keep a path open to later private or self-hosted deployment |
 
@@ -282,14 +282,13 @@ Provider code lives under `src/providers/<service>`. See
 ## License Scope
 
 Unless otherwise noted, the source code, scripts, generated project scaffolding, tests, and
-documentation authored for this repository are licensed under the Functional Source License,
-Version 1.1, ALv2 Future License (FSL-1.1-ALv2). See [LICENSE.txt](LICENSE.txt).
+documentation authored for this repository are licensed under the OpenConnector License, a modified
+Apache License 2.0. See [LICENSE.txt](LICENSE.txt).
 
-You may use, modify, and self-host OpenConnector for any purpose other than a Competing Use, which
-means offering it in a commercial product or service that substitutes for OpenConnector or for
-OOMOL's offerings built on it. Each release becomes available under the Apache License, Version
-2.0, two years after it is published. Releases up to and including v1.9.4 remain under the Apache
-License, Version 2.0. See [NOTICE.md](NOTICE.md) for details.
+You may use, modify, and self-host OpenConnector for any purpose, including commercial use and
+embedding it in your own products. The one added condition is that providing OpenConnector to third
+parties as a hosted connector service requires a commercial license from OOMOL. Releases up to and
+including v1.9.4 remain under the unmodified Apache License 2.0. See [NOTICE.md](NOTICE.md).
 
 The license for this repository does not grant rights to third-party products,
 providers, apps, APIs, trademarks, service marks, trade names, logos, icons, brand assets,

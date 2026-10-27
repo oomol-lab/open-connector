@@ -70,9 +70,9 @@ jobs:
         uses: docker/metadata-action@v6
         with:
           images: ${{ env.REGISTRY }}/${{ env.IMAGE_NAME }}
-          # GitHub cannot detect FSL-1.1-ALv2, so the inferred license label would be empty.
+          # GitHub cannot detect the modified Apache license, so the inferred label would be empty.
           labels: |
-            org.opencontainers.image.licenses=FSL-1.1-ALv2
+            org.opencontainers.image.licenses=LicenseRef-OpenConnector
 
       - name: Log in to GHCR
         uses: docker/login-action@v4

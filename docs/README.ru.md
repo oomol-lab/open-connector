@@ -4,7 +4,7 @@
 
 [English](../README.md) | [简体中文](README.zh-CN.md) | [繁體中文](README.zh-TW.md) | [日本語](README.ja.md) | [한국어](README.ko.md) | [Русский](README.ru.md) | [Français](README.fr.md) | [Español](README.es.md)
 
-[![License: FSL-1.1-ALv2](https://img.shields.io/badge/License-FSL--1.1--ALv2-blue.svg)](../LICENSE.txt)
+[![License: Modified Apache-2.0](https://img.shields.io/badge/License-Modified%20Apache--2.0-blue.svg)](../LICENSE.txt)
 [![npm](https://img.shields.io/npm/v/@oomol-lab/open-connector.svg)](https://www.npmjs.com/package/@oomol-lab/open-connector)
 ![Node.js 22+](https://img.shields.io/badge/Node.js-22%2B-339933)
 ![Cloudflare compatible](https://img.shields.io/badge/Cloudflare-compatible-F38020)
@@ -16,7 +16,7 @@
 
 </div>
 
-OpenConnector — source-available connector gateway для AI agents и альтернатива Pipedream/Composio. Подключите
+OpenConnector — open-source connector gateway для AI agents и альтернатива Pipedream/Composio. Подключите
 пользовательские аккаунты приложений один раз, а затем откройте общий catalog из 1,000+ providers и
 10 000+ готовых Actions для агентов и приложений.
 
@@ -44,7 +44,7 @@ custom clients — HTTP/OpenAPI, а для администрирования и
 
 - Держите credentials, scopes, schemas, policies и run logs внутри проверяемого runtime.
 - Запускайте локально, в собственной инфраструктуре или через hosted runtime OOMOL.
-- Используйте одни и те же provider ids, Action ids, schemas и contracts в self-hosted и
+- Используйте одни и те же provider ids, Action ids, schemas и contracts в open-source и
   commercial SaaS deployments.
 
 ## Что Дает
@@ -113,7 +113,7 @@ flowchart LR
   Agent["AI Agent / App"] -->|"SDK / CLI / MCP / HTTP"| Gateway["OpenConnector Gateway"]
   Gateway --> Auth["Credential & OAuth Boundary"]
   Gateway --> Catalog["Provider Catalog"]
-  Gateway --> Actions["Built-in Action Executors"]
+  Gateway --> Actions["Open-source Action Executors"]
   Gateway --> Policy["Tokens, Scopes, Allow/Block Policy"]
   Gateway --> Logs["Run Logs"]
   Actions --> Providers["1,000+ Providers"]
@@ -129,8 +129,8 @@ flowchart LR
 
 | Путь                        | Лучше всего подходит для                                | Включает                                                                                                                                                              |
 | --------------------------- | ------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Self-host                   | Разработчиков и команд, которым нужен полный контроль   | Локальный Docker или Node runtime, SQLite storage, MCP, HTTP, OpenAPI и Web Console                                                                                   |
-| [OOMOL](https://oomol.com/) | Команд, ограниченных OAuth approval или сроками запуска | Hosted auth и runtime infrastructure с теми же provider и Action contracts; совместимость с self-hosted interface для последующего private или self-hosted deployment |
+| Open-source self-host       | Разработчиков и команд, которым нужен полный контроль   | Локальный Docker или Node runtime, SQLite storage, MCP, HTTP, OpenAPI и Web Console                                                                                   |
+| [OOMOL](https://oomol.com/) | Команд, ограниченных OAuth approval или сроками запуска | Hosted auth и runtime infrastructure с теми же provider и Action contracts; совместимость с open-source interface для последующего private или self-hosted deployment |
 
 ## Быстрый Старт
 
@@ -251,14 +251,14 @@ Provider code находится в `src/providers/<service>`. Правила д
 ## Область Действия Лицензии
 
 Если не указано иное, исходный код, scripts, сгенерированное project scaffolding, tests и
-documentation, созданные для этого repository, лицензируются по Functional Source License,
-Version 1.1, ALv2 Future License (FSL-1.1-ALv2). См. [LICENSE.txt](../LICENSE.txt).
+documentation, созданные для этого repository, лицензируются по OpenConnector License,
+модифицированной версии Apache License 2.0. См. [LICENSE.txt](../LICENSE.txt).
 
-Вы можете использовать, изменять и самостоятельно размещать OpenConnector для любых целей, кроме
-Competing Use, то есть предложения его в коммерческом продукте или сервисе, который заменяет
-OpenConnector или построенные на нем предложения OOMOL. Каждый release становится доступен по Apache
-License, Version 2.0, через два года после публикации. Releases до v1.9.4 включительно остаются под
-Apache License, Version 2.0. Подробнее см. [NOTICE.md](../NOTICE.md).
+Вы можете использовать, изменять и самостоятельно размещать OpenConnector для любых целей, включая
+коммерческое использование и встраивание в собственные продукты. Единственное дополнительное условие:
+для предоставления OpenConnector третьим лицам в виде hosted connector service нужна коммерческая
+лицензия OOMOL. Releases до v1.9.4 включительно остаются под немодифицированной Apache License 2.0.
+См. [NOTICE.md](../NOTICE.md).
 
 Лицензия для этого repository не предоставляет прав на third-party products, providers,
 apps, APIs, trademarks, service marks, trade names, logos, icons, brand assets, documentation,

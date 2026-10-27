@@ -4,7 +4,7 @@
 
 [English](../README.md) | [简体中文](README.zh-CN.md) | [繁體中文](README.zh-TW.md) | [日本語](README.ja.md) | [한국어](README.ko.md) | [Русский](README.ru.md) | [Français](README.fr.md) | [Español](README.es.md)
 
-[![License: FSL-1.1-ALv2](https://img.shields.io/badge/License-FSL--1.1--ALv2-blue.svg)](../LICENSE.txt)
+[![License: Modified Apache-2.0](https://img.shields.io/badge/License-Modified%20Apache--2.0-blue.svg)](../LICENSE.txt)
 [![npm](https://img.shields.io/npm/v/@oomol-lab/open-connector.svg)](https://www.npmjs.com/package/@oomol-lab/open-connector)
 ![Node.js 22+](https://img.shields.io/badge/Node.js-22%2B-339933)
 ![Cloudflare compatible](https://img.shields.io/badge/Cloudflare-compatible-F38020)
@@ -16,7 +16,7 @@
 
 </div>
 
-OpenConnector는 AI Agent를 위한 source-available connector gateway이자 Pipedream/Composio의 대안입니다.
+OpenConnector는 AI Agent를 위한 오픈 소스 connector gateway이자 Pipedream/Composio의 대안입니다.
 사용자의 앱 계정을 한 번 연결하면 1,000개 이상의 provider와 10,000개 이상의 사전 구축된 Action을
 Agent와 애플리케이션에 공통 catalog로 제공할 수 있습니다.
 
@@ -44,7 +44,7 @@ HTTP/OpenAPI를 사용합니다. 관리와 디버깅에는 Web Console을 사용
 
 - Credential, scope, schema, policy, 실행 로그를 검사 가능한 runtime 내부에 보관합니다.
 - 로컬, 자체 인프라 또는 OOMOL hosted runtime에서 실행할 수 있습니다.
-- self-hosted와 상용 SaaS 배포에서 동일한 provider id, Action id, schema, contract를 사용합니다.
+- 오픈 소스와 상용 SaaS 배포에서 동일한 provider id, Action id, schema, contract를 사용합니다.
 
 ## 주요 기능
 
@@ -109,7 +109,7 @@ flowchart LR
   Agent["AI Agent / App"] -->|"SDK / CLI / MCP / HTTP"| Gateway["OpenConnector Gateway"]
   Gateway --> Auth["Credential & OAuth Boundary"]
   Gateway --> Catalog["Provider Catalog"]
-  Gateway --> Actions["Built-in Action Executors"]
+  Gateway --> Actions["Open-source Action Executors"]
   Gateway --> Policy["Tokens, Scopes, Allow/Block Policy"]
   Gateway --> Logs["Run Logs"]
   Actions --> Providers["1,000+ Providers"]
@@ -125,7 +125,7 @@ flowchart LR
 
 | 경로                            | 적합한 대상                             | 포함 항목                                                                                                                                                                           |
 | ------------------------------- | --------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| self-host                       | 인프라를 완전히 제어하려는 개발자와 팀  | 로컬 Docker 또는 Node runtime, SQLite storage, MCP, HTTP, OpenAPI, Web Console                                                                                                      |
+| 오픈 소스 self-host             | 인프라를 완전히 제어하려는 개발자와 팀  | 로컬 Docker 또는 Node runtime, SQLite storage, MCP, HTTP, OpenAPI, Web Console                                                                                                      |
 | [OOMOL](https://oomol.com/apps) | 사용자가 계정을 즉시 승인하게 하려는 팀 | 지원되는 provider용 OAuth app, 매월 제공되는 Connect credits, hosted runtime 인프라. 동일한 provider 및 Action contract를 사용하므로 향후 private 또는 self-hosted 배포로 전환 가능 |
 
 ## 빠른 시작
@@ -249,13 +249,13 @@ Provider 코드는 `src/providers/<service>`에 있습니다. Provider 기여 �
 ## 라이선스 범위
 
 별도로 명시하지 않는 한 이 repository를 위해 작성된 source code, script, 생성된 project scaffolding,
-test, 문서는 Functional Source License, Version 1.1, ALv2 Future License (FSL-1.1-ALv2)에 따라
-사용이 허가됩니다. [LICENSE.txt](../LICENSE.txt)를 참조하세요.
+test, 문서는 Apache License 2.0을 수정한 OpenConnector License에 따라 사용이 허가됩니다.
+[LICENSE.txt](../LICENSE.txt)를 참조하세요.
 
-Competing Use(OpenConnector 또는 이를 기반으로 한 OOMOL 제품을 대체하는 상용 제품이나 서비스로
-제공하는 것)가 아니라면 어떤 목적으로든 OpenConnector를 사용, 수정, self-host할 수 있습니다. 각
-release는 공개 2년 후 Apache License Version 2.0으로도 사용할 수 있습니다. v1.9.4 이하 release는
-계속 Apache License Version 2.0을 따릅니다. 자세한 내용은 [NOTICE.md](../NOTICE.md)를 참조하세요.
+상용 사용과 자체 제품에 포함하는 것을 비롯해 어떤 목적으로든 OpenConnector를 사용, 수정, self-host할
+수 있습니다. 추가 조건은 하나뿐이며, OpenConnector를 hosted connector service로 제3자에게 제공하려면
+OOMOL의 commercial license가 필요합니다. v1.9.4 이하 release는 계속 수정되지 않은 Apache License
+2.0을 따릅니다. [NOTICE.md](../NOTICE.md)를 참조하세요.
 
 이 repository의 license는 각 권리자가 소유한 타사 제품, provider, app, API, 상표,
 service mark, trade name, logo, icon, brand asset, 문서, screenshot 또는 기타 저작물에 대한 권리를
