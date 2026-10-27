@@ -418,6 +418,30 @@ describe("Trigger runtime HTTP boundary", () => {
     expect(hooks).toHaveLength(1);
   });
 
+  it("preserves pre-upgrade webhook URLs through reconciliation and cleanup", async () => {
+    const id = await subscription();
+    const record = (await database.triggerStore.getFlowTrigger(id))!;
+    const originalUrl = new URL(String((hooks[0]!.config as Record<string, unknown>).url));
+    expect(originalUrl.searchParams.get("connector_reference")).toBe(id);
+    originalUrl.searchParams.delete("connector_reference");
+    (hooks[0]!.config as Record<string, unknown>).url = originalUrl.href;
+    delete record.callbackReference;
+    const now = Date.now();
+    expect(await database.triggerStore.claimFlowTrigger(id, "upgrade-fixture", now, now + 60_000)).toBe(true);
+    expect(await database.triggerStore.saveFlowTrigger(record, "upgrade-fixture", now)).toBe(true);
+    await database.triggerStore.releaseFlowTrigger(id, "upgrade-fixture");
+
+    expect((await request(reconcile())).status).toBe(200);
+    expect(hooks).toHaveLength(1);
+    expect((hooks[0]!.config as Record<string, unknown>).url).toBe(originalUrl.href);
+    expect((await request(reconcile({ active: false, subscriptionId: id }))).status).toBe(200);
+    expect(hooks).toHaveLength(0);
+    await subscription();
+    const recreatedUrl = new URL(String((hooks[0]!.config as Record<string, unknown>).url));
+    expect(recreatedUrl.searchParams.get("connector_reference")).toBe(id);
+    expect(recreatedUrl.searchParams.get("connector_subscription")).not.toBe(record.callbackNonce);
+  });
+
   it("verifies nonce and signature, exposes opaque state, and retires old callbacks after recreation", async () => {
     const id = await subscription();
     const record = (await database.triggerStore.getFlowTrigger(id))!;
@@ -873,4 +897,32 @@ it("rejects case-insensitive duplicate headers in shared source requests", async
       request: { ...operation.request, headers: { Authorization: "token", authorization: "another" } },
     }),
   ).toThrow();
+});
+
+it.each([true, false])("checks scopes for Source activation but permits release lookup: active=%s", async (active) => {
+  const connection = await database.connectionStore.set("zoom", "work", {
+    authType: "oauth2",
+    accessToken: "zoom-token",
+    tokenType: "Bearer",
+    profile: { accountId: "account", displayName: "Zoom", grantedScopes: [] },
+    metadata: { providerAccountVerified: true },
+  });
+  const response = await request(
+    {
+      operation: "sourceReference",
+      request: {
+        action: "resource",
+        deploymentId: "deployment",
+        reference: { applicationId: "missing", sourceId: "missing" },
+        key: "resource",
+        active,
+      },
+    },
+    token,
+    connection.id,
+    "zoom",
+    "zoom.on_recording_ready",
+  );
+  expect(response.status, await response.clone().text()).toBe(active ? 403 : 404);
+  expect(calls).toHaveLength(0);
 });

@@ -28,7 +28,7 @@ export const snapshot: TriggerKeySnapshot & { readonly type: "poll" } = {
       handle: "teamId",
       jsonSchema: {
         type: "string",
-        pattern: "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$",
+        pattern: uuidPattern,
         title: "Team ID",
       },
       nullable: false,
@@ -40,7 +40,7 @@ export const snapshot: TriggerKeySnapshot & { readonly type: "poll" } = {
         type: "array",
         items: {
           type: "string",
-          pattern: "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$",
+          pattern: uuidPattern,
         },
         maxItems: 50,
         uniqueItems: true,

@@ -87,6 +87,7 @@ export async function executeSubscription(
       config: input.config,
       endpointUrl: url.href,
       callbackNonce: randomUUIDv7(),
+      callbackReference: id,
       callbackSecret: randomBytes(32).toString("base64url"),
       checkpoint: definition.initialState?.checkpoint ?? null,
       subscription: definition.initialState?.subscription ?? {},
@@ -175,6 +176,7 @@ export async function executeSubscriptionOperation(
       record.config = input.config;
       record.endpointUrl = url.href;
       record.callbackNonce = randomUUIDv7();
+      record.callbackReference = id;
       record.callbackSecret = randomBytes(32).toString("base64url");
       record.checkpoint = definition.initialState?.checkpoint ?? null;
       record.subscription = definition.initialState?.subscription ?? {};
@@ -196,7 +198,8 @@ export async function executeSubscriptionOperation(
       throw new ExecutionError("invalid_input", "Subscription is being deleted", "conflict");
     const callback = new URL(record.endpointUrl);
     callback.searchParams.set("connector_subscription", record.callbackNonce);
-    callback.searchParams.set("connector_reference", record.id);
+    // Existing registrations retain their original URL for lookup and cleanup.
+    if (record.callbackReference) callback.searchParams.set("connector_reference", record.callbackReference);
     const result = await definition.reconcile({
       active: input.active,
       config: record.config,

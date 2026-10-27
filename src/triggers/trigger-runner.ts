@@ -122,7 +122,10 @@ export class TriggerRunner {
       ?.triggerPermissions?.find((permission) => permission.id === input.triggerId);
     const alternatives = permission?.providerScopeAlternatives;
     const cleanup =
-      (input.request.operation === "reconcile" || input.request.operation === "resource") && !input.request.active;
+      ((input.request.operation === "reconcile" || input.request.operation === "resource") && !input.request.active) ||
+      (input.request.operation === "sourceReference" &&
+        input.request.request.action === "resource" &&
+        !input.request.request.active);
     if (!cleanup && alternatives && !alternatives.some((scope) => target.scopes.includes(scope)))
       throw new ExecutionError("scope_missing", "The Trigger requires additional provider permissions.", "forbidden");
     const request = input.request;

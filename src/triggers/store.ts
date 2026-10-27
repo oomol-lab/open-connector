@@ -13,6 +13,7 @@ export interface TriggerSubscription {
   config: Readonly<Record<string, JsonValue>>;
   endpointUrl: string;
   callbackNonce: string;
+  callbackReference?: string;
   callbackSecret: string;
   checkpoint: JsonValue;
   subscription: Readonly<Record<string, JsonValue>>;

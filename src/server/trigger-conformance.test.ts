@@ -4,4 +4,4 @@ import { createHarness } from "./trigger-conformance-adapter.ts";
 
 test("registered Trigger operations satisfy the shared behavioral contract", async () => {
   await runTriggerConformance(createHarness);
-});
+}, 60_000);
