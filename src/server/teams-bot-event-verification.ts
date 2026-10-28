@@ -1,6 +1,7 @@
 import type { CryptoKey as JoseCryptoKey, JWK } from "jose";
 
 import { optionalRecord, optionalString, optionalStringOrNull } from "../core/cast.ts";
+import { readBoundedResponseBytes } from "../core/request.ts";
 import { isAllowedTeamsBotConnectorHost } from "../core/teams-bot-connector.ts";
 import { eventRequestMaximumBodyBytes } from "./event-request-body.ts";
 
@@ -239,6 +240,7 @@ async function fetchPublishedKeys(cloud: BotFrameworkCloud): Promise<PublishedKe
       : [];
     keys.set(keyId, { key: (await importJWK(jwk as unknown as JWK, "RS256")) as JoseCryptoKey, endorsements });
   }
+  if (keys.size === 0) throw new Error("Bot Framework keys document has no usable RSA signing keys.");
   const now = Date.now();
   return { keys, fetchedAt: now, expiresAt: now + keysTtlMs, refreshError: undefined };
 }
@@ -247,8 +249,12 @@ async function fetchPublishedKeys(cloud: BotFrameworkCloud): Promise<PublishedKe
 async function fetchJson(url: string): Promise<unknown> {
   const response = await fetch(url, { signal: AbortSignal.timeout(keysRequestTimeoutMs) });
   if (!response.ok) throw new Error(`Bot Framework keys request failed with HTTP ${response.status}.`);
-  const text = await response.text();
-  if (text.length > keysDocumentMaximumBytes) throw new Error("Bot Framework keys document is too large.");
+  const bytes = await readBoundedResponseBytes(response, {
+    maxBytes: keysDocumentMaximumBytes,
+    fieldName: "Bot Framework keys document",
+    createError: (message) => new Error(message),
+  });
+  const text = new TextDecoder("utf-8", { fatal: true }).decode(bytes);
   return JSON.parse(text);
 }
 

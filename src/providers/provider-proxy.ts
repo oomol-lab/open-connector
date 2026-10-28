@@ -616,7 +616,8 @@ function providerProxyBodyMethods(methods: readonly string[] | undefined): Set<s
   return new Set((methods ?? ["POST", "PUT", "PATCH"]).map((method) => method.toUpperCase()));
 }
 
-function injectProviderProxyJsonBodyField(body: unknown, name: string, value: string): Record<string, unknown> {
+/** Inject a credential field into a JSON object body, rejecting raw or non-object payloads. */
+export function injectProviderProxyJsonBodyField(body: unknown, name: string, value: string): Record<string, unknown> {
   if (body == null) return { [name]: value };
   if (typeof body !== "object" || Array.isArray(body)) {
     throw new ProviderRequestError(400, `${name} proxy auth requires a JSON object body`);

@@ -1383,7 +1383,7 @@ function createAisaError(response: Response, payload: unknown, phase: "validate"
   if (isCredentialErrorCode(code)) {
     return phase === "validate" ? providerInputError(message) : new ProviderRequestError(409, message, payload);
   }
-  if (response.status === 400 || response.status === 404 || response.status === 422) {
+  if (response.status === 400 || response.status === 422) {
     return new ProviderRequestError(400, message, payload, "invalid_input");
   }
   return new ProviderRequestError(response.status, message, payload);

@@ -197,7 +197,7 @@ describe("Bot Framework published signing keys", () => {
     expect(fetcher).toHaveBeenCalledTimes(5);
   });
 
-  it.each([null, {}, { keys: {} }, { error: "unavailable" }])(
+  it.each([null, {}, { keys: {} }, { keys: [] }, { keys: [{ kid: "unused", kty: "EC" }] }, { error: "unavailable" }])(
     "preserves cached keys when the JWKS response is malformed: %j",
     async (document) => {
       await expect(verifyPublished()).resolves.toMatchObject({ valid: true });
@@ -217,5 +217,9 @@ describe("Bot Framework published signing keys", () => {
 
   it("rejects an unknown key after successfully fetching a valid JWKS", async () => {
     await expect(verifyPublished("unknown-key")).resolves.toEqual({ valid: false, reason: "token" });
+  });
+  it("rejects oversized published key documents", async () => {
+    keysDocument = { padding: "x".repeat(1024 * 1024 + 1) };
+    await expect(verifyPublished()).rejects.toBeInstanceOf(verifier.BotFrameworkKeysUnavailableError);
   });
 });
