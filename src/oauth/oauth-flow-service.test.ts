@@ -16,6 +16,7 @@ import { createHash } from "node:crypto";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { createCatalogStore } from "../catalog-store.ts";
 import { ConnectionService } from "../connection-service.ts";
+import { provider as googleDriveProvider } from "../providers/googledrive/definition.ts";
 import { provider as slackProvider } from "../providers/slack/definition.ts";
 import { provider as slackbotProvider } from "../providers/slackbot/definition.ts";
 import { executors as slackbotExecutors } from "../providers/slackbot/executors.ts";
@@ -1535,3 +1536,22 @@ it.each(["cloud_recording:read:recording", "cloud_recording:read:recording:admin
     ]);
   },
 );
+
+it("requests only drive.file when selected and preserves default Drive authorization", async () => {
+  const services = createServices([{ ...googleDriveProvider, actions: [] }]);
+  await services.clientConfigs.upsertConfig({ service: "googledrive", clientId: "client", clientSecret: "secret" });
+  const full = await services.flow.startAuthorization({ service: "googledrive" });
+  expect(new URL(full.authorizationUrl).searchParams.get("scope")!.split(" ")).toEqual([
+    "https://www.googleapis.com/auth/drive.readonly",
+    "https://www.googleapis.com/auth/drive.metadata.readonly",
+    "https://www.googleapis.com/auth/drive",
+  ]);
+  await services.clientConfigs.upsertConfig({
+    service: "googledrive",
+    clientId: "client",
+    clientSecret: "secret",
+    requestedScopes: ["https://www.googleapis.com/auth/drive.file"],
+  });
+  const narrow = await services.flow.startAuthorization({ service: "googledrive" });
+  expect(new URL(narrow.authorizationUrl).searchParams.get("scope")).toBe("https://www.googleapis.com/auth/drive.file");
+});

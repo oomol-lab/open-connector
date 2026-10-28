@@ -2,7 +2,12 @@ import type { ActionDefinition, JsonSchema } from "../../core/types.ts";
 
 import { s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
-import { googleDriveFullScope, googleDriveMetadataReadonlyScope, googleDriveReadonlyScope } from "./scopes.ts";
+import {
+  googleDriveFileScope,
+  googleDriveFullScope,
+  googleDriveMetadataReadonlyScope,
+  googleDriveReadonlyScope,
+} from "./scopes.ts";
 
 const service = "googledrive";
 
@@ -1449,7 +1454,7 @@ const actionSources: GoogledriveActionSource[] = [
     operationType: "read",
     description:
       "Export a Google Workspace file to the requested MIME type and return a transit URL for the exported content.",
-    requiredScopes: [googleDriveReadonlyScope, googleDriveMetadataReadonlyScope],
+    requiredScopes: [googleDriveReadonlyScope, googleDriveMetadataReadonlyScope, googleDriveFileScope],
     inputSchema: {
       $schema: "https://json-schema.org/draft/2020-12/schema",
       type: "object",
@@ -1538,7 +1543,7 @@ const actionSources: GoogledriveActionSource[] = [
     name: "files.get",
     operationType: "read",
     description: "Get metadata for a Drive file by ID, or download stored file content with alt=media.",
-    requiredScopes: [googleDriveReadonlyScope, googleDriveMetadataReadonlyScope],
+    requiredScopes: [googleDriveReadonlyScope, googleDriveMetadataReadonlyScope, googleDriveFileScope],
     inputSchema: s.object("Input parameters for getting Drive file metadata or content.", {
       fileId: s.nonEmptyString("The ID of the Google Drive file to retrieve."),
       includeSharedDrives: s.optional(s.boolean("Whether the request supports files in shared drives.")),
@@ -1738,8 +1743,9 @@ const actionSources: GoogledriveActionSource[] = [
   {
     name: "files.list",
     operationType: "read",
-    description: "List Google Drive files using the official Drive query and pagination parameters.",
-    requiredScopes: [googleDriveReadonlyScope, googleDriveMetadataReadonlyScope],
+    description:
+      "List Google Drive files using the official Drive query and pagination parameters. With drive.file, only files authorized for this app are returned; use Google Picker in the host application to select additional files.",
+    requiredScopes: [googleDriveReadonlyScope, googleDriveMetadataReadonlyScope, googleDriveFileScope],
     inputSchema: {
       $schema: "https://json-schema.org/draft/2020-12/schema",
       type: "object",
@@ -1999,7 +2005,7 @@ const actionSources: GoogledriveActionSource[] = [
     name: "files.listLabels",
     operationType: "read",
     description: "List the Drive labels currently applied to a file.",
-    requiredScopes: [googleDriveReadonlyScope, googleDriveMetadataReadonlyScope],
+    requiredScopes: [googleDriveReadonlyScope, googleDriveMetadataReadonlyScope, googleDriveFileScope],
     inputSchema: {
       $schema: "https://json-schema.org/draft/2020-12/schema",
       type: "object",
@@ -5151,7 +5157,7 @@ const actionSources: GoogledriveActionSource[] = [
     name: "files.copy",
     operationType: "write",
     description: "Copy a Drive file and optionally override official File metadata.",
-    requiredScopes: [googleDriveFullScope],
+    requiredScopes: [googleDriveFullScope, googleDriveFileScope],
     inputSchema: {
       $schema: "https://json-schema.org/draft/2020-12/schema",
       type: "object",
@@ -5384,7 +5390,7 @@ const actionSources: GoogledriveActionSource[] = [
     name: "files.create",
     operationType: "write",
     description: "Create a Drive file with official File metadata and optional connector media upload content.",
-    requiredScopes: [googleDriveFullScope],
+    requiredScopes: [googleDriveFullScope, googleDriveFileScope],
     inputSchema: {
       $schema: "https://json-schema.org/draft/2020-12/schema",
       type: "object",
@@ -5621,7 +5627,7 @@ const actionSources: GoogledriveActionSource[] = [
     name: "files.delete",
     operationType: "destructive",
     description: "Permanently delete a Drive file or folder by ID.",
-    requiredScopes: [googleDriveFullScope],
+    requiredScopes: [googleDriveFullScope, googleDriveFileScope],
     inputSchema: {
       $schema: "https://json-schema.org/draft/2020-12/schema",
       type: "object",
@@ -5691,7 +5697,7 @@ const actionSources: GoogledriveActionSource[] = [
     name: "files.generateIds",
     operationType: "write",
     description: "Generate one or more Drive file IDs for later create or copy requests.",
-    requiredScopes: [googleDriveFullScope],
+    requiredScopes: [googleDriveFullScope, googleDriveFileScope],
     inputSchema: {
       $schema: "https://json-schema.org/draft/2020-12/schema",
       type: "object",
@@ -5743,7 +5749,7 @@ const actionSources: GoogledriveActionSource[] = [
     name: "files.modifyLabels",
     operationType: "destructive",
     description: "Add, update, or remove Drive labels on a file.",
-    requiredScopes: [googleDriveFullScope],
+    requiredScopes: [googleDriveFullScope, googleDriveFileScope],
     inputSchema: {
       $schema: "https://json-schema.org/draft/2020-12/schema",
       type: "object",
@@ -6020,7 +6026,7 @@ const actionSources: GoogledriveActionSource[] = [
     operationType: "destructive",
     description:
       "Patch a Drive file with official metadata, parent query parameters, and optional connector media upload content.",
-    requiredScopes: [googleDriveFullScope],
+    requiredScopes: [googleDriveFullScope, googleDriveFileScope],
     inputSchema: {
       $schema: "https://json-schema.org/draft/2020-12/schema",
       type: "object",

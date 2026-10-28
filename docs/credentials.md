@@ -168,7 +168,7 @@ curl -s -X PUT http://localhost:3000/api/oauth/configs/github \
   -d '{"clientId":"...","clientSecret":"..."}'
 ```
 
-By default, authorization requests include every scope declared by the provider. A deployment that
+By default, authorization requests include the provider's default scopes, without optional scopes. A deployment that
 needs a smaller permission surface can save `requestedScopes` with the OAuth client configuration:
 
 ```bash
@@ -177,10 +177,41 @@ curl -s -X PUT http://localhost:3000/api/oauth/configs/github \
   -d '{"clientId":"...","clientSecret":"...","requestedScopes":["read:user"]}'
 ```
 
-Every requested scope must come from the provider's declared `auth[].scopes`. The runtime rejects
+Every requested scope must come from the provider's declared `auth[].scopes` or `auth[].optionalScopes`. The runtime rejects
 unknown scopes instead of silently expanding authorization. Omit `requestedScopes` to keep the
 provider defaults; when present, the array must contain at least one scope. Config summaries expose
 both `requestedScopes` and the resulting `effectiveScopes`.
+
+For Google Drive, configure the optional `drive.file` scope to access only files created by the app
+or explicitly selected/shared with the app by the user:
+
+```bash
+curl -s -X PUT http://localhost:3000/api/oauth/configs/googledrive \
+  -H 'content-type: application/json' \
+  -d '{"clientId":"...","clientSecret":"...","requestedScopes":["https://www.googleapis.com/auth/drive.file"]}'
+```
+
+Start a new OAuth authorization after saving this configuration. Changing it does not narrow an
+existing token's grants; revoke existing broad access in Google before reconnecting if you need to
+verify a connection with only `drive.file`. Omitting `requestedScopes` retains the existing full
+Drive mode. Service Account and custom credential configuration are unchanged.
+
+The host application supplies the [Google Picker UI](https://developers.google.com/workspace/drive/api/guides/picker)
+and passes the selected file or folder ID to OpenConnector. Use the same Google Cloud project for
+Picker and the OAuth client. Selecting a folder does not grant access to all existing descendants.
+To upload a generated file into an authorized My Drive or Shared Drive folder, call
+`googledrive.files.create` with that folder ID in `parents` and the file content in `text` or `contentBase64`.
+Use `googledrive.files.get` to read an authorized file and `googledrive.files.update` to modify one.
+
+With `drive.file`, `googledrive.files.list` only returns files the app can access; it cannot enumerate
+the user's entire Drive or replace Picker for discovering files not yet authorized to the app.
+The scope also supports the existing `files.copy`, `files.delete`, `files.export`, `files.generateIds`,
+`files.listLabels`, and `files.modifyLabels` actions, subject to the user's file permissions. It does
+not support `files.emptyTrash` or all Shared Drive administration actions.
+For Shared Drives, continue using `supportsAllDrives` on supported file operations and
+`includeItemsFromAllDrives` on `files.list`; these parameters do not grant additional permissions.
+See [Google's Drive scope guide](https://developers.google.com/workspace/drive/api/guides/api-specific-auth)
+for the per-file access model.
 
 A provider whose OAuth app is registered with a different redirect URI, for example a native app's
 custom scheme, can save it as `redirectUri` with the client configuration:
