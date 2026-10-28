@@ -219,7 +219,10 @@ describe("Bot Framework published signing keys", () => {
     await expect(verifyPublished("unknown-key")).resolves.toEqual({ valid: false, reason: "token" });
   });
   it("rejects oversized published key documents", async () => {
-    keysDocument = { padding: "x".repeat(1024 * 1024 + 1) };
+    keysDocument = {
+      keys: [{ ...(await exportJWK(publicKey)), kid: "key-1", endorsements: ["msteams"] }],
+      padding: "x".repeat(1024 * 1024 + 1),
+    };
     await expect(verifyPublished()).rejects.toBeInstanceOf(verifier.BotFrameworkKeysUnavailableError);
   });
 });

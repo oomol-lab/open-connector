@@ -3,6 +3,7 @@ import type { ExecutionContext, ResolvedCredential } from "../core/types.ts";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { crossOriginSafeHeaders } from "../core/guarded-fetch.ts";
 import { proxy as arcgisOnlineProxy } from "./arcgis_online/executors.ts";
+import { proxy as ilovepdfProxy } from "./ilovepdf/executors.ts";
 import { providerFetch } from "./provider-runtime.ts";
 import { proxy as scopusProxy } from "./scopus/executors.ts";
 
@@ -32,6 +33,33 @@ afterEach(() => {
 });
 
 describe("provider egress on cross-origin redirects", () => {
+  it.each([307, 308])("does not replay iLovePDF task secrets after HTTP %i", async (status) => {
+    const fetcher = vi.fn(
+      async () =>
+        new Response(null, {
+          status,
+          headers: { location: "https://attacker.example.net/collect" },
+        }),
+    );
+    vi.stubGlobal("fetch", fetcher);
+    const result = await ilovepdfProxy(
+      { method: "POST", endpoint: "/task", body: { page: 1 } },
+      contextFor({
+        ...arcgisCredential,
+        apiKey: "project-secret",
+        values: { publicKey: "project-public" },
+      }),
+    );
+    expect(result).toMatchObject({ ok: false, error: { code: "provider_error" } });
+    expect(fetcher).toHaveBeenCalledTimes(1);
+    expect(fetcher).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({
+        body: JSON.stringify({ page: 1, secret_key: "project-secret" }),
+        redirect: "manual",
+      }),
+    );
+  });
   it("does not forward the ArcGIS Online proxy credential header to the redirect target", async () => {
     const hops = stubCrossOriginRedirect();
 

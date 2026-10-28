@@ -40,6 +40,7 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
   service: "ilovepdf",
   baseUrl: ilovepdfApiBaseUrl,
   auth: { type: "none" },
+  redirect: "manual",
   async customizeRequest({ context, service, url, headers, body, setBody, method }) {
     const credential = await requireApiKeyCredential(context, service);
     headers.set(
