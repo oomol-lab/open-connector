@@ -189,7 +189,22 @@ const idempotencyKeyParameter = {
 const idempotencyConflictDescription =
   "For idempotency, idempotency_request_in_progress means the original request is still running or its outcome is uncertain, while idempotency_key_conflict means the key was reused for a different action, input, effective connection, or stored runtime token. Other runtime conflicts may return their own error code with the same status.";
 
+const notionConnectionSchema = jsonSchema.optional(
+  jsonSchema.object(
+    {
+      duplicatedTemplateId: jsonSchema.string({
+        description: "Page ID duplicated during Notion OAuth authorization. Preserved during token refresh.",
+      }),
+    },
+    {
+      description: "Present only for Notion OAuth connections with a duplicated template ID.",
+      additionalProperties: false,
+    },
+  ),
+);
+
 const runtimeConnectionProperties: Record<string, JsonSchema> = {
+  notion: notionConnectionSchema,
   id: jsonSchema.string({ description: "Stable local connection identifier." }),
   providerAccountId: jsonSchema.string({
     description: "Provider account identity from the stored credential profile.",
@@ -776,6 +791,7 @@ export function createOpenApiDocument(options: OpenApiDocumentOptions = {}): Ope
             service: jsonSchema.string({ description: "Provider service identifier." }),
             authType: jsonSchema.string({ description: "Connection authentication type." }),
             configured: jsonSchema.boolean({ description: "Whether the provider is connected." }),
+            notion: notionConnectionSchema,
             oauthAuthorizationId: jsonSchema.string({
               description: "Completed OAuth consent state. Omitted for legacy and non-OAuth connections.",
             }),

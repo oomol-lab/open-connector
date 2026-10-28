@@ -4,7 +4,7 @@ import type { OAuthClientConfigService } from "./oauth-client-config-service.ts"
 import type { OAuthTokenErrorFactory, OAuthTokenResult } from "./oauth-token.ts";
 
 import { ConnectionError } from "../connection-error.ts";
-import { optionalRecord, stringRecord } from "../core/cast.ts";
+import { optionalRecord, optionalString, stringRecord } from "../core/cast.ts";
 import { providerFetch } from "../providers/provider-runtime.ts";
 import { readOAuthClientConfigMetadata } from "./oauth-client-config-service.ts";
 import { expiresAtFromLifetime, requestRefreshToken, requestTokenRevocation } from "./oauth-token.ts";
@@ -93,6 +93,13 @@ export class OAuthCredentialRefreshService implements IOAuthCredentialRefresher 
         ? credential.metadata.expires_in
         : refreshed.metadata.expires_in;
 
+    const metadata = { ...credential.metadata, ...refreshed.metadata };
+    if (service === "notion") {
+      const duplicatedTemplateId = optionalString(credential.metadata.duplicated_template_id);
+      // Template duplication belongs to the original consent, not token rotation.
+      if (duplicatedTemplateId) metadata.duplicated_template_id = duplicatedTemplateId;
+    }
+
     return {
       ...refreshed,
       authType: "oauth2",
@@ -107,8 +114,7 @@ export class OAuthCredentialRefreshService implements IOAuthCredentialRefresher 
       providerSecret: refreshed.providerSecret ?? credential.providerSecret,
       profile: credential.profile,
       metadata: {
-        ...credential.metadata,
-        ...refreshed.metadata,
+        ...metadata,
         // Refresh rotates tokens within the existing authorization, including legacy absence.
         oauthAuthorizationId: credential.metadata.oauthAuthorizationId,
         expires_in: expiresIn,

@@ -167,6 +167,30 @@ the stale callback fails instead of recreating it or overwriting the replacement
 New connections receive distinct local aliases. Use the returned `alias` as the connection
 selector when executing actions. Existing local default-connection selection remains available.
 
+### Notion duplicated templates
+
+For self-hosted Notion OAuth connections, `GET /v1/connections/by-id/:appId` and
+`GET /v1/connections` include `notion.duplicatedTemplateId` when Notion returned a
+non-empty `duplicated_template_id` during authorization:
+
+```json
+{
+  "notion": {
+    "duplicatedTemplateId": "6c3b0c2e-8e10-4e47-b684-898720a84742"
+  }
+}
+```
+
+After polling `GET /v1/connection-requests/:connectionRequestId` until its status is
+`connected`, use its `appId` to read the connection and obtain this page ID. The ID
+is preserved during token refresh and can be used to access or update the copied
+page without another authorization flow. Existing stored OAuth connections also
+expose the ID if it is already present in their saved credentials.
+
+The `notion` field is omitted when no valid template ID was returned, for Notion
+internal integration tokens, and for other providers. Only this template ID is
+exposed; tokens, client secrets, and arbitrary OAuth response metadata remain private.
+
 ## API keys and custom credentials
 
 These operations validate and save credentials synchronously. They return the connection in the

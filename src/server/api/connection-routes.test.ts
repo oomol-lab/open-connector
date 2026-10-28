@@ -5,6 +5,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { createCatalogStore } from "../../catalog-store.ts";
 import { requestAuthorizationCodeToken } from "../../oauth/oauth-token.ts";
 import { provider as githubProvider } from "../../providers/github/definition.ts";
+import { provider as notionProvider } from "../../providers/notion/definition.ts";
 import { ProviderLoader } from "../../providers/provider-loader.ts";
 import { provider as slackProvider } from "../../providers/slack/definition.ts";
 import { slackCredentialValidators } from "../../providers/slack/runtime.ts";
@@ -50,7 +51,7 @@ async function setup(
   const database = new SqliteRuntimeDatabase(":memory:");
   databases.push(database);
   await database.oauthClientConfigStore.set({
-    service: "example",
+    service: definition.service,
     clientId: "client",
     clientSecret: "secret",
     extra: {},
@@ -60,7 +61,7 @@ async function setup(
     catalog: createCatalogStore([definition]),
     runtimeDatabase: database,
     providerLoader: new ProviderLoader({
-      example: async () => ({
+      [definition.service]: async () => ({
         executors: {},
         credentialValidators,
         oauth: {
@@ -86,7 +87,7 @@ async function setup(
       headers: { "content-type": "application/json", ...(token ? { authorization: `Bearer ${token}` } : {}) },
       body: body === undefined ? undefined : JSON.stringify(body),
     });
-  const start = async () => (await (await call("/v1/connections/example/connect", {})).json()).data;
+  const start = async () => (await (await call(`/v1/connections/${definition.service}/connect`, {})).json()).data;
   return { app, database, call, start };
 }
 
@@ -441,4 +442,82 @@ it("connects Slack using granted scopes from the nested user token response", as
   const connection = (await (await call(`/v1/connections/by-id/${result.appId}`)).json()).data;
   expect(connection.scopes).toEqual(["channels:read", "users:read"]);
   expect(fetcher).toHaveBeenCalledTimes(2);
+});
+
+it.each([
+  ["template-page-id", { duplicatedTemplateId: "template-page-id" }],
+  [undefined, undefined],
+  [null, undefined],
+  ["", undefined],
+  [42, undefined],
+])("reads only the safe Notion OAuth template field for %j", async (templateId, expected) => {
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(async () =>
+      Response.json({
+        access_token: "notion-access-secret",
+        refresh_token: "notion-refresh-secret",
+        client_secret: "notion-client-secret",
+        token_type: "bearer",
+        duplicated_template_id: templateId,
+        arbitrary_field: "private-metadata",
+      }),
+    ),
+  );
+  const { call, start, database } = await setup(
+    async () =>
+      requestAuthorizationCodeToken({
+        clientId: "client",
+        clientSecret: "secret",
+        code: "code",
+        redirectUri: "http://localhost/oauth/callback",
+        tokenUrl: "https://api.notion.com/v1/oauth/token",
+        tokenEndpointAuthMethod: "client_secret_basic",
+        tokenRequestFormat: "json",
+        createError: (message) => new Error(message),
+      }),
+    {},
+    { ...notionProvider, actions: [] },
+  );
+  const request = await start();
+  expect((await call(`/oauth/callback?state=${request.stateHandle}&code=code`)).status).toBe(200);
+  const result = (await (await call(`/v1/connection-requests/${request.connectionRequestId}`)).json()).data;
+  expect(result.status).toBe("connected");
+  const stored = (await database.connectionStore.list())[0];
+  expect(stored?.credential).toMatchObject({ metadata: { arbitrary_field: "private-metadata" } });
+  if (templateId !== undefined)
+    expect(stored?.credential).toMatchObject({ metadata: { duplicated_template_id: templateId } });
+  const detail = (await (await call(`/v1/connections/by-id/${result.appId}`)).json()).data;
+  const list = (await (await call("/v1/connections")).json()).data;
+  expect(detail.notion).toEqual(expected);
+  expect(list).toEqual([detail]);
+  if (!expected) expect(detail).not.toHaveProperty("notion");
+  for (const secret of [
+    "notion-access-secret",
+    "notion-refresh-secret",
+    "notion-client-secret",
+    "private-metadata",
+    "metadata",
+  ]) {
+    expect(JSON.stringify(detail)).not.toContain(secret);
+  }
+});
+
+it("does not expose Notion fields for another provider or internal integration tokens", async () => {
+  const metadata = { duplicated_template_id: "template-page-id" };
+  const other = await setup(async () => ({ accessToken: "secret", tokenType: "Bearer", metadata }));
+  const request = await other.start();
+  await other.call(`/oauth/callback?state=${request.stateHandle}&code=code`);
+  expect((await (await other.call("/v1/connections")).json()).data[0]).not.toHaveProperty("notion");
+  const notion = await setup(
+    undefined,
+    {},
+    { ...notionProvider, actions: [] },
+    {
+      apiKey: async () => ({ metadata }),
+    },
+  );
+  const response = await notion.call("/v1/connections/notion/connect/api-key", { apiKey: "internal-secret" });
+  expect(response.status).toBe(200);
+  expect((await response.json()).data).not.toHaveProperty("notion");
 });

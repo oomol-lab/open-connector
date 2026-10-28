@@ -453,3 +453,35 @@ describe("Feishu refresh override integration", () => {
     expect(Date.parse(refreshed.expiresAt!)).toBeGreaterThan(Date.now());
   });
 });
+
+describe("Notion template metadata during refresh", () => {
+  afterEach(() => vi.unstubAllGlobals());
+
+  it.each([undefined, null, "", "different-page-id"])(
+    "preserves the original duplicated template when refresh returns %j",
+    async (templateId) => {
+      stubRefreshResponse({ duplicated_template_id: templateId });
+      const refreshed = await new OAuthCredentialRefreshService(clientConfigs).refresh(
+        "notion",
+        expiredCredential({ duplicated_template_id: "original-page-id" }),
+      );
+      expect(refreshed.accessToken).toBe("new-access-token");
+      expect(refreshed.metadata.duplicated_template_id).toBe("original-page-id");
+    },
+  );
+
+  it("keeps a missing template absent", async () => {
+    stubRefreshResponse({});
+    const refreshed = await new OAuthCredentialRefreshService(clientConfigs).refresh("notion", expiredCredential({}));
+    expect(refreshed.metadata).not.toHaveProperty("duplicated_template_id");
+  });
+
+  it("preserves normal metadata merging for other providers", async () => {
+    stubRefreshResponse({ duplicated_template_id: "new-value" });
+    const refreshed = await new OAuthCredentialRefreshService(clientConfigs).refresh(
+      "example",
+      expiredCredential({ duplicated_template_id: "old-value" }),
+    );
+    expect(refreshed.metadata.duplicated_template_id).toBe("new-value");
+  });
+});

@@ -82,6 +82,7 @@ export interface RuntimeConnectedApp {
   isDefault: boolean;
   scopes: string[];
   marketplace?: ConnectionSummary["marketplace"];
+  notion?: ConnectionSummary["notion"];
 }
 
 export interface RuntimeFailureInput {
@@ -158,6 +159,7 @@ export function serializeRuntimeConnectedApp(connection: ConnectionSummary): Run
     isDefault: connection.default,
     scopes: connection.profile.grantedScopes,
     marketplace: connection.marketplace,
+    notion: connection.notion,
   };
 }
 

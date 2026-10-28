@@ -24,6 +24,7 @@ import type { IOAuthCredentialRefresher, OAuthRevocationOutcome } from "./oauth/
 import type { IProviderLoader } from "./providers/provider-loader.ts";
 
 import { ConnectionError } from "./connection-error.ts";
+import { optionalString } from "./core/cast.ts";
 import { normalizeCredentialValues } from "./core/credential-fields.ts";
 import { apiKeyCredentialFields } from "./core/provider-setup.ts";
 import { CredentialResolver, isOAuthCredentialExpired } from "./credential-resolver.ts";
@@ -52,6 +53,7 @@ export interface ConnectionSummary {
   profile: CredentialProfile;
   /** Completed OAuth consent state; absent for legacy and non-OAuth connections. */
   oauthAuthorizationId?: string;
+  notion?: { duplicatedTemplateId: string };
   marketplace?: { id: string; pricing: MarketplacePricing };
   saas?: StoredSaasConnection["reference"];
 }
@@ -657,9 +659,13 @@ export class ConnectionService {
       default: connectionName === defaultConnectionName,
       profile: credential.profile,
     };
-    // Credential metadata also contains client secrets. Expose only this runtime-owned string.
+    // Credential metadata also contains client secrets. Expose only explicitly allowed fields.
     if (credential.authType === "oauth2" && typeof credential.metadata.oauthAuthorizationId === "string") {
       summary.oauthAuthorizationId = credential.metadata.oauthAuthorizationId;
+    }
+    if (provider.service === "notion" && credential.authType === "oauth2") {
+      const duplicatedTemplateId = optionalString(credential.metadata.duplicated_template_id);
+      if (duplicatedTemplateId) summary.notion = { duplicatedTemplateId };
     }
     return summary;
   }
