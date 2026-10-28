@@ -208,8 +208,15 @@ the user's entire Drive or replace Picker for discovering files not yet authoriz
 The scope also supports the existing `files.copy`, `files.delete`, `files.export`, `files.generateIds`,
 `files.listLabels`, and `files.modifyLabels` actions, subject to the user's file permissions. It does
 not support `files.emptyTrash` or all Shared Drive administration actions.
-For Shared Drives, continue using `supportsAllDrives` on supported file operations and
-`includeItemsFromAllDrives` on `files.list`; these parameters do not grant additional permissions.
+Shared Drive inputs depend on the action:
+
+- `files.list` accepts `supportsAllDrives` and `includeItemsFromAllDrives`.
+- `files.get` accepts `includeSharedDrives` (defaults to `true`), which the connector maps to Google's
+  `supportsAllDrives` parameter.
+- `files.create` and `files.update` enable Shared Drive support automatically and do not accept a
+  `supportsAllDrives` input.
+
+These settings do not grant additional permissions.
 See [Google's Drive scope guide](https://developers.google.com/workspace/drive/api/guides/api-specific-auth)
 for the per-file access model.
 
