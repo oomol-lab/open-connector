@@ -3,7 +3,6 @@ import type { ExecutionContext, ResolvedCredential, TransitFileStore } from "../
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { executeAction } from "../../core/execution.ts";
 import { setDefaultGuardedFetchDnsLookup } from "../../core/guarded-fetch.ts";
-import { ProviderRequestError } from "../provider-runtime.ts";
 import { provider } from "./definition.ts";
 import { credentialValidators, executors } from "./executors.ts";
 import { supabaseProviderScopes } from "./scopes.ts";
@@ -36,44 +35,61 @@ afterEach(() => {
 });
 
 describe("Supabase credential validation", () => {
-  it("validates OAuth through /v1/profile and uses gotrue_id as the account identity", async () => {
+  it("validates OAuth through organizations and uses the JWT subject as the account identity", async () => {
+    const accessToken = `header.${Buffer.from(JSON.stringify({ sub: "user-123" })).toString("base64url")}.signature`;
     const calls: string[] = [];
-    const result = await credentialValidators.oauth2!(oauthCredential, {
-      fetcher: async (input) => {
-        calls.push(String(input));
-        return Response.json({
-          gotrue_id: "11111111-2222-3333-4444-555555555555",
-          primary_email: "ada@example.com",
-          username: "ada",
-        });
+    const result = await credentialValidators.oauth2!(
+      { ...oauthCredential, accessToken },
+      {
+        fetcher: async (input, init) => {
+          calls.push(String(input));
+          expect(new Headers(init?.headers).get("authorization")).toBe(`Bearer ${accessToken}`);
+          return Response.json([{ id: "org-1", name: "Example" }]);
+        },
       },
-    });
-
-    expect(calls).toEqual(["https://api.supabase.com/v1/profile"]);
-    expect(result).toEqual({
-      profile: {
-        accountId: "11111111-2222-3333-4444-555555555555",
-        displayName: "ada",
-        grantedScopes: supabaseProviderScopes,
-      },
-      metadata: {
-        validationEndpoint: "/profile",
-        gotrueId: "11111111-2222-3333-4444-555555555555",
-        username: "ada",
-        primaryEmail: "ada@example.com",
-      },
+    );
+    expect(calls).toEqual(["https://api.supabase.com/v1/organizations"]);
+    expect(result).toMatchObject({
+      profile: { accountId: "user-123", displayName: "Supabase (Example)", grantedScopes: supabaseProviderScopes },
+      metadata: { validationEndpoint: "/organizations", organizationCount: 1, identitySource: "jwt_sub" },
     });
   });
 
-  it("rejects an OAuth profile response that is missing gotrue_id", async () => {
+  it("uses a stable organization fingerprint for opaque OAuth tokens", async () => {
+    const organizations = [
+      { id: "org-2", name: "Second" },
+      { id: "org-1", name: "First" },
+    ];
+    const first = await credentialValidators.oauth2!(oauthCredential, {
+      fetcher: async () => Response.json(organizations),
+    });
+    const second = await credentialValidators.oauth2!(
+      { ...oauthCredential, accessToken: "refreshed-token" },
+      {
+        fetcher: async () => Response.json(organizations.toReversed()),
+      },
+    );
+    expect(first?.profile?.accountId).toMatch(/^orgs:/);
+    expect(second?.profile?.accountId).toBe(first?.profile?.accountId);
+    expect(first?.metadata).toMatchObject({ identitySource: "organization_fingerprint" });
+  });
+
+  it("accepts OAuth credentials with an empty organization list", async () => {
+    const result = await credentialValidators.oauth2!(oauthCredential, {
+      fetcher: async () => Response.json([]),
+    });
+    expect(result?.metadata).toMatchObject({ organizationCount: 0, identitySource: "access_token_fingerprint" });
+  });
+
+  it("rejects malformed organization responses", async () => {
     await expect(
       credentialValidators.oauth2!(oauthCredential, {
-        fetcher: async () => Response.json({ primary_email: "ada@example.com", username: "ada" }),
+        fetcher: async () => Response.json({}),
       }),
-    ).rejects.toEqual(new ProviderRequestError(502, "malformed supabase response: profile.gotrue_id is required."));
+    ).rejects.toMatchObject({ status: 502, message: "malformed supabase organizations response" });
   });
 
-  it("rejects unauthorized OAuth profile responses", async () => {
+  it("rejects unauthorized OAuth organization responses", async () => {
     await expect(
       credentialValidators.oauth2!(oauthCredential, {
         fetcher: async () => Response.json({ message: "invalid token" }, { status: 401 }),

@@ -175,48 +175,6 @@ export async function validateSupabaseCredential(
   };
 }
 
-export async function validateSupabaseOAuthCredential(
-  accessToken: string,
-  fetcher: typeof fetch,
-  signal?: AbortSignal,
-): Promise<{
-  profile: {
-    accountId: string;
-    displayName: string;
-    grantedScopes: string[];
-  };
-  metadata: Record<string, unknown>;
-}> {
-  const profile = requiredRecord(
-    await requestSupabaseJson({
-      accessToken,
-      fetcher,
-      signal,
-      phase: "validate",
-      path: "/profile",
-    }),
-    "profile",
-    providerMalformedError,
-  );
-  const gotrueId = requiredString(profile.gotrue_id, "profile.gotrue_id", providerMalformedError);
-  const username = optionalString(profile.username);
-  const primaryEmail = optionalString(profile.primary_email);
-
-  return {
-    profile: {
-      accountId: gotrueId,
-      displayName: username || primaryEmail || "Supabase User",
-      grantedScopes: supabaseProviderScopes,
-    },
-    metadata: compactObject({
-      validationEndpoint: "/profile",
-      gotrueId,
-      username,
-      primaryEmail,
-    }),
-  };
-}
-
 async function supabaseListOrganizations(context: BearerProviderContext): Promise<unknown> {
   return {
     organizations: normalizeOrganizationList(await requestSupabaseJson({ path: "/organizations", context })),

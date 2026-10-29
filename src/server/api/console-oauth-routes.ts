@@ -426,16 +426,19 @@ export function createConsoleOAuthRoutes({
         "oauth callback completed",
       );
     } catch (error) {
-      if (error instanceof OAuthCallbackError && error.returnUri) return context.redirect(error.returnUri);
       if (error instanceof OAuthFlowError || error instanceof ConnectionError) {
         const cancelled = error instanceof ConnectionError && error.code === "connection_cancelled";
+        const cause = error instanceof OAuthCallbackError ? error.cause : error;
         logger?.[cancelled ? "info" : "warn"](
           {
             ...logContext,
             errorCode: error.code,
+            causeCode: cause instanceof OAuthFlowError || cause instanceof ConnectionError ? cause.code : undefined,
+            causeMessage: cause instanceof Error ? cause.message : undefined,
           },
           cancelled ? "oauth callback cancelled" : "oauth callback failed",
         );
+        if (error instanceof OAuthCallbackError && error.returnUri) return context.redirect(error.returnUri);
         return jsonError(context, error.code === "unknown_service" ? 404 : 400, error.code, error.message);
       }
       throw error;
