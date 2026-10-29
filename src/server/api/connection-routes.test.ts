@@ -239,26 +239,43 @@ describe("shared personal connection API", () => {
     expect((await restricted.call("/v1/connections", undefined, "runtime")).status).toBe(403);
   });
 
-  it("records a safe failure when token exchange fails", async () => {
-    const { call, start, logger } = await setup(async () => {
-      throw new Error("secret-token");
-    });
-    const request = await start();
-    await call(`/oauth/callback?state=${request.stateHandle}&code=code`);
-    const result = (await (await call(`/v1/connection-requests/${request.connectionRequestId}`)).json()).data;
-    expect(result).toMatchObject({ status: "failed", errorCode: "provider_error" });
-    expect(JSON.stringify(result)).not.toContain("secret-token");
-    expect(logger.warn).toHaveBeenCalledWith(
-      expect.objectContaining({ errorCode: "provider_error", causeMessage: "secret-token" }),
-      "oauth callback failed",
-    );
-  });
+  it.each([undefined, "https://client.example/done"])(
+    "logs token exchange failure without echoed credentials with return URI %s",
+    async (returnUri) => {
+      const { call, logger } = await setup(async ({ code, clientConfig, createError }) => {
+        throw createError(`Rejected code=${code} client_secret=${clientConfig.clientSecret}`);
+      });
+      const request = (await (await call("/v1/connections/example/connect", { returnUri })).json()).data;
+      const response = await call(`/oauth/callback?state=${request.stateHandle}&code=private-code`);
+      expect(response.status).toBe(returnUri ? 302 : 400);
+      const result = (await (await call(`/v1/connection-requests/${request.connectionRequestId}`)).json()).data;
+      expect(result).toMatchObject({ status: "failed", errorCode: "provider_error" });
+      expect(logger.warn).toHaveBeenCalledExactlyOnceWith(
+        {
+          path: "/oauth/callback",
+          hasState: true,
+          hasCode: true,
+          errorCode: "provider_error",
+          causeCode: "oauth_token_exchange_failed",
+        },
+        "oauth callback failed",
+      );
+      const output = JSON.stringify({
+        result,
+        logs: logger.warn.mock.calls,
+        response: response.headers.get("location") ?? (await response.text()),
+      });
+      expect(output).not.toContain("private-code");
+      expect(output).not.toContain("secret");
+      expect(output).not.toContain(request.stateHandle);
+    },
+  );
 });
 
 it.each([undefined, "https://client.example/done"])(
   "logs the underlying validation failure with return URI %s",
   async (returnUri) => {
-    const message = "GET /v1/profile does not support oauth access yet";
+    const message = "GET /v1/profile does not support oauth access yet; token=access-secret";
     const { call, logger, database } = await setup(undefined, {}, provider, {
       async oauth2() {
         throw new Error(message);
@@ -268,11 +285,13 @@ it.each([undefined, "https://client.example/done"])(
     const response = await call(`/oauth/callback?state=${request.stateHandle}&code=private-code`);
     expect(response.status).toBe(returnUri ? 302 : 400);
     expect(logger.warn).toHaveBeenCalledExactlyOnceWith(
-      expect.objectContaining({
+      {
+        path: "/oauth/callback",
+        hasState: true,
+        hasCode: true,
         errorCode: "provider_error",
         causeCode: "credential_verification_failed",
-        causeMessage: message,
-      }),
+      },
       "oauth callback failed",
     );
     const result = (await (await call(`/v1/connection-requests/${request.connectionRequestId}`)).json()).data;
@@ -285,6 +304,7 @@ it.each([undefined, "https://client.example/done"])(
     expect(response.headers.get("location") ?? (await response.text())).not.toContain(message);
     expect(await database.connectionStore.list()).toEqual([]);
     const logs = JSON.stringify(logger.warn.mock.calls);
+    expect(logs).not.toContain(message);
     expect(logs).not.toContain("access-secret");
     expect(logs).not.toContain("private-code");
     expect(logs).not.toContain(request.stateHandle);

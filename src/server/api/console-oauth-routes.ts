@@ -434,7 +434,6 @@ export function createConsoleOAuthRoutes({
             ...logContext,
             errorCode: error.code,
             causeCode: cause instanceof OAuthFlowError || cause instanceof ConnectionError ? cause.code : undefined,
-            causeMessage: cause instanceof Error ? cause.message : undefined,
           },
           cancelled ? "oauth callback cancelled" : "oauth callback failed",
         );
