@@ -107,6 +107,7 @@ describe("assertPublicHttpUrl", () => {
       "http://service.localhost:3000/",
       "http://127.0.0.1:3000/",
       "http://100.100.100.200/",
+      "http://168.63.129.16/",
       "http://169.254.169.254/",
       "http://224.0.0.1/",
       "http://[fd7a:115c:a1e0::1]/",
@@ -123,6 +124,7 @@ describe("isBlockedIpAddress", () => {
       "169.254.169.254",
       "0.0.0.0",
       "100.100.100.200",
+      "168.63.129.16",
       "224.0.0.1",
       "255.255.255.255",
     ]) {
@@ -144,20 +146,29 @@ describe("isBlockedIpAddress", () => {
   });
 
   it("allows public IPv4 addresses", () => {
-    for (const address of ["1.1.1.1", "8.8.8.8", "93.184.216.34"]) {
+    for (const address of ["1.1.1.1", "8.8.8.8", "93.184.216.34", "168.63.129.15", "168.63.129.17"]) {
       expect(isBlockedIpAddress(address)).toBe(false);
     }
   });
 
   it("blocks reserved IPv6 addresses regardless of the private-network flag", () => {
-    for (const address of ["::", "::1", "fe80::1", "ff02::1", "2001:db8::1", "100::1", "fd00:ec2::254"]) {
+    for (const address of [
+      "::",
+      "::1",
+      "fe80::1",
+      "ff02::1",
+      "2001:db8::1",
+      "100::1",
+      "fd00:ec2::254",
+      "fd20:ce::254",
+    ]) {
       expect(isBlockedIpAddress(address)).toBe(true);
       expect(isBlockedIpAddress(address, true)).toBe(true);
     }
   });
 
   it("blocks unique-local and site-local IPv6 unless private networks are allowed", () => {
-    for (const address of ["fd00::1", "fc00::1", "fec0::1", "fd7a:115c:a1e0::1"]) {
+    for (const address of ["fd00::1", "fc00::1", "fec0::1", "fd7a:115c:a1e0::1", "fd20:ce::253"]) {
       expect(isBlockedIpAddress(address)).toBe(true);
       expect(isBlockedIpAddress(address, true)).toBe(false);
     }
@@ -188,6 +199,17 @@ describe("isBlockedIpAddress", () => {
     // 6to4 embedding 192.168.1.1 (c0a8:0101).
     expect(isBlockedIpAddress("2002:c0a8:101::1")).toBe(true);
     expect(isBlockedIpAddress("2002:c0a8:101::1", true)).toBe(false);
+    // 168.63.129.16 (a83f:8110) stays blocked in every embedding, even with private networks allowed:
+    // v4-mapped, NAT64, 6to4, Teredo server, and Teredo obfuscated client (57c0:7eef).
+    for (const address of [
+      "::ffff:168.63.129.16",
+      "64:ff9b::a83f:8110",
+      "2002:a83f:8110::1",
+      "2001:0:a83f:8110:0:0:f7f7:f7f7",
+      "2001:0:808:808:0:0:57c0:7eef",
+    ]) {
+      expect(isBlockedIpAddress(address, true)).toBe(true);
+    }
   });
 
   it("applies the IPv4 policy to Teredo client and server addresses", () => {
@@ -262,10 +284,12 @@ describe("classifyIpAddress", () => {
       "127.0.0.1",
       "169.254.169.254",
       "100.100.100.200",
+      "168.63.129.16",
       "::1",
       "fe80::1",
       "ff02::1",
       "fd00:ec2::254",
+      "fd20:ce::254",
     ]) {
       expect(classifyIpAddress(value)).toBe("always-blocked");
     }

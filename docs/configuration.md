@@ -207,8 +207,9 @@ self-hosted providers that opt in (**Dokploy**, **n8n**, **GitLab**,
 The following targets stay blocked even when the flag is enabled:
 
 - Loopback and localhost (`127.0.0.0/8`, `localhost`, `.localhost`)
-- Link-local and cloud metadata (`169.254.0.0/16`, `100.100.100.200/32`, and
-  metadata hostnames such as `metadata.google.internal`)
+- Link-local and cloud metadata (`169.254.0.0/16`, `100.100.100.200/32`, the Azure
+  platform endpoint `168.63.129.16/32`, the IPv6 metadata endpoints `fd00:ec2::254`
+  and `fd20:ce::254`, and metadata hostnames such as `metadata.google.internal`)
 - Reserved, multicast, and broadcast ranges, and all IPv6 targets
 
 > **Enable this only on a single-tenant, self-hosted runtime that you operate.**
