@@ -19,6 +19,8 @@ For funds flows, carry `next_key` forward, increase `page`, and keep `pageSize` 
 
 Unavailable data, missing permission, an absent record, and provider failures remain errors. They are not converted into successful zero counts. Business failures on shipment/rejection actions are not automatically retried; the shared request layer only refreshes and retries a token rejected as invalid by WeChat.
 
+Numeric response properties named `id` or ending in `_id` retain their numeric type when safely representable. Larger integer identifiers are returned as exact decimal strings taken from the raw JSON text, including settlement-linked order ids. Quoted ids, ordinary amounts and non-ID fractions retain their existing types. Unsafe ID representations that cannot be parsed as exact decimal integers fail instead of returning rounded identifiers.
+
 ## Official API references
 
 Contracts checked against the public WeChat documentation on 2026-10-31. The provider retains existing actions for product publishing/stock, ordinary shipping, category qualification, and basic after-sales rather than adding duplicates.

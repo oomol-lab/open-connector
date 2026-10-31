@@ -163,10 +163,20 @@ async function mintAndCacheAccessToken(input: WechatAccessTokenRequest, cacheKey
   return token;
 }
 
-/** Parse a WeChat JSON response body; non-object payloads read as undefined. */
+/** Parse an object envelope, preserving unsafe numeric ID properties from their original decimal text. */
 export function parseWechatJson(rawText: string): Record<string, unknown> | undefined {
   try {
-    return optionalRecord(JSON.parse(rawText));
+    return optionalRecord(
+      JSON.parse(rawText, (key: string, value: unknown, context?: { source?: string }) => {
+        if (typeof value !== "number" || (key !== "id" && !key.endsWith("_id")) || Number.isSafeInteger(value)) {
+          return value;
+        }
+        // String(value) is already rounded here. Use the parser's original source,
+        // and reject unsupported representations instead of returning a wrong ID.
+        if (!context?.source) throw new Error("WeChat numeric ID source is unavailable");
+        return BigInt(context.source).toString();
+      }),
+    );
   } catch {
     return undefined;
   }

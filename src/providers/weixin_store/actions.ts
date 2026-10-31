@@ -63,6 +63,17 @@ function numericIdInput(description: string): JsonSchema {
   );
 }
 
+/** Numeric response ids stay numbers when safe and use exact decimal strings otherwise. */
+function numericIdOutput(description: string): JsonSchema {
+  return s.union(
+    [
+      s.integer("The id when safely representable as a number."),
+      s.string("The exact decimal id when it exceeds JavaScript's safe integer range."),
+    ],
+    { description },
+  );
+}
+
 const qualificationImageOutputSchema = s.looseObject("The uploaded qualification image.", {
   data: s.looseObject("The uploaded file reference.", {
     file_id: s.nonEmptyString("The file id to use in a category or brand qualification application."),
@@ -107,13 +118,13 @@ const categoryApplicationInputSchema = s.looseRequiredObject(
 );
 
 const categoryApplicationOutputSchema = s.looseObject("The created category audit application.", {
-  audit_id: s.positiveInteger("The audit id to pass to get_category_application."),
+  audit_id: numericIdOutput("The audit id to pass to get_category_application."),
 });
 
 const categoryApplicationDetailOutputSchema = s.looseObject("The category audit application.", {
   info: s.looseObject("The audit status and submitted materials.", {
-    audit_id: s.positiveInteger("The audit id."),
-    cat_id: s.positiveInteger("The leaf category id."),
+    audit_id: numericIdOutput("The audit id."),
+    cat_id: numericIdOutput("The leaf category id."),
     status: s.integer("1 = in review, 2 = rejected, 3 = approved, 4 = canceled."),
     audit_reason: s.string("The rejection reason, when rejected."),
   }),
@@ -123,7 +134,7 @@ const categoryPermissionsOutputSchema = s.looseObject("The store's current categ
   list: s.array(
     "The category permissions.",
     s.looseObject("One category permission.", {
-      id: s.positiveInteger("The leaf category id."),
+      id: numericIdOutput("The leaf category id."),
       status: s.integer("1 = effective, 2 = expired."),
       uneffective_reason: s.string("Why an expired permission is no longer effective."),
     }),
@@ -552,6 +563,9 @@ export const weixinStoreActions: ProviderActionDefinition[] = [
           mch_settle_amount: s.number("Actual or expected settlement in fen; inspect the state."),
           buyer_refund_amount: s.number("Buyer refunds in fen."),
           platform_commission_amount: s.number("Actual or expected platform fee in fen."),
+          post_settlement_expense: s.looseObject("Expenses after settlement, including linked order identifiers.", {
+            freight_insurance_make_up_order_id: numericIdOutput("The linked order id."),
+          }),
         }),
       ),
     }),
@@ -1408,7 +1422,7 @@ export const weixinStoreActions: ProviderActionDefinition[] = [
       list: s.array(
         "Product data.",
         s.looseObject("One product.", {
-          spu_id: s.integer("The product id."),
+          spu_id: numericIdOutput("The product id."),
           product_data: s.looseObject("Sales metrics.", {
             total_sale_gmv: s.number("Lifetime sales GMV, in upstream units."),
             sale_gmv_30d: s.number("30-day sales GMV, in upstream units."),
@@ -1452,7 +1466,7 @@ export const weixinStoreActions: ProviderActionDefinition[] = [
             talent_appid: s.string("The talent appid."),
           }),
           commission_info: s.looseObject("Read-only commission terms.", {
-            promotion_plan_id: s.integer("The plan id."),
+            promotion_plan_id: numericIdOutput("The plan id."),
             promotion_plan_type: s.integer("The plan type."),
             ratio: s.integer(
               "Upstream scale: 1000000 means 100%; not the 0–90 percentage scale of update_league_plan.",
@@ -1502,7 +1516,7 @@ export const weixinStoreActions: ProviderActionDefinition[] = [
       list: s.array(
         "Existing plan identifiers.",
         s.looseObject("One plan.", {
-          promotion_plan_id: s.nullable(s.integer("The plan id.")),
+          promotion_plan_id: s.nullable(numericIdOutput("The plan id.")),
           promotion_plan_type: s.nullable(s.integer("100 all, 200 filtered, 300 specified talents.")),
         }),
       ),
@@ -1612,7 +1626,7 @@ export const weixinStoreActions: ProviderActionDefinition[] = [
       { description: "One approved existing-plan update; commission is required only for edit-and-activate." },
     ),
     outputSchema: s.looseObject("The upstream update result; inspect failures and reread actual state.", {
-      promotion_plan_id: s.integer("The updated plan id."),
+      promotion_plan_id: numericIdOutput("The updated plan id."),
       fail_talent_appids: s.array(
         "Talents that failed to update; a nonempty list means partial failure.",
         s.string("A talent appid."),
