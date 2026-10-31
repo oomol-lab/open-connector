@@ -87,6 +87,189 @@ const deliveryProductFieldMap: Record<string, string> = {
 };
 
 const weixinStoreActionHandlers: ProviderActionHandlers<typeof service, WeixinStoreActionHandler> = {
+  get_product_qr_code(input, context) {
+    return callWechatApi(context, {
+      method: "POST",
+      path: "/channels/ec/product/qrcode/get",
+      body: compactObject({
+        ...readProductShareInput(input),
+        qrcode_type: readBoundedInteger(input.qrcodeType, "qrcodeType", 1, 3),
+      }),
+    });
+  },
+  get_product_tag_link(input, context) {
+    return callWechatApi(context, {
+      method: "POST",
+      path: "/channels/ec/product/taglink/get",
+      body: readProductShareInput(input),
+    });
+  },
+  get_compass_shop_overview(input, context) {
+    return callWechatApi(context, {
+      method: "POST",
+      path: "/channels/ec/compass/shop/overall/get",
+      body: { ds: readCompassDate(input.date) },
+    });
+  },
+  get_funds_balance(_input, context) {
+    return callWechatApi(context, { method: "POST", path: "/channels/ec/funds/getbalance", body: {} });
+  },
+  list_funds_flows(input, context) {
+    const page = readBoundedInteger(input.page, "page", 1, Number.MAX_SAFE_INTEGER) ?? 1;
+    const pageSize = readBoundedInteger(input.pageSize, "pageSize", 1, Number.MAX_SAFE_INTEGER) ?? 10;
+    const nextKey = input.nextKey === undefined ? undefined : requiredInputString(input.nextKey, "nextKey");
+    if (page * pageSize >= 10000 && nextKey === undefined) {
+      throw providerInputError("nextKey is required when page multiplied by pageSize is at least 10000");
+    }
+    const range = readOptionalTimeBounds(input, "startTime", "endTime");
+    return callWechatApi(context, {
+      method: "POST",
+      path: "/channels/ec/funds/getfundsflowlist",
+      body: compactObject({
+        page,
+        page_size: pageSize,
+        next_key: nextKey,
+        start_time: range.start,
+        end_time: range.end,
+        transaction_id:
+          input.transactionId === undefined ? undefined : requiredInputString(input.transactionId, "transactionId"),
+      }),
+    });
+  },
+  get_funds_flow(input, context) {
+    return callWechatApi(context, {
+      method: "POST",
+      path: "/channels/ec/funds/getfundsflowdetail",
+      body: { flow_id: requiredInputString(input.flowId, "flowId") },
+    });
+  },
+  list_order_settlements(input, context) {
+    const settleState = readBoundedInteger(input.settleState, "settleState", 0, 100);
+    const orderState = readBoundedInteger(input.orderState, "orderState", 0, 100);
+    if (
+      settleState === undefined ||
+      ![0, 1, 2, 60, 100].includes(settleState) ||
+      (orderState !== undefined && ![0, 20, 30, 100].includes(orderState))
+    ) {
+      throw providerInputError("settleState must be 0, 1, 2, 60 or 100; orderState must be 0, 20, 30 or 100");
+    }
+    if (input.usePageContext !== undefined && typeof input.usePageContext !== "boolean") {
+      throw providerInputError("usePageContext must be a boolean");
+    }
+    const usePageContext = input.usePageContext ?? true;
+    if (input.pageContext !== undefined && typeof input.pageContext !== "string") {
+      throw providerInputError("pageContext must be a string");
+    }
+    if ((usePageContext && input.offset !== undefined) || (!usePageContext && input.pageContext !== undefined)) {
+      throw providerInputError("Use pageContext with context pagination, or offset with usePageContext false");
+    }
+    const range = readOptionalTimeBounds(input, "createTimeStart", "createTimeEnd");
+    if (range.start !== undefined && range.end !== undefined && range.end === range.start) {
+      throw providerInputError("createTimeEnd is exclusive and must be after createTimeStart");
+    }
+    return callWechatApi(context, {
+      method: "POST",
+      path: "/channels/ec/funds/listorderflow",
+      body: compactObject({
+        order_settle_state: settleState,
+        order_state: orderState,
+        order_pay_method: readBoundedInteger(input.payMethod, "payMethod", 0, 2),
+        order_id: input.orderId === undefined ? undefined : readIdString(input.orderId, "orderId"),
+        pagination_info: compactObject({
+          limit: readBoundedInteger(input.limit, "limit", 1, 100) ?? 20,
+          offset: readBoundedInteger(input.offset, "offset", 0, Number.MAX_SAFE_INTEGER),
+          use_page_ctx: usePageContext,
+          page_ctx: input.pageContext,
+        }),
+        order_create_time_range:
+          range.start === undefined && range.end === undefined
+            ? undefined
+            : compactObject({ begin: range.start, end: range.end }),
+      }),
+    });
+  },
+  list_merchant_tickets(input, context) {
+    const range = readOptionalTimeBounds(input, "startTime", "endTime");
+    return callWechatApi(context, {
+      method: "POST",
+      path: "/channels/ec/platformkf/getmchticketlist",
+      body: compactObject({
+        ticket_state: readBoundedInteger(input.ticketState, "ticketState", 1, 3),
+        ticket_class_type: readBoundedInteger(input.ticketClassType, "ticketClassType", 9, 9),
+        search_ticket_id:
+          input.searchTicketId === undefined ? undefined : requiredInputString(input.searchTicketId, "searchTicketId"),
+        search_start_time: range.start,
+        search_end_time: range.end,
+        sort_order_type: readBoundedInteger(input.sortOrderType, "sortOrderType", 1, 2),
+        limit: readBoundedInteger(input.limit, "limit", 1, 50) ?? 10,
+        start: readBoundedInteger(input.start, "start", 0, Number.MAX_SAFE_INTEGER) ?? 0,
+      }),
+    });
+  },
+  get_merchant_ticket(input, context) {
+    return callWechatApi(context, {
+      method: "POST",
+      path: "/channels/ec/platformkf/getmchticketdetail",
+      body: { ticket_id: requiredInputString(input.ticketId, "ticketId") },
+    });
+  },
+  list_aftersale_reasons(_input, context) {
+    return callWechatApi(context, { method: "POST", path: "/channels/ec/aftersale/reason/get", body: {} });
+  },
+  list_aftersale_reject_reasons(_input, context) {
+    return callWechatApi(context, { method: "POST", path: "/channels/ec/aftersale/rejectreason/get", body: {} });
+  },
+  get_aftersale_complaint(input, context) {
+    return callWechatApi(context, {
+      method: "POST",
+      path: "/channels/ec/aftersale/getcomplaintorder",
+      body: { complaint_id: requiredInputString(input.complaintId, "complaintId") },
+    });
+  },
+  update_delivery_info(input, context) {
+    const changes = objectArray(input.changeInfos, "changeInfos", providerInputError);
+    if (changes.length === 0) throw providerInputError("changeInfos must contain at least one package correction");
+    return callWechatApi(context, {
+      method: "POST",
+      path: "/channels/ec/order/deliveryinfo/update",
+      body: {
+        order_id: readIdString(input.orderId, "orderId"),
+        change_infos: changes.map((change) => ({
+          old: readDeliveryCorrectionPackage(change.old),
+          new: readDeliveryCorrectionPackage(change.new),
+        })),
+      },
+    });
+  },
+  send_exchange_delivery(input, context) {
+    return callWechatApi(context, {
+      method: "POST",
+      path: "/channels/ec/aftersale/acceptexchangereship",
+      body: {
+        after_sale_order_id: requiredInputString(input.afterSaleOrderId, "afterSaleOrderId"),
+        delivery_id: requiredInputString(input.deliveryId, "deliveryId"),
+        waybill_id: requiredInputString(input.waybillId, "waybillId"),
+      },
+    });
+  },
+  async upload_aftersale_image(input, context) {
+    const file = await readTransitFileInput(input.file, context);
+    if (file.sizeBytes > 10 * 1024 * 1024 || file.sizeBytes === 0) {
+      throw providerInputError("file must be non-empty and at most 10 MB");
+    }
+    if (!["image/jpeg", "image/png", "image/bmp", "image/x-ms-bmp", "image/gif"].includes(file.mimeType)) {
+      throw providerInputError("file must be a JPEG, PNG, BMP or GIF image");
+    }
+    const formData = new FormData();
+    formData.set("media", file.file, file.name);
+    return callWechatApi(context, {
+      method: "POST",
+      path: "/shop/ec/basics/img/uploadv2",
+      query: { scene_type: "170", upload_type: "0" },
+      body: formData,
+      timeoutMs: wechatImageUploadTimeoutMs,
+    });
+  },
   async list_league_promoter_products(input, context) {
     const talentAppid = requiredInputString(input.talentAppid, "talentAppid");
     const dataType = positiveInteger(input.dataType, "dataType", providerInputError);
@@ -276,25 +459,7 @@ const weixinStoreActionHandlers: ProviderActionHandlers<typeof service, WeixinSt
     });
   },
   async get_compass_product_data(input, context) {
-    const date = requiredInputString(input.date, "date");
-    const parsed = /^\d{8}$/.test(date)
-      ? new Date(`${date.slice(0, 4)}-${date.slice(4, 6)}-${date.slice(6, 8)}T00:00:00Z`)
-      : new Date(Number.NaN);
-    const today = new Intl.DateTimeFormat("en-CA", {
-      timeZone: "Asia/Shanghai",
-      year: "numeric",
-      month: "2-digit",
-      day: "2-digit",
-    })
-      .format(new Date())
-      .replaceAll("-", "");
-    if (
-      !Number.isFinite(parsed.getTime()) ||
-      parsed.toISOString().slice(0, 10).replaceAll("-", "") !== date ||
-      date >= today
-    ) {
-      throw providerInputError("date must be a valid YYYYMMDD date, yesterday or earlier in Asia/Shanghai");
-    }
+    const date = readCompassDate(input.date);
     const productId = positiveInteger(input.productId, "productId", providerInputError);
     if (!Number.isSafeInteger(productId)) {
       throw providerInputError("productId must be a safe positive integer");
@@ -454,13 +619,7 @@ const weixinStoreActionHandlers: ProviderActionHandlers<typeof service, WeixinSt
     return callWechatApi(context, {
       method: "POST",
       path: "/channels/ec/product/h5url/get",
-      body: compactObject({
-        product_id: readIdString(input.productId, "productId"),
-        wecom_corp_id:
-          input.wecomCorpId === undefined ? undefined : requiredInputString(input.wecomCorpId, "wecomCorpId"),
-        wecom_user_id:
-          input.wecomUserId === undefined ? undefined : requiredInputString(input.wecomUserId, "wecomUserId"),
-      }),
+      body: readProductShareInput(input),
     });
   },
   list_products(input, context) {
@@ -623,6 +782,7 @@ const weixinStoreActionHandlers: ProviderActionHandlers<typeof service, WeixinSt
         after_sale_order_id: requiredInputString(input.afterSaleOrderId, "afterSaleOrderId"),
         reject_reason_type: positiveInteger(input.rejectReasonType, "rejectReasonType", providerInputError),
         reject_reason: optionalString(input.rejectReason),
+        media_files: input.mediaFiles === undefined ? undefined : readAftersaleMedia(input.mediaFiles),
       }),
     });
   },
@@ -869,11 +1029,9 @@ function readTimeRangePair(
 }
 
 function readOptionalTimestamp(value: unknown, fieldName: string): number | undefined {
+  if (value === undefined) return undefined;
   const timestamp = optionalInteger(value);
-  if (timestamp === undefined) {
-    return undefined;
-  }
-  if (timestamp <= 0) {
+  if (timestamp === undefined || !Number.isSafeInteger(timestamp) || timestamp <= 0) {
     throw providerInputError(`${fieldName} must be a Unix timestamp in seconds`);
   }
   return timestamp;
@@ -910,12 +1068,105 @@ function readIdString(value: unknown, fieldName: string): string {
 
 /** Read an optional integer bounded to [min, max]; undefined passes through. */
 function readBoundedInteger(value: unknown, fieldName: string, min: number, max: number): number | undefined {
+  if (value === undefined) return undefined;
   const parsed = optionalInteger(value);
-  if (parsed === undefined) {
-    return undefined;
-  }
-  if (parsed < min || parsed > max) {
+  if (parsed === undefined || !Number.isSafeInteger(parsed) || parsed < min || parsed > max) {
     throw providerInputError(`${fieldName} must be an integer between ${min} and ${max}`);
   }
   return parsed;
+}
+
+/** Product sharing uses the same optional, already-bound WeCom attribution across formats. */
+function readProductShareInput(input: Record<string, unknown>): Record<string, unknown> {
+  return compactObject({
+    product_id: readIdString(input.productId, "productId"),
+    wecom_corp_id: input.wecomCorpId === undefined ? undefined : requiredInputString(input.wecomCorpId, "wecomCorpId"),
+    wecom_user_id: input.wecomUserId === undefined ? undefined : requiredInputString(input.wecomUserId, "wecomUserId"),
+  });
+}
+
+/** Funds and ticket queries allow either time bound independently, unlike order-list ranges. */
+function readOptionalTimeBounds(
+  input: Record<string, unknown>,
+  startField: string,
+  endField: string,
+): { start?: number; end?: number } {
+  const start = readOptionalTimestamp(input[startField], startField);
+  const end = readOptionalTimestamp(input[endField], endField);
+  if (start !== undefined && end !== undefined && end < start)
+    throw providerInputError(`${endField} must be on or after ${startField}`);
+  return { start, end };
+}
+
+/** Corrections must identify the exact old and new express package, not virtual delivery. */
+function readDeliveryCorrectionPackage(value: unknown): Record<string, unknown> {
+  const packageInfo = optionalRecord(value);
+  if (!packageInfo) throw providerInputError("Each change must contain old and new package objects");
+  const products = objectArray(packageInfo.productInfos, "productInfos", providerInputError);
+  if (products.length === 0) throw providerInputError("Each package must contain at least one product");
+  return {
+    delivery_id: requiredInputString(packageInfo.deliveryId, "deliveryId"),
+    waybill_id: requiredInputString(packageInfo.waybillId, "waybillId"),
+    product_infos: products.map((product) => {
+      const count = positiveInteger(product.productCnt, "productCnt", providerInputError);
+      if (!Number.isSafeInteger(count)) throw providerInputError("productCnt must be a safe positive integer");
+      return {
+        product_id: requiredInputString(product.productId, "productId"),
+        sku_id: requiredInputString(product.skuId, "skuId"),
+        product_cnt: count,
+      };
+    }),
+  };
+}
+
+/** C2C evidence URLs include authorization query parameters; preserve them verbatim. */
+function readAftersaleMedia(value: unknown): Record<string, unknown>[] {
+  const media = objectArray(value, "mediaFiles", providerInputError);
+  if (media.length === 0) throw providerInputError("mediaFiles must contain at least one evidence item");
+  return media.map((item) => {
+    if (item.type !== 1 && item.type !== 2)
+      throw providerInputError("mediaFiles[].type must be 1 (image) or 2 (video)");
+    const key = item.type === 1 ? "picture" : "video";
+    if (
+      item[item.type === 1 ? "video" : "picture"] !== undefined ||
+      (item.type === 1 && item.videoPlayLength !== undefined)
+    ) {
+      throw providerInputError("Evidence fields must match the media type");
+    }
+    const reference = optionalRecord(item[key]);
+    if (!reference) throw providerInputError(`mediaFiles[].${key} is required`);
+    const duration = item.videoPlayLength;
+    if (duration !== undefined && (typeof duration !== "number" || !Number.isFinite(duration) || duration < 0)) {
+      throw providerInputError("videoPlayLength must be a non-negative finite number");
+    }
+    return compactObject({
+      type: item.type,
+      [key]: { c2c_url: requiredInputString(reference.c2cUrl, "c2cUrl") },
+      video_play_length: duration,
+    });
+  });
+}
+
+/** Compass only exposes complete historical days in China Standard Time. */
+function readCompassDate(value: unknown): string {
+  const date = requiredInputString(value, "date");
+  const parsed = /^\d{8}$/.test(date)
+    ? new Date(`${date.slice(0, 4)}-${date.slice(4, 6)}-${date.slice(6, 8)}T00:00:00Z`)
+    : new Date(Number.NaN);
+  const today = new Intl.DateTimeFormat("en-CA", {
+    timeZone: "Asia/Shanghai",
+    year: "numeric",
+    month: "2-digit",
+    day: "2-digit",
+  })
+    .format(new Date())
+    .replaceAll("-", "");
+  if (
+    !Number.isFinite(parsed.getTime()) ||
+    parsed.toISOString().slice(0, 10).replaceAll("-", "") !== date ||
+    date >= today
+  ) {
+    throw providerInputError("date must be a valid YYYYMMDD date, yesterday or earlier in Asia/Shanghai");
+  }
+  return date;
 }

@@ -51,10 +51,11 @@ interface WechatAccessTokenCacheEntry {
  * input, so they map to 400 instead of an upstream failure.
  */
 const wechatInvalidInputErrcodes = new Set([
-  9401020, 9700234, 10020017, 10020051, 10020059, 10020060, 10020062, 10020063, 10020065, 10020087, 10020091, 10020094,
-  10020127, 10020504, 10021069, 10021404, 10021405, 10023000, 10023001, 10024003, 10023100, 10023102, 10023104,
-  10023105, 10023106, 10023107, 10023108, 10023109, 10023110, 10023111, 10023112, 10023113, 10023116, 10023117,
-  10023121,
+  606004, 606005, 606042, 6060479, 9700224, 10020000, 10020055, 10020056, 10020193, 10020253, 10020254, 10020261,
+  10020331, 10021098, 669900000, 9401020, 9700234, 10020017, 10020051, 10020059, 10020060, 10020062, 10020063, 10020065,
+  10020087, 10020091, 10020094, 10020127, 10020504, 10021069, 10021404, 10021405, 10023000, 10023001, 10024003,
+  10023100, 10023102, 10023104, 10023105, 10023106, 10023107, 10023108, 10023109, 10023110, 10023111, 10023112,
+  10023113, 10023116, 10023117, 10023121,
 ]);
 
 const accessTokenCache = new Map<string, WechatAccessTokenCacheEntry>();
@@ -198,22 +199,54 @@ export function normalizeWechatApiError(result: WechatApiResult): ProviderReques
     // A bare HTTP 403 with no errcode envelope is the store's optional IP whitelist rejecting the caller.
     message = `${message}. If the store has an IP whitelist configured (微信小店后台 → 服务市场 → 经营工具 → 自研 → IP 白名单), add this runtime's public egress IP to it and try again.`;
   }
-  if (result.status === 429 || errcode === 45009 || errcode === 45011 || errcode === 10020510 || errcode === 10023002) {
+  if (
+    result.status === 429 ||
+    errcode === 45009 ||
+    errcode === 45011 ||
+    errcode === 10020510 ||
+    errcode === 10023002 ||
+    errcode === 100003 ||
+    errcode === 10021044 ||
+    errcode === 10021059
+  ) {
     return new ProviderRequestError(429, message, result.record);
   }
   if (
     errcode === 48001 ||
     errcode === 10020050 ||
+    errcode === 606034 ||
+    errcode === 606064 ||
+    errcode === 10021043 ||
+    errcode === 10080000 ||
     errcode === 10023007 ||
     errcode === 10023114 ||
     errcode === 10023115
   ) {
     return new ProviderRequestError(403, message, result.record, "provider_error");
   }
-  if (errcode === 10023003 || errcode === 10023004 || errcode === 10023006) {
+  if (
+    errcode === 10023003 ||
+    errcode === 10023004 ||
+    errcode === 10023006 ||
+    errcode === 100004 ||
+    errcode === 101100 ||
+    errcode === 606040 ||
+    errcode === 606041 ||
+    errcode === 10020001 ||
+    errcode === 10021041 ||
+    errcode === 10021065
+  ) {
     return new ProviderRequestError(409, message, result.record);
   }
-  if (errcode === 10020052 || errcode === 10023103) {
+  if (
+    errcode === 10020052 ||
+    errcode === 10023103 ||
+    errcode === 100002 ||
+    errcode === 10021050 ||
+    errcode === 10021057 ||
+    errcode === 10021302 ||
+    errcode === 10021500
+  ) {
     return new ProviderRequestError(404, message, result.record);
   }
   if (errcode !== null && ((errcode >= 40000 && errcode < 50000) || wechatInvalidInputErrcodes.has(errcode))) {

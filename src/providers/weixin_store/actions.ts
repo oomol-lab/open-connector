@@ -313,6 +313,69 @@ const productManagePermission = "Manage the products of the connected WeChat Sto
 const orderManagePermission = "Manage the orders of the connected WeChat Store";
 const aftersaleManagePermission = "Manage the after-sale orders of the connected WeChat Store";
 
+const compassPermission = "WeChat Store Compass data access; service providers require permission set 175";
+const fundsPermission = "Read WeChat Store funds; service providers require permission set 138";
+const fundsFlowPermission = "Read WeChat Store funds flows; service providers require permission set 138 or 141";
+const aftersaleReadPermission =
+  "Read WeChat Store after-sales and merchant tickets; service providers require permission set 131";
+const compassDateInputSchema = s.withExamples(
+  s.stringPattern("^[0-9]{8}$", {
+    description: "A valid historical date as YYYYMMDD, yesterday or earlier in Asia/Shanghai.",
+  }),
+  ["20240520"],
+);
+const productShareFields = {
+  productId: productIdInputSchema,
+  wecomCorpId: s.nonEmptyString("Optional WeCom corporation id already bound to this store."),
+  wecomUserId: s.nonEmptyString("Optional member id of the bound WeCom corporation."),
+};
+const deliveryPackageSchema = s.requiredObject("An express package identified by its carrier, waybill and products.", {
+  deliveryId: s.nonEmptyString("Carrier id from list_delivery_companies, or OTHER."),
+  waybillId: s.nonEmptyString("The waybill number."),
+  productInfos: s.array(
+    "The products in this package.",
+    s.requiredObject("One packaged SKU.", {
+      productId: s.nonEmptyString("The product id."),
+      skuId: s.nonEmptyString("The SKU id."),
+      productCnt: s.positiveInteger("The quantity in this package.", { maximum: Number.MAX_SAFE_INTEGER }),
+    }),
+    { minItems: 1 },
+  ),
+});
+const merchantTicketSchema = s.looseObject(
+  "A merchant ticket. Currently only shipping-reminder tickets are supported, not general platform notices.",
+  {
+    ticket_id: s.string("The ticket id."),
+    ticket_class_type: s.integer("9 = shipping reminder."),
+    ticket_state: s.integer("1 = awaiting merchant, 2 = awaiting platform, 3 = closed."),
+    ticket_deal_end_time: s.integer("The merchant response deadline as a Unix timestamp in seconds."),
+    order_id: s.string("The related order id."),
+    aftersale_id: s.string("The related after-sale id, when present."),
+    description: s.string("The issue description."),
+    merchant_operate: s.looseObject("The merchant's response and negotiation record."),
+    platform_operate: s.looseObject("The platform's review and response."),
+  },
+);
+const aftersaleMediaSchema = s.union([
+  s.requiredObject("An image previously uploaded by upload_aftersale_image.", {
+    type: s.literal(1),
+    picture: s.requiredObject("The image reference.", {
+      c2cUrl: s.nonEmptyString("The complete img_info.img_url, including all query parameters."),
+    }),
+  }),
+  s.object(
+    "A video already uploaded through WeChat's after-sale video upload protocol.",
+    {
+      type: s.literal(2),
+      video: s.requiredObject("The video reference.", {
+        c2cUrl: s.nonEmptyString("The complete video C2C URL, including all query parameters."),
+      }),
+      videoPlayLength: s.number("Optional video duration in seconds.", { minimum: 0 }),
+    },
+    { optional: ["videoPlayLength"] },
+  ),
+]);
+
 const leaguePermission =
   "WeChat Store alliance access must be enabled and approved; service providers require permission set 141";
 const leaguePlanIdentity = {
@@ -328,6 +391,336 @@ const leaguePlanStatus = s.integer(
 );
 
 export const weixinStoreActions: ProviderActionDefinition[] = [
+  defineProviderAction(service, {
+    name: "get_product_qr_code",
+    operationType: "read",
+    description:
+      "Get a QR-code image URL for an on-sale self-operated product, optionally as standard or gift artwork. Optional bound WeCom ids attribute resulting orders. This does not publish the image.",
+    inputSchema: s.actionInput(
+      {
+        ...productShareFields,
+        qrcodeType: s.union([s.literal(1), s.literal(2), s.literal(3)], {
+          description: "1 = QR code (default), 2 = standard artwork, 3 = gift artwork.",
+        }),
+      },
+      ["productId"],
+      "The product QR code to retrieve.",
+    ),
+    outputSchema: s.looseObject("The QR-code response.", {
+      product_qrcode: s.string("The QR-code image URL, not a purchase page URL."),
+    }),
+  }),
+  defineProviderAction(service, {
+    name: "get_product_tag_link",
+    operationType: "read",
+    description:
+      "Get the WeChat sharing token for an on-sale self-operated product, with optional bound WeCom attribution. The returned token only opens inside WeChat; it is not an ordinary HTTPS link.",
+    inputSchema: s.actionInput(productShareFields, ["productId"], "The product sharing token to retrieve."),
+    outputSchema: s.looseObject("The sharing-token response.", {
+      product_taglink: s.string("The complete WeChat-only sharing token."),
+    }),
+  }),
+  defineProviderAction(service, {
+    name: "get_compass_shop_overview",
+    operationType: "read",
+    description:
+      "Read daily shop-wide product clicks, transactions and refunds. T+1 historical data only; no same-day traffic inference. Counts and monetary values retain upstream strings, with money in fen.",
+    inputSchema: s.actionInput({ date: compassDateInputSchema }, ["date"], "The historical day to inspect."),
+    outputSchema: s.looseObject("Daily shop metrics.", {
+      data: s.looseObject("Historical shop-wide data.", {
+        product_click_uv: s.string("Unique product-click visitors."),
+        pay_gmv: s.string("Paid GMV in fen."),
+        pay_uv: s.string("Paying users."),
+        pay_order_cnt: s.string("Paid orders."),
+        pay_refund_gmv: s.string("Refund amount in fen."),
+        live_pay_gmv: s.string("Live-stream GMV in fen."),
+        feed_pay_gmv: s.string("Short-video GMV in fen."),
+      }),
+    }),
+    providerPermissions: [compassPermission],
+  }),
+  defineProviderAction(service, {
+    name: "get_funds_balance",
+    operationType: "read",
+    description:
+      "Read the store's available and pending-settlement balances. Does not withdraw funds or change the settlement account. Amounts retain the upstream units.",
+    inputSchema: emptyInput,
+    outputSchema: s.looseObject("The funds balance.", {
+      available_amount: s.number("Available balance in upstream units."),
+      pending_amount: s.number("Pending-settlement balance in upstream units."),
+      sub_mchid: s.string("The sub-merchant id."),
+    }),
+    providerPermissions: [fundsPermission],
+  }),
+  defineProviderAction(service, {
+    name: "list_funds_flows",
+    operationType: "read",
+    description:
+      "List funds-flow ids for reconciliation; inspect each with get_funds_flow. Daily flows become available after 16:00 the following day. Continue while has_more using the returned next_key, incrementing page and keeping pageSize unchanged. nextKey is required when page * pageSize >= 10000.",
+    inputSchema: s.actionInput(
+      {
+        page: s.positiveInteger("One-based page, defaults to 1.", { default: 1, maximum: Number.MAX_SAFE_INTEGER }),
+        pageSize: s.positiveInteger("Page size, defaults to 10.", { default: 10, maximum: Number.MAX_SAFE_INTEGER }),
+        nextKey: nextKeyInputSchema,
+        startTime: s.positiveInteger("Optional flow start time, Unix seconds.", { maximum: Number.MAX_SAFE_INTEGER }),
+        endTime: s.positiveInteger(
+          "Optional flow end time, Unix seconds. WeChat caps this to yesterday's midnight before 16:00, or today's midnight after 16:00.",
+          { maximum: Number.MAX_SAFE_INTEGER },
+        ),
+        transactionId: s.nonEmptyString("Optional payment transaction id."),
+      },
+      [],
+      "The funds-flow page to retrieve.",
+    ),
+    outputSchema: s.looseObject("The funds-flow page.", {
+      flow_ids: s.array("Flow ids for get_funds_flow.", s.string()),
+      has_more: s.boolean("Whether another page exists."),
+      next_key: s.string("Cursor for the next page."),
+    }),
+    providerPermissions: [fundsFlowPermission],
+  }),
+  defineProviderAction(service, {
+    name: "get_funds_flow",
+    operationType: "read",
+    description:
+      "Read one funds flow, including income/expense, fees and related order/after-sale ids. Preserve the upstream amount units; an unavailable flow is an error, not a zero balance.",
+    inputSchema: s.actionInput(
+      { flowId: s.nonEmptyString("A flow id from list_funds_flows.") },
+      ["flowId"],
+      "The flow to inspect.",
+    ),
+    outputSchema: s.looseObject("The funds-flow detail.", {
+      funds_flow: s.looseObject("The recorded flow.", {
+        flow_id: s.string("The flow id."),
+        funds_type: s.integer("The upstream funds category."),
+        funds_type_desc: s.string("The category description."),
+        flow_type: s.integer("1 = income, 2 = expense."),
+        amount: s.number("Flow amount in upstream units."),
+        balance: s.number("Balance in upstream units."),
+        bookkeeping_time: s.string("The upstream bookkeeping time."),
+        related_info_list: s.array(
+          "Linked orders, after-sales and other transactions.",
+          s.looseObject("One related transaction."),
+        ),
+      }),
+    }),
+    providerPermissions: [fundsFlowPermission],
+  }),
+  defineProviderAction(service, {
+    name: "list_order_settlements",
+    operationType: "read",
+    description:
+      "Read order settlement, refund and fee breakdowns, in fen. Uses stable page-context pagination by default: pass the returned page_ctx until it is empty. Set usePageContext false to use offsets. Expected settlement is not actual profit or received cash.",
+    inputSchema: s.actionInput(
+      {
+        settleState: s.union([s.literal(0), s.literal(1), s.literal(2), s.literal(60), s.literal(100)], {
+          description: "0 = all, 1 = pending, 2 = no settlement, 60 = settled, 100 = partly settled.",
+        }),
+        orderState: s.union([s.literal(0), s.literal(20), s.literal(30), s.literal(100)], {
+          description: "0 = all, 20 = pending shipment, 30 = awaiting receipt, 100 = completed.",
+        }),
+        payMethod: s.union([s.literal(0), s.literal(1), s.literal(2)], {
+          description: "0 = all, 1 = ordinary payment, 2 = pay after use.",
+        }),
+        orderId: orderIdInputSchema,
+        limit: s.positiveInteger("Page size, defaults to 20, at most 100.", { default: 20, maximum: 100 }),
+        offset: s.nonNegativeInteger("Offset; only valid when usePageContext is false.", {
+          maximum: Number.MAX_SAFE_INTEGER,
+        }),
+        usePageContext: s.boolean({ description: "Use stable context pagination, defaults to true.", default: true }),
+        pageContext: s.string("The previous page_ctx. Omit or pass an empty string for the first page."),
+        createTimeStart: s.positiveInteger("Optional inclusive creation-time start, Unix seconds.", {
+          maximum: Number.MAX_SAFE_INTEGER,
+        }),
+        createTimeEnd: s.positiveInteger("Optional exclusive creation-time end, Unix seconds.", {
+          maximum: Number.MAX_SAFE_INTEGER,
+        }),
+      },
+      ["settleState"],
+      "The settlement filters and page.",
+    ),
+    outputSchema: s.looseObject("The settlement page.", {
+      total_count: s.integer("Approximate total, which may change during pagination."),
+      page_ctx: s.string("Continuation context; empty means no further page."),
+      data_list: s.array(
+        "Order settlement records; all upstream fields are preserved.",
+        s.looseObject("One settlement record.", {
+          order_id: s.string("Order id."),
+          order_settle_state: s.integer("Settlement state."),
+          mch_received_amount: s.number("Merchant receipts in fen."),
+          expense_amount: s.number("Expenses in fen."),
+          mch_settle_amount: s.number("Actual or expected settlement in fen; inspect the state."),
+          buyer_refund_amount: s.number("Buyer refunds in fen."),
+          platform_commission_amount: s.number("Actual or expected platform fee in fen."),
+        }),
+      ),
+    }),
+    providerPermissions: [fundsPermission],
+  }),
+  defineProviderAction(service, {
+    name: "list_merchant_tickets",
+    operationType: "read",
+    description:
+      "List merchant complaint tickets and response deadlines. WeChat currently exposes shipping-reminder tickets (class 9) only; this is not a general platform-notification inbox. Paginate with start/limit and total; omitted state includes all states.",
+    inputSchema: s.actionInput(
+      {
+        ticketState: s.union([s.literal(1), s.literal(2), s.literal(3)], {
+          description: "1 = awaiting merchant, 2 = awaiting platform, 3 = closed.",
+        }),
+        ticketClassType: s.literal(9, { description: "The currently supported shipping-reminder class." }),
+        searchTicketId: s.nonEmptyString("Optional ticket or order id."),
+        startTime: s.positiveInteger("Optional ticket creation-time start, Unix seconds.", {
+          maximum: Number.MAX_SAFE_INTEGER,
+        }),
+        endTime: s.positiveInteger("Optional ticket creation-time end, Unix seconds.", {
+          maximum: Number.MAX_SAFE_INTEGER,
+        }),
+        sortOrderType: s.union([s.literal(1), s.literal(2)], {
+          description: "1 = creation time, 2 = response deadline ascending. Omit for creation time descending.",
+        }),
+        limit: s.positiveInteger("Page size, defaults to 10. This action follows WeChat's recommended maximum of 50.", {
+          default: 10,
+          maximum: 50,
+        }),
+        start: s.nonNegativeInteger("Zero-based page offset, defaults to 0.", {
+          default: 0,
+          maximum: Number.MAX_SAFE_INTEGER,
+        }),
+      },
+      [],
+      "Ticket filters and pagination.",
+    ),
+    outputSchema: s.looseObject("The merchant ticket page.", {
+      ticket_item_list: s.array("Merchant tickets.", merchantTicketSchema),
+      total: s.integer("Total matching tickets."),
+    }),
+    providerPermissions: [aftersaleReadPermission],
+  }),
+  defineProviderAction(service, {
+    name: "get_merchant_ticket",
+    operationType: "read",
+    description: "Read one merchant complaint ticket, including its deadline and merchant/platform response history.",
+    inputSchema: s.actionInput(
+      { ticketId: s.nonEmptyString("The ticket id from list_merchant_tickets.") },
+      ["ticketId"],
+      "The ticket to inspect.",
+    ),
+    outputSchema: s.looseObject("The ticket detail.", { merchant_ticket: merchantTicketSchema }),
+    providerPermissions: [aftersaleReadPermission],
+  }),
+  defineProviderAction(service, {
+    name: "list_aftersale_reasons",
+    operationType: "read",
+    description: "Read the current after-sale reason codes and labels instead of guessing their meanings.",
+    inputSchema: emptyInput,
+    outputSchema: s.looseObject("The after-sale reason dictionary.", {
+      reason_list: s.array(
+        "Available reasons.",
+        s.looseObject("One reason.", {
+          reason: s.string("The upstream reason code."),
+          reason_text: s.string("The reason label."),
+        }),
+      ),
+    }),
+    providerPermissions: [aftersaleReadPermission],
+  }),
+  defineProviderAction(service, {
+    name: "list_aftersale_reject_reasons",
+    operationType: "read",
+    description:
+      "Read current rejection reasons, applicable after-sale scenes and need_proof. If a chosen reason requires proof, upload images with upload_aftersale_image and pass mediaFiles to reject_aftersale.",
+    inputSchema: emptyInput,
+    outputSchema: s.looseObject("The after-sale rejection dictionary.", {
+      reason_list: s.array(
+        "Available rejection reasons.",
+        s.looseObject("One rejection reason.", {
+          reject_reason_type: s.integer("Code passed to reject_aftersale."),
+          reject_reason_type_text: s.string("Reason label."),
+          reject_reason: s.string("Default explanation."),
+          reject_scene: s.integer(
+            "1 = refund, 4 = return/refund, 5 = exchange, 6 = exchange shipment, 7 = fast-exchange receipt.",
+          ),
+          need_proof: s.integer("1 means evidence is required."),
+        }),
+      ),
+    }),
+    providerPermissions: [aftersaleReadPermission],
+  }),
+  defineProviderAction(service, {
+    name: "get_aftersale_complaint",
+    operationType: "read",
+    description:
+      "Read an after-sale dispute by its complaint id, including state and evidence history. This does not submit evidence, accept a refund or resolve the dispute.",
+    inputSchema: s.actionInput(
+      { complaintId: s.nonEmptyString("The complaint id from an after-sale record or dispute event.") },
+      ["complaintId"],
+      "The dispute to inspect.",
+    ),
+    outputSchema: s.looseObject("The dispute detail.", {
+      after_sale_order_id: s.string("The after-sale id."),
+      order_id: s.string("The order id."),
+      status: s.integer("The upstream dispute status."),
+      history: s.array(
+        "Dispute events, including media_infos with temporary evidence URLs.",
+        s.looseObject("One dispute event."),
+      ),
+    }),
+    providerPermissions: [aftersaleReadPermission],
+  }),
+  defineProviderAction(service, {
+    name: "update_delivery_info",
+    operationType: "write",
+    description:
+      "Correct express-package logistics using old/new package identities (change_infos), including split shipments where supported. WeChat permits at most three corrections before order completion and rejects virtual-goods corrections. Confirm the actual shipment before changing its carrier or waybill.",
+    inputSchema: s.actionInput(
+      {
+        orderId: orderIdInputSchema,
+        changeInfos: s.array(
+          "Package corrections.",
+          s.requiredObject("One package correction.", { old: deliveryPackageSchema, new: deliveryPackageSchema }),
+          { minItems: 1 },
+        ),
+      },
+      ["orderId", "changeInfos"],
+      "The logistics correction to submit.",
+    ),
+    outputSchema: emptyOutputSchema,
+    providerPermissions: [orderManagePermission],
+  }),
+  defineProviderAction(service, {
+    name: "send_exchange_delivery",
+    operationType: "write",
+    description:
+      "Record shipment of a replacement in an exchange after receiving the buyer's return. Requires an actual carrier and waybill. Do not submit shipments for multiple after-sales of the same order within one minute.",
+    inputSchema: s.actionInput(
+      {
+        afterSaleOrderId: s.nonEmptyString("The exchange after-sale id."),
+        deliveryId: s.nonEmptyString("Carrier id from list_delivery_companies, or OTHER."),
+        waybillId: s.nonEmptyString("The actual replacement waybill number."),
+      },
+      ["afterSaleOrderId", "deliveryId", "waybillId"],
+      "The replacement shipment.",
+    ),
+    outputSchema: emptyOutputSchema,
+    providerPermissions: [aftersaleManagePermission],
+  }),
+  defineProviderAction(service, {
+    name: "upload_aftersale_image",
+    operationType: "write",
+    description:
+      "Upload a JPEG, PNG, BMP or GIF transit file up to 10 MB as after-sale evidence (scene 170). Returns a C2C image URL for reject_aftersale mediaFiles. Keep the complete URL including query parameters; ordinary product-image URLs cannot substitute for this upload.",
+    inputSchema: s.actionInput(
+      { file: s.transitFile("The evidence image uploaded to the local transit file API.") },
+      ["file"],
+      "The after-sale evidence image.",
+    ),
+    outputSchema: s.looseObject("The evidence upload result.", {
+      img_info: s.looseObject("The uploaded image.", {
+        img_url: s.string("Complete C2C URL to pass unchanged as mediaFiles[].picture.c2cUrl."),
+      }),
+    }),
+    providerPermissions: [aftersaleManagePermission],
+  }),
   defineProviderAction(service, {
     name: "upload_qualification_image",
     operationType: "write",
@@ -518,11 +911,7 @@ export const weixinStoreActions: ProviderActionDefinition[] = [
     description:
       "Get a shareable H5 purchase link for an on-sale, self-operated store product. Optional linked WeCom company and member ids attribute orders to that company. Only WeChat Store accounts support this API.",
     inputSchema: s.actionInput(
-      {
-        productId: productIdInputSchema,
-        wecomCorpId: s.nonEmptyString("The id of a WeCom company linked to this store; omit for an ordinary link."),
-        wecomUserId: s.nonEmptyString("The member id within the linked WeCom company."),
-      },
+      productShareFields,
       ["productId"],
       "The on-sale, self-operated product whose H5 link to retrieve.",
     ),
@@ -839,12 +1228,16 @@ export const weixinStoreActions: ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "reject_aftersale",
     operationType: "write",
-    description: "Reject a buyer's after-sale request with a reason.",
+    description:
+      "Reject a buyer's after-sale request using a current reason from list_aftersale_reject_reasons. Check reject_scene and need_proof; when proof is required, supply mediaFiles with complete C2C URLs (upload_aftersale_image for images).",
     inputSchema: s.actionInput(
       {
         afterSaleOrderId: s.nonEmptyString("The after_sale_order_id to reject."),
-        rejectReasonType: s.positiveInteger("The rejection reason type, from the reason enum of the after-sale order."),
+        rejectReasonType: s.positiveInteger("The applicable rejection code from list_aftersale_reject_reasons."),
         rejectReason: s.nonEmptyString("A custom rejection description; a default description is used when omitted."),
+        mediaFiles: s.array("Evidence required when the selected reason has need_proof = 1.", aftersaleMediaSchema, {
+          minItems: 1,
+        }),
       },
       ["afterSaleOrderId", "rejectReasonType"],
       "The after-sale rejection.",
@@ -926,12 +1319,7 @@ export const weixinStoreActions: ProviderActionDefinition[] = [
       "Read historical Compass product click and transaction data. T+1 only: date must be yesterday or earlier in Asia/Shanghai. Monetary values and counts retain upstream string units.",
     inputSchema: s.actionInput(
       {
-        date: s.withExamples(
-          s.stringPattern("^[0-9]{8}$", {
-            description: "A valid historical date as YYYYMMDD, yesterday or earlier in Asia/Shanghai.",
-          }),
-          ["20240520"],
-        ),
+        date: compassDateInputSchema,
         productId: numericIdInput("The product id, no greater than JavaScript's maximum safe integer."),
       },
       ["date", "productId"],
@@ -956,7 +1344,7 @@ export const weixinStoreActions: ProviderActionDefinition[] = [
         }),
       }),
     }),
-    providerPermissions: ["WeChat Store Compass data access; service providers require permission set 175"],
+    providerPermissions: [compassPermission],
   }),
   defineProviderAction(service, {
     name: "get_product_restricted_info",
