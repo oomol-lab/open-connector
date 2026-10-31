@@ -45,16 +45,16 @@ interface WechatAccessTokenCacheEntry {
 }
 
 /**
- * WeChat Store errcodes outside the 4xxxx range that the category and
- * qualification docs describe as bad parameters or materials, such as an
- * invalid or non-leaf category id, a mismatched certificate group, or a file id
- * that did not come from the qualification upload. The caller has to fix the
+ * WeChat Store errcodes outside the 4xxxx range that identify invalid input,
+ * such as category or qualification errors, an ineligible product for an H5
+ * link, or a WeCom account not linked to the store. The caller has to fix the
  * input, so they map to 400 instead of an upstream failure.
  */
 const wechatInvalidInputErrcodes = new Set([
-  9401020, 9700234, 10020017, 10020059, 10020060, 10020062, 10020063, 10020087, 10020094, 10020127, 10020504, 10021069,
-  10023000, 10023001, 10024003, 10023100, 10023102, 10023104, 10023105, 10023106, 10023107, 10023108, 10023109,
-  10023110, 10023111, 10023112, 10023113, 10023116, 10023117, 10023121,
+  9401020, 9700234, 10020017, 10020051, 10020059, 10020060, 10020062, 10020063, 10020065, 10020087, 10020091, 10020094,
+  10020127, 10020504, 10021069, 10021404, 10021405, 10023000, 10023001, 10024003, 10023100, 10023102, 10023104,
+  10023105, 10023106, 10023107, 10023108, 10023109, 10023110, 10023111, 10023112, 10023113, 10023116, 10023117,
+  10023121,
 ]);
 
 const accessTokenCache = new Map<string, WechatAccessTokenCacheEntry>();
@@ -201,13 +201,19 @@ export function normalizeWechatApiError(result: WechatApiResult): ProviderReques
   if (result.status === 429 || errcode === 45009 || errcode === 45011 || errcode === 10020510 || errcode === 10023002) {
     return new ProviderRequestError(429, message, result.record);
   }
-  if (errcode === 48001 || errcode === 10023007 || errcode === 10023114 || errcode === 10023115) {
+  if (
+    errcode === 48001 ||
+    errcode === 10020050 ||
+    errcode === 10023007 ||
+    errcode === 10023114 ||
+    errcode === 10023115
+  ) {
     return new ProviderRequestError(403, message, result.record, "provider_error");
   }
   if (errcode === 10023003 || errcode === 10023004 || errcode === 10023006) {
     return new ProviderRequestError(409, message, result.record);
   }
-  if (errcode === 10023103) {
+  if (errcode === 10020052 || errcode === 10023103) {
     return new ProviderRequestError(404, message, result.record);
   }
   if (errcode !== null && ((errcode >= 40000 && errcode < 50000) || wechatInvalidInputErrcodes.has(errcode))) {

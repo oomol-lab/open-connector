@@ -513,6 +513,24 @@ export const weixinStoreActions: ProviderActionDefinition[] = [
     outputSchema: productOutputSchema,
   }),
   defineProviderAction(service, {
+    name: "get_product_h5_url",
+    operationType: "read",
+    description:
+      "Get a shareable H5 purchase link for an on-sale, self-operated store product. Optional linked WeCom company and member ids attribute orders to that company. Only WeChat Store accounts support this API.",
+    inputSchema: s.actionInput(
+      {
+        productId: productIdInputSchema,
+        wecomCorpId: s.nonEmptyString("The id of a WeCom company linked to this store; omit for an ordinary link."),
+        wecomUserId: s.nonEmptyString("The member id within the linked WeCom company."),
+      },
+      ["productId"],
+      "The on-sale, self-operated product whose H5 link to retrieve.",
+    ),
+    outputSchema: s.looseObject("The product's H5 purchase link.", {
+      product_h5url: s.url("The shareable product H5 short link returned by WeChat."),
+    }),
+  }),
+  defineProviderAction(service, {
     name: "list_products",
     operationType: "read",
     description: "List the product ids of the store, paginated by cursor.",

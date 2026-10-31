@@ -450,6 +450,19 @@ const weixinStoreActionHandlers: ProviderActionHandlers<typeof service, WeixinSt
       }),
     });
   },
+  get_product_h5_url(input, context) {
+    return callWechatApi(context, {
+      method: "POST",
+      path: "/channels/ec/product/h5url/get",
+      body: compactObject({
+        product_id: readIdString(input.productId, "productId"),
+        wecom_corp_id:
+          input.wecomCorpId === undefined ? undefined : requiredInputString(input.wecomCorpId, "wecomCorpId"),
+        wecom_user_id:
+          input.wecomUserId === undefined ? undefined : requiredInputString(input.wecomUserId, "wecomUserId"),
+      }),
+    });
+  },
   list_products(input, context) {
     return callWechatApi(context, {
       method: "POST",
