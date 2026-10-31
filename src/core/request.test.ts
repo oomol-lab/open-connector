@@ -161,6 +161,7 @@ describe("isBlockedIpAddress", () => {
       "100::1",
       "fd00:ec2::254",
       "fd20:ce::254",
+      "fd00:c1::a9fe:a9fe",
     ]) {
       expect(isBlockedIpAddress(address)).toBe(true);
       expect(isBlockedIpAddress(address, true)).toBe(true);
@@ -168,7 +169,14 @@ describe("isBlockedIpAddress", () => {
   });
 
   it("blocks unique-local and site-local IPv6 unless private networks are allowed", () => {
-    for (const address of ["fd00::1", "fc00::1", "fec0::1", "fd7a:115c:a1e0::1", "fd20:ce::253"]) {
+    for (const address of [
+      "fd00::1",
+      "fc00::1",
+      "fec0::1",
+      "fd7a:115c:a1e0::1",
+      "fd20:ce::253",
+      "fd00:c1::a9fe:a9fd",
+    ]) {
       expect(isBlockedIpAddress(address)).toBe(true);
       expect(isBlockedIpAddress(address, true)).toBe(false);
     }
@@ -290,6 +298,7 @@ describe("classifyIpAddress", () => {
       "ff02::1",
       "fd00:ec2::254",
       "fd20:ce::254",
+      "fd00:c1::a9fe:a9fe",
     ]) {
       expect(classifyIpAddress(value)).toBe("always-blocked");
     }

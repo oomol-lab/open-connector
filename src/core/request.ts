@@ -273,10 +273,11 @@ const reservedIpv4Cidrs: Array<[number, number]> = [
 // Trusted-host only: RFC 2544 benchmark space used by aTrust/EasyConnect-class VPNs to map
 // public SaaS hostnames into locally routed addresses.
 const vpnMappedIpv4Cidrs: Array<[number, number]> = [[ipv4ToNumber("198.18.0.0"), 15]];
-// Always blocked: unspecified/loopback (::, ::1), link-local (fe80::/10), the AWS IMDS
-// (fd00:ec2::254) and Google Cloud metadata server (fd20:ce::254) IPv6 endpoints, which sit
-// inside the flag-gated ULA range, multicast (ff00::/8), plus discard, documentation, benchmark,
-// and other special-purpose IPv6 ranges (RFC 6890 registry).
+// Always blocked: unspecified/loopback (::, ::1), link-local (fe80::/10), the IPv6 metadata
+// endpoints of AWS (fd00:ec2::254), Google Cloud (fd20:ce::254), and Oracle Cloud
+// (fd00:c1::a9fe:a9fe, used by IPv6-only instances), which sit inside the flag-gated ULA range,
+// multicast (ff00::/8), plus discard, documentation, benchmark, and other special-purpose IPv6
+// ranges (RFC 6890 registry).
 const reservedIpv6Cidrs: Array<[Uint8Array, number]> = [
   [ipv6ToBytes("::"), 128],
   [ipv6ToBytes("::1"), 128],
@@ -287,6 +288,7 @@ const reservedIpv6Cidrs: Array<[Uint8Array, number]> = [
   [ipv6ToBytes("2001:db8::"), 32],
   [ipv6ToBytes("3fff::"), 20],
   [ipv6ToBytes("5f00::"), 16],
+  [ipv6ToBytes("fd00:c1::a9fe:a9fe"), 128],
   [ipv6ToBytes("fd00:ec2::254"), 128],
   [ipv6ToBytes("fd20:ce::254"), 128],
   [ipv6ToBytes("fe80::"), 10],

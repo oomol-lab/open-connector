@@ -208,9 +208,12 @@ The following targets stay blocked even when the flag is enabled:
 
 - Loopback and localhost (`127.0.0.0/8`, `localhost`, `.localhost`)
 - Link-local and cloud metadata (`169.254.0.0/16`, `100.100.100.200/32`, the Azure
-  platform endpoint `168.63.129.16/32`, the IPv6 metadata endpoints `fd00:ec2::254`
-  and `fd20:ce::254`, and metadata hostnames such as `metadata.google.internal`)
-- Reserved, multicast, and broadcast ranges, and all IPv6 targets
+  platform endpoint `168.63.129.16/32`, the IPv6 metadata endpoints `fd00:ec2::254`,
+  `fd20:ce::254`, and `fd00:c1::a9fe:a9fe`, and metadata hostnames such as
+  `metadata.google.internal`)
+- Reserved, multicast, and broadcast ranges
+- IPv6 address literals in URLs; a hostname that resolves to IPv6 addresses goes through
+  the same checks as one that resolves to IPv4
 
 > **Enable this only on a single-tenant, self-hosted runtime that you operate.**
 > On a shared or multi-tenant deployment, turning it on lets any connection
