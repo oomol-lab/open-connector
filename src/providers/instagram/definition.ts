@@ -4,12 +4,12 @@ import { instagramActions, instagramOAuthScopes } from "./actions.ts";
 
 const service = "instagram";
 
-/** Instagram API provider using an operator-owned Meta Business application. */
+/** Instagram API provider: OAuth through an operator-owned Meta app, or a pasted Facebook Login access token. */
 export const provider: ProviderDefinition = {
   service,
   displayName: "Instagram",
   categories: ["Social", "Marketing"],
-  authTypes: ["oauth2"],
+  authTypes: ["oauth2", "api_key"],
   auth: [
     {
       type: "oauth2",
@@ -31,6 +31,25 @@ export const provider: ProviderDefinition = {
           "Copy the Instagram App ID and App Secret into the local OAuth client configuration.",
         ],
       },
+    },
+    {
+      type: "api_key",
+      label: "Facebook Login access token",
+      placeholder: "EAAG...",
+      description:
+        "Instagram API with Facebook Login: a Page access token, or a user or system-user token that can list Pages, for a Facebook Page linked to an Instagram Business or Creator account. Grant instagram_basic and pages_show_list, plus instagram_manage_comments, instagram_manage_insights or instagram_content_publish for the matching actions. Prefer a long-lived or system-user token; OpenConnector does not refresh it. Messaging (send_message) requires OAuth.",
+      extraFields: [
+        {
+          key: "instagramAccountId",
+          label: "Instagram account ID",
+          inputType: "text",
+          required: false,
+          secret: false,
+          placeholder: "17841400000000000",
+          description:
+            "Only needed when the token reaches several Pages that each link an Instagram account. Leave empty to use the only linked account.",
+        },
+      ],
     },
   ],
   homepageUrl: "https://www.instagram.com/",
