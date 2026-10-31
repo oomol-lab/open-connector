@@ -53,10 +53,10 @@ const categoryDetailOutputSchema = s.looseObject("The upstream WeChat category d
  * numbers but returns them as strings from list_categories and get_category, so
  * both forms are accepted and the executor sends them upstream as numbers.
  */
-function numericIdInput(description: string): JsonSchema {
+function numericIdInput(description: string, maximum?: number): JsonSchema {
   return s.union(
     [
-      s.positiveInteger("The id as a number."),
+      s.positiveInteger("The id as a number.", { maximum }),
       s.stringPattern("^[1-9][0-9]*$", { description: "The id as a numeric string." }),
     ],
     { description },
@@ -394,8 +394,11 @@ const leaguePlanIdentity = {
     description:
       "100 = all talents, 300 = specified talents. These endpoints do not support filtered audience type 200.",
   }),
-  productId: numericIdInput("The existing product id; must be a safe positive integer."),
-  promotionPlanId: numericIdInput("The existing promotion plan id; must be a safe positive integer."),
+  productId: numericIdInput("The existing product id; must be a safe positive integer.", Number.MAX_SAFE_INTEGER),
+  promotionPlanId: numericIdInput(
+    "The existing promotion plan id; numeric strings must also be within the safe integer range. Larger returned ids cannot be used by this action.",
+    Number.MAX_SAFE_INTEGER,
+  ),
 };
 const leaguePlanStatus = s.integer(
   "1 active, 2 delisted, 4 deleted, 5 ineligible, 7 product delisted, 8 expired, 9 banned, 10 pending activation.",
@@ -816,7 +819,12 @@ export const weixinStoreActions: ProviderActionDefinition[] = [
     operationType: "read",
     description: "Get the status and any rejection reason of a category application by audit id.",
     inputSchema: s.actionInput(
-      { auditId: s.positiveInteger("The audit_id returned by apply_category.") },
+      {
+        auditId: numericIdInput(
+          "The audit_id returned by apply_category, as a number or decimal string, at most 9007199254740991. Larger returned ids are preserved for reporting but cannot be queried by this action.",
+          Number.MAX_SAFE_INTEGER,
+        ),
+      },
       ["auditId"],
       "The category application to inspect.",
     ),

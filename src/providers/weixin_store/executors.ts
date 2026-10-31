@@ -542,10 +542,14 @@ const weixinStoreActionHandlers: ProviderActionHandlers<typeof service, WeixinSt
     });
   },
   get_category_application(input, context) {
+    const auditId = positiveInteger(input.auditId, "auditId", providerInputError);
+    if (!Number.isSafeInteger(auditId)) {
+      throw providerInputError("auditId must be a safe positive integer; larger audit ids are not supported");
+    }
     return callWechatApi(context, {
       method: "POST",
       path: "/shop/ec/category/getbizcatflowdetail",
-      body: { audit_id: positiveInteger(input.auditId, "auditId", providerInputError) },
+      body: { audit_id: auditId },
     });
   },
   list_category_permissions(input, context) {

@@ -21,6 +21,8 @@ Unavailable data, missing permission, an absent record, and provider failures re
 
 Numeric response properties named `id` or ending in `_id` retain their numeric type when safely representable. Larger integer identifiers are returned as exact decimal strings taken from the raw JSON text, including settlement-linked order ids. Quoted ids, ordinary amounts and non-ID fractions retain their existing types. Unsafe ID representations that cannot be parsed as exact decimal integers fail instead of returning rounded identifiers.
 
+Lossless responses do not imply that every returned id can be reused by every action. `get_category_application` accepts numeric or decimal-string `auditId` values only from 1 through 9007199254740991 and sends a JSON number. `get_league_plan`, `update_league_plan` and `list_product_promotion_talents` have the same limit for `promotionPlanId` (and `productId`). Larger returned audit/plan ids remain exact in read results but cannot be used by these follow-up actions; they fail before a provider request instead of being rounded. Support for sending these upstream numeric fields as quoted decimal strings has not been confirmed, so the connector does not assume it. Do not convert a larger returned id with `Number` to work around the limit.
+
 ## Official API references
 
 Contracts checked against the public WeChat documentation on 2026-10-31. The provider retains existing actions for product publishing/stock, ordinary shipping, category qualification, and basic after-sales rather than adding duplicates.
