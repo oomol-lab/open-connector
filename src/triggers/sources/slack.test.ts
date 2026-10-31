@@ -79,6 +79,11 @@ const buttonClick = {
 const modalSubmission = {
   type: "view_submission",
   token: "legacy-verification-token",
+  bot_access_token: "xwfp-workflow-token",
+  interactivity: {
+    interactor: { id: "U0APPROVER", secret: "interactor-secret" },
+    interactivity_pointer: "123.pointer",
+  },
   trigger_id: "13345224609.738474920.submitted",
   api_app_id: "A0APP",
   team: { id: "T0TEAM", domain: "example" },
@@ -235,6 +240,12 @@ describe("Slack interactivity on the shared application source", () => {
         isCleared: false,
       },
     });
+    expect(submitted.payload.body).not.toHaveProperty("token");
+    expect(submitted.payload.body).not.toHaveProperty("bot_access_token");
+    expect(submitted.payload.body).toMatchObject({
+      interactivity: { interactor: { id: "U0APPROVER" }, interactivity_pointer: "123.pointer" },
+    });
+    expect(JSON.stringify(submitted.payload)).not.toContain("interactor-secret");
 
     const { trigger_id: _triggerId, ...closed } = { ...modalSubmission, type: "view_closed", is_cleared: true };
     expect((await receive(closed)).payload).toMatchObject({

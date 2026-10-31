@@ -195,8 +195,15 @@ function receiveInteraction(
     (type === "block_actions" ? !Array.isArray(payload.actions) : typeof view?.id !== "string")
   )
     throw new TypeError("Incomplete Slack interaction.");
-  // The legacy verification token and function-scoped bot tokens are credentials, not event data.
-  const { token: _token, bot_access_token: _botAccessToken, ...body } = payload;
+  // The legacy verification token, function-scoped bot tokens and the function interactor's
+  // secret are credentials, not event data.
+  const { token: _token, bot_access_token: _botAccessToken, ...rest } = payload;
+  const interactivity = isJsonObject(rest.interactivity) ? rest.interactivity : undefined;
+  let body: JsonObject = rest;
+  if (isJsonObject(interactivity?.interactor)) {
+    const { secret: _secret, ...interactor } = interactivity.interactor;
+    body = { ...rest, interactivity: { ...interactivity, interactor } };
+  }
   return {
     event: {
       id: deliveryId,
