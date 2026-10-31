@@ -57,6 +57,17 @@ const buttonClick = {
   channel: { id: "C0CHAN", name: "approvals" },
   message: { type: "message", ts: "1700000000.000100", thread_ts: "1699999999.000001", text: "Approve the deploy?" },
   response_url: "https://hooks.slack.com/actions/T0TEAM/1/secret",
+  function_data: {
+    execution_id: "Fx0EXECUTION",
+    function: { callback_id: "approval_step" },
+    inputs: {
+      approver_context: {
+        interactor: { id: "U0APPROVER", secret: "input-interactor-secret" },
+        interactivity_pointer: "1.p",
+      },
+      request_id: "request-7",
+    },
+  },
   actions: [
     {
       type: "button",
@@ -196,6 +207,15 @@ describe("Slack interactivity on the shared application source", () => {
       view: null,
     });
     expect(received.event.payload.body).not.toHaveProperty("token");
+    expect(received.event.payload.body).toMatchObject({
+      function_data: {
+        inputs: {
+          approver_context: { interactor: { id: "U0APPROVER" }, interactivity_pointer: "1.p" },
+          request_id: "request-7",
+        },
+      },
+    });
+    expect(JSON.stringify(received.event.payload)).not.toContain("input-interactor-secret");
     expect(received.event.payload.body).toMatchObject({ trigger_id: buttonClick.trigger_id });
 
     // Slack may deliver the same interaction more than once; the trigger_id keeps the dedupe key stable.

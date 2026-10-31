@@ -195,15 +195,18 @@ function receiveInteraction(
     (type === "block_actions" ? !Array.isArray(payload.actions) : typeof view?.id !== "string")
   )
     throw new TypeError("Incomplete Slack interaction.");
-  // The legacy verification token, function-scoped bot tokens and the function interactor's
-  // secret are credentials, not event data.
-  const { token: _token, bot_access_token: _botAccessToken, ...rest } = payload;
-  const interactivity = isJsonObject(rest.interactivity) ? rest.interactivity : undefined;
-  let body: JsonObject = rest;
-  if (isJsonObject(interactivity?.interactor)) {
-    const { secret: _secret, ...interactor } = interactivity.interactor;
-    body = { ...rest, interactivity: { ...interactivity, interactor } };
-  }
+  // The legacy verification token, function-scoped bot tokens and interactor secrets are
+  // credentials, not event data. A function receives interactivity as an input under any
+  // name, so every function input is scrubbed as well as the top-level interactivity.
+  const { token: _token, bot_access_token: _botAccessToken, ...body } = payload as Record<string, JsonValue>;
+  if (body.interactivity !== undefined) body.interactivity = withoutInteractorSecret(body.interactivity);
+  if (isJsonObject(body.function_data) && isJsonObject(body.function_data.inputs))
+    body.function_data = {
+      ...body.function_data,
+      inputs: Object.fromEntries(
+        Object.entries(body.function_data.inputs).map(([name, value]) => [name, withoutInteractorSecret(value)]),
+      ),
+    };
   return {
     event: {
       id: deliveryId,
@@ -234,6 +237,12 @@ function receiveInteraction(
       },
     },
   };
+}
+
+function withoutInteractorSecret(value: JsonValue): JsonValue {
+  if (!isJsonObject(value) || !isJsonObject(value.interactor)) return value;
+  const { secret: _secret, ...interactor } = value.interactor;
+  return { ...value, interactor };
 }
 
 function interactionAction(action: JsonObject): JsonValue {
