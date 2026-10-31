@@ -29,7 +29,7 @@ export const cloudgpuActions: ActionDefinition[] = [
         max_completion_tokens: s.positiveInteger("Maximum completion token count for models that use this field."),
         temperature: s.number("Sampling temperature, when supported by the model.", { minimum: 0, maximum: 2 }),
         top_p: s.number("Nucleus sampling probability, when supported by the model.", { minimum: 0, maximum: 1 }),
-        stream: s.boolean("Only false or omitted is supported by this JSON action."),
+        stream: s.literal(false, { description: "Only false or omitted is supported by this JSON action." }),
         tools: s.array("OpenAI-format tool definitions.", s.looseObject("A tool definition.")),
         tool_choice: s.anyOf("Tool selection policy.", [
           s.string("Tool selection mode."),
