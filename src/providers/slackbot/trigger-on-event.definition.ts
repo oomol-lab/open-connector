@@ -3,9 +3,9 @@ export const snapshot: TriggerKeySnapshot & { readonly type: "integration" } = {
   key: "slackbot.on_event",
   provider: "slackbot",
   name: "on_event",
-  displayName: "Mention or Direct Message",
+  displayName: "Mention, Direct Message or Interaction",
   description:
-    "Receives user mentions and new direct messages through a shared Slack application event source. Slack Connect events are excluded.",
+    "Receives user mentions, new direct messages and interactive component payloads (button clicks, menu selections and modal submissions or closes) through a shared Slack application event source. Slack Connect message events are excluded.",
   definitionVersion: 2,
   type: "integration",
   endpoint: {
@@ -23,9 +23,12 @@ export const snapshot: TriggerKeySnapshot & { readonly type: "integration" } = {
       handle: "eventTypes",
       jsonSchema: {
         type: "array",
-        items: { type: "string", enum: ["app_mention", "message.im"] },
+        items: {
+          type: "string",
+          enum: ["app_mention", "message.im", "block_actions", "view_submission", "view_closed"],
+        },
         minItems: 1,
-        maxItems: 2,
+        maxItems: 5,
         uniqueItems: true,
         title: "Events",
       },
@@ -49,11 +52,47 @@ export const snapshot: TriggerKeySnapshot & { readonly type: "integration" } = {
     { handle: "deliveryId", jsonSchema: { type: "string" }, nullable: false },
     { handle: "appId", jsonSchema: { type: "string" }, nullable: false },
     { handle: "teamId", jsonSchema: { type: "string" }, nullable: false },
-    { handle: "channel", jsonSchema: { type: "string" }, nullable: false },
+    { handle: "channel", jsonSchema: { type: "string" }, nullable: true },
     { handle: "user", jsonSchema: { type: "string" }, nullable: false },
-    { handle: "text", jsonSchema: { type: "string" }, nullable: false },
-    { handle: "ts", jsonSchema: { type: "string" }, nullable: false },
+    { handle: "text", jsonSchema: { type: "string" }, nullable: true },
+    { handle: "ts", jsonSchema: { type: "string" }, nullable: true },
     { handle: "threadTs", jsonSchema: { type: "string" }, nullable: true },
+    { handle: "responseUrl", jsonSchema: { type: "string" }, nullable: true },
+    {
+      handle: "actions",
+      jsonSchema: {
+        type: "array",
+        items: {
+          type: "object",
+          properties: {
+            actionId: { type: ["string", "null"] },
+            blockId: { type: ["string", "null"] },
+            type: { type: ["string", "null"] },
+            value: { type: ["string", "null"] },
+            selectedOption: {
+              type: ["object", "null"],
+              properties: { value: { type: ["string", "null"] }, text: { type: ["string", "null"] } },
+            },
+            actionTs: { type: ["string", "null"] },
+          },
+        },
+      },
+      nullable: true,
+    },
+    {
+      handle: "view",
+      jsonSchema: {
+        type: "object",
+        properties: {
+          id: { type: ["string", "null"] },
+          callbackId: { type: ["string", "null"] },
+          privateMetadata: { type: ["string", "null"] },
+          state: { type: "object" },
+          isCleared: { type: "boolean" },
+        },
+      },
+      nullable: true,
+    },
     { handle: "body", jsonSchema: { type: "object" }, nullable: false },
   ],
 };

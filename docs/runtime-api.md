@@ -111,6 +111,38 @@ The response contains an opaque `subscription.id`; remote hook IDs, callback sec
 
 `receive` requires `subscriptionId`, HTTP `method`, string `headers` and `query`, base64 `rawBody`, and boolean `admit` / `current`. Header names are normalized. The callback's `connector_subscription` nonce must match, and the provider implementation verifies its own signature or secret. Raw bodies are limited to 64 KiB; the enclosing JSON request is limited to 160 KiB. Open Flow owns public ingress, event scheduling, business checkpoints and deduplication. Feishu shared event ingress stays in Open Flow; its Connector `resource` operation only manages native resource subscriptions and reference counts.
 
+Shared event Source Triggers keep their provider configuration and secrets in Connector through the `sourceReference` operation: `feishu_app_bot.on_event`, `fireflies.on_meeting_ready`, `intercom.on_conversation_event`, `jira.on_issue_event`, `sentry.on_issue_alert`, `slackbot.on_event` and `zoom.on_recording_ready`. `create` takes a `deploymentId`, a caller-chosen `requestKey` and the provider `input`. It returns `source.reference` (`applicationId`, `sourceId`) for later `get`, `update`, `prepare`, `receive`, `resource` and `delete` calls. Repeating `create` with the same key and input returns the same Source, while different input under that key is refused with a conflict. Connector adds `kind`, `version`, `name`, `connectionId` and `teamId` itself and rejects them in `input`. Invalid input answers `invalid_input` and names each failing field. Sentry, Slack, Intercom and Zoom deliveries arrive for a whole application, so the host passes them to `route` with the reference's `applicationId` first. `route` returns the references that accept the delivery, and the host then calls `receive` for each one.
+
+For `slackbot.on_event`, select a Slack Bot OAuth connection with `x-oo-connector-app-id` and send this `create` request:
+
+```json
+{
+  "operation": "sourceReference",
+  "request": {
+    "action": "create",
+    "deploymentId": "deployment-1",
+    "requestKey": "workspace-T0123ABCD",
+    "input": {
+      "appId": "A0123ABCD",
+      "workspaceId": "T0123ABCD",
+      "signingSecret": "<Slack app Signing Secret>",
+      "eventTypes": ["app_mention", "message.im", "block_actions", "view_submission"]
+    }
+  }
+}
+```
+
+`appId` is the Slack App ID (`A…`), `workspaceId` is the installed workspace ID (`T…`) and `signingSecret` is the app's Signing Secret. `eventTypes` lists one to five of `app_mention`, `message.im`, `block_actions`, `view_submission` and `view_closed`. No Slack Web API call is made: the bot user ID comes from the connection. Every Source of one Slack app shares one application and must use the same Signing Secret. `update` takes `reference`, `expectedRevision` and `input` with `eventTypes` and an optional replacement `signingSecret`. Replacing the secret clears readiness until the next `url_verification`.
+
+The `slackbot.on_event` shared application Source serves both the Slack app's Events API Request URL and its Interactivity Request URL. Point both settings at the same callback, or at two host routes that forward to the same Source `route` and `receive` operations, and enable Interactivity in the Slack app. Interactivity requests are form bodies whose `payload` field holds JSON. They are verified with the same Signing Secret and 300-second window over the raw form bytes, then normalized as `block_actions`, `view_submission` or `view_closed` events:
+
+- `deliveryId` is Slack's `trigger_id`. `view_closed` has none, so its `deliveryId` is `view_closed:<view id>`. Use `deliveryId` as the deduplication key.
+- Interaction outputs add `responseUrl`, `actions` (`actionId`, `blockId`, `type`, `value`, `selectedOption`, `actionTs`) and `view` (`id`, `callbackId`, `privateMetadata`, `state`, `isCleared`). `channel`, `text`, `ts` and `threadTs` come from the message that held the component and are `null` for interactions in modals or App Home. Message event payloads are unchanged and do not include the three new fields. `body` is the interaction payload without Slack's legacy verification token.
+- The new event types are opt-in: list them in the Source `eventTypes` and in each consumer's `eventTypes`. Existing consumers keep receiving only the types they listed.
+- When `route` returns references, answer Slack with an empty 200 response within three seconds; for `view_submission` that closes the submitted view. Interactions that no Source accepts, other interaction types and other form posts are answered by `route` with that empty 200.
+- The `url_verification` challenge comes only from the Events API Request URL, and a Source becomes ready only after it has answered one.
+- Interactions carry no bot authorization list and are not filtered for Slack Connect, so authorize the acting `user` before applying a decision.
+
 Stateful `reconcile`, `receive`, and `resource` operations require a persistent runtime token. Bootstrap environment tokens, JWT verification and unauthenticated development mode can use policy-permitted `options` / `read`; they do not provide a durable subscription owner. Triggers currently require native local connections. SaaS and Marketplace connections return `trigger_source_not_supported` without attempting a local fallback.
 
 Administrators can inspect `/api/trigger-subscriptions`, cancel with `POST /api/trigger-subscriptions/:id/cancel`, or explicitly stop automatic cleanup with `POST /api/trigger-subscriptions/:id/abandon`. Subscription IDs must be URL-encoded. Abandonment retains the original ownership and uncleaned remote-resource record; it does not claim the provider resource was deleted. Clean the remote resource manually if automatic deletion cannot recover.
