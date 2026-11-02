@@ -51,7 +51,7 @@ type OAuthCredential = Extract<ResolvedCredential, { authType: "oauth2" }>;
  * Which Meta Graph host a credential talks to. OAuth connections use Instagram Login on
  * `graph.instagram.com`; pasted access tokens use Instagram API with Facebook Login on `graph.facebook.com`.
  */
-export type InstagramApiHost = "instagram" | "facebook";
+type InstagramApiHost = "instagram" | "facebook";
 
 /** Execution context shared by every Instagram handler. */
 export interface InstagramContext extends OAuthProviderContext {
@@ -220,9 +220,13 @@ async function listLinkedInstagramAccounts(context: InstagramContext): Promise<L
       }),
     );
     const paging = optionalRecord(pages.paging);
-    after = optionalString(paging?.next)
+    const nextAfter = optionalString(paging?.next)
       ? requiredString(optionalRecord(paging?.cursors)?.after, "Facebook Pages next cursor", providerResponseError)
       : undefined;
+    if (nextAfter !== undefined && nextAfter === after) {
+      throw providerResponseError("Facebook Pages next cursor did not advance.");
+    }
+    after = nextAfter;
   } while (after);
   return accounts;
 }

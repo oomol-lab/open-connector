@@ -119,7 +119,7 @@ describe("Instagram Facebook Login credentials", () => {
             }
             return Response.json({
               data: [{ id: "page-1", instagram_business_account: linkedAccount }],
-              paging: { cursors: { after: "last-page" } },
+              paging: { cursors: { after: "page-two" } },
             });
           },
         },
@@ -132,6 +132,32 @@ describe("Instagram Facebook Login credentials", () => {
       expect(seen[2]!.searchParams.get("fields")).toContain("instagram_business_account{");
     },
   );
+
+  it("rejects an unchanged cursor when Facebook indicates another page", async () => {
+    const seen: URL[] = [];
+    await expect(
+      credentialValidators.apiKey!(
+        { apiKey: "user-token", values: {} },
+        {
+          fetcher: async (value) => {
+            const url = new URL(value.toString());
+            seen.push(url);
+            if (seen.length > 3) throw new Error("Unexpected repeated page request");
+            if (url.pathname === "/v25.0/me") return graphError(100, "nonexisting field");
+            return Response.json({
+              data: [],
+              paging: {
+                cursors: { after: "page-two" },
+                next: "https://graph.facebook.com/v25.0/me/accounts?after=page-two",
+              },
+            });
+          },
+        },
+      ),
+    ).rejects.toMatchObject({ message: "Facebook Pages next cursor did not advance.", status: 502 });
+    expect(seen).toHaveLength(3);
+    expect(seen[2]!.searchParams.get("after")).toBe("page-two");
+  });
 
   it("requires account selection when linked accounts span several pages", async () => {
     await expect(
