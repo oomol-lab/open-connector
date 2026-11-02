@@ -165,9 +165,29 @@ async function mintAndCacheAccessToken(input: WechatAccessTokenRequest, cacheKey
 
 /** Parse an object envelope, preserving unsafe numeric ID properties from their original decimal text. */
 export function parseWechatJson(rawText: string): Record<string, unknown> | undefined {
+  const arraySources = new WeakMap<object, Map<string, string | undefined>>();
   try {
     return optionalRecord(
-      JSON.parse(rawText, (key: string, value: unknown, context?: { source?: string }) => {
+      JSON.parse(rawText, function (this: unknown, key: string, value: unknown, context?: { source?: string }) {
+        if (key === "freight_insurance_make_up_order_id_list" && Array.isArray(value)) {
+          const sources = arraySources.get(value);
+          return value.map((id: unknown, index) => {
+            if (typeof id !== "number" || Number.isSafeInteger(id)) return id;
+            const source = sources?.get(String(index));
+            if (!source) throw new Error("WeChat numeric ID source is unavailable");
+            return BigInt(source).toString();
+          });
+        }
+        // Array elements are visited before their field name is known. Retain their
+        // source text until the parent identifies an ID list, leaving other arrays intact.
+        if (Array.isArray(this) && typeof value === "number" && !Number.isSafeInteger(value)) {
+          let sources = arraySources.get(this);
+          if (!sources) {
+            sources = new Map();
+            arraySources.set(this, sources);
+          }
+          sources.set(key, context?.source);
+        }
         if (typeof value !== "number" || (key !== "id" && !key.endsWith("_id")) || Number.isSafeInteger(value)) {
           return value;
         }

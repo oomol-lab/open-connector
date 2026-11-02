@@ -25,11 +25,11 @@ function createContext(): ExecutionContext {
 afterEach(() => vi.unstubAllGlobals());
 
 describe("WeChat Store numeric response identifiers", () => {
-  it("preserves a numeric associated order id through the public action execution path", async () => {
+  it("preserves scalar and array order ids through the public action execution path", async () => {
     const context = createContext();
     // Use raw response text: JSON.stringify on an unsafe JS number would corrupt the fixture first.
     const raw =
-      '{"errcode":0,"errmsg":"ok","data_list":[{"order_id":"37000000000000000001","mch_settle_amount":290,"post_settlement_expense":{"freight_insurance_make_up_order_id":37000000000000000001,"buyer_refund_amount":10},"product_list":[{"product_id":9007199254740991},{"product_id":9007199254740993}]}],"page_ctx":""}';
+      '{"errcode":0,"errmsg":"ok","data_list":[{"order_id":"37000000000000000001","mch_settle_amount":290,"freight_insurance_make_up_order_id_list":[37000000000000000001,37000000000000000002,42,"00037000000000000000003"],"post_settlement_expense":{"freight_insurance_make_up_order_id":37000000000000000001,"buyer_refund_amount":10},"product_list":[{"product_id":9007199254740991},{"product_id":9007199254740993}]}],"page_ctx":""}';
     const fetcher = vi.fn<typeof fetch>(async (url) =>
       new URL(String(url)).pathname === "/cgi-bin/stable_token"
         ? Response.json({ access_token: "test-token", expires_in: 7200 })
@@ -46,6 +46,12 @@ describe("WeChat Store numeric response identifiers", () => {
           {
             order_id: "37000000000000000001",
             mch_settle_amount: 290,
+            freight_insurance_make_up_order_id_list: [
+              "37000000000000000001",
+              "37000000000000000002",
+              42,
+              "00037000000000000000003",
+            ],
             post_settlement_expense: {
               freight_insurance_make_up_order_id: "37000000000000000001",
               buyer_refund_amount: 10,
@@ -73,6 +79,15 @@ describe("WeChat Store numeric response identifiers", () => {
       items: [{ sku_id: 9007199254740991 }],
       note: "order_id: 37000000000000000001",
     });
+  });
+
+  it("does not reinterpret non-ID numeric arrays", () => {
+    const raw = '{"amounts":[37000000000000000001,0.25,3.7e19],"freight_insurance_make_up_order_id_list":[42]}';
+    expect(parseWechatJson(raw)).toEqual(JSON.parse(raw));
+  });
+
+  it.each(["3.7e19", "37000000000000000001.5"])("rejects unsupported numeric ID array representations: %s", (id) => {
+    expect(parseWechatJson(`{"freight_insurance_make_up_order_id_list":[${id}]}`)).toBeUndefined();
   });
 
   it.each([
