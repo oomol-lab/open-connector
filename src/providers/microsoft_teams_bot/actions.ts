@@ -15,9 +15,38 @@ const activityId = s.nonEmptyString("ID of an existing activity in the conversat
 const threadId = s.nonEmptyString(
   "Numeric ID of a channel thread's root message. Routes the call into that thread instead of the channel's main conversation.",
 );
-const text = s.nonEmptyString("Message text.");
+const text = s.nonEmptyString("Message text. Optional when attachments are given.");
 const textFormat = s.stringEnum(["plain", "markdown", "xml"], {
   description: "How the text is rendered. Defaults to markdown.",
+});
+// Bot Framework card content types that Teams renders in bot messages; animation, audio and video cards are not.
+const cardContentTypes = [
+  "application/vnd.microsoft.card.adaptive",
+  "application/vnd.microsoft.card.hero",
+  "application/vnd.microsoft.card.thumbnail",
+  "application/vnd.microsoft.card.receipt",
+  "application/vnd.microsoft.card.signin",
+  "application/vnd.microsoft.card.oauth",
+  "application/vnd.microsoft.teams.card.o365connector",
+  "application/vnd.microsoft.teams.card.list",
+];
+const attachments = s.array(
+  s.object(
+    {
+      contentType: s.stringEnum(cardContentTypes, { description: "Card type." }),
+      content: s.unknownObject("The card JSON as an object, such as an Adaptive Card."),
+    },
+    { description: "A card attached to the message." },
+  ),
+  {
+    minItems: 1,
+    maxItems: 10,
+    description:
+      "Cards to attach. Teams splits a message with both text and cards into separate messages and returns an ID for only one, so put the text inside the card when the card will be updated later.",
+  },
+);
+const attachmentLayout = s.stringEnum(["list", "carousel"], {
+  description: "How several cards are shown. Defaults to list.",
 });
 const resourceResponse = s.looseObject(
   { id: s.string("ID of the activity the Bot Connector created or changed.") },
@@ -45,50 +74,59 @@ const actions: Parameters<typeof defineProviderAction>[1][] = [
   {
     name: "send_message",
     operationType: "write",
-    description: "Send a new message from the bot into an existing Teams conversation.",
+    description:
+      "Send a new message from the bot into an existing Teams conversation, with text, cards such as an Adaptive Card, or both.",
     inputSchema: s.actionInput(
       {
         serviceUrl: s.optional(serviceUrl),
         conversationId,
         threadId: s.optional(threadId),
-        text,
+        text: s.optional(text),
         textFormat: s.optional(textFormat),
+        attachments: s.optional(attachments),
+        attachmentLayout: s.optional(attachmentLayout),
       },
-      ["conversationId", "text"],
+      ["conversationId"],
     ),
     outputSchema: resourceResponse,
   },
   {
     name: "reply_to_message",
     operationType: "write",
-    description: "Reply to an existing activity in a Teams conversation.",
+    description:
+      "Reply to an existing activity in a Teams conversation, with text, cards such as an Adaptive Card, or both.",
     inputSchema: s.actionInput(
       {
         serviceUrl: s.optional(serviceUrl),
         conversationId,
         threadId: s.optional(threadId),
         activityId,
-        text,
+        text: s.optional(text),
         textFormat: s.optional(textFormat),
+        attachments: s.optional(attachments),
+        attachmentLayout: s.optional(attachmentLayout),
       },
-      ["conversationId", "activityId", "text"],
+      ["conversationId", "activityId"],
     ),
     outputSchema: resourceResponse,
   },
   {
     name: "update_message",
     operationType: "write",
-    description: "Replace the text of a message the bot previously sent.",
+    description:
+      "Replace a message the bot previously sent. The new text and cards replace the old message entirely, so leaving out attachments removes its cards, for example to swap a card with buttons for one without.",
     inputSchema: s.actionInput(
       {
         serviceUrl: s.optional(serviceUrl),
         conversationId,
         threadId: s.optional(threadId),
         activityId,
-        text,
+        text: s.optional(text),
         textFormat: s.optional(textFormat),
+        attachments: s.optional(attachments),
+        attachmentLayout: s.optional(attachmentLayout),
       },
-      ["conversationId", "activityId", "text"],
+      ["conversationId", "activityId"],
     ),
     outputSchema: resourceResponse,
   },

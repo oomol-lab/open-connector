@@ -24,6 +24,8 @@ const tokenRefreshSkewMs = 60_000;
 
 const defaultTextFormat = "markdown";
 
+const maximumMessageBytes = 100 * 1024;
+
 interface TeamsBotCloud {
   loginEndpoint: string;
   scope: string;
@@ -288,12 +290,28 @@ function activityPath(input: Record<string, unknown>): string {
   return `${conversationPath(input)}/activities/${encodePathSegment(requiredInputString(input.activityId, "activityId"))}`;
 }
 
+/**
+ * Builds a message activity from text, cards or both. Teams counts a bot message's size in UTF-16 and refuses
+ * one above 100 KB with 413 MessageSizeTooBig, so an oversized message is refused before it is sent.
+ */
 function messageActivity(input: Record<string, unknown>): Record<string, unknown> {
-  return {
+  const text = optionalString(input.text);
+  const attachments = Array.isArray(input.attachments) && input.attachments.length > 0 ? input.attachments : undefined;
+  if (text === undefined && attachments === undefined) {
+    throw providerInputError("Provide text, attachments, or both.");
+  }
+  const activity = compactObject({
     type: "message",
-    text: requiredInputString(input.text, "text"),
-    textFormat: optionalString(input.textFormat) ?? defaultTextFormat,
-  };
+    text,
+    textFormat: text === undefined ? undefined : (optionalString(input.textFormat) ?? defaultTextFormat),
+    attachments,
+    attachmentLayout: attachments === undefined ? undefined : optionalString(input.attachmentLayout),
+  });
+  // A JavaScript string length counts UTF-16 code units, two bytes each.
+  if (JSON.stringify(activity).length * 2 > maximumMessageBytes) {
+    throw providerInputError("The message exceeds Teams' 100 KB limit for bot messages.");
+  }
+  return activity;
 }
 
 function readResourceResponse(response: unknown): Record<string, unknown> {
