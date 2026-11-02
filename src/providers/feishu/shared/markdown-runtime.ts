@@ -249,11 +249,10 @@ interface PatchResult {
 function applyPatch(markdown: string, pattern: string, replacement: string, regex: boolean): PatchResult {
   if (!regex) {
     return {
-      markdown: markdown.replaceAll(pattern, replacement),
+      markdown: markdown.replaceAll(pattern, () => replacement),
       matchCount: markdown.split(pattern).length - 1,
     };
   }
-
   let expression: RegExp;
   try {
     expression = new RegExp(pattern, "g");

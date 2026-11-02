@@ -225,29 +225,19 @@ export function createFeishuSlidesActions(service: string): readonly ActionDefin
           parts: s.array(
             "Structural replacement and insertion operations.",
             s.anyOf("One structural Slides edit.", [
-              s.object(
-                "Replace one existing element.",
-                {
-                  action: s.literal("block_replace", { description: "The structural edit action." }),
-                  blockId: s.string("The existing element ID.", { minLength: 1 }),
-                  replacement: s.string("The replacement SML element.", { minLength: 1 }),
-                },
-                {
-                  optional: [],
-                },
-              ),
+              s.requiredObject("Replace one existing element.", {
+                action: s.literal("block_replace", { description: "The structural edit action." }),
+                blockId: s.nonEmptyString("The existing element ID."),
+                replacement: s.nonEmptyString("The replacement SML element."),
+              }),
               s.object(
                 "Insert one or more SML elements.",
                 {
                   action: s.literal("block_insert", { description: "The structural edit action." }),
-                  insertion: s.string("The SML element or elements to insert.", {
-                    minLength: 1,
-                  }),
-                  insertBeforeBlockId: s.string("Insert before this element ID; omit it to append.", { minLength: 1 }),
+                  insertion: s.nonEmptyString("The SML element or elements to insert."),
+                  insertBeforeBlockId: s.nonEmptyString("Insert before this element ID; omit it to append."),
                 },
-                {
-                  optional: ["insertBeforeBlockId"],
-                },
+                { optional: ["insertBeforeBlockId"] },
               ),
             ]),
             { minItems: 1, maxItems: 200 },
@@ -255,13 +245,9 @@ export function createFeishuSlidesActions(service: string): readonly ActionDefin
           revisionId: s.integer("The base revision for optimistic locking; `-1` uses the latest revision.", {
             minimum: -1,
           }),
-          transactionId: s.string("An optional concurrent-edit transaction ID.", {
-            minLength: 1,
-          }),
+          transactionId: s.nonEmptyString("An optional concurrent-edit transaction ID."),
         },
-        {
-          optional: ["presentationType", "revisionId", "transactionId"],
-        },
+        { optional: ["revisionId", "transactionId"] },
       ),
       outputSchema: s.looseRequiredObject(
         "The structural Slides edit result.",
@@ -269,13 +255,11 @@ export function createFeishuSlidesActions(service: string): readonly ActionDefin
           presentationId: s.string("The resolved presentation ID."),
           slideId: slideIdSchema,
           partsCount: s.positiveInteger("The number of submitted edit parts."),
-          revisionId: s.integer("The resulting presentation revision ID."),
-          failedPartIndex: s.integer("The index of a failed part, when reported."),
-          failedReason: s.string("The reason a part failed, when reported."),
+          revisionId: s.optional(s.integer("The resulting presentation revision ID.")),
+          failedPartIndex: s.optional(s.integer("The index of a failed part, when reported.")),
+          failedReason: s.optional(s.string("The reason a part failed, when reported.")),
         },
-        {
-          optional: ["revisionId", "failedPartIndex", "failedReason"],
-        },
+        { optional: ["revisionId", "failedPartIndex", "failedReason"] },
       ),
     }),
     defineProviderAction(service, {

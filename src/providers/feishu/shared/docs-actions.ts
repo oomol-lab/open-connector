@@ -201,10 +201,18 @@ export function createFeishuDocsActions(service: string): readonly ActionDefinit
           format: documentFormatSchema,
           content: s.string("The replacement, inserted, or appended document content."),
           pattern: s.string("The text matched by `replace_text`."),
-          blockId: s.string("The target block ID, or comma-separated block IDs for `delete_blocks`.", { minLength: 1 }),
+          blockId: s.nonEmptyString(
+            "The target block ID, or comma-separated block IDs for `replace_block` and `delete_blocks`; cannot be combined with a block range.",
+          ),
+          startBlockId: s.nonEmptyString(
+            "The inclusive start of a sibling block range for `replace_block` or `delete_blocks`; requires endBlockId. `0` means document start.",
+          ),
+          endBlockId: s.nonEmptyString(
+            "The inclusive end of a sibling block range for `replace_block` or `delete_blocks`; requires startBlockId. `-1` means document end.",
+          ),
           sourceBlockIds: s.array(
             "The source block IDs used by copy or move operations.",
-            s.string("A source block ID.", { minLength: 1 }),
+            s.nonEmptyString("A source block ID."),
             { minItems: 1 },
           ),
           revisionId: s.integer("The base document revision ID; `-1` means the latest revision.", {
@@ -213,7 +221,17 @@ export function createFeishuDocsActions(service: string): readonly ActionDefinit
           referenceMap: s.looseObject("A reference map accompanying rich content in supported write operations."),
         },
         {
-          optional: ["format", "content", "pattern", "blockId", "sourceBlockIds", "revisionId", "referenceMap"],
+          optional: [
+            "format",
+            "content",
+            "pattern",
+            "blockId",
+            "startBlockId",
+            "endBlockId",
+            "sourceBlockIds",
+            "revisionId",
+            "referenceMap",
+          ],
         },
       ),
       outputSchema: documentOutputSchema,

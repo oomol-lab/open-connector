@@ -77,21 +77,13 @@ export function createFeishuVcActions(options: FeishuVcActionOptions): readonly 
       inputSchema: s.object(
         "Optionally identify a tenant user when using app identity.",
         {
-          userId: s.string("The target user ID required for tenant identity.", { minLength: 1 }),
+          userId: s.nonEmptyString("The target user ID required for tenant identity."),
         },
-        {
-          optional: ["userId"],
-        },
+        { optional: options.identity === "tenant" ? [] : ["userId"] },
       ),
-      outputSchema: s.object(
-        "The active video meetings.",
-        {
-          meetings: s.array("The active meetings.", raw),
-        },
-        {
-          optional: [],
-        },
-      ),
+      outputSchema: s.requiredObject("The active video meetings.", {
+        meetings: s.array("The active meetings.", raw),
+      }),
     }),
     defineProviderAction(options.service, {
       name: "list_vc_meeting_events",

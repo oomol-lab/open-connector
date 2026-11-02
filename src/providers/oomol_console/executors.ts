@@ -20,6 +20,18 @@ export const oomolConsoleActionHandlers: ProviderActionHandlers<
   "oomol_console",
   ProviderRuntimeHandler<OomolConsoleContext>
 > = {
+  list_my_skill_packages(input, context) {
+    return executeAction("list_my_skill_packages", input, context);
+  },
+  list_team_skill_packages(input, context) {
+    return executeAction("list_team_skill_packages", input, context);
+  },
+  add_skill_package_to_team(input, context) {
+    return executeAction("add_skill_package_to_team", input, context);
+  },
+  remove_skill_package_from_team(input, context) {
+    return executeAction("remove_skill_package_from_team", input, context);
+  },
   get_current_scope(input, context) {
     return executeAction("get_current_scope", input, context);
   },

@@ -1,6 +1,7 @@
 import type { FeishuJsonRequest } from "./client.ts";
 
 import { optionalBoolean, optionalNumber, optionalRecord, optionalString } from "../../../core/cast.ts";
+import { requiredResponseRecord } from "../../provider-runtime.ts";
 import { providerInputError, ProviderRequestError } from "../../provider-runtime.ts";
 
 interface FeishuDriveActionHandler {
@@ -53,6 +54,15 @@ export function createFeishuDriveActionHandlers(request: FeishuJsonRequest): Rec
     },
     list_drive_permissions(input) {
       return listDrivePermissions(input, request);
+    },
+    async get_drive_permission_settings(input) {
+      const data = await request({
+        path: `/drive/v2/permissions/${encodeURIComponent(requireString(input.token, "token"))}/public`,
+        query: { type: requireString(input.resourceType, "resourceType") },
+      });
+      return {
+        permissionPublic: requiredResponseRecord(data.permission_public, "Feishu permission_public"),
+      };
     },
     add_drive_permission(input) {
       return addDrivePermission(input, request);
@@ -357,15 +367,18 @@ async function addDrivePermission(input: Record<string, unknown>, request: Feish
 
 async function updateDrivePermission(input: Record<string, unknown>, request: FeishuJsonRequest) {
   const memberId = requireString(input.memberId, "memberId");
+  const memberType = requireString(input.memberType, "memberType");
   const data = await request({
     method: "PUT",
     path: `${permissionPath(input)}/${encodeURIComponent(memberId)}`,
     query: {
       type: requireString(input.resourceType, "resourceType"),
-      member_type: requireString(input.memberType, "memberType"),
       need_notification: optionalBoolean(input.needNotification),
     },
     body: {
+      member_type: memberType,
+      type: memberKind(memberType, optionalString(input.memberKind)),
+      perm_type: optionalString(input.permType),
       perm: requireString(input.permission, "permission"),
     },
   });
@@ -374,12 +387,16 @@ async function updateDrivePermission(input: Record<string, unknown>, request: Fe
 
 async function removeDrivePermission(input: Record<string, unknown>, request: FeishuJsonRequest) {
   const memberId = requireString(input.memberId, "memberId");
+  const memberType = requireString(input.memberType, "memberType");
   await request({
     method: "DELETE",
     path: `${permissionPath(input)}/${encodeURIComponent(memberId)}`,
     query: {
       type: requireString(input.resourceType, "resourceType"),
-      member_type: requireString(input.memberType, "memberType"),
+      member_type: memberType,
+    },
+    body: {
+      type: memberKind(memberType, optionalString(input.memberKind)),
       perm_type: optionalString(input.permType),
     },
   });

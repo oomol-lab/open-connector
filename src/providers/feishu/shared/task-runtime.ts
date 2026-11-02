@@ -91,11 +91,13 @@ async function searchTasks(input: Record<string, unknown>, request: FeishuJsonRe
   const data = await request({
     method: "POST",
     path: "/task/v2/tasks/search",
-    query: { user_id_type: optionalString(input.userIdType) ?? "open_id" },
+    query: {
+      user_id_type: optionalString(input.userIdType) ?? "open_id",
+      page_token: optionalString(input.pageToken),
+    },
     body: compact({
       query: optionalString(input.query) ?? "",
       filter: Object.keys(filter).length > 0 ? filter : undefined,
-      page_token: optionalString(input.pageToken),
     }),
   });
   return normalizePage(data);
@@ -133,6 +135,12 @@ async function createTask(input: Record<string, unknown>, request: FeishuJsonReq
 async function updateTask(input: Record<string, unknown>, request: FeishuJsonRequest) {
   const taskGuid = requiredString(input.taskGuid, "taskGuid");
   const task: Record<string, unknown> = {};
+  if (
+    (input.clearStart === true && input.start !== undefined) ||
+    (input.clearDue === true && input.due !== undefined)
+  ) {
+    throw providerInputError("start/due cannot be combined with their clear flags");
+  }
   if (input.summary !== undefined) {
     task.summary = requiredString(input.summary, "summary");
   }
@@ -140,10 +148,10 @@ async function updateTask(input: Record<string, unknown>, request: FeishuJsonReq
     task.description = String(input.description);
   }
   if (input.start !== undefined || input.clearStart === true) {
-    task.start = input.clearStart === true ? null : optionalTaskTime(input.start);
+    task.start = input.clearStart === true ? undefined : optionalTaskTime(input.start);
   }
   if (input.due !== undefined || input.clearDue === true) {
-    task.due = input.clearDue === true ? null : optionalTaskTime(input.due);
+    task.due = input.clearDue === true ? undefined : optionalTaskTime(input.due);
   }
   const updateFields = Object.keys(task);
   if (updateFields.length === 0) {
@@ -323,11 +331,13 @@ async function searchTasklists(input: Record<string, unknown>, request: FeishuJs
   const data = await request({
     method: "POST",
     path: "/task/v2/tasklists/search",
-    query: { user_id_type: optionalString(input.userIdType) ?? "open_id" },
+    query: {
+      user_id_type: optionalString(input.userIdType) ?? "open_id",
+      page_token: optionalString(input.pageToken),
+    },
     body: compact({
       query: optionalString(input.query) ?? "",
       filter: ownerIds ? { user_id: ownerIds } : undefined,
-      page_token: optionalString(input.pageToken),
     }),
   });
   return normalizePage(data);

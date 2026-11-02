@@ -80,25 +80,26 @@ async function cancelMessageFlag(input: Record<string, unknown>, request: Feishu
 
 async function listMessageFlags(input: Record<string, unknown>, request: FeishuJsonRequest) {
   const pageSize = optionalNumber(input.pageSize) ?? 50;
-  const fetchAll = input.fetchAll === true && input.pageToken === undefined;
-  const maxPages = optionalNumber(input.maxPages) ?? 20;
-  let pageToken = optionalString(input.pageToken) ?? "";
-  let hasMore = false;
-  const flagItems: Record<string, unknown>[] = [];
-  const deletedFlagItems: Record<string, unknown>[] = [];
   const messages: Record<string, unknown>[] = [];
-  for (let page = 0; page < (fetchAll ? maxPages : 1); page++) {
-    const data = await request({
-      path: "/im/v1/flags",
-      query: { page_size: pageSize, page_token: pageToken },
-    });
-    flagItems.push(...recordArray(data.flag_items));
-    deletedFlagItems.push(...recordArray(data.delete_flag_items));
-    messages.push(...recordArray(data.messages));
-    hasMore = data.has_more === true;
-    pageToken = optionalString(data.page_token) ?? "";
-    if (!fetchAll || !hasMore || !pageToken) break;
-  }
+  const {
+    active: flagItems,
+    deleted: deletedFlagItems,
+    hasMore,
+    pageToken,
+  } = await fetchDualPages({
+    input,
+    activeKey: "flag_items",
+    deletedKey: "delete_flag_items",
+    firstPageToken: "",
+    requestPage: async (pageToken) => {
+      const data = await request({
+        path: "/im/v1/flags",
+        query: { page_size: pageSize, page_token: pageToken },
+      });
+      messages.push(...recordArray(data.messages));
+      return data;
+    },
+  });
   if (input.includeMessages !== false) {
     await enrichFlagMessages(flagItems, messages, request);
   }
@@ -148,7 +149,12 @@ async function listFeedShortcuts(input: Record<string, unknown>, request: Feishu
   });
   const shortcuts = recordArray(data.shortcuts);
   if (input.includeDetails !== false) {
-    await enrichChatDetails(shortcuts, "feed_card_id", "detail", request);
+    await enrichChatDetails(
+      shortcuts.filter((item) => item.type === 1),
+      "feed_card_id",
+      "detail",
+      request,
+    );
   }
   return {
     shortcuts,
@@ -354,12 +360,13 @@ async function fetchDualPages(input: FetchDualPagesInput): Promise<DualPage> {
   const active: Record<string, unknown>[] = [];
   const deleted: Record<string, unknown>[] = [];
   for (let page = 0; page < (fetchAll ? maxPages : 1); page++) {
+    const previousPageToken = pageToken;
     const data = await input.requestPage(pageToken);
     active.push(...recordArray(data[input.activeKey]));
     deleted.push(...recordArray(data[input.deletedKey]));
     hasMore = data.has_more === true;
     pageToken = optionalString(data.page_token);
-    if (!fetchAll || !hasMore || !pageToken) break;
+    if (!fetchAll || !hasMore || !pageToken || pageToken === previousPageToken) break;
   }
   return { active, deleted, hasMore, pageToken: pageToken ?? null };
 }

@@ -158,16 +158,12 @@ export function createFeishuMarkdownActions(service: string): readonly ActionDef
         "Describe the replacement to apply to the remote Markdown file.",
         {
           fileToken: fileTokenSchema,
-          pattern: s.string("The non-empty literal text or regular expression to match.", {
-            minLength: 1,
-          }),
+          pattern: s.nonEmptyString("The non-empty literal text or regular expression to match."),
           replacement: s.string("The replacement Markdown string; it may be empty."),
           regex: s.boolean("Whether pattern is a JavaScript regular expression."),
           fileName: fileNameSchema,
         },
-        {
-          optional: ["regex", "fileName"],
-        },
+        { optional: ["regex", "fileName"] },
       ),
       outputSchema: s.object(
         "The Markdown patch result.",
@@ -180,9 +176,7 @@ export function createFeishuMarkdownActions(service: string): readonly ActionDef
           sizeBytesBefore: s.nonNegativeInteger("The UTF-8 size before replacement."),
           sizeBytesAfter: s.nonNegativeInteger("The UTF-8 size after replacement."),
         },
-        {
-          optional: ["version"],
-        },
+        { optional: ["version"] },
       ),
     }),
     defineProviderAction(service, {
@@ -198,9 +192,7 @@ export function createFeishuMarkdownActions(service: string): readonly ActionDef
           markdown: markdownSchema,
           fileName: fileNameSchema,
         },
-        {
-          optional: ["fileName"],
-        },
+        { optional: ["fileName"] },
       ),
       outputSchema: writeOutputSchema,
     }),

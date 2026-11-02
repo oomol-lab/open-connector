@@ -248,7 +248,106 @@ const billingWindowInputSchema = (description: string) =>
     }),
   });
 
+const skillPackageSchema = s.object(
+  "A published package containing agent skills.",
+  {
+    packageName: s.nonEmptyString("The exact registry package name, including its scope when present."),
+    version: s.string("The latest published package version when available."),
+    title: s.string("The package display name when available."),
+    description: s.string("The package description."),
+    visibility: s.stringEnum("The package visibility when reported by the upstream service.", ["public", "private"]),
+    skills: s.array(
+      "The skills contained in this package.",
+      s.object(
+        "One skill published in the package.",
+        {
+          name: s.nonEmptyString("The skill name or path used for installation."),
+          title: s.string("The skill display name when available."),
+          description: s.string("The skill description."),
+        },
+        { optional: ["title"], additionalProperties: true },
+      ),
+    ),
+  },
+  { optional: ["version", "title", "visibility"], additionalProperties: true },
+);
+
+function createTeamSkillPackageAction<
+  const Name extends "add_skill_package_to_team" | "remove_skill_package_from_team",
+>(name: Name, operationType: "write" | "destructive", description: string) {
+  return defineProviderAction(service, {
+    name,
+    operationType,
+    description,
+    requiredScopes: [],
+    inputSchema: s.object("The package whose current-team access should change.", {
+      packageName: s.nonEmptyString(
+        "The exact registry package name, such as @scope/name, without a version or share ID.",
+      ),
+    }),
+    outputSchema: s.object("Confirmation of the package access change for the current team.", {
+      success: s.literal(true, { description: "Whether the upstream operation succeeded." }),
+      packageName: s.nonEmptyString("The registry package whose team access changed."),
+      teamId: s.nonEmptyString("The current OOMOL team identifier."),
+    }),
+  });
+}
+
 export const oomolConsoleActions: readonly ProviderActionDefinition[] = [
+  defineProviderAction(service, {
+    name: "list_my_skill_packages",
+    operationType: "read",
+    description:
+      "List skill packages maintained by the authenticated identity, including its private packages. A bot's results do not list its owner's packages. Supports keyword search and pagination.",
+    requiredScopes: [],
+    inputSchema: s.object(
+      "Filters for the authenticated identity's published skill packages.",
+      {
+        query: s.nonEmptyString("Optional keywords to search the identity's maintained skill packages."),
+        lang: s.nonEmptyString("The preferred metadata language, such as en or zh-CN."),
+        cursor: s.nonEmptyString("The nextCursor returned by the previous page."),
+        limit: s.integer("The maximum number of packages to return per page.", {
+          minimum: 1,
+          maximum: 100,
+          default: 30,
+        }),
+      },
+      { optional: ["query", "lang", "cursor"] },
+    ),
+    outputSchema: s.requiredObject("One page of skill packages maintained by the authenticated identity.", {
+      packages: s.array("The identity's maintained skill packages.", skillPackageSchema),
+      nextCursor: s.nullableString("The cursor for the next page, or null when there are no more pages."),
+    }),
+  }),
+  defineProviderAction(service, {
+    name: "list_team_skill_packages",
+    operationType: "read",
+    description:
+      "List skill packages configured for the current team. Team membership alone does not grant access to an unconfigured private package. This lists team configuration, not local installations.",
+    requiredScopes: [],
+    inputSchema: s.object(
+      "Options for reading the current team's skill packages.",
+      {
+        lang: s.nonEmptyString("The preferred metadata language, such as en or zh-CN."),
+      },
+      { optional: ["lang"] },
+    ),
+    outputSchema: s.requiredObject("The skill packages configured for the current team.", {
+      teamId: s.nonEmptyString("The current OOMOL team identifier."),
+      packages: s.array("The team's configured skill packages.", skillPackageSchema),
+    }),
+  }),
+  createTeamSkillPackageAction(
+    "add_skill_package_to_team",
+    "write",
+    "Grant the current team access to an entire registry package, including its private skills. Requires package access and team write permission. Does not make the package public or install it locally.",
+  ),
+  createTeamSkillPackageAction(
+    "remove_skill_package_from_team",
+    "destructive",
+    "Revoke the current team's access through this package binding for the entire registry package. Requires package access and team write permission. Does not delete the package, change its visibility, remove other access grants, or uninstall local skills.",
+  ),
+
   defineProviderAction(service, {
     name: "get_current_scope",
     operationType: "read",
@@ -311,19 +410,24 @@ export const oomolConsoleActions: readonly ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_billing_summary",
     operationType: "read",
-    description: "Return the compact OOMOL account billing metrics shown by Console.",
+    description: "Return current-team billing and usage with the authenticated account balance.",
     requiredScopes: [],
-    inputSchema: billingWindowInputSchema("The time window used to summarize OOMOL account billing."),
-    outputSchema: s.object("A compact billing summary for the OOMOL account.", {
-      scope: s.literal("account", { description: "The billing scope represented by this result." }),
-      period: s.object("The requested billing summary period.", {
+    inputSchema: billingWindowInputSchema("The time window used to summarize current-team billing."),
+    outputSchema: s.requiredObject("Current-team billing and the authenticated account balance.", {
+      teamId: s.nonEmptyString("The current OOMOL team identifier."),
+      scope: s.literal("team", { description: "The billing scope represented by this result." }),
+      period: s.requiredObject("The requested billing summary period.", {
         days: s.integer("The number of trailing days included in the summary."),
         startTime: s.number("The period start timestamp in milliseconds."),
         endTime: s.number("The period end timestamp in milliseconds."),
         utcOffset: s.integer("The UTC offset used for daily boundaries."),
       }),
-      generalBalanceCredit: s.string("The remaining GENERAL credit as an exact decimal string."),
-      scopedAllowanceCredit: s.string("The remaining non-general visible allowance as an exact decimal string."),
+      generalBalanceCredit: s.string(
+        "The authenticated account’s remaining GENERAL credit as an exact decimal string.",
+      ),
+      scopedAllowanceCredit: s.string(
+        "The authenticated account’s remaining non-general allowance as an exact decimal string.",
+      ),
       deficit: s.nullable(s.string("The account deficit as an exact decimal string.")),
       spentCredit: s.string("The credit spent during the period as an exact decimal string."),
       meteredEvents: s.nonNegativeInteger("The number of metered events during the period."),
@@ -332,21 +436,22 @@ export const oomolConsoleActions: readonly ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_usage_breakdown",
     operationType: "read",
-    description: "Return the daily OOMOL account usage breakdown by source and subject.",
+    description: "Return the daily current-team usage breakdown by source and subject.",
     requiredScopes: [],
-    inputSchema: billingWindowInputSchema("The time window used to read the OOMOL account usage breakdown."),
-    outputSchema: s.object("The OOMOL Insight metering breakdown for the account.", {
-      scope: s.literal("account", { description: "The usage scope represented by this result." }),
+    inputSchema: billingWindowInputSchema("The time window used to read the current-team usage breakdown."),
+    outputSchema: s.requiredObject("The OOMOL Insight metering breakdown for the current team.", {
+      teamId: s.nonEmptyString("The current OOMOL team identifier."),
+      scope: s.literal("team", { description: "The usage scope represented by this result." }),
       effectiveRange: statsRangeSchema,
       dataAsOf: s.number("The timestamp through which metering data is complete."),
       granularity: s.literal("daily", { description: "The time granularity of the returned series." }),
       items: s.array("The daily metering series.", statsMeteringPointSchema),
-      total: s.object("The metering total across all returned sources.", {
+      total: s.requiredObject("The metering total across all returned sources.", {
         eventCount: s.nonNegativeInteger("The total number of metering events."),
       }),
       sourceTotals: s.record(
         "Metering event totals keyed by source.",
-        s.object("The metering total for one source.", {
+        s.requiredObject("The metering total for one source.", {
           eventCount: s.nonNegativeInteger("The number of metering events for the source."),
         }),
       ),

@@ -2,6 +2,7 @@ import type { FeishuJsonRequest } from "./client.ts";
 
 import { optionalNumber, optionalRecord, requiredRecord } from "../../../core/cast.ts";
 import { providerInputError, requiredResponseRecord } from "../../provider-runtime.ts";
+import { FeishuPagination } from "./pagination.ts";
 import { requireFeishuResponseId } from "./response.ts";
 
 interface OkrActionHandler {
@@ -41,7 +42,7 @@ async function listCycles(input: Record<string, unknown>, request: FeishuJsonReq
   const data = await request({
     path: "/okr/v2/cycles",
     query: {
-      user_id: optionalString(input.userId),
+      user_id: requiredString(input.userId, "userId"),
       user_id_type: optionalString(input.userIdType) ?? "open_id",
       page_size: optionalNumber(input.pageSize) ?? 20,
       page_token: optionalString(input.pageToken),
@@ -73,6 +74,12 @@ async function getCycleDetail(input: Record<string, unknown>, request: FeishuJso
 async function createOkr(input: Record<string, unknown>, request: FeishuJsonRequest) {
   const targetType = requiredTargetType(input.targetType);
   const parentId = requiredString(input.parentId, "parentId");
+  if (
+    targetType === "key_result" &&
+    (input.notes !== undefined || input.notesMentions !== undefined || input.categoryId !== undefined)
+  ) {
+    throw providerInputError("notes, notesMentions, and categoryId only apply to objectives");
+  }
   const body = compact({
     content: contentBlock(requiredString(input.text, "text"), optionalStringArray(input.mentions) ?? []),
     notes: optionalString(input.notes)
@@ -104,7 +111,10 @@ async function batchCreateOkrs(input: Record<string, unknown>, request: FeishuJs
   const cycleId = requiredString(input.cycleId, "cycleId");
   const userIdType = optionalString(input.userIdType) ?? "open_id";
   const definitions = recordArray(input.objectives);
-  const created: Array<{ objectiveId: string; keyResultIds: string[] }> = [];
+  const created: Array<{
+    objectiveId: string;
+    keyResultIds: string[];
+  }> = [];
   try {
     for (const definition of definitions) {
       const objectiveData = await request({
@@ -141,6 +151,7 @@ async function batchCreateOkrs(input: Record<string, unknown>, request: FeishuJs
       }
     }
   } catch (error) {
+    const residual = [];
     if (input.rollbackOnFailure !== false) {
       for (const result of created.toReversed()) {
         try {
@@ -150,9 +161,14 @@ async function batchCreateOkrs(input: Record<string, unknown>, request: FeishuJs
             query: { objective_id: result.objectiveId },
           });
         } catch {
-          // Preserve the original create error; callers can inspect created IDs if rollback also fails.
+          residual.push(result);
         }
       }
+    } else {
+      residual.push(...created);
+    }
+    if (residual.length > 0 && error instanceof Error) {
+      error.message += `; OKR batch left created resources: ${JSON.stringify(residual)}. Inspect them before retrying.`;
     }
     throw error;
   }
@@ -162,6 +178,9 @@ async function batchCreateOkrs(input: Record<string, unknown>, request: FeishuJs
 async function patchOkr(input: Record<string, unknown>, request: FeishuJsonRequest) {
   const targetType = requiredTargetType(input.targetType);
   const targetId = requiredString(input.targetId, "targetId");
+  if (targetType === "key_result" && input.notes !== undefined) {
+    throw providerInputError("notes only apply to objectives");
+  }
   const body = compact({
     content: optionalString(input.text)
       ? contentBlock(requiredString(input.text, "text"), optionalStringArray(input.mentions) ?? [])
@@ -446,13 +465,14 @@ async function updateIndicator(input: Record<string, unknown>, request: FeishuJs
 async function fetchAllPages(request: FeishuJsonRequest, path: string, baseQuery: Record<string, string>) {
   const items: Record<string, unknown>[] = [];
   let pageToken: string | undefined;
+  const pagination = new FeishuPagination("OKR");
   do {
     const data = await request({
       path,
       query: { ...baseQuery, page_size: 50, page_token: pageToken },
     });
     items.push(...recordArray(data.items));
-    pageToken = data.has_more === true ? optionalString(data.page_token) : undefined;
+    pageToken = pagination.next(data.has_more, data.page_token);
   } while (pageToken);
   return items;
 }

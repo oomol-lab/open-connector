@@ -352,8 +352,8 @@ export const feishuAppBotActions: ActionDefinition[] = [
     name: "get_app_info",
     operationType: "read",
     description: "Get the Feishu custom app profile and configured scopes for this connection.",
-    requiredScopes: [feishuAppBotScopes.applicationRead],
-    providerPermissions: [feishuAppBotScopes.applicationRead],
+    requiredScopes: [],
+    providerPermissions: [],
     inputSchema: s.object("No input is required.", {}),
     outputSchema: s.requiredObject("The connected Feishu app profile.", {
       app: s.looseObject("The application object returned by Feishu."),
@@ -363,8 +363,8 @@ export const feishuAppBotActions: ActionDefinition[] = [
     name: "get_app_permissions",
     operationType: "read",
     description: "Get the currently published Feishu app version, tenant scopes, and subscribed events.",
-    requiredScopes: [feishuAppBotScopes.applicationVersionRead],
-    providerPermissions: [feishuAppBotScopes.applicationVersionRead],
+    requiredScopes: [],
+    providerPermissions: [],
     inputSchema: s.object("No input is required.", {}),
     outputSchema: s.requiredObject("The published Feishu app permission snapshot.", {
       versionId: s.nullableString("The published version identifier."),

@@ -2,12 +2,14 @@ import type { ExecutionContext } from "../core/types.ts";
 
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { proxy as appgrowingProxy } from "./appgrowing_mcp/executors.ts";
+import { proxy as openseoProxy } from "./openseo_mcp/executors.ts";
 import { proxy as tencentProxy } from "./tencent_meeting_mcp/executors.ts";
 
 afterEach(() => vi.unstubAllGlobals());
 
 for (const [service, proxy, endpoint] of [
   ["appgrowing_mcp", appgrowingProxy, "/mcp"],
+  ["openseo_mcp", openseoProxy, "/mcp"],
   ["tencent_meeting_mcp", tencentProxy, "/mcp/wemeet-open/v1"],
 ] as const) {
   describe(service + " proxy boundary", () => {

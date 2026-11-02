@@ -133,21 +133,13 @@ export function createFeishuMailAdvancedActions(service: string): readonly Actio
           mailboxId: mailboxIdSchema,
           messageId: messageIdSchema,
         },
-        {
-          optional: ["mailboxId"],
-        },
+        { optional: ["mailboxId"] },
       ),
-      outputSchema: s.object(
-        "The receipt-decline result.",
-        {
-          messageId: messageIdSchema,
-          declined: s.boolean("Whether the receipt label was removed by this call."),
-          alreadyCleared: s.boolean("Whether the label was already absent."),
-        },
-        {
-          optional: [],
-        },
-      ),
+      outputSchema: s.requiredObject("The receipt-decline result.", {
+        messageId: messageIdSchema,
+        declined: s.boolean("Whether the receipt label was removed by this call."),
+        alreadyCleared: s.boolean("Whether the label was already absent."),
+      }),
     }),
     defineProviderAction(service, {
       name: "get_mail_signature_detail",
@@ -295,16 +287,10 @@ export function createFeishuMailAdvancedActions(service: string): readonly Actio
           ],
         },
       ),
-      outputSchema: s.object(
-        "The updated mail template.",
-        {
-          template: looseMailObject,
-          warning: s.string("The concurrency warning for this full-replace endpoint."),
-        },
-        {
-          optional: [],
-        },
-      ),
+      outputSchema: s.requiredObject("The updated mail template.", {
+        template: looseMailObject,
+        warning: s.string("The concurrency warning for this full-replace endpoint."),
+      }),
     }),
     defineProviderAction(service, {
       name: "triage_mail_messages",

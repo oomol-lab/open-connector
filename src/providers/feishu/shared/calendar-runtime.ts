@@ -58,8 +58,7 @@ async function listAgenda(input: Record<string, unknown>, request: FeishuJsonReq
   if (end < start) {
     throw providerInputError("endTime must be later than startTime");
   }
-
-  const windows = splitUnixRange(start, end, 40 * 24 * 60 * 60);
+  const windows = splitUnixRange(start, end, 40 * 24 * 60 * 60 - 1);
   const pages = await Promise.all(
     windows.map(([windowStart, windowEnd]) =>
       request({
@@ -319,13 +318,24 @@ async function getMeetingInfo(input: Record<string, unknown>, request: FeishuJso
     },
   });
   const items = recordArray(data.instance_relation_infos ?? data.items);
-  return { items, hasMore: false, pageToken: null };
+  return {
+    items,
+    hasMore: false,
+    pageToken: null,
+    failedInstances: recordArray(data.failed_instance_ids),
+  };
 }
 
 function buildEventBody(input: Record<string, unknown>, required: boolean) {
+  if ((input.startTime != null) !== (input.endTime != null)) {
+    throw providerInputError("startTime and endTime must be provided together");
+  }
+  if ((input.timezone !== undefined || input.isAllDay !== undefined) && input.startTime == null) {
+    throw providerInputError("timezone and isAllDay require startTime and endTime");
+  }
   const body: Record<string, unknown> = {};
   assignString(body, "summary", input.summary, required);
-  assignString(body, "description_rich", input.description);
+  assignScalar(body, "description_rich", input.description);
   assignScalar(body, "visibility", input.visibility);
   assignScalar(body, "attendee_ability", input.attendeeAbility);
   assignScalar(body, "free_busy_status", input.freeBusyStatus);
@@ -349,19 +359,27 @@ function buildEventBody(input: Record<string, unknown>, required: boolean) {
   ) {
     throw providerInputError("endTime must be later than startTime");
   }
+  if (Object.keys(body).length > 0) {
+    body.need_notification = input.notifyAttendees !== false;
+  }
   return body;
 }
 
 function calendarTime(value: unknown, timezone: unknown, isAllDay: unknown) {
+  if (isAllDay === true) {
+    const date = requiredString(value, "time");
+    const parsed = new Date(date);
+    if (date.length !== 10 || !Number.isFinite(parsed.getTime()) || parsed.toISOString().slice(0, 10) !== date) {
+      throw providerInputError("all-day event times must be valid YYYY-MM-DD dates with an exclusive end date");
+    }
+    return { date };
+  }
   const result: Record<string, unknown> = {
     timestamp: unixSeconds(value, "time").toString(),
   };
   const timezoneString = optionalString(timezone);
   if (timezoneString) {
     result.timezone = timezoneString;
-  }
-  if (typeof isAllDay === "boolean") {
-    result.is_all_day = isAllDay;
   }
   return result;
 }

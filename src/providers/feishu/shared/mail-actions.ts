@@ -2,12 +2,14 @@ import type { ActionDefinition } from "../../../core/types.ts";
 
 import { s } from "../../../core/json-schema.ts";
 import { defineProviderAction } from "../../../core/provider-definition.ts";
+const composeOptional = ["from", "cc", "bcc", "text", "html", "attachments"];
 const mailboxId = s.string("The mailbox email address. Use `me` for the authorized user's mailbox.", { minLength: 1 });
 const messageId = s.string("The Feishu mail message ID.", { minLength: 1 });
 const draftId = s.string("The Feishu mail draft ID.", { minLength: 1 });
 const pageSize = s.positiveInteger("The maximum number of results on this page.", {
-  maximum: 50,
+  maximum: 15,
 });
+
 const pageToken = s.string("The page token returned by the previous request.", { minLength: 1 });
 const email = s.email("An email address.");
 const mailItem = s.looseRequiredObject(
@@ -42,16 +44,15 @@ const composeFields = {
       "One URL-backed mail attachment.",
       {
         fileUrl: s.url("The public HTTPS URL of the attachment."),
-        fileName: s.string("The attachment file name.", { minLength: 1 }),
-        contentType: s.string("The attachment MIME type.", { minLength: 1 }),
+        fileName: s.nonEmptyString("The attachment file name."),
+        contentType: s.nonEmptyString("The attachment MIME type."),
       },
-      {
-        optional: ["fileName", "contentType"],
-      },
+      { optional: ["fileName", "contentType"] },
     ),
-    { maxItems: 20 },
+    { maxItems: 250 },
   ),
 };
+
 const draftOutput = s.object(
   "A normalized draft result.",
   {
@@ -133,7 +134,7 @@ export function createFeishuMailActions(service: string): readonly ActionDefinit
         "Describe the mailbox search.",
         {
           mailboxId,
-          query: s.string("Full-text search terms."),
+          query: s.string("Full-text search terms.", { maxLength: 50 }),
           from: s.array("Sender addresses to match.", email),
           to: s.array("Recipient addresses to match.", email),
           cc: s.array("CC recipient addresses to match.", email),
@@ -294,18 +295,12 @@ export function createFeishuMailActions(service: string): readonly ActionDefinit
       requiredScopes: ["mail:user_mailbox.message:modify"],
       providerPermissions: ["mail:user_mailbox.message:modify"],
       inputSchema: messageLifecycleInput(),
-      outputSchema: s.object(
-        "The mail recall request result.",
-        {
-          messageId,
-          recallStatus: s.nullable(s.string("Whether the message is available for recall or unavailable.")),
-          recallRestrictionReason: s.nullable(s.string("Why the message cannot be recalled, when unavailable.")),
-          raw: mailItem,
-        },
-        {
-          optional: [],
-        },
-      ),
+      outputSchema: s.requiredObject("The mail recall request result.", {
+        messageId,
+        recallStatus: s.nullable(s.string("Whether the message is available for recall or unavailable.")),
+        recallRestrictionReason: s.nullable(s.string("Why the message cannot be recalled, when unavailable.")),
+        raw: mailItem,
+      }),
     }),
     defineProviderAction(service, {
       name: "get_mail_recall_detail",
@@ -432,9 +427,7 @@ function draftActions(service: string): readonly ActionDefinition[] {
       inputSchema: s.object(
         "Identify and compose the replacement draft.",
         { mailboxId, draftId, ...composeFields },
-        {
-          optional: ["mailboxId"],
-        },
+        { optional: ["mailboxId", ...composeOptional] },
       ),
       outputSchema: draftOutput,
     }),

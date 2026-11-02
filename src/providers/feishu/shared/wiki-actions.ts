@@ -58,6 +58,22 @@ const memberRole = s.stringEnum("The Wiki space member role.", ["admin", "member
 export function createFeishuWikiActions(service: string): readonly ActionDefinition[] {
   return [
     defineProviderAction(service, {
+      name: "update_wiki_node_title",
+      operationType: "write",
+      description: "Update a Feishu Wiki node title. Supports doc, docx, and shortcut nodes.",
+      requiredScopes: ["wiki:node:update"],
+      providerPermissions: ["wiki:node:update"],
+      inputSchema: s.requiredObject("Identify the Wiki node and its new title.", {
+        spaceId,
+        nodeToken,
+        title: s.string("The new node title."),
+      }),
+      outputSchema: s.requiredObject("The Wiki title update acknowledgement.", {
+        updated: s.boolean("Whether Feishu accepted the title update."),
+      }),
+    }),
+
+    defineProviderAction(service, {
       name: "list_wiki_spaces",
       operationType: "read",
       description: "List Feishu Wiki spaces accessible to the caller.",
@@ -181,13 +197,11 @@ export function createFeishuWikiActions(service: string): readonly ActionDefinit
         {
           spaceId,
           nodeToken,
-          targetSpaceId: s.string("The destination Wiki space ID.", { minLength: 1 }),
-          targetParentToken: s.string("The destination parent node_token.", { minLength: 1 }),
-          title: s.string("An optional title for the copied node.", { minLength: 1 }),
+          targetSpaceId: s.nonEmptyString("The destination Wiki space ID."),
+          targetParentToken: s.nonEmptyString("The destination parent node_token."),
+          title: s.string("The copied node title. Omit to retain the original; an empty string clears it."),
         },
-        {
-          optional: ["targetSpaceId", "targetParentToken", "title"],
-        },
+        { optional: ["targetSpaceId", "targetParentToken", "title"] },
       ),
       outputSchema: itemOutput,
     }),
@@ -202,12 +216,10 @@ export function createFeishuWikiActions(service: string): readonly ActionDefinit
         {
           spaceId,
           nodeToken,
-          targetSpaceId: s.string("The destination Wiki space ID.", { minLength: 1 }),
-          targetParentToken: s.string("The destination parent node_token.", { minLength: 1 }),
+          targetSpaceId: s.nonEmptyString("The destination Wiki space ID."),
+          targetParentToken: s.nonEmptyString("The destination parent node_token."),
         },
-        {
-          optional: ["targetParentToken"],
-        },
+        { optional: ["targetSpaceId", "targetParentToken"] },
       ),
       outputSchema: itemOutput,
     }),
@@ -221,25 +233,26 @@ export function createFeishuWikiActions(service: string): readonly ActionDefinit
         "Identify the node to delete.",
         {
           spaceId,
-          nodeToken,
-          objectType,
+          nodeToken: s.nonEmptyString("The Wiki node_token, or the obj_token matching objectType."),
+          objectType: s.stringEnum("The token type. Defaults to wiki for a Wiki node_token.", [
+            "wiki",
+            "doc",
+            "docx",
+            "sheet",
+            "bitable",
+            "mindnote",
+            "slides",
+            "file",
+          ]),
           includeChildren: s.boolean("Whether to delete descendant nodes."),
         },
-        {
-          optional: ["objectType", "includeChildren"],
-        },
+        { optional: ["objectType", "includeChildren"] },
       ),
-      outputSchema: s.object(
-        "The deletion result or asynchronous task.",
-        {
-          deleted: s.boolean("Whether Feishu completed deletion synchronously."),
-          taskId: s.nullable(s.string("The asynchronous task ID, when returned.")),
-          raw: wikiItem,
-        },
-        {
-          optional: [],
-        },
-      ),
+      outputSchema: s.requiredObject("The deletion result or asynchronous task.", {
+        deleted: s.boolean("Whether Feishu completed deletion synchronously."),
+        taskId: s.nullable(s.string("The asynchronous task ID, when returned.")),
+        raw: wikiItem,
+      }),
     }),
     defineProviderAction(service, {
       name: "submit_wiki_move_to_drive",
@@ -255,25 +268,15 @@ export function createFeishuWikiActions(service: string): readonly ActionDefinit
         "Identify the Wiki node and optional target Drive folder.",
         {
           nodeToken,
-          folderToken: s.string("The target Drive folder token. Omit it to move to the identity's Drive root.", {
-            minLength: 1,
-          }),
+          folderToken: s.nonEmptyString("The target Drive folder token. Omit it to move to the identity's Drive root."),
         },
-        {
-          optional: ["folderToken"],
-        },
+        { optional: ["folderToken"] },
       ),
-      outputSchema: s.object(
-        "The submitted Wiki move task.",
-        {
-          taskId: s.string("The Wiki asynchronous task ID."),
-          nodeToken,
-          folderToken: s.nullable(s.string("The target Drive folder token, or null for root.")),
-        },
-        {
-          optional: [],
-        },
-      ),
+      outputSchema: s.requiredObject("The submitted Wiki move task.", {
+        taskId: s.string("The Wiki asynchronous task ID."),
+        nodeToken,
+        folderToken: s.nullable(s.string("The target Drive folder token, or null for root.")),
+      }),
     }),
     defineProviderAction(service, {
       name: "delete_wiki_space",
@@ -307,15 +310,21 @@ export function createFeishuWikiActions(service: string): readonly ActionDefinit
       description: "Get a normalized Wiki asynchronous task status.",
       requiredScopes: ["wiki:space:read"],
       providerPermissions: ["wiki:space:read"],
+      asyncLifecycle: {
+        startActionId: `${service}.submit_wiki_move_to_drive`,
+        statusActionId: `${service}.get_wiki_task`,
+      },
       inputSchema: s.object(
         "Identify the Wiki task and its operation type.",
         {
-          taskId: s.string("The Wiki asynchronous task ID.", { minLength: 1 }),
-          taskType: s.stringEnum("The Wiki asynchronous operation type.", ["move_wiki_to_docs", "delete_space"]),
+          taskId: s.nonEmptyString("The Wiki asynchronous task ID."),
+          taskType: s.stringEnum("The Wiki asynchronous operation type.", [
+            "move_wiki_to_docs",
+            "delete_space",
+            "delete_node",
+          ]),
         },
-        {
-          optional: ["taskType"],
-        },
+        { optional: ["taskType"] },
       ),
       outputSchema: s.object(
         "The normalized Wiki task status.",
@@ -329,9 +338,7 @@ export function createFeishuWikiActions(service: string): readonly ActionDefinit
           url: s.url("The moved Drive resource URL."),
           raw: wikiItem,
         },
-        {
-          optional: ["statusMessage", "resourceToken", "resourceType", "url"],
-        },
+        { optional: ["statusMessage", "resourceToken", "resourceType", "url"] },
       ),
     }),
     defineProviderAction(service, {

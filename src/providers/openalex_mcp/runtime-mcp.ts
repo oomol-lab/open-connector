@@ -93,13 +93,16 @@ export async function validateOpenalexMcpCredential(
 async function listOpenalexMcpToolNames(client: Client, signal: AbortSignal): Promise<Set<string>> {
   const names = new Set<string>();
   let cursor: string | undefined;
+  const cursors = new Set<string>();
   for (let page = 0; page < maxToolListPages; page += 1) {
     const listed = await client.listTools(cursor ? { cursor } : {}, { signal });
     for (const tool of listed.tools) names.add(tool.name);
     cursor = optionalString(listed.nextCursor);
-    if (!cursor) break;
+    if (!cursor) return names;
+    if (cursors.has(cursor)) throw providerResponseError("OpenAlex MCP returned a repeated tool cursor.");
+    cursors.add(cursor);
   }
-  return names;
+  throw providerResponseError("OpenAlex MCP tool discovery exceeded its page limit.");
 }
 
 /** Call one tool in a fresh MCP session and return its text and parsed payload. */
@@ -152,7 +155,7 @@ interface OpenalexMcpAccount {
 
 /**
  * The get_my_account answer as a profile: the claimed author's OpenAlex ID,
- * else the first account email, else the service itself; the display name
+ * else the first account email; the display name
  * prefers the claimed author, then the account, then the email.
  */
 function parseOpenalexMcpAccount(payload: unknown): OpenalexMcpAccount | undefined {
@@ -161,8 +164,10 @@ function parseOpenalexMcpAccount(payload: unknown): OpenalexMcpAccount | undefin
   const claimedAuthor = optionalRecord(record.claimed_author);
   const user = optionalRecord(record.user);
   const email = parseOpenalexMcpEmails(user?.emails)[0] ?? optionalString(record.email) ?? optionalString(user?.email);
+  const accountId = (claimedAuthor && pickOptionalString(claimedAuthor, "id")) ?? email;
+  if (!accountId) return undefined;
   return {
-    accountId: (claimedAuthor && pickOptionalString(claimedAuthor, "id")) ?? email ?? "openalex",
+    accountId,
     displayName:
       (claimedAuthor && pickOptionalString(claimedAuthor, "display_name", "displayName", "name")) ??
       (user && pickOptionalString(user, "display_name", "displayName", "name")) ??

@@ -175,9 +175,18 @@ async function updateDocument(input: Record<string, unknown>, request: FeishuJso
   const content = optionalString(input.content);
   const pattern = optionalString(input.pattern);
   const blockId = optionalString(input.blockId);
+  const startBlockId = optionalRawString(input.startBlockId)?.trim() || undefined;
+  const endBlockId = optionalRawString(input.endBlockId)?.trim() || undefined;
   const sourceBlockIds = optionalStringArray(input.sourceBlockIds);
-  validateUpdateInput({ command, content, pattern, blockId, sourceBlockIds });
-
+  validateUpdateInput({
+    command,
+    content,
+    pattern,
+    blockId,
+    startBlockId,
+    endBlockId,
+    sourceBlockIds,
+  });
   const apiCommand = {
     replace_text: "str_replace",
     delete_blocks: "block_delete",
@@ -197,6 +206,8 @@ async function updateDocument(input: Record<string, unknown>, request: FeishuJso
       content,
       pattern,
       block_id: command === "append" ? "-1" : blockId,
+      start_block_id: startBlockId,
+      end_block_id: endBlockId,
       src_block_ids: sourceBlockIds?.join(","),
       revision_id: optionalNumber(input.revisionId),
       reference_map: optionalRecord(input.referenceMap),
@@ -308,18 +319,36 @@ interface UpdateInput {
   readonly content: string | undefined;
   readonly pattern: string | undefined;
   readonly blockId: string | undefined;
+  readonly startBlockId: string | undefined;
+  readonly endBlockId: string | undefined;
   readonly sourceBlockIds: string[] | undefined;
 }
 
 function validateUpdateInput(input: UpdateInput) {
+  const hasRange = input.startBlockId != null || input.endBlockId != null;
+  const isBlockMutation = input.command === "replace_block" || input.command === "delete_blocks";
+  if (hasRange) {
+    if (!isBlockMutation) {
+      throw providerInputError("startBlockId and endBlockId are only supported for replace_block or delete_blocks");
+    }
+    if (input.blockId) {
+      throw providerInputError("blockId cannot be combined with startBlockId or endBlockId");
+    }
+    if (!input.startBlockId || !input.endBlockId) {
+      throw providerInputError("startBlockId and endBlockId must be provided together");
+    }
+    if (input.startBlockId === "-1" || input.endBlockId === "0") {
+      throw providerInputError("startBlockId cannot be -1 and endBlockId cannot be 0");
+    }
+  }
+  if (isBlockMutation && !input.blockId && !hasRange) {
+    throw providerInputError("blockId or both startBlockId and endBlockId are required");
+  }
   if (input.command === "replace_text" && !input.pattern) {
     throw providerInputError("pattern is required for replace_text");
-  } else if (input.command === "delete_blocks" && !input.blockId) {
-    throw providerInputError("blockId is required for delete_blocks");
-  } else if (
-    (input.command === "insert_after" || input.command === "replace_block") &&
-    (!input.blockId || !input.content)
-  ) {
+  } else if (input.command === "replace_block" && !input.content) {
+    throw providerInputError("content is required for replace_block");
+  } else if (input.command === "insert_after" && (!input.blockId || !input.content)) {
     throw providerInputError(`blockId and content are required for ${input.command}`);
   } else if (
     (input.command === "copy_after" || input.command === "move_after") &&
