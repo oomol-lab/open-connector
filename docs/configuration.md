@@ -380,6 +380,8 @@ must point to those generated assets. The host must await `runtime.close()`.
 
 ## Microsoft Teams bot event verification
 
+To have Connector also normalize, filter and identify activities for deduplication, use the `microsoft_teams_bot.on_activity` Trigger with a shared event Source instead of forwarding to this route. See [Provider Triggers](runtime-api.md#provider-triggers).
+
 Connect a Microsoft Teams Bot account with its Application (client) ID, then set `OOMOL_CONNECT_EVENT_VERIFY_TOKEN` as described for Slack. Teams delivers activities to the messaging endpoint of your own ingress, which can forward them for verification. `Authorization` carries the dedicated token, so forward the activity request's own `Authorization` header value in `X-Botframework-Authorization`:
 
 ```http

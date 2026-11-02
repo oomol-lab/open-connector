@@ -210,6 +210,11 @@ export async function validateTeamsBotCredential(
   };
 }
 
+/** Returns a cached or newly minted Bot Connector token for the credential's cloud. */
+export function mintTeamsBotConnectorToken(context: TeamsBotContext): Promise<string> {
+  return fetchConnectorToken(context, cloudForServiceUrl(context.serviceUrl), "execute");
+}
+
 interface CreateConversationTarget {
   memberId?: string;
   teamId?: string;

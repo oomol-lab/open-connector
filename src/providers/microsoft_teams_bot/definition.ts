@@ -1,6 +1,8 @@
 import type { ProviderDefinition } from "../../core/types.ts";
 
 import { microsoftTeamsBotActions } from "./actions.ts";
+import { snapshot } from "./trigger-on-activity.definition.ts";
+import { triggerPermissions } from "./trigger-permissions.ts";
 
 const service = "microsoft_teams_bot";
 
@@ -9,6 +11,8 @@ const service = "microsoft_teams_bot";
  */
 export const provider: ProviderDefinition = {
   service,
+  triggers: [snapshot],
+  triggerPermissions,
   displayName: "Microsoft Teams Bot",
   categories: ["Communication"],
   authTypes: ["custom_credential"],

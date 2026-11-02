@@ -14,16 +14,28 @@ Chat platform ──► your ingress ──► POST /v1/providers/{service}/even
 
 The route is stateless. It never stores, deduplicates, retries or schedules an event; the ingress owns those steps. A URL verification challenge is returned to the ingress, which sends the reply to the platform.
 
+## Verify route or Trigger source
+
+A channel can also have a Trigger fed by a shared event Source, the stateful path. The host creates a Source for the Bot connection with the Trigger's `sourceReference` operation, points the platform at the Source's callback URL, and forwards each delivery to the Source's `receive` operation. Connector verifies the delivery, normalizes it, matches the subscribed consumers and returns an event with a stable `deliveryId` for deduplication. The host still acknowledges the platform; see [Provider Triggers](runtime-api.md#provider-triggers).
+
+| Service               | Verify route                                           | Trigger                           |
+| --------------------- | ------------------------------------------------------ | --------------------------------- |
+| `slackbot`            | `POST /v1/providers/slackbot/events/verify`            | `slackbot.on_event`               |
+| `microsoft_teams_bot` | `POST /v1/providers/microsoft_teams_bot/events/verify` | `microsoft_teams_bot.on_activity` |
+| `feishu_app_bot`      | `POST /v1/providers/feishu_app_bot/events/verify`      | `feishu_app_bot.on_event`         |
+
+Both paths of a channel import one protocol module, so they accept and reject the same requests. The Teams Trigger reads the activity's own `Authorization` header from the forwarded headers, because Connector's own authentication travels outside them. The verify route instead reads it from `X-Botframework-Authorization`.
+
 ## Architecture
 
-| Module                                                                              | Owns                                                                                                    |
-| ----------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
-| `src/server/api/event-verification-routes.ts`                                       | The dedicated bearer token, credential lookup, the body limit, and rejection reason → HTTP status/code. |
-| `src/server/event-verification/contract.ts`                                         | The `ChannelEventVerifier` interface between the route and a channel.                                   |
-| `src/server/event-verification/registry.ts`                                         | The list of verifiable channels, loaded lazily. Routes and the auth exemption are derived from it.      |
-| `src/server/event-verification/request-body.ts`                                     | Reading raw request bytes within the shared 64 KiB limit.                                               |
-| `src/server/event-verification/<service>.ts`                                        | One channel's protocol: credential fields, signature/token checks, decryption, and its success payload. |
-| `src/triggers/signature.ts`, `src/triggers/sources/*-signature.ts`, `*-envelope.ts` | Signature and envelope primitives shared with the Trigger sources of the same channel.                  |
+| Module                                                                                            | Owns                                                                                                    |
+| ------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| `src/server/api/event-verification-routes.ts`                                                     | The dedicated bearer token, credential lookup, the body limit, and rejection reason → HTTP status/code. |
+| `src/server/event-verification/contract.ts`                                                       | The `ChannelEventVerifier` interface between the route and a channel.                                   |
+| `src/server/event-verification/registry.ts`                                                       | The list of verifiable channels, loaded lazily. Routes and the auth exemption are derived from it.      |
+| `src/server/event-verification/request-body.ts`                                                   | Reading raw request bytes within the shared 64 KiB limit.                                               |
+| `src/server/event-verification/<service>.ts`                                                      | One channel's protocol: credential fields, signature/token checks, decryption, and its success payload. |
+| `src/triggers/signature.ts`, `src/triggers/sources/*-signature.ts`, `*-envelope.ts`, `*-token.ts` | Signature, envelope and token primitives shared with the Trigger sources of the same channel.           |
 
 Each channel is a small adapter. It does not handle HTTP, the bearer token, the body limit, error codes or connection selection. Those parts are shared and are written once.
 
@@ -63,7 +75,7 @@ A Teams token authenticates the sender but does not sign the activity body. Fiel
 ## Adding a channel
 
 1. **Credential fields.** Add the verification fields to the provider's `definition.ts`, for example a signing secret or an encrypt key. For connection scope, add them to the credential fields. Set `required` and `secret` per field: a secret used only for event verification is optional and secret, so ordinary actions keep working without it, while an identifier such as an app ID is not secret and may already be required. For application scope, add them as `clientConfigFields`. Then run `npm run generate:catalog`.
-2. **Protocol primitives.** If the channel also has a Trigger source, put the signature and envelope code where both paths can import it, as `src/triggers/sources/slack-signature.ts` and `feishu-envelope.ts` do. A channel with two separate copies of its protocol will drift. Reuse `src/triggers/signature.ts` (`sameSecret`, `verifyHexHmac`, `verifyBase64Hmac`) instead of writing another comparison or HMAC.
+2. **Protocol primitives.** If the channel also has a Trigger source, put the signature and envelope code where both paths can import it, as `src/triggers/sources/slack-signature.ts`, `feishu-envelope.ts` and `teams-bot-token.ts` do. A channel with two separate copies of its protocol will drift. Reuse `src/triggers/signature.ts` (`sameSecret`, `verifyHexHmac`, `verifyBase64Hmac`) instead of writing another comparison or HMAC.
 3. **Verifier.** Create `src/server/event-verification/<service>.ts`. It exports a `ChannelEventVerifier`, which needs:
    - `credentialScope`.
    - `readCredential`, which returns `undefined` unless every field it needs is present.

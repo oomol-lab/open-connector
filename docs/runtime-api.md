@@ -111,6 +111,23 @@ The response contains an opaque `subscription.id`; remote hook IDs, callback sec
 
 `receive` requires `subscriptionId`, HTTP `method`, string `headers` and `query`, base64 `rawBody`, and boolean `admit` / `current`. Header names are normalized. The callback's `connector_subscription` nonce must match, and the provider implementation verifies its own signature or secret. Raw bodies are limited to 64 KiB; the enclosing JSON request is limited to 160 KiB. Open Flow owns public ingress, event scheduling, business checkpoints and deduplication. Feishu shared event ingress stays in Open Flow; its Connector `resource` operation only manages native resource subscriptions and reference counts.
 
+`microsoft_teams_bot.on_activity` receives Microsoft Teams activities through a shared event Source that belongs to one Teams Bot connection. Select the connection with `x-oo-connector-app-id` and create the Source with `{ "operation": "sourceReference", "request": { "action": "create", "deploymentId": "...", "requestKey": "...", "input": { "eventTypes": ["message"] } } }`:
+
+- `eventTypes` lists one to four of `message`, `conversationUpdate`, `messageReaction` and `invoke`. The bot's Application ID comes from the connection, and no secret is stored.
+- Set the Azure Bot's messaging endpoint to the Source's callback URL, and forward each activity request's headers, including its own `Authorization`, to the Source's `receive` operation.
+- Every activity is verified with its Bot Framework token, using the same rules as `POST /v1/providers/microsoft_teams_bot/events/verify`. A token for another bot or an unverifiable token answers 401. Unreachable signing keys answer as a temporary provider failure, so the host can let Bot Framework retry.
+- The Source is ready as soon as it exists. Its `verifiedAt` records the first verified activity.
+- Other activity types, activities from other channels such as Web Chat, and types the Source does not subscribe to are acknowledged with 200 and no event. Answer Bot Framework with 200 for delivered events too. An `invoke` that expects a response body, such as an Adaptive Card action, needs that body from the host.
+- Consumers filter by `eventTypes` and optional `conversationIds`. A channel ID also matches the channel's threads, whose conversation IDs add `;messageid=<root message>`.
+- Outputs:
+  - `event` is the activity type, and `deliveryId` is the JSON array `[conversation.id, activityId]`. Bot Framework retries keep both, so `deliveryId` is the deduplication key.
+  - `text` removes the bot's own `<at>` mention and unwraps the other mentions, while `rawText` keeps the original.
+  - `mentions` lists `id`, `name` and `isBot` for each mention entity.
+  - `from`, `conversation` (`id`, `conversationType`, `tenantId`), `channelData`, `replyToId`, `serviceUrl` and `timestamp` come from the activity, and `body` is the whole activity.
+- To answer in the same thread, call `microsoft_teams_bot.reply_to_message` with `serviceUrl`, `conversationId` set to `conversation.id` and `activityId`.
+
+The Trigger runner reaches the provider through the connection's proxy, which targets the connection's default service URL. Source operations make no Bot Connector call.
+
 Stateful `reconcile`, `receive`, and `resource` operations require a persistent runtime token. Bootstrap environment tokens, JWT verification and unauthenticated development mode can use policy-permitted `options` / `read`; they do not provide a durable subscription owner. Triggers currently require native local connections. SaaS and Marketplace connections return `trigger_source_not_supported` without attempting a local fallback.
 
 Administrators can inspect `/api/trigger-subscriptions`, cancel with `POST /api/trigger-subscriptions/:id/cancel`, or explicitly stop automatic cleanup with `POST /api/trigger-subscriptions/:id/abandon`. Subscription IDs must be URL-encoded. Abandonment retains the original ownership and uncleaned remote-resource record; it does not claim the provider resource was deleted. Clean the remote resource manually if automatic deletion cannot recover.
