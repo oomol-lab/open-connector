@@ -176,6 +176,22 @@ const paginatedNotes = s.object(
   },
   { required: ["notes", "total", "nextPage"], description: "A paginated GitLab notes response." },
 );
+const createdNote = s.object(
+  {
+    note: s.nullable(note),
+    commandsChanges: s.unknownObject(
+      "Changes GitLab applied from quick actions in the body; empty when there were none.",
+    ),
+    commandSummary: s.array(s.string({ description: "A GitLab message describing an applied quick action." }), {
+      description: "GitLab's summary of applied quick actions when the body held only quick actions; otherwise empty.",
+    }),
+  },
+  {
+    required: ["note", "commandsChanges", "commandSummary"],
+    description:
+      "The result of posting a GitLab note. note is null when the body held only quick actions: GitLab then applies them without storing a comment.",
+  },
+);
 const noteSorting = {
   sort: s.stringEnum(["asc", "desc"], { description: "Sort direction. GitLab defaults to desc, newest first." }),
   orderBy: s.stringEnum(["created_at", "updated_at"], { description: "Order notes by creation or update time." }),
@@ -528,7 +544,7 @@ const actions: GitlabActionSource[] = [
       },
       ["projectId", "issueIid", "body"],
     ),
-    outputSchema: note,
+    outputSchema: createdNote,
   },
   {
     name: "list_merge_request_notes",
@@ -561,7 +577,7 @@ const actions: GitlabActionSource[] = [
       },
       ["projectId", "mergeRequestIid", "body"],
     ),
-    outputSchema: note,
+    outputSchema: createdNote,
   },
 ];
 

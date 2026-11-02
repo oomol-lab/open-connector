@@ -224,19 +224,37 @@ describe("GitLab actions", () => {
     const context = actionContext(async (url, init) => {
       expect(init?.method).toBe("POST");
       requests.push({ url: url.toString(), body: JSON.parse(String(init?.body)) });
-      return Response.json({ id: 99, body: "Looking into it", system: false }, { status: 201 });
+      return Response.json({ id: 99, body: "Looking into it", system: false, commands_changes: {} }, { status: 201 });
     });
     const body = "Looking into it\n\n```\nindented code\n```\n";
 
     await expect(
       gitlabActionHandlers.create_issue_note({ projectId: "1", issueIid: 7, body, internal: true }, context),
-    ).resolves.toEqual({ id: 99, body: "Looking into it", system: false });
+    ).resolves.toEqual({
+      note: { id: 99, body: "Looking into it", system: false, commands_changes: {} },
+      commandsChanges: {},
+      commandSummary: [],
+    });
     await gitlabActionHandlers.create_merge_request_note({ projectId: "1", mergeRequestIid: 8, body }, context);
 
     expect(requests).toEqual([
       { url: "https://gitlab.com/api/v4/projects/1/issues/7/notes", body: { body, internal: true } },
       { url: "https://gitlab.com/api/v4/projects/1/merge_requests/8/notes", body: { body } },
     ]);
+  });
+
+  it("reports a body of only quick actions as applied commands without a note", async () => {
+    const result = await gitlabActionHandlers.create_issue_note(
+      { projectId: "1", issueIid: 7, body: "/close" },
+      actionContext(async () =>
+        Response.json({ commands_changes: { state_event: "close" }, summary: ["Closed this issue."] }, { status: 202 }),
+      ),
+    );
+    expect(result).toEqual({
+      note: null,
+      commandsChanges: { state_event: "close" },
+      commandSummary: ["Closed this issue."],
+    });
   });
 
   it("lists issue and merge request notes with filters and pagination", async () => {

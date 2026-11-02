@@ -15,6 +15,7 @@ import {
   optionalBoolean,
   optionalIntegerLike,
   optionalRawString,
+  looseArray,
   optionalRecord,
   optionalString as asOptionalString,
   recordOrEmpty,
@@ -511,16 +512,38 @@ async function listGitlabNotes(
   return { notes: payload, ...readPagination(response.headers) };
 }
 
-function createGitlabNote(path: string, input: GitlabActionInput, context: GitlabActionContext): Promise<unknown> {
+/**
+ * Posts a note. A body made only of quick actions is applied without storing a comment, and GitLab
+ * answers 202 with the command result instead of a note, so both outcomes share one output shape.
+ */
+async function createGitlabNote(
+  path: string,
+  input: GitlabActionInput,
+  context: GitlabActionContext,
+): Promise<{ note: unknown; commandsChanges: Record<string, unknown>; commandSummary: unknown[] }> {
   // The body is sent as written: GitLab treats whitespace and line breaks in Markdown as content.
   const body = optionalRawString(input.body);
   if (!body?.trim()) {
     throw providerInputError("body is required");
   }
-  return gitlabRequestJson(path, context, "execute", {
+  const response = await gitlabRequest(path, context, {
     method: "POST",
     body: compactObject({ body, internal: optionalBoolean(input.internal) }),
   });
+  const payload = await readGitlabPayload(response);
+  if (!response.ok) {
+    throw createGitlabError(response, payload, "execute");
+  }
+  const result = optionalRecord(payload);
+  if (!result) {
+    throw new ProviderRequestError(502, "gitlab note response is not an object", payload);
+  }
+  const commandsOnly = response.status === 202;
+  return {
+    note: commandsOnly ? null : result,
+    commandsChanges: recordOrEmpty(result.commands_changes),
+    commandSummary: commandsOnly ? looseArray(result.summary) : [],
+  };
 }
 
 async function deleteGitlabResource(path: string, context: GitlabActionContext): Promise<{ deleted: boolean }> {
