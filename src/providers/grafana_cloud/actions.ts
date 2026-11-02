@@ -8,10 +8,6 @@ const service = "grafana_cloud";
 const nonEmptyString = (description: string) => s.nonEmptyString(description);
 const rawObjectSchema = s.looseObject("The raw Grafana Cloud API object.");
 
-const pageSizeSchema = s.integer("The number of records to request from Grafana Cloud.", {
-  minimum: 1,
-});
-
 const regionSchema = s.object("A normalized Grafana Cloud stack region.", {
   id: s.nullable(s.integer("The Grafana Cloud region ID.")),
   slug: s.nullable(s.string("The Grafana Cloud region slug.")),
@@ -62,22 +58,11 @@ export const grafanaCloudActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_stacks",
     operationType: "read",
-    description: "List Grafana Cloud stacks in the connected organization.",
+    description: "List every Grafana Cloud stack in the connected organization in one response.",
     requiredScopes: [],
-    inputSchema: s.object(
-      "Input for listing Grafana Cloud stacks.",
-      {
-        pageSize: pageSizeSchema,
-        pageCursor: nonEmptyString("The Grafana Cloud pagination cursor from a previous response."),
-      },
-      { optional: ["pageSize", "pageCursor"] },
-    ),
+    inputSchema: s.object("Input for listing Grafana Cloud stacks.", {}),
     outputSchema: s.object("Grafana Cloud stacks response.", {
       stacks: s.array("Stacks returned by Grafana Cloud.", stackSchema),
-      nextPageCursor: s.nullable(
-        s.string("The cursor to pass as pageCursor for the next Grafana Cloud stacks request."),
-      ),
-      nextPage: s.nullable(s.string("The next page URL returned by Grafana Cloud, if present.")),
       raw: rawObjectSchema,
     }),
   }),
