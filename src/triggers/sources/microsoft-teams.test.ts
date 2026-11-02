@@ -317,10 +317,13 @@ describe("Microsoft Teams Bot activity source", () => {
     expect(routed.response).toBeUndefined();
     expect(routed.references).toHaveLength(2);
     expect(routed.references).toEqual(expect.arrayContaining([fabrikam.reference, everyTenant.reference]));
-    expect(await route(activity({ type: "typing", text: undefined }))).toEqual({
-      references: [],
-      response: { status: 200, body: "", headers: {} },
-    });
+    // Neither an unsupported type nor a type no Source subscribes to returns a reference to receive.
+    for (const type of ["typing", "invoke"]) {
+      expect(await route(activity({ type, text: undefined }))).toEqual({
+        references: [],
+        response: { status: 200, body: "", headers: {} },
+      });
+    }
     expect(await route(fabrikamMessage, await botToken("00000000-0000-0000-0000-0000000000ff"))).toEqual({
       references: [],
       response: { status: 401, body: "", headers: {} },
