@@ -2,7 +2,14 @@ import type { CredentialValidationResult } from "../../core/types.ts";
 import type { ProviderActionHandlers, ProviderRuntimeHandler } from "../provider-executors.ts";
 import type { ProviderFetch } from "../provider-runtime.ts";
 
-import { compactObject, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
+import {
+  compactObject,
+  looseArray,
+  optionalInteger,
+  optionalRawString,
+  optionalRecord,
+  optionalString,
+} from "../../core/cast.ts";
 import { assertPublicHttpUrl, encodePathSegment } from "../../core/request.ts";
 import { isAllowedTeamsBotConnectorHost } from "../../core/teams-bot-connector.ts";
 import {
@@ -25,7 +32,7 @@ const tokenRefreshSkewMs = 60_000;
 const defaultTextFormat = "markdown";
 
 const maximumMessageBytes = 100 * 1024;
-// A card value that is a whole base64 image data URI, such as an Adaptive Card Image url. Its characters need no
+// An image URL that is a whole base64 data URI. Its characters need no
 // JSON escaping, so its length is the same inside the serialized activity.
 const embeddedImage = /^data:image\/[\w.+-]+;base64,[A-Za-z0-9+/]+=*$/i;
 
@@ -340,7 +347,7 @@ function messageActivity(
     activity[activityIdField] = requiredInputString(input.activityId, "activityId");
   }
   // A JavaScript string length counts UTF-16 code units, two bytes each. Teams leaves base64-encoded images
-  // out of the limit, so card values that are embedded images are not counted; the text always is, and the
+  // out of the limit, so only rendered image fields are excluded; text and action data always count, and the
   // activity itself is sent unchanged.
   if ((JSON.stringify(activity).length - embeddedImageLength(attachments)) * 2 > maximumMessageBytes) {
     throw providerInputError("The message exceeds Teams' 100 KB limit for bot messages.");
@@ -348,12 +355,86 @@ function messageActivity(
   return activity;
 }
 
-/** Total length of the card values that are embedded base64 images. */
+/** Count embedded images only along card rendering paths, never inside text or action data. */
 function embeddedImageLength(value: unknown): number {
-  if (typeof value === "string") return embeddedImage.test(value) ? value.length : 0;
-  if (Array.isArray(value)) return value.reduce((total: number, item) => total + embeddedImageLength(item), 0);
-  const record = optionalRecord(value);
-  return record ? Object.values(record).reduce((total: number, item) => total + embeddedImageLength(item), 0) : 0;
+  const images: unknown[] = [];
+  looseArray(value).forEach((entry) => {
+    const attachment = optionalRecord(entry);
+    const content = optionalRecord(attachment?.content);
+    if (!content) return;
+    if (attachment?.contentType === "application/vnd.microsoft.card.adaptive") {
+      const pending: unknown[] = [content];
+      while (pending.length > 0) {
+        const node = optionalRecord(pending.pop());
+        if (!node) continue;
+        switch (node.type) {
+          case "AdaptiveCard":
+          case "Container":
+          case "Column":
+            images.push(optionalRecord(node.backgroundImage)?.url ?? node.backgroundImage);
+            pending.push(...looseArray(node.type === "AdaptiveCard" ? node.body : node.items));
+            if (node.type === "AdaptiveCard") pending.push(...looseArray(node.actions));
+            break;
+          case "ColumnSet":
+            pending.push(...looseArray(node.columns));
+            break;
+          case "ImageSet":
+            pending.push(...looseArray(node.images));
+            break;
+          case "Image":
+            images.push(node.url);
+            break;
+          case "Media":
+            images.push(node.poster);
+            break;
+          case "ActionSet":
+            pending.push(...looseArray(node.actions));
+            break;
+          case "RichTextBlock":
+            pending.push(...looseArray(node.inlines));
+            break;
+          case "Input.Text":
+            pending.push(node.inlineAction);
+            break;
+          case "Action.ShowCard":
+            pending.push(node.card);
+            images.push(node.iconUrl);
+            break;
+          case "Action.Execute":
+          case "Action.Submit":
+          case "Action.OpenUrl":
+          case "Action.ToggleVisibility":
+            images.push(node.iconUrl);
+            break;
+        }
+        pending.push(node.selectAction, node.fallback);
+      }
+      return;
+    }
+    switch (attachment?.contentType) {
+      case "application/vnd.microsoft.card.hero":
+      case "application/vnd.microsoft.card.thumbnail":
+        images.push(...looseArray(content.images).map((image) => optionalRecord(image)?.url));
+        break;
+      case "application/vnd.microsoft.card.receipt":
+        images.push(...looseArray(content.items).map((item) => optionalRecord(optionalRecord(item)?.image)?.url));
+        break;
+      case "application/vnd.microsoft.teams.card.o365connector":
+        looseArray(content.sections).forEach((section) => {
+          const record = optionalRecord(section);
+          images.push(record?.activityImage, optionalRecord(record?.heroImage)?.image);
+          images.push(...looseArray(record?.images).map((image) => optionalRecord(image)?.image));
+        });
+        break;
+      case "application/vnd.microsoft.teams.card.list":
+        images.push(...looseArray(content.items).map((item) => optionalRecord(item)?.icon));
+        break;
+    }
+    images.push(...looseArray(content.buttons).map((button) => optionalRecord(button)?.image));
+  });
+  return images
+    .map(optionalRawString)
+    .reduce((total, url) => total + (url && embeddedImage.test(url) ? url.length : 0), 0);
 }
 
 function readResourceResponse(response: unknown): Record<string, unknown> {

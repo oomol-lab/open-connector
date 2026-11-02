@@ -136,9 +136,117 @@ describe("Microsoft Teams Bot message cards", () => {
 });
 
 describe("Microsoft Teams Bot embedded card images", () => {
+  const image = `data:image/png;base64,${"A".repeat(80_000)}`;
+
+  it.each([
+    { name: "text block", content: { ...card, body: [{ type: "TextBlock", text: image }] } },
+    {
+      name: "image alternative text",
+      content: { ...card, body: [{ type: "Image", url: "https://example.com/image.png", altText: image }] },
+    },
+    { name: "button title", content: { ...card, actions: [{ type: "Action.Submit", title: image }] } },
+    {
+      name: "submission data",
+      content: { ...card, actions: [{ type: "Action.Submit", title: "Send", data: { type: "Image", url: image } }] },
+    },
+    {
+      name: "execute data",
+      content: {
+        ...card,
+        actions: [
+          { type: "Action.Execute", title: "Send", verb: "approve", data: { backgroundImage: image, iconUrl: image } },
+        ],
+      },
+    },
+    { name: "input default", content: { ...card, body: [{ type: "Input.Text", id: "text", value: image }] } },
+  ])("counts image-like strings in $name before any request", async ({ name, content }) => {
+    const { context } = teamsContext(`app-image-text-${name}`, "https://smba.trafficmanager.net/amer");
+    let fetchCalls = 0;
+    context.fetcher = async () => {
+      fetchCalls += 1;
+      return Response.json({ id: "unexpected" });
+    };
+    await expect(
+      microsoftTeamsBotActionHandlers.send_message(
+        {
+          conversationId: "19:channel@thread.tacv2",
+          attachments: [{ contentType: "application/vnd.microsoft.card.adaptive", content }],
+        },
+        context,
+      ),
+    ).rejects.toMatchObject({ status: 400 });
+    expect(fetchCalls).toBe(0);
+  });
+
+  it.each([
+    {
+      name: "nested image",
+      content: {
+        ...card,
+        body: [
+          {
+            type: "ColumnSet",
+            columns: [
+              {
+                type: "Column",
+                items: [{ type: "Container", items: [{ type: "ImageSet", images: [{ type: "Image", url: image }] }] }],
+              },
+            ],
+          },
+        ],
+      },
+    },
+    { name: "background image", content: { ...card, backgroundImage: { url: image } } },
+    { name: "string background image", content: { ...card, backgroundImage: image } },
+    { name: "action icon", content: { ...card, actions: [{ type: "Action.Submit", title: "Send", iconUrl: image }] } },
+    {
+      name: "nested card",
+      content: {
+        ...card,
+        actions: [
+          {
+            type: "Action.ShowCard",
+            title: "More",
+            card: { type: "AdaptiveCard", body: [{ type: "Image", url: image }] },
+          },
+        ],
+      },
+    },
+  ])("excludes a rendered $name and preserves the payload", async ({ name, content }) => {
+    const { requests, context } = teamsContext(`app-rendered-${name}`, "https://smba.trafficmanager.net/amer");
+    const attachments = [{ contentType: "application/vnd.microsoft.card.adaptive", content }];
+    await microsoftTeamsBotActionHandlers.send_message(
+      { conversationId: "19:channel@thread.tacv2", attachments },
+      context,
+    );
+    expect(requests[0]!.body).toEqual({ type: "message", attachments });
+  });
+
+  it("excludes hero card images but counts their title and button values", async () => {
+    const { requests, context } = teamsContext("app-hero-images", "https://smba.trafficmanager.net/amer");
+    const contentType = "application/vnd.microsoft.card.hero";
+    const attachments = [{ contentType, content: { images: [{ url: image }] } }];
+    await microsoftTeamsBotActionHandlers.send_message(
+      { conversationId: "19:channel@thread.tacv2", attachments },
+      context,
+    );
+    expect(requests[0]!.body).toEqual({ type: "message", attachments });
+    for (const content of [{ title: image }, { buttons: [{ type: "imBack", title: "Send", value: image }] }]) {
+      await expect(
+        microsoftTeamsBotActionHandlers.send_message(
+          {
+            conversationId: "19:channel@thread.tacv2",
+            attachments: [{ contentType, content }],
+          },
+          context,
+        ),
+      ).rejects.toMatchObject({ status: 400 });
+    }
+    expect(requests).toHaveLength(1);
+  });
+
   it("leaves base64 image data out of the message size and sends it unchanged", async () => {
     const { requests, context } = teamsContext("app-images", "https://smba.trafficmanager.net/amer");
-    const image = `data:image/png;base64,${"A".repeat(80_000)}`;
     const attachment = {
       contentType: "application/vnd.microsoft.card.adaptive",
       content: { ...card, body: [{ type: "Image", url: image }] },
