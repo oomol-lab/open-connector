@@ -114,8 +114,9 @@ function callOpenalexMcpTool(
 }
 
 /**
- * Join the text blocks as `text` and read the JSON they carry as `payload`
- * (structured content wins when the server sends it). Text that is not JSON
+ * Join all text blocks as `text`, but parse only the first as `payload`: OpenAlex
+ * appends budget warnings in separate blocks. Structured content takes priority.
+ * Text that is not JSON
  * is not an error: `payload` stays undefined and `raw` still reaches the caller.
  */
 function readOpenalexMcpToolResult(name: string, result: OpenalexMcpToolCall): OpenalexMcpToolResult {
@@ -123,12 +124,14 @@ function readOpenalexMcpToolResult(name: string, result: OpenalexMcpToolCall): O
     return { text: JSON.stringify(result.toolResult), payload: result.toolResult };
   }
   if (result.isError) throw new ProviderRequestError(502, `OpenAlex MCP tool ${name} failed.`, result);
-  const text = looseArray(result.content)
+  const texts = looseArray(result.content)
     .map((block) => optionalRecord(block))
     .filter((block) => block?.type === "text")
-    .map((block) => optionalRawString(block?.text) ?? "")
-    .join("\n");
-  return { text, payload: optionalRecord(result.structuredContent) ?? parseJsonText(text) };
+    .map((block) => optionalRawString(block?.text) ?? "");
+  return {
+    text: texts.join("\n"),
+    payload: optionalRecord(result.structuredContent) ?? parseJsonText(texts[0] ?? ""),
+  };
 }
 
 function parseJsonText(text: string): unknown {

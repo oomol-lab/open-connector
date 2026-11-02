@@ -16,17 +16,15 @@ interface RpcRequest {
 const endpoint = "https://mcp.openalex.org/mcp";
 const accessToken = "synthetic-openalex-mcp-token";
 
-// The 28 tools OpenAlex's MCP server registered when exercised, sorted.
+// MCP registrations in ourresearch/openalex-mcp-server at 4296c8f, including optional tool groups.
 const officialTools = [
   "analyze_works",
-  "answer",
   "calculate_works",
   "check_oql",
   "claim_author_profile",
   "create_alert",
   "delete_alert",
   "find_candidate_works",
-  "find_entity",
   "find_experts",
   "find_keywords",
   "get_entity",
@@ -38,12 +36,9 @@ const officialTools = [
   "list_my_alerts",
   "list_my_curations",
   "read_docs",
-  "read_help_page",
   "resolve_references",
-  "run_oql",
   "search_entities",
   "search_works",
-  "submit",
   "submit_curations",
   "update_alert",
 ];
@@ -62,7 +57,13 @@ const worksBody = {
   canonical_oql: 'works where title-abstract-keywords has "a paper"',
 };
 
-function fixture(options: { tools?: string[]; callResult?: (name: string) => unknown } = {}) {
+interface FixtureOptions {
+  tools?: string[];
+  callResult?: (name: string) => unknown;
+  toolResult?: Record<string, unknown>;
+}
+
+function fixture(options: FixtureOptions = {}) {
   const calls: RpcRequest[] = [];
   const fetcher: typeof fetch = async (_url, init) => {
     if (init?.method === "DELETE") return new Response(null, { status: 204 });
@@ -81,7 +82,7 @@ function fixture(options: { tools?: string[]; callResult?: (name: string) => unk
         break;
       case "tools/list":
         result = {
-          tools: (options.tools ?? [...openalexMcpActionNames]).map((name) => ({
+          tools: (options.tools ?? officialTools).map((name) => ({
             name,
             inputSchema: { type: "object" },
           })),
@@ -89,8 +90,14 @@ function fixture(options: { tools?: string[]; callResult?: (name: string) => unk
         break;
       case "tools/call": {
         const name = String(request.params?.name);
+        if (!(options.tools ?? officialTools).includes(name)) {
+          result = { isError: true, content: [{ type: "text", text: `Unknown tool: ${name}` }] };
+          break;
+        }
         const answer = options.callResult?.(name);
-        result = { content: [{ type: "text", text: JSON.stringify(answer === undefined ? worksBody : answer) }] };
+        result = options.toolResult ?? {
+          content: [{ type: "text", text: JSON.stringify(answer === undefined ? worksBody : answer) }],
+        };
         break;
       }
       default:
@@ -167,6 +174,31 @@ describe("openalex_mcp action handlers", () => {
     expect(output.raw).toBe(JSON.stringify(worksBody));
   });
 
+  it.each([
+    { label: "JSON with a budget warning", text: JSON.stringify(worksBody), expected: worksBody },
+    { label: "plain text", text: "OpenAlex documentation", expected: null },
+    {
+      label: "structured content",
+      text: JSON.stringify(worksBody),
+      structuredContent: { total_results: 2 },
+      expected: { total_results: 2 },
+    },
+  ])("preserves $label and all raw text", async ({ text, structuredContent, expected }) => {
+    const warning = "Budget: 1,000 credits left today.";
+    const host = fixture({
+      toolResult: {
+        content: [
+          { type: "text", text },
+          { type: "text", text: warning },
+        ],
+        structuredContent,
+      },
+    });
+    expect(
+      await openalexMcpActionHandlers.search_works({ query: "CRISPR" }, { accessToken, fetcher: host.fetcher }),
+    ).toEqual({ result: expected, raw: `${text}\n${warning}` });
+  });
+
   it("call get_my_account with no arguments", async () => {
     const host = fixture({ callResult: (name) => (name === "get_my_account" ? accountBody : null) });
     const output = (await openalexMcpActionHandlers.get_my_account(
@@ -188,7 +220,21 @@ describe("openalex_mcp credential validator", () => {
     expect(result).toEqual({
       profile: { accountId: "A5081234567", displayName: "Sam Lee" },
       grantedScopes: ["openalex:query"],
-      metadata: { mcpEndpoint: endpoint, discoveredToolCount: 28 },
+      metadata: { mcpEndpoint: endpoint, discoveredToolCount: 23 },
+    });
+  });
+
+  it("validates an account when the server appends a budget warning", async () => {
+    const host = fixture({
+      toolResult: {
+        content: [
+          { type: "text", text: JSON.stringify(accountBody) },
+          { type: "text", text: "Budget: 1,000 credits left today." },
+        ],
+      },
+    });
+    expect(await credentialValidators.oauth2!(oauthCredential(), { fetcher: host.fetcher })).toMatchObject({
+      profile: { accountId: "A5081234567", displayName: "Sam Lee" },
     });
   });
 
