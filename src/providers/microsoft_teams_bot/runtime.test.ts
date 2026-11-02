@@ -135,6 +135,31 @@ describe("Microsoft Teams Bot message cards", () => {
   });
 });
 
+describe("Microsoft Teams Bot embedded card images", () => {
+  it("leaves base64 image data out of the message size and sends it unchanged", async () => {
+    const { requests, context } = teamsContext("app-images", "https://smba.trafficmanager.net/amer");
+    const image = `data:image/png;base64,${"A".repeat(80_000)}`;
+    const attachment = {
+      contentType: "application/vnd.microsoft.card.adaptive",
+      content: { ...card, body: [{ type: "Image", url: image }] },
+    };
+
+    await microsoftTeamsBotActionHandlers.send_message(
+      { conversationId: "19:channel@thread.tacv2", attachments: [attachment] },
+      context,
+    );
+    expect(requests[0]!.body).toEqual({ type: "message", attachments: [attachment] });
+    // Text of the same length is not an image, so it still counts toward the limit.
+    await expect(
+      microsoftTeamsBotActionHandlers.send_message(
+        { conversationId: "19:channel@thread.tacv2", text: "A".repeat(80_000) },
+        context,
+      ),
+    ).rejects.toMatchObject({ status: 400 });
+    expect(requests).toHaveLength(1);
+  });
+});
+
 describe("Microsoft Teams Bot team channels", () => {
   it("lists a team's channels and names the General channel", async () => {
     const { requests, context } = teamsContext("app-channels", "https://smba.trafficmanager.net/amer");

@@ -25,6 +25,7 @@ const tokenRefreshSkewMs = 60_000;
 const defaultTextFormat = "markdown";
 
 const maximumMessageBytes = 100 * 1024;
+const base64ImageData = /(?<=data:image\/[\w.+-]+;base64,)[A-Za-z0-9+/=]+/gi;
 
 interface TeamsBotCloud {
   loginEndpoint: string;
@@ -313,8 +314,9 @@ function activityPath(input: Record<string, unknown>): string {
 }
 
 /**
- * Builds a message activity from text, cards or both. Teams counts a bot message's size in UTF-16 and refuses
- * one above 100 KB with 413 MessageSizeTooBig, so an oversized message is refused before it is sent.
+ * Builds a message activity from text, cards or both. Teams counts a bot message's size in UTF-16, without
+ * base64-encoded images, and refuses one above 100 KB with 413 MessageSizeTooBig, so an oversized message is
+ * refused before it is sent.
  */
 function messageActivity(
   input: Record<string, unknown>,
@@ -335,8 +337,12 @@ function messageActivity(
   if (activityIdField !== undefined) {
     activity[activityIdField] = requiredInputString(input.activityId, "activityId");
   }
-  // A JavaScript string length counts UTF-16 code units, two bytes each.
-  if (JSON.stringify(activity).length * 2 > maximumMessageBytes) {
+  // A JavaScript string length counts UTF-16 code units, two bytes each. Embedded images are measured without
+  // their base64 data, which Teams leaves out of the limit; the activity itself is sent unchanged.
+  const measured = JSON.stringify(activity, (_key, value: unknown) =>
+    typeof value === "string" ? value.replace(base64ImageData, "") : value,
+  );
+  if (measured.length * 2 > maximumMessageBytes) {
     throw providerInputError("The message exceeds Teams' 100 KB limit for bot messages.");
   }
   return activity;
