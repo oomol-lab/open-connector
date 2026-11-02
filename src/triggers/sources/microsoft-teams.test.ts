@@ -1,0 +1,237 @@
+import type { IntegrationReceiveContext } from "../common/integration.ts";
+import type { JsonValue } from "../common/json.ts";
+import type { PersistentSourceRequest, SourceApplication, SourceApplicationStore } from "./persistent.ts";
+
+import { exportJWK, generateKeyPair, SignJWT } from "jose";
+import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
+
+const appId = "00000000-0000-0000-0000-0000000000b0";
+const botId = `28:${appId}`;
+const serviceUrl = "https://smba.trafficmanager.net/amer/";
+const channelId = "19:approvals@thread.tacv2";
+const { privateKey, publicKey } = await generateKeyPair("RS256");
+const owner = { scope: "token", connectionId: "connection" };
+const proxy = {
+  providerAccountId: appId,
+  execute: async () => {
+    throw new Error("Unexpected upstream request");
+  },
+};
+
+let modules: {
+  persistent: typeof import("./persistent.ts");
+  trigger: typeof import("../../providers/microsoft_teams_bot/trigger-on-activity.ts");
+};
+
+beforeAll(async () => {
+  const keys = { keys: [{ ...(await exportJWK(publicKey)), kid: "key-1", endorsements: ["msteams"] }] };
+  // Bot Framework's OpenID metadata and key set are served locally; nothing reaches Microsoft.
+  vi.stubGlobal("fetch", async (url: string | URL | Request) =>
+    Response.json(String(url).endsWith("openidconfiguration") ? { jwks_uri: "https://keys.example/jwks" } : keys),
+  );
+  vi.resetModules();
+  (await import("../../core/guarded-fetch.ts")).setDefaultGuardedFetchDnsLookup(null);
+  modules = {
+    persistent: await import("./persistent.ts"),
+    trigger: await import("../../providers/microsoft_teams_bot/trigger-on-activity.ts"),
+  };
+});
+
+afterAll(() => {
+  vi.unstubAllGlobals();
+});
+
+class MemorySourceStore implements SourceApplicationStore {
+  private readonly rows = new Map<string, { revision: number; application: SourceApplication }>();
+
+  async getSourceApplication(scope: string, id: string) {
+    const row = this.rows.get(JSON.stringify([scope, id]));
+    return row ? structuredClone(row) : null;
+  }
+
+  async saveSourceApplication(scope: string, id: string, revision: number | null, application: SourceApplication) {
+    const key = JSON.stringify([scope, id]);
+    if ((this.rows.get(key)?.revision ?? null) !== revision) return false;
+    this.rows.set(key, { revision: (revision ?? 0) + 1, application: structuredClone(application) });
+    return true;
+  }
+}
+
+async function botToken(audience = appId): Promise<string> {
+  return new SignJWT({ serviceurl: serviceUrl })
+    .setProtectedHeader({ alg: "RS256", kid: "key-1" })
+    .setIssuer("https://api.botframework.com")
+    .setAudience(audience)
+    .setExpirationTime("10m")
+    .sign(privateKey);
+}
+
+function activity(overrides: Record<string, unknown> = {}): Record<string, unknown> {
+  return {
+    type: "message",
+    id: "1700000000123",
+    timestamp: "2026-11-01T10:00:00.000Z",
+    serviceUrl,
+    channelId: "msteams",
+    from: { id: "29:ada", aadObjectId: "aad-ada", name: "Ada" },
+    recipient: { id: botId, name: "Approvals Bot" },
+    conversation: { id: "a:personal-chat", conversationType: "personal", tenantId: "tenant-1" },
+    text: "hello",
+    ...overrides,
+  };
+}
+
+const channelMention = activity({
+  id: "1700000000456",
+  replyToId: "1700000000000",
+  conversation: { id: `${channelId};messageid=1700000000000`, conversationType: "channel", isGroup: true },
+  channelData: { tenant: { id: "tenant-1" }, team: { id: "19:team@thread.tacv2" }, channel: { id: channelId } },
+  text: "<at>Approvals Bot</at> deploy now, <at>Grace</at> please review",
+  entities: [
+    { type: "mention", text: "<at>@Approvals Bot</at>", mentioned: { id: botId, name: "Approvals Bot" } },
+    { type: "mention", text: "<at>Grace</at>", mentioned: { id: "29:grace", name: "Grace" } },
+    { type: "clientInfo", locale: "en-US" },
+  ],
+});
+
+async function createSource(store: SourceApplicationStore, eventTypes: string[]) {
+  const run = (request: PersistentSourceRequest) =>
+    modules.persistent.executePersistentSource(
+      store,
+      modules.trigger.microsoftTeamsBotActivities,
+      owner,
+      request,
+      proxy,
+      new AbortController().signal,
+    );
+  const created = (await run({
+    action: "create",
+    deploymentId: "deployment",
+    requestKey: "teams-bot",
+    input: { eventTypes },
+  })) as { source: { reference: { applicationId: string; sourceId: string }; ready: boolean } };
+  const reference = created.source.reference;
+  const receive = async (
+    body: Record<string, unknown>,
+    consumers: { id: string; config: Record<string, JsonValue> }[],
+    token?: string,
+  ) =>
+    (await run({
+      action: "receive",
+      deploymentId: "deployment",
+      reference,
+      consumers,
+      headers: { authorization: `Bearer ${token ?? (await botToken())}`, "content-type": "application/json" },
+      rawBody: Buffer.from(JSON.stringify(body)).toString("base64"),
+    })) as {
+      response?: { status: number; body: string };
+      event?: { id: string; type: string; matches: string[]; payload: Record<string, JsonValue> };
+    };
+  return { created, reference, run, receive };
+}
+
+describe("Microsoft Teams Bot activity source", () => {
+  it("is ready without a handshake and refuses stored secrets", async () => {
+    const { created, reference, run } = await createSource(new MemorySourceStore(), ["message"]);
+    expect(created.source.ready).toBe(true);
+    await expect(
+      run({
+        action: "update",
+        deploymentId: "deployment",
+        reference,
+        expectedRevision: 1,
+        input: { eventTypes: ["message"], signingSecret: "not-used" },
+      }),
+    ).rejects.toThrow(/Bot Framework tokens/u);
+  });
+
+  it("delivers a channel thread mention with the bot mention removed and conversation filters applied", async () => {
+    const { receive } = await createSource(new MemorySourceStore(), ["message", "conversationUpdate"]);
+    const received = await receive(channelMention, [
+      { id: "approvals-channel", config: { eventTypes: ["message"], conversationIds: [channelId] } },
+      { id: "other-channel", config: { eventTypes: ["message"], conversationIds: ["19:other@thread.tacv2"] } },
+      { id: "membership", config: { eventTypes: ["conversationUpdate"] } },
+    ]);
+
+    expect(received.event).toMatchObject({
+      id: JSON.stringify([`${channelId};messageid=1700000000000`, "1700000000456"]),
+      type: "message",
+      matches: ["approvals-channel"],
+    });
+    expect(received.event?.payload).toMatchObject({
+      event: "message",
+      activityId: "1700000000456",
+      text: "deploy now, Grace please review",
+      rawText: "<at>Approvals Bot</at> deploy now, <at>Grace</at> please review",
+      mentions: [
+        { id: botId, name: "Approvals Bot", isBot: true },
+        { id: "29:grace", name: "Grace", isBot: false },
+      ],
+      from: { id: "29:ada", aadObjectId: "aad-ada", name: "Ada" },
+      conversation: {
+        id: `${channelId};messageid=1700000000000`,
+        conversationType: "channel",
+        tenantId: "tenant-1",
+      },
+      channelData: { team: { id: "19:team@thread.tacv2" }, channel: { id: channelId } },
+      replyToId: "1700000000000",
+      serviceUrl,
+      timestamp: "2026-11-01T10:00:00.000Z",
+    });
+  });
+
+  it("delivers a direct message unchanged", async () => {
+    const { receive } = await createSource(new MemorySourceStore(), ["message"]);
+    const received = await receive(activity(), [{ id: "dm", config: { eventTypes: ["message"] } }]);
+    expect(received.event?.matches).toEqual(["dm"]);
+    expect(received.event?.payload).toMatchObject({
+      text: "hello",
+      rawText: "hello",
+      mentions: [],
+      conversation: { id: "a:personal-chat", conversationType: "personal", tenantId: "tenant-1" },
+      channelData: null,
+      replyToId: null,
+    });
+  });
+
+  it("acknowledges unsupported and unsubscribed activities without delivering them", async () => {
+    const { receive } = await createSource(new MemorySourceStore(), ["message"]);
+    const consumers = [{ id: "messages", config: { eventTypes: ["message"] } }];
+
+    expect(await receive(activity({ type: "typing", text: undefined }), consumers)).toMatchObject({
+      response: { status: 200, body: "" },
+    });
+    expect((await receive(activity({ channelId: "webchat" }), consumers)).event).toBeUndefined();
+    // The Source does not subscribe to conversation updates, so none reach a consumer.
+    const update = await receive(activity({ type: "conversationUpdate", text: undefined }), consumers);
+    expect(update.event).toBeUndefined();
+    expect(update.response?.status).toBe(200);
+  });
+
+  it("keeps the same delivery identity when Bot Framework replays an activity", async () => {
+    const { reference, receive } = await createSource(new MemorySourceStore(), ["message"]);
+    const consumers = [{ id: "messages", config: { eventTypes: ["message"] } }];
+    const first = await receive(channelMention, consumers);
+    const replayed = await receive(channelMention, consumers);
+    expect(replayed.event?.id).toBe(first.event?.id);
+
+    const config: Record<string, JsonValue> = { sourceId: reference.sourceId, eventTypes: ["message"] };
+    const dedupeKeys = [first, replayed].map((delivery) => {
+      const result = modules.trigger.microsoftTeamsBotActivities.receive({
+        eventSourceId: reference.sourceId,
+        config,
+        payload: delivery.event!.payload,
+      } as IntegrationReceiveContext);
+      return "dedupeKey" in result ? result.dedupeKey : undefined;
+    });
+    expect(dedupeKeys[0]).toBe(first.event?.id);
+    expect(dedupeKeys[1]).toBe(dedupeKeys[0]);
+  });
+
+  it("rejects a token issued for another bot", async () => {
+    const { receive } = await createSource(new MemorySourceStore(), ["message"]);
+    const rejected = await receive(activity(), [], await botToken("00000000-0000-0000-0000-0000000000ff"));
+    expect(rejected).toMatchObject({ response: { status: 401 } });
+    expect(rejected.event).toBeUndefined();
+  });
+});

@@ -1,4 +1,4 @@
-import type { BotFrameworkSigningKey } from "./microsoft-teams-bot.ts";
+import type { BotFrameworkSigningKey } from "../../triggers/sources/teams-bot-token.ts";
 
 import { exportJWK, generateKeyPair, SignJWT } from "jose";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -152,6 +152,7 @@ describe("Teams bot inbound activity verification", () => {
 
 describe("Bot Framework published signing keys", () => {
   let verifier: typeof import("./microsoft-teams-bot.ts");
+  let protocol: typeof import("../../triggers/sources/teams-bot-token.ts");
   let keysDocument: unknown;
   const fetcher = vi.fn(async (url: string) =>
     Response.json(url.endsWith("openidconfiguration") ? { jwks_uri: "https://keys.example/jwks" } : keysDocument),
@@ -162,6 +163,7 @@ describe("Bot Framework published signing keys", () => {
     // The fresh guarded-fetch module instance forgets vitest.setup.ts's DNS override; keep tests off real DNS.
     (await import("../../core/guarded-fetch.ts")).setDefaultGuardedFetchDnsLookup(null);
     verifier = await import("./microsoft-teams-bot.ts");
+    protocol = await import("../../triggers/sources/teams-bot-token.ts");
     vi.spyOn(Date, "now").mockReturnValue(now);
     fetcher.mockClear();
     keysDocument = { keys: [{ ...(await exportJWK(publicKey)), kid: "key-1", endorsements: ["msteams"] }] };
@@ -187,9 +189,9 @@ describe("Bot Framework published signing keys", () => {
     vi.mocked(Date.now).mockReturnValue(now + 3_600_001);
     fetcher.mockRejectedValueOnce(new Error("Network unavailable"));
 
-    await expect(verifyPublished("new-key")).rejects.toBeInstanceOf(verifier.BotFrameworkKeysUnavailableError);
+    await expect(verifyPublished("new-key")).rejects.toBeInstanceOf(protocol.BotFrameworkKeysUnavailableError);
     await expect(verifyPublished()).resolves.toMatchObject({ valid: true });
-    await expect(verifyPublished("new-key")).rejects.toBeInstanceOf(verifier.BotFrameworkKeysUnavailableError);
+    await expect(verifyPublished("new-key")).rejects.toBeInstanceOf(protocol.BotFrameworkKeysUnavailableError);
     expect(fetcher).toHaveBeenCalledTimes(3);
 
     keysDocument = { keys: [{ ...(await exportJWK(publicKey)), kid: "new-key", endorsements: ["msteams"] }] };
@@ -207,14 +209,14 @@ describe("Bot Framework published signing keys", () => {
       keysDocument = document;
 
       await expect(verifyPublished()).resolves.toMatchObject({ valid: true });
-      await expect(verifyPublished("new-key")).rejects.toBeInstanceOf(verifier.BotFrameworkKeysUnavailableError);
+      await expect(verifyPublished("new-key")).rejects.toBeInstanceOf(protocol.BotFrameworkKeysUnavailableError);
       expect(fetcher).toHaveBeenCalledTimes(4);
     },
   );
 
   it("reports malformed JWKS as unavailable when no cache exists", async () => {
     keysDocument = {};
-    await expect(verifyPublished()).rejects.toBeInstanceOf(verifier.BotFrameworkKeysUnavailableError);
+    await expect(verifyPublished()).rejects.toBeInstanceOf(protocol.BotFrameworkKeysUnavailableError);
   });
 
   it("rejects an unknown key after successfully fetching a valid JWKS", async () => {
@@ -225,6 +227,6 @@ describe("Bot Framework published signing keys", () => {
       keys: [{ ...(await exportJWK(publicKey)), kid: "key-1", endorsements: ["msteams"] }],
       padding: "x".repeat(1024 * 1024 + 1),
     };
-    await expect(verifyPublished()).rejects.toBeInstanceOf(verifier.BotFrameworkKeysUnavailableError);
+    await expect(verifyPublished()).rejects.toBeInstanceOf(protocol.BotFrameworkKeysUnavailableError);
   });
 });

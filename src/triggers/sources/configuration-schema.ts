@@ -98,6 +98,18 @@ const createSchema = z.union([
       .refine((values) => new Set(values).size === values.length),
   }),
   z.strictObject({
+    kind: z.literal("microsoft_teams"),
+    version: z.literal(1),
+    name,
+    connectionId: id,
+    teamId: id.nullable(),
+    eventTypes: z
+      .array(z.enum(["message", "conversationUpdate", "messageReaction", "invoke"]))
+      .min(1)
+      .max(4)
+      .refine((values) => new Set(values).size === values.length),
+  }),
+  z.strictObject({
     kind: z.literal("slack"),
     version: z.literal(1),
     name,

@@ -149,7 +149,7 @@ export interface IntegrationDefinition {
     context: Omit<ListenerReadContext, "checkpoint">,
   ) => Promise<Readonly<Record<string, JsonValue>>>;
   readonly resources?: ResourceDefinition;
-  readonly eventSource?: "feishu" | "slack" | "intercom" | "sentry" | "zoom" | "fireflies" | "jira";
+  readonly eventSource?: "feishu" | "slack" | "intercom" | "sentry" | "zoom" | "fireflies" | "jira" | "microsoft_teams";
   readonly configOptions?: (context: TriggerConfigOptionsContext) => Promise<readonly TriggerConfigOption[]>;
   readonly listener?: ListenerSource;
   readonly initialState?: {
