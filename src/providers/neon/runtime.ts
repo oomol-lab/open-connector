@@ -585,7 +585,7 @@ async function getOperation(input: Record<string, unknown>, context: NeonActionC
   };
 }
 
-async function requestNeonJson({
+export async function requestNeonJson({
   apiKey,
   path,
   fetcher,
@@ -737,7 +737,7 @@ function normalizeCurrentUser(value: unknown): Record<string, unknown> {
   return normalizeNeonObject(value, "current user");
 }
 
-function normalizeNeonObject(value: unknown, field: string): Record<string, unknown> {
+export function normalizeNeonObject(value: unknown, field: string): Record<string, unknown> {
   return normalizeNeonValue(requireResponseObject(value, field)) as Record<string, unknown>;
 }
 
@@ -748,7 +748,7 @@ function normalizeNullableNeonObject(value: unknown): Record<string, unknown> | 
   return normalizeNeonValue(value) as Record<string, unknown>;
 }
 
-function normalizeNeonArray(value: unknown, field: string): Array<Record<string, unknown>> {
+export function normalizeNeonArray(value: unknown, field: string): Array<Record<string, unknown>> {
   if (!Array.isArray(value)) {
     throw new ProviderRequestError(502, `Malformed Neon response: missing ${field}`);
   }

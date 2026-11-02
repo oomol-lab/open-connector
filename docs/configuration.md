@@ -145,7 +145,7 @@ currently available only on the Node server, not Cloudflare Workers.
 
 The Node runtime stores transit files under `data/files` by default. Set
 `OOMOL_CONNECT_TRANSIT_FILE_BACKEND=s3` to share transit files across multiple Node or Docker
-instances through AWS S3 or an S3-compatible service such as MinIO, Cloudflare R2, or Alibaba Cloud
+instances through AWS S3 or an S3-compatible service such as MinIO, Cloudflare R2, Neon, or Alibaba Cloud
 OSS:
 
 ```bash
@@ -167,6 +167,13 @@ For Cloudflare R2, use the account S3 endpoint and set the region to `auto`. For
 use its S3-compatible endpoint (`https://s3.oss-<region>.aliyuncs.com`), set the matching region, and
 leave path-style access disabled. MinIO commonly uses its server URL as the endpoint with
 `OOMOL_CONNECT_S3_FORCE_PATH_STYLE=true`.
+
+For Neon Object Storage, use the branch S3 endpoint
+(`https://<branch-id>.storage.<cell>.<region>.aws.neon.tech`), set the region the branch reports,
+and set `OOMOL_CONNECT_S3_FORCE_PATH_STYLE=true` because Neon only accepts path-style requests. The
+`neon_object_storage.get_branch_storage` action returns the endpoint and region for a branch. Create the bucket with
+`neon_object_storage.create_bucket` or the Neon Console, and use a branch credential's access key ID and secret
+access key for the two credential variables.
 
 Uploads and downloads continue to use `/api/files`; the bucket does not need to be public. All
 instances must use the same bucket and S3 settings. The runtime rejects expired files when they are

@@ -108,6 +108,28 @@ const answerSchema = s.oneOf(
   { description: "A typed TypeSafe answer." },
 );
 
+/** Named Noul, Choice, and Score questions, shared with gateways that serve System One models. */
+export const typesafeQuestionsSchema: JsonSchema = {
+  ...s.record(
+    "Named questions evaluated independently against the shared state.",
+    s.oneOf([noulQuestionSchema, choiceQuestionSchema, scoreQuestionSchema], {
+      description: "A Noul, Choice, or Score question.",
+    }),
+  ),
+  minProperties: 1,
+  propertyNames: s.nonEmptyString("A non-empty question ID used to key the matching answer."),
+};
+
+/** The System One evaluation result, shared with gateways that serve System One models. */
+export const typesafeEvaluationOutputSchema: JsonSchema = s.object("The structured TypeSafe evaluation result.", {
+  model: s.nonEmptyString("The versioned TypeSafe model that produced the answers."),
+  answers: s.record("Typed answers keyed by the input question names.", answerSchema),
+  usage: s.object("Token usage reported by TypeSafe.", {
+    input_tokens: s.nonNegativeInteger("The number of input tokens processed."),
+    output_tokens: s.nonNegativeInteger("The number of output tokens reported."),
+  }),
+});
+
 const modelSchema = s.object("A TypeSafe model available to the connected account.", {
   name: s.nonEmptyString("The model ID or alias accepted by the evaluation endpoint."),
   description: s.string("A description of the model's intended use."),
@@ -146,26 +168,10 @@ export const typesafeAiActions: ActionDefinition[] = [
       {
         state: stateSchema,
         model: s.nonWhitespaceString(`The TypeSafe model ID or alias to use. Defaults to ${typesafeAiDefaultModel}.`),
-        questions: {
-          ...s.record(
-            "Named questions evaluated independently against the shared state.",
-            s.oneOf([noulQuestionSchema, choiceQuestionSchema, scoreQuestionSchema], {
-              description: "A Noul, Choice, or Score question.",
-            }),
-          ),
-          minProperties: 1,
-          propertyNames: s.nonEmptyString("A non-empty question ID used to key the matching answer."),
-        },
+        questions: typesafeQuestionsSchema,
       },
       { optional: ["model"] },
     ),
-    s.object("The structured TypeSafe evaluation result.", {
-      model: s.nonEmptyString("The versioned TypeSafe model that produced the answers."),
-      answers: s.record("Typed answers keyed by the input question names.", answerSchema),
-      usage: s.object("Token usage reported by TypeSafe.", {
-        input_tokens: s.nonNegativeInteger("The number of input tokens processed."),
-        output_tokens: s.nonNegativeInteger("The number of output tokens reported."),
-      }),
-    }),
+    typesafeEvaluationOutputSchema,
   ),
 ];
