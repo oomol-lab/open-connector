@@ -8,10 +8,13 @@ function instancesFetcher(requests: string[]): typeof fetch {
     if (new URL(String(url)).search)
       return Response.json({ code: "InvalidArgument", message: "Unexpected parameter" }, { status: 409 });
     return Response.json({
-      items: [{ id: 7, slug: "acme", name: "Acme", orgSlug: "acme-org", orgName: "Acme Inc" }],
+      items: [
+        { id: 7, slug: "acme", name: "Acme", orgSlug: "acme-org", orgName: "Acme Inc" },
+        { id: 8, slug: "beta", name: "Beta", orgSlug: "acme-org", orgName: "Acme Inc" },
+      ],
       orderBy: "name",
       direction: "asc",
-      total: 1,
+      total: 2,
       pages: 1,
       pageSize: 1000000,
       page: 1,
@@ -31,7 +34,7 @@ describe("Grafana Cloud organization instances", () => {
     expect(requests).toEqual(["https://grafana.com/api/orgs/acme-org/instances"]);
     expect(result).toMatchObject({
       profile: { accountId: "grafana_cloud:acme-org", displayName: "Acme Inc" },
-      metadata: { stackCount: 1, firstStackSlug: "acme" },
+      metadata: { stackCount: 2, firstStackSlug: "acme" },
     });
   });
 
@@ -43,6 +46,12 @@ describe("Grafana Cloud organization instances", () => {
     );
 
     expect(requests).toEqual(["https://grafana.com/api/orgs/acme-org/instances"]);
-    expect(result).toMatchObject({ stacks: [{ id: 7, slug: "acme", name: "Acme" }], raw: { total: 1 } });
+    expect(result).toMatchObject({
+      stacks: [
+        { id: 7, slug: "acme", name: "Acme" },
+        { id: 8, slug: "beta", name: "Beta" },
+      ],
+      raw: { total: 2 },
+    });
   });
 });
