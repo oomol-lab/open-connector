@@ -11,6 +11,7 @@ interface CapturedRequest {
   authorization: string | null;
   apiArg: Record<string, unknown>;
   rawApiArg: string | null;
+  body: unknown;
 }
 
 const oauthCredential: Extract<ResolvedCredential, { authType: "oauth2" }> = {
@@ -232,6 +233,126 @@ describe("Dropbox-API-Arg header encoding", () => {
   });
 });
 
+describe("Dropbox membership", () => {
+  it.each(["file", "folder"] as const)(
+    "preserves %s user, group and invitee grants across cursor pages",
+    async (kind) => {
+      const users = [
+        {
+          access_type: { ".tag": "owner" },
+          user: { account_id: "dbid:owner", email: "owner@example.com", display_name: "Owner", same_team: true },
+          is_inherited: false,
+          permissions: [],
+        },
+      ];
+      const groups = [
+        {
+          access_type: { ".tag": "editor" },
+          group: { group_id: "g:team", group_name: "Team", same_team: true },
+          is_inherited: false,
+          permissions: [],
+        },
+      ];
+      const invitees = [
+        {
+          access_type: { ".tag": "viewer" },
+          invitee: { ".tag": "email", email: "pending@example.com" },
+          is_inherited: false,
+          permissions: [],
+        },
+      ];
+      const requests = stubResponses([
+        Response.json({ users, groups, invitees, cursor: "opaque-next-page" }),
+        Response.json({ users: [], groups: [], invitees: [] }),
+      ]);
+
+      expect(
+        await executeDropboxAction(
+          kind === "file" ? "list_file_members" : "list_folder_members",
+          kind === "file"
+            ? { file: "id:file-1", includeInherited: false, limit: 1 }
+            : { sharedFolderId: "1234", path: "/shared/nested", limit: 1 },
+        ),
+      ).toEqual({ ok: true, output: { users, groups, invitees, cursor: "opaque-next-page" } });
+      expect(
+        await executeDropboxAction(kind === "file" ? "list_file_members_continue" : "list_folder_members_continue", {
+          cursor: "opaque-next-page",
+        }),
+      ).toEqual({
+        ok: true,
+        output: { users: [], groups: [], invitees: [], cursor: null },
+      });
+      expect(requests.map((request) => [request.url.pathname, request.authorization, request.body])).toEqual([
+        [
+          `/2/sharing/list_${kind}_members`,
+          "Bearer dropbox-access-token",
+          kind === "file"
+            ? { file: "id:file-1", include_inherited: false, limit: 1 }
+            : { shared_folder_id: "1234", path: "/shared/nested", limit: 1 },
+        ],
+        [`/2/sharing/list_${kind}_members/continue`, "Bearer dropbox-access-token", { cursor: "opaque-next-page" }],
+      ]);
+      for (const name of [`list_${kind}_members`, `list_${kind}_members_continue`]) {
+        expect(provider.actions.find((action) => action.name === name)?.requiredScopes).toEqual(["sharing.read"]);
+      }
+    },
+  );
+
+  it.each([
+    ["list_file_members", { file: "id:file-1" }, 403, "access_error/no_permission", "authorization_failed"],
+    ["list_file_members_continue", { cursor: "expired" }, 409, "invalid_cursor", "invalid_input"],
+    ["list_folder_members", { sharedFolderId: "not-shared" }, 409, "invalid_id", "invalid_input"],
+    ["list_folder_members_continue", { cursor: "expired" }, 409, "invalid_cursor", "invalid_input"],
+  ] as const)("keeps %s upstream refusal distinct from an empty ACL", async (name, input, status, summary, code) => {
+    const requests = stubResponses([Response.json({ error_summary: summary }, { status })]);
+    expect(await executeDropboxAction(name, input)).toMatchObject({
+      ok: false,
+      error: { code, message: summary, details: { status, details: { upstreamStatus: status } } },
+    });
+    expect(requests).toHaveLength(1);
+  });
+
+  it.each(["list_file_members", "list_folder_members"] as const)(
+    "rejects malformed %s arrays instead of reporting complete empty access",
+    async (action) => {
+      stubResponses([Response.json({ users: [], invitees: [] })]);
+      expect(
+        await executeDropboxAction(
+          action,
+          action === "list_file_members" ? { file: "id:file-1" } : { sharedFolderId: "1234" },
+        ),
+      ).toMatchObject({
+        ok: false,
+        error: { code: "provider_error", message: "dropbox groups must be an array" },
+      });
+    },
+  );
+
+  it("preserves explicit-sharing changes on initial and continued listing pages", async () => {
+    const entry = { ".tag": "file", id: "id:file-1", name: "notes.txt", has_explicit_shared_members: true };
+    const requests = stubResponses([
+      Response.json({ entries: [entry], cursor: "next", has_more: true }),
+      Response.json({ entries: [{ ...entry, has_explicit_shared_members: false }], cursor: "done", has_more: false }),
+      Response.json({ ".tag": "folder", id: "id:folder-1", name: "private" }),
+    ]);
+    expect(
+      await executeDropboxAction("list_folder", { path: "", includeHasExplicitSharedMembers: true }),
+    ).toMatchObject({
+      ok: true,
+      output: { entries: [{ hasExplicitSharedMembers: true }] },
+    });
+    expect(await executeDropboxAction("list_folder_continue", { cursor: "next" })).toMatchObject({
+      ok: true,
+      output: { entries: [{ hasExplicitSharedMembers: false }] },
+    });
+    expect(await executeDropboxAction("get_metadata", { path: "id:folder-1" })).toMatchObject({
+      ok: true,
+      output: { metadata: { hasExplicitSharedMembers: null } },
+    });
+    expect(requests[0]?.body).toEqual({ path: "", include_has_explicit_shared_members: true });
+  });
+});
+
 function dropboxDownloadResponse(content: Uint8Array, metadata: Record<string, unknown>): Response {
   return new Response(Uint8Array.from(content), {
     headers: {
@@ -250,6 +371,7 @@ function stubResponses(responses: Response[]): CapturedRequest[] {
       authorization: request.headers.get("authorization"),
       apiArg: JSON.parse(request.headers.get("dropbox-api-arg") ?? "{}") as Record<string, unknown>,
       rawApiArg: request.headers.get("dropbox-api-arg"),
+      body: request.body === null ? null : await request.json(),
     });
     const response = responses.shift();
     if (!response) {
@@ -287,7 +409,16 @@ function createTransitFileStore(maxBytes: number): {
 }
 
 async function executeDropboxAction(
-  actionName: "download_file" | "get_shared_link_file",
+  actionName:
+    | "download_file"
+    | "get_shared_link_file"
+    | "list_file_members"
+    | "list_file_members_continue"
+    | "list_folder_members"
+    | "list_folder_members_continue"
+    | "list_folder"
+    | "list_folder_continue"
+    | "get_metadata",
   input: Record<string, unknown>,
   transitFiles?: TransitFileStore,
 ) {
