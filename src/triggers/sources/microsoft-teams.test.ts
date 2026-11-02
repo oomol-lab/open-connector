@@ -273,6 +273,60 @@ describe("Microsoft Teams Bot activity source", () => {
     expect((await contoso.receive(noTenant, consumers)).event).toBeUndefined();
   });
 
+  it("routes one bot's messaging endpoint to the Sources of the activity's tenant", async () => {
+    const store = new MemorySourceStore();
+    const contoso = await createSource(store, ["message"], {
+      requestKey: "contoso",
+      tenantId: "aaaaaaaa-0000-0000-0000-000000000001",
+    });
+    const fabrikam = await createSource(store, ["message"], {
+      requestKey: "fabrikam",
+      tenantId: "bbbbbbbb-0000-0000-0000-000000000002",
+    });
+    const everyTenant = await createSource(store, ["message"], { requestKey: "every-tenant" });
+    // Every Source of the bot shares the application of its App ID, behind the one messaging endpoint.
+    const { applicationId } = contoso.reference;
+    expect([fabrikam.reference.applicationId, everyTenant.reference.applicationId]).toEqual([
+      applicationId,
+      applicationId,
+    ]);
+    const route = async (body: Record<string, unknown>, token?: string) =>
+      modules.persistent.routeSourceApplication(
+        store,
+        modules.trigger.microsoftTeamsBotActivities,
+        owner.scope,
+        {
+          action: "route",
+          deploymentId: "deployment",
+          applicationId,
+          headers: { authorization: `Bearer ${token ?? (await botToken())}`, "content-type": "application/json" },
+          rawBody: Buffer.from(JSON.stringify(body)).toString("base64"),
+        },
+        () => undefined,
+        new AbortController().signal,
+      );
+
+    const fabrikamMessage = activity({
+      conversation: {
+        id: "a:fabrikam-chat",
+        conversationType: "personal",
+        tenantId: "bbbbbbbb-0000-0000-0000-000000000002",
+      },
+    });
+    const routed = await route(fabrikamMessage);
+    expect(routed.response).toBeUndefined();
+    expect(routed.references).toHaveLength(2);
+    expect(routed.references).toEqual(expect.arrayContaining([fabrikam.reference, everyTenant.reference]));
+    expect(await route(activity({ type: "typing", text: undefined }))).toEqual({
+      references: [],
+      response: { status: 200, body: "", headers: {} },
+    });
+    expect(await route(fabrikamMessage, await botToken("00000000-0000-0000-0000-0000000000ff"))).toEqual({
+      references: [],
+      response: { status: 401, body: "", headers: {} },
+    });
+  });
+
   it("filters consumers by tenant and exposes card submissions", async () => {
     const { receive } = await createSource(new MemorySourceStore(), ["invoke"]);
     const submit = activity({

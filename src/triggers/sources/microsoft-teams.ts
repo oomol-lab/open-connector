@@ -32,6 +32,9 @@ export const microsoftTeamsBot: EventSourceDefinition<
 > = {
   kind: "microsoft_teams",
   provider: "microsoft_teams_bot",
+  // An Azure Bot has one messaging endpoint, shared by every Source of its App ID (one per tenant when a
+  // multi-tenant bot serves several organizations), so deliveries are routed per application, as for Slack.
+  applicationIngress: true,
   maximumBodyBytes: 64 * 1024,
   initialize(input, accountId) {
     if (input.kind !== "microsoft_teams" || !accountId)
