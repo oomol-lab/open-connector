@@ -158,7 +158,7 @@ The `slackbot.on_event` shared application Source serves both the Slack app's Ev
   - `text` removes the bot's own `<at>` mention and unwraps the other mentions, while `rawText` keeps the original.
   - `mentions` lists `id`, `name` and `isBot` for each mention entity.
   - `from`, `conversation` (`id`, `conversationType`, `tenantId`), `channelData`, `replyToId`, `serviceUrl` and `timestamp` come from the activity, and `body` is the whole activity.
-  - `name` is an invoke's name, such as `adaptiveCard/action`, and `value` is the object an Adaptive Card action submits. Both are `null` otherwise.
+  - `name` and `value` are the activity's own fields: `name` is set on an invoke such as `adaptiveCard/action`, and `value` holds the object an Adaptive Card action submits, on an invoke or on an `Action.Submit` message. Each is `null` when the activity has none, and `value` is also `null` when it is not an object; `body` keeps the original.
 - To answer in the same thread, call `microsoft_teams_bot.reply_to_message` with `serviceUrl`, `conversationId` set to `conversation.id` and `activityId`.
 - Cards:
   - `send_message`, `reply_to_message` and `update_message` take `attachments`, cards such as `{ "contentType": "application/vnd.microsoft.card.adaptive", "content": <card JSON> }`, and `attachmentLayout` (`list` or `carousel`).
