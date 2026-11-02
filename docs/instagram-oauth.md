@@ -230,7 +230,7 @@ You need an Instagram Business or Creator account linked to a Facebook Page, and
 reach that Page:
 
 - a Page access token, or a user or system-user access token that can list the Page;
-- `instagram_basic` and `pages_show_list`, plus `instagram_manage_comments`,
+- `instagram_basic`, `pages_show_list` and `pages_read_engagement`, plus `instagram_manage_comments`,
   `instagram_manage_insights` or `instagram_content_publish` for the matching Actions; and
 - for an app in Development mode, the token owner holds a role on the app.
 

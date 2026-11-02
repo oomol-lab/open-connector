@@ -37,7 +37,7 @@ export const provider: ProviderDefinition = {
       label: "Facebook Login access token",
       placeholder: "EAAG...",
       description:
-        "Instagram API with Facebook Login: a Page access token, or a user or system-user token that can list Pages, for a Facebook Page linked to an Instagram Business or Creator account. Grant instagram_basic and pages_show_list, plus instagram_manage_comments, instagram_manage_insights or instagram_content_publish for the matching actions. Prefer a long-lived or system-user token; OpenConnector does not refresh it. Messaging (send_message) requires OAuth.",
+        "Instagram API with Facebook Login: a Page access token, or a user or system-user token that can list Pages, for a Facebook Page linked to an Instagram Business or Creator account. Grant instagram_basic, pages_show_list and pages_read_engagement, plus instagram_manage_comments, instagram_manage_insights or instagram_content_publish for the matching actions. Prefer a long-lived or system-user token; OpenConnector does not refresh it. Messaging (send_message) requires OAuth.",
       extraFields: [
         {
           key: "instagramAccountId",

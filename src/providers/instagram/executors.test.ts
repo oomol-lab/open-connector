@@ -97,6 +97,70 @@ describe("Instagram Facebook Login credentials", () => {
     expect(picked?.profile).toEqual({ accountId: second.id, displayName: "creator_two" });
   });
 
+  it.each([false, true])(
+    "finds a selected account on a later page (first page linked: %s)",
+    async (hasLinkedAccount) => {
+      const seen: URL[] = [];
+      const result = await credentialValidators.apiKey!(
+        { apiKey: "user-token", values: { instagramAccountId: linkedAccount.id } },
+        {
+          fetcher: async (value) => {
+            const url = new URL(value.toString());
+            seen.push(url);
+            if (url.pathname === "/v25.0/me") return graphError(100, "nonexisting field");
+            if (!url.searchParams.has("after")) {
+              return Response.json({
+                data: [{ id: "page-0", instagram_business_account: hasLinkedAccount ? { id: "other" } : undefined }],
+                paging: {
+                  cursors: { after: "page-two" },
+                  next: "https://graph.facebook.com/v25.0/me/accounts?after=page-two",
+                },
+              });
+            }
+            return Response.json({
+              data: [{ id: "page-1", instagram_business_account: linkedAccount }],
+              paging: { cursors: { after: "last-page" } },
+            });
+          },
+        },
+      );
+      expect(result?.profile?.accountId).toBe(linkedAccount.id);
+      expect(seen).toHaveLength(3);
+      expect(seen[2]!.origin).toBe("https://graph.facebook.com");
+      expect(seen[2]!.pathname).toBe("/v25.0/me/accounts");
+      expect(seen[2]!.searchParams.get("after")).toBe("page-two");
+      expect(seen[2]!.searchParams.get("fields")).toContain("instagram_business_account{");
+    },
+  );
+
+  it("requires account selection when linked accounts span several pages", async () => {
+    await expect(
+      credentialValidators.apiKey!(
+        { apiKey: "user-token", values: {} },
+        {
+          fetcher: async (value) => {
+            const url = new URL(value.toString());
+            if (url.pathname === "/v25.0/me") return graphError(100, "nonexisting field");
+            if (url.searchParams.has("after")) {
+              return Response.json({
+                data: [{ instagram_business_account: { id: "second", username: "creator_two" } }],
+              });
+            }
+            return Response.json({
+              data: [{ instagram_business_account: linkedAccount }],
+              paging: {
+                cursors: { after: "page-two" },
+                next: "https://graph.facebook.com/v25.0/me/accounts?after=page-two",
+              },
+            });
+          },
+        },
+      ),
+    ).rejects.toMatchObject({
+      message: expect.stringMatching(/set instagramAccountId.*creator_one.*creator_two/),
+    });
+  });
+
   it("rejects a token whose Page has no linked Instagram account", async () => {
     await expect(
       credentialValidators.apiKey!(

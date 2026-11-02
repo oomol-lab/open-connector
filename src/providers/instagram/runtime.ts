@@ -202,18 +202,29 @@ async function listLinkedInstagramAccounts(context: InstagramContext): Promise<L
       throw error;
     }
   }
-  const pages = requiredRecord(
-    await instagramRequestJson(
-      { path: "/me/accounts", query: { fields: `id,name,${linkedField}`, limit: "100" } },
-      context,
-    ),
-    "Facebook Pages response",
-    providerResponseError,
-  );
-  return objectArray(pages.data, "Facebook Pages", providerResponseError).flatMap((page) => {
-    const linked = optionalRecord(page.instagram_business_account);
-    return linked ? [normalizeLinkedAccount(linked)] : [];
-  });
+  const accounts: LinkedInstagramAccount[] = [];
+  let after: string | undefined;
+  do {
+    const pages = requiredRecord(
+      await instagramRequestJson(
+        { path: "/me/accounts", query: { fields: `id,name,${linkedField}`, limit: "100", after } },
+        context,
+      ),
+      "Facebook Pages response",
+      providerResponseError,
+    );
+    accounts.push(
+      ...objectArray(pages.data, "Facebook Pages", providerResponseError).flatMap((page) => {
+        const linked = optionalRecord(page.instagram_business_account);
+        return linked ? [normalizeLinkedAccount(linked)] : [];
+      }),
+    );
+    const paging = optionalRecord(pages.paging);
+    after = optionalString(paging?.next)
+      ? requiredString(optionalRecord(paging?.cursors)?.after, "Facebook Pages next cursor", providerResponseError)
+      : undefined;
+  } while (after);
+  return accounts;
 }
 
 function normalizeLinkedAccount(payload: Record<string, unknown>): LinkedInstagramAccount {
