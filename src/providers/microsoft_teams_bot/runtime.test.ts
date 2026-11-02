@@ -89,3 +89,38 @@ describe("Microsoft Teams Bot message cards", () => {
     expect(requests).toEqual([]);
   });
 });
+
+describe("Microsoft Teams Bot team channels", () => {
+  it("lists a team's channels and names the General channel", async () => {
+    const { requests, context } = teamsContext("app-channels", "https://smba.trafficmanager.net/amer");
+
+    await expect(
+      microsoftTeamsBotActionHandlers.list_team_channels({ teamId: "19:team@thread.tacv2" }, context),
+    ).resolves.toEqual({
+      channels: [
+        { id: "19:team@thread.tacv2", name: "General" },
+        { id: "19:releases@thread.tacv2", name: "Releases" },
+      ],
+    });
+    await microsoftTeamsBotActionHandlers.list_team_channels(
+      { teamId: "19:team@thread.tacv2", serviceUrl: "https://smba.trafficmanager.net/emea/" },
+      context,
+    );
+
+    expect(requests.map(({ method, url }) => `${method} ${url}`)).toEqual([
+      "GET https://smba.trafficmanager.net/amer/v3/teams/19%3Ateam%40thread.tacv2/conversations",
+      "GET https://smba.trafficmanager.net/emea/v3/teams/19%3Ateam%40thread.tacv2/conversations",
+    ]);
+  });
+
+  it("refuses a service URL outside the Bot Connector hosts", async () => {
+    const { requests, context } = teamsContext("app-hosts");
+    await expect(
+      microsoftTeamsBotActionHandlers.list_team_channels(
+        { teamId: "19:team@thread.tacv2", serviceUrl: "https://attacker.example/teams" },
+        context,
+      ),
+    ).rejects.toMatchObject({ status: 400 });
+    expect(requests).toEqual([]);
+  });
+});

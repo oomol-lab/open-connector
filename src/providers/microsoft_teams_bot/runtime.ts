@@ -161,6 +161,28 @@ export const microsoftTeamsBotActionHandlers: ProviderActionHandlers<typeof serv
     }
     return compactObject({ members: response.members, continuationToken: optionalString(response.continuationToken) });
   },
+  async list_team_channels(input, context) {
+    const serviceUrl = resolveServiceUrl(input.serviceUrl, context);
+    const response = requiredResponseRecord(
+      await requestConnector({
+        context,
+        method: "GET",
+        serviceUrl,
+        path: `/v3/teams/${encodePathSegment(requiredInputString(input.teamId, "teamId"))}/conversations`,
+      }),
+      "team channels response",
+    );
+    if (!Array.isArray(response.conversations)) {
+      throw providerResponseError("Microsoft Teams Bot channels response did not include a channel list.");
+    }
+    return {
+      channels: response.conversations.map((entry) => {
+        const channel = requiredResponseRecord(entry, "team channel");
+        // Teams returns the General channel without a name so clients can localize it.
+        return { id: requireString(channel.id, "channel id"), name: optionalString(channel.name) ?? "General" };
+      }),
+    };
+  },
 };
 
 /**

@@ -203,6 +203,35 @@ const actions: Parameters<typeof defineProviderAction>[1][] = [
       ["members"],
     ),
   },
+  {
+    name: "list_team_channels",
+    operationType: "read",
+    description:
+      "List the channels of a team the bot is installed in. The Bot Connector cannot list the teams a bot is in: learn a team's ID from channelData.team.id on its activities, such as the conversationUpdate Teams sends when the bot is added to the team.",
+    inputSchema: s.actionInput(
+      {
+        serviceUrl: s.optional(serviceUrl),
+        teamId: s.nonEmptyString("Teams team ID, taken from channelData.team.id on an activity from the team."),
+      },
+      ["teamId"],
+    ),
+    outputSchema: s.actionOutput(
+      {
+        channels: s.array(
+          s.object(
+            {
+              id: s.string("Channel ID, usable as conversationId. The General channel's ID equals the team ID."),
+              name: s.string("Channel name. Teams returns no name for the General channel, so it is named General."),
+            },
+            { description: "A channel of the team." },
+          ),
+          { description: "Channels of the team." },
+        ),
+      },
+      "Channels of a Teams team.",
+      ["channels"],
+    ),
+  },
 ];
 
 export const microsoftTeamsBotActions: ActionDefinition[] = actions.map((action) =>
