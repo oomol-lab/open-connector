@@ -53,5 +53,7 @@ describe("Grafana Cloud organization instances", () => {
       ],
       raw: { total: 2 },
     });
+    // The endpoint has no pagination, so the response carries no cursor fields.
+    expect(Object.keys(result as object)).toEqual(["stacks", "raw"]);
   });
 });
