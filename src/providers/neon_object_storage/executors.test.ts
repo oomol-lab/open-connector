@@ -82,6 +82,22 @@ describe("Neon Object Storage actions", () => {
     expect(requests.map(({ url }) => new URL(url).searchParams.get("prefix"))).toEqual([prefix, prefix]);
   });
 
+  it("keeps whitespace in pagination cursors, which Neon sets to the last listed key", async () => {
+    const cursor = "reports/q3 ";
+    const requests = stubResponses([
+      Response.json({ objects: [], folders: [], prefix: "", next_cursor: cursor, is_truncated: true }),
+      Response.json({ objects: [], folders: [], prefix: "", next_cursor: "", is_truncated: false }),
+    ]);
+    const input = { ...branch, bucketName: "media", limit: 1 };
+
+    expect(await execute("list_objects", input)).toMatchObject({ ok: true, output: { nextCursor: cursor } });
+    expect(await execute("list_objects", { ...input, cursor })).toMatchObject({
+      ok: true,
+      output: { nextCursor: null },
+    });
+    expect(new URL(requests[1]!.url).searchParams.get("cursor")).toBe(cursor);
+  });
+
   it.each(["projectId", "branchId", "bucketName", "objectKey"])(
     "rejects dot segments in %s before sending a request",
     async (field) => {

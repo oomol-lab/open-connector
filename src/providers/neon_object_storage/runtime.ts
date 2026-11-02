@@ -171,7 +171,7 @@ async function listObjects(input: Record<string, unknown>, context: ApiKeyProvid
       query: {
         prefix: optionalRawString(input.prefix),
         delimiter: optionalString(input.delimiter),
-        cursor: optionalString(input.cursor),
+        cursor: optionalRawString(input.cursor),
         limit: optionalNumber(input.limit),
       },
     }),
@@ -182,7 +182,8 @@ async function listObjects(input: Record<string, unknown>, context: ApiKeyProvid
     objects: normalizeNeonArray(payload.objects, "objects"),
     folders: Array.isArray(payload.folders) ? payload.folders.map((folder) => String(folder)) : [],
     prefix: optionalRawString(payload.prefix) ?? "",
-    nextCursor: optionalString(payload.next_cursor) ?? null,
+    // Neon uses the last listed key as the cursor, so it keeps the key's whitespace.
+    nextCursor: optionalRawString(payload.next_cursor) || null,
     isTruncated: payload.is_truncated === true,
   };
 }
