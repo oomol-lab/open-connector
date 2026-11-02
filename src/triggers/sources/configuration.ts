@@ -84,6 +84,8 @@ export interface CreateMicrosoftTeamsEventSource {
   readonly connectionId: string;
   readonly teamId: string | null;
   readonly eventTypes: string[];
+  /** Microsoft Entra tenant whose activities this Source accepts; every tenant when omitted. */
+  readonly tenantId?: string;
 }
 
 export type CreateEventSource =
@@ -124,6 +126,7 @@ export interface EventSource {
     | "microsoft_teams_bot";
   readonly appId: string;
   readonly workspaceId?: string;
+  readonly tenantId?: string | null;
   readonly installationId?: string;
   readonly organizationId?: string;
   readonly projectId?: string;

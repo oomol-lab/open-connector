@@ -2,7 +2,14 @@ import type { CredentialValidationResult } from "../../core/types.ts";
 import type { ProviderActionHandlers, ProviderRuntimeHandler } from "../provider-executors.ts";
 import type { ProviderFetch } from "../provider-runtime.ts";
 
-import { compactObject, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
+import {
+  compactObject,
+  looseArray,
+  optionalInteger,
+  optionalRawString,
+  optionalRecord,
+  optionalString,
+} from "../../core/cast.ts";
 import { assertPublicHttpUrl, encodePathSegment } from "../../core/request.ts";
 import { isAllowedTeamsBotConnectorHost } from "../../core/teams-bot-connector.ts";
 import {
@@ -23,6 +30,11 @@ const service = "microsoft_teams_bot";
 const tokenRefreshSkewMs = 60_000;
 
 const defaultTextFormat = "markdown";
+
+const maximumMessageBytes = 100 * 1024;
+// An image URL that is a whole base64 data URI. Its characters need no
+// JSON escaping, so its length is the same inside the serialized activity.
+const embeddedImage = /^data:image\/[\w.+-]+;base64,[A-Za-z0-9+/]+=*$/i;
 
 interface TeamsBotCloud {
   loginEndpoint: string;
@@ -95,7 +107,7 @@ export const microsoftTeamsBotActionHandlers: ProviderActionHandlers<typeof serv
         method: "POST",
         serviceUrl,
         path: activityPath(input),
-        body: { ...messageActivity(input), replyToId: requiredInputString(input.activityId, "activityId") },
+        body: messageActivity(input, "replyToId"),
       }),
     );
   },
@@ -107,7 +119,7 @@ export const microsoftTeamsBotActionHandlers: ProviderActionHandlers<typeof serv
         method: "PUT",
         serviceUrl,
         path: activityPath(input),
-        body: { ...messageActivity(input), id: requiredInputString(input.activityId, "activityId") },
+        body: messageActivity(input, "id"),
       }),
     );
   },
@@ -158,6 +170,28 @@ export const microsoftTeamsBotActionHandlers: ProviderActionHandlers<typeof serv
       throw providerResponseError("Microsoft Teams Bot members response did not include a member list.");
     }
     return compactObject({ members: response.members, continuationToken: optionalString(response.continuationToken) });
+  },
+  async list_team_channels(input, context) {
+    const serviceUrl = resolveServiceUrl(input.serviceUrl, context);
+    const response = requiredResponseRecord(
+      await requestConnector({
+        context,
+        method: "GET",
+        serviceUrl,
+        path: `/v3/teams/${encodePathSegment(requiredInputString(input.teamId, "teamId"))}/conversations`,
+      }),
+      "team channels response",
+    );
+    if (!Array.isArray(response.conversations)) {
+      throw providerResponseError("Microsoft Teams Bot channels response did not include a channel list.");
+    }
+    return {
+      channels: response.conversations.map((entry) => {
+        const channel = requiredResponseRecord(entry, "team channel");
+        // Teams returns the General channel without a name so clients can localize it.
+        return { id: requireString(channel.id, "channel id"), name: optionalString(channel.name) ?? "General" };
+      }),
+    };
   },
 };
 
@@ -288,12 +322,119 @@ function activityPath(input: Record<string, unknown>): string {
   return `${conversationPath(input)}/activities/${encodePathSegment(requiredInputString(input.activityId, "activityId"))}`;
 }
 
-function messageActivity(input: Record<string, unknown>): Record<string, unknown> {
-  return {
+/**
+ * Builds a message activity from text, cards or both. Teams counts a bot message's size in UTF-16, without
+ * base64-encoded images, and refuses one above 100 KB with 413 MessageSizeTooBig, so an oversized message is
+ * refused before it is sent.
+ */
+function messageActivity(
+  input: Record<string, unknown>,
+  activityIdField?: "id" | "replyToId",
+): Record<string, unknown> {
+  const text = optionalString(input.text);
+  const attachments = Array.isArray(input.attachments) && input.attachments.length > 0 ? input.attachments : undefined;
+  if (text === undefined && attachments === undefined) {
+    throw providerInputError("Provide text, attachments, or both.");
+  }
+  const activity: Record<string, unknown> = compactObject({
     type: "message",
-    text: requiredInputString(input.text, "text"),
-    textFormat: optionalString(input.textFormat) ?? defaultTextFormat,
-  };
+    text,
+    textFormat: text === undefined ? undefined : (optionalString(input.textFormat) ?? defaultTextFormat),
+    attachments,
+    attachmentLayout: attachments === undefined ? undefined : optionalString(input.attachmentLayout),
+  });
+  if (activityIdField !== undefined) {
+    activity[activityIdField] = requiredInputString(input.activityId, "activityId");
+  }
+  // A JavaScript string length counts UTF-16 code units, two bytes each. Teams leaves base64-encoded images
+  // out of the limit, so only rendered image fields are excluded; text and action data always count, and the
+  // activity itself is sent unchanged.
+  if ((JSON.stringify(activity).length - embeddedImageLength(attachments)) * 2 > maximumMessageBytes) {
+    throw providerInputError("The message exceeds Teams' 100 KB limit for bot messages.");
+  }
+  return activity;
+}
+
+/** Count embedded images only along card rendering paths, never inside text or action data. */
+function embeddedImageLength(value: unknown): number {
+  const images: unknown[] = [];
+  looseArray(value).forEach((entry) => {
+    const attachment = optionalRecord(entry);
+    const content = optionalRecord(attachment?.content);
+    if (!content) return;
+    if (attachment?.contentType === "application/vnd.microsoft.card.adaptive") {
+      const pending: unknown[] = [content];
+      while (pending.length > 0) {
+        const node = optionalRecord(pending.pop());
+        if (!node) continue;
+        switch (node.type) {
+          case "AdaptiveCard":
+          case "Container":
+          case "Column":
+            images.push(optionalRecord(node.backgroundImage)?.url ?? node.backgroundImage);
+            pending.push(...looseArray(node.type === "AdaptiveCard" ? node.body : node.items));
+            if (node.type === "AdaptiveCard") pending.push(...looseArray(node.actions));
+            break;
+          case "ColumnSet":
+            pending.push(...looseArray(node.columns));
+            break;
+          case "ImageSet":
+            pending.push(...looseArray(node.images));
+            break;
+          case "Image":
+            images.push(node.url);
+            break;
+          case "Media":
+            images.push(node.poster);
+            break;
+          case "ActionSet":
+            pending.push(...looseArray(node.actions));
+            break;
+          case "RichTextBlock":
+            pending.push(...looseArray(node.inlines));
+            break;
+          case "Input.Text":
+            pending.push(node.inlineAction);
+            break;
+          case "Action.ShowCard":
+            pending.push(node.card);
+            images.push(node.iconUrl);
+            break;
+          case "Action.Execute":
+          case "Action.Submit":
+          case "Action.OpenUrl":
+          case "Action.ToggleVisibility":
+            images.push(node.iconUrl);
+            break;
+        }
+        pending.push(node.selectAction, node.fallback);
+      }
+      return;
+    }
+    switch (attachment?.contentType) {
+      case "application/vnd.microsoft.card.hero":
+      case "application/vnd.microsoft.card.thumbnail":
+        images.push(...looseArray(content.images).map((image) => optionalRecord(image)?.url));
+        break;
+      case "application/vnd.microsoft.card.receipt":
+        images.push(...looseArray(content.items).map((item) => optionalRecord(optionalRecord(item)?.image)?.url));
+        break;
+      case "application/vnd.microsoft.teams.card.o365connector":
+        looseArray(content.sections).forEach((section) => {
+          const record = optionalRecord(section);
+          images.push(record?.activityImage, optionalRecord(record?.heroImage)?.image);
+          images.push(...looseArray(record?.images).map((image) => optionalRecord(image)?.image));
+        });
+        break;
+      case "application/vnd.microsoft.teams.card.list":
+        images.push(...looseArray(content.items).map((item) => optionalRecord(item)?.icon));
+        break;
+    }
+    images.push(...looseArray(content.buttons).map((button) => optionalRecord(button)?.image));
+  });
+  return images
+    .map(optionalRawString)
+    .reduce((total, url) => total + (url && embeddedImage.test(url) ? url.length : 0), 0);
 }
 
 function readResourceResponse(response: unknown): Record<string, unknown> {

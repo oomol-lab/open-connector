@@ -94,7 +94,11 @@ const channelMention = activity({
   ],
 });
 
-async function createSource(store: SourceApplicationStore, eventTypes: string[]) {
+async function createSource(
+  store: SourceApplicationStore,
+  eventTypes: string[],
+  options: { requestKey?: string; tenantId?: string } = {},
+) {
   const run = (request: PersistentSourceRequest) =>
     modules.persistent.executePersistentSource(
       store,
@@ -107,9 +111,15 @@ async function createSource(store: SourceApplicationStore, eventTypes: string[])
   const created = (await run({
     action: "create",
     deploymentId: "deployment",
-    requestKey: "teams-bot",
-    input: { eventTypes },
-  })) as { source: { reference: { applicationId: string; sourceId: string }; ready: boolean } };
+    requestKey: options.requestKey ?? "teams-bot",
+    input: options.tenantId === undefined ? { eventTypes } : { eventTypes, tenantId: options.tenantId },
+  })) as {
+    source: {
+      reference: { applicationId: string; sourceId: string };
+      ready: boolean;
+      view: Record<string, JsonValue>;
+    };
+  };
   const reference = created.source.reference;
   const receive = async (
     body: Record<string, unknown>,
@@ -226,6 +236,61 @@ describe("Microsoft Teams Bot activity source", () => {
     });
     expect(dedupeKeys[0]).toBe(first.event?.id);
     expect(dedupeKeys[1]).toBe(dedupeKeys[0]);
+  });
+
+  it("delivers an activity only to the Source of its tenant when one bot serves several tenants", async () => {
+    const store = new MemorySourceStore();
+    const contoso = await createSource(store, ["message"], {
+      requestKey: "contoso",
+      tenantId: "AAAAAAAA-0000-0000-0000-000000000001",
+    });
+    const fabrikam = await createSource(store, ["message"], {
+      requestKey: "fabrikam",
+      tenantId: "bbbbbbbb-0000-0000-0000-000000000002",
+    });
+    const everyTenant = await createSource(store, ["message"], { requestKey: "every-tenant" });
+    expect(contoso.created.source.view.tenantId).toBe("aaaaaaaa-0000-0000-0000-000000000001");
+    expect(everyTenant.created.source.view.tenantId).toBeNull();
+
+    const consumers = [{ id: "messages", config: { eventTypes: ["message"] } }];
+    const contosoMessage = activity({
+      conversation: {
+        id: "a:contoso-chat",
+        conversationType: "personal",
+        tenantId: "aaaaaaaa-0000-0000-0000-000000000001",
+      },
+    });
+    expect((await contoso.receive(contosoMessage, consumers)).event?.matches).toEqual(["messages"]);
+    expect(await fabrikam.receive(contosoMessage, consumers)).toMatchObject({ response: { status: 200, body: "" } });
+    expect((await everyTenant.receive(contosoMessage, consumers)).event?.matches).toEqual(["messages"]);
+    // The tenant may arrive only in channelData, and an activity naming no tenant fails a tenant-limited Source.
+    const channelTenant = activity({
+      conversation: { id: "19:fabrikam@thread.tacv2", conversationType: "channel" },
+      channelData: { tenant: { id: "bbbbbbbb-0000-0000-0000-000000000002" } },
+    });
+    expect((await fabrikam.receive(channelTenant, consumers)).event?.matches).toEqual(["messages"]);
+    const noTenant = activity({ conversation: { id: "a:unknown", conversationType: "personal" } });
+    expect((await contoso.receive(noTenant, consumers)).event).toBeUndefined();
+  });
+
+  it("filters consumers by tenant and exposes card submissions", async () => {
+    const { receive } = await createSource(new MemorySourceStore(), ["invoke"]);
+    const submit = activity({
+      type: "invoke",
+      name: "adaptiveCard/action",
+      text: undefined,
+      value: { action: { type: "Action.Execute", verb: "approve", data: { requestId: "7" } } },
+    });
+    const received = await receive(submit, [
+      { id: "tenant-1", config: { eventTypes: ["invoke"], tenantId: "TENANT-1" } },
+      { id: "other-tenant", config: { eventTypes: ["invoke"], tenantId: "00000000-0000-0000-0000-000000000009" } },
+    ]);
+    expect(received.event?.matches).toEqual(["tenant-1"]);
+    expect(received.event?.payload).toMatchObject({
+      event: "invoke",
+      name: "adaptiveCard/action",
+      value: { action: { verb: "approve", data: { requestId: "7" } } },
+    });
   });
 
   it("rejects a token issued for another bot", async () => {

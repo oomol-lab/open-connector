@@ -1,4 +1,4 @@
-import type { JsonObject } from "../common/json.ts";
+import type { JsonObject, JsonValue } from "../common/json.ts";
 import type { CreateEventSource, EventSource, UpdateEventSource } from "./configuration.ts";
 import type { EventSourceDefinition } from "./definition.ts";
 
@@ -27,6 +27,7 @@ export const microsoftTeamsBot: EventSourceDefinition<
     | "encryptKeyConfigured"
     | "signingSecretConfigured"
     | "verifiedAt"
+    | "tenantId"
   >
 > = {
   kind: "microsoft_teams",
@@ -37,13 +38,16 @@ export const microsoftTeamsBot: EventSourceDefinition<
       throw new SourceIdentityError("Connector must provide the verified Teams bot application ID.");
     if (input.eventTypes.some((type) => !activityTypes.has(type)))
       throw new SourceIdentityError("Unsupported Teams activity type.");
-    return {
-      identity: JSON.stringify([input.teamId, input.connectionId, accountId]),
-      eventTypes: input.eventTypes,
-      config: { appId: accountId, accountId },
-      secrets: {},
-      state: {},
-    };
+    const identity: JsonValue[] = [input.teamId, input.connectionId, accountId];
+    const config: Record<string, JsonValue> = { appId: accountId, accountId };
+    // One multi-tenant bot serves many organizations with the same App ID, so a Source can be limited to one
+    // tenant. Without a tenant the identity and config stay as before, so existing Sources keep matching.
+    if (input.kind === "microsoft_teams" && input.tenantId !== undefined) {
+      const tenantId = input.tenantId.toLowerCase();
+      identity.push(tenantId);
+      config.tenantId = tenantId;
+    }
+    return { identity: JSON.stringify(identity), eventTypes: input.eventTypes, config, secrets: {}, state: {} };
   },
   update(source, input) {
     if (input.signingSecret != null || input.verificationToken != null || input.encryptKey != null)
@@ -60,6 +64,7 @@ export const microsoftTeamsBot: EventSourceDefinition<
       encryptKeyConfigured: false,
       signingSecretConfigured: false,
       verifiedAt: typeof source.state.verifiedAt === "number" ? new Date(source.state.verifiedAt).toISOString() : null,
+      tenantId: typeof source.config.tenantId === "string" ? source.config.tenantId : null,
     };
   },
   // Bot Framework has no endpoint handshake: the connection's credentials were checked when it was
@@ -91,6 +96,13 @@ export const microsoftTeamsBot: EventSourceDefinition<
     if (type == null || activity.channelId !== "msteams" || (from?.id != null && from.id === recipient?.id))
       return acknowledged();
     const conversation = isJsonObject(activity.conversation) ? activity.conversation : undefined;
+    const channelData = isJsonObject(activity.channelData) ? activity.channelData : null;
+    const tenantId =
+      rawStringOrNull(conversation?.tenantId) ??
+      (isJsonObject(channelData?.tenant) ? rawStringOrNull(channelData.tenant.id) : null);
+    // A tenant-limited Source acknowledges other tenants' activities, and activities naming no tenant.
+    if (typeof source.config.tenantId === "string" && tenantId?.toLowerCase() !== source.config.tenantId)
+      return acknowledged();
     if (
       typeof activity.id !== "string" ||
       !activity.id ||
@@ -99,7 +111,6 @@ export const microsoftTeamsBot: EventSourceDefinition<
       typeof from?.id !== "string"
     )
       throw new TypeError("Incomplete Teams activity.");
-    const channelData = isJsonObject(activity.channelData) ? activity.channelData : null;
     const botIds = new Set([rawStringOrNull(recipient?.id), `28:${String(source.config.appId)}`]);
     const mentions = (Array.isArray(activity.entities) ? activity.entities : [])
       .filter(isJsonObject)
@@ -132,12 +143,13 @@ export const microsoftTeamsBot: EventSourceDefinition<
           conversation: {
             id: conversation.id,
             conversationType: rawStringOrNull(conversation.conversationType),
-            tenantId:
-              rawStringOrNull(conversation.tenantId) ??
-              (isJsonObject(channelData?.tenant) ? rawStringOrNull(channelData.tenant.id) : null),
+            tenantId,
           },
           channelData,
           replyToId: rawStringOrNull(activity.replyToId),
+          // An invoke's name, such as adaptiveCard/action, and the card data an Adaptive Card action submits.
+          name: rawStringOrNull(activity.name),
+          value: isJsonObject(activity.value) ? activity.value : null,
           serviceUrl: verified.serviceUrl,
           timestamp: rawStringOrNull(activity.timestamp),
           body: activity,
@@ -146,11 +158,13 @@ export const microsoftTeamsBot: EventSourceDefinition<
     };
   },
   matches(config, event) {
-    const conversation = event.payload.conversation;
-    const conversationId = isJsonObject(conversation) && typeof conversation.id === "string" ? conversation.id : "";
+    const conversation = isJsonObject(event.payload.conversation) ? event.payload.conversation : undefined;
+    const conversationId = rawStringOrNull(conversation?.id) ?? "";
+    const tenantId = rawStringOrNull(conversation?.tenantId)?.toLowerCase();
     return (
       Array.isArray(config.eventTypes) &&
       config.eventTypes.includes(event.type) &&
+      (typeof config.tenantId !== "string" || config.tenantId.toLowerCase() === tenantId) &&
       (!Array.isArray(config.conversationIds) ||
         config.conversationIds.length === 0 ||
         // A channel thread's conversation id is the channel id plus ";messageid=<root>".
