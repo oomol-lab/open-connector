@@ -92,7 +92,7 @@ export async function validateBrevoCredential(
 
   const email = optionalString(payload.email);
   const companyName = optionalString(payload.companyName);
-  const organizationId = optionalInteger(payload.organization_id);
+  const organizationId = optionalString(payload.organization_id);
 
   return {
     profile: {
