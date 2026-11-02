@@ -1,4 +1,6 @@
 import { describe, expect, it } from "vitest";
+import { validateActionInput } from "../../core/validation.ts";
+import { microsoftTeamsBotActions } from "./actions.ts";
 import { microsoftTeamsBotActionHandlers } from "./runtime.ts";
 
 interface ConnectorRequest {
@@ -40,6 +42,49 @@ function teamsContext(appId: string, serviceUrl?: string) {
 }
 
 describe("Microsoft Teams Bot message cards", () => {
+  it.each(["send_message", "reply_to_message", "update_message"])(
+    "%s requires both card fields at the action validation boundary",
+    (name) => {
+      const action = microsoftTeamsBotActions.find((action) => action.name === name)!;
+      const input =
+        name === "send_message"
+          ? { conversationId: "19:channel@thread.tacv2" }
+          : { conversationId: "19:channel@thread.tacv2", activityId: "1700000000999" };
+      const contentType = "application/vnd.microsoft.card.adaptive";
+      for (const attachment of [{}, { content: card }, { contentType }]) {
+        expect(
+          validateActionInput(action, { ...input, attachments: [attachment] }).valid,
+          JSON.stringify(attachment),
+        ).toBe(false);
+      }
+      expect(validateActionInput(action, { ...input, attachments: [{ contentType, content: card }] }).valid).toBe(true);
+    },
+  );
+
+  it.each([
+    { name: "reply", handler: microsoftTeamsBotActionHandlers.reply_to_message, field: "replyToId" },
+    { name: "update", handler: microsoftTeamsBotActionHandlers.update_message, field: "id" },
+  ])("counts the activity ID in the $name message size before any request", async ({ name, handler, field }) => {
+    const { requests, context } = teamsContext(`app-boundary-${name}`, "https://smba.trafficmanager.net/amer");
+    const fetcher = context.fetcher;
+    let fetchCalls = 0;
+    context.fetcher = async (url, init) => {
+      fetchCalls += 1;
+      return fetcher(url, init);
+    };
+    const activityId = "1700000000999";
+    const overhead = JSON.stringify({ type: "message", text: "", textFormat: "markdown", [field]: activityId }).length;
+    const text = "x".repeat((100 * 1024) / 2 - overhead);
+    const input = { conversationId: "19:channel@thread.tacv2", activityId, text };
+
+    await expect(handler({ ...input, text: `${text}x` }, context)).rejects.toMatchObject({ status: 400 });
+    expect(fetchCalls).toBe(0);
+    await expect(handler(input, context)).resolves.toEqual({ id: "1700000000999" });
+    expect(requests).toHaveLength(1);
+    expect(requests[0]!.body).toEqual({ type: "message", text, textFormat: "markdown", [field]: activityId });
+    expect(JSON.stringify(requests[0]!.body).length * 2).toBe(100 * 1024);
+  });
+
   it("sends and then replaces a message holding one Adaptive Card", async () => {
     const { requests, context } = teamsContext("app-cards", "https://smba.trafficmanager.net/amer");
     const attachment = { contentType: "application/vnd.microsoft.card.adaptive", content: card };

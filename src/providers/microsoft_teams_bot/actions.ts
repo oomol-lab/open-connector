@@ -36,7 +36,7 @@ const attachments = s.array(
       contentType: s.stringEnum(cardContentTypes, { description: "Card type." }),
       content: s.unknownObject("The card JSON as an object, such as an Adaptive Card."),
     },
-    { description: "A card attached to the message." },
+    { required: ["contentType", "content"], description: "A card attached to the message." },
   ),
   {
     minItems: 1,
