@@ -450,19 +450,23 @@ export function parseProviderJsonBodyText(text: string, options: ReadProviderJso
  * limit, reads it here instead of re-deriving it from the status.
  */
 export function providerRequestErrorCode(error: ProviderRequestError): ProviderErrorCode {
-  // `provider_error` is the generic fallback; a 429 is unambiguous, so refine it.
-  // A specific provider code (including one chosen for a 429) still wins.
-  return error.code === "provider_error" && error.status === 429
-    ? "rate_limited"
-    : (error.code ??
+  // `provider_error` is the generic fallback; 402 and 429 are unambiguous, so refine them.
+  // A specific provider code (including one chosen for a 402 or 429) still wins.
+  return error.code === "provider_error" && error.status === 402
+    ? "insufficient_credit"
+    : error.code === "provider_error" && error.status === 429
+      ? "rate_limited"
+      : (error.code ??
         (error.status === 401 || error.status === 403
           ? "authorization_failed"
-          : error.status === 429
-            ? "rate_limited"
-            : // A 3xx is an upstream redirect that `redirect: "manual"` surfaced unfollowed, not bad input.
-              error.status < 500 && (error.status < 300 || error.status >= 400)
-              ? "invalid_input"
-              : "provider_error"));
+          : error.status === 402
+            ? "insufficient_credit"
+            : error.status === 429
+              ? "rate_limited"
+              : // A 3xx is an upstream redirect that `redirect: "manual"` surfaced unfollowed, not bad input.
+                error.status < 500 && (error.status < 300 || error.status >= 400)
+                ? "invalid_input"
+                : "provider_error"));
 }
 
 /**
