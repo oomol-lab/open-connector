@@ -25,7 +25,9 @@ const tokenRefreshSkewMs = 60_000;
 const defaultTextFormat = "markdown";
 
 const maximumMessageBytes = 100 * 1024;
-const base64ImageData = /(?<=data:image\/[\w.+-]+;base64,)[A-Za-z0-9+/=]+/gi;
+// A card value that is a whole base64 image data URI, such as an Adaptive Card Image url. Its characters need no
+// JSON escaping, so its length is the same inside the serialized activity.
+const embeddedImage = /^data:image\/[\w.+-]+;base64,[A-Za-z0-9+/]+=*$/i;
 
 interface TeamsBotCloud {
   loginEndpoint: string;
@@ -337,15 +339,21 @@ function messageActivity(
   if (activityIdField !== undefined) {
     activity[activityIdField] = requiredInputString(input.activityId, "activityId");
   }
-  // A JavaScript string length counts UTF-16 code units, two bytes each. Embedded images are measured without
-  // their base64 data, which Teams leaves out of the limit; the activity itself is sent unchanged.
-  const measured = JSON.stringify(activity, (_key, value: unknown) =>
-    typeof value === "string" ? value.replace(base64ImageData, "") : value,
-  );
-  if (measured.length * 2 > maximumMessageBytes) {
+  // A JavaScript string length counts UTF-16 code units, two bytes each. Teams leaves base64-encoded images
+  // out of the limit, so card values that are embedded images are not counted; the text always is, and the
+  // activity itself is sent unchanged.
+  if ((JSON.stringify(activity).length - embeddedImageLength(attachments)) * 2 > maximumMessageBytes) {
     throw providerInputError("The message exceeds Teams' 100 KB limit for bot messages.");
   }
   return activity;
+}
+
+/** Total length of the card values that are embedded base64 images. */
+function embeddedImageLength(value: unknown): number {
+  if (typeof value === "string") return embeddedImage.test(value) ? value.length : 0;
+  if (Array.isArray(value)) return value.reduce((total: number, item) => total + embeddedImageLength(item), 0);
+  const record = optionalRecord(value);
+  return record ? Object.values(record).reduce((total: number, item) => total + embeddedImageLength(item), 0) : 0;
 }
 
 function readResourceResponse(response: unknown): Record<string, unknown> {

@@ -149,13 +149,15 @@ describe("Microsoft Teams Bot embedded card images", () => {
       context,
     );
     expect(requests[0]!.body).toEqual({ type: "message", attachments: [attachment] });
-    // Text of the same length is not an image, so it still counts toward the limit.
-    await expect(
-      microsoftTeamsBotActionHandlers.send_message(
-        { conversationId: "19:channel@thread.tacv2", text: "A".repeat(80_000) },
-        context,
-      ),
-    ).rejects.toMatchObject({ status: 400 });
+    // The message text always counts, even when it reads like an image data URI.
+    for (const textFormat of ["plain", "markdown"]) {
+      await expect(
+        microsoftTeamsBotActionHandlers.send_message(
+          { conversationId: "19:channel@thread.tacv2", text: image, textFormat },
+          context,
+        ),
+      ).rejects.toMatchObject({ status: 400 });
+    }
     expect(requests).toHaveLength(1);
   });
 });
