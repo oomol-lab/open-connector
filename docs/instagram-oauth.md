@@ -219,6 +219,41 @@ curl -s -X POST http://localhost:3000/v1/actions/instagram.send_message \
 The same Action IDs and generated schemas are exposed through the Connector SDK, `oo` CLI, MCP,
 and `/openapi.json`; see [Runtime API and MCP](runtime-api.md) and [Developer tools](sdk-cli.md).
 
+## Alternative: Facebook Login Access Token
+
+Newer Meta apps are created with Unified login and no longer offer Business Login for Instagram, so
+the OAuth flow above is unavailable for them. The `instagram` provider also accepts an access
+token from Instagram API with Facebook Login. This connection reads and writes through
+`graph.facebook.com` and needs no OAuth callback, so it works on a local HTTP origin.
+
+You need an Instagram Business or Creator account linked to a Facebook Page, and a token that can
+reach that Page:
+
+- a Page access token, or a user or system-user access token that can list the Page;
+- `instagram_basic`, `pages_show_list` and `pages_read_engagement`, plus `instagram_manage_comments`,
+  `instagram_manage_insights` or `instagram_content_publish` for the matching Actions; and
+- for an app in Development mode, the token owner holds a role on the app.
+
+Prefer a long-lived or system-user token. OpenConnector does not refresh a pasted token, and a
+short-lived user token stops working after about an hour.
+
+```bash
+curl -s -X PUT http://localhost:3000/api/connections/instagram \
+  -H 'content-type: application/json' \
+  -d '{"authType":"api_key","values":{"apiKey":"<FACEBOOK_LOGIN_ACCESS_TOKEN>"}}'
+```
+
+OpenConnector resolves the linked Instagram account from the token. When the token reaches several
+Pages that each link an Instagram account, add `"instagramAccountId":"<INSTAGRAM_ACCOUNT_ID>"` to
+`values`; the error message lists the candidates. The same Action IDs work for both connection
+types, with these differences for a pasted token:
+
+- `send_message` is not available; messaging through Facebook Login goes through the Page, so use
+  an OAuth connection for it.
+- `get_current_user` omits `accountType` because Facebook Login does not return it.
+- Permissions are the Facebook Login names (`instagram_basic`, ...), not the `instagram_business_*`
+  names listed in each Action's `requiredScopes`.
+
 ## Publishing Boundaries
 
 Instagram fetches publishing media from the supplied URL. Image, video, Reel, carousel child, and

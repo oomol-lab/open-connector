@@ -29,10 +29,12 @@ import {
 } from "../provider-runtime.ts";
 
 const instagramApiBaseUrl = "https://graph.instagram.com";
+const facebookGraphBaseUrl = "https://graph.facebook.com";
 const instagramApiVersion = "v25.0";
 
 const currentUserFields =
   "id,user_id,username,name,account_type,profile_picture_url,followers_count,follows_count,media_count";
+const facebookLoginUserFields = "id,username,name,profile_picture_url,followers_count,follows_count,media_count";
 const mediaFields =
   "id,caption,media_type,media_product_type,media_url,permalink,thumbnail_url,timestamp,username,comments_count,like_count,children{id,media_type,media_url,permalink,thumbnail_url,timestamp}";
 const commentFields = "id,text,timestamp,username,from{id,username},parent_id";
@@ -44,7 +46,19 @@ const instagramRateLimitErrorCodes = new Set([4, 17, 32, 613]);
 const professionalAccountRequiredMessage = "Instagram connections require a Business or Creator professional account.";
 
 type OAuthCredential = Extract<ResolvedCredential, { authType: "oauth2" }>;
-type InstagramActionHandler = (input: Record<string, unknown>, context: OAuthProviderContext) => Promise<unknown>;
+
+/**
+ * Which Meta Graph host a credential talks to. OAuth connections use Instagram Login on
+ * `graph.instagram.com`; pasted access tokens use Instagram API with Facebook Login on `graph.facebook.com`.
+ */
+type InstagramApiHost = "instagram" | "facebook";
+
+/** Execution context shared by every Instagram handler. */
+export interface InstagramContext extends OAuthProviderContext {
+  apiHost: InstagramApiHost;
+}
+
+type InstagramActionHandler = (input: Record<string, unknown>, context: InstagramContext) => Promise<unknown>;
 interface InstagramRequest {
   path: string;
   method?: "GET" | "POST";
@@ -52,6 +66,12 @@ interface InstagramRequest {
   form?: Record<string, string | undefined>;
   json?: Record<string, unknown>;
   timeoutMs?: number;
+}
+
+interface LinkedInstagramAccount {
+  id: string;
+  username?: string;
+  name?: string;
 }
 
 interface InstagramPaging {
@@ -77,7 +97,7 @@ interface ContainerRecoveryDetails {
 }
 
 interface InstagramPublishingContext {
-  context: OAuthProviderContext;
+  context: InstagramContext;
   deadline: number;
 }
 
@@ -112,10 +132,11 @@ export async function validateInstagramCredential(
   fetcher: ProviderFetch,
   signal?: AbortSignal,
 ): Promise<CredentialValidationResult> {
-  const context: OAuthProviderContext = {
+  const context: InstagramContext = {
     accessToken: credential.accessToken,
     tokenType: credential.tokenType,
     accountId: credential.profile.accountId,
+    apiHost: "instagram",
     fetcher,
     signal,
   };
@@ -133,17 +154,99 @@ export async function validateInstagramCredential(
   };
 }
 
-async function getCurrentUser(context: OAuthProviderContext): Promise<Record<string, unknown>> {
-  const payload = await instagramRequestJson({ path: "/me", query: { fields: currentUserFields } }, context);
+/**
+ * Verify a pasted Facebook Login access token and resolve the Instagram professional account it reaches.
+ *
+ * Accepts a Page access token or a user/system-user token that can list Pages. When several Pages link an
+ * Instagram account, `values.instagramAccountId` selects one.
+ */
+export async function validateInstagramFacebookLoginCredential(
+  input: { apiKey: string; values: Record<string, string> },
+  fetcher: ProviderFetch,
+  signal?: AbortSignal,
+): Promise<CredentialValidationResult> {
+  const context: InstagramContext = { accessToken: input.apiKey, apiHost: "facebook", fetcher, signal };
+  const accounts = await listLinkedInstagramAccounts(context);
+  if (accounts.length === 0) {
+    throw providerInputError(
+      "No Instagram Business or Creator account is linked to a Facebook Page this token can access.",
+    );
+  }
+  const requestedId = optionalString(input.values.instagramAccountId);
+  const account = requestedId ? accounts.find((candidate) => candidate.id === requestedId) : accounts[0];
+  if (!account || (!requestedId && accounts.length > 1)) {
+    const choices = accounts.map((candidate) => `${candidate.username ?? candidate.id} (${candidate.id})`).join(", ");
+    throw providerInputError(
+      requestedId
+        ? `Instagram account ${requestedId} is not reachable with this token. Available: ${choices}.`
+        : `This token reaches several Instagram accounts; set instagramAccountId to one of: ${choices}.`,
+    );
+  }
+  return { profile: { accountId: account.id, displayName: account.username ?? account.name ?? account.id } };
+}
+
+/** Resolve linked accounts from a Page token (`/me`) first, then from a user token (`/me/accounts`). */
+async function listLinkedInstagramAccounts(context: InstagramContext): Promise<LinkedInstagramAccount[]> {
+  const linkedField = `instagram_business_account{${facebookLoginUserFields}}`;
+  try {
+    const page = requiredRecord(
+      await instagramRequestJson({ path: "/me", query: { fields: `id,name,${linkedField}` } }, context),
+      "Facebook Page response",
+      providerResponseError,
+    );
+    const linked = optionalRecord(page.instagram_business_account);
+    return linked ? [normalizeLinkedAccount(linked)] : [];
+  } catch (error) {
+    // A user token has no `instagram_business_account` field on `/me` (Graph error 100); fall through to its Pages.
+    if (!(error instanceof ProviderRequestError) || optionalInteger(optionalRecord(error.details)?.code) !== 100) {
+      throw error;
+    }
+  }
+  const accounts: LinkedInstagramAccount[] = [];
+  let after: string | undefined;
+  do {
+    const pages = requiredRecord(
+      await instagramRequestJson(
+        { path: "/me/accounts", query: { fields: `id,name,${linkedField}`, limit: "100", after } },
+        context,
+      ),
+      "Facebook Pages response",
+      providerResponseError,
+    );
+    accounts.push(
+      ...objectArray(pages.data, "Facebook Pages", providerResponseError).flatMap((page) => {
+        const linked = optionalRecord(page.instagram_business_account);
+        return linked ? [normalizeLinkedAccount(linked)] : [];
+      }),
+    );
+    const paging = optionalRecord(pages.paging);
+    const nextAfter = optionalString(paging?.next)
+      ? requiredString(optionalRecord(paging?.cursors)?.after, "Facebook Pages next cursor", providerResponseError)
+      : undefined;
+    if (nextAfter !== undefined && nextAfter === after) {
+      throw providerResponseError("Facebook Pages next cursor did not advance.");
+    }
+    after = nextAfter;
+  } while (after);
+  return accounts;
+}
+
+function normalizeLinkedAccount(payload: Record<string, unknown>): LinkedInstagramAccount {
+  return {
+    id: requiredString(payload.id, "Instagram account ID", providerResponseError),
+    username: optionalString(payload.username),
+    name: optionalString(payload.name),
+  };
+}
+
+async function getCurrentUser(context: InstagramContext): Promise<Record<string, unknown>> {
+  const payload = await instagramRequestJson(currentUserRequest(context), context);
   const user = normalizeCurrentUser(unwrapDirectOrFirstDataItem(payload));
   assertProfessionalAccount(user);
   return { user };
 }
 
-async function listMedia(
-  input: Record<string, unknown>,
-  context: OAuthProviderContext,
-): Promise<Record<string, unknown>> {
+async function listMedia(input: Record<string, unknown>, context: InstagramContext): Promise<Record<string, unknown>> {
   assertExclusiveCursors(input);
   const payload = requiredRecord(
     await instagramRequestJson(
@@ -167,10 +270,7 @@ async function listMedia(
   };
 }
 
-async function getMedia(
-  input: Record<string, unknown>,
-  context: OAuthProviderContext,
-): Promise<Record<string, unknown>> {
+async function getMedia(input: Record<string, unknown>, context: InstagramContext): Promise<Record<string, unknown>> {
   const mediaId = requiredString(input.mediaId, "mediaId", providerInputError);
   const payload = await instagramRequestJson(
     { path: `/${encodePathSegment(mediaId)}`, query: { fields: mediaFields } },
@@ -181,7 +281,7 @@ async function getMedia(
 
 async function listMediaComments(
   input: Record<string, unknown>,
-  context: OAuthProviderContext,
+  context: InstagramContext,
 ): Promise<Record<string, unknown>> {
   assertExclusiveCursors(input);
   const mediaId = requiredString(input.mediaId, "mediaId", providerInputError);
@@ -209,7 +309,7 @@ async function listMediaComments(
 
 async function getMediaInsights(
   input: Record<string, unknown>,
-  context: OAuthProviderContext,
+  context: InstagramContext,
 ): Promise<Record<string, unknown>> {
   const mediaId = requiredString(input.mediaId, "mediaId", providerInputError);
   const metrics = requiredStringArray(input.metrics, "metrics", providerInputError);
@@ -279,7 +379,7 @@ async function createSingleContainer(
   input: Record<string, unknown>,
   kind: string,
   accountId: string,
-  context: OAuthProviderContext,
+  context: InstagramContext,
 ): Promise<string> {
   const form: Record<string, string | undefined> = {
     caption: optionalRawString(input.caption),
@@ -362,7 +462,7 @@ async function createCarouselContainer(
 async function createContainer(
   accountId: string,
   form: Record<string, string | undefined>,
-  context: OAuthProviderContext,
+  context: InstagramContext,
 ): Promise<string> {
   const payload = requiredRecord(
     await instagramRequestJson({ path: `/${encodePathSegment(accountId)}/media`, method: "POST", form }, context),
@@ -431,11 +531,7 @@ async function pollContainer(containerId: string, publishing: InstagramPublishin
   );
 }
 
-async function publishContainer(
-  accountId: string,
-  containerId: string,
-  context: OAuthProviderContext,
-): Promise<string> {
+async function publishContainer(accountId: string, containerId: string, context: InstagramContext): Promise<string> {
   try {
     const response = await instagramRequestJson(
       {
@@ -468,7 +564,7 @@ function withContainerId(
 
 async function createComment(
   input: Record<string, unknown>,
-  context: OAuthProviderContext,
+  context: InstagramContext,
 ): Promise<Record<string, unknown>> {
   const mediaId = requiredString(input.mediaId, "mediaId", providerInputError);
   const message = requiredUserText(input.message, "message");
@@ -485,7 +581,7 @@ async function createComment(
 
 async function replyToComment(
   input: Record<string, unknown>,
-  context: OAuthProviderContext,
+  context: InstagramContext,
 ): Promise<Record<string, unknown>> {
   const parentCommentId = requiredString(input.commentId, "commentId", providerInputError);
   const message = requiredUserText(input.message, "message");
@@ -505,8 +601,13 @@ async function replyToComment(
 
 async function sendMessage(
   input: Record<string, unknown>,
-  context: OAuthProviderContext,
+  context: InstagramContext,
 ): Promise<Record<string, unknown>> {
+  if (context.apiHost === "facebook") {
+    throw providerInputError(
+      "send_message requires an Instagram Login (OAuth) connection; Facebook Login sends messages through the Page.",
+    );
+  }
   const recipientId = requiredString(input.recipientId, "recipientId", providerInputError);
   const text = requiredUserText(input.text, "text");
   if (new TextEncoder().encode(text).byteLength > 1000) {
@@ -531,8 +632,9 @@ async function sendMessage(
   });
 }
 
-async function instagramRequestJson(request: InstagramRequest, context: OAuthProviderContext): Promise<unknown> {
-  const url = new URL(`/${instagramApiVersion}${request.path}`, instagramApiBaseUrl);
+async function instagramRequestJson(request: InstagramRequest, context: InstagramContext): Promise<unknown> {
+  const baseUrl = context.apiHost === "facebook" ? facebookGraphBaseUrl : instagramApiBaseUrl;
+  const url = new URL(`/${instagramApiVersion}${request.path}`, baseUrl);
   setSearchParams(url, request.query ?? {});
   const headers: Record<string, string> = {
     accept: "application/json",
@@ -735,7 +837,18 @@ function unwrapDirectOrFirstDataItem(value: unknown): Record<string, unknown> {
   return requiredRecord(payload.data[0], "Instagram current-user response data[0]", providerResponseError);
 }
 
-function requireInstagramAccountId(context: OAuthProviderContext): string {
+/** Instagram Login resolves the account through `/me`; Facebook Login addresses the linked account by ID. */
+function currentUserRequest(context: InstagramContext): InstagramRequest {
+  if (context.apiHost === "facebook") {
+    return {
+      path: `/${encodePathSegment(requireInstagramAccountId(context))}`,
+      query: { fields: facebookLoginUserFields },
+    };
+  }
+  return { path: "/me", query: { fields: currentUserFields } };
+}
+
+function requireInstagramAccountId(context: InstagramContext): string {
   return requiredString(context.accountId, "connected Instagram account ID", providerResponseError);
 }
 
