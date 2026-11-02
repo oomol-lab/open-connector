@@ -43,6 +43,15 @@ export const snapshot: TriggerKeySnapshot & { readonly type: "integration" } = {
       },
       nullable: true,
     },
+    {
+      handle: "tenantId",
+      jsonSchema: {
+        type: "string",
+        pattern: "^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}$",
+        title: "Tenant ID",
+      },
+      nullable: true,
+    },
   ],
   outputs: [
     { handle: "event", jsonSchema: { type: "string" }, nullable: false },
@@ -91,6 +100,8 @@ export const snapshot: TriggerKeySnapshot & { readonly type: "integration" } = {
     },
     { handle: "channelData", jsonSchema: { type: "object" }, nullable: true },
     { handle: "replyToId", jsonSchema: { type: "string" }, nullable: true },
+    { handle: "name", jsonSchema: { type: "string" }, nullable: true },
+    { handle: "value", jsonSchema: { type: "object" }, nullable: true },
     { handle: "serviceUrl", jsonSchema: { type: "string" }, nullable: false },
     { handle: "timestamp", jsonSchema: { type: "string" }, nullable: true },
     { handle: "body", jsonSchema: { type: "object" }, nullable: false },

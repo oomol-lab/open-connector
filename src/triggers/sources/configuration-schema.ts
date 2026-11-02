@@ -108,6 +108,10 @@ const createSchema = z.union([
       .min(1)
       .max(4)
       .refine((values) => new Set(values).size === values.length),
+    tenantId: z
+      .string()
+      .regex(/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i)
+      .optional(),
   }),
   z.strictObject({
     kind: z.literal("slack"),
