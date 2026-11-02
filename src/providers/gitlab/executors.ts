@@ -14,6 +14,7 @@ import {
   compactObject,
   optionalBoolean,
   optionalIntegerLike,
+  optionalRawString,
   optionalRecord,
   optionalString as asOptionalString,
   recordOrEmpty,
@@ -94,6 +95,14 @@ export const gitlabActionHandlers: ProviderActionHandlers<"gitlab", GitlabAction
   list_project_merge_requests(input, context) {
     return listGitlabProjectMergeRequests(input, context);
   },
+  get_merge_request(input, context) {
+    return gitlabRequestJson(mergeRequestPath(input), context, "execute", {
+      query: compactObject({
+        include_diverged_commits_count: optionalBoolean(input.includeDivergedCommitsCount),
+        include_rebase_in_progress: optionalBoolean(input.includeRebaseInProgress),
+      }),
+    });
+  },
   create_merge_request(input, context) {
     return createGitlabMergeRequest(input, context);
   },
@@ -102,6 +111,20 @@ export const gitlabActionHandlers: ProviderActionHandlers<"gitlab", GitlabAction
   },
   merge_merge_request(input, context) {
     return mergeGitlabMergeRequest(input, context);
+  },
+  list_issue_notes(input, context) {
+    return listGitlabNotes(`${issuePath(input)}/notes`, input, context, {
+      activity_filter: asOptionalString(input.activityFilter),
+    });
+  },
+  create_issue_note(input, context) {
+    return createGitlabNote(`${issuePath(input)}/notes`, input, context);
+  },
+  list_merge_request_notes(input, context) {
+    return listGitlabNotes(`${mergeRequestPath(input)}/notes`, input, context);
+  },
+  create_merge_request_note(input, context) {
+    return createGitlabNote(`${mergeRequestPath(input)}/notes`, input, context);
   },
 };
 
@@ -453,6 +476,51 @@ function mergeGitlabMergeRequest(input: GitlabActionInput, context: GitlabAction
       }),
     },
   );
+}
+
+function issuePath(input: GitlabActionInput): string {
+  return `/projects/${readProjectId(input)}/issues/${readRequiredPositiveInteger(input.issueIid, "issueIid")}`;
+}
+
+function mergeRequestPath(input: GitlabActionInput): string {
+  return `/projects/${readProjectId(input)}/merge_requests/${readRequiredPositiveInteger(input.mergeRequestIid, "mergeRequestIid")}`;
+}
+
+async function listGitlabNotes(
+  path: string,
+  input: GitlabActionInput,
+  context: GitlabActionContext,
+  filters: Record<string, unknown> = {},
+): Promise<{ notes: unknown[]; total: number | null; nextPage: number | null }> {
+  const response = await gitlabRequest(path, context, {
+    query: compactObject({
+      ...filters,
+      sort: asOptionalString(input.sort),
+      order_by: asOptionalString(input.orderBy),
+      page: asOptionalPositiveInteger(input.page, "page"),
+      per_page: asOptionalPositiveInteger(input.perPage, "perPage"),
+    }),
+  });
+  const payload = await readGitlabPayload(response);
+  if (!response.ok) {
+    throw createGitlabError(response, payload, "execute");
+  }
+  if (!Array.isArray(payload)) {
+    throw new ProviderRequestError(502, "gitlab notes response is not an array", payload);
+  }
+  return { notes: payload, ...readPagination(response.headers) };
+}
+
+function createGitlabNote(path: string, input: GitlabActionInput, context: GitlabActionContext): Promise<unknown> {
+  // The body is sent as written: GitLab treats whitespace and line breaks in Markdown as content.
+  const body = optionalRawString(input.body);
+  if (!body?.trim()) {
+    throw providerInputError("body is required");
+  }
+  return gitlabRequestJson(path, context, "execute", {
+    method: "POST",
+    body: compactObject({ body, internal: optionalBoolean(input.internal) }),
+  });
 }
 
 async function deleteGitlabResource(path: string, context: GitlabActionContext): Promise<{ deleted: boolean }> {

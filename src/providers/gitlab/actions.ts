@@ -150,6 +150,45 @@ const paginatedMergeRequests = s.object(
   },
   { required: ["mergeRequests", "total", "nextPage"], description: "A paginated GitLab merge requests response." },
 );
+const note = s.looseObject(
+  {
+    id: s.integer({ description: "The note ID." }),
+    type: s.nullableString("The note type, such as DiscussionNote or DiffNote, or null for a plain comment."),
+    body: s.string({ description: "The note content in Markdown." }),
+    author: user,
+    created_at: s.string({ description: "The note creation timestamp." }),
+    updated_at: s.string({ description: "The note update timestamp." }),
+    system: s.boolean({ description: "Whether GitLab generated the note for an activity, rather than a user." }),
+    noteable_id: s.integer({ description: "The global ID of the issue or merge request the note belongs to." }),
+    noteable_type: s.string({ description: "The kind of object the note belongs to, such as Issue or MergeRequest." }),
+    noteable_iid: s.nullable(s.integer({ description: "The internal ID of the issue or merge request." })),
+    project_id: s.integer({ description: "The project ID." }),
+    resolvable: s.boolean({ description: "Whether the note starts or belongs to a resolvable thread." }),
+    internal: s.boolean({ description: "Whether the note is internal, visible only to project members." }),
+  },
+  { description: "A GitLab note (comment) record." },
+);
+const paginatedNotes = s.object(
+  {
+    notes: s.array(note, { description: "Notes returned by GitLab." }),
+    total: s.nullable(s.integer({ description: "The total number of notes when GitLab returns it." })),
+    nextPage: s.nullable(s.integer({ description: "The next page number when another page exists." })),
+  },
+  { required: ["notes", "total", "nextPage"], description: "A paginated GitLab notes response." },
+);
+const noteSorting = {
+  sort: s.stringEnum(["asc", "desc"], { description: "Sort direction. GitLab defaults to desc, newest first." }),
+  orderBy: s.stringEnum(["created_at", "updated_at"], { description: "Order notes by creation or update time." }),
+};
+const noteBody = s.string({
+  minLength: 1,
+  maxLength: 1_000_000,
+  description:
+    "The comment in GitLab Markdown. GitLab runs quick actions such as /close or /assign found on their own line and removes them from the stored note.",
+});
+const internalNote = s.boolean({
+  description: "Post an internal note, which only project members with access to internal notes can see.",
+});
 const deletedOutput = s.object(
   { deleted: s.boolean({ description: "Whether GitLab accepted the deletion request." }) },
   { required: ["deleted"], description: "A normalized GitLab deletion response." },
@@ -370,6 +409,24 @@ const actions: GitlabActionSource[] = [
     outputSchema: paginatedMergeRequests,
   },
   {
+    name: "get_merge_request",
+    operationType: "read",
+    description: "Get a single merge request from a GitLab project by its internal merge request ID.",
+    requiredScopes: [gitlabReadApiScope],
+    inputSchema: input(
+      {
+        projectId,
+        mergeRequestIid: s.positiveInteger("The internal merge request ID within the project."),
+        includeDivergedCommitsCount: s.boolean({
+          description: "Include how many commits the source branch is behind the target branch.",
+        }),
+        includeRebaseInProgress: s.boolean({ description: "Include whether a rebase is in progress." }),
+      },
+      ["projectId", "mergeRequestIid"],
+    ),
+    outputSchema: mergeRequest,
+  },
+  {
     name: "create_merge_request",
     operationType: "write",
     description: "Create a GitLab merge request from a source branch into a target branch.",
@@ -436,6 +493,75 @@ const actions: GitlabActionSource[] = [
       ["projectId", "mergeRequestIid"],
     ),
     outputSchema: mergeRequest,
+  },
+  {
+    name: "list_issue_notes",
+    operationType: "read",
+    description:
+      "List the notes (comments and system activity) on a GitLab issue, to read a thread before answering it.",
+    requiredScopes: [gitlabReadApiScope],
+    inputSchema: input(
+      {
+        projectId,
+        issueIid: s.positiveInteger("The internal issue ID within the project."),
+        activityFilter: s.stringEnum(["all_notes", "only_comments", "only_activity"], {
+          description: "Return user comments, system activity notes, or both. GitLab defaults to all_notes.",
+        }),
+        ...noteSorting,
+        ...pagination,
+      },
+      ["projectId", "issueIid"],
+    ),
+    outputSchema: paginatedNotes,
+  },
+  {
+    name: "create_issue_note",
+    operationType: "write",
+    description: "Post a comment on a GitLab issue.",
+    requiredScopes: [gitlabApiScope],
+    inputSchema: input(
+      {
+        projectId,
+        issueIid: s.positiveInteger("The internal issue ID within the project."),
+        body: noteBody,
+        internal: internalNote,
+      },
+      ["projectId", "issueIid", "body"],
+    ),
+    outputSchema: note,
+  },
+  {
+    name: "list_merge_request_notes",
+    operationType: "read",
+    description:
+      "List the notes (comments and system activity) on a GitLab merge request, to read a thread before answering it.",
+    requiredScopes: [gitlabReadApiScope],
+    inputSchema: input(
+      {
+        projectId,
+        mergeRequestIid: s.positiveInteger("The internal merge request ID within the project."),
+        ...noteSorting,
+        ...pagination,
+      },
+      ["projectId", "mergeRequestIid"],
+    ),
+    outputSchema: paginatedNotes,
+  },
+  {
+    name: "create_merge_request_note",
+    operationType: "write",
+    description: "Post a comment on a GitLab merge request. The comment is not attached to a line of the diff.",
+    requiredScopes: [gitlabApiScope],
+    inputSchema: input(
+      {
+        projectId,
+        mergeRequestIid: s.positiveInteger("The internal merge request ID within the project."),
+        body: noteBody,
+        internal: internalNote,
+      },
+      ["projectId", "mergeRequestIid", "body"],
+    ),
+    outputSchema: note,
   },
 ];
 

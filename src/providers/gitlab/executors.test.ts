@@ -205,6 +205,66 @@ describe("GitLab actions", () => {
     expect(result).toEqual({ iid: 8, state: "merged" });
   });
 
+  it("gets a single merge request with its optional detail flags", async () => {
+    const result = await gitlabActionHandlers.get_merge_request(
+      { projectId: "group%2Fdemo", mergeRequestIid: 4, includeDivergedCommitsCount: true },
+      actionContext(async (url, init) => {
+        expect(url.toString()).toBe(
+          "https://gitlab.com/api/v4/projects/group%2Fdemo/merge_requests/4?include_diverged_commits_count=true",
+        );
+        expect(init?.method).toBe("GET");
+        return Response.json({ iid: 4, diverged_commits_count: 2 });
+      }),
+    );
+    expect(result).toEqual({ iid: 4, diverged_commits_count: 2 });
+  });
+
+  it("posts issue and merge request notes with the body unchanged", async () => {
+    const requests: { url: string; body: unknown }[] = [];
+    const context = actionContext(async (url, init) => {
+      expect(init?.method).toBe("POST");
+      requests.push({ url: url.toString(), body: JSON.parse(String(init?.body)) });
+      return Response.json({ id: 99, body: "Looking into it", system: false }, { status: 201 });
+    });
+    const body = "Looking into it\n\n```\nindented code\n```\n";
+
+    await expect(
+      gitlabActionHandlers.create_issue_note({ projectId: "1", issueIid: 7, body, internal: true }, context),
+    ).resolves.toEqual({ id: 99, body: "Looking into it", system: false });
+    await gitlabActionHandlers.create_merge_request_note({ projectId: "1", mergeRequestIid: 8, body }, context);
+
+    expect(requests).toEqual([
+      { url: "https://gitlab.com/api/v4/projects/1/issues/7/notes", body: { body, internal: true } },
+      { url: "https://gitlab.com/api/v4/projects/1/merge_requests/8/notes", body: { body } },
+    ]);
+  });
+
+  it("lists issue and merge request notes with filters and pagination", async () => {
+    const urls: string[] = [];
+    const context = actionContext(async (url) => {
+      urls.push(url.toString());
+      return new Response(JSON.stringify([{ id: 1, body: "First" }]), {
+        headers: { "x-total": "3", "x-next-page": "2" },
+      });
+    });
+
+    await expect(
+      gitlabActionHandlers.list_issue_notes(
+        { projectId: "1", issueIid: 7, activityFilter: "only_comments", sort: "asc", perPage: 1 },
+        context,
+      ),
+    ).resolves.toEqual({ notes: [{ id: 1, body: "First" }], total: 3, nextPage: 2 });
+    await gitlabActionHandlers.list_merge_request_notes(
+      { projectId: "1", mergeRequestIid: 8, orderBy: "updated_at", page: 2 },
+      context,
+    );
+
+    expect(urls).toEqual([
+      "https://gitlab.com/api/v4/projects/1/issues/7/notes?activity_filter=only_comments&sort=asc&per_page=1",
+      "https://gitlab.com/api/v4/projects/1/merge_requests/8/notes?order_by=updated_at&page=2",
+    ]);
+  });
+
   it("normalizes a no-content deletion", async () => {
     const deleted = await gitlabActionHandlers.delete_project_issue(
       { projectId: "1", issueIid: 9 },
@@ -235,6 +295,11 @@ describe("GitLab actions", () => {
     ).rejects.toMatchObject({ status: 400 });
     await expect(
       Promise.resolve().then(() => gitlabActionHandlers.get_project({ projectId: "1/../../groups/2" }, noRequest)),
+    ).rejects.toMatchObject({ status: 400 });
+    await expect(
+      Promise.resolve().then(() =>
+        gitlabActionHandlers.create_issue_note({ projectId: "1", issueIid: 7, body: "  \n" }, noRequest),
+      ),
     ).rejects.toMatchObject({ status: 400 });
   });
 });
