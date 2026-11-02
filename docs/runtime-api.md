@@ -147,17 +147,25 @@ The `slackbot.on_event` shared application Source serves both the Slack app's Ev
 `microsoft_teams_bot.on_activity` receives Microsoft Teams activities through a shared event Source that belongs to one Teams Bot connection. Select the connection with `x-oo-connector-app-id` and create the Source with `{ "operation": "sourceReference", "request": { "action": "create", "deploymentId": "...", "requestKey": "...", "input": { "eventTypes": ["message"] } } }`:
 
 - `eventTypes` lists one to four of `message`, `conversationUpdate`, `messageReaction` and `invoke`. The bot's Application ID comes from the connection, and no secret is stored.
+- Optional `tenantId`, a Microsoft Entra tenant ID, limits the Source to one organization. Use it when one multi-tenant bot serves several organizations, each with its own connection and Source on the same Application ID. The Source then acknowledges, without an event, every activity whose `conversation.tenantId` (or `channelData.tenant.id`) differs or is missing. The Source view shows the tenant, and a Source without one accepts every tenant. The connection's `tenantId` credential field cannot fill this in: it is the token authority, which is `botframework.com` for a multi-tenant bot, so pass the organization's tenant explicitly.
 - Set the Azure Bot's messaging endpoint to the Source's callback URL, and forward each activity request's headers, including its own `Authorization`, to the Source's `receive` operation.
 - Every activity is verified with its Bot Framework token, using the same rules as `POST /v1/providers/microsoft_teams_bot/events/verify`. A token for another bot or an unverifiable token answers 401. Unreachable signing keys answer as a temporary provider failure, so the host can let Bot Framework retry.
 - The Source is ready as soon as it exists. Its `verifiedAt` records the first verified activity.
 - Other activity types, activities from other channels such as Web Chat, and types the Source does not subscribe to are acknowledged with 200 and no event. Answer Bot Framework with 200 for delivered events too. An `invoke` that expects a response body, such as an Adaptive Card action, needs that body from the host.
-- Consumers filter by `eventTypes` and optional `conversationIds`. A channel ID also matches the channel's threads, whose conversation IDs add `;messageid=<root message>`.
+- Consumers filter by `eventTypes`, optional `conversationIds` and optional `tenantId`. A channel ID also matches the channel's threads, whose conversation IDs add `;messageid=<root message>`.
 - Outputs:
   - `event` is the activity type, and `deliveryId` is the JSON array `[conversation.id, activityId]`. Bot Framework retries keep both, so `deliveryId` is the deduplication key.
   - `text` removes the bot's own `<at>` mention and unwraps the other mentions, while `rawText` keeps the original.
   - `mentions` lists `id`, `name` and `isBot` for each mention entity.
   - `from`, `conversation` (`id`, `conversationType`, `tenantId`), `channelData`, `replyToId`, `serviceUrl` and `timestamp` come from the activity, and `body` is the whole activity.
+  - `name` is an invoke's name, such as `adaptiveCard/action`, and `value` is the object an Adaptive Card action submits. Both are `null` otherwise.
 - To answer in the same thread, call `microsoft_teams_bot.reply_to_message` with `serviceUrl`, `conversationId` set to `conversation.id` and `activityId`.
+- Cards:
+  - `send_message`, `reply_to_message` and `update_message` take `attachments`, cards such as `{ "contentType": "application/vnd.microsoft.card.adaptive", "content": <card JSON> }`, and `attachmentLayout` (`list` or `carousel`).
+  - Teams splits a message with both text and cards into separate messages and returns an ID for only one, so put any text inside a card that will be updated.
+  - A click on `Action.Execute` arrives as an `invoke` activity named `adaptiveCard/action`, and the host answers it with an invoke response. A click on `Action.Submit` arrives as a `message` activity whose `value` holds the card data. `Action.OpenUrl` opens the link and sends the bot nothing.
+  - `update_message` replaces the whole message, so a card with buttons can be swapped for one without, using the delivered `conversation.id` and the card's activity ID.
+- `microsoft_teams_bot.list_team_channels` lists a team's channels for a channel picker. Learn the team ID from `channelData.team.id`, for example on the `conversationUpdate` Teams sends when the bot is added to a team: the Bot Connector cannot list the teams a bot is in.
 
 The Trigger runner reaches the provider through the connection's proxy, which targets the connection's default service URL. Source operations make no Bot Connector call.
 
