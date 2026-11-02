@@ -16,3 +16,12 @@
   Set `OOMOL_CONNECT_CATALOG_LAZY_SCHEMAS=false` for the previous eager-loading
   behavior, or pass `lazySchemas: false` when embedding the runtime. Keep the catalog
   files available throughout the runtime's lifetime.
+
+### Security
+
+- The egress guard now always blocks the Azure platform endpoint `168.63.129.16` and the
+  IPv6 metadata endpoints of Google Cloud (`fd20:ce::254`) and Oracle Cloud
+  (`fd00:c1::a9fe:a9fe`), including when `OOMOL_CONNECT_ALLOW_PRIVATE_NETWORK=true` and when
+  the IPv4 address is embedded in a v4-mapped, NAT64, 6to4, or Teredo IPv6 address. Previously
+  `168.63.129.16` passed as a public address and the two IPv6 endpoints were reachable once
+  private networks were allowed.

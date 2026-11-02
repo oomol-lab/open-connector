@@ -254,11 +254,14 @@ const privateIpv4Cidrs: Array<[number, number]> = [
 // link-local incl. the 169.254.169.254 metadata host (169.254/16), IANA protocol/documentation
 // blocks, multicast (224/4), and future-use (240/4). 100.100.100.200/32 is the Alibaba
 // Cloud metadata endpoint — it sits inside CGNAT (100.64/10) but is pinned here so it stays
-// blocked even after opting into private networks.
+// blocked even after opting into private networks. 168.63.129.16/32 is the Azure platform
+// endpoint (WireServer) that serves VM agent and extension configuration; it is a public
+// address reachable only from inside Azure, so no range above covers it.
 const reservedIpv4Cidrs: Array<[number, number]> = [
   [ipv4ToNumber("0.0.0.0"), 8],
   [ipv4ToNumber("100.100.100.200"), 32],
   [ipv4ToNumber("127.0.0.0"), 8],
+  [ipv4ToNumber("168.63.129.16"), 32],
   [ipv4ToNumber("169.254.0.0"), 16],
   [ipv4ToNumber("192.0.0.0"), 24],
   [ipv4ToNumber("192.0.2.0"), 24],
@@ -270,9 +273,11 @@ const reservedIpv4Cidrs: Array<[number, number]> = [
 // Trusted-host only: RFC 2544 benchmark space used by aTrust/EasyConnect-class VPNs to map
 // public SaaS hostnames into locally routed addresses.
 const vpnMappedIpv4Cidrs: Array<[number, number]> = [[ipv4ToNumber("198.18.0.0"), 15]];
-// Always blocked: unspecified/loopback (::, ::1), link-local (fe80::/10), AWS IMDSv2 IPv6
-// (fd00:ec2::254), multicast (ff00::/8), plus discard, documentation, benchmark, and other
-// special-purpose IPv6 ranges (RFC 6890 registry).
+// Always blocked: unspecified/loopback (::, ::1), link-local (fe80::/10), the IPv6 metadata
+// endpoints of AWS (fd00:ec2::254), Google Cloud (fd20:ce::254), and Oracle Cloud
+// (fd00:c1::a9fe:a9fe, used by IPv6-only instances), which sit inside the flag-gated ULA range,
+// multicast (ff00::/8), plus discard, documentation, benchmark, and other special-purpose IPv6
+// ranges (RFC 6890 registry).
 const reservedIpv6Cidrs: Array<[Uint8Array, number]> = [
   [ipv6ToBytes("::"), 128],
   [ipv6ToBytes("::1"), 128],
@@ -283,7 +288,9 @@ const reservedIpv6Cidrs: Array<[Uint8Array, number]> = [
   [ipv6ToBytes("2001:db8::"), 32],
   [ipv6ToBytes("3fff::"), 20],
   [ipv6ToBytes("5f00::"), 16],
+  [ipv6ToBytes("fd00:c1::a9fe:a9fe"), 128],
   [ipv6ToBytes("fd00:ec2::254"), 128],
+  [ipv6ToBytes("fd20:ce::254"), 128],
   [ipv6ToBytes("fe80::"), 10],
   [ipv6ToBytes("ff00::"), 8],
 ];
