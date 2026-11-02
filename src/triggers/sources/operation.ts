@@ -5,7 +5,7 @@ import type { SourceConfiguration, SourceEvent, SourceSubscription } from "./def
 
 import { z } from "zod";
 import { IntegrationConnectionError, PermanentIntegrationError } from "../common/integration.ts";
-import { createEventSourceSchema, updateEventSourceSchema, sourceCreateSchema } from "./configuration-schema.ts";
+import { updateEventSourceSchema, sourceCreateSchema } from "./configuration-schema.ts";
 
 const jsonObject = z.record(z.string(), z.json());
 const configuration = z.object({
@@ -144,8 +144,8 @@ export async function executeSourceOperation(
   });
   switch (request.action) {
     case "initialize": {
-      const parsed = createEventSourceSchema.safeParse(request.input);
-      if (!parsed.success) throw new PermanentIntegrationError("Invalid event source configuration.");
+      const parsed = sourceCreateSchema(source.kind).safeParse(request.input);
+      if (!parsed.success) throw invalidSourceInput("Invalid event source configuration", parsed.error);
       const input = parsed.data;
       let configuration = source.initialize(input, connector.providerAccountId);
       if (source.verifyIdentity != null)
@@ -156,7 +156,7 @@ export async function executeSourceOperation(
     }
     case "update": {
       const parsed = updateEventSourceSchema.safeParse(request.input);
-      if (!parsed.success) throw new PermanentIntegrationError("Invalid event source update.");
+      if (!parsed.success) throw invalidSourceInput("Invalid event source update", parsed.error);
       return { source: project(source.update(request.source, parsed.data)) };
     }
     case "inspect":
@@ -211,4 +211,11 @@ export async function executeSourceOperation(
       };
     }
   }
+}
+
+/** Names each failing input field; Zod issue messages describe the expected shape, never the submitted value. */
+function invalidSourceInput(message: string, error: z.ZodError): PermanentIntegrationError {
+  return new PermanentIntegrationError(
+    `${message}: ${error.issues.map((issue) => `${issue.path.join(".") || "input"}: ${issue.message}`).join("; ")}`,
+  );
 }
