@@ -61,24 +61,32 @@ const noulQuestionSchema: JsonSchema = {
   ],
 };
 
-const choiceQuestionSchema = s.object("A categorical question that selects one named option.", {
-  type: s.literal("choice", { description: "The TypeSafe question type." }),
-  instructions: entrySchema,
-  criteria: {
-    ...s.record("Candidate option names mapped to optional descriptions.", entrySchema),
-    minProperties: 1,
-    maxProperties: 255,
+const choiceQuestionSchema = s.object(
+  "A categorical question that selects one named option.",
+  {
+    type: s.literal("choice", { description: "The TypeSafe question type." }),
+    instructions: entrySchema,
+    criteria: {
+      ...s.record("Candidate option names mapped to optional descriptions.", entrySchema),
+      minProperties: 1,
+      maxProperties: 255,
+    },
   },
-});
+  { optional: ["instructions"] },
+);
 
-const scoreQuestionSchema = s.object("An ordinal question that scores the state against ordered rubric levels.", {
-  type: s.literal("score", { description: "The TypeSafe question type." }),
-  instructions: entrySchema,
-  criteria: s.array("Ordered rubric levels from the lowest to the highest score.", entrySchema, {
-    minItems: 2,
-    maxItems: 10,
-  }),
-});
+const scoreQuestionSchema = s.object(
+  "An ordinal question that scores the state against ordered rubric levels.",
+  {
+    type: s.literal("score", { description: "The TypeSafe question type." }),
+    instructions: entrySchema,
+    criteria: s.array("Ordered rubric levels from the lowest to the highest score.", entrySchema, {
+      minItems: 2,
+      maxItems: 10,
+    }),
+  },
+  { optional: ["instructions"] },
+);
 
 const probabilitySchema = s.number("A probability from 0 to 1.", {
   minimum: 0,
