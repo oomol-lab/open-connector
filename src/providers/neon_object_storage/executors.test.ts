@@ -28,6 +28,84 @@ afterEach(() => {
 });
 
 describe("Neon Object Storage actions", () => {
+  it.each([" report.csv ", " "])("preserves the exact object key %j across object operations", async (objectKey) => {
+    const presigned = {
+      url: `${s3Url}/object?sig=1`,
+      method: "PUT",
+      headers: {},
+      expires_at: "2026-11-02T08:00:00Z",
+    };
+    const requests = stubResponses([
+      new Response(null, { status: 204 }),
+      Response.json(presigned),
+      Response.json(presigned),
+      new Response(null),
+      Response.json({ ...presigned, method: "GET" }),
+      new Response("contents"),
+    ]);
+    const input = { ...branch, bucketName: "media", objectKey };
+    const { store } = createTransitFileStore();
+    const results = [
+      await execute("delete_object", input),
+      await execute("generate_presigned_url", input),
+      await execute("put_object", { ...input, contentText: "contents" }),
+      await execute("download_object", input, store),
+    ];
+
+    for (const result of results) {
+      expect(result).toMatchObject({ ok: true, output: { objectKey } });
+    }
+    const objectUrl = `${apiBranchPath}/buckets/media/objects/${encodeURIComponent(objectKey)}`;
+    expect(requests.map(({ url }) => url)).toEqual([
+      objectUrl,
+      `${objectUrl}/presign`,
+      `${objectUrl}/presign`,
+      presigned.url,
+      `${objectUrl}/presign`,
+      presigned.url,
+    ]);
+  });
+
+  it("preserves whitespace in listing and deletion prefixes", async () => {
+    const prefix = " reports/";
+    const requests = stubResponses([
+      Response.json({ objects: [], folders: [], prefix, is_truncated: false }),
+      Response.json({ deleted: 2 }),
+    ]);
+    const input = { ...branch, bucketName: "media", prefix };
+
+    expect(await execute("list_objects", input)).toMatchObject({ ok: true, output: { prefix } });
+    expect(await execute("delete_objects_by_prefix", input)).toMatchObject({
+      ok: true,
+      output: { prefix, deletedCount: 2 },
+    });
+    expect(requests.map(({ url }) => new URL(url).searchParams.get("prefix"))).toEqual([prefix, prefix]);
+  });
+
+  it.each(["projectId", "branchId", "bucketName", "objectKey"])(
+    "rejects dot segments in %s before sending a request",
+    async (field) => {
+      const requests = stubResponses([]);
+      for (const value of [".", ".."]) {
+        const result = await execute("delete_object", {
+          ...branch,
+          bucketName: "media",
+          objectKey: "report.csv",
+          [field]: value,
+        });
+        expect(result).toMatchObject({ ok: false, error: { code: "invalid_input" } });
+        expect(requests).toHaveLength(0);
+      }
+    },
+  );
+
+  it.each([".hidden", "a/../b", "%2e%2e"])("keeps non-traversing object key %j as one segment", async (objectKey) => {
+    const requests = stubResponses([new Response(null, { status: 204 })]);
+
+    expect(await execute("delete_object", { ...branch, bucketName: "media", objectKey })).toMatchObject({ ok: true });
+    expect(requests[0]?.url).toBe(`${apiBranchPath}/buckets/media/objects/${encodeURIComponent(objectKey)}`);
+  });
+
   it("sends object keys as one encoded path segment", async () => {
     const requests = stubResponses([new Response(null, { status: 204 })]);
 

@@ -4,8 +4,10 @@ import {
   base64Bytes,
   compactObject,
   optionalNumber,
+  optionalRawString,
   optionalRecord,
   optionalString,
+  requiredRawString,
   requiredString,
 } from "../../core/cast.ts";
 import { assertPublicHttpUrl, encodePathSegment, storeResponseInTransit } from "../../core/request.ts";
@@ -167,7 +169,7 @@ async function listObjects(input: Record<string, unknown>, context: ApiKeyProvid
       phase: "execute",
       notFoundAsInvalidInput: true,
       query: {
-        prefix: optionalString(input.prefix),
+        prefix: optionalRawString(input.prefix),
         delimiter: optionalString(input.delimiter),
         cursor: optionalString(input.cursor),
         limit: optionalNumber(input.limit),
@@ -179,7 +181,7 @@ async function listObjects(input: Record<string, unknown>, context: ApiKeyProvid
   return {
     objects: normalizeNeonArray(payload.objects, "objects"),
     folders: Array.isArray(payload.folders) ? payload.folders.map((folder) => String(folder)) : [],
-    prefix: optionalString(payload.prefix) ?? "",
+    prefix: optionalRawString(payload.prefix) ?? "",
     nextCursor: optionalString(payload.next_cursor) ?? null,
     isTruncated: payload.is_truncated === true,
   };
@@ -191,7 +193,7 @@ async function downloadObject(input: Record<string, unknown>, context: ApiKeyPro
   }
   const transitFiles = context.transitFiles;
   const bucketName = requiredInputString(input.bucketName, "bucketName");
-  const objectKey = requiredInputString(input.objectKey, "objectKey");
+  const objectKey = requiredRawString(input.objectKey, "objectKey", providerInputError);
   // The API download endpoint always answers application/octet-stream, so read
   // through a presigned GET, which returns the Content-Type stored on the object.
   const presigned = await presignObject(context, {
@@ -232,7 +234,7 @@ async function downloadObject(input: Record<string, unknown>, context: ApiKeyPro
 
 async function putObject(input: Record<string, unknown>, context: ApiKeyProviderContext): Promise<unknown> {
   const bucketName = requiredInputString(input.bucketName, "bucketName");
-  const objectKey = requiredInputString(input.objectKey, "objectKey");
+  const objectKey = requiredRawString(input.objectKey, "objectKey", providerInputError);
   const content = await readUploadContent(input, context);
   const presigned = await presignObject(context, {
     path: objectPath(input, bucketName, objectKey),
@@ -264,7 +266,7 @@ async function putObject(input: Record<string, unknown>, context: ApiKeyProvider
 
 async function deleteObject(input: Record<string, unknown>, context: ApiKeyProviderContext): Promise<unknown> {
   const bucketName = requiredInputString(input.bucketName, "bucketName");
-  const objectKey = requiredInputString(input.objectKey, "objectKey");
+  const objectKey = requiredRawString(input.objectKey, "objectKey", providerInputError);
   await requestNeonJson({
     apiKey: context.apiKey,
     path: objectPath(input, bucketName, objectKey),
@@ -281,7 +283,7 @@ async function deleteObject(input: Record<string, unknown>, context: ApiKeyProvi
 
 async function deleteObjectsByPrefix(input: Record<string, unknown>, context: ApiKeyProviderContext): Promise<unknown> {
   const bucketName = requiredInputString(input.bucketName, "bucketName");
-  const prefix = requiredInputString(input.prefix, "prefix");
+  const prefix = requiredRawString(input.prefix, "prefix", providerInputError);
   if (!prefix.endsWith("/")) {
     throw providerInputError("prefix must end with /");
   }
@@ -308,7 +310,7 @@ async function deleteObjectsByPrefix(input: Record<string, unknown>, context: Ap
 
 async function generatePresignedUrl(input: Record<string, unknown>, context: ApiKeyProviderContext): Promise<unknown> {
   const bucketName = requiredInputString(input.bucketName, "bucketName");
-  const objectKey = requiredInputString(input.objectKey, "objectKey");
+  const objectKey = requiredRawString(input.objectKey, "objectKey", providerInputError);
   const operation = input.operation === "upload" ? "upload" : "download";
   const presigned = await presignObject(context, {
     path: objectPath(input, bucketName, objectKey),
@@ -422,17 +424,17 @@ async function storageResponseError(
 function branchPath(input: Record<string, unknown>): string {
   const projectId = requiredInputString(input.projectId, "projectId");
   const branchId = requiredInputString(input.branchId, "branchId");
-  return `/projects/${encodePathSegment(projectId)}/branches/${encodePathSegment(branchId)}`;
+  return `/projects/${encodeStoragePathSegment(projectId, "projectId")}/branches/${encodeStoragePathSegment(branchId, "branchId")}`;
 }
 
 function bucketPath(input: Record<string, unknown>, bucketName: string): string {
-  return `${branchPath(input)}/buckets/${encodePathSegment(bucketName)}`;
+  return `${branchPath(input)}/buckets/${encodeStoragePathSegment(bucketName, "bucketName")}`;
 }
 
 // The Neon API matches the whole key as one path segment, so slashes inside the
 // key must travel as %2F rather than as literal path separators.
 function objectPath(input: Record<string, unknown>, bucketName: string, objectKey: string): string {
-  return `${bucketPath(input, bucketName)}/objects/${encodePathSegment(objectKey)}`;
+  return `${bucketPath(input, bucketName)}/objects/${encodeStoragePathSegment(objectKey, "objectKey")}`;
 }
 
 function defaultObjectFileName(objectKey: string): string {
@@ -444,4 +446,12 @@ function unquoteEtag(value: string | null): string | null {
     return null;
   }
   return value.length >= 2 && value.startsWith('"') && value.endsWith('"') ? value.slice(1, -1) : value;
+}
+
+function encodeStoragePathSegment(value: string, fieldName: string): string {
+  // URL parsing resolves dot segments even when the dots are percent-encoded.
+  if (!value || value === "." || value === "..") {
+    throw providerInputError(`${fieldName} must be non-empty and must not be . or ..`);
+  }
+  return encodePathSegment(value);
 }
