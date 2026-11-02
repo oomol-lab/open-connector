@@ -196,7 +196,7 @@ private targets are rejected during connection setup.
 Some self-hosted services are only reachable over a LAN or an overlay network
 such as Tailscale or NetBird. To allow those connections, set
 `OOMOL_CONNECT_ALLOW_PRIVATE_NETWORK=true`. When enabled, connections for the
-self-hosted providers that opt in (**Dokploy**, **n8n**, **GitLab**,
+self-hosted providers that opt in (**Apache Doris**, **Dokploy**, **n8n**, **GitLab**,
 **Gitea**, **Home Assistant**, **IMAP Mailbox**, and others) may target:
 
 - RFC 1918 ranges: `10.0.0.0/8`, `172.16.0.0/12`, `192.168.0.0/16`
@@ -219,6 +219,68 @@ The following targets stay blocked even when the flag is enabled:
 > On a shared or multi-tenant deployment, turning it on lets any connection
 > owner reach the operator's internal network from the runtime's egress
 > position, so leave it at the `false` default there.
+
+### Apache Doris
+
+The `doris` provider uses the FE HTTP statement API, with Apache Doris **2.1** as
+the minimum supported version. It provides `execute_query`, `list_databases`,
+`list_tables`, and `get_table_schema`. Configure a `custom_credential` connection
+with `baseUrl` (the FE HTTP endpoint, usually port 8030), `username`, `password`,
+and optionally `defaultDatabase`. Use HTTPS for publicly exposed endpoints.
+
+Use a dedicated account with only `SELECT_PRIV` on the databases it needs:
+
+```sql
+GRANT SELECT_PRIV ON your_db.* TO 'oc_reader'@'%';
+```
+
+The user must already exist. Do not grant administrator or write privileges to
+this account. On Doris versions where `enable_all_http_auth=true` adds an ADMIN
+check to the statement endpoint, a SELECT-only account cannot use this provider.
+That deployment configuration is incompatible with this integration's minimum
+privilege setup; do not elevate the connector account to work around it.
+
+Credential validation runs `SELECT 1`. Query execution uses the action's
+`database`, then `defaultDatabase`, then the built-in `information_schema`.
+Database listing and credential validation use `defaultDatabase` or
+`information_schema`. Table listing and table schema actions require either an
+action `database` or a configured `defaultDatabase`. Table names are unqualified
+identifiers and are quoted by the provider.
+
+`execute_query` accepts one `SELECT`, `WITH ... SELECT`, `SHOW`, `DESC`,
+`DESCRIBE`, or `EXPLAIN` statement, with an optional trailing semicolon. It rejects
+multiple statements and write keywords, including `INTO OUTFILE` even when used
+inside a SELECT. Quoted values and ordinary comments are recognized; SQL hints,
+executable comments and backslash escapes are not supported. Use doubled quotes
+for literal quote characters and backticks for identifiers that use reserved
+words. These checks supplement database permissions; they do not establish a
+sandbox for functions or external resources configured by the Doris operator.
+The provider does not expose an arbitrary HTTP proxy.
+
+All four actions return `columns`, positional `rows`, `rowCount`,
+`executionTimeMs`, and `truncated`. Duplicate column names are preserved. For
+database/table listings each row holds a name; schema lookup returns DESCRIBE
+rows, with `columns` identifying their attributes. A nonzero Doris `code` is an
+error, and an unexpected `exec_status` response is rejected instead of being
+reported as an empty result set.
+
+`maxRows` defaults to 1,000 and accepts 1–10,000. Requests disable Doris streaming
+with `X-Doris-Stream: false` and ask for one extra row through the HTTP body's
+`limit` field so `truncated` is accurate. Response bodies are capped at **8 MiB**
+while being read; exceeding the cap returns an error rather than a partial
+result. The shared request timeout is 30 seconds. These limits do not bound the
+database's scan or guarantee cancellation of a server-side query: use SQL
+`LIMIT`, selective filters and Doris workload controls for expensive queries.
+
+For private FE addresses, enable `OOMOL_CONNECT_ALLOW_PRIVATE_NETWORK=true` on
+the runtime. This applies to both credential validation and action execution,
+including DNS and redirect checks. Loopback and metadata addresses remain
+blocked. Cloudflare Workers cannot route to private addresses; use a Node,
+Docker or Fly deployment with network access to the FE instead.
+
+See the [Doris statement API](https://doris.apache.org/docs/3.x/admin-manual/open-api/fe-http/statement-execution-action/),
+the [HTTP request implementation](https://github.com/apache/doris/blob/branch-3.0/fe/fe-core/src/main/java/org/apache/doris/httpv2/rest/StmtExecutionAction.java),
+and the runnable [local HTTP example](../examples/local-http/doris.ts).
 
 ### Corporate VPN host exceptions
 

@@ -29,6 +29,19 @@ first.
 NOTION_TOKEN=secret_... node examples/local-http/notion.ts
 ```
 
+Run Apache Doris with a dedicated read-only account. See the
+[Doris setup and limits](../../docs/configuration.md#apache-doris) before connecting.
+Set `DORIS_TABLE` as well to describe a table; without `DORIS_DATABASE`, the example
+only executes `SELECT 1` and lists databases. Missing credentials produce a skip message.
+
+```bash
+DORIS_BASE_URL=https://doris.example.com:8030 \
+DORIS_USERNAME=oc_reader \
+DORIS_PASSWORD=... \
+DORIS_DATABASE=analytics \
+node examples/local-http/doris.ts
+```
+
 Run App Store Connect with an API key created in App Store Connect. Pass the `.p8` file through
 `APP_STORE_CONNECT_PRIVATE_KEY_PATH`, or inline its PEM contents through
 `APP_STORE_CONNECT_PRIVATE_KEY`. Omit `APP_STORE_CONNECT_ISSUER_ID` when you use an Individual API
