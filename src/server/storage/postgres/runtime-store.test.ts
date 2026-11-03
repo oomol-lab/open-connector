@@ -370,6 +370,50 @@ describe("PostgresRuntimeDatabase with PGlite", () => {
     await expect(database.oauthStateStore.take("current")).resolves.toMatchObject({ state: "current" });
   });
 
+  it("consumes OAuth refresh tokens atomically", async () => {
+    const now = Date.now();
+    const base = {
+      clientId: "client-1",
+      runtimeTokenId: "grant-1",
+      scope: "mcp:access offline_access",
+      issuedAt: new Date(now).toISOString(),
+      expiresAt: now + 3_600_000,
+      refreshExpiresAt: now + 86_400_000,
+    };
+    await database.oauthTokenStore.add({ ...base, tokenHash: "access-1", refreshTokenHash: "refresh-1" });
+
+    const consumed = await database.oauthTokenStore.consumeRefreshToken("refresh-1");
+    expect(consumed).toMatchObject({ tokenHash: "access-1", clientId: "client-1", refreshTokenHash: undefined });
+
+    // The hash is nulled: a second use fails and the lookup is gone.
+    await expect(database.oauthTokenStore.consumeRefreshToken("refresh-1")).resolves.toBeUndefined();
+    await expect(database.oauthTokenStore.findByRefreshTokenHash("refresh-1")).resolves.toBeUndefined();
+
+    // Revoked tokens are not consumable.
+    await database.oauthTokenStore.add({
+      ...base,
+      tokenHash: "access-2",
+      refreshTokenHash: "refresh-2",
+      revokedAt: now,
+    });
+    await expect(database.oauthTokenStore.consumeRefreshToken("refresh-2")).resolves.toBeUndefined();
+    await expect(database.oauthTokenStore.findByRefreshTokenHash("refresh-2")).resolves.toMatchObject({
+      tokenHash: "access-2",
+    });
+
+    // Expired refresh tokens are not consumable.
+    await database.oauthTokenStore.add({
+      ...base,
+      tokenHash: "access-3",
+      refreshTokenHash: "refresh-3",
+      refreshExpiresAt: now - 1_000,
+    });
+    await expect(database.oauthTokenStore.consumeRefreshToken("refresh-3")).resolves.toBeUndefined();
+
+    // Unknown hashes are not consumable.
+    await expect(database.oauthTokenStore.consumeRefreshToken("unknown")).resolves.toBeUndefined();
+  });
+
   it("preserves connection identity and rejects stale revisions", async () => {
     const created = await database.connectionStore.set("github", "default", githubCredential("github-token"));
     const updated = await database.connectionStore.set("github", "default", githubCredential("updated-token"));

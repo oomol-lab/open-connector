@@ -1457,6 +1457,55 @@ describe("SqliteOAuthTokenStore", () => {
     }
   });
 
+  it("consumes refresh tokens atomically", async () => {
+    const database = new SqliteRuntimeDatabase(await createDatabasePath());
+    try {
+      const now = Date.now();
+      const base = {
+        clientId: "client-1",
+        runtimeTokenId: "grant-1",
+        scope: "mcp:access offline_access",
+        issuedAt: new Date(now).toISOString(),
+        expiresAt: now + 3_600_000,
+        refreshExpiresAt: now + 86_400_000,
+      };
+      await database.oauthTokenStore.add({ ...base, tokenHash: "access-1", refreshTokenHash: "refresh-1" });
+
+      const consumed = await database.oauthTokenStore.consumeRefreshToken("refresh-1");
+      expect(consumed).toMatchObject({ tokenHash: "access-1", clientId: "client-1", refreshTokenHash: undefined });
+
+      // The hash is nulled: a second use fails and the lookup is gone.
+      expect(await database.oauthTokenStore.consumeRefreshToken("refresh-1")).toBeUndefined();
+      expect(await database.oauthTokenStore.findByRefreshTokenHash("refresh-1")).toBeUndefined();
+
+      // Revoked tokens are not consumable.
+      await database.oauthTokenStore.add({
+        ...base,
+        tokenHash: "access-2",
+        refreshTokenHash: "refresh-2",
+        revokedAt: now,
+      });
+      expect(await database.oauthTokenStore.consumeRefreshToken("refresh-2")).toBeUndefined();
+      expect(await database.oauthTokenStore.findByRefreshTokenHash("refresh-2")).toMatchObject({
+        tokenHash: "access-2",
+      });
+
+      // Expired refresh tokens are not consumable.
+      await database.oauthTokenStore.add({
+        ...base,
+        tokenHash: "access-3",
+        refreshTokenHash: "refresh-3",
+        refreshExpiresAt: now - 1_000,
+      });
+      expect(await database.oauthTokenStore.consumeRefreshToken("refresh-3")).toBeUndefined();
+
+      // Unknown hashes are not consumable.
+      expect(await database.oauthTokenStore.consumeRefreshToken("unknown")).toBeUndefined();
+    } finally {
+      database.close();
+    }
+  });
+
   it("deletes fully expired tokens but keeps refreshable ones", async () => {
     const database = new SqliteRuntimeDatabase(await createDatabasePath());
     try {

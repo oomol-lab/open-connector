@@ -10,6 +10,7 @@ import type { RuntimeGrant, RuntimeTokenService, IRuntimeTokenStore } from "../s
 import type { OAuthServerConfig } from "./config.ts";
 
 import { constantTimeEqual } from "../api/auth-utils.ts";
+import { offlineAccessScope } from "./config.ts";
 import { hashToken, randomToken, signAccessToken, verifyAccessToken } from "./jwks.ts";
 import { verifyPkceS256 } from "./pkce.ts";
 
@@ -51,8 +52,12 @@ export class TokenError extends Error {
   }
 }
 
-export async function handleTokenPost(form: URLSearchParams, deps: TokenDependencies): Promise<IssuedTokenResponse> {
-  const client = await authenticateClient(form, deps);
+export async function handleTokenPost(
+  form: URLSearchParams,
+  deps: TokenDependencies,
+  authorization?: string,
+): Promise<IssuedTokenResponse> {
+  const client = await authenticateClient(form, deps, authorization);
   const grantType = form.get("grant_type") ?? "";
   if (grantType === "authorization_code") {
     return exchangeAuthorizationCode(form, client, deps);
@@ -63,8 +68,12 @@ export async function handleTokenPost(form: URLSearchParams, deps: TokenDependen
   throw new TokenError("unsupported_grant_type", "Supported grant types: authorization_code, refresh_token.");
 }
 
-export async function handleRevokePost(form: URLSearchParams, deps: TokenDependencies): Promise<void> {
-  const client = await authenticateClient(form, deps);
+export async function handleRevokePost(
+  form: URLSearchParams,
+  deps: TokenDependencies,
+  authorization?: string,
+): Promise<void> {
+  const client = await authenticateClient(form, deps, authorization);
   const token = form.get("token") ?? "";
   if (token) {
     await revokeToken(token, client, deps);
@@ -92,8 +101,12 @@ async function revokeGrant(record: OAuthAccessTokenRecord, deps: TokenDependenci
 }
 
 /** Client authentication per the registered token_endpoint_auth_method. */
-export async function authenticateClient(form: URLSearchParams, deps: TokenDependencies): Promise<OAuthClientRecord> {
-  const credentials = readClientCredentials(form);
+export async function authenticateClient(
+  form: URLSearchParams,
+  deps: TokenDependencies,
+  authorization?: string,
+): Promise<OAuthClientRecord> {
+  const credentials = readClientCredentials(form, authorization);
   const client = await deps.clients.get(credentials.clientId);
   if (!client) {
     throw new TokenError("invalid_client", "Unknown client.", 401);
@@ -113,18 +126,52 @@ export async function authenticateClient(form: URLSearchParams, deps: TokenDepen
   return client;
 }
 
-function readClientCredentials(form: URLSearchParams): { clientId: string; clientSecret?: string } {
-  const header = form.get("_basic_authorization");
-  if (header) {
-    const decoded = Buffer.from(header, "base64url").toString("utf8");
-    const separator = decoded.indexOf(":");
-    if (separator > 0) {
-      return { clientId: decoded.slice(0, separator), clientSecret: decoded.slice(separator + 1) };
+function readClientCredentials(
+  form: URLSearchParams,
+  authorization?: string,
+): { clientId: string; clientSecret?: string } {
+  const header = authorization?.trim();
+  if (header !== undefined && header !== "" && /^basic\s/i.test(header)) {
+    const credentials = parseBasicCredentials(header);
+    if (!credentials) {
+      throw new TokenError("invalid_client", "Malformed Basic authorization header.", 401);
     }
+    return credentials;
   }
   const clientId = form.get("client_id") ?? "";
   const clientSecret = form.get("client_secret") ?? undefined;
   return { clientId, clientSecret };
+}
+
+/**
+ * RFC 6749 section 2.3.1: the client id and secret are sent as a
+ * `client_id:client_secret` pair encoded with the standard `Basic` scheme
+ * (case-insensitive; standard base64, not base64url) and both halves are
+ * form-URL-decoded before use.
+ */
+function parseBasicCredentials(header: string): { clientId: string; clientSecret?: string } | undefined {
+  const encoded = header.replace(/^basic\s+/i, "");
+  if (!encoded) {
+    return undefined;
+  }
+  const decoded = Buffer.from(encoded, "base64").toString("utf8");
+  const separator = decoded.indexOf(":");
+  if (separator < 0) {
+    return undefined;
+  }
+  return {
+    clientId: decodeFormComponent(decoded.slice(0, separator)),
+    clientSecret: decodeFormComponent(decoded.slice(separator + 1)),
+  };
+}
+
+function decodeFormComponent(value: string): string {
+  try {
+    return decodeURIComponent(value.replace(/\+/g, " "));
+  } catch {
+    // Not valid percent-encoding; treat the value as sent verbatim.
+    return value;
+  }
 }
 
 async function exchangeAuthorizationCode(
@@ -177,13 +224,24 @@ async function refreshGrant(
   if (!refreshToken) {
     throw new TokenError("invalid_request", "refresh_token is required.");
   }
-  const record = await deps.tokens.findByRefreshTokenHash(hashToken(refreshToken));
-  if (!record || record.clientId !== client.clientId) {
-    throw new TokenError("invalid_grant", "The refresh token is invalid.");
+  const tokenHash = hashToken(refreshToken);
+  const record = await deps.tokens.consumeRefreshToken(tokenHash);
+  if (!record) {
+    // Replay detection (RFC 6749 section 10.4): a refresh token that is still
+    // findable but no longer redeemable (revoked or past its refresh expiry)
+    // must not leave its grant alive. Tokens already consumed by a successful
+    // rotation have their hash nulled and cannot be mapped back to a grant.
+    const known = await deps.tokens.findByRefreshTokenHash(tokenHash);
+    if (known && known.clientId === client.clientId) {
+      await revokeGrant(known, deps);
+    }
+    throw new TokenError("invalid_grant", "The refresh token is invalid, expired, or already used.");
   }
-  const now = Date.now();
-  if (record.revokedAt !== undefined || (record.refreshExpiresAt !== undefined && record.refreshExpiresAt <= now)) {
-    throw new TokenError("invalid_grant", "The refresh token is expired or revoked.");
+  if (record.clientId !== client.clientId) {
+    // Another client's live refresh token was presented: burn it and revoke
+    // the grant it anchors — presenting it elsewhere indicates theft.
+    await revokeGrant(record, deps);
+    throw new TokenError("invalid_grant", "The refresh token was issued to a different client.");
   }
   const scope = form.get("scope");
   if (
@@ -236,7 +294,8 @@ async function issueTokens(deps: TokenDependencies, input: IssueTokensInput): Pr
     ttlSeconds: deps.config.accessTokenTtlSeconds,
     tokenId: accessTokenId,
   });
-  const refreshToken = input.refreshTokenTtl > 0 ? randomToken(32) : undefined;
+  const refreshToken =
+    input.refreshTokenTtl > 0 && input.scope.split(/\s+/).includes(offlineAccessScope) ? randomToken(32) : undefined;
   const record: OAuthAccessTokenRecord = {
     tokenHash: hashToken(token),
     refreshTokenHash: refreshToken === undefined ? undefined : hashToken(refreshToken),

@@ -76,6 +76,13 @@ export interface IOAuthTokenStore {
   add(record: OAuthAccessTokenRecord): Promise<void>;
   findByAccessTokenHash(tokenHash: string): Promise<OAuthAccessTokenRecord | undefined>;
   findByRefreshTokenHash(tokenHash: string): Promise<OAuthAccessTokenRecord | undefined>;
+  /**
+   * Atomically consume a refresh token: only an unrevoked, unexpired refresh
+   * token matches, and its hash is nulled in the same operation so the token
+   * can never be redeemed twice. Returns the record, or undefined when the
+   * hash is unknown, already consumed, revoked, or expired.
+   */
+  consumeRefreshToken(tokenHash: string): Promise<OAuthAccessTokenRecord | undefined>;
   /** All token records for one client (access + refresh anchoring), any revocation state. */
   listByClient(clientId: string): Promise<OAuthAccessTokenRecord[]>;
   /** Revoke all tokens for one client+grant (the minted RuntimeGrant). Returns count revoked. */

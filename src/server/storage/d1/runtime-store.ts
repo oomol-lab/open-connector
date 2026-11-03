@@ -471,6 +471,37 @@ export class D1OAuthTokenStore implements IOAuthTokenStore {
     return row ? readOAuthTokenRow(row) : undefined;
   }
 
+  async consumeRefreshToken(tokenHash: string): Promise<OAuthAccessTokenRecord | undefined> {
+    // D1 has no cross-statement transaction, so this is a guarded
+    // UPDATE-then-GET rather than a single atomic UPDATE ... RETURNING. The
+    // UPDATE itself is atomic per statement and re-checks every guard
+    // (revocation, expiry, and a still-set refresh_token_hash), so only the
+    // first caller can consume a token; a concurrent second caller's UPDATE
+    // matches zero rows and returns undefined.
+    const existing = await this.findByRefreshTokenHash(tokenHash);
+    if (!existing) {
+      return undefined;
+    }
+    const result = await this.database
+      .prepare(
+        `
+        update oauth_tokens
+        set refresh_token_hash = null
+        where token_hash = ?
+          and refresh_token_hash = ?
+          and revoked_at is null
+          and refresh_expires_at is not null
+          and refresh_expires_at > ?
+      `,
+      )
+      .bind(existing.tokenHash, tokenHash, Date.now())
+      .run();
+    if ((result.meta.changes ?? 0) === 0) {
+      return undefined;
+    }
+    return this.findByAccessTokenHash(existing.tokenHash);
+  }
+
   async listByClient(clientId: string): Promise<OAuthAccessTokenRecord[]> {
     const { results } = await this.database
       .prepare("select * from oauth_tokens where client_id = ? order by issued_at, token_hash")
