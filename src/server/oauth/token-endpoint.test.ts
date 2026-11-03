@@ -549,9 +549,10 @@ describe("refresh replay detection", () => {
     expect(typeof tokens.access_token).toBe("string");
     expect(await mcpStatus(app, String(tokens.access_token))).not.toBe(401);
 
-    await deleteClient(app, clientId);
-    // The token record itself is untouched (the deletion raced the insert),
-    // but resolution refuses it because the client is gone.
+    // Remove only the client row, as a racing deletion would. The token
+    // record stays unrevoked, so only the client-existence check can
+    // reject it.
+    await deps.clients.delete(clientId);
     await expect(
       resolveOAuthAccessToken(String(tokens.access_token), {
         config: deps.config,

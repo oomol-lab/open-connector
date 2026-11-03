@@ -8,6 +8,7 @@ import type { RuntimeTokenService } from "../storage/runtime-token-service.ts";
 
 import { Hono } from "hono";
 import { optionalString } from "../../core/cast.ts";
+import { withClientLock } from "../oauth/client-lock.ts";
 import { isValidRedirectUri } from "../oauth/client-metadata.ts";
 import { accessScope, supportedScopes } from "../oauth/config.ts";
 import { hashToken, randomToken } from "../oauth/jwks.ts";
@@ -135,26 +136,31 @@ export function createOAuthClientRoutes({ clients, codes, tokens, runtimeTokens 
 
   app.delete("/oauth-clients/:clientId", async (context) => {
     const clientId = context.req.param("clientId");
-    const existing = await clients.get(clientId);
-    if (!existing) {
-      return jsonError(context, 404, "oauth_client_not_found", `OAuth client not found: ${clientId}`);
-    }
-    // Revoking every token anchored to this client's grants is the point of
-    // deletion: a removed client must not keep working access tokens.
-    const runtimeTokenIds = new Set((await tokens.listByClient(clientId)).map((record) => record.runtimeTokenId));
-    // Pending authorization codes mint their backing runtime grant at consent
-    // time, before redemption — revoke those grants too, or a re-registered
-    // client could redeem a still-valid code without renewed consent.
-    for (const code of await codes.listByClient(clientId)) {
-      runtimeTokenIds.add(code.runtimeTokenId);
-    }
-    for (const runtimeTokenId of runtimeTokenIds) {
-      await tokens.revokeByGrant(clientId, runtimeTokenId);
-      await runtimeTokens.revokeToken(runtimeTokenId);
-    }
-    await codes.deleteByClient(clientId);
-    await clients.delete(clientId);
-    return context.json({ id: clientId, deleted: true });
+    // Serialize with consent approval: the approve path validates the client
+    // outside this lock, so deletion must not interleave between that check
+    // and its code insert, or an orphan code could outlive the client.
+    return withClientLock(clientId, async () => {
+      const existing = await clients.get(clientId);
+      if (!existing) {
+        return jsonError(context, 404, "oauth_client_not_found", `OAuth client not found: ${clientId}`);
+      }
+      // Revoking every token anchored to this client's grants is the point of
+      // deletion: a removed client must not keep working access tokens.
+      const runtimeTokenIds = new Set((await tokens.listByClient(clientId)).map((record) => record.runtimeTokenId));
+      // Pending authorization codes mint their backing runtime grant at consent
+      // time, before redemption — revoke those grants too, or a re-registered
+      // client could redeem a still-valid code without renewed consent.
+      for (const code of await codes.listByClient(clientId)) {
+        runtimeTokenIds.add(code.runtimeTokenId);
+      }
+      for (const runtimeTokenId of runtimeTokenIds) {
+        await tokens.revokeByGrant(clientId, runtimeTokenId);
+        await runtimeTokens.revokeToken(runtimeTokenId);
+      }
+      await codes.deleteByClient(clientId);
+      await clients.delete(clientId);
+      return context.json({ id: clientId, deleted: true });
+    });
   });
 
   return app;

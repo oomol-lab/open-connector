@@ -10,6 +10,8 @@ import type { OAuthServerConfig } from "./config.ts";
 import type { ConsentDescription } from "@cloudflare/workers-oauth-provider";
 import type { Context } from "hono";
 
+import { withClientLock } from "./client-lock.ts";
+
 // `jose` is a lazy-only package (see eager-imports.test.ts): dynamic import only.
 async function jose(): Promise<typeof import("jose")> {
   return import("jose");
@@ -356,29 +358,39 @@ export async function handleAuthorizePost(context: Context, deps: AuthorizeDepen
   if (!constantTimeEqual(form.get("admin_token") ?? "", deps.adminToken)) {
     return htmlError(401, "Invalid administrator token. Go back and try again.");
   }
-  const backing = await deps.runtimeTokens.createToken(`MCP OAuth • ${client.clientName.slice(0, 120)}`, {
-    allowedActions: ["*"],
-    blockedActions: [],
-    allowedProxies: [],
-    allowedConnections: [],
-    allowedTriggers: [],
-  });
-  const code = randomToken(32);
-  try {
-    await deps.codes.add({
-      codeHash: hashToken(code),
-      clientId: client.clientId,
-      redirectUri: request.redirectUri,
-      scope: request.scope.join(" "),
-      codeChallenge: request.codeChallenge,
-      resource: request.resource,
-      runtimeTokenId: backing.record.id,
-      issuedAt: new Date().toISOString(),
-      expiresAt: Date.now() + deps.config.authorizationCodeTtlSeconds * 1000,
+  // Serialize grant + code minting with client deletion (shared per-client
+  // lock): the client was validated above, but a deletion could land between
+  // that check and the code insert, leaving an exchangeable code for a
+  // deleted client. Inside the lock, re-check and only then mint.
+  return withClientLock(request.clientId, async () => {
+    const current = await deps.clients.get(request.clientId);
+    if (!current) {
+      return htmlError(400, "This client or its redirect URI is no longer registered.");
+    }
+    const backing = await deps.runtimeTokens.createToken(`MCP OAuth • ${current.clientName.slice(0, 120)}`, {
+      allowedActions: ["*"],
+      blockedActions: [],
+      allowedProxies: [],
+      allowedConnections: [],
+      allowedTriggers: [],
     });
-  } catch (error) {
-    await deps.runtimeTokens.revokeToken(backing.record.id);
-    throw error;
-  }
-  return completeRedirect({ code, ...(state ? { state } : {}) });
+    const code = randomToken(32);
+    try {
+      await deps.codes.add({
+        codeHash: hashToken(code),
+        clientId: current.clientId,
+        redirectUri: request.redirectUri,
+        scope: request.scope.join(" "),
+        codeChallenge: request.codeChallenge,
+        resource: request.resource,
+        runtimeTokenId: backing.record.id,
+        issuedAt: new Date().toISOString(),
+        expiresAt: Date.now() + deps.config.authorizationCodeTtlSeconds * 1000,
+      });
+    } catch (error) {
+      await deps.runtimeTokens.revokeToken(backing.record.id);
+      throw error;
+    }
+    return completeRedirect({ code, ...(state ? { state } : {}) });
+  });
 }

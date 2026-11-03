@@ -147,7 +147,47 @@ describe("oauth discovery", () => {
     expect(asBody.client_id_metadata_document_supported).toBe(true);
     expect(asBody.registration_endpoint).toBe(`${ISSUER}/oauth/mcp/register`);
   });
+
+  it("approval serialized against deletion mints nothing for a deleted client", async () => {
+    const { app, database } = await setup();
+    const clientId = (await createManualClient(app)).clientId;
+    const { withClientLock } = await import("./client-lock.ts");
+    const { promise: unblock, resolve: release } = Promise.withResolvers<void>();
+    // Consent page first (client still live), then hold the lock, queue the
+    // approve POST behind it, delete the client, and let the approval run:
+    // its locked re-check must see the deletion.
+    const page = await authorizeGetConsent(app, clientId);
+    const handle = /name="handle" value="([^"]+)"/.exec(page)?.[1] ?? "";
+    const holder = withClientLock(clientId, () => unblock);
+    const approvePromise = app.request(`${ISSUER}/oauth/mcp/authorize`, {
+      method: "POST",
+      headers: { "content-type": "application/x-www-form-urlencoded", origin: ISSUER },
+      body: new URLSearchParams({ handle, decision: "approve", admin_token: ADMIN_TOKEN }).toString(),
+      redirect: "manual",
+    });
+    await database.oauthClientStore.delete(clientId);
+    release();
+    await holder;
+    const approved = await approvePromise;
+    expect(approved.status).toBe(400);
+    expect(await database.oauthCodeStore.listByClient(clientId)).toHaveLength(0);
+  });
 });
+
+/** Fetches the consent page HTML for a pending authorization request. */
+async function authorizeGetConsent(app: HonoApp, clientId: string): Promise<string> {
+  const { challenge } = pkcePair();
+  const authorizeUrl = new URL(`${ISSUER}/oauth/mcp/authorize`);
+  authorizeUrl.searchParams.set("response_type", "code");
+  authorizeUrl.searchParams.set("client_id", clientId);
+  authorizeUrl.searchParams.set("redirect_uri", REDIRECT);
+  authorizeUrl.searchParams.set("scope", "mcp:access offline_access");
+  authorizeUrl.searchParams.set("code_challenge", challenge);
+  authorizeUrl.searchParams.set("code_challenge_method", "S256");
+  const consent = await app.request(authorizeUrl, { redirect: "manual" });
+  expect(consent.status).toBe(200);
+  return consent.text();
+}
 
 describe("authorization code flow", () => {
   it("completes with PKCE, echoes resource into the token, and mints a RuntimeGrant", async () => {
