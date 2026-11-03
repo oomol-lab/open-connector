@@ -52,6 +52,11 @@ export interface ConnectAppOptions {
   authMode?: "none" | "runtime_token" | "oauth" | "mixed";
   /** Inbound OAuth 2.1 authorization server settings; `enabled: false` (default) mounts nothing. */
   oauth?: OAuthServerSettings;
+  /**
+   * Trust reverse-proxy forwarding headers when keying the OAuth endpoints'
+   * rate-limit buckets. Default `false`; see `OAuthRoutesOptions`.
+   */
+  trustProxyHeaders?: boolean;
   allowedCustomOAuth?: string[];
   verifyRuntimeJwt?: RuntimeJwtVerifier;
   actionPolicy?: ActionPolicyService;
@@ -222,6 +227,7 @@ export async function createConnectApp(options: ConnectAppOptions): Promise<Conn
         oauthChallenge: oauthConfig ? protectedResourceChallenge(oauthConfig) : undefined,
       },
       oauth: options.oauth,
+      trustProxyHeaders: options.trustProxyHeaders,
       oauthClients: options.runtimeDatabase.oauthClientStore,
       oauthCodes: options.runtimeDatabase.oauthCodeStore,
       oauthTokens: options.runtimeDatabase.oauthTokenStore,

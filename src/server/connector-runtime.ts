@@ -75,6 +75,11 @@ export interface ConnectorRuntimeOptions {
   authMode?: "none" | "runtime_token" | "oauth" | "mixed";
   /** Inbound OAuth 2.1 authorization server for remote MCP clients (ChatGPT et al). */
   oauth?: OAuthServerSettings;
+  /**
+   * Trust reverse-proxy forwarding headers when keying the OAuth endpoints'
+   * rate-limit buckets. Default `false`; see `OAuthRoutesOptions`.
+   */
+  trustProxyHeaders?: boolean;
   /** Dedicated bearer token for inbound provider event verification. Kept separate from the admin token. */
   eventVerifyToken?: string;
   /** Verify /v1 bearer tokens as JWTs against a JWKS endpoint. */
@@ -218,6 +223,7 @@ export async function createConnectorRuntime(options: ConnectorRuntimeOptions): 
       runtimeToken: options.runtimeToken,
       authMode: options.authMode,
       oauth: options.oauth,
+      trustProxyHeaders: options.trustProxyHeaders,
       eventVerifyToken: options.eventVerifyToken,
       verifyRuntimeJwt,
       actionPolicy: new ActionPolicyService(options.actionPolicy),

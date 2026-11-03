@@ -97,6 +97,13 @@ export interface IConnectServerOptions {
   auth?: LocalAuthOptions;
   /** Inbound OAuth 2.1 authorization server settings; absent/`enabled: false` mounts nothing. */
   oauth?: OAuthServerSettings;
+  /**
+   * Trust reverse-proxy forwarding headers (`x-forwarded-for`, `x-real-ip`,
+   * `cf-connecting-ip`) when keying the OAuth endpoints' rate-limit buckets.
+   * Default `false`: keys come from the socket peer address only. Enable only
+   * behind a proxy that overwrites these headers.
+   */
+  trustProxyHeaders?: boolean;
   oauthClients: IOAuthClientStore;
   oauthCodes: IOAuthCodeStore;
   oauthTokens: IOAuthTokenStore;
@@ -351,6 +358,7 @@ export class ConnectServer {
           keys: this.options.oauthKeys,
           runtimeTokens: this.options.runtimeTokens,
           runtimeTokenStore: this.options.runtimeTokenStore,
+          trustProxyHeaders: this.options.trustProxyHeaders,
           cimd: new CimdClient({ logger: this.options.logger }),
         }),
       );
