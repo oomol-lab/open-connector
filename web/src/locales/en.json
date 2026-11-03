@@ -803,7 +803,7 @@
       "oauthHelp": "MCP clients discover the OAuth 2.1 authorization server automatically. Dynamic client registration is available if your client needs it.",
       "oauthPkceNote": "PKCE S256 is mandatory, and the resource parameter (the MCP resource URI) must be sent on the authorize and token requests.",
       "oauthDiscovery": "OAuth 2.1 discovery endpoints",
-      "oauthCliSdkNote": "OAuth 2.1 applies to MCP clients. The CLI and SDK below authenticate with Runtime Tokens.",
+      "oauthCliSdkNote": "OAuth 2.1 applies to MCP clients. The CLI and SDK examples below authenticate with Runtime Tokens, which an OAuth-only gateway rejects: set the gateway auth mode to mixed, or supply an OAuth access token for these examples.",
       "tokenHelp": "Create a token, then replace <RUNTIME_TOKEN> in the examples. Tokens are never stored on this page.",
       "createToken": "Create a Runtime Token",
       "tokenDifferenceTitle": "Which key do I need?",

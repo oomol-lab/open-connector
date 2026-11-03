@@ -803,7 +803,7 @@
       "oauthHelp": "MCP 客户端会自动发现 OAuth 2.1 授权服务器。如果客户端需要，可以使用动态客户端注册。",
       "oauthPkceNote": "PKCE S256 为必选项，并且在 authorize 和 token 请求中必须发送 resource 参数（即 MCP 资源 URI）。",
       "oauthDiscovery": "OAuth 2.1 发现端点",
-      "oauthCliSdkNote": "OAuth 2.1 适用于 MCP 客户端。下方的 CLI 和 SDK 使用 Runtime Token 进行鉴权。",
+      "oauthCliSdkNote": "OAuth 2.1 适用于 MCP 客户端。下方 CLI 和 SDK 示例使用 Runtime Token 鉴权，仅支持 OAuth 的网关会拒绝这类令牌：请将网关设为 mixed（混合）模式，或为这些示例提供 OAuth 访问令牌。",
       "tokenHelp": "创建 Token 后，替换代码中的 <RUNTIME_TOKEN>。此页面不会存储 Token。",
       "createToken": "创建 Runtime Token",
       "tokenDifferenceTitle": "这里应该使用哪一种 Key？",

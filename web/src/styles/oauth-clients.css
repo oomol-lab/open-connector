@@ -125,15 +125,17 @@
   }
 
   .oauth-client-row {
-    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-columns: minmax(0, 1fr);
     grid-template-areas:
-      "identity actions"
-      "meta meta"
-      "uris uris"
-      "scopes scopes";
+      "identity"
+      "meta"
+      "actions"
+      "uris"
+      "scopes";
   }
 
   .oauth-client-actions {
-    justify-self: end;
+    justify-content: flex-start;
+    flex-wrap: wrap;
   }
 }

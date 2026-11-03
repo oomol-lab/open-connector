@@ -803,7 +803,7 @@
       "oauthHelp": "MCP 用戶端會自動探索 OAuth 2.1 授權伺服器。如果用戶端需要，可以使用動態用戶端註冊。",
       "oauthPkceNote": "PKCE S256 為必要項，並且在 authorize 與 token 請求中必須傳送 resource 參數（即 MCP 資源 URI）。",
       "oauthDiscovery": "OAuth 2.1 探索端點",
-      "oauthCliSdkNote": "OAuth 2.1 適用於 MCP 用戶端。下方的 CLI 和 SDK 使用 Runtime Token 進行驗證。",
+      "oauthCliSdkNote": "OAuth 2.1 適用於 MCP 用戶端。下方 CLI 與 SDK 範例使用 Runtime Token 驗證，僅支援 OAuth 的閘道會拒絕這類權杖：請將閘道設為 mixed（混合）模式，或為這些範例提供 OAuth 存取權杖。",
       "tokenHelp": "建立 Token 後，替換程式碼中的 <RUNTIME_TOKEN>。此頁面不會儲存 Token。",
       "createToken": "建立 Runtime Token",
       "tokenDifferenceTitle": "這裡應該使用哪一種 Key？",
