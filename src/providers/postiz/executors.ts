@@ -192,8 +192,9 @@ function normalizePostizApiBaseUrl(value: unknown): string {
   url.search = "";
   url.pathname = url.pathname.replace(/\/+$/u, "");
   if (!url.pathname.endsWith("/public/v1")) {
-    const prefix = url.pathname.endsWith("/api") ? url.pathname : `${url.pathname}${url.pathname === "/" ? "" : "/api"}`;
-    url.pathname = `${prefix}/${selfHostedApiSuffix}`;
+    const base = url.pathname === "/" ? "" : url.pathname.replace(/\/+$/u, "");
+    const stem = base.endsWith("/api") ? base.slice(0, -4) : base;
+    url.pathname = stem === "" ? `/${selfHostedApiSuffix}` : `${stem}/${selfHostedApiSuffix}`;
   }
   return url.toString().replace(/\/$/u, "");
 }
