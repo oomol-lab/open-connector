@@ -7,12 +7,19 @@ export interface ResponseCachePolicy {
 const catalogBrowserCacheControl = "public, max-age=0, must-revalidate";
 const catalogEdgeCacheControl = "public, max-age=31536000, stale-while-revalidate=86400";
 
-export function getResponseCachePolicy(method: string, path: string, status: number): ResponseCachePolicy | undefined {
+export function getResponseCachePolicy(
+  method: string,
+  path: string,
+  status: number,
+  explicitLocale = false,
+): ResponseCachePolicy | undefined {
   if (isCatalogResponse(method, path) && ((status >= 200 && status < 300) || status === 304)) {
     return {
       cacheControl: catalogBrowserCacheControl,
-      cloudflareCdnCacheControl: catalogEdgeCacheControl,
-      vary: "Authorization, Cookie, Accept-Encoding",
+      cloudflareCdnCacheControl: isProviderCatalog(path) && !explicitLocale ? "no-store" : catalogEdgeCacheControl,
+      vary: isProviderCatalog(path)
+        ? "Authorization, Cookie, Accept-Encoding, Accept-Language"
+        : "Authorization, Cookie, Accept-Encoding",
     };
   }
 
@@ -61,4 +68,8 @@ function isRuntimeResponsePath(path: string): boolean {
     path === "/oauth" ||
     path.startsWith("/oauth/")
   );
+}
+
+function isProviderCatalog(path: string): boolean {
+  return path === "/api/providers" || /^\/api\/providers\/[^/]+$/.test(path);
 }

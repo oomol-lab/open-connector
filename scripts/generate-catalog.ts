@@ -3,6 +3,7 @@ import type { CatalogIndexSource } from "../src/catalog-index.ts";
 import { mkdir, rename, rm, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { catalogIndexFileName, createCatalogIndex } from "../src/catalog-index.ts";
+import { validateCatalogTranslations, untranslatedProviderServices } from "../src/catalog-localization/validation.ts";
 import { sortProviders } from "../src/core/catalog.ts";
 import { assertProviderId } from "../src/core/provider-id.ts";
 import { generateProviderRegistries } from "./generate-provider-registry.ts";
@@ -19,6 +20,7 @@ const providerSources = await loadProviderSources();
 await generateProviderRegistries(providerSources);
 const providers = providerSources.map((source) => source.definition);
 const apps = sortProviders(providers);
+validateCatalogTranslations(apps);
 
 await mkdir(catalogRootDir, { recursive: true });
 
@@ -47,4 +49,8 @@ try {
 
 console.log(
   `Generated ${apps.length} apps and ${apps.reduce((sum, app) => sum + app.actions.length, 0)} actions, and the startup index ${indexFile}.`,
+);
+
+console.log(
+  `Chinese provider translations: ${apps.length - untranslatedProviderServices(apps).length}/${apps.length}; run node scripts/check-catalog-translations.ts for untranslated services.`,
 );

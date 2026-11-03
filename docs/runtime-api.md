@@ -69,6 +69,31 @@ limitations.
 Admin endpoints under `/api/*`, `/docs`, and the Web Console use `OOMOL_CONNECT_ADMIN_TOKEN` when it
 is configured.
 
+## Provider Display Languages
+
+Provider lists, details and credential setup support `?locale=en` and `?locale=zh-CN`:
+
+- `GET /api/providers`
+- `GET /api/providers/{service}`
+- `GET /v1/providers`
+- `GET /v1/providers/{service}/setup`
+
+An explicit `locale` takes precedence over `Accept-Language`. Without it, the server selects a supported language from the header's weighted preferences. Simplified Chinese variants such as `zh-Hans` resolve to `zh-CN`; traditional Chinese does not resolve to simplified Chinese. Unsupported languages use English. `Content-Language` identifies the selected language, and missing translations fall back to the original text field by field.
+
+```bash
+curl 'http://localhost:3000/api/providers/tencent_meeting_mcp?locale=zh-CN'
+curl 'http://localhost:3000/v1/providers/tencent_meeting_mcp/setup' \
+  -H 'Accept-Language: zh-CN, en;q=0.5'
+```
+
+Only display text is localized: provider names and descriptions, credential labels, placeholders and help, OAuth option labels and registration steps. Service IDs, credential keys, category IDs, scopes, URLs, default values, action schemas and execution contracts are unchanged. `/api/providers` and its detail endpoint keep `categories` as stable strings and add `categoryDisplayNames` to translated responses. `/v1/providers` retains category objects with stable `id` and translated `displayName`.
+
+The console requests its selected language explicitly and reloads provider metadata when the language changes. Catalog ETags represent the localized content. Header-negotiated console catalog responses use `Vary: Accept-Language` and disable CDN caching; explicit-locale URLs retain the existing catalog CDN policy. Runtime `/v1` endpoints remain `no-store`.
+
+Chinese coverage currently includes shared generated credential labels, existing catalog categories, and provider-specific text for Tencent Meeting MCP, OpenAI, GitHub, Slack, Gmail, Google Drive, Google Calendar, Feishu, Feishu App Bot, Box, Dokploy, Airtable, Notion and Football Charts. GitHub authentication help, all Slack authorization-option labels and descriptions, and the three Google services' service-account setup text have been translated individually against their provider definitions. Brand names without a Chinese display-name translation and literal credential examples retain their original form. Another individually reviewed batch covers DeepSeek, Qwen, Baidu Qianfan, MiniMax, DingTalk Bot, DingTalk MCP, WeCom Bot, WeCom MCP, Feishu Custom Bot, Tencent Docs, Gitee and AMap. Provider-specific coverage is incremental; untranslated fields remain in their original language. Action documentation and schemas are not translated.
+
+Translation source files live under `src/catalog-localization/`. `npm run generate:catalog` checks translation references against the provider definitions. Run `node scripts/check-catalog-translations.ts` to list providers without provider-specific Chinese entries. This list measures entry coverage, not whether every field of an entry has been translated.
+
 ## Provider Triggers
 
 Provider Triggers run through registered server operations:

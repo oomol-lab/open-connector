@@ -197,7 +197,7 @@ describe("loadRuntimeData", () => {
 
     expect(calls.map((call) => call.path)).toEqual([
       "/api/auth/session",
-      "/api/providers",
+      "/api/providers?locale=en",
       "/api/connections",
       "/api/oauth/configs",
       "/api/runtime-tokens",
@@ -232,10 +232,34 @@ describe("loadRuntimeData", () => {
       }),
     );
 
-    const result = await loadRuntimeData("", []);
+    const result = await loadRuntimeData("", { locale: "en", providers: [] });
 
-    expect(calls).not.toContain("/api/providers");
+    expect(calls).not.toContain("/api/providers?locale=en");
     expect(result.data.providers).toEqual([]);
+  });
+
+  it("reloads metadata for a new language and reuses only a matching language cache", async () => {
+    const calls: string[] = [];
+    vi.stubGlobal("fetch", async (path: RequestInfo | URL) => {
+      calls.push(String(path));
+      if (path === "/api/auth/session") return Response.json({ authenticated: true });
+      if (path === "/api/providers?locale=zh-CN")
+        return Response.json([{ service: "tencent_meeting_mcp", displayName: "腾讯会议 MCP", setup: [] }]);
+      if (path === "/api/providers?locale=en")
+        return Response.json([{ service: "tencent_meeting_mcp", displayName: "Tencent Meeting MCP", setup: [] }]);
+      if (path === "/api/runs") return Response.json({ items: [], nextCursor: null });
+      return Response.json([]);
+    });
+    const chinese = await loadRuntimeData("", { locale: "en", providers: [] }, "zh-CN");
+    expect(chinese.data.providers[0]?.displayName).toBe("腾讯会议 MCP");
+    const cache = { locale: "zh-CN" as const, providers: chinese.data.providers };
+    expect((await loadRuntimeData("", cache, "zh-CN")).data.providers).toBe(cache.providers);
+    const english = await loadRuntimeData("", cache, "en");
+    expect(english.data.providers[0]?.displayName).toBe("Tencent Meeting MCP");
+    expect(calls.filter((path) => path.startsWith("/api/providers"))).toEqual([
+      "/api/providers?locale=zh-CN",
+      "/api/providers?locale=en",
+    ]);
   });
 
   it("does not cache catalog when initial session is unauthenticated and fetches catalog on unlock", async () => {
@@ -249,7 +273,7 @@ describe("loadRuntimeData", () => {
         if (path === "/api/auth/session") {
           return Response.json({ adminAuthConfigured: true, authenticated: sessionAuthenticated });
         }
-        if (path === "/api/providers") {
+        if (path === "/api/providers?locale=en") {
           return Response.json([
             {
               service: "example",
@@ -279,7 +303,7 @@ describe("loadRuntimeData", () => {
 
     // Initial unauthenticated load (simulating useEffect in App)
     let cachedProviders: ProviderDefinition[] | undefined = undefined;
-    const initialResult = await loadRuntimeData("", cachedProviders);
+    const initialResult = await loadRuntimeData("", cachedProviders && { locale: "en", providers: cachedProviders });
     if (initialResult.authSession.authenticated) {
       cachedProviders = initialResult.data.providers;
     } else {
@@ -292,12 +316,15 @@ describe("loadRuntimeData", () => {
 
     // User unlocks with valid token
     sessionAuthenticated = true;
-    const unlockResult = await loadRuntimeData("valid-token", cachedProviders);
+    const unlockResult = await loadRuntimeData(
+      "valid-token",
+      cachedProviders && { locale: "en", providers: cachedProviders },
+    );
     if (unlockResult.authSession.authenticated) {
       cachedProviders = unlockResult.data.providers;
     }
 
-    expect(calls).toContain("/api/providers");
+    expect(calls).toContain("/api/providers?locale=en");
     expect(unlockResult.data.providers).toMatchObject([
       {
         service: "example",

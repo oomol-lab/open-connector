@@ -8,6 +8,7 @@ import { Hono } from "hono";
 import { ConnectionError } from "../../connection-error.ts";
 import { searchActions } from "../../core/action-search.ts";
 import { renderActionMarkdown } from "./action-markdown.ts";
+import { catalogLocale } from "./catalog-locale.ts";
 import { jsonError, notFound, readConnectionName as defaultReadConnectionName } from "./http-utils.ts";
 import { mapConnectionErrorStatus } from "./runtime-api.ts";
 import { readSearchQuery, serializeActionSearchResult } from "./runtime-catalog-routes.ts";
@@ -60,7 +61,7 @@ export function createConsoleCatalogRoutes({
     });
 
   app.get("/providers", (context) => {
-    const { providerSummariesJson, providerSummariesEtag } = catalog;
+    const { providerSummariesJson, providerSummariesEtag } = catalog.getProviderDisplay(catalogLocale(context));
     context.header("ETag", providerSummariesEtag);
     if (requestMatchesEtag(context.req.header("If-None-Match"), providerSummariesEtag)) {
       return context.body(null, 304);
@@ -69,7 +70,9 @@ export function createConsoleCatalogRoutes({
   });
 
   app.get("/providers/:service", async (context) => {
-    const provider = catalog.providers.find((p) => p.service === context.req.param("service"));
+    const provider = catalog
+      .getProviderDisplay(catalogLocale(context))
+      .providers.find((p) => p.service === context.req.param("service"));
     if (!provider) return notFound(context);
     return context.json({
       ...provider,

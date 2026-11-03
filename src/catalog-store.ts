@@ -1,3 +1,4 @@
+import type { CatalogLocale } from "./catalog-localization/localization.ts";
 import type { ProviderAuthSetup } from "./core/provider-setup.ts";
 import type { ActionDefinition, AuthType, ProviderDefinition, ProviderScenario } from "./core/types.ts";
 
@@ -5,6 +6,7 @@ import { readdir, readFile } from "node:fs/promises";
 import { join } from "node:path";
 import { readCatalogIndex } from "./catalog-index.ts";
 import { loadFileCatalog } from "./catalog-lazy-schemas.ts";
+import { catalogSetupLabels, localizeProvider } from "./catalog-localization/localization.ts";
 import { sortProviders } from "./core/catalog.ts";
 import { resolveProviderScenario } from "./core/provider-scenarios.ts";
 import { describeProviderAuth } from "./core/provider-setup.ts";
@@ -51,6 +53,12 @@ export type ProviderSummaryDefinition = Omit<RuntimeProviderDefinition, "actions
   setup: ProviderAuthSetup[];
 };
 
+export interface ProviderDisplayCatalog {
+  providers: (RuntimeProviderDefinition & { categoryDisplayNames?: Record<string, string> })[];
+  providerSummariesJson: Uint8Array<ArrayBuffer>;
+  providerSummariesEtag: string;
+}
+
 /**
  * In-memory view of generated catalog JSON.
  *
@@ -59,6 +67,7 @@ export type ProviderSummaryDefinition = Omit<RuntimeProviderDefinition, "actions
  */
 export type CatalogStore = {
   providers: RuntimeProviderDefinition[];
+  getProviderDisplay(locale: CatalogLocale): ProviderDisplayCatalog;
   /**
    * Schema-free view of `providers`, serialized once as UTF-8 bytes because the
    * catalog is immutable at runtime. Served verbatim by `/api/providers` so the
@@ -147,8 +156,15 @@ function createCatalog(
     };
   });
   const actions = runtimeProviders.flatMap((provider) => provider.actions);
-  const providerSummaries = runtimeProviders.map(toProviderSummary);
+  const providerSummaries = runtimeProviders.map((provider) => toProviderSummary(provider));
   const providerSummariesJson = JSON.stringify(providerSummaries);
+
+  const englishDisplay: ProviderDisplayCatalog = {
+    providers: runtimeProviders,
+    providerSummariesJson: new TextEncoder().encode(providerSummariesJson),
+    providerSummariesEtag: weakEtag(providerSummariesJson),
+  };
+  const displays = new Map<CatalogLocale, ProviderDisplayCatalog>([["en", englishDisplay]]);
 
   const actionsById = new Map(actions.map((action) => [action.id, action]));
   // Follow the source object's lifetime so the file LRU still controls schema retention.
@@ -156,8 +172,21 @@ function createCatalog(
   return {
     providers: runtimeProviders,
     // TextEncoder rather than Buffer: the Cloudflare Workers build shares this function.
-    providerSummariesJson: new TextEncoder().encode(providerSummariesJson),
-    providerSummariesEtag: weakEtag(providerSummariesJson),
+    providerSummariesJson: englishDisplay.providerSummariesJson,
+    providerSummariesEtag: englishDisplay.providerSummariesEtag,
+    getProviderDisplay(locale) {
+      const existing = displays.get(locale);
+      if (existing) return existing;
+      const providers = runtimeProviders.map((provider) => localizeProvider(provider, locale));
+      const json = JSON.stringify(providers.map((provider) => toProviderSummary(provider, locale)));
+      const display = {
+        providers,
+        providerSummariesJson: new TextEncoder().encode(json),
+        providerSummariesEtag: weakEtag(json),
+      };
+      displays.set(locale, display);
+      return display;
+    },
     actions,
     actionsById,
     async getAction(id) {
@@ -193,11 +222,14 @@ function weakEtag(content: string): string {
   return `W/"${content.length.toString(16)}-${digest}"`;
 }
 
-function toProviderSummary(provider: RuntimeProviderDefinition): ProviderSummaryDefinition {
+function toProviderSummary(
+  provider: RuntimeProviderDefinition,
+  locale: CatalogLocale = "en",
+): ProviderSummaryDefinition {
   return {
     ...provider,
     actions: provider.actions,
-    setup: provider.auth.map(describeProviderAuth),
+    setup: provider.auth.map((auth) => describeProviderAuth(auth, catalogSetupLabels[locale])),
   };
 }
 

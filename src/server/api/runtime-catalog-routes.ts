@@ -8,6 +8,7 @@ import type { Context } from "hono";
 import { Hono } from "hono";
 import { DEFAULT_ACTION_SEARCH_LIMIT, searchActions } from "../../core/action-search.ts";
 import { optionalString } from "../../core/cast.ts";
+import { catalogLocale } from "./catalog-locale.ts";
 import {
   serializeRuntimeAction,
   serializeRuntimeActionService,
@@ -120,7 +121,8 @@ export function createRuntimeCatalogRoutes({
 
   app.get("/providers/:service/setup", async (context) => {
     const service = context.req.param("service");
-    const provider = catalog.providers.find((p) => p.service === service);
+    const locale = catalogLocale(context);
+    const provider = catalog.getProviderDisplay(locale).providers.find((p) => p.service === service);
     if (!provider) return writeRuntimeFailure(context, unknownServiceFailure(service));
     let oauth = provider.auth.some((auth) => auth.type === "oauth2")
       ? await oauthClientConfigs.getSummary(service)
@@ -141,13 +143,13 @@ export function createRuntimeCatalogRoutes({
         missingFields: [],
       };
     }
-    return writeRuntimeSuccess(context, serializeRuntimeProviderSetup(provider, oauth));
+    return writeRuntimeSuccess(context, serializeRuntimeProviderSetup(provider, oauth, locale));
   });
 
   app.get("/providers", (context) => {
     const services = context.req.queries("service") ?? [];
     const query = optionalString(context.req.query("q"))?.toLowerCase();
-    const providers = catalog.providers.filter((provider) => {
+    const providers = catalog.getProviderDisplay(catalogLocale(context)).providers.filter((provider) => {
       if (services.length > 0 && !services.includes(provider.service)) {
         return false;
       }
@@ -159,6 +161,7 @@ export function createRuntimeCatalogRoutes({
         provider.service,
         provider.displayName,
         provider.categories.join(" "),
+        Object.values(provider.categoryDisplayNames ?? {}).join(" "),
         provider.scenario,
         provider.authTypes.join(" "),
       ]

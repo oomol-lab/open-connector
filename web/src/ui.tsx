@@ -129,6 +129,11 @@ export function nextAuthLoadState(state: AuthLoadState, session: AuthSession): A
   };
 }
 
+export interface CachedProviderCatalog {
+  locale: AppLang;
+  providers: ProviderDefinition[];
+}
+
 export interface RuntimeLoadResult {
   authSession: AuthSession;
   data: AppData;
@@ -138,12 +143,13 @@ export interface RuntimeLoadResult {
  * Loads dashboard state.
  *
  * The provider catalog is generated at build time and cannot change while the
- * server runs, so `cachedProviders` lets refreshes skip re-downloading it and
+ * server runs, so `cachedCatalog` lets same-language refreshes skip re-downloading it and
  * re-fetch only mutable data.
  */
 export async function loadRuntimeData(
   unlockToken: string,
-  cachedProviders?: ProviderDefinition[],
+  cachedCatalog?: CachedProviderCatalog,
+  locale: AppLang = "en",
 ): Promise<RuntimeLoadResult> {
   const authSession = await apiGet<AuthSession>("/api/auth/session", unlockToken);
   if (!authSession.authenticated) {
@@ -151,11 +157,11 @@ export async function loadRuntimeData(
   }
 
   const catalogRequest =
-    cachedProviders !== undefined
-      ? Promise.resolve(cachedProviders)
-      : apiGet<(ProviderDefinition & { setup: ProviderDefinition["auth"] })[]>("/api/providers").then((providers) =>
-          providers.map(({ setup, ...provider }) => ({ ...provider, auth: setup })),
-        );
+    cachedCatalog?.locale === locale
+      ? Promise.resolve(cachedCatalog.providers)
+      : apiGet<(ProviderDefinition & { setup: ProviderDefinition["auth"] })[]>(
+          `/api/providers?locale=${encodeURIComponent(locale)}`,
+        ).then((providers) => providers.map(({ setup, ...provider }) => ({ ...provider, auth: setup })));
 
   const [
     providers,
@@ -195,6 +201,7 @@ export async function loadRuntimeData(
 
 export function App(): ReactNode {
   const t = useTranslate();
+  const locale = useLang() as AppLang;
   const { theme, setTheme } = useThemeMode();
   const [data, setData] = useState<AppData>(emptyData);
   const [authSession, setAuthSession] = useState<AuthSession>({
@@ -202,9 +209,8 @@ export function App(): ReactNode {
     authenticated: true,
   });
   const pendingUnlockToken = useRef("");
-  // Catalog is immutable while the server runs, so it is fetched once and
-  // reused across refreshes instead of being re-downloaded on every action.
-  const cachedProviders = useRef<ProviderDefinition[] | undefined>(undefined);
+  // Reuse immutable catalog metadata only for the language it was loaded in.
+  const cachedProviders = useRef<CachedProviderCatalog | undefined>(undefined);
   const [locked, setLocked] = useState(false);
   const [loading, setLoading] = useState(true);
   const [runtimeChecked, setRuntimeChecked] = useState(false);
@@ -223,10 +229,10 @@ export function App(): ReactNode {
     let cancelled = false;
     const requestUnlockToken = pendingUnlockToken.current;
     setLoading(true);
-    loadRuntimeData(requestUnlockToken, cachedProviders.current)
+    loadRuntimeData(requestUnlockToken, cachedProviders.current, locale)
       .then(({ authSession: session, data: nextData }) => {
         if (!cancelled) {
-          cachedProviders.current = session.authenticated ? nextData.providers : undefined;
+          cachedProviders.current = session.authenticated ? { locale, providers: nextData.providers } : undefined;
           const nextAuth = nextAuthLoadState(
             {
               pendingUnlockToken: pendingUnlockToken.current,
@@ -267,7 +273,7 @@ export function App(): ReactNode {
     return () => {
       cancelled = true;
     };
-  }, [refreshToken, t]);
+  }, [refreshToken, t, locale]);
 
   function refresh(): void {
     setRefreshToken((value) => value + 1);
