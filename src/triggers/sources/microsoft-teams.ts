@@ -96,7 +96,13 @@ export const microsoftTeamsBot: EventSourceDefinition<
     const type = typeof activity.type === "string" && activityTypes.has(activity.type) ? activity.type : undefined;
     const from = isJsonObject(activity.from) ? activity.from : undefined;
     const recipient = isJsonObject(activity.recipient) ? activity.recipient : undefined;
-    if (type == null || activity.channelId !== "msteams" || (from?.id != null && from.id === recipient?.id))
+    // A type the Source does not subscribe to is acknowledged here, so route never returns its reference.
+    if (
+      type == null ||
+      !source.eventTypes.includes(type) ||
+      activity.channelId !== "msteams" ||
+      (from?.id != null && from.id === recipient?.id)
+    )
       return acknowledged();
     const conversation = isJsonObject(activity.conversation) ? activity.conversation : undefined;
     const channelData = isJsonObject(activity.channelData) ? activity.channelData : null;
