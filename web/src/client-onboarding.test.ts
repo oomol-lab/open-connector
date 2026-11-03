@@ -81,6 +81,7 @@ describe("OAuth 2.1 client setup", () => {
     const config = JSON.parse(buildMcpOAuthClientConfig(baseUrl));
     expect(Object.keys(config)).toEqual(["mcpServers"]);
     expect(config.mcpServers["open-connector"]).toEqual({
+      type: "http",
       url: `${baseUrl}/mcp`,
       auth: "oauth2.1",
       protectedResourceMetadata: `${baseUrl}/.well-known/oauth-protected-resource/mcp`,

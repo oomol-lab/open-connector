@@ -72,6 +72,7 @@ export function buildMcpOAuthClientConfig(baseUrl: string): string {
     {
       mcpServers: {
         "open-connector": {
+          type: "http",
           url: urls.resource,
           auth: "oauth2.1",
           protectedResourceMetadata: urls.protectedResourceMetadata,
