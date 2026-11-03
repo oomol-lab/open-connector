@@ -125,6 +125,7 @@ describe("action execution OpenAPI", () => {
 
     expect(route.post.requestBody.content["application/json"].schema.required).toEqual(["service", "connectionName"]);
     expect(route.post.requestBody.content["application/json"].schema.properties).toHaveProperty("appId");
+    expect(route.post.requestBody.content["application/json"].schema.properties).toHaveProperty("returnUri");
     expect(route.post.requestBody.content["application/json"].schema.properties).toMatchObject({
       authorizationOptionIds: { type: "array", items: { type: "string" } },
     });

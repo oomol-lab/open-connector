@@ -354,6 +354,27 @@ it("returns to the caller with success and safe failure parameters", async () =>
   expect((await call("/v1/connections/example/connect", { returnUri: "javascript:alert(1)" })).status).toBe(400);
 });
 
+it("returns a console connection request to the caller with success and safe failure parameters", async () => {
+  const { call } = await setup();
+  const create = async (connectionName: string, returnUri: string) =>
+    call("/api/oauth/connection-requests", { service: "example", connectionName, returnUri });
+  const success = await (await create("console-success", "https://client.example/done?keep=1")).json();
+  const response = await call(`/oauth/callback?state=${success.stateHandle}&code=code`);
+  expect(response.status).toBe(302);
+  const successUrl = new URL(response.headers.get("location")!);
+  expect(Object.fromEntries(successUrl.searchParams)).toEqual({ keep: "1", status: "success", service: "example" });
+  const denied = await (await create("console-denied", "https://client.example/done")).json();
+  const failure = await call(
+    `/oauth/callback?state=${denied.stateHandle}&error=access_denied&error_description=secret`,
+  );
+  expect(failure.status).toBe(302);
+  const failureUrl = new URL(failure.headers.get("location")!);
+  expect(failureUrl.searchParams.get("status")).toBe("error");
+  expect(failureUrl.searchParams.get("code")).toBe("invalid_input");
+  expect(failureUrl.toString()).not.toContain("secret");
+  expect((await create("console-unsafe", "javascript:alert(1)")).status).toBe(400);
+});
+
 it("lets a claimed callback finish after expiry and a newer request", async () => {
   vi.useFakeTimers({ toFake: ["Date"] });
   const started = Promise.withResolvers<void>();

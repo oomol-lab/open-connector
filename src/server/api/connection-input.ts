@@ -16,11 +16,13 @@ export const consoleOAuthConnectionInput: z.ZodType<{
   connectionName: string;
   appId?: string;
   authorizationOptionIds?: string[];
+  returnUri?: string;
 }> = z.strictObject({
   service: z.string().trim().min(1),
   connectionName: z.string().regex(/^[a-zA-Z0-9][a-zA-Z0-9_-]{0,63}$/),
   appId: z.string().min(1).optional(),
   authorizationOptionIds: z.array(z.string().trim().min(1)).optional(),
+  returnUri: z.string().optional(),
 });
 
 export const apiKeyConnectionInput: z.ZodType<{
