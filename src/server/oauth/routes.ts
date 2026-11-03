@@ -12,6 +12,7 @@ import type { RegisterDependencies } from "./register-endpoint.ts";
 import type { TokenDependencies } from "./token-endpoint.ts";
 import type { Context } from "hono";
 
+import { getConnInfo } from "@hono/node-server/conninfo";
 import { Hono } from "hono";
 import { applyWellKnownRoutes } from "./as-metadata.ts";
 import { handleAuthorizeGet, handleAuthorizePost } from "./authorize-endpoint.ts";
@@ -47,10 +48,23 @@ export interface RateLimiter {
 
 export class MemoryRateLimiter implements RateLimiter {
   private readonly windows = new Map<string, { count: number; resetAt: number }>();
+  private nextSweepAt: number = 0;
+  private static readonly sweepIntervalMs: number = 60_000;
 
   take(bucket: string, key: string, limit: number, windowMs: number): boolean {
-    const id = `${bucket}:${key}`;
     const now = Date.now();
+    // Expired windows are dead weight: without a sweep the map grows by one
+    // entry per bucket:key pair forever. Sweep at most once per interval so a
+    // burst of distinct keys cannot turn sweeping itself into the hot path.
+    if (now >= this.nextSweepAt) {
+      this.nextSweepAt = now + MemoryRateLimiter.sweepIntervalMs;
+      for (const [id, window] of this.windows) {
+        if (window.resetAt <= now) {
+          this.windows.delete(id);
+        }
+      }
+    }
+    const id = `${bucket}:${key}`;
     const window = this.windows.get(id);
     if (window === undefined || window.resetAt <= now) {
       this.windows.set(id, { count: 1, resetAt: now + windowMs });
@@ -139,6 +153,20 @@ async function readForm(context: Context): Promise<URLSearchParams | undefined> 
 }
 
 function clientKey(context: Context): string {
+  // Prefer the socket peer address: caller-set forwarding headers are trivially
+  // spoofable, so trusting them would let a client rotate its rate-limit
+  // bucket at will. The header fallback only applies when no socket info is
+  // available (in-process requests such as tests, or a handler detached from
+  // the node-server env); a reverse proxy deployment always has socket info,
+  // so the fallback never runs there.
+  try {
+    const info = getConnInfo(context);
+    if (info.remote?.address) {
+      return info.remote.address;
+    }
+  } catch {
+    // No node-server env on this context; fall through to the headers below.
+  }
   const forwarded = context.req.header("x-forwarded-for");
   if (forwarded) {
     return forwarded.split(",")[0].trim();

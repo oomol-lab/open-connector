@@ -1430,7 +1430,7 @@ function createOAuthClientPath(): Record<string, unknown> {
         },
       },
       responses: {
-        200: { $ref: "#/components/schemas/OAuthClientSummary" },
+        200: jsonResponse({ $ref: "#/components/schemas/OAuthClientSummary" }, "The updated OAuth client."),
         400: jsonResponse({ $ref: "#/components/schemas/ErrorResponse" }),
         404: jsonResponse({ $ref: "#/components/schemas/ErrorResponse" }),
         413: jsonResponse({ $ref: "#/components/schemas/ErrorResponse" }),

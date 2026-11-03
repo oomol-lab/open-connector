@@ -4,7 +4,7 @@ import type { RuntimeTokenService } from "../storage/runtime-token-service.ts";
 import { Hono } from "hono";
 import { optionalString } from "../../core/cast.ts";
 import { isValidRedirectUri } from "../oauth/client-metadata.ts";
-import { accessScope } from "../oauth/config.ts";
+import { accessScope, supportedScopes } from "../oauth/config.ts";
 import { hashToken, randomToken } from "../oauth/jwks.ts";
 import { jsonError, readJsonBody } from "./http-utils.ts";
 
@@ -185,6 +185,12 @@ function readClientInput(body: unknown, requireAll: boolean): ClientInput {
       throw new Error("scopes must be an array of strings.");
     }
     scopes = record.scopes as string[];
+    const unsupported = scopes.find((scope) => !(supportedScopes as readonly string[]).includes(scope));
+    if (unsupported !== undefined) {
+      throw new Error(
+        `Unsupported scope: ${unsupported}. Supported scopes: ${(supportedScopes as readonly string[]).join(" ")}.`,
+      );
+    }
   }
   let tokenEndpointAuthMethod: ClientInput["tokenEndpointAuthMethod"];
   if (record.tokenEndpointAuthMethod !== undefined) {

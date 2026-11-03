@@ -111,6 +111,17 @@ export async function parseAuthorizeRequest(
   if (resource !== undefined && !/^https?:\/\//.test(resource)) {
     throw redirectError("invalid_target", "resource must be an absolute URI.", redirectUri, state);
   }
+  // RFC 8707: this AS serves exactly one protected resource; minting a token
+  // for any other audience would let the code reach a different API.
+  const servedResource = `${deps.config.issuer}/mcp`;
+  if (resource !== undefined && resource !== servedResource) {
+    throw redirectError(
+      "invalid_target",
+      `This authorization server only serves ${servedResource}.`,
+      redirectUri,
+      state,
+    );
+  }
   return { request: { clientId, redirectUri, scope, state, codeChallenge, resource }, client };
 }
 
@@ -291,7 +302,10 @@ export async function handleAuthorizePost(context: Context, deps: AuthorizeDepen
       },
     );
   const origin = context.req.header("origin");
-  if (origin !== new URL(context.req.url).origin) {
+  // Compare against the issuer origin, not context.req.url: behind a
+  // TLS-terminating proxy the server sees http:// while browsers send an
+  // https:// Origin header.
+  if (origin !== new URL(deps.config.issuer).origin) {
     return htmlError(403, "Invalid request origin.");
   }
   const contentType = context.req.header("content-type") ?? "";
