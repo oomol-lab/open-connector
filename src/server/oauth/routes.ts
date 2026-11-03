@@ -108,7 +108,9 @@ export function createOAuthRoutes(options: OAuthRoutesOptions): Hono {
     if (!limiter.take("token", form.get("client_id") ?? clientKey(context), tokenRate.limit, tokenRate.windowMs)) {
       return rateLimitResponse(tokenRate.windowMs);
     }
-    return jsonResult(context, async () => context.json(await handleTokenPost(form, tokenDeps)));
+    return jsonResult(context, async () =>
+      context.json(await handleTokenPost(form, tokenDeps, context.req.header("authorization") ?? undefined)),
+    );
   });
 
   app.post("/oauth/mcp/revoke", async (context: Context) => {
@@ -123,7 +125,7 @@ export function createOAuthRoutes(options: OAuthRoutesOptions): Hono {
       return rateLimitResponse(tokenRate.windowMs);
     }
     return jsonResult(context, async () => {
-      await handleRevokePost(form, tokenDeps);
+      await handleRevokePost(form, tokenDeps, context.req.header("authorization") ?? undefined);
       return new Response(null, { status: 200 });
     });
   });
