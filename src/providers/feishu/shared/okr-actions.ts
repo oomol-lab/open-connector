@@ -105,14 +105,12 @@ export function createFeishuOkrActions(
       inputSchema: s.object(
         "Choose a user and configure pagination.",
         {
-          userId: s.string("The user whose cycles should be listed.", { minLength: 1 }),
+          userId: s.nonEmptyString("The user whose cycles should be listed."),
           userIdType,
-          pageSize,
+          pageSize: extendedPageSize,
           pageToken,
         },
-        {
-          optional: ["userId", "userIdType", "pageSize", "pageToken"],
-        },
+        { optional: ["userIdType", "pageSize", "pageToken"] },
       ),
       outputSchema: pageOutput,
     }),
@@ -246,28 +244,20 @@ export function createFeishuOkrActions(
         {
           targetType,
           targetId,
-          text: s.string("Replacement target text.", { minLength: 1 }),
+          text: s.nonEmptyString("Replacement target text."),
           mentions,
           notes: s.string("Replacement notes."),
-          score: s.number("The new OKR score."),
-          deadline: s.string("The new deadline accepted by Feishu.", { minLength: 1 }),
+          score: s.number("The new OKR score.", { minimum: 0, maximum: 1, multipleOf: 0.1 }),
+          deadline: s.nonEmptyString("The new deadline accepted by Feishu."),
           userIdType,
         },
-        {
-          optional: ["text", "mentions", "notes", "score", "deadline", "userIdType"],
-        },
+        { optional: ["text", "mentions", "notes", "score", "deadline", "userIdType"] },
       ),
-      outputSchema: s.object(
-        "The patch result.",
-        {
-          targetType: s.string("The patched target level."),
-          targetId: s.string("The patched target ID."),
-          patchedFields: s.array("The fields sent to Feishu.", s.string("A patched field name.")),
-        },
-        {
-          optional: [],
-        },
-      ),
+      outputSchema: s.requiredObject("The patch result.", {
+        targetType: s.string("The patched target level."),
+        targetId: s.string("The patched target ID."),
+        patchedFields: s.array("The fields sent to Feishu.", s.string("A patched field name.")),
+      }),
     }),
     defineProviderAction(service, {
       name: "list_okr_alignments",
@@ -379,33 +369,19 @@ export function createFeishuOkrActions(
       description: "Replace the objective or key-result order with an explicit ID sequence.",
       requiredScopes: ["okr:okr.content:writeonly"],
       providerPermissions: ["okr:okr.content:writeonly"],
-      inputSchema: s.object(
-        "Describe the desired order.",
-        {
-          targetType,
-          parentId: s.string("The cycle ID or objective ID containing the targets.", {
-            minLength: 1,
-          }),
-          orderedIds: s.array(
-            "All target IDs in the desired order.",
-            s.string("An objective or key-result ID.", { minLength: 1 }),
-            { minItems: 1 },
-          ),
-        },
-        {
-          optional: [],
-        },
-      ),
-      outputSchema: s.object(
-        "The reorder result.",
-        {
-          targetType: s.string("The reordered target level."),
-          orderedIds: s.array("The applied target order.", s.string("A target ID.")),
-        },
-        {
-          optional: [],
-        },
-      ),
+      inputSchema: s.requiredObject("Describe the desired order.", {
+        targetType,
+        parentId: s.nonEmptyString("The cycle ID or objective ID containing the targets."),
+        orderedIds: s.array(
+          "All target IDs in the desired order.",
+          s.nonEmptyString("An objective or key-result ID."),
+          { minItems: 1 },
+        ),
+      }),
+      outputSchema: s.requiredObject("The reorder result.", {
+        targetType: s.string("The reordered target level."),
+        orderedIds: s.array("The applied target order.", s.string("A target ID.")),
+      }),
     }),
     defineProviderAction(service, {
       name: "update_okr_weights",
@@ -413,42 +389,22 @@ export function createFeishuOkrActions(
       description: "Replace objective or key-result weights with explicit ID and weight pairs.",
       requiredScopes: ["okr:okr.content:writeonly"],
       providerPermissions: ["okr:okr.content:writeonly"],
-      inputSchema: s.object(
-        "Describe the desired weights.",
-        {
-          targetType,
-          parentId: s.string("The cycle ID or objective ID containing the targets.", {
-            minLength: 1,
+      inputSchema: s.requiredObject("Describe the desired weights.", {
+        targetType,
+        parentId: s.nonEmptyString("The cycle ID or objective ID containing the targets."),
+        weights: s.array(
+          "Target weights.",
+          s.requiredObject("One target weight.", {
+            id: s.nonEmptyString("The objective or key-result ID."),
+            weight: s.number("The target weight."),
           }),
-          weights: s.array(
-            "Target weights.",
-            s.object(
-              "One target weight.",
-              {
-                id: s.string("The objective or key-result ID.", { minLength: 1 }),
-                weight: s.number("The target weight."),
-              },
-              {
-                optional: [],
-              },
-            ),
-            { minItems: 1 },
-          ),
-        },
-        {
-          optional: [],
-        },
-      ),
-      outputSchema: s.object(
-        "The weight update result.",
-        {
-          targetType: s.string("The updated target level."),
-          weights: s.array("The applied weights.", looseItem),
-        },
-        {
-          optional: [],
-        },
-      ),
+          { minItems: 1 },
+        ),
+      }),
+      outputSchema: s.requiredObject("The weight update result.", {
+        targetType: s.string("The updated target level."),
+        weights: s.array("The applied weights.", looseItem),
+      }),
     }),
     defineProviderAction(service, {
       name: "update_okr_indicator",

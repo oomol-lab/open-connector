@@ -3,6 +3,7 @@ import type { FeishuJsonRequest } from "./client.ts";
 
 import { ProviderRequestError } from "../../provider-runtime.ts";
 import { storeFeishuTransitBytes } from "./media.ts";
+import { FeishuPagination } from "./pagination.ts";
 
 interface NoteHandler {
   (input: Record<string, unknown>): Promise<unknown>;
@@ -54,7 +55,7 @@ async function downloadTranscript(input: Record<string, unknown>, deps: FeishuNo
   }
 
   const chunks: string[] = [];
-  const seenCursors = new Set<string>();
+  const pagination = new FeishuPagination("note transcript");
   let cursor: string | undefined;
   for (let page = 0; page < 500; page++) {
     const data = await deps.request({
@@ -71,18 +72,8 @@ async function downloadTranscript(input: Record<string, unknown>, deps: FeishuNo
     if (chunk) {
       chunks.push(chunk);
     }
-    if (data.has_more !== true) {
-      cursor = undefined;
-      break;
-    }
-    const nextCursor = scalarString(data.next_cursor_id);
-    if (!nextCursor || nextCursor === cursor || seenCursors.has(nextCursor)) {
-      throw new ProviderRequestError(502, "Feishu note transcript pagination cursor did not advance");
-    }
-    if (cursor) {
-      seenCursors.add(cursor);
-    }
-    cursor = nextCursor;
+    cursor = pagination.next(data.has_more, scalarString(data.next_cursor_id));
+    if (!cursor) break;
   }
   if (cursor) {
     throw new ProviderRequestError(502, "Feishu note transcript exceeded 500 pages");

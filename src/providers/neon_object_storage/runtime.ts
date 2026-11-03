@@ -87,7 +87,6 @@ async function getBranchStorage(input: Record<string, unknown>, context: ApiKeyP
       path: `${branchPath(input)}/storage`,
       fetcher: context.fetcher,
       signal: context.signal,
-      phase: "execute",
       notFoundAsInvalidInput: true,
     }),
     "Neon branch storage response",
@@ -108,7 +107,6 @@ async function listBuckets(input: Record<string, unknown>, context: ApiKeyProvid
       path: `${branchPath(input)}/buckets`,
       fetcher: context.fetcher,
       signal: context.signal,
-      phase: "execute",
       notFoundAsInvalidInput: true,
     }),
     "Neon bucket list response",
@@ -127,7 +125,6 @@ async function createBucket(input: Record<string, unknown>, context: ApiKeyProvi
       method: "POST",
       fetcher: context.fetcher,
       signal: context.signal,
-      phase: "execute",
       notFoundAsInvalidInput: true,
       body: compactObject({
         name: requiredInputString(input.name, "name"),
@@ -150,7 +147,6 @@ async function deleteBucket(input: Record<string, unknown>, context: ApiKeyProvi
     method: "DELETE",
     fetcher: context.fetcher,
     signal: context.signal,
-    phase: "execute",
     notFoundAsInvalidInput: true,
     allowNoContent: true,
   });
@@ -166,7 +162,6 @@ async function listObjects(input: Record<string, unknown>, context: ApiKeyProvid
       path: `${bucketPath(input, bucketName)}/objects`,
       fetcher: context.fetcher,
       signal: context.signal,
-      phase: "execute",
       notFoundAsInvalidInput: true,
       query: {
         prefix: optionalRawString(input.prefix),
@@ -274,7 +269,6 @@ async function deleteObject(input: Record<string, unknown>, context: ApiKeyProvi
     method: "DELETE",
     fetcher: context.fetcher,
     signal: context.signal,
-    phase: "execute",
     notFoundAsInvalidInput: true,
     allowNoContent: true,
   });
@@ -295,7 +289,6 @@ async function deleteObjectsByPrefix(input: Record<string, unknown>, context: Ap
       method: "DELETE",
       fetcher: context.fetcher,
       signal: context.signal,
-      phase: "execute",
       notFoundAsInvalidInput: true,
       query: { prefix },
     }),
@@ -338,7 +331,6 @@ async function presignObject(context: ApiKeyProviderContext, input: NeonPresignI
       method: "POST",
       fetcher: context.fetcher,
       signal: context.signal,
-      phase: "execute",
       notFoundAsInvalidInput: true,
       body: compactObject({
         operation: input.operation,

@@ -558,18 +558,12 @@ export function createFeishuBaseActions(service: string): readonly ActionDefinit
         "Replace one field definition in a Feishu Base table. Read the field first and include all writable configuration to preserve; this is a full PUT replacement, not a partial update.",
       requiredScopes: [feishuBaseProviderPermissions.fieldUpdate],
       providerPermissions: [feishuBaseProviderPermissions.fieldUpdate],
-      inputSchema: s.object(
-        "Identify and configure the Base field to update.",
-        {
-          appToken: appTokenField,
-          tableId: tableIdField,
-          fieldId: fieldIdField,
-          field: updateFieldDefinitionSchema,
-        },
-        {
-          optional: [],
-        },
-      ),
+      inputSchema: s.requiredObject("Identify and configure the Base field to update.", {
+        appToken: appTokenField,
+        tableId: tableIdField,
+        fieldId: fieldIdField,
+        field: updateFieldDefinitionSchema,
+      }),
       outputSchema: writeOutput("The updated Base field.", "field", "updated"),
     }),
     defineProviderAction(service, {

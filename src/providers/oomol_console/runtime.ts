@@ -19,6 +19,7 @@ import {
   toPermissionGroupsView,
 } from "./permission-groups.ts";
 import { requestOomolConsole, requestOomolConsoleWithResponse } from "./request.ts";
+import { encodeSkillPackageName, parseSkillPackages } from "./skill-packages.ts";
 
 export interface OomolConsoleContext {
   apiKey: string;
@@ -119,6 +120,60 @@ export async function executeOomolConsoleAction(
   const apiKey = requireApiKey(context);
 
   switch (actionName) {
+    case "list_my_skill_packages": {
+      const payload = asRecord(
+        await requestOomolConsole({
+          endpoints: deps.endpoints,
+          endpoint: "search",
+          path: "/v1/packages/-/my-skills",
+          apiKey,
+          fetcher,
+          query: {
+            q: input.query as string | undefined,
+            lang: input.lang as string | undefined,
+            next: input.cursor as string | undefined,
+            size: input.limit as number,
+          },
+        }),
+        "my skill packages",
+      );
+      return {
+        packages: parseSkillPackages(payload.data),
+        nextCursor: readNullableString(payload.next, "my skill packages next"),
+      };
+    }
+    case "list_team_skill_packages": {
+      const teamId = requireTeamId(context);
+      const payload = asRecord(
+        await requestOomolConsole({
+          endpoints: deps.endpoints,
+          endpoint: "registry",
+          path: `/-/oomol/orgs/${encodeURIComponent(teamId)}/package-infos`,
+          apiKey,
+          fetcher,
+          query: { lang: input.lang as string | undefined },
+        }),
+        "team skill packages",
+      );
+      return { teamId, packages: parseSkillPackages(payload.data) };
+    }
+    case "add_skill_package_to_team":
+    case "remove_skill_package_from_team": {
+      const teamId = requireTeamId(context);
+      const packageName = input.packageName as string;
+      const payload = await requestOomolConsole({
+        endpoints: deps.endpoints,
+        endpoint: "registry",
+        path: `/-/oomol/packages/${encodeSkillPackageName(packageName)}/orgs/${encodeURIComponent(teamId)}`,
+        method: actionName === "add_skill_package_to_team" ? "PUT" : "DELETE",
+        apiKey,
+        fetcher,
+      });
+      if (payload !== undefined && asRecord(payload, "package binding").ok !== true) {
+        throw invalidResponse("package binding did not confirm success");
+      }
+      return { success: true, packageName, teamId };
+    }
     case "get_current_scope": {
       const teamId = requireTeamId(context);
       const team = await getTeam(teamId, apiKey, fetcher, deps.endpoints);
@@ -149,14 +204,16 @@ export async function executeOomolConsoleAction(
       };
     }
     case "get_billing_summary": {
+      const teamId = requireTeamId(context);
       const period = createPeriod(input, deps.now?.() ?? Date.now());
       const [balance, billing, metering] = await Promise.all([
         getAllAvailableBalance(apiKey, fetcher, deps.endpoints),
-        getBillingStats(period, apiKey, fetcher, deps.endpoints),
-        getMeteringStats(period, apiKey, fetcher, deps.endpoints),
+        getBillingStats(period, apiKey, fetcher, deps.endpoints, teamId),
+        getMeteringStats(period, apiKey, fetcher, deps.endpoints, teamId),
       ]);
       return {
-        scope: "account",
+        scope: "team",
+        teamId,
         period,
         generalBalanceCredit: sumDecimalStrings(
           balance.items.filter((lot) => lot.serviceScope === "GENERAL").map((lot) => lot.currentCredit),
@@ -172,9 +229,10 @@ export async function executeOomolConsoleAction(
       };
     }
     case "get_usage_breakdown": {
+      const teamId = requireTeamId(context);
       const period = createPeriod(input, deps.now?.() ?? Date.now());
-      const metering = await getMeteringStats(period, apiKey, fetcher, deps.endpoints);
-      return { scope: "account", ...metering };
+      const metering = await getMeteringStats(period, apiKey, fetcher, deps.endpoints, teamId);
+      return { scope: "team", teamId, ...metering };
     }
     case "list_members": {
       const teamId = requireTeamId(context);
@@ -236,7 +294,7 @@ export async function executeOomolConsoleAction(
       return requestOomolConsole({
         endpoints: deps.endpoints,
         endpoint: "connector",
-        path: `/v1/connections/by-id/${encodeURIComponent(appId)}/executions`,
+        path: `/v1/apps/by-id/${encodeURIComponent(appId)}/executions`,
         apiKey,
         fetcher,
         teamId,
@@ -281,7 +339,7 @@ async function getTeamConnection(
     await requestOomolConsole({
       endpoints,
       endpoint: "connector",
-      path: `/v1/connections/by-id/${encodeURIComponent(appId)}`,
+      path: `/v1/apps/by-id/${encodeURIComponent(appId)}`,
       apiKey,
       fetcher,
       teamId,
@@ -797,12 +855,13 @@ async function getBillingStats(
   apiKey: string,
   fetcher: typeof fetch,
   endpoints: OomolConsoleEndpoints,
+  teamId: string,
 ) {
   const payload = asRecord(
     await requestOomolConsole({
       endpoints,
       endpoint: "insight",
-      path: "/v2/stats/billing",
+      path: `/v2/team/${encodeURIComponent(teamId)}/stats/billing`,
       apiKey,
       fetcher,
       query: {
@@ -823,12 +882,13 @@ async function getMeteringStats(
   apiKey: string,
   fetcher: typeof fetch,
   endpoints: OomolConsoleEndpoints,
+  teamId: string,
 ) {
   const payload = asRecord(
     await requestOomolConsole({
       endpoints,
       endpoint: "insight",
-      path: "/v2/stats/metering",
+      path: `/v2/team/${encodeURIComponent(teamId)}/stats/metering`,
       apiKey,
       fetcher,
       query: {

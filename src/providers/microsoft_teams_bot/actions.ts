@@ -161,7 +161,11 @@ const actions: Parameters<typeof defineProviderAction>[1][] = [
         tenantId: s.optional(
           s.nonEmptyString("Tenant of the target user or team. Defaults to the credential's tenant."),
         ),
-        text: s.optional(text),
+        text: s.optional(
+          s.nonEmptyString(
+            "Initial message text. Required when teamId is provided; optional for a one-on-one conversation.",
+          ),
+        ),
         textFormat: s.optional(textFormat),
       },
       [],

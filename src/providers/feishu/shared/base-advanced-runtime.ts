@@ -1,6 +1,7 @@
 import type { FeishuJsonRequest, FeishuQueryValue } from "./client.ts";
 
 import { compactObject, optionalRawString } from "../../../core/cast.ts";
+import { providerInputError } from "../../provider-runtime.ts";
 import { ProviderRequestError } from "../../provider-runtime.ts";
 
 interface FeishuBaseAdvancedActionHandler {
@@ -31,7 +32,6 @@ export function createFeishuBaseAdvancedActionHandlers(
     await request({ method: "DELETE", path, body });
     return { deleted: true, id: requireString(id, "id") };
   };
-
   return {
     list_base_blocks: async (input) => {
       const data = await request({
@@ -54,7 +54,7 @@ export function createFeishuBaseAdvancedActionHandlers(
       }),
     move_base_block: async (input) => {
       if (input.beforeId !== undefined && input.afterId !== undefined) {
-        throw new ProviderRequestError(400, "beforeId and afterId are mutually exclusive");
+        throw providerInputError("beforeId and afterId are mutually exclusive");
       }
       return await write(input, "POST", basePath(input, "blocks", input.blockId, "move"), {
         parent_id: input.parentId === undefined ? null : input.parentId,
@@ -77,7 +77,10 @@ export function createFeishuBaseAdvancedActionHandlers(
           page_size: input.pageSize ?? 30,
         }),
       });
-      return normalizedList(data, firstObjectItems(data, ["items", "records", "history"]));
+      return {
+        ...normalizedList(data, firstObjectItems(data, ["items", "records", "history"])),
+        nextMaxVersion: data.next_max_version ?? null,
+      };
     },
     create_base_record_share_links: async (input) => ({
       result: await request({
@@ -200,6 +203,7 @@ export function createFeishuBaseAdvancedActionHandlers(
     delete_base_form_questions: (input) =>
       write(input, "DELETE", formPath(input, "questions"), {
         question_ids: input.questionIds,
+        keep_field: input.keepFields,
       }),
     submit_base_form: (input) =>
       write(input, "POST", "/base/v3/bases/tables/forms/submit", {

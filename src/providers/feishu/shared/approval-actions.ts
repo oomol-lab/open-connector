@@ -16,7 +16,9 @@ const userIdTypeField = s.stringEnum("The type used by all user IDs in this requ
   "open_id",
   "union_id",
   "user_id",
+  "user_key",
 ]);
+
 const localeField = s.string("The response locale, for example `zh-CN` or `en-US`.");
 const commentField = s.string("An optional approval comment.", { maxLength: 500 });
 const rawObjectSchema = s.looseObject("The raw Approval object returned by Feishu.");
@@ -34,18 +36,15 @@ const pageFields = {
   pageSize: s.positiveInteger("The number of results per page.", { maximum: 100 }),
   pageToken: s.string("The pagination token from a previous response."),
 };
-const listOutputSchema = s.object(
-  "A normalized page of Approval objects.",
-  {
-    items: s.array("The objects returned for this page.", rawObjectSchema),
-    pageToken: s.string("The next pagination token."),
-    hasMore: s.boolean("Whether another page is available."),
-    total: s.nonNegativeInteger("The total count reported by Feishu."),
-  },
-  {
-    optional: [],
-  },
-);
+const listOutputSchema = s.requiredObject("A normalized page of Approval objects.", {
+  items: s.array("The objects returned for this page.", rawObjectSchema),
+  pageToken: s.string("The next pagination token."),
+  hasMore: s.boolean("Whether another page is available."),
+  total: s.optional(
+    s.nonNegativeInteger("The count reported by Feishu when available; it may be capped and is not an exact total."),
+  ),
+});
+
 const formSchema = s.array(
   "Approval form controls; the provider serializes this array for Feishu.",
   s.looseObject("One form control value with its ID, type, and value."),
@@ -70,13 +69,16 @@ const instanceTaskFields = {
   taskId: taskIdField,
 };
 const timeFilterFields = {
-  definitionCode: approvalCodeField,
-  startTimestamp: s.nonEmptyString("The inclusive start time as a Unix timestamp in seconds."),
-  endTimestamp: s.nonEmptyString("The inclusive end time as a Unix timestamp in seconds."),
-  locale: localeField,
-  userIdType: userIdTypeField,
-  ...pageFields,
+  definitionCode: s.optional(approvalCodeField),
+  keyword: s.optional(s.string("Text used to search approval instances or tasks.")),
+  startTimestamp: s.optional(s.nonEmptyString("The inclusive start time as a Unix timestamp in seconds.")),
+  endTimestamp: s.optional(s.nonEmptyString("The inclusive end time as a Unix timestamp in seconds.")),
+  locale: s.optional(localeField),
+  userIdType: s.optional(userIdTypeField),
+  pageSize: s.optional(pageFields.pageSize),
+  pageToken: s.optional(pageFields.pageToken),
 };
+
 export function createFeishuApprovalActions(service: string): readonly ActionDefinition[] {
   return [
     defineProviderAction(service, {
@@ -233,33 +235,13 @@ export function createFeishuApprovalActions(service: string): readonly ActionDef
     defineProviderAction(service, {
       name: "list_approval_tasks",
       operationType: "read",
-      description: "List approval tasks grouped by pending, completed, initiated, or CC status.",
+      description: "List approval tasks grouped by pending, completed, or CC status.",
       requiredScopes: [feishuApprovalProviderPermissions.taskRead],
       providerPermissions: [feishuApprovalProviderPermissions.taskRead],
-      inputSchema: s.object(
-        "Filter and page approval tasks.",
-        {
-          topic: s.stringEnum("The approval task group to query.", [
-            "pending",
-            "completed",
-            "initiated",
-            "cc_unread",
-            "cc_read",
-          ]),
-          ...timeFilterFields,
-        },
-        {
-          optional: [
-            "definitionCode",
-            "startTimestamp",
-            "endTimestamp",
-            "locale",
-            "userIdType",
-            "pageSize",
-            "pageToken",
-          ],
-        },
-      ),
+      inputSchema: s.requiredObject("Filter and page approval tasks.", {
+        topic: s.stringEnum("The approval task group to query.", ["pending", "completed", "cc_unread", "cc_read"]),
+        ...timeFilterFields,
+      }),
       outputSchema: listOutputSchema,
     }),
     defineProviderAction(service, {

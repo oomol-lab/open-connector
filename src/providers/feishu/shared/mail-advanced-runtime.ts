@@ -5,6 +5,7 @@ import MailComposer from "nodemailer/lib/mail-composer/index.js";
 import { optionalBoolean, optionalNumber } from "../../../core/cast.ts";
 import { providerInputError, ProviderRequestError } from "../../provider-runtime.ts";
 import { extractFeishuMailDraftId, readFeishuMailMessagePage } from "./mail-response.ts";
+import { FeishuPagination } from "./pagination.ts";
 import { requireFeishuResponseString } from "./response.ts";
 
 interface MailAdvancedActionHandler {
@@ -122,13 +123,12 @@ async function declineReadReceipt(input: Record<string, unknown>, request: Feish
 async function getSignatureDetail(input: Record<string, unknown>, request: FeishuJsonRequest) {
   const mailboxId = optionalString(input.mailboxId) ?? "me";
   const signatureId = requiredString(input.signatureId, "signatureId");
-  const data = await request({ path: mailboxPath(mailboxId, "signatures") });
+  const data = await request({ path: mailboxPath(mailboxId, "settings", "signatures") });
   const signatures = recordArray(data.signatures ?? data.items);
   const signature = signatures.find((item) => optionalString(item.id ?? item.signature_id) === signatureId);
   if (!signature) {
     throw new ProviderRequestError(404, `signature ${signatureId} was not found in mailbox ${mailboxId}`);
   }
-
   let isSendDefault = false;
   let isReplyDefault = false;
   for (const usage of recordArray(data.usages ?? data.signature_usages)) {
@@ -226,14 +226,18 @@ async function triageMailMessages(input: Record<string, unknown>, request: Feish
   const maximum = Math.min(optionalNumber(input.maxResults) ?? 20, 400);
   const parsedToken = parseTriageToken(optionalString(input.pageToken));
   const useSearch = parsedToken?.source === "search" || wantsSearch(input);
+  if (input.folderId !== undefined && input.labelId !== undefined) {
+    throw providerInputError("folderId and labelId cannot be combined");
+  }
+  if (useSearch && (input.folderId !== undefined || input.labelId !== undefined)) {
+    throw providerInputError("search requires folder or label names instead of folderId or labelId");
+  }
   if (parsedToken && parsedToken.source !== (useSearch ? "search" : "list")) {
     throw providerInputError("pageToken source does not match the current triage filters");
   }
-
   const messages: Record<string, unknown>[] = [];
   let pageToken = parsedToken?.token;
-  const seenPageTokens = new Set<string>();
-  if (pageToken) seenPageTokens.add(pageToken);
+  const pagination = new FeishuPagination("mail", pageToken);
   let hasMore = false;
   let notice: string | null = null;
   if (useSearch) {
@@ -252,7 +256,7 @@ async function triageMailMessages(input: Record<string, unknown>, request: Feish
       }
       messages.push(...normalizeSearchItems(data.items));
       hasMore = data.has_more === true;
-      pageToken = nextTriagePageToken(hasMore, data.page_token, seenPageTokens);
+      pageToken = pagination.next(hasMore, data.page_token);
       if (!pageToken) break;
     }
     messages.splice(maximum);
@@ -280,13 +284,12 @@ async function triageMailMessages(input: Record<string, unknown>, request: Feish
       const page = readFeishuMailMessagePage(data);
       messageIds.push(...page.items);
       hasMore = page.hasMore;
-      pageToken = nextTriagePageToken(hasMore, page.pageToken, seenPageTokens);
+      pageToken = pagination.next(hasMore, page.pageToken);
       if (!pageToken) break;
     }
     messageIds.splice(maximum);
     messages.push(...(await batchGetMetadata(mailboxId, messageIds, request)));
   }
-
   return {
     messages,
     mailboxId,
@@ -543,7 +546,7 @@ function normalizeSearchItems(value: unknown) {
   return recordArray(value)
     .map((item) => {
       const metadata = recordValue(item.meta_data);
-      const messageId = optionalString(metadata.message_biz_id ?? metadata.message_id ?? item.message_id);
+      const messageId = optionalString(metadata.message_biz_id ?? metadata.message_id ?? item.message_id ?? item.id);
       return messageId
         ? {
             messageId,
@@ -588,7 +591,7 @@ function normalizeMessageMetadata(message: Record<string, unknown>) {
     threadId: optionalString(message.thread_id) ?? null,
     subject: optionalString(message.subject) ?? "",
     from: recordValue(message.head_from),
-    date: optionalNumber(message.internal_date)?.toString() ?? null,
+    date: optionalString(message.internal_date) ?? optionalNumber(message.internal_date)?.toString() ?? null,
     folderId: optionalString(message.folder_id) ?? null,
     labels: stringArray(message.label_ids),
     raw: message,
@@ -605,16 +608,6 @@ function mergeLabels(messages: Record<string, unknown>[], metadata: Record<strin
 interface TriageToken {
   readonly source: "list" | "search";
   readonly token: string;
-}
-
-function nextTriagePageToken(hasMore: boolean, value: unknown, seenPageTokens: Set<string>) {
-  if (!hasMore) return undefined;
-  const token = requireFeishuResponseString(value, "page_token");
-  if (seenPageTokens.has(token)) {
-    throw new ProviderRequestError(502, "Feishu mail pagination returned a repeated page_token");
-  }
-  seenPageTokens.add(token);
-  return token;
 }
 
 function parseTriageToken(value: string | undefined): TriageToken | undefined {

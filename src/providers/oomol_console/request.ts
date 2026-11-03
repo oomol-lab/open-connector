@@ -5,6 +5,8 @@ export interface OomolConsoleEndpoints {
   connector: string;
   insight: string;
   relationControl: string;
+  registry: string;
+  search: string;
 }
 
 export type OomolConsoleEndpointName = keyof OomolConsoleEndpoints;
@@ -20,6 +22,8 @@ export function resolveOomolConsoleEndpoints(deployEnv: string): OomolConsoleEnd
     connector: `https://connector.${domain}`,
     insight: `https://insight.${domain}`,
     relationControl: `https://relation-control.${domain}`,
+    registry: `https://registry.${domain}`,
+    search: `https://search.${domain}`,
   };
 }
 
@@ -29,6 +33,8 @@ export function normalizeOomolConsoleEndpoints(endpoints: OomolConsoleEndpoints)
     connector: normalizeEndpoint("connector", endpoints.connector),
     insight: normalizeEndpoint("insight", endpoints.insight),
     relationControl: normalizeEndpoint("relationControl", endpoints.relationControl),
+    registry: normalizeEndpoint("registry", endpoints.registry),
+    search: normalizeEndpoint("search", endpoints.search),
   };
 }
 
@@ -38,7 +44,7 @@ export async function requestOomolConsole(input: {
   path: string;
   apiKey: string;
   fetcher: typeof fetch;
-  method?: "GET" | "POST" | "PUT";
+  method?: "GET" | "POST" | "PUT" | "DELETE";
   query?: Record<string, string | number | string[] | undefined>;
   body?: unknown;
   teamId?: string;
@@ -54,7 +60,7 @@ export async function requestOomolConsoleWithResponse(input: {
   path: string;
   apiKey: string;
   fetcher: typeof fetch;
-  method?: "GET" | "POST" | "PUT";
+  method?: "GET" | "POST" | "PUT" | "DELETE";
   query?: Record<string, string | number | string[] | undefined>;
   body?: unknown;
   teamId?: string;

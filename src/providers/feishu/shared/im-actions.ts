@@ -253,19 +253,17 @@ export function createFeishuImActions(input: FeishuImActionOptions): readonly Ac
       name: "get_message_read_users",
       operationType: "read",
       description: "List users who have read a Feishu message.",
-      requiredScopes: readPermissions,
-      providerPermissions: readPermissions,
+      requiredScopes: ["im:message:readonly"],
+      providerPermissions: ["im:message:readonly"],
       inputSchema: s.object(
         "Identify the message and page through read receipts.",
         {
-          messageId: s.string("The Feishu message identifier.", { minLength: 1 }),
+          messageId: s.nonEmptyString("The Feishu message identifier."),
           userIdType: userIdTypeSchema,
           pageSize: s.positiveInteger("The number of users per page.", { maximum: 100 }),
           pageToken: s.string("The page token returned by the previous request."),
         },
-        {
-          optional: ["userIdType", "pageSize", "pageToken"],
-        },
+        { optional: ["userIdType", "pageSize", "pageToken"] },
       ),
       outputSchema: messagePageSchema,
     }),

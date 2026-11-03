@@ -63,7 +63,7 @@ export function createFeishuSheetsActionHandlers(
       result: await getSheetChangeset(request, input),
     }),
     get_sheet: async (input) => ({
-      sheet: await resolveSheet(request, input),
+      sheet: await resolveFeishuSheet(request, input),
     }),
     create_sheet: async (input) => ({
       result: await callSheetTool(
@@ -295,7 +295,7 @@ async function getSheetChangeset(
   });
 }
 
-async function resolveSheet(
+export async function resolveFeishuSheet(
   request: FeishuJsonRequest,
   input: Record<string, unknown>,
 ): Promise<Record<string, unknown>> {
@@ -730,7 +730,7 @@ function parseCellReference(value: string) {
   return { column: column - 1, row };
 }
 
-function columnIndexToLetters(index: number) {
+export function columnIndexToLetters(index: number): string {
   let value = index + 1;
   let result = "";
   while (value > 0) {

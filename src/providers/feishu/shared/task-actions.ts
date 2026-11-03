@@ -24,17 +24,12 @@ const member = s.object(
     optional: [],
   },
 );
-const tasklistMember = s.object(
-  "A Feishu tasklist member.",
-  {
-    id: s.string("A user open_id or application ID.", { minLength: 1 }),
-    type: s.stringEnum("The member type.", ["user", "app"]),
-    role: s.stringEnum("The tasklist permission granted to the member.", ["editor", "viewer"]),
-  },
-  {
-    optional: [],
-  },
-);
+const tasklistMember = s.requiredObject("A Feishu tasklist member.", {
+  id: s.nonEmptyString("A user open_id or application ID."),
+  type: s.stringEnum("The member type.", ["user", "app", "chat"]),
+  role: s.stringEnum("The tasklist permission granted to the member.", ["editor", "viewer"]),
+});
+
 const taskItem = s.looseRequiredObject(
   "A Feishu task object.",
   {},
@@ -97,19 +92,12 @@ export function createFeishuTaskActions(service: string): readonly ActionDefinit
         "Configure task filters and pagination.",
         {
           completed: s.boolean("Whether to return completed tasks."),
-          type: s.stringEnum("The caller's relationship to returned tasks.", [
-            "my_tasks",
-            "assigned",
-            "created",
-            "followed",
-          ]),
+          type: s.stringEnum("The caller's relationship to returned tasks.", ["my_tasks"]),
           pageSize,
           pageToken,
           userIdType,
         },
-        {
-          optional: ["completed", "type", "pageSize", "pageToken", "userIdType"],
-        },
+        { optional: ["completed", "type", "pageSize", "pageToken", "userIdType"] },
       ),
       outputSchema: taskPageOutput,
     }),
@@ -279,15 +267,13 @@ export function createFeishuTaskActions(service: string): readonly ActionDefinit
           operation: s.stringEnum("Whether to add or remove assignees.", ["add", "remove"]),
           assigneeIds: s.array(
             "User open_ids or application IDs to change.",
-            s.string("A member identifier.", { minLength: 1 }),
+            s.nonEmptyString("A member identifier."),
             { minItems: 1 },
           ),
-          clientToken: s.string("An idempotency token for an add operation.", { minLength: 1 }),
+          clientToken: s.nonEmptyString("An idempotency token for an add operation."),
           userIdType,
         },
-        {
-          optional: ["clientToken", "userIdType"],
-        },
+        { optional: ["clientToken", "userIdType"] },
       ),
       outputSchema: taskOutput,
     }),
@@ -304,15 +290,13 @@ export function createFeishuTaskActions(service: string): readonly ActionDefinit
           operation: s.stringEnum("Whether to add or remove followers.", ["add", "remove"]),
           followerIds: s.array(
             "User open_ids or application IDs to change.",
-            s.string("A member identifier.", { minLength: 1 }),
+            s.nonEmptyString("A member identifier."),
             { minItems: 1 },
           ),
-          clientToken: s.string("An idempotency token for an add operation.", { minLength: 1 }),
+          clientToken: s.nonEmptyString("An idempotency token for an add operation."),
           userIdType,
         },
-        {
-          optional: ["clientToken", "userIdType"],
-        },
+        { optional: ["clientToken", "userIdType"] },
       ),
       outputSchema: taskOutput,
     }),
@@ -326,32 +310,16 @@ export function createFeishuTaskActions(service: string): readonly ActionDefinit
         "Identify the task and optionally its new ancestor.",
         {
           taskGuid,
-          ancestorGuid: s.string("The ancestor task GUID. Omit this field to make the task independent.", {
-            minLength: 1,
-          }),
+          ancestorGuid: s.nonEmptyString("The ancestor task GUID. Omit this field to make the task independent."),
           userIdType,
         },
-        {
-          optional: ["ancestorGuid", "userIdType"],
-        },
+        { optional: ["ancestorGuid", "userIdType"] },
       ),
-      outputSchema: s.object(
-        "The updated task ancestry.",
-        {
-          taskGuid,
-          ancestorGuid: s.nullable(s.string("The ancestor task GUID, or null when cleared.")),
-          raw: s.looseRequiredObject(
-            "The raw Feishu response data.",
-            {},
-            {
-              optional: [],
-            },
-          ),
-        },
-        {
-          optional: [],
-        },
-      ),
+      outputSchema: s.requiredObject("The updated task ancestry.", {
+        taskGuid,
+        ancestorGuid: s.nullable(s.string("The ancestor task GUID, or null when cleared.")),
+        raw: s.looseRequiredObject("The raw Feishu response data.", {}),
+      }),
     }),
     defineProviderAction(service, {
       name: "get_related_tasks",
@@ -424,32 +392,15 @@ export function createFeishuTaskActions(service: string): readonly ActionDefinit
             "Reminder offsets in minutes relative to the task due time.",
             s.integer("A reminder offset in minutes."),
           ),
-          reminderIds: s.array("Reminder IDs to remove.", s.string("A reminder ID.", { minLength: 1 })),
+          reminderIds: s.array("Reminder IDs to remove.", s.nonEmptyString("A reminder ID.")),
           userIdType,
         },
-        {
-          optional: ["offsetsMinutes", "reminderIds", "userIdType"],
-        },
+        { optional: ["offsetsMinutes", "reminderIds", "userIdType"] },
       ),
-      outputSchema: s.object(
-        "The task and its current reminder objects.",
-        {
-          task: taskItem,
-          reminders: s.array(
-            "The current task reminders.",
-            s.looseRequiredObject(
-              "A Feishu task reminder.",
-              {},
-              {
-                optional: [],
-              },
-            ),
-          ),
-        },
-        {
-          optional: [],
-        },
-      ),
+      outputSchema: s.requiredObject("The task and its current reminder objects.", {
+        task: taskItem,
+        reminders: s.array("The current task reminders.", s.looseRequiredObject("A Feishu task reminder.", {})),
+      }),
     }),
     defineProviderAction(service, {
       name: "create_tasklist",

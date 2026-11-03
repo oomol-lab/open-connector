@@ -257,3 +257,10 @@ describe("openalex_mcp credential validator", () => {
     expect(host.calls.filter((call) => call.method === "tools/call")).toHaveLength(0);
   });
 });
+
+it("rejects an account response without a stable identity", async () => {
+  const host = fixture({ callResult: () => ({ user: { display_name: "Sam" } }) });
+  await expect(credentialValidators.oauth2!(oauthCredential(), { fetcher: host.fetcher })).rejects.toThrow(
+    "signed-in account",
+  );
+});

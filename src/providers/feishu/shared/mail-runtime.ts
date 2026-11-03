@@ -3,7 +3,8 @@ import type { FeishuJsonRequest } from "./client.ts";
 import { Buffer } from "node:buffer";
 import MailComposer from "nodemailer/lib/mail-composer/index.js";
 import { optionalBoolean, optionalNumber } from "../../../core/cast.ts";
-import { providerFetch, providerInputError, ProviderRequestError } from "../../provider-runtime.ts";
+import { providerResponseError } from "../../provider-runtime.ts";
+import { providerFetch, providerInputError } from "../../provider-runtime.ts";
 import { extractFeishuMailDraftId, readFeishuMailMessagePage } from "./mail-response.ts";
 import { downloadFeishuSource } from "./media.ts";
 
@@ -105,7 +106,7 @@ async function searchMessages(input: Record<string, unknown>, request: FeishuJso
     method: "POST",
     path: mailboxPath(input, "search"),
     query: {
-      page_size: optionalNumber(input.pageSize) ?? 50,
+      page_size: optionalNumber(input.pageSize) ?? 15,
       page_token: optionalString(input.pageToken),
     },
     body: compact({
@@ -449,8 +450,8 @@ async function downloadMailAttachments(value: unknown, fetcher: typeof fetch) {
   if (value === undefined) {
     return [];
   }
-  if (!Array.isArray(value) || value.length > 20) {
-    throw providerInputError("attachments must be an array with at most 20 items");
+  if (!Array.isArray(value) || value.length > 250) {
+    throw providerInputError("attachments must be an array with at most 250 items");
   }
   const attachments: MailAttachment[] = [];
   let totalBytes = 0;
@@ -468,7 +469,7 @@ async function downloadMailAttachments(value: unknown, fetcher: typeof fetch) {
     );
     const bytes = source.bytes;
     if (!bytes) {
-      throw new ProviderRequestError(502, "Feishu mail attachment source is not available in memory");
+      throw providerResponseError("Feishu mail attachment source is not available in memory");
     }
     totalBytes += bytes.byteLength;
     if (totalBytes > maxMailMimeBytes) {

@@ -147,6 +147,7 @@ async function searchMinutes(input: Record<string, unknown>, request: FeishuJson
     },
     body: compact({
       query: optionalString(input.query),
+      sorter: "create_time_desc",
       filter: Object.keys(filter).length > 0 ? filter : undefined,
     }),
   });

@@ -10,10 +10,10 @@ interface FeishuApprovalActionHandler {
 const taskTopics: Readonly<Record<string, string>> = {
   pending: "1",
   completed: "2",
-  initiated: "3",
   cc_unread: "17",
   cc_read: "18",
 };
+
 const addSignTypes: Readonly<Record<string, number>> = {
   before: 1,
   after: 2,
@@ -202,7 +202,7 @@ function normalizePage(data: Record<string, unknown>, itemKey: string) {
     items,
     pageToken: optionalRawString(data.page_token) ?? "",
     hasMore: data.has_more === true,
-    total: optionalNonNegativeInteger(data.count) ?? items.length,
+    total: optionalNonNegativeInteger(data.count),
   };
 }
 
@@ -212,6 +212,7 @@ function listQuery(input: Record<string, unknown>) {
     page_token: input.pageToken,
     locale: input.locale,
     definition_code: input.definitionCode,
+    keyword: input.keyword,
     start_timestamp: input.startTimestamp,
     end_timestamp: input.endTimestamp,
     user_id_type: input.userIdType,

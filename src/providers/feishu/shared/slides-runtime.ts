@@ -71,7 +71,7 @@ async function createSlidesPresentation(input: Record<string, unknown>, request:
   const slideIds: string[] = [];
   const issues: unknown[] = [];
   if (data.issues != null) {
-    issues.push(data.issues);
+    issues.push({ issues: data.issues });
   }
   let revisionId = optionalNumber(data.revision_id);
   for (const content of slides) {
@@ -207,29 +207,45 @@ async function replaceSlides(input: Record<string, unknown>, request: FeishuJson
   const presentationId = await resolvePresentationId(input, request);
   const pages = readSlideReplacements(input.pages);
   let revisionId = optionalNumber(input.revisionId) ?? -1;
-  const results: Array<{ oldSlideId: string; newSlideId: string }> = [];
+  const results: Array<{
+    oldSlideId: string;
+    newSlideId: string;
+  }> = [];
   for (const page of pages) {
-    const createData = await request({
-      method: "POST",
-      path: `/slides_ai/v1/xml_presentations/${encodeURIComponent(presentationId)}/slide`,
-      query: { revision_id: revisionId },
-      body: {
-        slide: { content: page.content },
-        before_slide_id: page.slideId,
-      },
-    });
-    const newSlideId = requireResponseString(createData.slide_id, "slide_id");
-    revisionId = optionalNumber(createData.revision_id) ?? revisionId;
-    const deleteData = await request({
-      method: "DELETE",
-      path: `/slides_ai/v1/xml_presentations/${encodeURIComponent(presentationId)}/slide`,
-      query: {
-        slide_id: page.slideId,
-        revision_id: revisionId,
-      },
-    });
-    revisionId = optionalNumber(deleteData.revision_id) ?? revisionId;
-    results.push({ oldSlideId: page.slideId, newSlideId });
+    let newSlideId: string | undefined;
+    try {
+      const createData = await request({
+        method: "POST",
+        path: `/slides_ai/v1/xml_presentations/${encodeURIComponent(presentationId)}/slide`,
+        query: { revision_id: revisionId },
+        body: {
+          slide: { content: page.content },
+          before_slide_id: page.slideId,
+        },
+      });
+      newSlideId = requireResponseString(createData.slide_id, "slide_id");
+      revisionId = optionalNumber(createData.revision_id) ?? revisionId;
+      const deleteData = await request({
+        method: "DELETE",
+        path: `/slides_ai/v1/xml_presentations/${encodeURIComponent(presentationId)}/slide`,
+        query: {
+          slide_id: page.slideId,
+          revision_id: revisionId,
+        },
+      });
+      revisionId = optionalNumber(deleteData.revision_id) ?? revisionId;
+      results.push({ oldSlideId: page.slideId, newSlideId });
+    } catch (error) {
+      if (error instanceof Error) {
+        error.message += `; Slides replacement stopped: ${JSON.stringify({
+          presentationId,
+          completed: results,
+          pending: { oldSlideId: page.slideId, newSlideId },
+          revisionId,
+        })}. The operation is not atomic; inspect the pending page before retrying.`;
+      }
+      throw error;
+    }
   }
   return {
     presentationId,

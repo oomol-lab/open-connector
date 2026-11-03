@@ -1,7 +1,10 @@
 import type { FeishuJsonRequest } from "./client.ts";
 
-import { compactObject } from "../../../core/cast.ts";
+import { compactObject, optionalString } from "../../../core/cast.ts";
+import { providerResponseError } from "../../provider-runtime.ts";
+import { providerInputError } from "../../provider-runtime.ts";
 import { ProviderRequestError } from "../../provider-runtime.ts";
+import { columnIndexToLetters, resolveFeishuSheet } from "./sheets-runtime.ts";
 
 interface FeishuSheetsAdvancedActionHandler {
   (input: Record<string, unknown>): Promise<Record<string, unknown>>;
@@ -72,13 +75,22 @@ export function createFeishuSheetsAdvancedActionHandlers(
   request: FeishuJsonRequest,
 ): Readonly<Record<string, FeishuSheetsAdvancedActionHandler>> {
   const handlers: Record<string, FeishuSheetsAdvancedActionHandler> = {
-    insert_sheet_dimension: (input) =>
-      toolResult(request, input, "write", "modify_sheet_structure", {
+    insert_sheet_dimension: (input) => {
+      const position = string(input.position, "position");
+      const parsed = parseDimensionPosition(position);
+      let anchor = position;
+      let side = "before";
+      if (input.inheritStyle === "before" && parsed.index > 0) {
+        side = "after";
+        anchor = parsed.dimension === "row" ? String(parsed.index) : columnIndexToLetters(parsed.index - 1);
+      }
+      return toolResult(request, input, "write", "modify_sheet_structure", {
         operation: "insert",
-        position: input.position,
+        position: anchor,
         count: input.count,
-        side: input.inheritStyle,
-      }),
+        side,
+      });
+    },
     freeze_sheet_dimension: (input) => {
       const count = number(input.count, "count");
       const dimension = string(input.dimension, "dimension");
@@ -92,13 +104,11 @@ export function createFeishuSheetsAdvancedActionHandlers(
       const source = parseDimensionRange(string(input.sourceRange, "sourceRange"));
       const target = parseDimensionPosition(string(input.target, "target"));
       if (source.dimension !== target.dimension) {
-        throw new ProviderRequestError(400, "sourceRange and target must use the same dimension");
+        throw providerInputError("sourceRange and target must use the same dimension");
       }
       const result = await request({
         method: "POST",
-        path: `/sheets/v3/spreadsheets/${segment(
-          string(input.spreadsheetToken, "spreadsheetToken"),
-        )}/sheets/${segment(string(input.sheetId, "sheetId"))}/move_dimension`,
+        path: `/sheets/v3/spreadsheets/${segment(string(input.spreadsheetToken, "spreadsheetToken"))}/sheets/${segment(string(input.sheetId, "sheetId"))}/move_dimension`,
         body: {
           source: {
             major_dimension: source.dimension === "row" ? "ROWS" : "COLUMNS",
@@ -125,9 +135,16 @@ export function createFeishuSheetsAdvancedActionHandlers(
       const dimension = string(input.dimension, "dimension");
       const type = string(input.type, "type");
       if (type === "pixel" && typeof input.pixels !== "number") {
-        throw new ProviderRequestError(400, "pixels is required for pixel resize");
+        throw providerInputError("pixels is required for pixel resize");
       }
-      const size = compactObject({ type, value: input.pixels });
+      if (dimension === "column" && type === "auto") {
+        throw providerInputError("auto resize is supported only for rows");
+      }
+      const parsedRange = parseDimensionRange(string(input.range, "range"));
+      if (parsedRange.dimension !== dimension) {
+        throw providerInputError("range must match the resize dimension");
+      }
+      const size = compactObject({ type, value: type === "pixel" ? input.pixels : undefined });
       return toolResult(request, input, "write", "resize_range", {
         range: normalizeDimensionRange(string(input.range, "range")),
         resize_height: dimension === "row" ? size : undefined,
@@ -150,8 +167,11 @@ export function createFeishuSheetsAdvancedActionHandlers(
         sort_conditions: input.sortConditions,
         has_header: input.hasHeader === true ? true : undefined,
       }),
-    verify_sheet_formulas: (input) =>
-      toolResult(
+    verify_sheet_formulas: (input) => {
+      if (input.sheetIds !== undefined && input.sheetNames !== undefined) {
+        throw providerInputError("sheetIds and sheetNames are mutually exclusive");
+      }
+      return toolResult(
         request,
         input,
         "read",
@@ -163,7 +183,8 @@ export function createFeishuSheetsAdvancedActionHandlers(
           max_locations_per_error: input.maxLocations,
         },
         false,
-      ),
+      );
+    },
     get_sheet_dropdown: (input) =>
       toolResult(request, input, "read", "get_cell_ranges", {
         ranges: [input.range],
@@ -247,13 +268,23 @@ function transformRange(request: FeishuJsonRequest, input: Record<string, unknow
   });
 }
 
-function manageObject(
+async function manageObject(
   request: FeishuJsonRequest,
   input: Record<string, unknown>,
   family: ObjectFamily,
   operation: "create" | "update" | "delete",
 ) {
-  const objectId = family.singular === "filter" ? input.sheetId : input.objectId;
+  let objectId = family.singular === "filter" ? input.sheetId : input.objectId;
+  if (family.singular === "filter" && operation !== "create" && objectId === undefined) {
+    const sheet = await resolveFeishuSheet(request, input);
+    objectId = optionalString(sheet.sheet_id) ?? optionalString(sheet.id);
+    if (typeof objectId !== "string" || objectId.length === 0) {
+      throw providerResponseError("resolved filter sheet has no ID");
+    }
+  }
+  if (family.singular === "filter" && input.objectId !== undefined && input.objectId !== objectId) {
+    throw providerInputError("filter objectId must equal the resolved sheetId");
+  }
   return toolResult(
     request,
     input,
@@ -297,9 +328,11 @@ async function batchDropdown(
   const operations = ranges.map((value) => {
     const split = value.lastIndexOf("!");
     if (split <= 0 || split === value.length - 1) {
-      throw new ProviderRequestError(400, "dropdown batch ranges must include a sheet prefix");
+      throw providerInputError("dropdown batch ranges must include a sheet prefix");
     }
-    const sheetName = value.slice(0, split).replaceAll("'", "");
+    const prefix = value.slice(0, split);
+    const sheetName =
+      prefix.startsWith("'") && prefix.endsWith("'") ? prefix.slice(1, -1).replaceAll("''", "'") : prefix;
     const cellRange = value.slice(split + 1);
     const dimensions = parseCellRange(cellRange);
     totalCells += dimensions.rows * dimensions.columns;
@@ -395,21 +428,25 @@ async function invokeTool(
 }
 
 function selector(input: Record<string, unknown>) {
+  if (input.sheetId !== undefined && input.sheetName !== undefined) {
+    throw providerInputError("provide exactly one of sheetId or sheetName");
+  }
   if (typeof input.sheetId === "string") {
     return { sheet_id: input.sheetId };
   }
   if (typeof input.sheetName === "string") {
     return { sheet_name: input.sheetName };
   }
-  throw new ProviderRequestError(400, "provide exactly one of sheetId or sheetName");
+  throw providerInputError("provide exactly one of sheetId or sheetName");
 }
 
 function parseDimensionRange(value: string) {
   const parts = value.split(":");
+  if (parts.length > 2) throw providerInputError(`invalid dimension range: ${value}`);
   const start = parseDimensionPosition(parts[0] ?? "");
   const end = parseDimensionPosition(parts[1] ?? parts[0] ?? "");
   if (start.dimension !== end.dimension || end.index < start.index) {
-    throw new ProviderRequestError(400, `invalid dimension range: ${value}`);
+    throw providerInputError(`invalid dimension range: ${value}`);
   }
   return { dimension: start.dimension, start: start.index, end: end.index };
 }
@@ -422,12 +459,15 @@ function parseDimensionPosition(value: string) {
     letters &&= (character >= "A" && character <= "Z") || (character >= "a" && character <= "z");
   }
   if (digits && value[0] !== "0") {
-    return { dimension: "row", index: Number(value) - 1 };
+    const position = Number(value);
+    if (!Number.isSafeInteger(position)) throw providerInputError("dimension position exceeds the safe integer range");
+    return { dimension: "row", index: position - 1 };
   }
   if (letters) {
     let index = 0;
     for (const character of value.toUpperCase()) {
       index = index * 26 + character.charCodeAt(0) - 64;
+      if (!Number.isSafeInteger(index)) throw providerInputError("dimension position exceeds the safe integer range");
     }
     return { dimension: "column", index: index - 1 };
   }
@@ -441,10 +481,11 @@ function normalizeDimensionRange(value: string) {
 
 function parseCellRange(value: string) {
   const parts = value.toUpperCase().split(":");
+  if (parts.length > 2) throw providerInputError(`invalid cell range: ${value}`);
   const start = parseCell(parts[0] ?? "");
   const end = parseCell(parts[1] ?? parts[0] ?? "");
   if (end.row < start.row || end.column < start.column) {
-    throw new ProviderRequestError(400, `invalid cell range: ${value}`);
+    throw providerInputError(`invalid cell range: ${value}`);
   }
   return {
     rows: end.row - start.row + 1,
@@ -458,13 +499,18 @@ function parseCell(value: string) {
     split += 1;
   }
   const columnLetters = value.slice(0, split);
-  const row = Number(value.slice(split));
-  if (columnLetters.length === 0 || !Number.isInteger(row) || row <= 0) {
-    throw new ProviderRequestError(400, `invalid cell reference: ${value}`);
+  const rowText = value.slice(split);
+  if ([...rowText].some((character) => character < "0" || character > "9")) {
+    throw providerInputError(`invalid cell reference: ${value}`);
+  }
+  const row = Number(rowText);
+  if (columnLetters.length === 0 || !Number.isSafeInteger(row) || row <= 0) {
+    throw providerInputError(`invalid cell reference: ${value}`);
   }
   let column = 0;
   for (const character of columnLetters) {
     column = column * 26 + character.charCodeAt(0) - 64;
+    if (!Number.isSafeInteger(column)) throw providerInputError(`invalid cell reference: ${value}`);
   }
   return { row, column };
 }

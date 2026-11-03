@@ -51,15 +51,12 @@ export function createFeishuContactActions(input: FeishuContactActionOptions): r
       inputSchema: s.object(
         "Identify the user to retrieve.",
         {
-          userId: s.string(
+          userId: s.nonEmptyString(
             "The Feishu user identifier. Omit only when using user identity to get the authenticated user.",
-            { minLength: 1 },
           ),
           userIdType: userIdTypeSchema,
         },
-        {
-          optional: ["userId", "userIdType"],
-        },
+        { optional: input.identity === "tenant" ? ["userIdType"] : ["userId", "userIdType"] },
       ),
       outputSchema: userOutputSchema,
     }),

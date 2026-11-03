@@ -30,6 +30,7 @@ import { createFeishuMailActionHandlers } from "../feishu/shared/mail-runtime.ts
 import { createFeishuMarkdownRuntimeContext } from "../feishu/shared/markdown-feishu-runtime.ts";
 import { createFeishuMarkdownActionHandlers } from "../feishu/shared/markdown-runtime.ts";
 import { createFeishuOkrActionHandlers } from "../feishu/shared/okr-runtime.ts";
+import { FeishuPagination } from "../feishu/shared/pagination.ts";
 import { createFeishuSheetsAdvancedActionHandlers } from "../feishu/shared/sheets-advanced-runtime.ts";
 import { createFeishuSheetsActionHandlers } from "../feishu/shared/sheets-runtime.ts";
 import { createFeishuSlidesActionHandlers } from "../feishu/shared/slides-runtime.ts";
@@ -447,27 +448,33 @@ async function fetchFeishuPublishedAppVersion(
   phase: FeishuRequestPhase,
   signal?: AbortSignal,
 ): Promise<Record<string, unknown>> {
-  const result = await feishuRequest({
-    method: "GET",
-    path: `/application/v6/applications/${encodeURIComponent(appId)}/app_versions`,
-    query: [
+  let pageToken: string | undefined;
+  const pagination = new FeishuPagination("app versions");
+  while (true) {
+    const query: Array<[string, string]> = [
       ["lang", "zh_cn"],
       ["page_size", "20"],
-    ],
-    accessToken,
-    fetcher,
-    phase,
-    signal,
-  });
-  const data = optionalRecord(result.data);
-  const items = Array.isArray(data?.items) ? data.items : [];
-  for (const value of items) {
-    const item = optionalRecord(value);
-    if (item && item.status === 1 && item.publish_time != null && item.publish_time !== "") {
-      return item;
-    }
+      ["order", "0"],
+    ];
+    if (pageToken) query.push(["page_token", pageToken]);
+    const result = await feishuRequest({
+      method: "GET",
+      path: `/application/v6/applications/${encodeURIComponent(appId)}/app_versions`,
+      query,
+      accessToken,
+      fetcher,
+      phase,
+      signal,
+    });
+    const data = optionalRecord(result.data);
+    const items = Array.isArray(data?.items) ? data.items : [];
+    const published = items
+      .map((item) => optionalRecord(item))
+      .find((item) => item && item.status === 1 && item.publish_time != null && item.publish_time !== "");
+    if (published) return published;
+    pageToken = pagination.next(data?.has_more, data?.page_token);
+    if (!pageToken) return {};
   }
-  return {};
 }
 
 function readPublishedTenantScopes(version: Record<string, unknown>): string[] {
@@ -485,15 +492,20 @@ function readPublishedTenantScopes(version: Record<string, unknown>): string[] {
 }
 
 function readPublishedEvents(version: Record<string, unknown>): string[] {
-  const events = Array.isArray(version.event_infos) ? version.event_infos : [];
-  const output: string[] = [];
-  for (const value of events) {
-    const event = optionalString(optionalRecord(value)?.event_type);
-    if (event) {
-      output.push(event);
-    }
-  }
-  return output;
+  const events = Array.isArray(version.events) ? version.events : [];
+  const details = Array.isArray(version.event_infos) ? version.event_infos : [];
+  return [
+    ...new Set([
+      ...events.flatMap((value) => {
+        const event = optionalString(value);
+        return event ? [event] : [];
+      }),
+      ...details.flatMap((value) => {
+        const event = optionalString(optionalRecord(value)?.event_type);
+        return event ? [event] : [];
+      }),
+    ]),
+  ];
 }
 
 async function uploadImage(
