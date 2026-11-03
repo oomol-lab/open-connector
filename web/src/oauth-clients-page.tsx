@@ -124,6 +124,11 @@ export function validateClientInput(input: ClientFormInput): string[] {
   return errors;
 }
 
+/** Renders a client creation timestamp as a locale date + time (matches console date display). */
+export function formatCreatedAt(value: string): string {
+  return new Intl.DateTimeFormat(undefined, { dateStyle: "medium", timeStyle: "medium" }).format(new Date(value));
+}
+
 /** One-time secret visibility: a new secret replaces any previously shown one. */
 export function showOneTimeSecret(
   previous: OneTimeSecretState | null,
@@ -287,7 +292,7 @@ function OAuthClientRow(props: {
         </Badge>
         <span>{t(`oauthClients.authMethodValue.${client.tokenEndpointAuthMethod}`)}</span>
         <span>
-          {t("oauthClients.created")} {client.createdAt}
+          {t("oauthClients.created")} {formatCreatedAt(client.createdAt)}
         </span>
       </div>
       <div className="oauth-client-uris">
