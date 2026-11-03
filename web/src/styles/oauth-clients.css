@@ -1,0 +1,139 @@
+.oauth-clients-panel {
+  overflow: hidden;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--card);
+  box-shadow: var(--console-shadow-sm);
+}
+
+.oauth-clients-header {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 20px;
+  padding: 14px 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.oauth-clients-header > div {
+  display: grid;
+  gap: 3px;
+}
+
+.oauth-clients-header h2,
+.oauth-clients-header p {
+  margin: 0;
+}
+
+.oauth-clients-header h2 {
+  font-size: 14px;
+  line-height: 1.35;
+}
+
+.oauth-clients-header p {
+  color: var(--muted-foreground);
+  font-size: 12px;
+}
+
+.oauth-client-row {
+  display: grid;
+  grid-template-columns: minmax(180px, 1fr) minmax(220px, 1.2fr) auto;
+  grid-template-areas:
+    "identity meta actions"
+    "uris uris uris"
+    "scopes scopes scopes";
+  align-items: center;
+  gap: 8px 12px;
+  padding: 12px 16px;
+}
+
+.oauth-client-row + .oauth-client-row {
+  border-top: 1px solid var(--border);
+}
+
+.oauth-client-identity {
+  grid-area: identity;
+  display: grid;
+  gap: 2px;
+  min-width: 0;
+}
+
+.oauth-client-identity strong {
+  overflow: hidden;
+  font-size: 14px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.oauth-client-identity code {
+  overflow: hidden;
+  color: var(--muted-foreground);
+  font-family: var(--font-mono);
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.oauth-client-meta {
+  grid-area: meta;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
+  color: var(--muted-foreground);
+  font-size: 12px;
+}
+
+.oauth-client-uris {
+  grid-area: uris;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 12px;
+}
+
+.oauth-client-uris code {
+  color: var(--muted-foreground);
+  font-family: var(--font-mono);
+  font-size: 12px;
+}
+
+.oauth-client-scopes {
+  grid-area: scopes;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.oauth-client-scopes [data-slot="badge"] {
+  font-family: var(--font-mono);
+}
+
+.oauth-client-actions {
+  grid-area: actions;
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+@media (max-width: 720px) {
+  .oauth-clients-header {
+    grid-template-columns: 1fr;
+  }
+
+  .oauth-clients-header > button {
+    justify-self: start;
+  }
+
+  .oauth-client-row {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-areas:
+      "identity actions"
+      "meta meta"
+      "uris uris"
+      "scopes scopes";
+  }
+
+  .oauth-client-actions {
+    justify-self: end;
+  }
+}

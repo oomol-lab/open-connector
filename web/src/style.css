@@ -8,6 +8,7 @@
 @import "./styles/overview.css";
 @import "./styles/providers.css";
 @import "./styles/oauth-apps.css";
+@import "./styles/oauth-clients.css";
 @import "./styles/marketplace.css";
 @import "./styles/actions.css";
 @import "./styles/runs.css";
