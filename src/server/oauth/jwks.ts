@@ -119,7 +119,16 @@ export async function verifyAccessToken(
   try {
     const { importJWK, jwtVerify } = await jose();
     const publicKey = await importJWK(key.publicKeyJwk, "ES256");
-    const { payload } = await jwtVerify(token, publicKey, { issuer, algorithms: ["ES256"] });
+    // Tokens are only minted for this server's own protected resource
+    // (`${issuer}/mcp`, what the PRM advertises): the authorize endpoint
+    // rejects any other `resource`, and issueTokens falls back to the same
+    // audience when no resource was requested. Enforcing it here keeps a token
+    // minted for a different audience from being replayed at /mcp.
+    const { payload } = await jwtVerify(token, publicKey, {
+      issuer,
+      audience: `${issuer}/mcp`,
+      algorithms: ["ES256"],
+    });
     const claims = payload as unknown as AccessTokenClaims;
     if (!claims.clientId || !claims.runtimeTokenId || typeof claims.scope !== "string") {
       return undefined;
