@@ -333,6 +333,7 @@ export class ConnectServer {
       "/api",
       createOAuthClientRoutes({
         clients: this.options.oauthClients,
+        codes: this.options.oauthCodes,
         tokens: this.options.oauthTokens,
         runtimeTokens: this.options.runtimeTokens,
       }),

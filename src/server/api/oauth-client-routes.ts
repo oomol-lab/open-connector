@@ -1,4 +1,9 @@
-import type { OAuthClientRecord, IOAuthClientStore, IOAuthTokenStore } from "../storage/oauth-as-stores.ts";
+import type {
+  OAuthClientRecord,
+  IOAuthClientStore,
+  IOAuthCodeStore,
+  IOAuthTokenStore,
+} from "../storage/oauth-as-stores.ts";
 import type { RuntimeTokenService } from "../storage/runtime-token-service.ts";
 
 import { Hono } from "hono";
@@ -31,6 +36,7 @@ export interface OAuthClientRoutesOptions {
   clients: IOAuthClientStore;
   tokens: IOAuthTokenStore;
   runtimeTokens: RuntimeTokenService;
+  codes: IOAuthCodeStore;
 }
 
 const clientRequestMaxBytes = 64 * 1024;
@@ -50,7 +56,7 @@ export function toClientSummary(record: OAuthClientRecord): OAuthClientSummary {
   };
 }
 
-export function createOAuthClientRoutes({ clients, tokens, runtimeTokens }: OAuthClientRoutesOptions): Hono {
+export function createOAuthClientRoutes({ clients, codes, tokens, runtimeTokens }: OAuthClientRoutesOptions): Hono {
   const app = new Hono();
 
   app.get("/oauth-clients", async (context) => context.json((await clients.list()).map(toClientSummary)));
@@ -136,10 +142,17 @@ export function createOAuthClientRoutes({ clients, tokens, runtimeTokens }: OAut
     // Revoking every token anchored to this client's grants is the point of
     // deletion: a removed client must not keep working access tokens.
     const runtimeTokenIds = new Set((await tokens.listByClient(clientId)).map((record) => record.runtimeTokenId));
+    // Pending authorization codes mint their backing runtime grant at consent
+    // time, before redemption — revoke those grants too, or a re-registered
+    // client could redeem a still-valid code without renewed consent.
+    for (const code of await codes.listByClient(clientId)) {
+      runtimeTokenIds.add(code.runtimeTokenId);
+    }
     for (const runtimeTokenId of runtimeTokenIds) {
       await tokens.revokeByGrant(clientId, runtimeTokenId);
       await runtimeTokens.revokeToken(runtimeTokenId);
     }
+    await codes.deleteByClient(clientId);
     await clients.delete(clientId);
     return context.json({ id: clientId, deleted: true });
   });

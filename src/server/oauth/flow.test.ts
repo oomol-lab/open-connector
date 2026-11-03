@@ -81,14 +81,17 @@ async function authorizeAndApprove(
   clientId: string,
   scope = "mcp:access offline_access",
   resource?: string,
-): Promise<URL> {
-  const { challenge } = pkcePair();
+  pair?: { verifier: string; challenge: string },
+): Promise<{ location: URL; verifier: string }> {
+  const generated = pkcePair();
+  const verifier = pair?.verifier ?? generated.verifier;
+  const codeChallenge = pair?.challenge ?? generated.challenge;
   const authorizeUrl = new URL(`${ISSUER}/oauth/mcp/authorize`);
   authorizeUrl.searchParams.set("response_type", "code");
   authorizeUrl.searchParams.set("client_id", clientId);
   authorizeUrl.searchParams.set("redirect_uri", REDIRECT);
   authorizeUrl.searchParams.set("scope", scope);
-  authorizeUrl.searchParams.set("code_challenge", challenge);
+  authorizeUrl.searchParams.set("code_challenge", codeChallenge);
   authorizeUrl.searchParams.set("code_challenge_method", "S256");
   if (resource !== undefined) {
     authorizeUrl.searchParams.set("resource", resource);
@@ -109,7 +112,7 @@ async function authorizeAndApprove(
   const location = new URL(approved.headers.get("location") ?? "");
   expect(location.searchParams.get("iss")).toBe(ISSUER);
   expect(location.searchParams.get("state")).toBe("client-state-123");
-  return location;
+  return { location, verifier };
 }
 
 async function exchangeCode(app: HonoApp, clientId: string, code: string, verifier?: string): Promise<Response> {
@@ -151,7 +154,7 @@ describe("authorization code flow", () => {
     const { app, database } = await setup();
     const { clientId } = await createManualClient(app);
     const { verifier } = pkcePair();
-    const location = await authorizeAndApprove(app, clientId, "mcp:access offline_access", `${ISSUER}/mcp`);
+    const { location } = await authorizeAndApprove(app, clientId, "mcp:access offline_access", `${ISSUER}/mcp`);
     const code = location.searchParams.get("code");
     expect(code).toBeTruthy();
 
@@ -180,7 +183,7 @@ describe("authorization code flow", () => {
     const { app } = await setup();
     const { clientId } = await setupClient(app);
     const { verifier } = pkcePair();
-    const location = await authorizeAndApprove(app, clientId);
+    const { location } = await authorizeAndApprove(app, clientId);
     const code = location.searchParams.get("code") ?? "";
 
     const badVerifier = await exchangeCode(app, clientId, code, `${verifier.slice(0, -1)}b`);
@@ -198,7 +201,7 @@ describe("authorization code flow", () => {
     const { app } = await setup();
     const { clientId } = await setupClient(app);
     const { verifier } = pkcePair();
-    const location = await authorizeAndApprove(app, clientId);
+    const { location } = await authorizeAndApprove(app, clientId);
     const code = location.searchParams.get("code") ?? "";
 
     const first = await exchangeCode(app, clientId, code, verifier);
@@ -211,7 +214,7 @@ describe("authorization code flow", () => {
     const { app } = await setup();
     const { clientId } = await setupClient(app);
     const { verifier } = pkcePair();
-    const location = await authorizeAndApprove(app, clientId);
+    const { location } = await authorizeAndApprove(app, clientId);
     const response = await app.request(`${ISSUER}/oauth/mcp/token`, {
       method: "POST",
       headers: { "content-type": "application/x-www-form-urlencoded" },
@@ -392,6 +395,29 @@ describe("admin client management", () => {
     });
     expect(mcp.status).toBe(401);
   });
+
+  it("deleting a client with an approved-but-unredeemed code kills its backing grant", async () => {
+    const { app, database } = await setup();
+    const clientId = (await setupClient(app)).clientId;
+    const pair = pkcePair();
+    const { location, verifier } = await authorizeAndApprove(app, clientId, undefined, undefined, pair);
+    // Consent approval mints a backing runtime token; the code is unredeemed.
+    expect((await database.runtimeTokenStore.list()).length).toBeGreaterThan(0);
+    const backingTokenId = (await database.oauthCodeStore.listByClient(clientId))[0]?.runtimeTokenId;
+    expect(backingTokenId).toBeTruthy();
+
+    const removed = await app.request(`${ISSUER}/api/oauth-clients/${clientId}`, {
+      method: "DELETE",
+      headers: { authorization: `Bearer ${ADMIN_TOKEN}` },
+    });
+    expect(removed.status).toBe(200);
+
+    // Revocation deletes the row: the consent-minted backing token must be gone.
+    expect(await database.runtimeTokenStore.findById(backingTokenId as string)).toBeUndefined();
+    // Redeeming the pending code must fail even for a re-registered client id.
+    const replay = await exchangeCode(app, clientId, location.searchParams.get("code") ?? "", verifier);
+    expect(replay.status).toBe(401);
+  });
 });
 
 async function setupClient(app: HonoApp): Promise<{ clientId: string }> {
@@ -400,7 +426,7 @@ async function setupClient(app: HonoApp): Promise<{ clientId: string }> {
 
 async function exchangeAndRead(app: HonoApp, clientId: string): Promise<Record<string, unknown>> {
   const { verifier } = pkcePair();
-  const location = await authorizeAndApprove(app, clientId);
+  const { location } = await authorizeAndApprove(app, clientId);
   const response = await exchangeCode(app, clientId, location.searchParams.get("code") ?? "", verifier);
   expect(response.status).toBe(200);
   return readJson(response);

@@ -594,6 +594,15 @@ class PostgresOAuthCodeStore implements IOAuthCodeStore {
     return row ? readOAuthCodeRow(row) : undefined;
   }
 
+  async listByClient(clientId: string): Promise<OAuthAuthorizationCodeRecord[]> {
+    const result = await this.pool.query("select * from oauth_authorization_codes where client_id = $1", [clientId]);
+    return result.rows.map((row) => readOAuthCodeRow(row));
+  }
+
+  async deleteByClient(clientId: string): Promise<void> {
+    await this.pool.query("delete from oauth_authorization_codes where client_id = $1", [clientId]);
+  }
+
   async deleteExpired(nowMs: number): Promise<void> {
     await this.pool.query("delete from oauth_authorization_codes where expires_at <= $1", [nowMs]);
   }

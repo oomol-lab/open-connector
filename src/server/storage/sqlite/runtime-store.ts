@@ -594,6 +594,15 @@ export class SqliteOAuthCodeStore implements IOAuthCodeStore {
     });
   }
 
+  async listByClient(clientId: string): Promise<OAuthAuthorizationCodeRecord[]> {
+    const rows = this.database.prepare("select * from oauth_authorization_codes where client_id = ?").all(clientId);
+    return rows.map((row) => readOAuthCodeRow(row));
+  }
+
+  async deleteByClient(clientId: string): Promise<void> {
+    this.database.prepare("delete from oauth_authorization_codes where client_id = ?").run(clientId);
+  }
+
   async deleteExpired(nowMs: number): Promise<void> {
     this.database.prepare("delete from oauth_authorization_codes where expires_at <= ?").run(nowMs);
   }

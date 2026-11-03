@@ -417,6 +417,18 @@ export class D1OAuthCodeStore implements IOAuthCodeStore {
     return row ? readOAuthCodeRow(row) : undefined;
   }
 
+  async listByClient(clientId: string): Promise<OAuthAuthorizationCodeRecord[]> {
+    const { results } = await this.database
+      .prepare("select * from oauth_authorization_codes where client_id = ?")
+      .bind(clientId)
+      .all<RuntimeRow>();
+    return results.map((row) => readOAuthCodeRow(row));
+  }
+
+  async deleteByClient(clientId: string): Promise<void> {
+    await this.database.prepare("delete from oauth_authorization_codes where client_id = ?").bind(clientId).run();
+  }
+
   async deleteExpired(nowMs: number): Promise<void> {
     await this.database.prepare("delete from oauth_authorization_codes where expires_at <= ?").bind(nowMs).run();
   }

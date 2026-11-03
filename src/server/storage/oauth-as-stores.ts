@@ -76,6 +76,9 @@ export interface IOAuthCodeStore {
   add(record: OAuthAuthorizationCodeRecord): Promise<void>;
   /** Atomically mark consumed and return the record; undefined when missing, expired, or already consumed. */
   consume(codeHash: string): Promise<OAuthAuthorizationCodeRecord | undefined>;
+  /** All codes registered for a client, consumed or not — client deletion revokes their backing grants. */
+  listByClient(clientId: string): Promise<OAuthAuthorizationCodeRecord[]>;
+  deleteByClient(clientId: string): Promise<void>;
   deleteExpired(nowMs: number): Promise<void>;
 }
 
