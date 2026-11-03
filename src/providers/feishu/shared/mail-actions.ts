@@ -243,9 +243,7 @@ export function createFeishuMailActions(service: string): readonly ActionDefinit
       inputSchema: s.object(
         "Compose the email.",
         { mailboxId, ...composeFields },
-        {
-          optional: ["mailboxId"],
-        },
+        { optional: ["mailboxId", ...composeOptional] },
       ),
       outputSchema: sendOutput,
     }),
@@ -412,9 +410,7 @@ function draftActions(service: string): readonly ActionDefinition[] {
       inputSchema: s.object(
         "Compose the draft.",
         { mailboxId, ...composeFields },
-        {
-          optional: ["mailboxId"],
-        },
+        { optional: ["mailboxId", "to", ...composeOptional] },
       ),
       outputSchema: draftOutput,
     }),
@@ -427,7 +423,7 @@ function draftActions(service: string): readonly ActionDefinition[] {
       inputSchema: s.object(
         "Identify and compose the replacement draft.",
         { mailboxId, draftId, ...composeFields },
-        { optional: ["mailboxId", ...composeOptional] },
+        { optional: ["mailboxId", "to", ...composeOptional] },
       ),
       outputSchema: draftOutput,
     }),

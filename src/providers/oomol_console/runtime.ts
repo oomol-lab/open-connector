@@ -204,15 +204,16 @@ export async function executeOomolConsoleAction(
       };
     }
     case "get_billing_summary": {
+      const teamId = requireTeamId(context);
       const period = createPeriod(input, deps.now?.() ?? Date.now());
       const [balance, billing, metering] = await Promise.all([
         getAllAvailableBalance(apiKey, fetcher, deps.endpoints),
-        getBillingStats(period, apiKey, fetcher, deps.endpoints, requireTeamId(context)),
-        getMeteringStats(period, apiKey, fetcher, deps.endpoints, requireTeamId(context)),
+        getBillingStats(period, apiKey, fetcher, deps.endpoints, teamId),
+        getMeteringStats(period, apiKey, fetcher, deps.endpoints, teamId),
       ]);
       return {
         scope: "team",
-        teamId: requireTeamId(context),
+        teamId,
         period,
         generalBalanceCredit: sumDecimalStrings(
           balance.items.filter((lot) => lot.serviceScope === "GENERAL").map((lot) => lot.currentCredit),
@@ -228,9 +229,10 @@ export async function executeOomolConsoleAction(
       };
     }
     case "get_usage_breakdown": {
+      const teamId = requireTeamId(context);
       const period = createPeriod(input, deps.now?.() ?? Date.now());
-      const metering = await getMeteringStats(period, apiKey, fetcher, deps.endpoints, requireTeamId(context));
-      return { scope: "team", teamId: requireTeamId(context), ...metering };
+      const metering = await getMeteringStats(period, apiKey, fetcher, deps.endpoints, teamId);
+      return { scope: "team", teamId, ...metering };
     }
     case "list_members": {
       const teamId = requireTeamId(context);

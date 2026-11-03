@@ -154,7 +154,7 @@ export const slackApplication: EventSourceDefinition<
       config.eventTypes.includes(event.type) &&
       (!Array.isArray(config.channelIds) ||
         config.channelIds.length === 0 ||
-        config.channelIds.includes(event.payload.channel!))
+        (typeof event.payload.channel === "string" && config.channelIds.includes(event.payload.channel)))
     );
   },
   resources: { triggerId: "slackbot.on_event", requests: () => [] },

@@ -43,6 +43,8 @@ export const snapshot: TriggerKeySnapshot & { readonly type: "integration" } = {
         maxItems: 100,
         uniqueItems: true,
         title: "Channel IDs",
+        description:
+          "Only events with a matching channel are delivered. A non-empty list excludes modal events, which have no channel.",
       },
       nullable: true,
     },

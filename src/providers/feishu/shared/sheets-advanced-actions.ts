@@ -283,7 +283,7 @@ export function createFeishuSheetsAdvancedActions(service: string): readonly Act
       sheetInput("Identify the object and provide replacement properties.", {
         objectId:
           family.singular === "filter"
-            ? s.nonEmptyString("The object ID; sheet filters use sheetId.")
+            ? s.optional(s.nonEmptyString("The object ID; sheet filters use sheetId."))
             : s.nonEmptyString("The object ID."),
         properties: s.looseObject("The object properties accepted by Sheet AI."),
       }),
@@ -295,7 +295,7 @@ export function createFeishuSheetsAdvancedActions(service: string): readonly Act
       sheetInput("Identify the object to delete.", {
         objectId:
           family.singular === "filter"
-            ? s.nonEmptyString("The object ID; sheet filters use sheetId.")
+            ? s.optional(s.nonEmptyString("The object ID; sheet filters use sheetId."))
             : s.nonEmptyString("The object ID."),
       }),
     );

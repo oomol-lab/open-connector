@@ -240,7 +240,9 @@ const listFileMembersContinueInputSchema = s.object(
 const listFolderMembersInputSchema = s.object(
   {
     sharedFolderId: nonEmptyString("The ID of the shared folder whose members should be listed."),
-    path: nonEmptyString("Optional folder path; provide it to include access inherited from parent shared folders."),
+    path: nonEmptyString(
+      "Optional folder path. When provided, Dropbox derives the shared folder ID from this path instead of sharedFolderId and includes inherited access.",
+    ),
     limit: s.integer({
       description: "The maximum number of users, groups, and invitees to return per page.",
       minimum: 1,

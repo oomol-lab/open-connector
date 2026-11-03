@@ -75,7 +75,8 @@ const timeFilterFields = {
   endTimestamp: s.optional(s.nonEmptyString("The inclusive end time as a Unix timestamp in seconds.")),
   locale: s.optional(localeField),
   userIdType: s.optional(userIdTypeField),
-  ...pageFields,
+  pageSize: s.optional(pageFields.pageSize),
+  pageToken: s.optional(pageFields.pageToken),
 };
 
 export function createFeishuApprovalActions(service: string): readonly ActionDefinition[] {

@@ -38,3 +38,15 @@ it("reads execution records through the public apps route with the selected team
     ),
   ).resolves.toEqual({ items: [] });
 });
+
+it("rejects billing requests without a team before making any network request", async () => {
+  let calls = 0;
+  const fetcher: typeof fetch = async () => {
+    calls++;
+    return Response.json({});
+  };
+  for (const name of ["get_billing_summary", "get_usage_breakdown"] as const) {
+    await expect(executeOomolConsoleAction(name, {}, { apiKey: "key", fetcher }, fetcher, deps)).rejects.toThrow();
+  }
+  expect(calls).toBe(0);
+});

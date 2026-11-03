@@ -459,12 +459,15 @@ function parseDimensionPosition(value: string) {
     letters &&= (character >= "A" && character <= "Z") || (character >= "a" && character <= "z");
   }
   if (digits && value[0] !== "0") {
-    return { dimension: "row", index: Number(value) - 1 };
+    const position = Number(value);
+    if (!Number.isSafeInteger(position)) throw providerInputError("dimension position exceeds the safe integer range");
+    return { dimension: "row", index: position - 1 };
   }
   if (letters) {
     let index = 0;
     for (const character of value.toUpperCase()) {
       index = index * 26 + character.charCodeAt(0) - 64;
+      if (!Number.isSafeInteger(index)) throw providerInputError("dimension position exceeds the safe integer range");
     }
     return { dimension: "column", index: index - 1 };
   }

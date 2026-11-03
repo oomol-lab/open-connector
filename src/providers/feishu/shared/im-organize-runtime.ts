@@ -2,6 +2,7 @@ import type { FeishuJsonRequest } from "./client.ts";
 
 import { optionalNumber } from "../../../core/cast.ts";
 import { providerInputError, ProviderRequestError } from "../../provider-runtime.ts";
+import { FeishuPagination } from "./pagination.ts";
 
 interface ImOrganizeActionHandler {
   (input: Record<string, unknown>): Promise<Record<string, unknown>>;
@@ -356,17 +357,18 @@ async function fetchDualPages(input: FetchDualPagesInput): Promise<DualPage> {
   const fetchAll = input.input.fetchAll === true && input.input.pageToken === undefined;
   const maxPages = optionalNumber(input.input.maxPages) ?? 20;
   let pageToken = optionalString(input.input.pageToken) ?? input.firstPageToken;
+  const pagination = new FeishuPagination("IM", pageToken);
   let hasMore = false;
   const active: Record<string, unknown>[] = [];
   const deleted: Record<string, unknown>[] = [];
   for (let page = 0; page < (fetchAll ? maxPages : 1); page++) {
-    const previousPageToken = pageToken;
     const data = await input.requestPage(pageToken);
     active.push(...recordArray(data[input.activeKey]));
     deleted.push(...recordArray(data[input.deletedKey]));
     hasMore = data.has_more === true;
     pageToken = optionalString(data.page_token);
-    if (!fetchAll || !hasMore || !pageToken || pageToken === previousPageToken) break;
+    if (hasMore && pageToken) pagination.next(true, pageToken);
+    if (!fetchAll || !hasMore || !pageToken) break;
   }
   return { active, deleted, hasMore, pageToken: pageToken ?? null };
 }

@@ -247,7 +247,7 @@ export function createFeishuSlidesActions(service: string): readonly ActionDefin
           }),
           transactionId: s.nonEmptyString("An optional concurrent-edit transaction ID."),
         },
-        { optional: ["revisionId", "transactionId"] },
+        { optional: ["presentationType", "revisionId", "transactionId"] },
       ),
       outputSchema: s.looseRequiredObject(
         "The structural Slides edit result.",
