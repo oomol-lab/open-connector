@@ -61,13 +61,17 @@ export function readRuntimeGrant(context: Context): RuntimeGrant | undefined {
 export function createLocalAuthMiddleware(options: LocalAuthOptions): MiddlewareHandler {
   const adminToken = normalizeToken(options.adminToken);
   const runtimeToken = normalizeToken(options.runtimeToken);
+  // `oauth` mode must never fall through to unauthenticated, even when the
+  // OAuth authorization server itself is disabled (fail closed).
   if (
     !adminToken &&
     !runtimeToken &&
     !options.requireRuntimeAuth &&
     !options.hasRuntimeTokens &&
     !options.resolveRuntimeToken &&
-    !options.verifyRuntimeJwt
+    !options.verifyRuntimeJwt &&
+    !options.resolveOAuthToken &&
+    options.authMode !== "oauth"
   ) {
     return async (_context, next) => {
       await next();
@@ -212,19 +216,25 @@ async function hasValidToken(context: Context, options: LocalAuthOptions, scope:
   if (scope === "runtime" && options.authMode === "none") {
     return true;
   }
-  const token = tokenForScope(options, scope);
+  // In `oauth` mode a configured static runtime token is not accepted: OAuth-only
+  // means OAuth-only, so skip straight to runtime-token resolution below.
+  const skipStaticRuntimeToken = scope === "runtime" && options.authMode === "oauth";
+  const token = skipStaticRuntimeToken ? undefined : tokenForScope(options, scope);
   if (!token) {
     if (scope === "admin") {
       return true;
     }
+    const authMode = options.authMode ?? "runtime_token";
+    const acceptsOAuth = (authMode === "oauth" || authMode === "mixed") && options.resolveOAuthToken !== undefined;
     const hasRuntimeTokens = options.hasRuntimeTokens
       ? await options.hasRuntimeTokens()
       : options.resolveRuntimeToken !== undefined;
     if (
+      authMode !== "oauth" &&
+      !acceptsOAuth &&
       !options.requireRuntimeAuth &&
       !hasRuntimeTokens &&
-      !options.verifyRuntimeJwt &&
-      options.resolveOAuthToken === undefined
+      !options.verifyRuntimeJwt
     ) {
       return true;
     }
@@ -311,7 +321,12 @@ function readAuthScope(path: string): AuthScope {
  * runtime token for them.
  */
 function isOAuthServerPath(path: string): boolean {
-  return path === "/oauth/mcp" || path.startsWith("/oauth/mcp/") || path.startsWith("/.well-known/oauth-");
+  return (
+    path === "/oauth/mcp" ||
+    path.startsWith("/oauth/mcp/") ||
+    path === "/oauth/jwks" ||
+    path.startsWith("/.well-known/oauth-")
+  );
 }
 
 function canUseAdminAuth(path: string, method: string): boolean {
