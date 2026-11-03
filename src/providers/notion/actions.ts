@@ -418,8 +418,43 @@ export const notionActions: ActionDefinition[] = [
     inputSchema: s.object(
       {
         query: s.string({ description: "The search query text." }),
-        filter: s.record(notionValue, { description: "The filter object to narrow results." }),
-        sort: s.record(notionValue, { description: "The sort object to order results." }),
+        filter: s.union(
+          [
+            s.object(
+              {
+                property: s.literal("object", { description: "The property to filter by." }),
+                value: s.stringEnum(["page", "data_source"], { description: "The object type to return." }),
+                in_trash: s.boolean({ description: "Whether to return objects in the trash." }),
+              },
+              { required: ["property", "value"], description: "Filter by object type and optionally trash status." },
+            ),
+            s.object(
+              { in_trash: s.boolean({ description: "Whether to return objects in the trash." }) },
+              { required: ["in_trash"], description: "Filter by trash status only." },
+            ),
+          ],
+          { description: "The filter object to narrow results." },
+        ),
+        sort: s.union(
+          [
+            s.object(
+              {
+                timestamp: s.literal("last_edited_time", { description: "The timestamp to sort by." }),
+                direction: s.stringEnum(["ascending", "descending"], { description: "The sort direction." }),
+              },
+              { required: ["timestamp", "direction"], description: "Sort by last edited time." },
+            ),
+            s.object(
+              { property: s.literal("relevance", { description: "The property to sort by." }) },
+              { required: ["property"], description: "Sort by relevance." },
+            ),
+          ],
+          { description: "The sort object to order results." },
+        ),
+        filterProperties: s.array(s.string({ description: "A page property name or ID." }), {
+          description:
+            "Page property names or IDs to include. Unknown properties are skipped; data source schemas are unaffected.",
+        }),
         pageSize: s.integer({
           minimum: 1,
           maximum: 100,
@@ -428,7 +463,6 @@ export const notionActions: ActionDefinition[] = [
         startCursor: s.string({ description: "The cursor for pagination." }),
       },
       {
-        required: ["query"],
         description: "The input payload for this action.",
       },
     ),

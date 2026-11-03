@@ -35,7 +35,7 @@ export const provider: ProviderDefinition = {
       label: "Internal Integration Secret",
       placeholder: "secret_...",
       description:
-        "Notion internal integration secret used with the Authorization Bearer header. Create an internal integration from the Notion integrations dashboard, then share target pages or databases with it.",
+        "Notion internal integration secret used with the Authorization Bearer header. Create an internal integration and copy its secret from the Creator dashboard, then share target pages or databases with it. Setup guide: https://developers.notion.com/guides/connections-and-tokens/internal-connections.",
     },
   ],
   homepageUrl: "https://www.notion.so",
