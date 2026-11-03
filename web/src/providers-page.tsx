@@ -124,7 +124,7 @@ interface ProviderScenarioGridProps {
 
 interface ProviderCatalogProps {
   counts: Array<{ id: ProviderStatusFilter; labelKey: string; count: number }>;
-  categoryOptions: Array<{ category: string; count: number }>;
+  categoryOptions: Array<{ category: string; displayName: string; count: number }>;
   categoryFilter: string;
   filtersActive: boolean;
   hasMoreProviders: boolean;
@@ -396,8 +396,15 @@ function ProviderBrowser(props: ProviderBrowserProps): ReactNode {
         ...(categoryFilter !== "all" && !categoryCounts.has(categoryFilter) ? [[categoryFilter, 0] as const] : []),
       ]
         .sort((left, right) => left[0].localeCompare(right[0]))
-        .map(([category, count]) => ({ category, count })),
-    [categoryCounts, categoryFilter],
+        .map(([category, count]) => ({
+          category,
+          count,
+          displayName:
+            props.data.providers.find((provider) => provider.categoryDisplayNames?.[category])?.categoryDisplayNames?.[
+              category
+            ] ?? category,
+        })),
+    [categoryCounts, categoryFilter, props.data.providers],
   );
   const scenarioCounts = useMemo(() => providerScenarioCounts(sortedProviders), [sortedProviders]);
 
@@ -881,7 +888,7 @@ function ProviderCatalog(props: ProviderCatalogProps): ReactNode {
             <SelectItem value="all">{t("providers.categories.all")}</SelectItem>
             {props.categoryOptions.map((option) => (
               <SelectItem key={option.category} value={option.category}>
-                {option.category} ({compactProviderCount(option.count)})
+                {option.displayName} ({compactProviderCount(option.count)})
               </SelectItem>
             ))}
           </SelectContent>

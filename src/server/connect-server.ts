@@ -144,7 +144,12 @@ export class ConnectServer {
 
     app.use("*", async (context, next) => {
       await next();
-      const cachePolicy = getResponseCachePolicy(context.req.method, context.req.path, context.res.status);
+      const cachePolicy = getResponseCachePolicy(
+        context.req.method,
+        context.req.path,
+        context.res.status,
+        context.req.query("locale") !== undefined,
+      );
       if (cachePolicy) {
         context.header("Cache-Control", cachePolicy.cacheControl);
         if (cachePolicy.cloudflareCdnCacheControl) {

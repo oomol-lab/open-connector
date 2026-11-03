@@ -29,19 +29,25 @@ export type ProviderAuthSetup =
       authorizationOptions?: OAuth2AuthDefinition["authorizationOptions"];
     };
 
+export interface ProviderSetupLabels {
+  apiKey: string;
+  clientId: string;
+  clientSecret: string;
+}
+
 /** Describe the inputs accepted by the existing connection and OAuth-client APIs. */
-export function describeProviderAuth(auth: ProviderAuthDefinition): ProviderAuthSetup {
+export function describeProviderAuth(auth: ProviderAuthDefinition, labels?: ProviderSetupLabels): ProviderAuthSetup {
   switch (auth.type) {
     case "no_auth":
       return { type: "no_auth" };
     case "api_key":
-      return { type: "api_key", fields: apiKeyCredentialFields(auth) };
+      return { type: "api_key", fields: apiKeyCredentialFields(auth, labels) };
     case "custom_credential":
       return { type: "custom_credential", label: auth.label, description: auth.description, fields: auth.fields };
     case "oauth2":
       return {
         type: "oauth2",
-        clientFields: oauthClientFields(auth),
+        clientFields: oauthClientFields(auth, labels),
         clientSetup: auth.clientSetup,
         scopes: auth.scopes,
         optionalScopes: auth.optionalScopes,
@@ -51,11 +57,14 @@ export function describeProviderAuth(auth: ProviderAuthDefinition): ProviderAuth
 }
 
 /** The key itself plus the provider's extra fields, in the shape credential forms and validation share. */
-export function apiKeyCredentialFields(auth: ApiKeyAuthDefinition): CredentialDefinition[] {
+export function apiKeyCredentialFields(
+  auth: ApiKeyAuthDefinition,
+  labels?: ProviderSetupLabels,
+): CredentialDefinition[] {
   return [
     {
       key: "apiKey",
-      label: auth.label ?? "API key",
+      label: auth.label ?? labels?.apiKey ?? "API key",
       inputType: "password",
       required: true,
       secret: true,
@@ -67,12 +76,15 @@ export function apiKeyCredentialFields(auth: ApiKeyAuthDefinition): CredentialDe
 }
 
 /** Client configuration fields in the same shape as provider-declared credential fields. */
-export function oauthClientFields(auth: OAuth2AuthDefinition): OAuthClientConfigFieldDefinition[] {
+export function oauthClientFields(
+  auth: OAuth2AuthDefinition,
+  labels?: ProviderSetupLabels,
+): OAuthClientConfigFieldDefinition[] {
   const fields: OAuthClientConfigFieldDefinition[] = [
-    { key: "clientId", label: "Client ID", inputType: "text", required: true, secret: false },
+    { key: "clientId", label: labels?.clientId ?? "Client ID", inputType: "text", required: true, secret: false },
     {
       key: "clientSecret",
-      label: "Client secret",
+      label: labels?.clientSecret ?? "Client secret",
       inputType: "password",
       required: auth.tokenEndpointAuthMethod !== "none",
       secret: true,

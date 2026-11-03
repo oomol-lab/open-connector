@@ -1,3 +1,4 @@
+import type { CatalogLocale } from "../../catalog-localization/localization.ts";
 import type { RuntimeActionDefinition, RuntimeProviderDefinition } from "../../catalog-store.ts";
 import type { ConnectionError } from "../../connection-error.ts";
 import type { ConnectionSummary, ManagedConnectionSummary } from "../../connection-service.ts";
@@ -9,6 +10,7 @@ import type { TriggerPermission } from "../../triggers/metadata.ts";
 import type { ProxyRunFailure } from "../proxy/proxy-runner.ts";
 import type { Context } from "hono";
 
+import { catalogSetupLabels } from "../../catalog-localization/localization.ts";
 import { optionalInteger, optionalString, optionalRecord, requiredRecord } from "../../core/cast.ts";
 import { connectionExecutionError } from "../../core/execution-error.ts";
 import { describeProviderAuth } from "../../core/provider-setup.ts";
@@ -108,7 +110,9 @@ export type RuntimeActionHttpResult =
   | { status: 200; body: RuntimeSuccessEnvelope<unknown> }
   | { status: RuntimeStatus; body: RuntimeFailureEnvelope };
 
-export function serializeRuntimeProvider(provider: RuntimeProviderDefinition): RuntimeProviderMetadata {
+export function serializeRuntimeProvider(
+  provider: RuntimeProviderDefinition & { categoryDisplayNames?: Record<string, string> },
+): RuntimeProviderMetadata {
   return {
     service: provider.service,
     displayName: provider.displayName,
@@ -116,7 +120,7 @@ export function serializeRuntimeProvider(provider: RuntimeProviderDefinition): R
     homepageUrl: provider.homepageUrl ?? null,
     categories: provider.categories.map((category) => ({
       id: category,
-      displayName: category,
+      displayName: provider.categoryDisplayNames?.[category] ?? category,
     })),
     scenario: provider.scenario,
     authTypes: provider.authTypes,
@@ -414,10 +418,11 @@ export function serializeRuntimeProviderSetup(
     OAuthClientConfigSummary,
     "configured" | "customClientAvailable" | "expectedRedirectUri" | "missingFields"
   >,
+  locale: CatalogLocale = "en",
 ): RuntimeProviderSetup {
   return {
     service: provider.service,
-    auth: provider.auth.map(describeProviderAuth),
+    auth: provider.auth.map((auth) => describeProviderAuth(auth, catalogSetupLabels[locale])),
     oauthClient: oauth
       ? {
           configured: oauth.configured,

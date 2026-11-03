@@ -88,6 +88,7 @@ export interface ProviderDefinition {
   displayName: string;
   description?: string;
   categories: string[];
+  categoryDisplayNames?: Record<string, string>;
   scenario?: ProviderScenario | "docs";
   authTypes: string[];
   auth: AuthDefinition[];
@@ -438,7 +439,13 @@ export function filterProviders(providers: ProviderDefinition[], query: string):
   const normalized = query.trim().toLowerCase();
   if (!normalized) return providers;
   return providers.filter((provider) =>
-    [provider.displayName, provider.service, provider.categories.join(" "), provider.authTypes.join(" ")]
+    [
+      provider.displayName,
+      provider.service,
+      provider.categories.join(" "),
+      Object.values(provider.categoryDisplayNames ?? {}).join(" "),
+      provider.authTypes.join(" "),
+    ]
       .join(" ")
       .toLowerCase()
       .includes(normalized),
