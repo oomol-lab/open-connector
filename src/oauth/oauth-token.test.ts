@@ -305,6 +305,27 @@ describe("OAuth token requests", () => {
     }
   });
 
+  it("stores the canonical Bearer token type whatever case the provider answers", async () => {
+    for (const [tokenType, expected] of [
+      ["bearer", "Bearer"],
+      ["BEARER", "Bearer"],
+      ["Bearer", "Bearer"],
+      [undefined, "Bearer"],
+      ["mac", "mac"],
+    ] as const) {
+      vi.stubGlobal(
+        "fetch",
+        vi.fn(async () => Response.json({ access_token: "access-token", token_type: tokenType })),
+      );
+
+      await expect(requestAuthorizationCodeToken({ ...authorizationCodeRequest })).resolves.toMatchObject({
+        accessToken: "access-token",
+        tokenType: expected,
+        metadata: { rawTokenType: tokenType },
+      });
+    }
+  });
+
   it("applies the same expires_in parsing when refreshing a token", async () => {
     const now = Date.now();
     vi.spyOn(Date, "now").mockReturnValue(now);
