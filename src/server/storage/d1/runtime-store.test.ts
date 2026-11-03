@@ -629,13 +629,20 @@ describe("D1RuntimeDatabase", () => {
       tokenHash: "access-1b",
       refreshTokenHash: "refresh-1b",
     });
-    expect(consumed).toMatchObject({ tokenHash: "access-1", clientId: "client-1", refreshTokenHash: undefined });
+    expect(consumed).toMatchObject({
+      tokenHash: "access-1",
+      clientId: "client-1",
+      refreshTokenHash: "refresh-1",
+      refreshConsumedAt: expect.any(Number),
+    });
     await expect(database.oauthTokenStore.findByAccessTokenHash("access-1b")).resolves.toMatchObject({
       tokenHash: "access-1b",
       refreshTokenHash: "refresh-1b",
     });
 
-    // The old hash is nulled: a second rotation fails and inserts nothing.
+    // The consumed row stays findable by hash (with refreshConsumedAt set)
+    // so a replayed token maps back to its grant, but a second rotation
+    // fails and inserts nothing.
     await expect(
       database.oauthTokenStore.rotateRefreshToken("refresh-1", {
         ...base,
@@ -644,6 +651,48 @@ describe("D1RuntimeDatabase", () => {
       }),
     ).resolves.toBeUndefined();
     await expect(database.oauthTokenStore.findByAccessTokenHash("access-1c")).resolves.toBeUndefined();
+  });
+
+  it("deletes fully expired tokens, including consumed refresh rows", async () => {
+    const database = new D1RuntimeDatabase(new SqliteD1Database(), { secretCodec: new AesGcmSecretCodec("saas-test") });
+    const now = Date.now();
+    await database.oauthTokenStore.add({
+      tokenHash: "gone",
+      clientId: "client-1",
+      runtimeTokenId: "grant-1",
+      scope: "mcp:access",
+      issuedAt: new Date(now - 120_000).toISOString(),
+      expiresAt: now - 60_000,
+    });
+    await database.oauthTokenStore.add({
+      tokenHash: "kept",
+      refreshTokenHash: "kept-refresh",
+      clientId: "client-1",
+      runtimeTokenId: "grant-1",
+      scope: "mcp:access offline_access",
+      issuedAt: new Date(now - 120_000).toISOString(),
+      expiresAt: now - 60_000,
+      refreshExpiresAt: now + 60_000,
+    });
+    // A consumed refresh token is swept on the same refreshExpiresAt clock:
+    // once that passes it is cleaned up like any other row.
+    await database.oauthTokenStore.add({
+      tokenHash: "consumed",
+      refreshTokenHash: "consumed-refresh",
+      clientId: "client-1",
+      runtimeTokenId: "grant-1",
+      scope: "mcp:access offline_access",
+      issuedAt: new Date(now - 120_000).toISOString(),
+      expiresAt: now - 60_000,
+      refreshExpiresAt: now - 1_000,
+      refreshConsumedAt: now - 90_000,
+    });
+    await database.oauthTokenStore.deleteExpired(now);
+    await expect(database.oauthTokenStore.findByAccessTokenHash("gone")).resolves.toBeUndefined();
+    await expect(database.oauthTokenStore.findByAccessTokenHash("kept")).resolves.toMatchObject({
+      tokenHash: "kept",
+    });
+    await expect(database.oauthTokenStore.findByAccessTokenHash("consumed")).resolves.toBeUndefined();
   });
 });
 

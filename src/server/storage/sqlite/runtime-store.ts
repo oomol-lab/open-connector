@@ -616,9 +616,9 @@ export class SqliteOAuthTokenStore implements IOAuthTokenStore {
         `
         insert into oauth_tokens (
           token_hash, refresh_token_hash, client_id, runtime_token_id, scope, resource,
-          issued_at, expires_at, refresh_expires_at, revoked_at
+          issued_at, expires_at, refresh_expires_at, revoked_at, refresh_consumed_at
         )
-        values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `,
       )
       .run(
@@ -632,6 +632,7 @@ export class SqliteOAuthTokenStore implements IOAuthTokenStore {
         record.expiresAt,
         record.refreshExpiresAt ?? null,
         record.revokedAt ?? null,
+        record.refreshConsumedAt ?? null,
       );
   }
 
@@ -651,21 +652,24 @@ export class SqliteOAuthTokenStore implements IOAuthTokenStore {
   ): Promise<OAuthAccessTokenRecord | undefined> {
     // One transaction: the successor is inserted only when the old refresh
     // token is still redeemable, and a failed insert rolls the consumption
-    // back so the old token stays redeemable.
+    // back so the old token stays redeemable. The hash is retained (only
+    // refresh_consumed_at is stamped) so a replayed token stays mapped to
+    // its grant for revocation.
     return runInTransaction(this.database, () => {
       const rows = this.database
         .prepare(
           `
           update oauth_tokens
-          set refresh_token_hash = null
+          set refresh_consumed_at = ?
           where refresh_token_hash = ?
             and revoked_at is null
+            and refresh_consumed_at is null
             and refresh_expires_at is not null
             and refresh_expires_at > ?
           returning *
         `,
         )
-        .all(oldRefreshTokenHash, Date.now());
+        .all(Date.now(), oldRefreshTokenHash, Date.now());
       const row = rows[0];
       if (!row) {
         return undefined;
@@ -832,6 +836,10 @@ function readOAuthTokenRow(row: RuntimeRow): OAuthAccessTokenRecord {
         ? undefined
         : Number(row.refresh_expires_at),
     revokedAt: row.revoked_at === null || row.revoked_at === undefined ? undefined : Number(row.revoked_at),
+    refreshConsumedAt:
+      row.refresh_consumed_at === null || row.refresh_consumed_at === undefined
+        ? undefined
+        : Number(row.refresh_consumed_at),
   };
 }
 

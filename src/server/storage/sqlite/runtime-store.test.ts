@@ -63,6 +63,7 @@ describe("SqliteRuntimeDatabase", () => {
       "0018_connection_retirement.sql",
       "0019_trigger_sources.sql",
       "0020_oauth_tables.sql",
+      "0021_oauth_refresh_replay.sql",
     ];
     expect(entries.filter((entry) => entry.message === "sqlite migration started")).toEqual(
       migrations.map((migration) => ({ fields: { migration }, message: "sqlite migration started" })),
@@ -1476,14 +1477,20 @@ describe("SqliteOAuthTokenStore", () => {
         tokenHash: "access-1b",
         refreshTokenHash: "refresh-1b",
       });
-      expect(consumed).toMatchObject({ tokenHash: "access-1", clientId: "client-1", refreshTokenHash: undefined });
+      expect(consumed).toMatchObject({
+        tokenHash: "access-1",
+        clientId: "client-1",
+        refreshTokenHash: "refresh-1",
+        refreshConsumedAt: expect.any(Number),
+      });
       expect(await database.oauthTokenStore.findByAccessTokenHash("access-1b")).toMatchObject({
         tokenHash: "access-1b",
         refreshTokenHash: "refresh-1b",
       });
 
-      // The old hash is nulled: a second rotation fails, inserts nothing, and
-      // leaves the store unchanged.
+      // The consumed row stays findable by hash (with refreshConsumedAt set)
+      // so a replayed token maps back to its grant, but a second rotation
+      // fails, inserts nothing, and leaves the store unchanged.
       expect(
         await database.oauthTokenStore.rotateRefreshToken("refresh-1", {
           ...base,
@@ -1491,7 +1498,10 @@ describe("SqliteOAuthTokenStore", () => {
           refreshTokenHash: "refresh-1c",
         }),
       ).toBeUndefined();
-      expect(await database.oauthTokenStore.findByRefreshTokenHash("refresh-1")).toBeUndefined();
+      expect(await database.oauthTokenStore.findByRefreshTokenHash("refresh-1")).toMatchObject({
+        tokenHash: "access-1",
+        refreshConsumedAt: expect.any(Number),
+      });
       expect(await database.oauthTokenStore.findByAccessTokenHash("access-1c")).toBeUndefined();
 
       // Revoked tokens are not rotatable, and no successor is inserted.
@@ -1565,9 +1575,23 @@ describe("SqliteOAuthTokenStore", () => {
         expiresAt: now - 60_000,
         refreshExpiresAt: now + 60_000,
       });
+      // A consumed refresh token is swept on the same refreshExpiresAt
+      // clock: once that passes it is cleaned up like any other row.
+      await database.oauthTokenStore.add({
+        tokenHash: "consumed",
+        refreshTokenHash: "consumed-refresh",
+        clientId: "client-1",
+        runtimeTokenId: "grant-1",
+        scope: "mcp:access offline_access",
+        issuedAt: new Date(now - 120_000).toISOString(),
+        expiresAt: now - 60_000,
+        refreshExpiresAt: now - 1_000,
+        refreshConsumedAt: now - 90_000,
+      });
       await database.oauthTokenStore.deleteExpired(now);
       expect(await database.oauthTokenStore.findByAccessTokenHash("gone")).toBeUndefined();
       expect(await database.oauthTokenStore.findByAccessTokenHash("kept")).toBeDefined();
+      expect(await database.oauthTokenStore.findByAccessTokenHash("consumed")).toBeUndefined();
     } finally {
       database.close();
     }

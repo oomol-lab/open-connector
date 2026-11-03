@@ -13,7 +13,13 @@ import { RuntimeTokenService } from "../storage/runtime-token-service.ts";
 import { SqliteRuntimeDatabase } from "../storage/sqlite/runtime-store.ts";
 import { resolveOAuthServerConfig } from "./config.ts";
 import { hashToken } from "./jwks.ts";
-import { authenticateClient, handleRevokePost, handleTokenPost, TokenError } from "./token-endpoint.ts";
+import {
+  authenticateClient,
+  handleRevokePost,
+  handleTokenPost,
+  resolveOAuthAccessToken,
+  TokenError,
+} from "./token-endpoint.ts";
 
 // Token-endpoint behavior: HTTP Basic client authentication (RFC 6749
 // section 2.3.1), single-use refresh-token rotation, and refresh tokens only
@@ -276,7 +282,7 @@ describe("client_secret_basic authentication", () => {
 
 describe("refresh token rotation", () => {
   it("makes the previous refresh token single-use and issues a working new one", async () => {
-    const { app } = await setup();
+    const { app, database } = await setup();
     const { clientId } = await createManualClient(app);
     const { verifier } = pkcePair();
     const location = await authorizeAndApprove(app, clientId);
@@ -289,14 +295,17 @@ describe("refresh token rotation", () => {
     expect(typeof refreshed.access_token).toBe("string");
     expect(refreshed.refresh_token).not.toBe(first.refresh_token);
 
-    // Replay of the consumed token: invalid_grant, even for the known client.
+    // Replay of the consumed token: invalid_grant, and the whole grant —
+    // including the successor the legitimate client holds — is revoked,
+    // because presenting a consumed token indicates theft.
     const replay = await refreshViaApp(app, clientId, String(first.refresh_token));
     expect(replay.status).toBe(400);
     expect((await readJson(replay)).error).toBe("invalid_grant");
 
-    // The rotation successor still redeems.
-    const secondResponse = await refreshViaApp(app, clientId, String(refreshed.refresh_token));
-    expect(secondResponse.status).toBe(200);
+    const successorResponse = await refreshViaApp(app, clientId, String(refreshed.refresh_token));
+    expect(successorResponse.status).toBe(400);
+    expect((await readJson(successorResponse)).error).toBe("invalid_grant");
+    expect((await database.oauthTokenStore.listByClient(clientId)).every((t) => t.revokedAt !== undefined)).toBe(true);
   });
 
   it("accepts a scope subset on refresh and rejects exceeding the granted scope", async () => {
@@ -460,5 +469,131 @@ describe("offline_access gating", () => {
         deps,
       ),
     ).rejects.toMatchObject({ code: "invalid_grant" });
+  });
+});
+
+describe("refresh replay detection", () => {
+  async function deleteClient(app: HonoApp, clientId: string): Promise<void> {
+    const response = await app.request(`${ISSUER}/api/oauth-clients/${clientId}`, {
+      method: "DELETE",
+      headers: { authorization: `Bearer ${ADMIN_TOKEN}` },
+    });
+    expect(response.status).toBe(200);
+  }
+
+  async function mcpStatus(app: HonoApp, accessToken: string): Promise<number> {
+    const response = await app.request(`${ISSUER}/mcp`, {
+      method: "POST",
+      headers: { authorization: `Bearer ${accessToken}`, "content-type": "application/json" },
+      body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "tools/list" }),
+    });
+    return response.status;
+  }
+
+  it("revokes the grant when a consumed refresh token is replayed", async () => {
+    const { app } = await setup();
+    const { clientId } = await createManualClient(app);
+    const { verifier } = pkcePair();
+    const location = await authorizeAndApprove(app, clientId);
+    const first = await exchangeCode(app, clientId, location.searchParams.get("code") ?? "", verifier);
+
+    // Rotate once: the presented token is now consumed but still findable.
+    const rotated = await refreshViaApp(app, clientId, String(first.refresh_token));
+    expect(rotated.status).toBe(200);
+    const successor = await readJson(rotated);
+    expect(await mcpStatus(app, String(successor.access_token))).not.toBe(401);
+
+    // Replay of the consumed token: invalid_grant, and the whole grant —
+    // including the successor the legitimate client holds — is revoked.
+    const replay = await refreshViaApp(app, clientId, String(first.refresh_token));
+    expect(replay.status).toBe(400);
+    expect((await readJson(replay)).error).toBe("invalid_grant");
+    expect(await mcpStatus(app, String(successor.access_token))).toBe(401);
+  });
+
+  it("revokes the grant when a consumed refresh token is replayed by another client", async () => {
+    const { app } = await setup();
+    const victim = await createManualClient(app);
+    const attacker = await createManualClient(app);
+    const { verifier } = pkcePair();
+    const location = await authorizeAndApprove(app, victim.clientId);
+    const first = await exchangeCode(app, victim.clientId, location.searchParams.get("code") ?? "", verifier);
+
+    const rotated = await refreshViaApp(app, victim.clientId, String(first.refresh_token));
+    expect(rotated.status).toBe(200);
+    const successor = await readJson(rotated);
+
+    // The attacker replays the victim's consumed token under its own client:
+    // theft either way — the victim's grant is revoked, not the attacker's.
+    const replay = await refreshViaApp(app, attacker.clientId, String(first.refresh_token));
+    expect(replay.status).toBe(400);
+    expect((await readJson(replay)).error).toBe("invalid_grant");
+    expect(await mcpStatus(app, String(successor.access_token))).toBe(401);
+  });
+
+  it("rejects tokens of a deleted client at /mcp resolution", async () => {
+    const { app, deps } = await setup();
+    const { clientId } = await createManualClient(app);
+    const { verifier } = pkcePair();
+    const location = await authorizeAndApprove(app, clientId);
+    const tokens = await handleTokenPost(
+      new URLSearchParams({
+        grant_type: "authorization_code",
+        code: location.searchParams.get("code") ?? "",
+        redirect_uri: REDIRECT,
+        client_id: clientId,
+        code_verifier: verifier,
+      }),
+      deps,
+    );
+    expect(typeof tokens.access_token).toBe("string");
+    expect(await mcpStatus(app, String(tokens.access_token))).not.toBe(401);
+
+    await deleteClient(app, clientId);
+    // The token record itself is untouched (the deletion raced the insert),
+    // but resolution refuses it because the client is gone.
+    await expect(
+      resolveOAuthAccessToken(String(tokens.access_token), {
+        config: deps.config,
+        tokens: deps.tokens,
+        keys: deps.keys,
+        clients: deps.clients,
+        runtimeTokenStore: deps.runtimeTokenStore,
+      }),
+    ).resolves.toBeUndefined();
+    expect(await mcpStatus(app, String(tokens.access_token))).toBe(401);
+  });
+
+  it("rejects refresh for a deleted client", async () => {
+    const { app, deps } = await setup();
+    const { clientId } = await createManualClient(app);
+    const { verifier } = pkcePair();
+    const location = await authorizeAndApprove(app, clientId);
+    const tokens = await handleTokenPost(
+      new URLSearchParams({
+        grant_type: "authorization_code",
+        code: location.searchParams.get("code") ?? "",
+        redirect_uri: REDIRECT,
+        client_id: clientId,
+        code_verifier: verifier,
+      }),
+      deps,
+    );
+    expect(typeof tokens.refresh_token).toBe("string");
+
+    await deleteClient(app, clientId);
+    // Client authentication runs first and rejects the unknown client; the
+    // in-grant client check in refreshGrant is defense against a client
+    // deleted between authentication and rotation.
+    await expect(
+      handleTokenPost(
+        new URLSearchParams({
+          grant_type: "refresh_token",
+          refresh_token: String(tokens.refresh_token),
+          client_id: clientId,
+        }),
+        deps,
+      ),
+    ).rejects.toMatchObject({ code: "invalid_client", status: 401 });
   });
 });

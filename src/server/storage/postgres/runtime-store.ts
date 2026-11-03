@@ -615,9 +615,9 @@ class PostgresOAuthTokenStore implements IOAuthTokenStore {
       `
         insert into oauth_tokens (
           token_hash, refresh_token_hash, client_id, runtime_token_id, scope, resource,
-          issued_at, expires_at, refresh_expires_at, revoked_at
+          issued_at, expires_at, refresh_expires_at, revoked_at, refresh_consumed_at
         )
-        values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+        values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
       `,
       [
         record.tokenHash,
@@ -630,6 +630,7 @@ class PostgresOAuthTokenStore implements IOAuthTokenStore {
         record.expiresAt,
         record.refreshExpiresAt ?? null,
         record.revokedAt ?? null,
+        record.refreshConsumedAt ?? null,
       ],
     );
   }
@@ -654,19 +655,22 @@ class PostgresOAuthTokenStore implements IOAuthTokenStore {
   ): Promise<OAuthAccessTokenRecord | undefined> {
     // One transaction: the successor is inserted only when the old refresh
     // token is still redeemable, and a failed insert rolls the consumption
-    // back so the old token stays redeemable.
+    // back so the old token stays redeemable. The hash is retained (only
+    // refresh_consumed_at is stamped) so a replayed token stays mapped to
+    // its grant for revocation.
     return runInTransaction(this.pool, async (client) => {
       const result = await client.query<RuntimeRow>(
         `
           update oauth_tokens
-          set refresh_token_hash = null
-          where refresh_token_hash = $1
+          set refresh_consumed_at = $1
+          where refresh_token_hash = $2
             and revoked_at is null
+            and refresh_consumed_at is null
             and refresh_expires_at is not null
-            and refresh_expires_at > $2
+            and refresh_expires_at > $3
           returning *
         `,
-        [oldRefreshTokenHash, Date.now()],
+        [Date.now(), oldRefreshTokenHash, Date.now()],
       );
       const row = result.rows[0];
       if (!row) {
@@ -851,6 +855,7 @@ function readOAuthTokenRow(row: RuntimeRow): OAuthAccessTokenRecord {
     expiresAt: readOptionalNumber(row, "expires_at")!,
     refreshExpiresAt: readOptionalNumber(row, "refresh_expires_at"),
     revokedAt: readOptionalNumber(row, "revoked_at"),
+    refreshConsumedAt: readOptionalNumber(row, "refresh_consumed_at"),
   };
 }
 

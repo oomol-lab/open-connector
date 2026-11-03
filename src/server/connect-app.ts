@@ -124,6 +124,7 @@ export async function createConnectApp(options: ConnectAppOptions): Promise<Conn
           config: oauthConfig,
           tokens: options.runtimeDatabase.oauthTokenStore,
           keys: options.runtimeDatabase.oauthSigningKeyStore,
+          clients: options.runtimeDatabase.oauthClientStore,
           runtimeTokenStore: options.runtimeDatabase.runtimeTokenStore,
         })
     : undefined;

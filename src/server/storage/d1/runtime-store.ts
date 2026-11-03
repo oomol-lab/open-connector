@@ -435,9 +435,9 @@ export class D1OAuthTokenStore implements IOAuthTokenStore {
         `
         insert into oauth_tokens (
           token_hash, refresh_token_hash, client_id, runtime_token_id, scope, resource,
-          issued_at, expires_at, refresh_expires_at, revoked_at
+          issued_at, expires_at, refresh_expires_at, revoked_at, refresh_consumed_at
         )
-        values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `,
       )
       .bind(
@@ -451,6 +451,7 @@ export class D1OAuthTokenStore implements IOAuthTokenStore {
         record.expiresAt,
         record.refreshExpiresAt ?? null,
         record.revokedAt ?? null,
+        record.refreshConsumedAt ?? null,
       )
       .run();
   }
@@ -478,12 +479,13 @@ export class D1OAuthTokenStore implements IOAuthTokenStore {
     // D1 batches run in a single implicit transaction but cannot branch
     // between statements, so both writes carry the same redeemability guard:
     // the successor is inserted via INSERT ... SELECT ... WHERE EXISTS only
-    // when the old refresh token is still redeemable, and the old hash is
-    // nulled by an UPDATE under the same predicate. If the old token was
-    // already consumed, revoked, or expired, both statements are no-ops, no
-    // successor row appears, and the old token is left untouched.
+    // when the old refresh token is still redeemable, and the consumption
+    // time is stamped by an UPDATE under the same predicate. If the old
+    // token was already consumed, revoked, or expired, both statements are
+    // no-ops, no successor row appears, and the old token is left untouched.
     const now = Date.now();
-    const guard = "revoked_at is null and refresh_expires_at is not null and refresh_expires_at > ?";
+    const guard =
+      "revoked_at is null and refresh_consumed_at is null and refresh_expires_at is not null and refresh_expires_at > ?";
     const results = await this.database.batch([
       this.database
         .prepare(`select * from oauth_tokens where refresh_token_hash = ? and ${guard}`)
@@ -518,8 +520,8 @@ export class D1OAuthTokenStore implements IOAuthTokenStore {
           now,
         ),
       this.database
-        .prepare(`update oauth_tokens set refresh_token_hash = null where refresh_token_hash = ? and ${guard}`)
-        .bind(oldRefreshTokenHash, now),
+        .prepare(`update oauth_tokens set refresh_consumed_at = ? where refresh_token_hash = ? and ${guard}`)
+        .bind(now, oldRefreshTokenHash, now),
     ]);
     const row = (results[0]?.results ?? [])[0];
     if (!row) {
@@ -689,6 +691,7 @@ function readOAuthTokenRow(row: RuntimeRow): OAuthAccessTokenRecord {
     expiresAt: readOptionalNumber(row, "expires_at")!,
     refreshExpiresAt: readOptionalNumber(row, "refresh_expires_at"),
     revokedAt: readOptionalNumber(row, "revoked_at"),
+    refreshConsumedAt: readOptionalNumber(row, "refresh_consumed_at"),
   };
 }
 

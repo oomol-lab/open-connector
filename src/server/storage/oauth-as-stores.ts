@@ -47,6 +47,13 @@ export interface OAuthAccessTokenRecord {
   expiresAt: number; // epoch ms
   refreshExpiresAt?: number;
   revokedAt?: number;
+  /**
+   * Set when this record's refresh token was consumed by a successful
+   * rotation; the hash is retained so the consumed record stays findable and
+   * a replayed token can be mapped back to its grant and revoked
+   * (refresh-replay detection).
+   */
+  refreshConsumedAt?: number;
 }
 
 export interface OAuthSigningKeyRecord {
@@ -77,13 +84,15 @@ export interface IOAuthTokenStore {
   findByAccessTokenHash(tokenHash: string): Promise<OAuthAccessTokenRecord | undefined>;
   findByRefreshTokenHash(tokenHash: string): Promise<OAuthAccessTokenRecord | undefined>;
   /**
-   * Atomically rotate a refresh token: only an unrevoked, unexpired refresh
-   * token whose hash is still set matches. Its hash is nulled and the
-   * successor record inserted in the same transaction, so a persistence
-   * failure rolls back and leaves the old token redeemable, and the token can
-   * never be redeemed twice. Returns the consumed record, or undefined when
-   * the hash is unknown, already consumed, revoked, expired, or lost a
-   * concurrent rotation race.
+   * Atomically rotate a refresh token: only an unrevoked, unconsumed,
+   * unexpired refresh token matches. The consumption time is recorded
+   * (`refreshConsumedAt`) and the successor record inserted in the same
+   * transaction, so a persistence failure rolls back and leaves the old
+   * token redeemable, and the token can never be redeemed twice. The hash is
+   * retained so the consumed record stays findable by hash and a replayed
+   * token can be mapped back to its grant and revoked. Returns the consumed
+   * record, or undefined when the hash is unknown, already consumed,
+   * revoked, expired, or lost a concurrent rotation race.
    */
   rotateRefreshToken(
     oldRefreshTokenHash: string,

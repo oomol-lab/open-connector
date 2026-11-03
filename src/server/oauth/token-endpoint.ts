@@ -193,6 +193,11 @@ async function exchangeAuthorizationCode(
   if (record.clientId !== client.clientId) {
     throw new TokenError("invalid_grant", "The authorization code was issued to a different client.");
   }
+  // A grant is only as valid as its client: a code that survived a racing
+  // client deletion must not mint tokens.
+  if (!(await deps.clients.get(record.clientId))) {
+    throw new TokenError("invalid_grant", "The client no longer exists.");
+  }
   if (record.redirectUri !== redirectUri) {
     throw new TokenError("invalid_grant", "redirect_uri does not match the authorization request.");
   }
@@ -233,16 +238,24 @@ async function refreshGrant(
   if (!precheck) {
     throw new TokenError("invalid_grant", "The refresh token is invalid, expired, or already used.");
   }
+  // Replay detection (RFC 6749 section 10.4): a refresh token that was
+  // already consumed by a successful rotation stays findable by hash, so a
+  // replay maps back to its grant. Presenting it again indicates theft —
+  // revoke the whole grant before rejecting.
+  if (precheck.refreshConsumedAt !== undefined) {
+    await revokeGrant(precheck, deps);
+    throw new TokenError("invalid_grant", "The refresh token is invalid, expired, or already used.");
+  }
   // Another client's live refresh token was presented: burn it and revoke
-  // the grant it anchors — presenting it elsewhere indicates theft.
+  // the grant it anchors — presenting it elsewhere indicates theft. A
+  // consumed token from another client is handled above the same way.
   if (precheck.clientId !== client.clientId) {
     await revokeGrant(precheck, deps);
     throw new TokenError("invalid_grant", "The refresh token was issued to a different client.");
   }
   // Replay detection (RFC 6749 section 10.4): a refresh token that is still
   // findable but no longer redeemable (revoked or past its refresh expiry)
-  // must not leave its grant alive. Tokens already consumed by a successful
-  // rotation have their hash nulled and cannot be mapped back to a grant.
+  // must not leave its grant alive.
   if (
     precheck.revokedAt !== undefined ||
     precheck.refreshExpiresAt === undefined ||
@@ -250,6 +263,12 @@ async function refreshGrant(
   ) {
     await revokeGrant(precheck, deps);
     throw new TokenError("invalid_grant", "The refresh token is invalid, expired, or already used.");
+  }
+  // A grant is only as valid as its client: a token that survived a racing
+  // client deletion must not mint new tokens.
+  if (!(await deps.clients.get(precheck.clientId))) {
+    await revokeGrant(precheck, deps);
+    throw new TokenError("invalid_grant", "The client no longer exists.");
   }
   // A request with an excess scope is rejected before the old token is
   // consumed, so a wrong request does not burn a redeemable token.
@@ -277,11 +296,16 @@ async function refreshGrant(
   const rotated = await deps.tokens.rotateRefreshToken(tokenHash, built.record);
   if (!rotated) {
     // The token vanished between the pre-check and the rotation (a concurrent
-    // request won the race, or it was revoked in between). Re-run the replay
-    // check: a token that is still findable but no longer redeemable must not
-    // leave its grant alive.
+    // request won the race, or it was revoked in between). A mere consumption
+    // here is a benign concurrent retry, not evidence of theft, so the grant
+    // stays alive for the winner; only a token that is revoked or past its
+    // refresh expiry must not leave its grant alive.
     const known = await deps.tokens.findByRefreshTokenHash(tokenHash);
-    if (known && known.clientId === client.clientId) {
+    if (
+      known &&
+      known.clientId === client.clientId &&
+      (known.revokedAt !== undefined || known.refreshExpiresAt === undefined || known.refreshExpiresAt <= Date.now())
+    ) {
       await revokeGrant(known, deps);
     }
     throw new TokenError("invalid_grant", "The refresh token is invalid, expired, or already used.");
@@ -381,7 +405,7 @@ async function issueTokens(deps: TokenDependencies, input: IssueTokensInput): Pr
  */
 export async function resolveOAuthAccessToken(
   token: string,
-  deps: Pick<TokenDependencies, "config" | "tokens" | "keys"> & { runtimeTokenStore: IRuntimeTokenStore },
+  deps: Pick<TokenDependencies, "config" | "tokens" | "keys" | "clients"> & { runtimeTokenStore: IRuntimeTokenStore },
 ): Promise<RuntimeGrant | undefined> {
   const verified = await verifyAccessToken(token, deps.keys, deps.config.issuer);
   if (!verified) {
@@ -389,6 +413,11 @@ export async function resolveOAuthAccessToken(
   }
   const record = await deps.tokens.findByAccessTokenHash(hashToken(token));
   if (!record || record.revokedAt !== undefined || record.expiresAt <= Date.now()) {
+    return undefined;
+  }
+  // A grant is only as valid as its client: a token that survived a racing
+  // client deletion must not resolve.
+  if (!(await deps.clients.get(record.clientId))) {
     return undefined;
   }
   if (record.clientId !== verified.claims.clientId || record.runtimeTokenId !== verified.claims.runtimeTokenId) {
