@@ -1,3 +1,4 @@
+import type { IOAuthSigningKeyStore } from "../storage/oauth-as-stores.ts";
 import type { TokenDependencies } from "./token-endpoint.ts";
 import type { Hono } from "hono";
 
@@ -319,7 +320,7 @@ describe("refresh token rotation", () => {
     const narrowed = await handleTokenPost(
       new URLSearchParams({
         grant_type: "refresh_token",
-        refresh_token: first.refresh_token ?? "",
+        refresh_token: String(first.refresh_token ?? ""),
         client_id: clientId,
         scope: "mcp:access",
       }),
@@ -340,6 +341,96 @@ describe("refresh token rotation", () => {
         deps,
       ),
     ).rejects.toMatchObject({ code: "invalid_scope" });
+
+    // The rejected request did not consume the token: it still redeems.
+    const stillRedeemable = await refreshViaApp(app, clientId, String(narrowed.refresh_token ?? ""));
+    expect(stillRedeemable.status).toBe(200);
+  });
+});
+
+describe("refresh token rotation atomicity", () => {
+  it("leaves the old refresh token redeemable when signing fails before rotation", async () => {
+    const { app, deps } = await setup();
+    const { clientId } = await createManualClient(app);
+    const { verifier } = pkcePair();
+    const location = await authorizeAndApprove(app, clientId);
+    const first = await exchangeCode(app, clientId, location.searchParams.get("code") ?? "", verifier);
+
+    const failingKeys = Object.create(deps.keys) as IOAuthSigningKeyStore;
+    failingKeys.active = () => Promise.reject(new Error("key activation failed"));
+    await expect(
+      handleTokenPost(
+        new URLSearchParams({
+          grant_type: "refresh_token",
+          refresh_token: String(first.refresh_token ?? ""),
+          client_id: clientId,
+        }),
+        { ...deps, keys: failingKeys },
+      ),
+    ).rejects.toMatchObject({ message: "key activation failed" });
+
+    // The old token was not consumed by the failed attempt: it still redeems.
+    const retry = await refreshViaApp(app, clientId, String(first.refresh_token));
+    expect(retry.status).toBe(200);
+  });
+
+  it("lets only one of two concurrent redemptions rotate the token", async () => {
+    const { app, deps } = await setup();
+    const { clientId } = await createManualClient(app);
+    const { verifier } = pkcePair();
+    const location = await authorizeAndApprove(app, clientId);
+    const first = await exchangeCode(app, clientId, location.searchParams.get("code") ?? "", verifier);
+
+    const form = () =>
+      new URLSearchParams({
+        grant_type: "refresh_token",
+        refresh_token: String(first.refresh_token),
+        client_id: clientId,
+      });
+    const [firstAttempt, secondAttempt] = await Promise.allSettled([
+      handleTokenPost(form(), deps),
+      handleTokenPost(form(), deps),
+    ]);
+
+    const settled = [firstAttempt, secondAttempt];
+    const fulfilled = settled.filter((attempt) => attempt.status === "fulfilled");
+    const rejected = settled.filter((attempt) => attempt.status === "rejected");
+    expect(fulfilled).toHaveLength(1);
+    expect(rejected).toHaveLength(1);
+    expect(rejected[0]).toMatchObject({ reason: expect.objectContaining({ code: "invalid_grant" }) });
+
+    // Exactly one successor was inserted: the original record plus one.
+    const records = await deps.tokens.listByClient(clientId);
+    expect(records).toHaveLength(2);
+
+    // The single successor still redeems.
+    const successor = fulfilled[0] as PromiseFulfilledResult<{ refresh_token?: string }>;
+    const next = await refreshViaApp(app, clientId, String(successor.value.refresh_token));
+    expect(next.status).toBe(200);
+  });
+
+  it("rejects an excess scope before consuming the refresh token", async () => {
+    const { app, deps } = await setup();
+    const { clientId } = await createManualClient(app);
+    const { verifier } = pkcePair();
+    const location = await authorizeAndApprove(app, clientId);
+    const first = await exchangeCode(app, clientId, location.searchParams.get("code") ?? "", verifier);
+
+    await expect(
+      handleTokenPost(
+        new URLSearchParams({
+          grant_type: "refresh_token",
+          refresh_token: String(first.refresh_token ?? ""),
+          client_id: clientId,
+          scope: "mcp:access offline_access extra:scope",
+        }),
+        deps,
+      ),
+    ).rejects.toMatchObject({ code: "invalid_scope" });
+
+    // The rejected request did not consume the token: it still redeems.
+    const retry = await refreshViaApp(app, clientId, String(first.refresh_token));
+    expect(retry.status).toBe(200);
   });
 });
 

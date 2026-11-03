@@ -225,43 +225,82 @@ async function refreshGrant(
     throw new TokenError("invalid_request", "refresh_token is required.");
   }
   const tokenHash = hashToken(refreshToken);
-  const record = await deps.tokens.consumeRefreshToken(tokenHash);
-  if (!record) {
-    // Replay detection (RFC 6749 section 10.4): a refresh token that is still
-    // findable but no longer redeemable (revoked or past its refresh expiry)
-    // must not leave its grant alive. Tokens already consumed by a successful
-    // rotation have their hash nulled and cannot be mapped back to a grant.
+  // Read the record before consuming anything: a request with an excess
+  // scope, or against a token that cannot redeem anyway, must not burn a
+  // redeemable token. The record found here can be stale by the time the
+  // rotation runs, so the rotated record is re-checked below.
+  const precheck = await deps.tokens.findByRefreshTokenHash(tokenHash);
+  if (!precheck) {
+    throw new TokenError("invalid_grant", "The refresh token is invalid, expired, or already used.");
+  }
+  // Another client's live refresh token was presented: burn it and revoke
+  // the grant it anchors — presenting it elsewhere indicates theft.
+  if (precheck.clientId !== client.clientId) {
+    await revokeGrant(precheck, deps);
+    throw new TokenError("invalid_grant", "The refresh token was issued to a different client.");
+  }
+  // Replay detection (RFC 6749 section 10.4): a refresh token that is still
+  // findable but no longer redeemable (revoked or past its refresh expiry)
+  // must not leave its grant alive. Tokens already consumed by a successful
+  // rotation have their hash nulled and cannot be mapped back to a grant.
+  if (
+    precheck.revokedAt !== undefined ||
+    precheck.refreshExpiresAt === undefined ||
+    precheck.refreshExpiresAt <= Date.now()
+  ) {
+    await revokeGrant(precheck, deps);
+    throw new TokenError("invalid_grant", "The refresh token is invalid, expired, or already used.");
+  }
+  // A request with an excess scope is rejected before the old token is
+  // consumed, so a wrong request does not burn a redeemable token.
+  if (exceedsGrantedScope(form.get("scope"), precheck.scope)) {
+    throw new TokenError("invalid_scope", "Requested scope exceeds the originally granted scope.");
+  }
+  // The backing runtime token must still exist; a deleted connection cannot
+  // mint new tokens.
+  const backing = await deps.runtimeTokenStore.findById(precheck.runtimeTokenId);
+  if (!backing) {
+    throw new TokenError("invalid_grant", "This connection was revoked. Authorize again.");
+  }
+  // Build and sign the successor BEFORE consuming the old token: if key
+  // activation or signing fails, the old token stays redeemable.
+  const built = await buildTokens(deps, {
+    clientId: client.clientId,
+    runtimeTokenId: precheck.runtimeTokenId,
+    scope: precheck.scope,
+    resource: precheck.resource,
+    refreshTokenTtl: remainingRefreshTtl(precheck, deps.config.refreshTokenTtlSeconds),
+  });
+  // Rotate atomically: the old hash is consumed and the successor inserted in
+  // one store operation, so a concurrent redemption or a persistence failure
+  // cannot leave the client with neither token.
+  const rotated = await deps.tokens.rotateRefreshToken(tokenHash, built.record);
+  if (!rotated) {
+    // The token vanished between the pre-check and the rotation (a concurrent
+    // request won the race, or it was revoked in between). Re-run the replay
+    // check: a token that is still findable but no longer redeemable must not
+    // leave its grant alive.
     const known = await deps.tokens.findByRefreshTokenHash(tokenHash);
     if (known && known.clientId === client.clientId) {
       await revokeGrant(known, deps);
     }
     throw new TokenError("invalid_grant", "The refresh token is invalid, expired, or already used.");
   }
-  if (record.clientId !== client.clientId) {
-    // Another client's live refresh token was presented: burn it and revoke
-    // the grant it anchors — presenting it elsewhere indicates theft.
-    await revokeGrant(record, deps);
-    throw new TokenError("invalid_grant", "The refresh token was issued to a different client.");
+  return {
+    access_token: built.accessToken,
+    token_type: "Bearer",
+    expires_in: deps.config.accessTokenTtlSeconds,
+    refresh_token: built.refreshToken,
+    scope: rotated.scope,
+  };
+}
+
+function exceedsGrantedScope(requested: string | null, granted: string): boolean {
+  if (requested === null || requested === "") {
+    return false;
   }
-  const scope = form.get("scope");
-  if (
-    scope !== null &&
-    scope !== "" &&
-    !scope.split(/\s+/).every((requested) => record.scope.split(/\s+/).includes(requested))
-  ) {
-    throw new TokenError("invalid_scope", "Requested scope exceeds the originally granted scope.");
-  }
-  const backing = await deps.runtimeTokenStore.findById(record.runtimeTokenId);
-  if (!backing) {
-    throw new TokenError("invalid_grant", "This connection was revoked. Authorize again.");
-  }
-  return issueTokens(deps, {
-    clientId: client.clientId,
-    runtimeTokenId: record.runtimeTokenId,
-    scope: record.scope,
-    resource: record.resource,
-    refreshTokenTtl: remainingRefreshTtl(record, deps.config.refreshTokenTtlSeconds),
-  });
+  const grantedScopes = granted.split(/\s+/);
+  return !requested.split(/\s+/).every((scope) => grantedScopes.includes(scope));
 }
 
 function remainingRefreshTtl(record: OAuthAccessTokenRecord, defaultTtl: number): number {
@@ -279,7 +318,18 @@ interface IssueTokensInput {
   refreshTokenTtl: number;
 }
 
-async function issueTokens(deps: TokenDependencies, input: IssueTokensInput): Promise<IssuedTokenResponse> {
+interface BuiltTokens {
+  accessToken: string;
+  refreshToken?: string;
+  record: OAuthAccessTokenRecord;
+}
+
+/**
+ * Key activation, access-token signing, and successor-record construction:
+ * everything that can fail BEFORE any store mutation. Refresh-token rotation
+ * calls this first so a signing failure cannot consume the old token.
+ */
+async function buildTokens(deps: TokenDependencies, input: IssueTokensInput): Promise<BuiltTokens> {
   const key = await deps.keys.active();
   const nowMs = Date.now();
   const accessTokenId = crypto.randomUUID();
@@ -307,13 +357,18 @@ async function issueTokens(deps: TokenDependencies, input: IssueTokensInput): Pr
     expiresAt: nowMs + deps.config.accessTokenTtlSeconds * 1000,
     refreshExpiresAt: refreshToken === undefined ? undefined : nowMs + input.refreshTokenTtl * 1000,
   };
-  await deps.tokens.add(record);
+  return { accessToken: token, refreshToken, record };
+}
+
+async function issueTokens(deps: TokenDependencies, input: IssueTokensInput): Promise<IssuedTokenResponse> {
+  const built = await buildTokens(deps, input);
+  await deps.tokens.add(built.record);
   return {
-    access_token: token,
+    access_token: built.accessToken,
     token_type: "Bearer",
     expires_in: deps.config.accessTokenTtlSeconds,
-    refresh_token: refreshToken,
-    scope: input.scope,
+    refresh_token: built.refreshToken,
+    scope: built.record.scope,
   };
 }
 
