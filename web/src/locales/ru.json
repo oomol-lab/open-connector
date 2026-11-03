@@ -37,6 +37,7 @@
     "providers": "Провайдеры",
     "marketplace": "Marketplace",
     "oauthApps": "OAuth Apps",
+    "oauthClients": "OAuth-клиенты",
     "actions": "Действия",
     "runs": "Запуски",
     "access": "API Key",
@@ -67,6 +68,9 @@
       },
       "oauthApps": {
         "title": "OAuth Apps"
+      },
+      "oauthClients": {
+        "title": "OAuth-клиенты"
       },
       "actions": {
         "title": "Действия"
@@ -448,6 +452,75 @@
       "editTitle": "Изменить OAuth App для {{name}}"
     }
   },
+  "oauthClients": {
+    "title": "OAuth-клиенты",
+    "description": "Управление клиентами, подключающимися к конечной точке MCP через OAuth 2.1.",
+    "newClient": "Новый клиент",
+    "emptyTitle": "Нет OAuth-клиентов",
+    "emptyDescription": "Зарегистрируйте клиента, чтобы MCP-клиенты могли подключаться через OAuth.",
+    "clientName": "Имя клиента",
+    "clientId": "ID клиента",
+    "registration": "Регистрация",
+    "authMethod": "Аутентификация на конечной точке токенов",
+    "redirectUris": "URI перенаправления",
+    "redirectUrisHint": "Один URI в строке. HTTPS, либо HTTP только для loopback.",
+    "scopes": "Области",
+    "created": "Создан",
+    "confidential": "Конфиденциальный",
+    "public": "Публичный",
+    "registrationType": {
+      "manual": "Вручную",
+      "dcr": "Динамическая (DCR)",
+      "cimd": "Метаданные (CIMD)"
+    },
+    "authMethodValue": {
+      "none": "Публичный (нет)",
+      "client_secret_basic": "Basic",
+      "client_secret_post": "В теле запроса"
+    },
+    "edit": "Изменить",
+    "rotateSecret": "Ротировать секрет",
+    "delete": "Удалить",
+    "save": "Сохранить",
+    "create": "Создать клиента",
+    "createDialog": {
+      "title": "Новый OAuth-клиент",
+      "description": "Зарегистрируйте клиента для авторизации OAuth 2.1."
+    },
+    "editDialog": {
+      "title": "Изменить {{name}}",
+      "description": "Обновите имя клиента, URI перенаправления и области."
+    },
+    "deleteDialog": {
+      "title": "Удалить {{name}}",
+      "description": "Все токены, выданные этому клиенту, будут отозваны. Действие необратимо.",
+      "confirm": "Удалить клиента"
+    },
+    "secret": {
+      "title": "Секрет клиента {{name}}",
+      "description": "Скопируйте этот секрет сейчас.",
+      "warning": "Секрет показывается только один раз и позже не восстанавливается.",
+      "copy": "Копировать",
+      "copied": "Скопировано",
+      "done": "Готово"
+    },
+    "toasts": {
+      "created": "Клиент создан.",
+      "updated": "Клиент обновлён.",
+      "rotated": "Секрет ротирован.",
+      "deleted": "Клиент удалён.",
+      "saveFailed": "Не удалось сохранить клиента.",
+      "rotateFailed": "Не удалось ротировать секрет.",
+      "deleteFailed": "Не удалось удалить клиента."
+    },
+    "errors": {
+      "nameRequired": "Требуется имя клиента.",
+      "redirectUriRequired": "Требуется хотя бы один URI перенаправления.",
+      "redirectUriInvalid": "URI перенаправления должны быть абсолютными HTTPS-URL, либо HTTP на loopback.",
+      "scopeInvalid": "Выбрана неподдерживаемая область.",
+      "loadFailed": "Не удалось загрузить OAuth-клиентов."
+    }
+  },
   "actions": {
     "connection": "Подключение",
     "selectConnection": "Выберите подключение",
@@ -725,7 +798,12 @@
       "urlError": "Введите полный URL HTTP или HTTPS без учётных данных, параметров запроса и фрагмента.",
       "authLabel": "Аутентификация среды",
       "tokenAuth": "Использовать Runtime Token",
+      "oauthAuth": "OAuth 2.1",
       "noAuth": "Аутентификация отключена",
+      "oauthHelp": "MCP-клиенты автоматически обнаруживают сервер авторизации OAuth 2.1. При необходимости доступна динамическая регистрация клиентов.",
+      "oauthPkceNote": "PKCE S256 обязателен, а параметр resource (URI ресурса MCP) должен передаваться в запросах authorize и token.",
+      "oauthDiscovery": "Конечные точки обнаружения OAuth 2.1",
+      "oauthCliSdkNote": "OAuth 2.1 применяется для MCP-клиентов. CLI и SDK ниже аутентифицируются с помощью Runtime Tokens.",
       "tokenHelp": "Создайте токен и замените <RUNTIME_TOKEN> в примерах. Эта страница не сохраняет токены.",
       "createToken": "Создать Runtime Token",
       "tokenDifferenceTitle": "Какой ключ нужен?",

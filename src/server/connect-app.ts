@@ -6,6 +6,7 @@ import type { RuntimeLogger, TransitFileUpload } from "../core/types.ts";
 import type { IProviderLoader } from "../providers/provider-loader.ts";
 import type { RuntimeJwtVerifier } from "./api/runtime-jwt.ts";
 import type { ITransitFileService } from "./files/transit-file-store.ts";
+import type { OAuthServerSettings } from "./oauth/settings.ts";
 import type { ISecretCodec } from "./secrets/secret-codec-core.ts";
 import type { RuntimeDatabase } from "./storage/runtime-database.ts";
 import type { Hono } from "hono";
@@ -27,6 +28,9 @@ import { TriggerRunner } from "../triggers/trigger-runner.ts";
 import { ActionRunner } from "./actions/action-runner.ts";
 import { normalizeOAuthResultOrigins } from "./api/oauth-completion-page.ts";
 import { ConnectServer } from "./connect-server.ts";
+import { protectedResourceChallenge } from "./oauth/as-metadata.ts";
+import { resolveOAuthServerConfig } from "./oauth/config.ts";
+import { resolveOAuthAccessToken } from "./oauth/token-endpoint.ts";
 import { RuntimeTokenService } from "./storage/runtime-token-service.ts";
 
 export interface ConnectAppOptions {
@@ -44,6 +48,10 @@ export interface ConnectAppOptions {
   runtimeToken?: string;
   eventVerifyToken?: string;
   requireRuntimeAuth?: boolean;
+  /** Which credentials `/mcp` + `/v1` accept; default `runtime_token` (historical behavior). */
+  authMode?: "none" | "runtime_token" | "oauth" | "mixed";
+  /** Inbound OAuth 2.1 authorization server settings; `enabled: false` (default) mounts nothing. */
+  oauth?: OAuthServerSettings;
   allowedCustomOAuth?: string[];
   verifyRuntimeJwt?: RuntimeJwtVerifier;
   actionPolicy?: ActionPolicyService;
@@ -94,6 +102,26 @@ export async function createConnectApp(options: ConnectAppOptions): Promise<Conn
   );
   const runtimeTokens = new RuntimeTokenService(options.runtimeDatabase.runtimeTokenStore, options.logger);
   const hasStoredRuntimeTokens = async (): Promise<boolean> => (await runtimeTokens.listTokens()).length > 0;
+  const oauthConfig = options.oauth?.enabled
+    ? resolveOAuthServerConfig({
+        issuer: options.oauth.issuer ?? options.publicOrigin,
+        accessTokenTtlSeconds: options.oauth.accessTokenTtlSeconds,
+        refreshTokenTtlSeconds: options.oauth.refreshTokenTtlSeconds,
+        authorizationCodeTtlSeconds: options.oauth.authorizationCodeTtlSeconds,
+        allowDynamicRegistration: options.oauth.allowDynamicRegistration,
+        allowClientIdMetadataDocuments: options.oauth.allowClientIdMetadataDocuments,
+        logger: options.logger,
+      })
+    : undefined;
+  const resolveOAuthToken = oauthConfig
+    ? (token: string) =>
+        resolveOAuthAccessToken(token, {
+          config: oauthConfig,
+          tokens: options.runtimeDatabase.oauthTokenStore,
+          keys: options.runtimeDatabase.oauthSigningKeyStore,
+          runtimeTokenStore: options.runtimeDatabase.runtimeTokenStore,
+        })
+    : undefined;
   const allowedCustomOAuth = new Set(options.allowedCustomOAuth);
   const isCustomClientConfigAllowed = (service: string): boolean =>
     allowedCustomOAuth.has("*") || allowedCustomOAuth.has(service);
@@ -189,7 +217,16 @@ export async function createConnectApp(options: ConnectAppOptions): Promise<Conn
         hasRuntimeTokens: hasStoredRuntimeTokens,
         resolveRuntimeToken: (token) => runtimeTokens.resolveToken(token),
         verifyRuntimeJwt: options.verifyRuntimeJwt,
+        authMode: options.authMode,
+        resolveOAuthToken,
+        oauthChallenge: oauthConfig ? protectedResourceChallenge(oauthConfig) : undefined,
       },
+      oauth: options.oauth,
+      oauthClients: options.runtimeDatabase.oauthClientStore,
+      oauthCodes: options.runtimeDatabase.oauthCodeStore,
+      oauthTokens: options.runtimeDatabase.oauthTokenStore,
+      oauthKeys: options.runtimeDatabase.oauthSigningKeyStore,
+      runtimeTokenStore: options.runtimeDatabase.runtimeTokenStore,
       actionPolicy: options.actionPolicy,
       logger: options.logger,
       marketplace,

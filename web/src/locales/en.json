@@ -37,6 +37,7 @@
     "providers": "Providers",
     "marketplace": "Marketplace",
     "oauthApps": "OAuth Apps",
+    "oauthClients": "OAuth Clients",
     "actions": "Actions",
     "runs": "Runs",
     "access": "API Key",
@@ -67,6 +68,9 @@
       },
       "oauthApps": {
         "title": "OAuth Apps"
+      },
+      "oauthClients": {
+        "title": "OAuth Clients"
       },
       "actions": {
         "title": "Actions"
@@ -448,6 +452,75 @@
       "editTitle": "Edit {{name}} OAuth App"
     }
   },
+  "oauthClients": {
+    "title": "OAuth Clients",
+    "description": "Manage clients that connect to the MCP endpoint with OAuth 2.1.",
+    "newClient": "New client",
+    "emptyTitle": "No OAuth clients",
+    "emptyDescription": "Register a client to let MCP clients connect with OAuth.",
+    "clientName": "Client name",
+    "clientId": "Client ID",
+    "registration": "Registration",
+    "authMethod": "Token endpoint auth",
+    "redirectUris": "Redirect URIs",
+    "redirectUrisHint": "One URI per line. HTTPS, or HTTP for loopback only.",
+    "scopes": "Scopes",
+    "created": "Created",
+    "confidential": "Confidential",
+    "public": "Public",
+    "registrationType": {
+      "manual": "Manual",
+      "dcr": "Dynamic (DCR)",
+      "cimd": "Metadata (CIMD)"
+    },
+    "authMethodValue": {
+      "none": "Public (none)",
+      "client_secret_basic": "Basic",
+      "client_secret_post": "Post body"
+    },
+    "edit": "Edit",
+    "rotateSecret": "Rotate secret",
+    "delete": "Delete",
+    "save": "Save",
+    "create": "Create client",
+    "createDialog": {
+      "title": "New OAuth client",
+      "description": "Register a client for OAuth 2.1 authorization."
+    },
+    "editDialog": {
+      "title": "Edit {{name}}",
+      "description": "Update the client name, redirect URIs, and scopes."
+    },
+    "deleteDialog": {
+      "title": "Delete {{name}}",
+      "description": "This revokes every token issued to this client and cannot be undone.",
+      "confirm": "Delete client"
+    },
+    "secret": {
+      "title": "Client secret for {{name}}",
+      "description": "Copy this secret now.",
+      "warning": "This secret is shown only once and cannot be retrieved later.",
+      "copy": "Copy",
+      "copied": "Copied",
+      "done": "Done"
+    },
+    "toasts": {
+      "created": "Client created.",
+      "updated": "Client updated.",
+      "rotated": "Secret rotated.",
+      "deleted": "Client deleted.",
+      "saveFailed": "Could not save the client.",
+      "rotateFailed": "Could not rotate the secret.",
+      "deleteFailed": "Could not delete the client."
+    },
+    "errors": {
+      "nameRequired": "Client name is required.",
+      "redirectUriRequired": "At least one redirect URI is required.",
+      "redirectUriInvalid": "Redirect URIs must be absolute HTTPS URLs, or HTTP on loopback.",
+      "scopeInvalid": "Unsupported scope selected.",
+      "loadFailed": "Could not load OAuth clients."
+    }
+  },
   "actions": {
     "connection": "Connection",
     "selectConnection": "Select a connection",
@@ -725,7 +798,12 @@
       "urlError": "Enter a full HTTP or HTTPS URL without credentials, query parameters, or a fragment.",
       "authLabel": "Runtime authentication",
       "tokenAuth": "Use a Runtime Token",
+      "oauthAuth": "OAuth 2.1",
       "noAuth": "Authentication is off",
+      "oauthHelp": "MCP clients discover the OAuth 2.1 authorization server automatically. Dynamic client registration is available if your client needs it.",
+      "oauthPkceNote": "PKCE S256 is mandatory, and the resource parameter (the MCP resource URI) must be sent on the authorize and token requests.",
+      "oauthDiscovery": "OAuth 2.1 discovery endpoints",
+      "oauthCliSdkNote": "OAuth 2.1 applies to MCP clients. The CLI and SDK below authenticate with Runtime Tokens.",
       "tokenHelp": "Create a token, then replace <RUNTIME_TOKEN> in the examples. Tokens are never stored on this page.",
       "createToken": "Create a Runtime Token",
       "tokenDifferenceTitle": "Which key do I need?",

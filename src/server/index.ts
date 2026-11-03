@@ -1,4 +1,5 @@
 import type { ConnectorRuntime, ConnectorTransitFileOptions } from "./connector-runtime.ts";
+import type { OAuthServerSettings } from "./oauth/settings.ts";
 import type { ServerType } from "@hono/node-server";
 
 import { serve } from "@hono/node-server";
@@ -76,6 +77,8 @@ async function main(): Promise<void> {
     encryptionKey: process.env.OOMOL_CONNECT_ENCRYPTION_KEY,
     adminToken: optionalEnv("OOMOL_CONNECT_ADMIN_TOKEN"),
     runtimeToken: optionalEnv("OOMOL_CONNECT_RUNTIME_TOKEN"),
+    authMode: parseAuthModeEnv(process.env.OOMOL_CONNECT_OAUTH_AUTH_MODE),
+    oauth: parseOAuthServerEnv(),
     eventVerifyToken: optionalEnv("OOMOL_CONNECT_EVENT_VERIFY_TOKEN"),
     jwt: {
       jwksUri: process.env.OOMOL_CONNECT_JWKS_URI,
@@ -218,6 +221,42 @@ function waitForShutdown(server: ServerType, runtime: ConnectorRuntime): Promise
     process.once("SIGINT", shutdown);
     process.once("SIGTERM", shutdown);
   });
+}
+
+function parseAuthModeEnv(value: string | undefined): "none" | "runtime_token" | "oauth" | "mixed" | undefined {
+  if (value === undefined || value === "") return undefined;
+  if (value === "none" || value === "runtime_token" || value === "oauth" || value === "mixed") return value;
+  throw new Error(`OOMOL_CONNECT_OAUTH_AUTH_MODE must be one of: none, runtime_token, oauth, mixed.`);
+}
+
+function parseOAuthServerEnv(): OAuthServerSettings | undefined {
+  if (!parseBooleanFlag(process.env.OOMOL_CONNECT_OAUTH_ENABLED)) {
+    return undefined;
+  }
+  return {
+    enabled: true,
+    issuer: optionalEnv("OOMOL_CONNECT_OAUTH_ISSUER"),
+    accessTokenTtlSeconds: optionalEnv("OOMOL_CONNECT_OAUTH_ACCESS_TOKEN_TTL")
+      ? readPositiveIntegerEnv("OOMOL_CONNECT_OAUTH_ACCESS_TOKEN_TTL", 3600)
+      : undefined,
+    refreshTokenTtlSeconds: optionalEnv("OOMOL_CONNECT_OAUTH_REFRESH_TOKEN_TTL")
+      ? readPositiveIntegerEnv("OOMOL_CONNECT_OAUTH_REFRESH_TOKEN_TTL", 30 * 86400)
+      : undefined,
+    authorizationCodeTtlSeconds: optionalEnv("OOMOL_CONNECT_OAUTH_CODE_TTL")
+      ? readPositiveIntegerEnv("OOMOL_CONNECT_OAUTH_CODE_TTL", 60)
+      : undefined,
+    allowDynamicRegistration: parseOptionalBooleanFlag(process.env.OOMOL_CONNECT_OAUTH_ALLOW_DCR),
+    allowClientIdMetadataDocuments: parseOptionalBooleanFlag(process.env.OOMOL_CONNECT_OAUTH_ALLOW_CIMD),
+  };
+}
+
+function parseBooleanFlag(value: string | undefined): boolean {
+  if (value === undefined || value === "") return false;
+  return value === "1" || value.toLowerCase() === "true";
+}
+
+function parseOptionalBooleanFlag(value: string | undefined): boolean | undefined {
+  return value === undefined || value === "" ? undefined : parseBooleanFlag(value);
 }
 
 function readPositiveIntegerEnv(name: string, fallback: number): number {

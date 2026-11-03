@@ -5,6 +5,7 @@ import type { IOAuthStateStore } from "../../oauth/oauth-flow-service.ts";
 import type { TriggerStore } from "../../triggers/store.ts";
 import type { ConnectionRequestStore } from "./connection-request-store.ts";
 import type { IIdempotencyStore } from "./idempotency-store.ts";
+import type { IOAuthClientStore, IOAuthCodeStore, IOAuthSigningKeyStore, IOAuthTokenStore } from "./oauth-as-stores.ts";
 import type { IRuntimePolicyStore } from "./runtime-policy-store.ts";
 import type { IRunLogStore } from "./runtime-store.ts";
 import type { IRuntimeTokenStore } from "./runtime-token-service.ts";
@@ -22,4 +23,8 @@ export interface RuntimeDatabase {
   runLogStore: IRunLogStore;
   idempotencyStore: IIdempotencyStore;
   marketplaceStore: IMarketplaceStore;
+  oauthClientStore: IOAuthClientStore;
+  oauthCodeStore: IOAuthCodeStore;
+  oauthTokenStore: IOAuthTokenStore;
+  oauthSigningKeyStore: IOAuthSigningKeyStore;
 }

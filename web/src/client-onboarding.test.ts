@@ -3,9 +3,13 @@ import {
   buildCliActionExample,
   buildCliClientSetup,
   buildMcpClientConfig,
+  buildMcpOAuthClientConfig,
+  buildOAuthDiscoveryCurl,
+  buildOAuthDiscoveryUrls,
   buildPowerShellClientSetup,
   buildSdkActionExample,
   normalizeGatewayUrl,
+  OAUTH_MCP_REQUIREMENTS,
 } from "./client-onboarding";
 
 describe("client gateway setup", () => {
@@ -55,5 +59,46 @@ describe("client gateway setup", () => {
       'gateway.execute("github.get_current_user", {}, {"connectionName":"work"})',
     );
     expect(buildSdkActionExample(url, action)).not.toContain('baseUrl: "https://connect.example.com/v1"');
+  });
+});
+
+describe("OAuth 2.1 client setup", () => {
+  const baseUrl = "https://connect.example.com/gateway";
+
+  it("derives the absolute discovery and endpoint URLs from the gateway base URL", () => {
+    expect(buildOAuthDiscoveryUrls(baseUrl)).toEqual({
+      resource: `${baseUrl}/mcp`,
+      protectedResourceMetadata: `${baseUrl}/.well-known/oauth-protected-resource/mcp`,
+      authorizationServerMetadata: `${baseUrl}/.well-known/oauth-authorization-server`,
+      registrationEndpoint: `${baseUrl}/oauth/mcp/register`,
+      authorizationEndpoint: `${baseUrl}/oauth/mcp/authorize`,
+      tokenEndpoint: `${baseUrl}/oauth/mcp/token`,
+      scopes: ["mcp:access", "offline_access"],
+    });
+  });
+
+  it("emits an MCP client configuration pointing at the OAuth 2.1 endpoints", () => {
+    const config = JSON.parse(buildMcpOAuthClientConfig(baseUrl));
+    expect(config).toEqual({
+      url: `${baseUrl}/mcp`,
+      auth: "oauth2.1",
+      protectedResourceMetadata: `${baseUrl}/.well-known/oauth-protected-resource/mcp`,
+      authorizationServerMetadata: `${baseUrl}/.well-known/oauth-authorization-server`,
+      registrationEndpoint: `${baseUrl}/oauth/mcp/register`,
+      authorizationEndpoint: `${baseUrl}/oauth/mcp/authorize`,
+      tokenEndpoint: `${baseUrl}/oauth/mcp/token`,
+      scopes: ["mcp:access", "offline_access"],
+    });
+  });
+
+  it("quotes the discovery documents for curl", () => {
+    const curl = buildOAuthDiscoveryCurl(baseUrl);
+    expect(curl).toContain(`curl -fsSL '${baseUrl}/.well-known/oauth-protected-resource/mcp'`);
+    expect(curl).toContain(`curl -fsSL '${baseUrl}/.well-known/oauth-authorization-server'`);
+  });
+
+  it("requires PKCE S256 and the resource parameter", () => {
+    expect(OAUTH_MCP_REQUIREMENTS.some((line) => line.includes("PKCE S256"))).toBe(true);
+    expect(OAUTH_MCP_REQUIREMENTS.some((line) => line.includes("resource parameter"))).toBe(true);
   });
 });

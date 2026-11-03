@@ -37,6 +37,7 @@
     "providers": "服務提供者",
     "marketplace": "Marketplace",
     "oauthApps": "OAuth Apps",
+    "oauthClients": "OAuth 用戶端",
     "actions": "動作",
     "runs": "執行記錄",
     "access": "API 金鑰",
@@ -67,6 +68,9 @@
       },
       "oauthApps": {
         "title": "OAuth Apps"
+      },
+      "oauthClients": {
+        "title": "OAuth 用戶端"
       },
       "actions": {
         "title": "動作"
@@ -448,6 +452,75 @@
       "editTitle": "編輯 {{name}} OAuth App"
     }
   },
+  "oauthClients": {
+    "title": "OAuth 用戶端",
+    "description": "管理透過 OAuth 2.1 連線 MCP 端點的用戶端。",
+    "newClient": "新增用戶端",
+    "emptyTitle": "沒有 OAuth 用戶端",
+    "emptyDescription": "註冊一個用戶端，讓 MCP 用戶端透過 OAuth 連線。",
+    "clientName": "用戶端名稱",
+    "clientId": "用戶端 ID",
+    "registration": "註冊方式",
+    "authMethod": "權杖端點驗證",
+    "redirectUris": "重新導向 URI",
+    "redirectUrisHint": "每行一個 URI。使用 HTTPS，或僅限環回位址的 HTTP。",
+    "scopes": "範圍",
+    "created": "建立於",
+    "confidential": "機密",
+    "public": "公開",
+    "registrationType": {
+      "manual": "手動",
+      "dcr": "動態 (DCR)",
+      "cimd": "中繼資料 (CIMD)"
+    },
+    "authMethodValue": {
+      "none": "公開（無）",
+      "client_secret_basic": "Basic",
+      "client_secret_post": "請求主體"
+    },
+    "edit": "編輯",
+    "rotateSecret": "輪換密鑰",
+    "delete": "刪除",
+    "save": "儲存",
+    "create": "建立用戶端",
+    "createDialog": {
+      "title": "新增 OAuth 用戶端",
+      "description": "註冊用於 OAuth 2.1 授權的用戶端。"
+    },
+    "editDialog": {
+      "title": "編輯 {{name}}",
+      "description": "更新用戶端名稱、重新導向 URI 和範圍。"
+    },
+    "deleteDialog": {
+      "title": "刪除 {{name}}",
+      "description": "將撤銷該用戶端的所有權杖，且無法復原。",
+      "confirm": "刪除用戶端"
+    },
+    "secret": {
+      "title": "{{name}} 的用戶端密鑰",
+      "description": "請立即複製此密鑰。",
+      "warning": "此密鑰僅顯示一次，之後無法再取得。",
+      "copy": "複製",
+      "copied": "已複製",
+      "done": "完成"
+    },
+    "toasts": {
+      "created": "用戶端已建立。",
+      "updated": "用戶端已更新。",
+      "rotated": "密鑰已輪換。",
+      "deleted": "用戶端已刪除。",
+      "saveFailed": "無法儲存用戶端。",
+      "rotateFailed": "無法輪換密鑰。",
+      "deleteFailed": "無法刪除用戶端。"
+    },
+    "errors": {
+      "nameRequired": "用戶端名稱為必填欄位。",
+      "redirectUriRequired": "至少需要一個重新導向 URI。",
+      "redirectUriInvalid": "重新導向 URI 必須是絕對 HTTPS 位址，或環回位址的 HTTP。",
+      "scopeInvalid": "選取了不支援的範圍。",
+      "loadFailed": "無法載入 OAuth 用戶端。"
+    }
+  },
   "actions": {
     "connection": "連線",
     "selectConnection": "選擇連線",
@@ -725,7 +798,12 @@
       "urlError": "請輸入完整的 HTTP 或 HTTPS 地址，不包含帳號密碼、查詢參數或片段。",
       "authLabel": "執行階段驗證",
       "tokenAuth": "使用 Runtime Token",
+      "oauthAuth": "OAuth 2.1",
       "noAuth": "尚未啟用驗證",
+      "oauthHelp": "MCP 用戶端會自動探索 OAuth 2.1 授權伺服器。如果用戶端需要，可以使用動態用戶端註冊。",
+      "oauthPkceNote": "PKCE S256 為必要項，並且在 authorize 與 token 請求中必須傳送 resource 參數（即 MCP 資源 URI）。",
+      "oauthDiscovery": "OAuth 2.1 探索端點",
+      "oauthCliSdkNote": "OAuth 2.1 適用於 MCP 用戶端。下方的 CLI 和 SDK 使用 Runtime Token 進行驗證。",
       "tokenHelp": "建立 Token 後，替換程式碼中的 <RUNTIME_TOKEN>。此頁面不會儲存 Token。",
       "createToken": "建立 Runtime Token",
       "tokenDifferenceTitle": "這裡應該使用哪一種 Key？",

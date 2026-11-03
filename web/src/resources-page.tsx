@@ -19,6 +19,8 @@ import { Link } from "react-router";
 import {
   buildCliClientSetup,
   buildMcpClientConfig,
+  buildMcpOAuthClientConfig,
+  buildOAuthDiscoveryCurl,
   buildPowerShellClientSetup,
   buildSdkClientSetup,
   normalizeGatewayUrl,
@@ -49,14 +51,17 @@ interface DocCardProps {
 }
 
 type ClientMethod = "mcp" | "cli" | "sdk";
+type AuthMode = "token" | "none" | "oauth";
 
 export function ResourcesPage(props: ResourcesPageProps): ReactNode {
   const t = useTranslate();
   const [method, setMethod] = useState<ClientMethod>("mcp");
-  const [authenticated, setAuthenticated] = useState(true);
+  const [authMode, setAuthMode] = useState<AuthMode>("token");
   const [platform, setPlatform] = useState("unix");
   const baseUrl = normalizeGatewayUrl(props.gatewayUrl);
   const exampleUrl = baseUrl ?? "https://connect.example.com";
+  const oauthSelected = authMode === "oauth";
+  const authenticated = authMode !== "none";
   const sdkCode = [
     buildSdkClientSetup(exampleUrl, authenticated),
     "",
@@ -118,17 +123,18 @@ export function ResourcesPage(props: ResourcesPageProps): ReactNode {
             <Label>{t("resources.onboarding.authLabel")}</Label>
             <ToggleGroup
               type="single"
-              value={authenticated ? "token" : "none"}
+              value={authMode}
               onValueChange={(value) => {
-                if (value) setAuthenticated(value === "token");
+                if (value) setAuthMode(value as AuthMode);
               }}
               aria-label={t("resources.onboarding.authLabel")}
             >
               <ToggleGroupItem value="token">{t("resources.onboarding.tokenAuth")}</ToggleGroupItem>
+              <ToggleGroupItem value="oauth">{t("resources.onboarding.oauthAuth")}</ToggleGroupItem>
               <ToggleGroupItem value="none">{t("resources.onboarding.noAuth")}</ToggleGroupItem>
             </ToggleGroup>
-            <p>{t("resources.onboarding.tokenHelp")}</p>
-            {authenticated ? (
+            <p>{t(oauthSelected ? "resources.onboarding.oauthHelp" : "resources.onboarding.tokenHelp")}</p>
+            {authMode === "token" ? (
               <Button asChild variant="outline" size="sm">
                 <Link to="/access" target="_blank">
                   <KeyRound size={14} aria-hidden="true" />
@@ -180,6 +186,7 @@ export function ResourcesPage(props: ResourcesPageProps): ReactNode {
                 <li>{t("resources.onboarding.mcpExecute")}</li>
               </ol>
               <code className="onboarding-endpoint">{exampleUrl}/mcp</code>
+              {oauthSelected ? <p className="onboarding-run-help">{t("resources.onboarding.oauthPkceNote")}</p> : null}
               <a
                 href="https://github.com/oomol-lab/open-connector/blob/main/docs/runtime-api.md#mcp"
                 target="_blank"
@@ -190,11 +197,26 @@ export function ResourcesPage(props: ResourcesPageProps): ReactNode {
               </a>
             </div>
             <div className="onboarding-snippets">
-              <CodeBlock
-                title={t("resources.onboarding.configure")}
-                code={buildMcpClientConfig(exampleUrl, authenticated)}
-                disabled={!baseUrl}
-              />
+              {oauthSelected ? (
+                <>
+                  <CodeBlock
+                    title={t("resources.onboarding.configure")}
+                    code={buildMcpOAuthClientConfig(exampleUrl)}
+                    disabled={!baseUrl}
+                  />
+                  <CodeBlock
+                    title={t("resources.onboarding.oauthDiscovery")}
+                    code={buildOAuthDiscoveryCurl(exampleUrl)}
+                    disabled={!baseUrl}
+                  />
+                </>
+              ) : (
+                <CodeBlock
+                  title={t("resources.onboarding.configure")}
+                  code={buildMcpClientConfig(exampleUrl, authenticated)}
+                  disabled={!baseUrl}
+                />
+              )}
               <CodeBlock
                 title={t("resources.onboarding.firstAction")}
                 code={JSON.stringify({ actionId: "hackernews.get_top_stories", input: {} }, null, 2)}
@@ -207,6 +229,9 @@ export function ResourcesPage(props: ResourcesPageProps): ReactNode {
               <Badge>oo CLI</Badge>
               <h4>{t("resources.onboarding.cliTitle")}</h4>
               <p>{t("resources.onboarding.cliHelp")}</p>
+              {oauthSelected ? (
+                <p className="onboarding-run-help">{t("resources.onboarding.oauthCliSdkNote")}</p>
+              ) : null}
               <ol>
                 <li>{t("resources.onboarding.cliInstall")}</li>
                 <li>{t("resources.onboarding.cliConfigure")}</li>
@@ -264,6 +289,9 @@ export function ResourcesPage(props: ResourcesPageProps): ReactNode {
               <Badge>TypeScript</Badge>
               <h4>{t("resources.onboarding.sdkTitle")}</h4>
               <p>{t("resources.onboarding.sdkHelp")}</p>
+              {oauthSelected ? (
+                <p className="onboarding-run-help">{t("resources.onboarding.oauthCliSdkNote")}</p>
+              ) : null}
               <ol>
                 <li>{t("resources.onboarding.sdkInstall")}</li>
                 <li>{t("resources.onboarding.sdkConfigure")}</li>

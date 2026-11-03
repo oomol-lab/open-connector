@@ -49,6 +49,14 @@ through runtime options to admit, delay or deny each upstream HTTP attempt.
 | `OOMOL_CONNECT_CATALOG_SCHEMA_CACHE_FILES`  | `64`                      | Provider files whose action schemas stay cached when lazy schemas are on.                                                                                                   |
 | `OOMOL_CONNECT_OAUTH_CLOSE_DELAY_SECONDS`   | `5`                       | Seconds the OAuth completion page waits before closing its window. `0` closes it as soon as it loads.                                                                       |
 | `OOMOL_CONNECT_OAUTH_RESULT_ORIGINS`        | unset                     | Comma-separated exact origins a provider-refusal callback page may `postMessage` its result to (its opener). `*` is refused.                                                |
+| `OOMOL_CONNECT_OAUTH_ENABLED`               | `false`                   | Mounts the Node MCP OAuth 2.1 authorization server endpoints (`/.well-known/oauth-*`, `/oauth/*`) and enables OAuth access-token acceptance on `/v1` and `/mcp`.            |
+| `OOMOL_CONNECT_OAUTH_AUTH_MODE`             | `runtime_token`           | Which credentials the runtime scope accepts: `none`, `runtime_token`, `oauth`, or `mixed`. `mixed` accepts both persistent runtime tokens and OAuth 2.1 access tokens.      |
+| `OOMOL_CONNECT_OAUTH_ISSUER`                | public origin             | AS issuer URL (RFC 8414 `issuer`) published in the authorization-server metadata. Defaults to the public origin.                                                            |
+| `OOMOL_CONNECT_OAUTH_ACCESS_TOKEN_TTL`      | `3600`                    | OAuth access token lifetime in seconds.                                                                                                                                     |
+| `OOMOL_CONNECT_OAUTH_REFRESH_TOKEN_TTL`     | `2592000`                 | OAuth refresh token lifetime in seconds.                                                                                                                                    |
+| `OOMOL_CONNECT_OAUTH_CODE_TTL`              | `60`                      | OAuth authorization code lifetime in seconds.                                                                                                                               |
+| `OOMOL_CONNECT_OAUTH_ALLOW_DCR`             | `true`                    | Exposes `POST /oauth/mcp/register` for OAuth 2.1 Dynamic Client Registration (RFC 7591).                                                                                    |
+| `OOMOL_CONNECT_OAUTH_ALLOW_CIMD`            | `true`                    | Accepts CIMD (Client Id Metadata Document) `client_id` values for OAuth client registration.                                                                                |
 
 Example:
 

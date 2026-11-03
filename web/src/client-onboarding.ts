@@ -35,6 +35,64 @@ export function buildMcpClientConfig(baseUrl: string, authenticated: boolean): s
   return JSON.stringify({ mcpServers: { "open-connector": server } }, null, 2);
 }
 
+export interface OAuthDiscoveryUrls {
+  /** The MCP resource URI; also the RFC 8707 `resource` parameter value. */
+  resource: string;
+  protectedResourceMetadata: string;
+  authorizationServerMetadata: string;
+  registrationEndpoint: string;
+  authorizationEndpoint: string;
+  tokenEndpoint: string;
+  scopes: string[];
+}
+
+/** OAuth 2.1 grant requirements from the MCP spec; protocol constants, not UI copy. */
+export const OAUTH_MCP_REQUIREMENTS: readonly string[] = [
+  "PKCE S256 is mandatory; the plain method is rejected.",
+  "Send the resource parameter (the MCP resource URI) on the authorize and token requests.",
+];
+
+/** Absolute discovery and endpoint URLs the MCP spec requires OAuth 2.1 clients to use. */
+export function buildOAuthDiscoveryUrls(baseUrl: string): OAuthDiscoveryUrls {
+  return {
+    resource: `${baseUrl}/mcp`,
+    protectedResourceMetadata: `${baseUrl}/.well-known/oauth-protected-resource/mcp`,
+    authorizationServerMetadata: `${baseUrl}/.well-known/oauth-authorization-server`,
+    registrationEndpoint: `${baseUrl}/oauth/mcp/register`,
+    authorizationEndpoint: `${baseUrl}/oauth/mcp/authorize`,
+    tokenEndpoint: `${baseUrl}/oauth/mcp/token`,
+    scopes: ["mcp:access", "offline_access"],
+  };
+}
+
+/** MCP client configuration pointing at the OAuth 2.1 endpoints, same JSON style as buildMcpClientConfig. */
+export function buildMcpOAuthClientConfig(baseUrl: string): string {
+  const urls = buildOAuthDiscoveryUrls(baseUrl);
+  return JSON.stringify(
+    {
+      url: urls.resource,
+      auth: "oauth2.1",
+      protectedResourceMetadata: urls.protectedResourceMetadata,
+      authorizationServerMetadata: urls.authorizationServerMetadata,
+      registrationEndpoint: urls.registrationEndpoint,
+      authorizationEndpoint: urls.authorizationEndpoint,
+      tokenEndpoint: urls.tokenEndpoint,
+      scopes: urls.scopes,
+    },
+    null,
+    2,
+  );
+}
+
+/** Curl examples for fetching the discovery documents. */
+export function buildOAuthDiscoveryCurl(baseUrl: string): string {
+  const urls = buildOAuthDiscoveryUrls(baseUrl);
+  return [
+    `curl -fsSL ${shellSingleQuote(urls.protectedResourceMetadata)}`,
+    `curl -fsSL ${shellSingleQuote(urls.authorizationServerMetadata)}`,
+  ].join("\n");
+}
+
 /** Environment configuration takes precedence over both saved CLI targets and hosted OOMOL keys. */
 export function buildCliClientSetup(baseUrl: string, authenticated: boolean): string {
   return [

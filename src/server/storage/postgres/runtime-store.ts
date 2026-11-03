@@ -16,6 +16,16 @@ import type {
   IIdempotencyStore,
 } from "../idempotency-store.ts";
 import type { MigrationSource } from "../migration-source.ts";
+import type {
+  IOAuthClientStore,
+  IOAuthCodeStore,
+  IOAuthSigningKeyStore,
+  IOAuthTokenStore,
+  OAuthAccessTokenRecord,
+  OAuthAuthorizationCodeRecord,
+  OAuthClientRecord,
+  OAuthSigningKeyRecord,
+} from "../oauth-as-stores.ts";
 import type { RuntimeDatabase } from "../runtime-database.ts";
 import type { IRuntimePolicyStore, RuntimePolicyRecord } from "../runtime-policy-store.ts";
 import type { RuntimeRow } from "../runtime-sql.ts";
@@ -64,6 +74,10 @@ export class PostgresRuntimeDatabase implements RuntimeDatabase {
   readonly runLogStore: IRunLogStore;
   readonly idempotencyStore: IIdempotencyStore;
   readonly marketplaceStore: IMarketplaceStore;
+  readonly oauthClientStore: IOAuthClientStore;
+  readonly oauthCodeStore: IOAuthCodeStore;
+  readonly oauthTokenStore: IOAuthTokenStore;
+  readonly oauthSigningKeyStore: IOAuthSigningKeyStore;
 
   private readonly pool: Pool;
   private readonly secretCodec: ISecretCodec;
@@ -100,6 +114,10 @@ export class PostgresRuntimeDatabase implements RuntimeDatabase {
     this.runLogStore = new PostgresRunLogStore(pool, options.runLimit ?? DEFAULT_RUN_LIMIT);
     this.idempotencyStore = new PostgresIdempotencyStore(pool, this.secretCodec);
     this.marketplaceStore = new PostgresMarketplaceStore(pool);
+    this.oauthClientStore = new PostgresOAuthClientStore(pool);
+    this.oauthCodeStore = new PostgresOAuthCodeStore(pool);
+    this.oauthTokenStore = new PostgresOAuthTokenStore(pool);
+    this.oauthSigningKeyStore = new PostgresOAuthSigningKeyStore(pool);
   }
 
   static async open(
@@ -412,6 +430,19 @@ class PostgresRuntimeTokenStore implements IRuntimeTokenStore {
     return row ? readRuntimeTokenRow(row) : undefined;
   }
 
+  async findById(id: string): Promise<RuntimeTokenRecord | undefined> {
+    const result = await this.pool.query<RuntimeRow>(
+      `
+        select ${runtimeTokenColumns}
+        from runtime_tokens
+        where id = $1
+      `,
+      [id],
+    );
+    const row = result.rows[0];
+    return row ? readRuntimeTokenRow(row) : undefined;
+  }
+
   async updatePolicy(id: string, policy: TokenPolicy): Promise<RuntimeTokenRecord | undefined> {
     const result = await this.pool.query<RuntimeRow>(
       `
@@ -441,6 +472,357 @@ class PostgresRuntimeTokenStore implements IRuntimeTokenStore {
   async markUsed(id: string, usedAt: string): Promise<void> {
     await this.pool.query("update runtime_tokens set last_used_at = $1 where id = $2", [usedAt, id]);
   }
+}
+
+class PostgresOAuthClientStore implements IOAuthClientStore {
+  private readonly pool: Pool;
+
+  constructor(pool: Pool) {
+    this.pool = pool;
+  }
+
+  async add(record: OAuthClientRecord): Promise<void> {
+    await this.pool.query(
+      `
+        insert into oauth_clients (
+          client_id, client_name, registration_type, redirect_uris, scopes,
+          token_endpoint_auth_method, client_secret_hash, metadata_document_url, created_at, rotated_at
+        )
+        values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+      `,
+      [
+        record.clientId,
+        record.clientName,
+        record.registrationType,
+        JSON.stringify(record.redirectUris),
+        JSON.stringify(record.scopes),
+        record.tokenEndpointAuthMethod,
+        record.clientSecretHash ?? null,
+        record.metadataDocumentUrl ?? null,
+        record.createdAt,
+        record.rotatedAt ?? null,
+      ],
+    );
+  }
+
+  async get(clientId: string): Promise<OAuthClientRecord | undefined> {
+    const result = await this.pool.query<RuntimeRow>("select * from oauth_clients where client_id = $1", [clientId]);
+    const row = result.rows[0];
+    return row ? readOAuthClientRow(row) : undefined;
+  }
+
+  async list(): Promise<OAuthClientRecord[]> {
+    const result = await this.pool.query<RuntimeRow>(
+      "select * from oauth_clients order by created_at desc, client_id desc",
+    );
+    return result.rows.map(readOAuthClientRow);
+  }
+
+  async update(record: OAuthClientRecord): Promise<void> {
+    await this.pool.query(
+      `
+        update oauth_clients
+        set client_name = $1, registration_type = $2, redirect_uris = $3, scopes = $4,
+          token_endpoint_auth_method = $5, client_secret_hash = $6, metadata_document_url = $7, rotated_at = $8
+        where client_id = $9
+      `,
+      [
+        record.clientName,
+        record.registrationType,
+        JSON.stringify(record.redirectUris),
+        JSON.stringify(record.scopes),
+        record.tokenEndpointAuthMethod,
+        record.clientSecretHash ?? null,
+        record.metadataDocumentUrl ?? null,
+        record.rotatedAt ?? null,
+        record.clientId,
+      ],
+    );
+  }
+
+  async delete(clientId: string): Promise<boolean> {
+    const result = await this.pool.query("delete from oauth_clients where client_id = $1", [clientId]);
+    return (result.rowCount ?? 0) > 0;
+  }
+}
+
+class PostgresOAuthCodeStore implements IOAuthCodeStore {
+  private readonly pool: Pool;
+
+  constructor(pool: Pool) {
+    this.pool = pool;
+  }
+
+  async add(record: OAuthAuthorizationCodeRecord): Promise<void> {
+    await this.pool.query(
+      `
+        insert into oauth_authorization_codes (
+          code_hash, client_id, redirect_uri, scope, code_challenge, resource,
+          runtime_token_id, issued_at, expires_at, consumed_at
+        )
+        values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+      `,
+      [
+        record.codeHash,
+        record.clientId,
+        record.redirectUri,
+        record.scope,
+        record.codeChallenge ?? null,
+        record.resource ?? null,
+        record.runtimeTokenId,
+        record.issuedAt,
+        record.expiresAt,
+        record.consumedAt ?? null,
+      ],
+    );
+  }
+
+  async consume(codeHash: string): Promise<OAuthAuthorizationCodeRecord | undefined> {
+    // Single conditional UPDATE: atomic single-use even under concurrent exchanges.
+    const result = await this.pool.query<RuntimeRow>(
+      `
+        update oauth_authorization_codes
+        set consumed_at = $1
+        where code_hash = $2
+          and consumed_at is null
+          and expires_at > $1
+        returning *
+      `,
+      [Date.now(), codeHash],
+    );
+    const row = result.rows[0];
+    return row ? readOAuthCodeRow(row) : undefined;
+  }
+
+  async deleteExpired(nowMs: number): Promise<void> {
+    await this.pool.query("delete from oauth_authorization_codes where expires_at <= $1", [nowMs]);
+  }
+}
+
+class PostgresOAuthTokenStore implements IOAuthTokenStore {
+  private readonly pool: Pool;
+
+  constructor(pool: Pool) {
+    this.pool = pool;
+  }
+
+  async add(record: OAuthAccessTokenRecord): Promise<void> {
+    await this.pool.query(
+      `
+        insert into oauth_tokens (
+          token_hash, refresh_token_hash, client_id, runtime_token_id, scope, resource,
+          issued_at, expires_at, refresh_expires_at, revoked_at
+        )
+        values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+      `,
+      [
+        record.tokenHash,
+        record.refreshTokenHash ?? null,
+        record.clientId,
+        record.runtimeTokenId,
+        record.scope,
+        record.resource ?? null,
+        record.issuedAt,
+        record.expiresAt,
+        record.refreshExpiresAt ?? null,
+        record.revokedAt ?? null,
+      ],
+    );
+  }
+
+  async findByAccessTokenHash(tokenHash: string): Promise<OAuthAccessTokenRecord | undefined> {
+    const result = await this.pool.query<RuntimeRow>("select * from oauth_tokens where token_hash = $1", [tokenHash]);
+    const row = result.rows[0];
+    return row ? readOAuthTokenRow(row) : undefined;
+  }
+
+  async findByRefreshTokenHash(tokenHash: string): Promise<OAuthAccessTokenRecord | undefined> {
+    const result = await this.pool.query<RuntimeRow>("select * from oauth_tokens where refresh_token_hash = $1", [
+      tokenHash,
+    ]);
+    const row = result.rows[0];
+    return row ? readOAuthTokenRow(row) : undefined;
+  }
+
+  async listByClient(clientId: string): Promise<OAuthAccessTokenRecord[]> {
+    const result = await this.pool.query<RuntimeRow>(
+      "select * from oauth_tokens where client_id = $1 order by issued_at, token_hash",
+      [clientId],
+    );
+    return result.rows.map(readOAuthTokenRow);
+  }
+
+  async revokeByGrant(clientId: string, runtimeTokenId: string): Promise<number> {
+    const result = await this.pool.query(
+      `
+        update oauth_tokens
+        set revoked_at = $1
+        where client_id = $2 and runtime_token_id = $3 and revoked_at is null
+      `,
+      [Date.now(), clientId, runtimeTokenId],
+    );
+    return result.rowCount ?? 0;
+  }
+
+  async deleteExpired(nowMs: number): Promise<void> {
+    await this.pool.query(
+      `
+        delete from oauth_tokens
+        where expires_at <= $1
+          and (refresh_expires_at is null or refresh_expires_at <= $1)
+      `,
+      [nowMs],
+    );
+  }
+}
+
+class PostgresOAuthSigningKeyStore implements IOAuthSigningKeyStore {
+  private readonly pool: Pool;
+
+  constructor(pool: Pool) {
+    this.pool = pool;
+  }
+
+  async add(record: OAuthSigningKeyRecord): Promise<void> {
+    await this.pool.query(
+      `
+        insert into oauth_signing_keys (kid, private_key, public_key, created_at, retired_at)
+        values ($1, $2, $3, $4, $5)
+      `,
+      [
+        record.kid,
+        JSON.stringify(record.privateKeyJwk),
+        JSON.stringify(record.publicKeyJwk),
+        record.createdAt,
+        record.retiredAt ?? null,
+      ],
+    );
+  }
+
+  async active(): Promise<OAuthSigningKeyRecord> {
+    const existing = await this.readActive();
+    if (existing) {
+      return existing;
+    }
+    const record = await generateSigningKeyRecord();
+    try {
+      await this.add(record);
+    } catch {
+      // A concurrent process inserted a key with the same primary key first; use theirs.
+      const raced = await this.readActive();
+      if (raced) {
+        return raced;
+      }
+      throw new Error("Failed to persist a new OAuth signing key.");
+    }
+    return record;
+  }
+
+  async all(): Promise<OAuthSigningKeyRecord[]> {
+    const result = await this.pool.query<RuntimeRow>(
+      "select * from oauth_signing_keys where retired_at is null order by created_at desc, kid desc",
+    );
+    return result.rows.map(readOAuthSigningKeyRow);
+  }
+
+  async retire(kid: string): Promise<void> {
+    await this.pool.query("update oauth_signing_keys set retired_at = $1 where kid = $2 and retired_at is null", [
+      new Date().toISOString(),
+      kid,
+    ]);
+  }
+
+  private async readActive(): Promise<OAuthSigningKeyRecord | undefined> {
+    const result = await this.pool.query<RuntimeRow>(
+      "select * from oauth_signing_keys where retired_at is null order by created_at desc, kid desc limit 1",
+    );
+    const row = result.rows[0];
+    return row ? readOAuthSigningKeyRow(row) : undefined;
+  }
+}
+
+async function generateSigningKeyRecord(): Promise<OAuthSigningKeyRecord> {
+  // `jose` is a lazy-only package (see eager-imports.test.ts): dynamic import only.
+  const { exportJWK, generateKeyPair } = await import("jose");
+  const { publicKey, privateKey } = await generateKeyPair("ES256", { extractable: true });
+  return {
+    kid: crypto.randomUUID(),
+    privateKeyJwk: await exportJWK(privateKey),
+    publicKeyJwk: await exportJWK(publicKey),
+    createdAt: new Date().toISOString(),
+  };
+}
+
+function readOAuthClientRow(row: RuntimeRow): OAuthClientRecord {
+  return {
+    clientId: readString(row, "client_id"),
+    clientName: readString(row, "client_name"),
+    registrationType: readString(row, "registration_type") as OAuthClientRecord["registrationType"],
+    redirectUris: parseJson<string[]>(readString(row, "redirect_uris")),
+    scopes: parseJson<string[]>(readString(row, "scopes")),
+    tokenEndpointAuthMethod: readString(
+      row,
+      "token_endpoint_auth_method",
+    ) as OAuthClientRecord["tokenEndpointAuthMethod"],
+    clientSecretHash: readOptionalString(row, "client_secret_hash"),
+    metadataDocumentUrl: readOptionalString(row, "metadata_document_url"),
+    createdAt: readString(row, "created_at"),
+    rotatedAt: readOptionalString(row, "rotated_at"),
+  };
+}
+
+function readOAuthCodeRow(row: RuntimeRow): OAuthAuthorizationCodeRecord {
+  return {
+    codeHash: readString(row, "code_hash"),
+    clientId: readString(row, "client_id"),
+    redirectUri: readString(row, "redirect_uri"),
+    scope: readString(row, "scope"),
+    codeChallenge: readOptionalString(row, "code_challenge"),
+    resource: readOptionalString(row, "resource"),
+    runtimeTokenId: readString(row, "runtime_token_id"),
+    issuedAt: readString(row, "issued_at"),
+    expiresAt: readOptionalNumber(row, "expires_at")!,
+    consumedAt: readOptionalNumber(row, "consumed_at"),
+  };
+}
+
+function readOAuthTokenRow(row: RuntimeRow): OAuthAccessTokenRecord {
+  return {
+    tokenHash: readString(row, "token_hash"),
+    refreshTokenHash: readOptionalString(row, "refresh_token_hash"),
+    clientId: readString(row, "client_id"),
+    runtimeTokenId: readString(row, "runtime_token_id"),
+    scope: readString(row, "scope"),
+    resource: readOptionalString(row, "resource"),
+    issuedAt: readString(row, "issued_at"),
+    expiresAt: readOptionalNumber(row, "expires_at")!,
+    refreshExpiresAt: readOptionalNumber(row, "refresh_expires_at"),
+    revokedAt: readOptionalNumber(row, "revoked_at"),
+  };
+}
+
+function readOAuthSigningKeyRow(row: RuntimeRow): OAuthSigningKeyRecord {
+  return {
+    kid: readString(row, "kid"),
+    privateKeyJwk: parseJson<JsonWebKey>(readString(row, "private_key")),
+    publicKeyJwk: parseJson<JsonWebKey>(readString(row, "public_key")),
+    createdAt: readString(row, "created_at"),
+    retiredAt: readOptionalString(row, "retired_at"),
+  };
+}
+
+function readOptionalString(row: RuntimeRow, key: string): string | undefined {
+  const value = row[key];
+  return value === null || value === undefined ? undefined : String(value);
+}
+
+// node-pg returns bigint (int8) columns as strings; epoch-ms values are numbers in TS.
+function readOptionalNumber(row: RuntimeRow, key: string): number | undefined {
+  const value = row[key];
+  if (value === null || value === undefined) {
+    return undefined;
+  }
+  return typeof value === "number" ? value : Number(value);
 }
 
 class PostgresRuntimePolicyStore implements IRuntimePolicyStore {

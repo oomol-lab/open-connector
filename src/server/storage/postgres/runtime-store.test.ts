@@ -166,6 +166,7 @@ describe("PostgreSQL migrations with PGlite", () => {
           { name: "0017_trigger_subscriptions.sql" },
           { name: "0018_connection_retirement.sql" },
           { name: "0019_trigger_sources.sql" },
+          { name: "0020_oauth_tables.sql" },
         ],
       });
 
@@ -230,6 +231,7 @@ describe("PostgreSQL migrations with a custom migration source", () => {
           { name: "0017_trigger_subscriptions.sql" },
           { name: "0018_connection_retirement.sql" },
           { name: "0019_trigger_sources.sql" },
+          { name: "0020_oauth_tables.sql" },
           { name: "9998_custom.sql" },
         ],
       });

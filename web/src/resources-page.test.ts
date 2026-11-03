@@ -32,6 +32,7 @@ describe("ResourcesPage", () => {
     expect(markup).toContain("Copy code");
     expect(markup).toContain("Choose a client");
     expect(markup).toContain("Run your first action");
+    expect(markup).toContain("OAuth 2.1");
     expect(markup).toMatch(/href="\/access"/);
     expect(markup).not.toMatch(/href="\/mcp\/tools"/);
   });

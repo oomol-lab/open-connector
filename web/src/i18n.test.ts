@@ -114,6 +114,7 @@ describe("locales", () => {
     "mcp url",
     "oauth app",
     "oauth apps",
+    "oauth 2.1",
     "oomol key",
     "openapi json",
   ]);

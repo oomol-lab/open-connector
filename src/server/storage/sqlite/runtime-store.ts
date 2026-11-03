@@ -15,8 +15,19 @@ import type {
   IIdempotencyStore,
 } from "../idempotency-store.ts";
 import type { MigrationSource } from "../migration-source.ts";
+import type {
+  IOAuthClientStore,
+  IOAuthCodeStore,
+  IOAuthSigningKeyStore,
+  IOAuthTokenStore,
+  OAuthAccessTokenRecord,
+  OAuthAuthorizationCodeRecord,
+  OAuthClientRecord,
+  OAuthSigningKeyRecord,
+} from "../oauth-as-stores.ts";
 import type { RuntimeDatabase } from "../runtime-database.ts";
 import type { IRuntimePolicyStore, RuntimePolicyRecord } from "../runtime-policy-store.ts";
+import type { RuntimeRow } from "../runtime-sql.ts";
 import type { IRunLogStore, RunLog, RunLogListInput, RunLogPage, RunLogWriteResult } from "../runtime-store.ts";
 import type { IRuntimeTokenStore, RuntimeTokenRecord } from "../runtime-token-service.ts";
 import type { StatementSync } from "node:sqlite";
@@ -97,6 +108,10 @@ export class SqliteRuntimeDatabase implements RuntimeDatabase {
   readonly runLogStore: SqliteRunLogStore;
   readonly idempotencyStore: SqliteIdempotencyStore;
   readonly marketplaceStore: SqliteMarketplaceStore;
+  readonly oauthClientStore: SqliteOAuthClientStore;
+  readonly oauthCodeStore: SqliteOAuthCodeStore;
+  readonly oauthTokenStore: SqliteOAuthTokenStore;
+  readonly oauthSigningKeyStore: SqliteOAuthSigningKeyStore;
 
   private readonly database: DatabaseSync;
   private readonly secretCodec: ISecretCodec;
@@ -120,6 +135,10 @@ export class SqliteRuntimeDatabase implements RuntimeDatabase {
     this.runLogStore = new SqliteRunLogStore(this.database, options.runLimit ?? DEFAULT_RUN_LIMIT);
     this.idempotencyStore = new SqliteIdempotencyStore(this.database, this.secretCodec);
     this.marketplaceStore = new SqliteMarketplaceStore(this.database);
+    this.oauthClientStore = new SqliteOAuthClientStore(this.database);
+    this.oauthCodeStore = new SqliteOAuthCodeStore(this.database);
+    this.oauthTokenStore = new SqliteOAuthTokenStore(this.database);
+    this.oauthSigningKeyStore = new SqliteOAuthSigningKeyStore(this.database);
   }
 
   close(): void {
@@ -406,6 +425,19 @@ export class SqliteRuntimeTokenStore implements IRuntimeTokenStore {
     return row ? readRuntimeTokenRow(row) : undefined;
   }
 
+  async findById(id: string): Promise<RuntimeTokenRecord | undefined> {
+    const row = this.database
+      .prepare(
+        `
+        select ${runtimeTokenColumns}
+        from runtime_tokens
+        where id = ?
+      `,
+      )
+      .get(id);
+    return row ? readRuntimeTokenRow(row) : undefined;
+  }
+
   async updatePolicy(id: string, policy: TokenPolicy): Promise<RuntimeTokenRecord | undefined> {
     const row = this.database
       .prepare(
@@ -436,6 +468,352 @@ export class SqliteRuntimeTokenStore implements IRuntimeTokenStore {
     this.markUsedStatement ??= this.database.prepare("update runtime_tokens set last_used_at = ? where id = ?");
     this.markUsedStatement.run(usedAt, id);
   }
+}
+
+export class SqliteOAuthClientStore implements IOAuthClientStore {
+  private readonly database: DatabaseSync;
+
+  constructor(database: DatabaseSync) {
+    this.database = database;
+  }
+
+  async add(record: OAuthClientRecord): Promise<void> {
+    this.database
+      .prepare(
+        `
+        insert into oauth_clients (
+          client_id, client_name, registration_type, redirect_uris, scopes,
+          token_endpoint_auth_method, client_secret_hash, metadata_document_url, created_at, rotated_at
+        )
+        values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `,
+      )
+      .run(
+        record.clientId,
+        record.clientName,
+        record.registrationType,
+        JSON.stringify(record.redirectUris),
+        JSON.stringify(record.scopes),
+        record.tokenEndpointAuthMethod,
+        record.clientSecretHash ?? null,
+        record.metadataDocumentUrl ?? null,
+        record.createdAt,
+        record.rotatedAt ?? null,
+      );
+  }
+
+  async get(clientId: string): Promise<OAuthClientRecord | undefined> {
+    const row = this.database.prepare("select * from oauth_clients where client_id = ?").get(clientId);
+    return row ? readOAuthClientRow(row) : undefined;
+  }
+
+  async list(): Promise<OAuthClientRecord[]> {
+    return this.database
+      .prepare("select * from oauth_clients order by created_at desc, client_id desc")
+      .all()
+      .map(readOAuthClientRow);
+  }
+
+  async update(record: OAuthClientRecord): Promise<void> {
+    this.database
+      .prepare(
+        `
+        update oauth_clients
+        set client_name = ?, registration_type = ?, redirect_uris = ?, scopes = ?,
+          token_endpoint_auth_method = ?, client_secret_hash = ?, metadata_document_url = ?, rotated_at = ?
+        where client_id = ?
+      `,
+      )
+      .run(
+        record.clientName,
+        record.registrationType,
+        JSON.stringify(record.redirectUris),
+        JSON.stringify(record.scopes),
+        record.tokenEndpointAuthMethod,
+        record.clientSecretHash ?? null,
+        record.metadataDocumentUrl ?? null,
+        record.rotatedAt ?? null,
+        record.clientId,
+      );
+  }
+
+  async delete(clientId: string): Promise<boolean> {
+    const result = this.database.prepare("delete from oauth_clients where client_id = ?").run(clientId);
+    return result.changes > 0;
+  }
+}
+
+export class SqliteOAuthCodeStore implements IOAuthCodeStore {
+  private readonly database: DatabaseSync;
+
+  constructor(database: DatabaseSync) {
+    this.database = database;
+  }
+
+  async add(record: OAuthAuthorizationCodeRecord): Promise<void> {
+    this.database
+      .prepare(
+        `
+        insert into oauth_authorization_codes (
+          code_hash, client_id, redirect_uri, scope, code_challenge, resource,
+          runtime_token_id, issued_at, expires_at, consumed_at
+        )
+        values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `,
+      )
+      .run(
+        record.codeHash,
+        record.clientId,
+        record.redirectUri,
+        record.scope,
+        record.codeChallenge ?? null,
+        record.resource ?? null,
+        record.runtimeTokenId,
+        record.issuedAt,
+        record.expiresAt,
+        record.consumedAt ?? null,
+      );
+  }
+
+  async consume(codeHash: string): Promise<OAuthAuthorizationCodeRecord | undefined> {
+    return runInTransaction(this.database, () => {
+      const now = Date.now();
+      const row = this.database.prepare("select * from oauth_authorization_codes where code_hash = ?").get(codeHash);
+      if (!row) {
+        return undefined;
+      }
+      const record = readOAuthCodeRow(row);
+      if (record.consumedAt !== undefined || record.expiresAt <= now) {
+        return undefined;
+      }
+      const consumedAt = Date.now();
+      this.database
+        .prepare("update oauth_authorization_codes set consumed_at = ? where code_hash = ?")
+        .run(consumedAt, codeHash);
+      return { ...record, consumedAt };
+    });
+  }
+
+  async deleteExpired(nowMs: number): Promise<void> {
+    this.database.prepare("delete from oauth_authorization_codes where expires_at <= ?").run(nowMs);
+  }
+}
+
+export class SqliteOAuthTokenStore implements IOAuthTokenStore {
+  private readonly database: DatabaseSync;
+
+  constructor(database: DatabaseSync) {
+    this.database = database;
+  }
+
+  async add(record: OAuthAccessTokenRecord): Promise<void> {
+    this.database
+      .prepare(
+        `
+        insert into oauth_tokens (
+          token_hash, refresh_token_hash, client_id, runtime_token_id, scope, resource,
+          issued_at, expires_at, refresh_expires_at, revoked_at
+        )
+        values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      `,
+      )
+      .run(
+        record.tokenHash,
+        record.refreshTokenHash ?? null,
+        record.clientId,
+        record.runtimeTokenId,
+        record.scope,
+        record.resource ?? null,
+        record.issuedAt,
+        record.expiresAt,
+        record.refreshExpiresAt ?? null,
+        record.revokedAt ?? null,
+      );
+  }
+
+  async findByAccessTokenHash(tokenHash: string): Promise<OAuthAccessTokenRecord | undefined> {
+    const row = this.database.prepare("select * from oauth_tokens where token_hash = ?").get(tokenHash);
+    return row ? readOAuthTokenRow(row) : undefined;
+  }
+
+  async findByRefreshTokenHash(tokenHash: string): Promise<OAuthAccessTokenRecord | undefined> {
+    const row = this.database.prepare("select * from oauth_tokens where refresh_token_hash = ?").get(tokenHash);
+    return row ? readOAuthTokenRow(row) : undefined;
+  }
+
+  async listByClient(clientId: string): Promise<OAuthAccessTokenRecord[]> {
+    return this.database
+      .prepare("select * from oauth_tokens where client_id = ? order by issued_at, token_hash")
+      .all(clientId)
+      .map(readOAuthTokenRow);
+  }
+
+  async revokeByGrant(clientId: string, runtimeTokenId: string): Promise<number> {
+    const result = this.database
+      .prepare(
+        `
+        update oauth_tokens
+        set revoked_at = ?
+        where client_id = ? and runtime_token_id = ? and revoked_at is null
+      `,
+      )
+      .run(Date.now(), clientId, runtimeTokenId);
+    return Number(result.changes);
+  }
+
+  async deleteExpired(nowMs: number): Promise<void> {
+    this.database
+      .prepare(
+        `
+        delete from oauth_tokens
+        where expires_at <= ?
+          and (refresh_expires_at is null or refresh_expires_at <= ?)
+      `,
+      )
+      .run(nowMs, nowMs);
+  }
+}
+
+export class SqliteOAuthSigningKeyStore implements IOAuthSigningKeyStore {
+  private readonly database: DatabaseSync;
+
+  constructor(database: DatabaseSync) {
+    this.database = database;
+  }
+
+  async add(record: OAuthSigningKeyRecord): Promise<void> {
+    this.database
+      .prepare(
+        `
+        insert into oauth_signing_keys (kid, private_key, public_key, created_at, retired_at)
+        values (?, ?, ?, ?, ?)
+      `,
+      )
+      .run(
+        record.kid,
+        JSON.stringify(record.privateKeyJwk),
+        JSON.stringify(record.publicKeyJwk),
+        record.createdAt,
+        record.retiredAt ?? null,
+      );
+  }
+
+  async active(): Promise<OAuthSigningKeyRecord> {
+    const existing = this.readActive();
+    if (existing) {
+      return existing;
+    }
+    const record = await generateSigningKeyRecord();
+    try {
+      await this.add(record);
+    } catch {
+      // A concurrent process inserted a key with the same primary key first; use theirs.
+      const raced = this.readActive();
+      if (raced) {
+        return raced;
+      }
+      throw new Error("Failed to persist a new OAuth signing key.");
+    }
+    return record;
+  }
+
+  async all(): Promise<OAuthSigningKeyRecord[]> {
+    return this.database
+      .prepare("select * from oauth_signing_keys where retired_at is null order by created_at desc, kid desc")
+      .all()
+      .map(readOAuthSigningKeyRow);
+  }
+
+  async retire(kid: string): Promise<void> {
+    this.database
+      .prepare("update oauth_signing_keys set retired_at = ? where kid = ? and retired_at is null")
+      .run(new Date().toISOString(), kid);
+  }
+
+  private readActive(): OAuthSigningKeyRecord | undefined {
+    const row = this.database
+      .prepare("select * from oauth_signing_keys where retired_at is null order by created_at desc, kid desc")
+      .get();
+    return row ? readOAuthSigningKeyRow(row) : undefined;
+  }
+}
+
+async function generateSigningKeyRecord(): Promise<OAuthSigningKeyRecord> {
+  // `jose` is a lazy-only package (see eager-imports.test.ts): dynamic import only.
+  const { exportJWK, generateKeyPair } = await import("jose");
+  const { publicKey, privateKey } = await generateKeyPair("ES256", { extractable: true });
+  return {
+    kid: crypto.randomUUID(),
+    privateKeyJwk: await exportJWK(privateKey),
+    publicKeyJwk: await exportJWK(publicKey),
+    createdAt: new Date().toISOString(),
+  };
+}
+
+function readOAuthClientRow(row: RuntimeRow): OAuthClientRecord {
+  return {
+    clientId: readString(row, "client_id"),
+    clientName: readString(row, "client_name"),
+    registrationType: readString(row, "registration_type") as OAuthClientRecord["registrationType"],
+    redirectUris: parseJson<string[]>(readString(row, "redirect_uris")),
+    scopes: parseJson<string[]>(readString(row, "scopes")),
+    tokenEndpointAuthMethod: readString(
+      row,
+      "token_endpoint_auth_method",
+    ) as OAuthClientRecord["tokenEndpointAuthMethod"],
+    clientSecretHash: readOptionalString(row, "client_secret_hash"),
+    metadataDocumentUrl: readOptionalString(row, "metadata_document_url"),
+    createdAt: readString(row, "created_at"),
+    rotatedAt: readOptionalString(row, "rotated_at"),
+  };
+}
+
+function readOAuthCodeRow(row: RuntimeRow): OAuthAuthorizationCodeRecord {
+  return {
+    codeHash: readString(row, "code_hash"),
+    clientId: readString(row, "client_id"),
+    redirectUri: readString(row, "redirect_uri"),
+    scope: readString(row, "scope"),
+    codeChallenge: readOptionalString(row, "code_challenge"),
+    resource: readOptionalString(row, "resource"),
+    runtimeTokenId: readString(row, "runtime_token_id"),
+    issuedAt: readString(row, "issued_at"),
+    expiresAt: Number(row.expires_at),
+    consumedAt: row.consumed_at === null || row.consumed_at === undefined ? undefined : Number(row.consumed_at),
+  };
+}
+
+function readOAuthTokenRow(row: RuntimeRow): OAuthAccessTokenRecord {
+  return {
+    tokenHash: readString(row, "token_hash"),
+    refreshTokenHash: readOptionalString(row, "refresh_token_hash"),
+    clientId: readString(row, "client_id"),
+    runtimeTokenId: readString(row, "runtime_token_id"),
+    scope: readString(row, "scope"),
+    resource: readOptionalString(row, "resource"),
+    issuedAt: readString(row, "issued_at"),
+    expiresAt: Number(row.expires_at),
+    refreshExpiresAt:
+      row.refresh_expires_at === null || row.refresh_expires_at === undefined
+        ? undefined
+        : Number(row.refresh_expires_at),
+    revokedAt: row.revoked_at === null || row.revoked_at === undefined ? undefined : Number(row.revoked_at),
+  };
+}
+
+function readOAuthSigningKeyRow(row: RuntimeRow): OAuthSigningKeyRecord {
+  return {
+    kid: readString(row, "kid"),
+    privateKeyJwk: parseJson<JsonWebKey>(readString(row, "private_key")),
+    publicKeyJwk: parseJson<JsonWebKey>(readString(row, "public_key")),
+    createdAt: readString(row, "created_at"),
+    retiredAt: readOptionalString(row, "retired_at"),
+  };
+}
+
+function readOptionalString(row: RuntimeRow, key: string): string | undefined {
+  const value = row[key];
+  return value === null || value === undefined ? undefined : String(value);
 }
 
 export class SqliteRuntimePolicyStore implements IRuntimePolicyStore {

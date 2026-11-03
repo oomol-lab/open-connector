@@ -5,6 +5,7 @@ import type { RuntimeLogger } from "../core/types.ts";
 import type { RuntimeJwtConfig } from "./api/runtime-jwt.ts";
 import type { S3TransitClientOptions } from "./files/s3-transit-files.ts";
 import type { IStagedTransitFileService } from "./files/transit-file-store.ts";
+import type { OAuthServerSettings } from "./oauth/settings.ts";
 
 import { mkdir } from "node:fs/promises";
 import { join, resolve } from "node:path";
@@ -70,6 +71,10 @@ export interface ConnectorRuntimeOptions {
   adminToken?: string;
   /** Static bearer token for the /v1 and /mcp execution API. JWT verification and console-issued tokens are the alternatives. */
   runtimeToken?: string;
+  /** Which credentials `/mcp` + `/v1` accept; default `runtime_token` (historical behavior). */
+  authMode?: "none" | "runtime_token" | "oauth" | "mixed";
+  /** Inbound OAuth 2.1 authorization server for remote MCP clients (ChatGPT et al). */
+  oauth?: OAuthServerSettings;
   /** Dedicated bearer token for inbound provider event verification. Kept separate from the admin token. */
   eventVerifyToken?: string;
   /** Verify /v1 bearer tokens as JWTs against a JWKS endpoint. */
@@ -211,6 +216,8 @@ export async function createConnectorRuntime(options: ConnectorRuntimeOptions): 
       secretCodec,
       adminToken: options.adminToken,
       runtimeToken: options.runtimeToken,
+      authMode: options.authMode,
+      oauth: options.oauth,
       eventVerifyToken: options.eventVerifyToken,
       verifyRuntimeJwt,
       actionPolicy: new ActionPolicyService(options.actionPolicy),

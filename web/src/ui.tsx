@@ -24,6 +24,7 @@ import {
   Moon,
   RefreshCw,
   Settings,
+  ShieldCheck,
   Sun,
   TerminalSquare,
 } from "lucide-react";
@@ -37,6 +38,7 @@ import { normalizeGatewayUrl } from "./client-onboarding";
 import { persistLang, supportedLangs } from "./i18n";
 import { emptyData } from "./model";
 import { OAuthAppsPage } from "./oauth-apps-page";
+import { OAuthClientsPage } from "./oauth-clients-page";
 import { OverviewPage } from "./overview-page";
 import { ProvidersPage } from "./providers-page";
 import { ResourcesPage } from "./resources-page";
@@ -54,6 +56,7 @@ const navItems = [
   { path: "/overview", labelKey: "nav.overview", icon: Home },
   { path: "/providers", labelKey: "nav.providers", icon: Cable },
   { path: "/oauth-apps", labelKey: "nav.oauthApps", icon: Fingerprint },
+  { path: "/oauth-clients", labelKey: "nav.oauthClients", icon: ShieldCheck },
   { path: "/actions", labelKey: "nav.actions", icon: TerminalSquare },
   { path: "/runs", labelKey: "nav.runs", icon: Activity },
   { path: "/access", labelKey: "nav.access", icon: KeyRound },
@@ -477,6 +480,7 @@ function AppShell(props: {
               element={<ProvidersPage data={props.data} onRefresh={props.onRefresh} />}
             />
             <Route path="/oauth-apps" element={<OAuthAppsPage data={props.data} onRefresh={props.onRefresh} />} />
+            <Route path="/oauth-clients" element={<OAuthClientsPage />} />
             <Route
               path="/actions"
               element={<ActionsPage data={props.data} gatewayUrl={clientBaseUrl} onRefresh={props.onRefresh} />}
@@ -656,6 +660,9 @@ function headingForPath(pathname: string): string {
   }
   if (section === "oauth-apps") {
     return "oauthApps";
+  }
+  if (section === "oauth-clients") {
+    return "oauthClients";
   }
   if (section === "actions") {
     return "actions";

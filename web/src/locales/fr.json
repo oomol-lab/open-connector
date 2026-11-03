@@ -37,6 +37,7 @@
     "providers": "Fournisseurs",
     "marketplace": "Marketplace",
     "oauthApps": "Apps OAuth",
+    "oauthClients": "Clients OAuth",
     "actions": "Actions",
     "runs": "Exécutions",
     "access": "API Key",
@@ -67,6 +68,9 @@
       },
       "oauthApps": {
         "title": "Apps OAuth"
+      },
+      "oauthClients": {
+        "title": "Clients OAuth"
       },
       "actions": {
         "title": "Actions"
@@ -448,6 +452,75 @@
       "editTitle": "Modifier l’app OAuth {{name}}"
     }
   },
+  "oauthClients": {
+    "title": "Clients OAuth",
+    "description": "Gérez les clients qui se connectent au point de terminaison MCP avec OAuth 2.1.",
+    "newClient": "Nouveau client",
+    "emptyTitle": "Aucun client OAuth",
+    "emptyDescription": "Inscrivez un client pour que les clients MCP se connectent avec OAuth.",
+    "clientName": "Nom du client",
+    "clientId": "Identifiant client",
+    "registration": "Inscription",
+    "authMethod": "Auth du point de terminaison de jeton",
+    "redirectUris": "URIs de redirection",
+    "redirectUrisHint": "Un URI par ligne. HTTPS, ou HTTP pour la boucle locale uniquement.",
+    "scopes": "Portées",
+    "created": "Créé",
+    "confidential": "Confidentiel",
+    "public": "Public",
+    "registrationType": {
+      "manual": "Manuelle",
+      "dcr": "Dynamique (DCR)",
+      "cimd": "Métadonnées (CIMD)"
+    },
+    "authMethodValue": {
+      "none": "Public (aucune)",
+      "client_secret_basic": "Basic",
+      "client_secret_post": "Corps de la requête"
+    },
+    "edit": "Modifier",
+    "rotateSecret": "Rotater le secret",
+    "delete": "Supprimer",
+    "save": "Enregistrer",
+    "create": "Créer le client",
+    "createDialog": {
+      "title": "Nouveau client OAuth",
+      "description": "Inscrivez un client pour l’autorisation OAuth 2.1."
+    },
+    "editDialog": {
+      "title": "Modifier {{name}}",
+      "description": "Mettez à jour le nom du client, les URIs de redirection et les portées."
+    },
+    "deleteDialog": {
+      "title": "Supprimer {{name}}",
+      "description": "Tous les jetons émis pour ce client seront révoqués. Cette action est irréversible.",
+      "confirm": "Supprimer le client"
+    },
+    "secret": {
+      "title": "Secret du client {{name}}",
+      "description": "Copiez ce secret maintenant.",
+      "warning": "Ce secret n’est affiché qu’une seule fois et ne pourra pas être récupéré plus tard.",
+      "copy": "Copier",
+      "copied": "Copié",
+      "done": "Terminé"
+    },
+    "toasts": {
+      "created": "Client créé.",
+      "updated": "Client mis à jour.",
+      "rotated": "Secret rotaté.",
+      "deleted": "Client supprimé.",
+      "saveFailed": "Impossible d’enregistrer le client.",
+      "rotateFailed": "Impossible de rotater le secret.",
+      "deleteFailed": "Impossible de supprimer le client."
+    },
+    "errors": {
+      "nameRequired": "Le nom du client est requis.",
+      "redirectUriRequired": "Au moins un URI de redirection est requis.",
+      "redirectUriInvalid": "Les URIs de redirection doivent être des URL HTTPS absolues, ou HTTP sur la boucle locale.",
+      "scopeInvalid": "Portée non prise en charge.",
+      "loadFailed": "Impossible de charger les clients OAuth."
+    }
+  },
   "actions": {
     "connection": "Connexion",
     "selectConnection": "Sélectionner une connexion",
@@ -725,7 +798,12 @@
       "urlError": "Saisissez une URL HTTP ou HTTPS complète, sans identifiants, paramètres ni fragment.",
       "authLabel": "Authentification du runtime",
       "tokenAuth": "Utiliser un Runtime Token",
+      "oauthAuth": "OAuth 2.1",
       "noAuth": "Authentification désactivée",
+      "oauthHelp": "Les clients MCP découvrent automatiquement le serveur d’autorisation OAuth 2.1. L’inscription dynamique de clients est disponible si votre client en a besoin.",
+      "oauthPkceNote": "PKCE S256 est obligatoire, et le paramètre resource (l’URI de ressource MCP) doit être envoyé dans les requêtes authorize et token.",
+      "oauthDiscovery": "Points de terminaison de découverte OAuth 2.1",
+      "oauthCliSdkNote": "OAuth 2.1 s’applique aux clients MCP. Le CLI et le SDK ci-dessous s’authentifient avec des Runtime Tokens.",
       "tokenHelp": "Créez un jeton et remplacez <RUNTIME_TOKEN>. Cette page ne conserve aucun jeton.",
       "createToken": "Créer un Runtime Token",
       "tokenDifferenceTitle": "Quelle clé utiliser ?",

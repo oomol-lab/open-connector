@@ -52,6 +52,8 @@ HTTP/OpenAPI from custom clients, and the Web Console for administration and deb
 - A working connector catalog across products such as GitHub, Gmail, Notion, BigQuery, Google
   Analytics, Supabase, Airtable, Slack, and more.
 - Credential handling for API keys, OAuth2, custom credentials, and no-auth providers.
+- Built-in OAuth 2.1 authorization server so remote MCP clients and other agents can authenticate
+  with dynamically registered clients, PKCE S256, and revocable, policy-scoped access tokens.
 - Inspectable Action contracts: request/response schemas, required scopes, and lazy-loaded executor
   source.
 - Runtime controls for connection identity, scopes, runtime tokens, action allow/block policies,

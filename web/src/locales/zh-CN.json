@@ -37,6 +37,7 @@
     "providers": "提供商",
     "marketplace": "Marketplace",
     "oauthApps": "OAuth Apps",
+    "oauthClients": "OAuth 客户端",
     "actions": "操作",
     "runs": "运行记录",
     "access": "API Key",
@@ -67,6 +68,9 @@
       },
       "oauthApps": {
         "title": "OAuth Apps"
+      },
+      "oauthClients": {
+        "title": "OAuth 客户端"
       },
       "actions": {
         "title": "操作"
@@ -448,6 +452,75 @@
       "editTitle": "编辑 {{name}} OAuth App"
     }
   },
+  "oauthClients": {
+    "title": "OAuth 客户端",
+    "description": "管理通过 OAuth 2.1 连接 MCP 端点的客户端。",
+    "newClient": "新建客户端",
+    "emptyTitle": "暂无 OAuth 客户端",
+    "emptyDescription": "注册一个客户端，让 MCP 客户端通过 OAuth 连接。",
+    "clientName": "客户端名称",
+    "clientId": "客户端 ID",
+    "registration": "注册方式",
+    "authMethod": "令牌端点认证",
+    "redirectUris": "重定向 URI",
+    "redirectUrisHint": "每行一个 URI。使用 HTTPS，或仅限环回地址的 HTTP。",
+    "scopes": "作用域",
+    "created": "创建于",
+    "confidential": "机密",
+    "public": "公开",
+    "registrationType": {
+      "manual": "手动",
+      "dcr": "动态 (DCR)",
+      "cimd": "元数据 (CIMD)"
+    },
+    "authMethodValue": {
+      "none": "公开（无）",
+      "client_secret_basic": "Basic",
+      "client_secret_post": "请求体"
+    },
+    "edit": "编辑",
+    "rotateSecret": "轮换密钥",
+    "delete": "删除",
+    "save": "保存",
+    "create": "创建客户端",
+    "createDialog": {
+      "title": "新建 OAuth 客户端",
+      "description": "注册用于 OAuth 2.1 授权的客户端。"
+    },
+    "editDialog": {
+      "title": "编辑 {{name}}",
+      "description": "更新客户端名称、重定向 URI 和作用域。"
+    },
+    "deleteDialog": {
+      "title": "删除 {{name}}",
+      "description": "将吊销该客户端的所有令牌，且无法撤销。",
+      "confirm": "删除客户端"
+    },
+    "secret": {
+      "title": "{{name}} 的客户端密钥",
+      "description": "请立即复制此密钥。",
+      "warning": "此密钥仅显示一次，之后无法再获取。",
+      "copy": "复制",
+      "copied": "已复制",
+      "done": "完成"
+    },
+    "toasts": {
+      "created": "客户端已创建。",
+      "updated": "客户端已更新。",
+      "rotated": "密钥已轮换。",
+      "deleted": "客户端已删除。",
+      "saveFailed": "无法保存客户端。",
+      "rotateFailed": "无法轮换密钥。",
+      "deleteFailed": "无法删除客户端。"
+    },
+    "errors": {
+      "nameRequired": "客户端名称为必填项。",
+      "redirectUriRequired": "至少需要一个重定向 URI。",
+      "redirectUriInvalid": "重定向 URI 必须是绝对 HTTPS 地址，或环回地址的 HTTP。",
+      "scopeInvalid": "选择了不支持的作用域。",
+      "loadFailed": "无法加载 OAuth 客户端。"
+    }
+  },
   "actions": {
     "connection": "连接",
     "selectConnection": "选择连接",
@@ -725,7 +798,12 @@
       "urlError": "请输入完整的 HTTP 或 HTTPS 地址，不包含账号密码、查询参数或片段。",
       "authLabel": "运行时认证",
       "tokenAuth": "使用 Runtime Token",
+      "oauthAuth": "OAuth 2.1",
       "noAuth": "尚未开启鉴权",
+      "oauthHelp": "MCP 客户端会自动发现 OAuth 2.1 授权服务器。如果客户端需要，可以使用动态客户端注册。",
+      "oauthPkceNote": "PKCE S256 为必选项，并且在 authorize 和 token 请求中必须发送 resource 参数（即 MCP 资源 URI）。",
+      "oauthDiscovery": "OAuth 2.1 发现端点",
+      "oauthCliSdkNote": "OAuth 2.1 适用于 MCP 客户端。下方的 CLI 和 SDK 使用 Runtime Token 进行鉴权。",
       "tokenHelp": "创建 Token 后，替换代码中的 <RUNTIME_TOKEN>。此页面不会存储 Token。",
       "createToken": "创建 Runtime Token",
       "tokenDifferenceTitle": "这里应该使用哪一种 Key？",

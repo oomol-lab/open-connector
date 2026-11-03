@@ -10,6 +10,7 @@ describe("RuntimeTokenService", () => {
       add: vi.fn(),
       list: vi.fn(async () => []),
       findByHash: vi.fn(),
+      findById: vi.fn(),
       updatePolicy: vi.fn(),
       revoke: vi.fn(async () => false),
       markUsed: vi.fn(),
@@ -37,6 +38,7 @@ describe("RuntimeTokenService", () => {
       add: vi.fn(),
       list: vi.fn(async () => [record]),
       findByHash: vi.fn(async () => record),
+      findById: vi.fn(),
       updatePolicy: vi.fn(),
       revoke: vi.fn(async () => false),
       markUsed: vi.fn(),
@@ -71,6 +73,7 @@ describe("RuntimeTokenService", () => {
       add: vi.fn(),
       list: vi.fn(async () => [record]),
       findByHash: vi.fn(async () => record),
+      findById: vi.fn(),
       updatePolicy: vi.fn(),
       revoke: vi.fn(async () => false),
       markUsed: vi.fn(async () => {
@@ -148,6 +151,10 @@ class MemoryRuntimeTokenStore implements IRuntimeTokenStore {
 
   async findByHash(tokenHash: string): Promise<RuntimeTokenRecord | undefined> {
     return [...this.tokens.values()].find((token) => token.tokenHash === tokenHash);
+  }
+
+  async findById(id: string): Promise<RuntimeTokenRecord | undefined> {
+    return this.tokens.get(id);
   }
 
   async updatePolicy(id: string, policy: TokenPolicy): Promise<RuntimeTokenRecord | undefined> {
