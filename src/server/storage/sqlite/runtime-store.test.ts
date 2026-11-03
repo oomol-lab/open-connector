@@ -1457,7 +1457,7 @@ describe("SqliteOAuthTokenStore", () => {
     }
   });
 
-  it("consumes refresh tokens atomically", async () => {
+  it("rotates refresh tokens atomically with their successor", async () => {
     const database = new SqliteRuntimeDatabase(await createDatabasePath());
     try {
       const now = Date.now();
@@ -1471,36 +1471,73 @@ describe("SqliteOAuthTokenStore", () => {
       };
       await database.oauthTokenStore.add({ ...base, tokenHash: "access-1", refreshTokenHash: "refresh-1" });
 
-      const consumed = await database.oauthTokenStore.consumeRefreshToken("refresh-1");
+      const consumed = await database.oauthTokenStore.rotateRefreshToken("refresh-1", {
+        ...base,
+        tokenHash: "access-1b",
+        refreshTokenHash: "refresh-1b",
+      });
       expect(consumed).toMatchObject({ tokenHash: "access-1", clientId: "client-1", refreshTokenHash: undefined });
+      expect(await database.oauthTokenStore.findByAccessTokenHash("access-1b")).toMatchObject({
+        tokenHash: "access-1b",
+        refreshTokenHash: "refresh-1b",
+      });
 
-      // The hash is nulled: a second use fails and the lookup is gone.
-      expect(await database.oauthTokenStore.consumeRefreshToken("refresh-1")).toBeUndefined();
+      // The old hash is nulled: a second rotation fails, inserts nothing, and
+      // leaves the store unchanged.
+      expect(
+        await database.oauthTokenStore.rotateRefreshToken("refresh-1", {
+          ...base,
+          tokenHash: "access-1c",
+          refreshTokenHash: "refresh-1c",
+        }),
+      ).toBeUndefined();
       expect(await database.oauthTokenStore.findByRefreshTokenHash("refresh-1")).toBeUndefined();
+      expect(await database.oauthTokenStore.findByAccessTokenHash("access-1c")).toBeUndefined();
 
-      // Revoked tokens are not consumable.
+      // Revoked tokens are not rotatable, and no successor is inserted.
       await database.oauthTokenStore.add({
         ...base,
         tokenHash: "access-2",
         refreshTokenHash: "refresh-2",
         revokedAt: now,
       });
-      expect(await database.oauthTokenStore.consumeRefreshToken("refresh-2")).toBeUndefined();
+      expect(
+        await database.oauthTokenStore.rotateRefreshToken("refresh-2", {
+          ...base,
+          tokenHash: "access-2b",
+          refreshTokenHash: "refresh-2b",
+        }),
+      ).toBeUndefined();
+      expect(await database.oauthTokenStore.findByAccessTokenHash("access-2b")).toBeUndefined();
       expect(await database.oauthTokenStore.findByRefreshTokenHash("refresh-2")).toMatchObject({
         tokenHash: "access-2",
       });
 
-      // Expired refresh tokens are not consumable.
+      // Expired refresh tokens are not rotatable.
       await database.oauthTokenStore.add({
         ...base,
         tokenHash: "access-3",
         refreshTokenHash: "refresh-3",
         refreshExpiresAt: now - 1_000,
       });
-      expect(await database.oauthTokenStore.consumeRefreshToken("refresh-3")).toBeUndefined();
+      expect(
+        await database.oauthTokenStore.rotateRefreshToken("refresh-3", {
+          ...base,
+          tokenHash: "access-3b",
+          refreshTokenHash: "refresh-3b",
+        }),
+      ).toBeUndefined();
+      expect(await database.oauthTokenStore.findByAccessTokenHash("access-3b")).toBeUndefined();
 
-      // Unknown hashes are not consumable.
-      expect(await database.oauthTokenStore.consumeRefreshToken("unknown")).toBeUndefined();
+      // Unknown hashes are not rotatable.
+      expect(
+        await database.oauthTokenStore.rotateRefreshToken("unknown", {
+          ...base,
+          tokenHash: "access-4",
+          refreshTokenHash: "refresh-4",
+        }),
+      ).toBeUndefined();
+      expect(await database.oauthTokenStore.findByAccessTokenHash("access-4")).toBeUndefined();
     } finally {
       database.close();
     }

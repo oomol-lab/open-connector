@@ -610,6 +610,41 @@ describe("D1RuntimeDatabase", () => {
     await expect(database.marketplaceStore.getConfig()).resolves.toBeUndefined();
     await expect(database.marketplaceStore.listProviderPreferences()).resolves.toHaveLength(2);
   });
+
+  it("rotates OAuth refresh tokens atomically with their successor", async () => {
+    const database = new D1RuntimeDatabase(new SqliteD1Database(), { secretCodec: new AesGcmSecretCodec("saas-test") });
+    const now = Date.now();
+    const base = {
+      clientId: "client-1",
+      runtimeTokenId: "grant-1",
+      scope: "mcp:access offline_access",
+      issuedAt: new Date(now).toISOString(),
+      expiresAt: now + 3_600_000,
+      refreshExpiresAt: now + 86_400_000,
+    };
+    await database.oauthTokenStore.add({ ...base, tokenHash: "access-1", refreshTokenHash: "refresh-1" });
+
+    const consumed = await database.oauthTokenStore.rotateRefreshToken("refresh-1", {
+      ...base,
+      tokenHash: "access-1b",
+      refreshTokenHash: "refresh-1b",
+    });
+    expect(consumed).toMatchObject({ tokenHash: "access-1", clientId: "client-1", refreshTokenHash: undefined });
+    await expect(database.oauthTokenStore.findByAccessTokenHash("access-1b")).resolves.toMatchObject({
+      tokenHash: "access-1b",
+      refreshTokenHash: "refresh-1b",
+    });
+
+    // The old hash is nulled: a second rotation fails and inserts nothing.
+    await expect(
+      database.oauthTokenStore.rotateRefreshToken("refresh-1", {
+        ...base,
+        tokenHash: "access-1c",
+        refreshTokenHash: "refresh-1c",
+      }),
+    ).resolves.toBeUndefined();
+    await expect(database.oauthTokenStore.findByAccessTokenHash("access-1c")).resolves.toBeUndefined();
+  });
 });
 
 function createRun(id: string, startedAt: string, actionId = "hackernews.get_top_stories", service = "hackernews") {

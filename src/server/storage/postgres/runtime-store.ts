@@ -607,6 +607,10 @@ class PostgresOAuthTokenStore implements IOAuthTokenStore {
   }
 
   async add(record: OAuthAccessTokenRecord): Promise<void> {
+    await this.insert(record);
+  }
+
+  private async insert(record: OAuthAccessTokenRecord): Promise<void> {
     await this.pool.query(
       `
         insert into oauth_tokens (
@@ -644,21 +648,53 @@ class PostgresOAuthTokenStore implements IOAuthTokenStore {
     return row ? readOAuthTokenRow(row) : undefined;
   }
 
-  async consumeRefreshToken(tokenHash: string): Promise<OAuthAccessTokenRecord | undefined> {
-    const result = await this.pool.query<RuntimeRow>(
-      `
-        update oauth_tokens
-        set refresh_token_hash = null
-        where refresh_token_hash = $1
-          and revoked_at is null
-          and refresh_expires_at is not null
-          and refresh_expires_at > $2
-        returning *
-      `,
-      [tokenHash, Date.now()],
-    );
-    const row = result.rows[0];
-    return row ? readOAuthTokenRow(row) : undefined;
+  async rotateRefreshToken(
+    oldRefreshTokenHash: string,
+    successor: OAuthAccessTokenRecord,
+  ): Promise<OAuthAccessTokenRecord | undefined> {
+    // One transaction: the successor is inserted only when the old refresh
+    // token is still redeemable, and a failed insert rolls the consumption
+    // back so the old token stays redeemable.
+    return runInTransaction(this.pool, async (client) => {
+      const result = await client.query<RuntimeRow>(
+        `
+          update oauth_tokens
+          set refresh_token_hash = null
+          where refresh_token_hash = $1
+            and revoked_at is null
+            and refresh_expires_at is not null
+            and refresh_expires_at > $2
+          returning *
+        `,
+        [oldRefreshTokenHash, Date.now()],
+      );
+      const row = result.rows[0];
+      if (!row) {
+        return undefined;
+      }
+      await client.query(
+        `
+          insert into oauth_tokens (
+            token_hash, refresh_token_hash, client_id, runtime_token_id, scope, resource,
+            issued_at, expires_at, refresh_expires_at, revoked_at
+          )
+          values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+        `,
+        [
+          successor.tokenHash,
+          successor.refreshTokenHash ?? null,
+          successor.clientId,
+          successor.runtimeTokenId,
+          successor.scope,
+          successor.resource ?? null,
+          successor.issuedAt,
+          successor.expiresAt,
+          successor.refreshExpiresAt ?? null,
+          successor.revokedAt ?? null,
+        ],
+      );
+      return readOAuthTokenRow(row);
+    });
   }
 
   async listByClient(clientId: string): Promise<OAuthAccessTokenRecord[]> {

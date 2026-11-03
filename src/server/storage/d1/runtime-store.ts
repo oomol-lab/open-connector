@@ -471,35 +471,63 @@ export class D1OAuthTokenStore implements IOAuthTokenStore {
     return row ? readOAuthTokenRow(row) : undefined;
   }
 
-  async consumeRefreshToken(tokenHash: string): Promise<OAuthAccessTokenRecord | undefined> {
-    // D1 has no cross-statement transaction, so this is a guarded
-    // UPDATE-then-GET rather than a single atomic UPDATE ... RETURNING. The
-    // UPDATE itself is atomic per statement and re-checks every guard
-    // (revocation, expiry, and a still-set refresh_token_hash), so only the
-    // first caller can consume a token; a concurrent second caller's UPDATE
-    // matches zero rows and returns undefined.
-    const existing = await this.findByRefreshTokenHash(tokenHash);
-    if (!existing) {
+  async rotateRefreshToken(
+    oldRefreshTokenHash: string,
+    successor: OAuthAccessTokenRecord,
+  ): Promise<OAuthAccessTokenRecord | undefined> {
+    // D1 batches run in a single implicit transaction but cannot branch
+    // between statements, so both writes carry the same redeemability guard:
+    // the successor is inserted via INSERT ... SELECT ... WHERE EXISTS only
+    // when the old refresh token is still redeemable, and the old hash is
+    // nulled by an UPDATE under the same predicate. If the old token was
+    // already consumed, revoked, or expired, both statements are no-ops, no
+    // successor row appears, and the old token is left untouched.
+    const now = Date.now();
+    const guard = "revoked_at is null and refresh_expires_at is not null and refresh_expires_at > ?";
+    const results = await this.database.batch([
+      this.database
+        .prepare(`select * from oauth_tokens where refresh_token_hash = ? and ${guard}`)
+        .bind(oldRefreshTokenHash, now),
+      this.database
+        .prepare(
+          `
+          insert into oauth_tokens (
+            token_hash, refresh_token_hash, client_id, runtime_token_id, scope, resource,
+            issued_at, expires_at, refresh_expires_at, revoked_at
+          )
+          select ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
+          where exists (
+            select 1 from oauth_tokens
+            where refresh_token_hash = ? and ${guard}
+          )
+          returning token_hash
+        `,
+        )
+        .bind(
+          successor.tokenHash,
+          successor.refreshTokenHash ?? null,
+          successor.clientId,
+          successor.runtimeTokenId,
+          successor.scope,
+          successor.resource ?? null,
+          successor.issuedAt,
+          successor.expiresAt,
+          successor.refreshExpiresAt ?? null,
+          successor.revokedAt ?? null,
+          oldRefreshTokenHash,
+          now,
+        ),
+      this.database
+        .prepare(`update oauth_tokens set refresh_token_hash = null where refresh_token_hash = ? and ${guard}`)
+        .bind(oldRefreshTokenHash, now),
+    ]);
+    const row = (results[0]?.results ?? [])[0];
+    if (!row) {
       return undefined;
     }
-    const result = await this.database
-      .prepare(
-        `
-        update oauth_tokens
-        set refresh_token_hash = null
-        where token_hash = ?
-          and refresh_token_hash = ?
-          and revoked_at is null
-          and refresh_expires_at is not null
-          and refresh_expires_at > ?
-      `,
-      )
-      .bind(existing.tokenHash, tokenHash, Date.now())
-      .run();
-    if ((result.meta.changes ?? 0) === 0) {
-      return undefined;
-    }
-    return this.findByAccessTokenHash(existing.tokenHash);
+    // The consumed record is read after the batch commits, so it reflects the
+    // nulled refresh hash exactly like the transactional backends' RETURNING.
+    return this.findByAccessTokenHash(readOAuthTokenRow(row).tokenHash);
   }
 
   async listByClient(clientId: string): Promise<OAuthAccessTokenRecord[]> {

@@ -607,6 +607,10 @@ export class SqliteOAuthTokenStore implements IOAuthTokenStore {
   }
 
   async add(record: OAuthAccessTokenRecord): Promise<void> {
+    this.insert(record);
+  }
+
+  private insert(record: OAuthAccessTokenRecord): void {
     this.database
       .prepare(
         `
@@ -641,22 +645,34 @@ export class SqliteOAuthTokenStore implements IOAuthTokenStore {
     return row ? readOAuthTokenRow(row) : undefined;
   }
 
-  async consumeRefreshToken(tokenHash: string): Promise<OAuthAccessTokenRecord | undefined> {
-    const rows = this.database
-      .prepare(
-        `
-        update oauth_tokens
-        set refresh_token_hash = null
-        where refresh_token_hash = ?
-          and revoked_at is null
-          and refresh_expires_at is not null
-          and refresh_expires_at > ?
-        returning *
-      `,
-      )
-      .all(tokenHash, Date.now());
-    const row = rows[0];
-    return row ? readOAuthTokenRow(row) : undefined;
+  async rotateRefreshToken(
+    oldRefreshTokenHash: string,
+    successor: OAuthAccessTokenRecord,
+  ): Promise<OAuthAccessTokenRecord | undefined> {
+    // One transaction: the successor is inserted only when the old refresh
+    // token is still redeemable, and a failed insert rolls the consumption
+    // back so the old token stays redeemable.
+    return runInTransaction(this.database, () => {
+      const rows = this.database
+        .prepare(
+          `
+          update oauth_tokens
+          set refresh_token_hash = null
+          where refresh_token_hash = ?
+            and revoked_at is null
+            and refresh_expires_at is not null
+            and refresh_expires_at > ?
+          returning *
+        `,
+        )
+        .all(oldRefreshTokenHash, Date.now());
+      const row = rows[0];
+      if (!row) {
+        return undefined;
+      }
+      this.insert(successor);
+      return readOAuthTokenRow(row);
+    });
   }
 
   async listByClient(clientId: string): Promise<OAuthAccessTokenRecord[]> {
