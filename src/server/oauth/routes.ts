@@ -37,6 +37,15 @@ export interface OAuthRoutesOptions {
   runtimeTokens: RuntimeTokenService;
   runtimeTokenStore: IRuntimeTokenStore;
   cimd?: CimdClient;
+  /**
+   * Opt-in trust for reverse-proxy forwarding headers when keying rate-limit
+   * buckets. Default `false`: only the socket peer address is used, so a
+   * caller cannot rotate its bucket by sending `x-forwarded-for`. Enable only
+   * behind a proxy that overwrites these headers; otherwise callers can spoof
+   * the key (and, worse, share one bucket behind a TLS-terminating proxy when
+   * left disabled).
+   */
+  trustProxyHeaders?: boolean;
   /** Test seam; defaults to an in-memory fixed-window limiter. */
   rateLimiter?: RateLimiter;
 }
@@ -84,6 +93,7 @@ const tokenRate = { limit: 60, windowMs: 60_000 };
 export function createOAuthRoutes(options: OAuthRoutesOptions): Hono {
   const app = new Hono();
   const limiter = options.rateLimiter ?? new MemoryRateLimiter();
+  const trustProxyHeaders = options.trustProxyHeaders ?? false;
   const authorizeDeps: AuthorizeDependencies = { ...options };
   const tokenDeps: TokenDependencies = { ...options };
   const registerDeps: RegisterDependencies = {
@@ -105,7 +115,14 @@ export function createOAuthRoutes(options: OAuthRoutesOptions): Hono {
         new TokenError("invalid_request", "Expected an application/x-www-form-urlencoded token request."),
       );
     }
-    if (!limiter.take("token", form.get("client_id") ?? clientKey(context), tokenRate.limit, tokenRate.windowMs)) {
+    if (
+      !limiter.take(
+        "token",
+        form.get("client_id") ?? clientKey(context, trustProxyHeaders),
+        tokenRate.limit,
+        tokenRate.windowMs,
+      )
+    ) {
       return rateLimitResponse(tokenRate.windowMs);
     }
     return jsonResult(context, async () =>
@@ -121,7 +138,14 @@ export function createOAuthRoutes(options: OAuthRoutesOptions): Hono {
         new TokenError("invalid_request", "Expected an application/x-www-form-urlencoded revocation request."),
       );
     }
-    if (!limiter.take("revoke", form.get("client_id") ?? clientKey(context), tokenRate.limit, tokenRate.windowMs)) {
+    if (
+      !limiter.take(
+        "revoke",
+        form.get("client_id") ?? clientKey(context, trustProxyHeaders),
+        tokenRate.limit,
+        tokenRate.windowMs,
+      )
+    ) {
       return rateLimitResponse(tokenRate.windowMs);
     }
     return jsonResult(context, async () => {
@@ -131,7 +155,7 @@ export function createOAuthRoutes(options: OAuthRoutesOptions): Hono {
   });
 
   app.post("/oauth/mcp/register", async (context: Context) => {
-    if (!limiter.take("register", clientKey(context), registerRate.limit, registerRate.windowMs)) {
+    if (!limiter.take("register", clientKey(context, trustProxyHeaders), registerRate.limit, registerRate.windowMs)) {
       return rateLimitResponse(registerRate.windowMs);
     }
     return jsonResult(context, () => handleRegisterPost(context, registerDeps));
@@ -154,26 +178,40 @@ async function readForm(context: Context): Promise<URLSearchParams | undefined> 
   return new URLSearchParams(await context.req.text());
 }
 
-function clientKey(context: Context): string {
-  // Prefer the socket peer address: caller-set forwarding headers are trivially
-  // spoofable, so trusting them would let a client rotate its rate-limit
-  // bucket at will. The header fallback only applies when no socket info is
-  // available (in-process requests such as tests, or a handler detached from
-  // the node-server env); a reverse proxy deployment always has socket info,
-  // so the fallback never runs there.
+function clientKey(context: Context, trustProxyHeaders: boolean): string {
+  if (trustProxyHeaders) {
+    // Behind a trusted reverse proxy every socket connection comes from the
+    // proxy, so the socket address would collapse all callers into one shared
+    // rate-limit bucket. The rightmost non-empty x-forwarded-for entry is the
+    // hop appended by the trusted proxy itself, making it the caller address
+    // a spoofing client cannot influence (a client-sent header is shifted
+    // left by the proxy's append). The dedicated proxy IP headers follow.
+    const forwarded = context.req.header("x-forwarded-for");
+    if (forwarded) {
+      const entries = forwarded
+        .split(",")
+        .map((entry) => entry.trim())
+        .filter((entry) => entry.length > 0);
+      const rightmost = entries[entries.length - 1];
+      if (rightmost) {
+        return rightmost;
+      }
+    }
+    const proxyAddress = context.req.header("x-real-ip") ?? context.req.header("cf-connecting-ip");
+    if (proxyAddress) {
+      return proxyAddress;
+    }
+  }
   try {
     const info = getConnInfo(context);
     if (info.remote?.address) {
       return info.remote.address;
     }
   } catch {
-    // No node-server env on this context; fall through to the headers below.
+    // No node-server env on this context (in-process requests such as tests,
+    // or a handler detached from the node-server env).
   }
-  const forwarded = context.req.header("x-forwarded-for");
-  if (forwarded) {
-    return forwarded.split(",")[0].trim();
-  }
-  return context.req.header("x-real-ip") ?? context.req.header("cf-connecting-ip") ?? "local";
+  return "local";
 }
 
 function rateLimitResponse(windowMs: number): Response {

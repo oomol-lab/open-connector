@@ -1,3 +1,4 @@
+import type { OAuthRoutesOptions, RateLimiter } from "./routes.ts";
 import type { Hono } from "hono";
 
 import { createHash } from "node:crypto";
@@ -7,9 +8,11 @@ import { ProviderLoader } from "../../providers/provider-loader.ts";
 import { createConnectApp } from "../connect-app.ts";
 import { TransitFileService } from "../files/transit-files.ts";
 import { AesGcmSecretCodec } from "../secrets/secret-codec.ts";
+import { RuntimeTokenService } from "../storage/runtime-token-service.ts";
 import { SqliteRuntimeDatabase } from "../storage/sqlite/runtime-store.ts";
+import { resolveOAuthServerConfig } from "./config.ts";
 import { signAccessToken, verifyAccessToken } from "./jwks.ts";
-import { MemoryRateLimiter } from "./routes.ts";
+import { createOAuthRoutes, MemoryRateLimiter } from "./routes.ts";
 
 // Regression tests for the CodeRabbit review of the inbound OAuth slice:
 // consent Origin behind a TLS-terminating proxy, rate-limiter memory sweep,
@@ -252,5 +255,116 @@ describe("admin client scope validation", () => {
       throw new Error("expected an error envelope.");
     }
     expect(error.code).toBe("invalid_input");
+  });
+});
+
+describe("rate-limit client keying", () => {
+  const registrationBody = JSON.stringify({
+    client_name: "ChatGPT",
+    redirect_uris: [REDIRECT],
+    token_endpoint_auth_method: "none",
+  });
+
+  async function setupRoutes(options?: Partial<OAuthRoutesOptions>): Promise<Hono> {
+    const database = new SqliteRuntimeDatabase(":memory:");
+    return createOAuthRoutes({
+      config: resolveOAuthServerConfig({ issuer: ISSUER }),
+      clients: database.oauthClientStore,
+      codes: database.oauthCodeStore,
+      tokens: database.oauthTokenStore,
+      keys: database.oauthSigningKeyStore,
+      runtimeTokens: new RuntimeTokenService(database.runtimeTokenStore),
+      runtimeTokenStore: database.runtimeTokenStore,
+      ...options,
+    });
+  }
+
+  /** Limiter allowing exactly one take per key; records every key it was asked about. */
+  function oneTakePerKeyLimiter(): RateLimiter & { keys: string[] } {
+    const keys: string[] = [];
+    const seen = new Set<string>();
+    return {
+      keys,
+      take(_bucket, key) {
+        keys.push(key);
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+      },
+    };
+  }
+
+  it("ignores spoofed forwarding headers by default and keys on the socket identity", async () => {
+    const limiter = oneTakePerKeyLimiter();
+    const app = await setupRoutes({ rateLimiter: limiter });
+    const response = await app.request(`${ISSUER}/oauth/mcp/register`, {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        "x-forwarded-for": "203.0.113.9, 198.51.100.7",
+        "x-real-ip": "203.0.113.9",
+        "cf-connecting-ip": "203.0.113.9",
+      },
+      body: registrationBody,
+    });
+    expect(response.status).toBe(201);
+    // In-process requests have no socket info, so the key falls back to the
+    // fixed "local" identity; the spoofed headers must not appear.
+    expect(limiter.keys).toEqual(["local"]);
+  });
+
+  it("trusts the rightmost x-forwarded-for entry and the proxy IP headers when enabled", async () => {
+    const limiter = oneTakePerKeyLimiter();
+    const app = await setupRoutes({ trustProxyHeaders: true, rateLimiter: limiter });
+    await app.request(`${ISSUER}/oauth/mcp/register`, {
+      method: "POST",
+      headers: { "content-type": "application/json", "x-forwarded-for": "203.0.113.9, 198.51.100.7" },
+      body: registrationBody,
+    });
+    await app.request(`${ISSUER}/oauth/mcp/register`, {
+      method: "POST",
+      headers: { "content-type": "application/json", "x-real-ip": "198.51.100.2" },
+      body: registrationBody,
+    });
+    await app.request(`${ISSUER}/oauth/mcp/register`, {
+      method: "POST",
+      headers: { "content-type": "application/json", "cf-connecting-ip": "198.51.100.3" },
+      body: registrationBody,
+    });
+    await app.request(`${ISSUER}/oauth/mcp/register`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: registrationBody,
+    });
+    // The rightmost entry is the hop appended by the trusted proxy, so a
+    // client-sent first entry cannot choose the bucket.
+    expect(limiter.keys).toEqual(["198.51.100.7", "198.51.100.2", "198.51.100.3", "local"]);
+  });
+
+  it("gives every caller behind a proxy its own bucket once the flag is enabled", async () => {
+    // Without the flag both proxy-forwarded callers collapse into the shared
+    // socket identity bucket, so the second registration is rate-limited.
+    const shared = oneTakePerKeyLimiter();
+    const untrusted = await setupRoutes({ rateLimiter: shared });
+    for (const address of ["198.51.100.7", "198.51.100.8"]) {
+      const response = await untrusted.request(`${ISSUER}/oauth/mcp/register`, {
+        method: "POST",
+        headers: { "content-type": "application/json", "x-forwarded-for": address },
+        body: registrationBody,
+      });
+      expect(response.status).toBe(address === "198.51.100.7" ? 201 : 429);
+    }
+    // With the flag the forwarded caller address keys each caller separately.
+    const separated = oneTakePerKeyLimiter();
+    const trusted = await setupRoutes({ trustProxyHeaders: true, rateLimiter: separated });
+    for (const address of ["198.51.100.7", "198.51.100.8"]) {
+      const response = await trusted.request(`${ISSUER}/oauth/mcp/register`, {
+        method: "POST",
+        headers: { "content-type": "application/json", "x-forwarded-for": address },
+        body: registrationBody,
+      });
+      expect(response.status).toBe(201);
+    }
+    expect(separated.keys).toEqual(["198.51.100.7", "198.51.100.8"]);
   });
 });

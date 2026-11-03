@@ -79,6 +79,7 @@ async function main(): Promise<void> {
     runtimeToken: optionalEnv("OOMOL_CONNECT_RUNTIME_TOKEN"),
     authMode: parseAuthModeEnv(process.env.OOMOL_CONNECT_OAUTH_AUTH_MODE),
     oauth: parseOAuthServerEnv(),
+    trustProxyHeaders: parseOptionalBooleanFlag(process.env.OOMOL_CONNECT_OAUTH_TRUST_PROXY_HEADERS),
     eventVerifyToken: optionalEnv("OOMOL_CONNECT_EVENT_VERIFY_TOKEN"),
     jwt: {
       jwksUri: process.env.OOMOL_CONNECT_JWKS_URI,
