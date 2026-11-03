@@ -644,6 +644,23 @@ class PostgresOAuthTokenStore implements IOAuthTokenStore {
     return row ? readOAuthTokenRow(row) : undefined;
   }
 
+  async consumeRefreshToken(tokenHash: string): Promise<OAuthAccessTokenRecord | undefined> {
+    const result = await this.pool.query<RuntimeRow>(
+      `
+        update oauth_tokens
+        set refresh_token_hash = null
+        where refresh_token_hash = $1
+          and revoked_at is null
+          and refresh_expires_at is not null
+          and refresh_expires_at > $2
+        returning *
+      `,
+      [tokenHash, Date.now()],
+    );
+    const row = result.rows[0];
+    return row ? readOAuthTokenRow(row) : undefined;
+  }
+
   async listByClient(clientId: string): Promise<OAuthAccessTokenRecord[]> {
     const result = await this.pool.query<RuntimeRow>(
       "select * from oauth_tokens where client_id = $1 order by issued_at, token_hash",

@@ -641,6 +641,24 @@ export class SqliteOAuthTokenStore implements IOAuthTokenStore {
     return row ? readOAuthTokenRow(row) : undefined;
   }
 
+  async consumeRefreshToken(tokenHash: string): Promise<OAuthAccessTokenRecord | undefined> {
+    const rows = this.database
+      .prepare(
+        `
+        update oauth_tokens
+        set refresh_token_hash = null
+        where refresh_token_hash = ?
+          and revoked_at is null
+          and refresh_expires_at is not null
+          and refresh_expires_at > ?
+        returning *
+      `,
+      )
+      .all(tokenHash, Date.now());
+    const row = rows[0];
+    return row ? readOAuthTokenRow(row) : undefined;
+  }
+
   async listByClient(clientId: string): Promise<OAuthAccessTokenRecord[]> {
     return this.database
       .prepare("select * from oauth_tokens where client_id = ? order by issued_at, token_hash")
