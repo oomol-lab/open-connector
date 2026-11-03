@@ -504,12 +504,13 @@ function parseCell(value: string) {
     throw providerInputError(`invalid cell reference: ${value}`);
   }
   const row = Number(rowText);
-  if (columnLetters.length === 0 || !Number.isInteger(row) || row <= 0) {
+  if (columnLetters.length === 0 || !Number.isSafeInteger(row) || row <= 0) {
     throw providerInputError(`invalid cell reference: ${value}`);
   }
   let column = 0;
   for (const character of columnLetters) {
     column = column * 26 + character.charCodeAt(0) - 64;
+    if (!Number.isSafeInteger(column)) throw providerInputError(`invalid cell reference: ${value}`);
   }
   return { row, column };
 }

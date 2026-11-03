@@ -26,7 +26,7 @@ it("reads execution records through the public apps route with the selected team
   const fetcher: typeof fetch = async (url, init) => {
     expect(String(url)).toBe("https://connector.oomol.com/v1/apps/by-id/app%2Fone/executions");
     expect(new Headers(init?.headers).get("x-oo-team-id")).toBe("team-one");
-    return Response.json({ items: [] });
+    return Response.json({ success: true, data: { data: [], nextCursor: "next-page" } });
   };
   await expect(
     executeOomolConsoleAction(
@@ -36,7 +36,7 @@ it("reads execution records through the public apps route with the selected team
       fetcher,
       deps,
     ),
-  ).resolves.toEqual({ items: [] });
+  ).resolves.toEqual({ data: [], nextCursor: "next-page" });
 });
 
 it("rejects billing requests without a team before making any network request", async () => {
