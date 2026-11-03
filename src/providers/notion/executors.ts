@@ -381,8 +381,13 @@ async function notionSearch(input: Record<string, unknown>, accessToken: string,
     {
       method: "POST",
       path: "/search",
+      query: {
+        filter_properties: Array.isArray(input.filterProperties)
+          ? input.filterProperties.map((value) => requiredInputString(value, "filterProperties"))
+          : undefined,
+      },
       body: compactObject({
-        query: String(input.query),
+        query: optionalString(input.query),
         filter: asObject(input.filter),
         sort: asObject(input.sort),
         page_size: asNumber(input.pageSize),

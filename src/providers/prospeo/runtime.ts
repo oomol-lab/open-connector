@@ -6,6 +6,7 @@ import { compactObject, optionalRecord, optionalString, requiredString } from ".
 import { defineApiKeyProviderExecutors } from "../provider-executors.ts";
 import {
   isAbortLikeError,
+  requiredResponseRecord,
   ProviderRequestError,
   providerUserAgent,
   defaultProviderRequestTimeoutMs,
@@ -86,7 +87,7 @@ export const prospeoActionHandlers: ProviderActionHandlers<"prospeo", ProspeoAct
     );
 
     return {
-      people: readPayloadArray(payload, "people"),
+      people: readSearchResults(payload, "person"),
       pagination: readPagination(payload),
       raw: payload,
     };
@@ -103,7 +104,7 @@ export const prospeoActionHandlers: ProviderActionHandlers<"prospeo", ProspeoAct
     );
 
     return {
-      companies: readPayloadArray(payload, "companies"),
+      companies: readSearchResults(payload, "company"),
       pagination: readPagination(payload),
       raw: payload,
     };
@@ -265,6 +266,11 @@ function readProspeoErrorMessage(payload: unknown) {
     return undefined;
   }
 
+  const code = optionalString(object.error_code)?.trim();
+  const detail = optionalString(object.filter_error)?.trim();
+  if (code || detail) {
+    return [code, detail].filter(Boolean).join(": ");
+  }
   return optionalString(object.message) || optionalString(object.error) || optionalString(object.detail) || undefined;
 }
 
@@ -291,23 +297,14 @@ function readPayloadRecord(payload: Record<string, unknown>, preferredKey: strin
   return optionalRecord(data[preferredKey]) ?? data;
 }
 
-function readPayloadArray(payload: Record<string, unknown>, preferredKey: string) {
-  const direct = payload[preferredKey];
-  if (Array.isArray(direct)) {
-    return normalizeArrayItems(direct);
+function readSearchResults(payload: Record<string, unknown>, key: "person" | "company"): Record<string, unknown>[] {
+  if (!Array.isArray(payload.results)) {
+    throw new ProviderRequestError(502, "Prospeo search response is missing results");
   }
-
-  const data = payload.data;
-  if (Array.isArray(data)) {
-    return normalizeArrayItems(data);
-  }
-
-  const dataObject = optionalRecord(data);
-  if (dataObject && Array.isArray(dataObject[preferredKey])) {
-    return normalizeArrayItems(dataObject[preferredKey]);
-  }
-
-  return [];
+  return payload.results.map((result) => {
+    const entry = requiredResponseRecord(result, "Prospeo search result");
+    return requiredResponseRecord(entry[key], `Prospeo search result ${key}`);
+  });
 }
 
 function normalizeArrayItems(items: unknown[]) {
@@ -324,7 +321,7 @@ function readPagination(payload: Record<string, unknown>) {
   }
 
   return {
-    total: readFirstInteger(pagination, ["total", "total_results", "totalResults", "count"]),
+    total: readFirstInteger(pagination, ["total_count", "total", "total_results", "totalResults", "count"]),
     page: readFirstInteger(pagination, ["page", "current_page", "currentPage"]),
     perPage: readFirstInteger(pagination, ["per_page", "perPage", "limit"]),
   };
