@@ -135,10 +135,10 @@ export function createOAuthClientRoutes({ clients, tokens, runtimeTokens }: OAut
     }
     // Revoking every token anchored to this client's grants is the point of
     // deletion: a removed client must not keep working access tokens.
-    const issued = await tokens.listByClient(clientId);
-    for (const record of issued) {
-      await tokens.revokeByGrant(clientId, record.runtimeTokenId);
-      await runtimeTokens.revokeToken(record.runtimeTokenId);
+    const runtimeTokenIds = new Set((await tokens.listByClient(clientId)).map((record) => record.runtimeTokenId));
+    for (const runtimeTokenId of runtimeTokenIds) {
+      await tokens.revokeByGrant(clientId, runtimeTokenId);
+      await runtimeTokens.revokeToken(runtimeTokenId);
     }
     await clients.delete(clientId);
     return context.json({ id: clientId, deleted: true });
