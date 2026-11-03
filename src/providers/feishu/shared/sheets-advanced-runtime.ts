@@ -1,6 +1,6 @@
 import type { FeishuJsonRequest } from "./client.ts";
 
-import { compactObject } from "../../../core/cast.ts";
+import { compactObject, optionalString } from "../../../core/cast.ts";
 import { providerResponseError } from "../../provider-runtime.ts";
 import { providerInputError } from "../../provider-runtime.ts";
 import { ProviderRequestError } from "../../provider-runtime.ts";
@@ -277,7 +277,7 @@ async function manageObject(
   let objectId = family.singular === "filter" ? input.sheetId : input.objectId;
   if (family.singular === "filter" && operation !== "create" && objectId === undefined) {
     const sheet = await resolveFeishuSheet(request, input);
-    objectId = sheet.sheet_id ?? sheet.id;
+    objectId = optionalString(sheet.sheet_id) ?? optionalString(sheet.id);
     if (typeof objectId !== "string" || objectId.length === 0) {
       throw providerResponseError("resolved filter sheet has no ID");
     }

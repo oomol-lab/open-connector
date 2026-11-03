@@ -162,7 +162,9 @@ const actions: Parameters<typeof defineProviderAction>[1][] = [
           s.nonEmptyString("Tenant of the target user or team. Defaults to the credential's tenant."),
         ),
         text: s.optional(
-          s.string("Initial message text. Required when teamId is provided; optional for a one-on-one conversation."),
+          s.nonEmptyString(
+            "Initial message text. Required when teamId is provided; optional for a one-on-one conversation.",
+          ),
         ),
         textFormat: s.optional(textFormat),
       },

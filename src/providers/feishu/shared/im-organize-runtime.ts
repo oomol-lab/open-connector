@@ -367,7 +367,7 @@ async function fetchDualPages(input: FetchDualPagesInput): Promise<DualPage> {
     deleted.push(...recordArray(data[input.deletedKey]));
     hasMore = data.has_more === true;
     pageToken = optionalString(data.page_token);
-    if (hasMore && pageToken) pagination.next(true, pageToken);
+    if (fetchAll && hasMore) pagination.next(true, pageToken);
     if (!fetchAll || !hasMore || !pageToken) break;
   }
   return { active, deleted, hasMore, pageToken: pageToken ?? null };
