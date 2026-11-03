@@ -803,7 +803,7 @@
       "oauthHelp": "MCPクライアントはOAuth 2.1認可サーバーを自動的に検出します。必要に応じて動的クライアント登録も利用できます。",
       "oauthPkceNote": "PKCE S256は必須で、authorizeリクエストとtokenリクエストにはresourceパラメーター（MCPリソースURI）を送信する必要があります。",
       "oauthDiscovery": "OAuth 2.1ディスカバリーエンドポイント",
-      "oauthCliSdkNote": "OAuth 2.1はMCPクライアント向けです。以下のCLIとSDKはRuntime Tokenで認証します。",
+      "oauthCliSdkNote": "OAuth 2.1 は MCP クライアントに適用されます。以下の CLI と SDK の例は Runtime Token で認証しますが、OAuth 専用のゲートウェイでは拒否されます。これらの例ではゲートウェイを mixed モードにするか、OAuth アクセストークンを指定してください。",
       "tokenHelp": "トークンを作成し、<RUNTIME_TOKEN>を置き換えてください。このページではトークンを保存しません。",
       "createToken": "Runtime Tokenを作成",
       "tokenDifferenceTitle": "どのキーを使いますか？",

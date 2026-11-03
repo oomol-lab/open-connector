@@ -77,9 +77,10 @@ describe("OAuth 2.1 client setup", () => {
     });
   });
 
-  it("emits an MCP client configuration pointing at the OAuth 2.1 endpoints", () => {
+  it("emits an MCP client configuration under the same mcpServers map as the token config", () => {
     const config = JSON.parse(buildMcpOAuthClientConfig(baseUrl));
-    expect(config).toEqual({
+    expect(Object.keys(config)).toEqual(["mcpServers"]);
+    expect(config.mcpServers["open-connector"]).toEqual({
       url: `${baseUrl}/mcp`,
       auth: "oauth2.1",
       protectedResourceMetadata: `${baseUrl}/.well-known/oauth-protected-resource/mcp`,

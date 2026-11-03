@@ -65,19 +65,23 @@ export function buildOAuthDiscoveryUrls(baseUrl: string): OAuthDiscoveryUrls {
   };
 }
 
-/** MCP client configuration pointing at the OAuth 2.1 endpoints, same JSON style as buildMcpClientConfig. */
+/** MCP client configuration pointing at the OAuth 2.1 endpoints, same top-level `mcpServers` map as buildMcpClientConfig. */
 export function buildMcpOAuthClientConfig(baseUrl: string): string {
   const urls = buildOAuthDiscoveryUrls(baseUrl);
   return JSON.stringify(
     {
-      url: urls.resource,
-      auth: "oauth2.1",
-      protectedResourceMetadata: urls.protectedResourceMetadata,
-      authorizationServerMetadata: urls.authorizationServerMetadata,
-      registrationEndpoint: urls.registrationEndpoint,
-      authorizationEndpoint: urls.authorizationEndpoint,
-      tokenEndpoint: urls.tokenEndpoint,
-      scopes: urls.scopes,
+      mcpServers: {
+        "open-connector": {
+          url: urls.resource,
+          auth: "oauth2.1",
+          protectedResourceMetadata: urls.protectedResourceMetadata,
+          authorizationServerMetadata: urls.authorizationServerMetadata,
+          registrationEndpoint: urls.registrationEndpoint,
+          authorizationEndpoint: urls.authorizationEndpoint,
+          tokenEndpoint: urls.tokenEndpoint,
+          scopes: urls.scopes,
+        },
+      },
     },
     null,
     2,

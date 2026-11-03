@@ -479,7 +479,7 @@
       "client_secret_post": "Corps de la requête"
     },
     "edit": "Modifier",
-    "rotateSecret": "Rotater le secret",
+    "rotateSecret": "Renouveler le secret",
     "delete": "Supprimer",
     "save": "Enregistrer",
     "create": "Créer le client",
@@ -507,10 +507,10 @@
     "toasts": {
       "created": "Client créé.",
       "updated": "Client mis à jour.",
-      "rotated": "Secret rotaté.",
+      "rotated": "Secret renouvelé.",
       "deleted": "Client supprimé.",
       "saveFailed": "Impossible d’enregistrer le client.",
-      "rotateFailed": "Impossible de rotater le secret.",
+      "rotateFailed": "Impossible de renouveler le secret.",
       "deleteFailed": "Impossible de supprimer le client."
     },
     "errors": {
@@ -803,7 +803,7 @@
       "oauthHelp": "Les clients MCP découvrent automatiquement le serveur d’autorisation OAuth 2.1. L’inscription dynamique de clients est disponible si votre client en a besoin.",
       "oauthPkceNote": "PKCE S256 est obligatoire, et le paramètre resource (l’URI de ressource MCP) doit être envoyé dans les requêtes authorize et token.",
       "oauthDiscovery": "Points de terminaison de découverte OAuth 2.1",
-      "oauthCliSdkNote": "OAuth 2.1 s’applique aux clients MCP. Le CLI et le SDK ci-dessous s’authentifient avec des Runtime Tokens.",
+      "oauthCliSdkNote": "OAuth 2.1 concerne les clients MCP. Les exemples CLI et SDK ci-dessous s’authentifient avec des Runtime Tokens, qu’une passerelle en mode OAuth seul refuse : passez la passerelle en mode mixte ou fournissez un jeton d’accès OAuth pour ces exemples.",
       "tokenHelp": "Créez un jeton et remplacez <RUNTIME_TOKEN>. Cette page ne conserve aucun jeton.",
       "createToken": "Créer un Runtime Token",
       "tokenDifferenceTitle": "Quelle clé utiliser ?",
