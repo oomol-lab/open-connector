@@ -244,6 +244,8 @@ export type ActionDefinition = {
   description: string;
   /** Whether the action reads, changes, or destructively changes provider state. */
   operationType: ActionOperationType;
+  /** Explicit supported credential types. Omission inherits the provider's capabilities. */
+  authTypes?: AuthType[];
   /** Provider-native OAuth scopes, permission names, or capability strings needed for this action. */
   requiredScopes: string[];
   /** Provider-native permissions or scopes users must grant. */
