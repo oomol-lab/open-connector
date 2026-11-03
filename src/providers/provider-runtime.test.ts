@@ -79,6 +79,20 @@ describe("toProviderExecutionError", () => {
     ).toBe("provider_error");
   });
 
+  it("infers insufficient_credit from a bare upstream 402", () => {
+    expect(toProviderExecutionError(new ProviderRequestError(402, "Payment required"), "failed")).toMatchObject({
+      error: { code: "insufficient_credit", message: "Payment required", details: { status: 402 } },
+    });
+    expect(
+      toProviderExecutionError(new ProviderRequestError(402, "Payment required", undefined, "provider_error"), "failed")
+        .error?.code,
+    ).toBe("insufficient_credit");
+    expect(
+      toProviderExecutionError(new ProviderRequestError(402, "Payment required", undefined, "invalid_input"), "failed")
+        .error?.code,
+    ).toBe("invalid_input");
+  });
+
   it("maps an upstream redirect status to a provider error rather than invalid input", () => {
     expect(toProviderExecutionError(new ProviderRequestError(302, "redirected"), "failed").error?.code).toBe(
       "provider_error",
@@ -681,6 +695,20 @@ describe("provider egress SSRF guard", () => {
     if (result.ok) throw new Error("expected failure");
     expect(result.error.message).toBe("endpoint must be a relative path");
     expect(calls).toHaveLength(0);
+  });
+
+  it("classifies a bare upstream 402 from a proxy as insufficient_credit", async () => {
+    const calls = stubFetchSequence([new Response("payment required", { status: 402 })]);
+    const proxy = defineProviderProxy({
+      service: "test_service",
+      baseUrl: "https://api.example.com/v1/",
+      auth: { type: "bearer" },
+    });
+
+    const result = await proxy({ method: "GET", endpoint: "/items" }, executionContext);
+
+    expect(calls).toHaveLength(1);
+    expect(result).toMatchObject({ ok: false, error: { code: "insufficient_credit", details: { status: 402 } } });
   });
 
   it("keeps Z-API-style path rewrites on the provider origin", async () => {
