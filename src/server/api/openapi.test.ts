@@ -108,6 +108,63 @@ describe("action execution OpenAPI", () => {
     expect(Object.keys(setup.get.responses).sort()).toEqual(["200", "401", "403", "404"]);
   });
 
+  it("documents the console OAuth connection-request route", () => {
+    const document = createOpenApiDocument();
+    const route = document.paths["/api/oauth/connection-requests"] as {
+      post: {
+        requestBody: {
+          content: {
+            "application/json": {
+              schema: { required?: string[]; properties?: Record<string, unknown> };
+            };
+          };
+        };
+        responses: Record<string, unknown>;
+      };
+    };
+
+    expect(route.post.requestBody.content["application/json"].schema.required).toEqual(["service", "connectionName"]);
+    expect(route.post.requestBody.content["application/json"].schema.properties).toHaveProperty("appId");
+    expect(route.post.requestBody.content["application/json"].schema.properties).toMatchObject({
+      authorizationOptionIds: { type: "array", items: { type: "string" } },
+    });
+    expect(Object.keys(route.post.responses).sort()).toEqual([
+      "200",
+      "400",
+      "401",
+      "403",
+      "404",
+      "409",
+      "429",
+      "502",
+      "503",
+      "504",
+    ]);
+    const started = route.post.responses["200"] as {
+      content: {
+        "application/json": { schema: { properties?: Record<string, unknown>; required?: string[] } };
+      };
+    };
+    expect(started.content["application/json"].schema.required).toEqual([
+      "authorizationUrl",
+      "stateHandle",
+      "connectionRequestId",
+      "status",
+      "expiresAt",
+    ]);
+    expect(started.content["application/json"].schema.properties).toMatchObject({
+      authorizationUrl: { type: "string" },
+      stateHandle: { type: "string" },
+      connectionRequestId: { type: "string" },
+      status: { const: "initiated" },
+      expiresAt: { type: "string" },
+    });
+    const errorResponse = document.components.schemas.ErrorResponse as {
+      properties: { error: { properties?: Record<string, unknown> } };
+    };
+    expect(errorResponse.properties.error.properties).toHaveProperty("reason");
+  });
+
   it("documents public /v1 catalog routes with the runtime envelope", () => {
     const document = createOpenApiDocument();
     const search = document.paths["/v1/actions/search"] as {

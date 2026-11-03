@@ -8,7 +8,12 @@ import {
   idempotencyKeyMaxBytes,
   idempotencyRetentionHours,
 } from "../actions/action-idempotency.ts";
-import { oauthConnectionInput, apiKeyConnectionInput, customConnectionInput } from "./connection-input.ts";
+import {
+  oauthConnectionInput,
+  apiKeyConnectionInput,
+  customConnectionInput,
+  consoleOAuthConnectionInput,
+} from "./connection-input.ts";
 import { policyRequestMaxBytes, policyRuleListMaxItems, policyRuleMaxBytes } from "./policy-input.ts";
 
 /**
@@ -42,6 +47,9 @@ const errorPayloadSchema = jsonSchema.object(
   {
     code: jsonSchema.string({ description: "Stable machine-readable error code." }),
     message: jsonSchema.string({ description: "Human-readable error message." }),
+    reason: jsonSchema.optional(
+      jsonSchema.string({ description: "SaaS- or provider-specific failure reason, when one is available." }),
+    ),
     details: {},
   },
   {
@@ -1969,13 +1977,16 @@ function connectionManagementPaths(): Record<string, unknown> {
     providerAccountId: jsonSchema.string("The provider account identifier."),
     comment: jsonSchema.nullableString("An optional administrator note."),
   });
-  const start = jsonSchema.object("An OAuth authorization attempt. Poll connectionRequestId to obtain its result.", {
-    authorizationUrl: jsonSchema.string(),
-    stateHandle: jsonSchema.string(),
-    connectionRequestId: jsonSchema.string(),
-    status: jsonSchema.literal("initiated"),
-    expiresAt: jsonSchema.string(),
-  });
+  const start = jsonSchema.requiredObject(
+    "An OAuth authorization attempt. Poll connectionRequestId to obtain its result.",
+    {
+      authorizationUrl: jsonSchema.string(),
+      stateHandle: jsonSchema.string(),
+      connectionRequestId: jsonSchema.string(),
+      status: jsonSchema.literal("initiated"),
+      expiresAt: jsonSchema.string(),
+    },
+  );
   const request = jsonSchema.object(
     "One authorization attempt; results remain available until expiresAt plus 24 hours.",
     {
@@ -2135,5 +2146,33 @@ function connectionManagementPaths(): Record<string, unknown> {
       };
     }
   }
+  paths["/api/oauth/connection-requests"] = {
+    post: {
+      tags: ["Connections"],
+      summary: "Start an OAuth connection request from the console.",
+      description:
+        "Console alias for starting an OAuth connection: returns the provider authorization URL and a connection request id to poll. An appId reconnects an existing connection and must match service and connectionName. Requires administrator credentials.",
+      requestBody: {
+        required: true,
+        content: {
+          "application/json": {
+            schema: z.toJSONSchema(consoleOAuthConnectionInput),
+          },
+        },
+      },
+      responses: {
+        200: jsonResponse(start),
+        400: jsonResponse({ $ref: "#/components/schemas/ErrorResponse" }),
+        401: jsonResponse(runtimeFailureSchema()),
+        403: jsonResponse(runtimeFailureSchema()),
+        404: jsonResponse({ $ref: "#/components/schemas/ErrorResponse" }),
+        409: jsonResponse({ $ref: "#/components/schemas/ErrorResponse" }),
+        429: jsonResponse({ $ref: "#/components/schemas/ErrorResponse" }),
+        502: jsonResponse({ $ref: "#/components/schemas/ErrorResponse" }),
+        503: jsonResponse({ $ref: "#/components/schemas/ErrorResponse" }),
+        504: jsonResponse({ $ref: "#/components/schemas/ErrorResponse" }),
+      },
+    },
+  };
   return paths;
 }
