@@ -264,6 +264,10 @@ account identity fields and never include stored credentials. Persistent tokens 
 granted. `get_action_guide` and `execute_action` deny ungranted credential connections before lookup.
 Virtual `no_auth` connections remain available.
 
+Action input validation runs before credential resolution and provider executor loading. Schema
+errors return `invalid_input` without refreshing OAuth credentials. MCP validation errors include
+execution and audit metadata but omit the unresolved `connection` field.
+
 Preview MCP tool metadata:
 
 ```bash
@@ -372,6 +376,19 @@ run before remote discovery or execution. The runtime checks the selected config
 capabilities without removing actions from the global catalog. It does not load local provider
 executors or refresh local OAuth credentials for a SaaS connection, and does not fall back to
 another connection after a failure.
+
+Execution shares one validated capability snapshot per runtime for up to 30 seconds. Concurrent
+Action and proxy calls share an in-flight discovery request. Project binding and key are still read
+from storage for each execution, and key rotation or a replacement binding cannot reuse the old
+snapshot. Project health, provider-config reads and authorization setup fetch fresh discovery;
+use the administrator provider-config refresh after changing capabilities on SaaS to update the
+snapshot immediately. Otherwise capability changes can take up to 30 seconds to appear locally.
+
+Every dispatched operation still reaches the SaaS execution endpoint for its current project,
+account, configuration and permission checks. A project-key or provider/configuration rejection
+invalidates the snapshot for the next call; it never replays the rejected POST. Execution rate limits and
+transport failures retain a still-fresh snapshot. Cancelling one shared-discovery waiter ends only
+that caller's wait; when all waiters cancel, Connect aborts discovery and discards the pending entry.
 
 Action responses keep the usual action output in `data`. The local `meta.executionId` stays
 unchanged; `meta.remoteExecutionId` identifies the SaaS execution when available and is also
@@ -531,6 +548,10 @@ Request body:
 stored credentials local and lets the provider proxy executor apply provider-specific authentication.
 Successful responses use the standard `/v1` success envelope with `data.status`, `data.headers`, and
 `data.data`.
+
+Caller cancellation returns HTTP 400 with `errorCode: "execution_cancelled"`. An already cancelled
+request stops before credential resolution; cancellation after dispatch does not undo provider
+side effects or automatically replay the request.
 
 Most proxies run under the same 30 second per-request budget as actions, covering the upstream request
 and the response body read. A provider that does not answer in time returns HTTP 500 with `errorCode`

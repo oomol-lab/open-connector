@@ -39,6 +39,11 @@ export class SqlConnectionStore implements IConnectionStore {
     return row ? this.read(row) : undefined;
   }
 
+  async getById(id: string): Promise<StoredConnection | undefined> {
+    const [[row]] = await this.transaction([{ sql: "select * from connections where id = ?", values: [id] }]);
+    return row ? this.read(row) : undefined;
+  }
+
   async list(): Promise<StoredConnection[]> {
     const [rows] = await this.transaction([
       { sql: "select * from connections order by service, connection_name", values: [] },

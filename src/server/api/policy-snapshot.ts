@@ -4,6 +4,7 @@ import type { IRuntimePolicyStore } from "../storage/runtime-policy-store.ts";
 import type { Context } from "hono";
 
 import { emptyPolicyRules } from "../../core/action-policy.ts";
+import { measureExecutionPhase } from "../../core/execution-timing.ts";
 import { readRuntimeGrant } from "./auth.ts";
 
 export interface PolicySnapshotProviderOptions {
@@ -48,7 +49,7 @@ export function createPolicySnapshotProvider({
     const request = context.req.raw;
     let snapshot = policySnapshots.get(request);
     if (!snapshot) {
-      snapshot = loadPolicySnapshot(context);
+      snapshot = measureExecutionPhase("policyMs", () => loadPolicySnapshot(context));
       policySnapshots.set(request, snapshot);
     }
     return snapshot;

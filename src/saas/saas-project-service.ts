@@ -1,9 +1,20 @@
 import type { CatalogStore, RuntimeProviderDefinition } from "../catalog-store.ts";
 import type { ISecretCodec } from "../server/secrets/secret-codec-core.ts";
 import type { ManagedProject, SaasProjectStore } from "../server/storage/saas-project-store.ts";
-import type { SaasProviderConfig } from "./saas-client.ts";
+import type { SaasDiscovery, SaasProviderConfig } from "./saas-client.ts";
 
+import { measureExecutionPhase } from "../core/execution-timing.ts";
 import { normalizeSaasBaseUrl, SaasClient, SaasError } from "./saas-client.ts";
+
+const executionDiscoveryTtlMs = 30_000;
+
+interface DiscoveryEntry {
+  key: string;
+  value: Promise<SaasDiscovery>;
+  controller: AbortController;
+  waiters: number;
+  expiresAt: number | undefined;
+}
 
 export interface SaasProjectState {
   configured: boolean;
@@ -35,6 +46,7 @@ export interface SaasProjectServiceOptions {
 export class SaasProjectService {
   private readonly options: SaasProjectServiceOptions;
   private readonly client: SaasClient;
+  private discovery: DiscoveryEntry | undefined;
 
   constructor(options: SaasProjectServiceOptions) {
     this.options = options;
@@ -149,6 +161,7 @@ export class SaasProjectService {
         "The project identity changed. Reload the configuration before retrying.",
         409,
       );
+    this.discovery = undefined;
     return {
       configured: true,
       managedProjectId: project.id,
@@ -167,6 +180,7 @@ export class SaasProjectService {
         "Clear service defaults, connections, pending requests and cleanup tasks before removing this project.",
         409,
       );
+    this.discovery = undefined;
   }
 
   async listProviderConfigs(
@@ -236,7 +250,9 @@ export class SaasProjectService {
   ): Promise<{ project: ManagedProject; config: SaasProviderConfig }> {
     const provider = this.getProvider(service);
     this.requireOrigin();
-    const { project, config } = await this.resolveExecutionConfig(service, configId, managedProjectId, signal);
+    const project = await this.requireProject(managedProjectId);
+    const discovery = await this.discover(project, signal);
+    const config = this.findConfig(discovery, service, configId);
     const auth = provider.auth.find((auth) => auth.type === "oauth2")!;
     const required = new Set(auth.authorizationOptions?.filter((option) => option.required).map((option) => option.id));
     for (const id of required)
@@ -259,12 +275,27 @@ export class SaasProjectService {
     managedProjectId: string | undefined,
     signal?: AbortSignal,
   ): Promise<{ project: ManagedProject; config: SaasProviderConfig }> {
+    signal?.throwIfAborted();
     const project = await this.requireProject(managedProjectId);
-    const discovery = await this.discover(project, signal);
+    const key = this.discoveryKey(project);
+    const cached = this.discovery;
+    const discovery =
+      cached?.key === key && (cached.expiresAt === undefined || cached.expiresAt > performance.now())
+        ? await this.waitForDiscovery(cached, signal)
+        : await this.discover(project, signal);
+    return { project, config: this.findConfig(discovery, service, configId) };
+  }
+
+  /** Invalidate rejected capabilities without evicting a replacement project's snapshot. */
+  invalidateDiscovery(project: ManagedProject): void {
+    if (this.discovery?.key === this.discoveryKey(project)) this.discovery = undefined;
+  }
+
+  private findConfig(discovery: SaasDiscovery, service: string, configId: string): SaasProviderConfig {
     const config = discovery.providerConfigs.find((config) => config.id === configId && config.service === service);
     if (!config)
       throw new SaasError("oauth_source_mismatch", "Select an available OAuth configuration for this service.", 409);
-    return { project, config };
+    return config;
   }
 
   async requireProject(managedProjectId?: string): Promise<ManagedProject> {
@@ -275,15 +306,60 @@ export class SaasProjectService {
     return project;
   }
 
-  private async discover(project: ManagedProject, signal?: AbortSignal): ReturnType<SaasClient["discover"]> {
-    const discovery = await this.client.discover(project, signal);
-    if (discovery.projectId !== project.projectId)
-      throw new SaasError(
-        "oauth_source_mismatch",
-        "SaaS project identity does not match the saved configuration.",
-        409,
-      );
-    return discovery;
+  private discoveryKey(project: ManagedProject): string {
+    return JSON.stringify([project.id, project.projectId, project.baseUrl, project.apiKey]);
+  }
+
+  private discover(project: ManagedProject, signal?: AbortSignal): Promise<SaasDiscovery> {
+    signal?.throwIfAborted();
+    const controller = new AbortController();
+    const entry: DiscoveryEntry = {
+      key: this.discoveryKey(project),
+      controller,
+      waiters: 0,
+      expiresAt: undefined,
+      value: this.client
+        .discover(project, controller.signal)
+        .then((discovery) => {
+          if (discovery.projectId !== project.projectId)
+            throw new SaasError(
+              "oauth_source_mismatch",
+              "SaaS project identity does not match the saved configuration.",
+              409,
+            );
+          entry.expiresAt = performance.now() + executionDiscoveryTtlMs;
+          return discovery;
+        })
+        .catch((error: unknown) => {
+          if (this.discovery === entry) this.discovery = undefined;
+          throw error;
+        }),
+    };
+    this.discovery = entry;
+    return this.waitForDiscovery(entry, signal);
+  }
+
+  private waitForDiscovery(entry: DiscoveryEntry, signal?: AbortSignal): Promise<SaasDiscovery> {
+    return measureExecutionPhase("saasDiscoveryMs", async () => {
+      signal?.throwIfAborted();
+      entry.waiters++;
+      let abort: (() => void) | undefined;
+      try {
+        if (!signal) return await entry.value;
+        const cancelled = new Promise<never>((_resolve, reject) => {
+          abort = () => reject(signal.reason);
+          signal.addEventListener("abort", abort, { once: true });
+        });
+        return await Promise.race([entry.value, cancelled]);
+      } finally {
+        if (signal && abort) signal.removeEventListener("abort", abort);
+        entry.waiters--;
+        if (entry.waiters === 0 && entry.expiresAt === undefined) {
+          if (this.discovery === entry) this.discovery = undefined;
+          entry.controller.abort();
+        }
+      }
+    });
   }
 
   private getProvider(service: string): RuntimeProviderDefinition {

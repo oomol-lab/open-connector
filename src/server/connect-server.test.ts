@@ -144,6 +144,108 @@ afterEach(() => {
 });
 
 describe("ConnectServer", () => {
+  it.each([
+    ["success", 200],
+    ["provider_failure", 500],
+    ["cancelled", 400],
+    ["audit_failure", 200],
+    ["auth_failure", 401],
+    ["policy_failure", 500],
+  ])("logs request and phase timings for %s", async (outcome, status) => {
+    let now = 0;
+    vi.spyOn(performance, "now").mockImplementation(() => now);
+    const { entries, logger } = createTestLogger();
+    const controller = new AbortController();
+    const catalog = createCatalogStore([{ ...apiKeyProvider, actions: [echoAction] }], {
+      executableActionIds: [echoAction.id],
+    });
+    const getAction = catalog.getAction;
+    vi.spyOn(catalog, "getAction").mockImplementation(async (id) => {
+      now += 5;
+      return getAction(id);
+    });
+    const runtimePolicyStore = new MemoryRuntimePolicyStore();
+    vi.spyOn(runtimePolicyStore, "get").mockImplementation(async () => {
+      now += 3;
+      if (outcome === "policy_failure") throw new Error("private-policy-data");
+      return undefined;
+    });
+    vi.spyOn(ConnectionService.prototype, "getConnectionSummary").mockImplementation(async () => {
+      now += 11;
+      return undefined;
+    });
+    vi.spyOn(ConnectionService.prototype, "resolveConnection").mockImplementation(async () => {
+      now += 13;
+      return { source: "local" };
+    });
+    const runs = new MemoryRunLogStore(outcome === "audit_failure" ? new Error("private-audit-data") : undefined);
+    const add = runs.add.bind(runs);
+    vi.spyOn(runs, "add").mockImplementation(async (run) => {
+      now += 19;
+      return add(run);
+    });
+    const app = createTestServer([apiKeyProvider], {
+      catalog,
+      runs,
+      logger,
+      runtimePolicyStore,
+      auth: {
+        verifyRuntimeJwt: async () => {
+          now += 2;
+          return outcome !== "auth_failure";
+        },
+      },
+      providerLoader: {
+        loadActionExecutor: async () => {
+          now += 7;
+          return async () => {
+            now += 17;
+            if (outcome === "cancelled") controller.abort();
+            controller.signal.throwIfAborted();
+            if (outcome === "provider_failure") throw new Error("private-provider-data");
+            return { ok: true, output: {} };
+          };
+        },
+        loadProxyExecutor: async () => undefined,
+        loadCredentialValidators: async () => undefined,
+      },
+    }).createApp();
+    const response = await app.fetch(
+      new Request("http://localhost/v1/actions/example.echo?token=private-query", {
+        method: "POST",
+        headers: { authorization: "Bearer private-credential", "content-type": "application/json" },
+        body: JSON.stringify({ input: {} }),
+        signal: controller.signal,
+      }),
+    );
+
+    expect(response.status).toBe(status);
+    const requestLogs = entries.filter((entry) => entry.message === "runtime request completed");
+    expect(requestLogs).toHaveLength(1);
+    const phases =
+      outcome === "auth_failure"
+        ? { authMs: 2 }
+        : outcome === "policy_failure"
+          ? { authMs: 2, policyMs: 3 }
+          : { authMs: 2, policyMs: 3, schemaMs: 5, credentialMs: 24, executorLoadMs: 7, providerMs: 17, auditMs: 19 };
+    const totalMs = outcome === "auth_failure" ? 2 : outcome === "policy_failure" ? 5 : 77;
+    expect(requestLogs[0].fields).toEqual({
+      method: "POST",
+      path: "/v1/actions/example.echo",
+      status,
+      cancelled: outcome === "cancelled",
+      timings: { requestId: expect.any(String), totalMs, phases },
+    });
+    const actionLog = entries.find((entry) =>
+      ["action run completed", "action run failed", "action run cancelled"].includes(entry.message),
+    );
+    if (actionLog) {
+      expect(actionLog.fields.timings).toEqual(requestLogs[0].fields.timings);
+      expect(actionLog.fields).toMatchObject({ auditPersisted: outcome !== "audit_failure" });
+    }
+    expect(JSON.stringify(requestLogs)).not.toContain("private-");
+  });
+
   describe("Feishu inbound event verification", () => {
     const feishuProvider: ProviderDefinition = {
       service: "feishu_app_bot",
@@ -4193,10 +4295,10 @@ describe("ConnectServer", () => {
     const response = await responsePromise;
 
     expect(proxySignal?.aborted).toBe(true);
-    expect(response.status).toBe(500);
+    expect(response.status).toBe(400);
     await expect(response.json()).resolves.toMatchObject({
       success: false,
-      errorCode: "internal_error",
+      errorCode: "execution_cancelled",
     });
   });
 
@@ -4860,6 +4962,10 @@ class TransitEchoProviderLoader extends EchoProviderLoader {
 class MemoryConnectionStore implements IConnectionStore {
   private readonly store = new Map<string, StoredConnection>();
 
+  async getById(id: string): Promise<StoredConnection | undefined> {
+    return [...this.store.values()].find((connection) => connection.id === id);
+  }
+
   async get(service: string, connectionName: string): Promise<StoredConnection | undefined> {
     return this.store.get(createConnectionKey(service, connectionName));
   }
@@ -4963,6 +5069,10 @@ class MemoryOAuthStateStore implements IOAuthStateStore {
 
 class MemoryRuntimeTokenStore implements IRuntimeTokenStore {
   private readonly tokens = new Map<string, RuntimeTokenRecord>();
+
+  async hasAny(): Promise<boolean> {
+    return this.tokens.size > 0;
+  }
 
   async add(record: RuntimeTokenRecord): Promise<void> {
     this.tokens.set(record.id, record);

@@ -55,6 +55,7 @@ const discovery = {
 const input = { baseUrl: "https://saas.example/", projectApiKey: "project-secret" };
 const databases: SqliteRuntimeDatabase[] = [];
 afterEach(() => {
+  vi.restoreAllMocks();
   for (const db of databases.splice(0)) db.close();
 });
 function setup(origin: string | undefined = "https://connect.example", encrypted = true) {
@@ -76,6 +77,227 @@ function setup(origin: string | undefined = "https://connect.example", encrypted
 }
 
 describe("SaasProjectService", () => {
+  it("coalesces execution discovery and expires successful snapshots after 30 seconds", async () => {
+    let now = 0;
+    vi.spyOn(performance, "now").mockImplementation(() => now);
+    const { service, fetcher } = setup();
+    await service.configure(input);
+    fetcher.mockClear();
+
+    const configs = await Promise.all(
+      Array.from({ length: 10 }, () => service.resolveExecutionConfig("example", "config", undefined)),
+    );
+    expect(configs.every(({ config }) => config.actionIds.includes("example.read"))).toBe(true);
+    expect(fetcher).toHaveBeenCalledOnce();
+    now = 29_999;
+    await service.resolveExecutionConfig("example", "config", undefined);
+    expect(fetcher).toHaveBeenCalledOnce();
+    now = 30_000;
+    await service.resolveExecutionConfig("example", "config", undefined);
+    expect(fetcher).toHaveBeenCalledTimes(2);
+  });
+
+  it.each(["health", "configs", "authorization"])("refreshes execution capabilities through %s reads", async (kind) => {
+    const { service, fetcher } = setup();
+    await service.configure(input);
+    await service.resolveExecutionConfig("example", "config", undefined);
+    fetcher.mockClear();
+    fetcher.mockResolvedValueOnce(
+      Response.json({
+        success: true,
+        data: {
+          ...discovery,
+          providerConfigs: [{ ...discovery.providerConfigs[0], actionIds: [] }],
+        },
+      }),
+    );
+
+    if (kind === "health") await service.getState();
+    else if (kind === "configs") await service.listProviderConfigs();
+    else await service.resolveConfig("example", "config");
+
+    expect((await service.resolveExecutionConfig("example", "config", undefined)).config.actionIds).toEqual([]);
+    expect(fetcher).toHaveBeenCalledOnce();
+  });
+
+  it("detects keys rotated by another instance and keeps late invalidations away from the replacement", async () => {
+    const { service, database, fetcher } = setup();
+    await service.configure(input);
+    const previous = (await database.saasProjectStore.getProject())!;
+    await service.resolveExecutionConfig("example", "config", undefined);
+    await database.saasProjectStore.saveProject({ ...previous, apiKey: "rotated-key" });
+    fetcher.mockClear();
+
+    const current = await service.resolveExecutionConfig("example", "config", undefined);
+    expect(current.project.apiKey).toBe("rotated-key");
+    expect(new Headers(fetcher.mock.calls[0][1]?.headers).get("authorization")).toBe("Bearer rotated-key");
+    service.invalidateDiscovery(previous);
+    await service.resolveExecutionConfig("example", "config", undefined);
+    expect(fetcher).toHaveBeenCalledOnce();
+  });
+
+  it("discards execution capabilities when the project configuration is saved with the same key", async () => {
+    const { service, fetcher } = setup();
+    await service.configure(input);
+    await service.resolveExecutionConfig("example", "config", undefined);
+    fetcher.mockImplementation(async () =>
+      Response.json({
+        success: true,
+        data: {
+          ...discovery,
+          providerConfigs: [{ ...discovery.providerConfigs[0], actionIds: ["replacement.action"] }],
+        },
+      }),
+    );
+    await service.configure(input);
+    expect((await service.resolveExecutionConfig("example", "config", undefined)).config.actionIds).toEqual([
+      "replacement.action",
+    ]);
+  });
+
+  it("rechecks the stored binding even while capabilities are cached", async () => {
+    const { service, database, fetcher } = setup();
+    await service.configure(input);
+    const previous = (await database.saasProjectStore.getProject())!;
+    await service.resolveExecutionConfig("example", "config", previous.id);
+    fetcher.mockClear();
+    expect(await database.saasProjectStore.deleteProject(previous.id)).toBe(true);
+    await expect(service.resolveExecutionConfig("example", "config", previous.id)).rejects.toMatchObject({
+      code: "oauth_source_not_configured",
+    });
+    await database.saasProjectStore.saveProject({ ...previous, id: "replacement-binding" });
+    await expect(service.resolveExecutionConfig("example", "config", previous.id)).rejects.toMatchObject({
+      code: "oauth_source_mismatch",
+    });
+    expect(fetcher).not.toHaveBeenCalled();
+  });
+
+  it.each(["network", "identity"])("retries discovery after a %s failure without caching it", async (failure) => {
+    const { service, fetcher } = setup();
+    await service.configure(input);
+    fetcher.mockClear();
+    if (failure === "network") fetcher.mockRejectedValueOnce(new TypeError("network unavailable"));
+    else fetcher.mockResolvedValueOnce(Response.json({ success: true, data: { ...discovery, projectId: "other" } }));
+    await expect(service.resolveExecutionConfig("example", "config", undefined)).rejects.toMatchObject({
+      code: failure === "network" ? "oauth_source_unavailable" : "oauth_source_mismatch",
+    });
+    await service.resolveExecutionConfig("example", "config", undefined);
+    await service.resolveExecutionConfig("example", "config", undefined);
+    expect(fetcher).toHaveBeenCalledTimes(2);
+  });
+
+  it("does not retain a healthy snapshot after an explicit refresh rejects the key", async () => {
+    const { service, fetcher } = setup();
+    await service.configure(input);
+    await service.resolveExecutionConfig("example", "config", undefined);
+    fetcher.mockClear();
+    fetcher.mockImplementation(async () => new Response("rejected", { status: 401 }));
+    expect(await service.getState()).toMatchObject({ status: "auth_error" });
+    await expect(service.resolveExecutionConfig("example", "config", undefined)).rejects.toMatchObject({
+      code: "oauth_source_unauthorized",
+    });
+    expect(fetcher).toHaveBeenCalledTimes(2);
+  });
+
+  it("keeps shared discovery alive when only one waiting caller cancels", async () => {
+    const { service, database, fetcher } = setup();
+    await service.configure(input);
+    vi.spyOn(database.saasProjectStore, "getProject").mockResolvedValue(await database.saasProjectStore.getProject());
+    fetcher.mockClear();
+    const started = Promise.withResolvers<AbortSignal>();
+    const reply = Promise.withResolvers<Response>();
+    fetcher.mockImplementationOnce(async (_url, init) => {
+      started.resolve(init!.signal!);
+      return reply.promise;
+    });
+    const controller = new AbortController();
+    const first = service.resolveExecutionConfig("example", "config", undefined, controller.signal);
+    const second = service.resolveExecutionConfig("example", "config", undefined);
+    const sharedSignal = await started.promise;
+    controller.abort();
+    await expect(first).rejects.toMatchObject({ name: "AbortError" });
+    expect(sharedSignal.aborted).toBe(false);
+    reply.resolve(Response.json({ success: true, data: discovery }));
+    await expect(second).resolves.toMatchObject({ config: { id: "config" } });
+    await service.resolveExecutionConfig("example", "config", undefined);
+    expect(fetcher).toHaveBeenCalledOnce();
+  });
+
+  it("aborts discovery after all callers cancel and does not cache a late response", async () => {
+    const { service, database, fetcher } = setup();
+    await service.configure(input);
+    vi.spyOn(database.saasProjectStore, "getProject").mockResolvedValue(await database.saasProjectStore.getProject());
+    fetcher.mockClear();
+    const started = Promise.withResolvers<AbortSignal>();
+    const reply = Promise.withResolvers<Response>();
+    fetcher.mockImplementationOnce(async (_url, init) => {
+      started.resolve(init!.signal!);
+      return reply.promise;
+    });
+    const controllers = [new AbortController(), new AbortController()];
+    const pending = controllers.map((controller) =>
+      service.resolveExecutionConfig("example", "config", undefined, controller.signal),
+    );
+    const sharedSignal = await started.promise;
+    controllers.forEach((controller) => controller.abort());
+    expect((await Promise.allSettled(pending)).every((result) => result.status === "rejected")).toBe(true);
+    expect(sharedSignal.aborted).toBe(true);
+    await service.resolveExecutionConfig("example", "config", undefined);
+    reply.resolve(Response.json({ success: true, data: { ...discovery, providerConfigs: [] } }));
+    await service.resolveExecutionConfig("example", "config", undefined);
+    expect(fetcher).toHaveBeenCalledTimes(2);
+  });
+
+  it("does not let an old discovery overwrite a rotated project's capabilities", async () => {
+    const { service, database, fetcher } = setup();
+    await service.configure(input);
+    const previous = (await database.saasProjectStore.getProject())!;
+    fetcher.mockClear();
+    const started = Promise.withResolvers<void>();
+    const reply = Promise.withResolvers<Response>();
+    fetcher.mockImplementationOnce(async () => {
+      started.resolve();
+      return reply.promise;
+    });
+    const pending = service.resolveExecutionConfig("example", "config", undefined);
+    await started.promise;
+    await database.saasProjectStore.saveProject({ ...previous, apiKey: "new-key" });
+    fetcher.mockResolvedValueOnce(
+      Response.json({
+        success: true,
+        data: {
+          ...discovery,
+          providerConfigs: [{ ...discovery.providerConfigs[0], actionIds: ["replacement.action"] }],
+        },
+      }),
+    );
+    await service.resolveExecutionConfig("example", "config", undefined);
+    reply.resolve(Response.json({ success: true, data: discovery }));
+    await pending;
+    expect((await service.resolveExecutionConfig("example", "config", undefined)).config.actionIds).toEqual([
+      "replacement.action",
+    ]);
+    expect(fetcher).toHaveBeenCalledTimes(2);
+  });
+
+  it("rejects an already cancelled cache hit without evicting the snapshot", async () => {
+    const { service, database, fetcher } = setup();
+    await service.configure(input);
+    await service.resolveExecutionConfig("example", "config", undefined);
+    fetcher.mockClear();
+    const getProject = vi.spyOn(database.saasProjectStore, "getProject");
+    const controller = new AbortController();
+    controller.abort();
+    await expect(
+      service.resolveExecutionConfig("example", "config", undefined, controller.signal),
+    ).rejects.toMatchObject({
+      name: "AbortError",
+    });
+    expect(getProject).not.toHaveBeenCalled();
+    await service.resolveExecutionConfig("example", "config", undefined);
+    expect(fetcher).not.toHaveBeenCalled();
+  });
+
   it("redacts keys, rotates only within the project, and derives a persistent external identity", async () => {
     const { service, database } = setup();
     const saved = await service.configure(input);

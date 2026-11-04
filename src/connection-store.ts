@@ -37,6 +37,7 @@ export interface StoredLocalConnection {
  */
 export interface IConnectionStore {
   get(service: string, connectionName: string): Promise<StoredConnection | undefined>;
+  getById(id: string): Promise<StoredConnection | undefined>;
   getRetirementGeneration(service: string, connectionName: string): Promise<string>;
   setIfCurrentGeneration(
     service: string,

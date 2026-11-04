@@ -84,6 +84,13 @@ The selected account must match the project, service, provider config and extern
 Only the intersection of the local catalog and SaaS capabilities can execute on that connection;
 the global catalog remains unchanged.
 
+Execution capability discovery is shared and cached for up to 30 seconds per runtime. Each remote
+execution still reads the saved project binding and key and receives SaaS's current authorization
+checks. Project-key changes invalidate reuse immediately. Refresh the provider configurations in
+Connect after changing SaaS capabilities to update the local snapshot immediately; health checks
+and authorization setup also fetch fresh capabilities. Otherwise local capability changes can be
+delayed by up to 30 seconds. Business failures are returned without automatically replaying a POST.
+
 Connect preserves safe error codes, applicable Retry-After, its local execution ID and the
 separate remoteExecutionId. See [runtime API](runtime-api.md#saas-connection-execution) for
 supported proxy values, response formats and budgets. Non-finite query numbers, HEAD, complex

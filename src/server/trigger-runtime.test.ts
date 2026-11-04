@@ -225,6 +225,7 @@ describe("Trigger runtime HTTP boundary", () => {
     const sql = database.connectionStore;
     const store: IConnectionStore = {
       get: sql.get.bind(sql),
+      getById: sql.getById.bind(sql),
       getRetirementGeneration: sql.getRetirementGeneration.bind(sql),
       setIfCurrentGeneration: sql.setIfCurrentGeneration.bind(sql),
       set: sql.set.bind(sql),

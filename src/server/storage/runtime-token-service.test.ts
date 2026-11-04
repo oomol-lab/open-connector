@@ -9,6 +9,7 @@ describe("RuntimeTokenService", () => {
     const store: IRuntimeTokenStore = {
       add: vi.fn(),
       list: vi.fn(async () => []),
+      hasAny: vi.fn(async () => false),
       findByHash: vi.fn(),
       findById: vi.fn(),
       updatePolicy: vi.fn(),
@@ -37,6 +38,7 @@ describe("RuntimeTokenService", () => {
     const store: IRuntimeTokenStore = {
       add: vi.fn(),
       list: vi.fn(async () => [record]),
+      hasAny: vi.fn(async () => true),
       findByHash: vi.fn(async () => record),
       findById: vi.fn(),
       updatePolicy: vi.fn(),
@@ -72,6 +74,7 @@ describe("RuntimeTokenService", () => {
     const store: IRuntimeTokenStore = {
       add: vi.fn(),
       list: vi.fn(async () => [record]),
+      hasAny: vi.fn(async () => true),
       findByHash: vi.fn(async () => record),
       findById: vi.fn(),
       updatePolicy: vi.fn(),
@@ -140,6 +143,10 @@ describe("RuntimeTokenService", () => {
 
 class MemoryRuntimeTokenStore implements IRuntimeTokenStore {
   private readonly tokens = new Map<string, RuntimeTokenRecord>();
+
+  async hasAny(): Promise<boolean> {
+    return this.tokens.size > 0;
+  }
 
   async add(record: RuntimeTokenRecord): Promise<void> {
     this.tokens.set(record.id, record);
