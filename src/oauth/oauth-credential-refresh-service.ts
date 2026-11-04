@@ -5,6 +5,7 @@ import type { OAuthTokenErrorFactory, OAuthTokenResult } from "./oauth-token.ts"
 
 import { ConnectionError } from "../connection-error.ts";
 import { optionalRecord, optionalString, stringRecord } from "../core/cast.ts";
+import { isOAuthCredentialExpired } from "../credential-resolver.ts";
 import { providerFetch } from "../providers/provider-runtime.ts";
 import { readOAuthClientConfigMetadata } from "./oauth-client-config-service.ts";
 import { expiresAtFromLifetime, requestRefreshToken, requestTokenRevocation } from "./oauth-token.ts";
@@ -149,8 +150,12 @@ export class OAuthCredentialRefreshService implements IOAuthCredentialRefresher 
       readOAuthClientConfigMetadata(service, credential.metadata) ?? (await this.clientConfigs.getConfig(service));
     if (providerOAuth?.revokeAccessToken) {
       if (!config) throw createError(`Configure an OAuth client for ${service} before revoking its token.`);
+      const current =
+        credential.refreshToken && isOAuthCredentialExpired(credential)
+          ? await this.refresh(service, credential)
+          : credential;
       await providerOAuth.revokeAccessToken({
-        accessToken: credential.accessToken,
+        accessToken: current.accessToken,
         clientConfig: config,
         fetcher: providerFetch,
         createError,

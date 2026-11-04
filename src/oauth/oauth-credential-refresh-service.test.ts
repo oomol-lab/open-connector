@@ -380,7 +380,12 @@ describe("OAuthCredentialRefreshService revoke", () => {
     vi.stubGlobal("fetch", fetcher);
     const providerLoader = new ProviderLoader({ github: async () => ({ executors: {}, oauth: githubOAuthRuntime }) });
     const service = new OAuthCredentialRefreshService(clientConfigs, providerLoader);
-    await expect(service.revoke("github", expiredCredential({}))).resolves.toBe("done");
+    await expect(
+      service.revoke("github", {
+        ...expiredCredential({}),
+        expiresAt: new Date(Date.now() + 3600_000).toISOString(),
+      }),
+    ).resolves.toBe("done");
     const [url, request] = fetcher.mock.calls[0] as unknown as [string, RequestInit];
     expect(String(url)).toBe("https://api.github.com/applications/client-id/token");
     expect(request.method).toBe("DELETE");
@@ -392,6 +397,38 @@ describe("OAuthCredentialRefreshService revoke", () => {
     expect(String(url)).not.toContain("/grant");
   });
 
+  it("refreshes an expired credential before revoking its individual access token", async () => {
+    const fetcher = vi
+      .fn()
+      .mockResolvedValueOnce(
+        Response.json({ access_token: "rotated-access", refresh_token: "rotated-refresh", expires_in: 3600 }),
+      )
+      .mockResolvedValueOnce(new Response(null, { status: 204 }));
+    vi.stubGlobal("fetch", fetcher);
+    const loader = new ProviderLoader({ github: async () => ({ executors: {}, oauth: githubOAuthRuntime }) });
+    const credential = expiredCredential({});
+    await expect(new OAuthCredentialRefreshService(clientConfigs, loader).revoke("github", credential)).resolves.toBe(
+      "done",
+    );
+    expect(fetcher).toHaveBeenCalledTimes(2);
+    expect(fetcher.mock.calls[0]?.[1].method).toBe("POST");
+    expect(String(fetcher.mock.calls[0]?.[1].body)).toContain("refresh_token=refresh-token");
+    expect(fetcher.mock.calls[1]?.[1].method).toBe("DELETE");
+    expect(String(fetcher.mock.calls[1]?.[0])).toBe("https://api.github.com/applications/client-id/token");
+    expect(JSON.parse(String(fetcher.mock.calls[1]?.[1].body))).toEqual({ access_token: "rotated-access" });
+    expect(credential.accessToken).toBe("old-access-token");
+  });
+
+  it("does not report successful revocation when the required refresh fails", async () => {
+    const fetcher = vi.fn(async () => Response.json({ error: "temporarily_unavailable" }, { status: 429 }));
+    vi.stubGlobal("fetch", fetcher);
+    const loader = new ProviderLoader({ github: async () => ({ executors: {}, oauth: githubOAuthRuntime }) });
+    await expect(
+      new OAuthCredentialRefreshService(clientConfigs, loader).revoke("github", expiredCredential({})),
+    ).rejects.toMatchObject({ code: "oauth_token_refresh_failed" });
+    expect(fetcher).toHaveBeenCalledTimes(1);
+  });
+
   it("does not expose GitHub revocation response or transport credential data", async () => {
     vi.stubGlobal(
       "fetch",
@@ -399,7 +436,12 @@ describe("OAuthCredentialRefreshService revoke", () => {
     );
     const providerLoader = new ProviderLoader({ github: async () => ({ executors: {}, oauth: githubOAuthRuntime }) });
     const service = new OAuthCredentialRefreshService(clientConfigs, providerLoader);
-    await expect(service.revoke("github", expiredCredential({}))).rejects.toMatchObject({
+    await expect(
+      service.revoke("github", {
+        ...expiredCredential({}),
+        expiresAt: new Date(Date.now() + 3600_000).toISOString(),
+      }),
+    ).rejects.toMatchObject({
       code: "oauth_token_revocation_failed",
       message: "GitHub token revocation failed.",
     });
