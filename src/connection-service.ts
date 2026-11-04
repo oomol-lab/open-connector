@@ -561,13 +561,12 @@ export class ConnectionService {
     // refuses (a row bound to active Trigger subscriptions) then ends nothing at the provider,
     // where revoking first would leave a dead grant behind a row that stays.
     let stored: StoredConnection | undefined;
-    let readFailed = false;
     if (options.revoke === true) {
       try {
         stored = await this.store.get(service, connectionName);
       } catch (error) {
-        readFailed = true;
         this.logger?.warn({ service, connectionName, error: describeError(error) }, "oauth token revocation skipped");
+        throw error;
       }
     }
     return this.credentials.withDisconnect(stored?.id, async () => {
@@ -597,11 +596,7 @@ export class ConnectionService {
           : undefined;
       await this.store.delete(service, connectionName, stored, authorizationKey);
       const revoked =
-        options.revoke !== true
-          ? "skipped"
-          : readFailed
-            ? "failed"
-            : await this.revokeDeletedCredential(service, connectionName, stored);
+        options.revoke !== true ? "skipped" : await this.revokeDeletedCredential(service, connectionName, stored);
       const provider = this.catalog.providers.find((provider) => provider.service === service);
       if (provider && this.supportsAuth(provider, "no_auth")) {
         return { ...(await this.connectWithoutAuth(service, { connectionName })), revoked };

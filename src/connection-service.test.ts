@@ -1459,13 +1459,18 @@ describe("ConnectionService", () => {
         list: memory.list.bind(memory),
       };
       const refresher = createRotatingRefresher();
+      const revokeAccessToken = vi.fn(async (): Promise<"done"> => "done");
       refresher.release();
       await memory.set("example", "default", expiredRotating);
-      const service = createService([oauthProvider], { store, oauthCredentials: refresher });
+      const service = createService([oauthProvider], { store, oauthCredentials: { ...refresher, revokeAccessToken } });
 
       await expect(service.getCredential("example")).rejects.toMatchObject({ code: "connection_not_found" });
       expect(refresher.refresh).toHaveBeenCalledOnce();
       expect(updates).toBe(3);
+      expect(revokeAccessToken).toHaveBeenCalledExactlyOnceWith(
+        "example",
+        expect.objectContaining({ accessToken: "fresh-token-2", refreshToken: "refresh-token-2" }),
+      );
     });
   });
 
@@ -2215,6 +2220,20 @@ describe("ConnectionService disconnect revocation", () => {
     expect(fetcher).not.toHaveBeenCalled();
     await expect(store.get("revocable", "default")).resolves.toMatchObject({ credential: { authType: "oauth2" } });
     await expect(service.getCredential("revocable")).resolves.toMatchObject({ accessToken: "access-token" });
+  });
+
+  it("preserves the connection when the credential read fails before revoking disconnect", async () => {
+    const { service, store } = await connectRevocable(revocableProvider);
+    const failure = new Error("Credential read unavailable");
+    vi.spyOn(store, "get").mockRejectedValueOnce(failure);
+    const remove = vi.spyOn(store, "delete");
+    const fetcher = stubRevocationResponse(() => new Response(null, { status: 200 }));
+
+    await expect(service.disconnect("revocable", undefined, { revoke: true })).rejects.toBe(failure);
+
+    expect(remove).not.toHaveBeenCalled();
+    expect(fetcher).not.toHaveBeenCalled();
+    await expect(store.get("revocable", "default")).resolves.toMatchObject({ credential: { authType: "oauth2" } });
   });
 });
 

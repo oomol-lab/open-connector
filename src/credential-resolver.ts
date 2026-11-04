@@ -207,20 +207,6 @@ export class CredentialResolver {
         current.credential.refreshToken !== spent.refreshToken ||
         current.credential.metadata.oauthAuthorizationId !== spent.metadata.oauthAuthorizationId
       ) {
-        // A disconnected generation can finish after a replacement was installed.
-        // Never revoke a token pair that the replacement still holds.
-        const sharesToken =
-          current !== undefined &&
-          current.source !== "saas" &&
-          current.credential.authType === "oauth2" &&
-          (current.credential.accessToken === nextCredential.accessToken ||
-            (nextCredential.refreshToken !== undefined &&
-              current.credential.refreshToken === nextCredential.refreshToken));
-        if (
-          !sharesToken &&
-          (await this.store.wasRevocationRequested(retirementGeneration, oauthAuthorizationKey(selected)))
-        )
-          await refresher.revokeAccessToken?.(service, nextCredential);
         break;
       }
       target = {
@@ -228,6 +214,24 @@ export class CredentialResolver {
         credential: mergeRefreshedOAuthCredential(current.credential, spent, nextCredential),
       };
     }
+    const current = await this.store.get(service, connectionName);
+    const currentCredential =
+      current?.source !== "saas" && current?.credential.authType === "oauth2" ? current.credential : undefined;
+    // Never revoke a token pair held by a replacement or a refresh that did persist.
+    const sharesToken =
+      currentCredential !== undefined &&
+      (currentCredential.accessToken === nextCredential.accessToken ||
+        (nextCredential.refreshToken !== undefined && currentCredential.refreshToken === nextCredential.refreshToken));
+    const stillSpent =
+      current?.id === id &&
+      currentCredential?.accessToken === spent.accessToken &&
+      currentCredential?.refreshToken === spent.refreshToken &&
+      currentCredential?.metadata.oauthAuthorizationId === spent.metadata.oauthAuthorizationId;
+    if (
+      !sharesToken &&
+      (stillSpent || (await this.store.wasRevocationRequested(retirementGeneration, oauthAuthorizationKey(selected))))
+    )
+      await refresher.revokeAccessToken?.(service, nextCredential);
     throw new ConnectionError(
       "connection_not_found",
       `${service} connection changed while its OAuth credential was refreshing. Retry the action.`,
