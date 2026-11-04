@@ -3,6 +3,7 @@ import type { OAuthClientConfigService } from "./oauth-client-config-service.ts"
 
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { githubOAuthRuntime } from "../providers/github/oauth.ts";
+import { githubUserAgent } from "../providers/github/runtime-shared.ts";
 import { ProviderLoader } from "../providers/provider-loader.ts";
 import { OAuthCredentialRefreshService } from "./oauth-credential-refresh-service.ts";
 
@@ -383,6 +384,7 @@ describe("OAuthCredentialRefreshService revoke", () => {
     const [url, request] = fetcher.mock.calls[0] as unknown as [string, RequestInit];
     expect(String(url)).toBe("https://api.github.com/applications/client-id/token");
     expect(request.method).toBe("DELETE");
+    expect(new Headers(request.headers).get("user-agent")).toBe(githubUserAgent);
     expect(new Headers(request.headers).get("authorization")).toBe(
       `Basic ${Buffer.from("client-id:client-secret").toString("base64")}`,
     );

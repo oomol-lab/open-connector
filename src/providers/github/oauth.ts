@@ -1,7 +1,7 @@
 import type { ProviderOAuthRuntime } from "../../oauth/oauth-token.ts";
 
 import { basicAuthorizationHeader, runProviderRequest } from "../provider-runtime.ts";
-import { githubApiBaseUrl, githubApiVersion, githubDefaultAcceptHeader } from "./runtime-shared.ts";
+import { githubApiBaseUrl, githubApiVersion, githubDefaultAcceptHeader, githubUserAgent } from "./runtime-shared.ts";
 
 /** GitHub revokes a single app token through its app-owner API, not RFC 7009. */
 export const githubOAuthRuntime: ProviderOAuthRuntime = {
@@ -19,6 +19,7 @@ export const githubOAuthRuntime: ProviderOAuthRuntime = {
               ),
               "content-type": "application/json",
               "x-github-api-version": githubApiVersion,
+              "user-agent": githubUserAgent,
             },
             body: JSON.stringify({ access_token: input.accessToken }),
             redirect: "manual",
