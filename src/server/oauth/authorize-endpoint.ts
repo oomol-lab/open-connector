@@ -99,6 +99,14 @@ export async function parseAuthorizeRequest(
   if (!scope.includes(accessScope)) {
     throw redirectError("invalid_scope", `Request must include the ${accessScope} scope.`, redirectUri, state);
   }
+  if (scope.some((requested) => !client.scopes.includes(requested))) {
+    throw redirectError(
+      "invalid_scope",
+      "Requested scope exceeds this client's registered scopes.",
+      redirectUri,
+      state,
+    );
+  }
   const codeChallenge = query.get("code_challenge") ?? undefined;
   const challengeMethod = query.get("code_challenge_method");
   if (codeChallenge !== undefined || client.tokenEndpointAuthMethod === "none") {
@@ -342,6 +350,9 @@ export async function handleAuthorizePost(context: Context, deps: AuthorizeDepen
     for (const [key, value] of Object.entries(params)) {
       redirect.searchParams.set(key, value);
     }
+    if (state !== undefined) {
+      redirect.searchParams.set("state", state);
+    }
     redirect.searchParams.set("iss", deps.config.issuer);
     return new Response(null, { status: 302, headers: { location: redirect.toString() } });
   };
@@ -349,7 +360,6 @@ export async function handleAuthorizePost(context: Context, deps: AuthorizeDepen
     return completeRedirect({
       error: "access_denied",
       error_description: "The administrator denied this request.",
-      ...(state ? { state } : {}),
     });
   }
   if (form.get("decision") !== "approve") {
@@ -364,8 +374,14 @@ export async function handleAuthorizePost(context: Context, deps: AuthorizeDepen
   // deleted client. Inside the lock, re-check and only then mint.
   return withClientLock(request.clientId, async () => {
     const current = await deps.clients.get(request.clientId);
-    if (!current) {
+    if (!current || !redirectUriMatches(current.redirectUris, request.redirectUri)) {
       return htmlError(400, "This client or its redirect URI is no longer registered.");
+    }
+    if (request.scope.some((scope) => !current.scopes.includes(scope))) {
+      return completeRedirect({
+        error: "invalid_scope",
+        error_description: "Requested scope exceeds this client's registered scopes.",
+      });
     }
     const backing = await deps.runtimeTokens.createToken(`MCP OAuth • ${current.clientName.slice(0, 120)}`, {
       allowedActions: ["*"],
@@ -391,6 +407,6 @@ export async function handleAuthorizePost(context: Context, deps: AuthorizeDepen
       await deps.runtimeTokens.revokeToken(backing.record.id);
       throw error;
     }
-    return completeRedirect({ code, ...(state ? { state } : {}) });
+    return completeRedirect({ code });
   });
 }

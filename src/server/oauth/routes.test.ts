@@ -217,6 +217,30 @@ describe("access-token audience enforcement", () => {
   });
 });
 
+describe("registered authorization scopes", () => {
+  it("rejects offline access outside the client's registered scopes", async () => {
+    const { app, database } = await setup();
+    const clientId = await createManualClient(app);
+    const url = new URL(`${ISSUER}/oauth/mcp/authorize`);
+    url.search = new URLSearchParams({
+      response_type: "code",
+      client_id: clientId,
+      redirect_uri: REDIRECT,
+      scope: "mcp:access offline_access",
+      code_challenge: pkceChallenge,
+      code_challenge_method: "S256",
+      state: "scope-test",
+    }).toString();
+    const response = await app.request(url);
+    expect(response.status).toBe(302);
+    const redirect = new URL(response.headers.get("location") ?? "");
+    expect(redirect.searchParams.get("error")).toBe("invalid_scope");
+    expect(redirect.searchParams.get("state")).toBe("scope-test");
+    expect(await database.oauthCodeStore.listByClient(clientId)).toEqual([]);
+    expect(await database.runtimeTokenStore.list()).toEqual([]);
+  });
+});
+
 describe("admin client scope validation", () => {
   it("rejects unsupported scopes on create with invalid_input", async () => {
     const { app } = await setup();

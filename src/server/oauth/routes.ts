@@ -108,6 +108,9 @@ export function createOAuthRoutes(options: OAuthRoutesOptions): Hono {
   app.post("/oauth/mcp/authorize", (context: Context) => handleAuthorizePost(context, authorizeDeps));
 
   app.post("/oauth/mcp/token", async (context: Context) => {
+    if (!limiter.take("token", clientKey(context, trustProxyHeaders), tokenRate.limit, tokenRate.windowMs)) {
+      return rateLimitResponse(tokenRate.windowMs);
+    }
     const form = await readForm(context);
     if (!form) {
       return formError(
@@ -115,38 +118,21 @@ export function createOAuthRoutes(options: OAuthRoutesOptions): Hono {
         new TokenError("invalid_request", "Expected an application/x-www-form-urlencoded token request."),
       );
     }
-    if (
-      !limiter.take(
-        "token",
-        form.get("client_id") ?? clientKey(context, trustProxyHeaders),
-        tokenRate.limit,
-        tokenRate.windowMs,
-      )
-    ) {
-      return rateLimitResponse(tokenRate.windowMs);
-    }
     return jsonResult(context, async () =>
       context.json(await handleTokenPost(form, tokenDeps, context.req.header("authorization") ?? undefined)),
     );
   });
 
   app.post("/oauth/mcp/revoke", async (context: Context) => {
+    if (!limiter.take("revoke", clientKey(context, trustProxyHeaders), tokenRate.limit, tokenRate.windowMs)) {
+      return rateLimitResponse(tokenRate.windowMs);
+    }
     const form = await readForm(context);
     if (!form) {
       return formError(
         context,
         new TokenError("invalid_request", "Expected an application/x-www-form-urlencoded revocation request."),
       );
-    }
-    if (
-      !limiter.take(
-        "revoke",
-        form.get("client_id") ?? clientKey(context, trustProxyHeaders),
-        tokenRate.limit,
-        tokenRate.windowMs,
-      )
-    ) {
-      return rateLimitResponse(tokenRate.windowMs);
     }
     return jsonResult(context, async () => {
       await handleRevokePost(form, tokenDeps, context.req.header("authorization") ?? undefined);

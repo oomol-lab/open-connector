@@ -598,3 +598,42 @@ describe("refresh replay detection", () => {
     ).rejects.toMatchObject({ code: "invalid_client", status: 401 });
   });
 });
+
+describe("token endpoint source rate limits", () => {
+  it.each(["token", "revoke"])(
+    "limits /%s despite changing form client ids with Basic authentication",
+    async (endpoint) => {
+      const { app } = await setup();
+      const { clientId, clientSecret } = await createManualClient(app, "client_secret_basic");
+      for (let index = 0; index <= 60; index += 1) {
+        const response = await app.request(`${ISSUER}/oauth/mcp/${endpoint}`, {
+          method: "POST",
+          headers: {
+            "content-type": "application/x-www-form-urlencoded",
+            authorization: basicHeader(clientId, clientSecret ?? ""),
+            "x-forwarded-for": `198.51.100.${index}`,
+          },
+          body: new URLSearchParams({ client_id: `unrelated-${index}`, grant_type: "invalid", token: "unknown" }),
+        });
+        expect(response.status).toBe(index === 60 ? 429 : endpoint === "token" ? 400 : 200);
+        if (index === 60) expect(response.headers.get("retry-after")).toBe("60");
+      }
+    },
+  );
+
+  it.each(["token", "revoke"])("limits /%s authentication failures despite changing client ids", async (endpoint) => {
+    const { app } = await setup();
+    for (let index = 0; index <= 60; index += 1) {
+      const response = await app.request(`${ISSUER}/oauth/mcp/${endpoint}`, {
+        method: "POST",
+        headers: { "content-type": "application/x-www-form-urlencoded" },
+        body: new URLSearchParams({
+          client_id: `unknown-${index}`,
+          grant_type: "refresh_token",
+          refresh_token: "unknown",
+        }),
+      });
+      expect(response.status).toBe(index === 60 ? 429 : 401);
+    }
+  });
+});

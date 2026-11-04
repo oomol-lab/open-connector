@@ -477,3 +477,36 @@ async function createRuntimeToken(database: SqliteRuntimeDatabase): Promise<stri
   const created = await service.createToken("test");
   return created.token;
 }
+
+describe("consent scope enforcement", () => {
+  it("rejects a pending consent after the administrator removes offline access", async () => {
+    const { app, database } = await setup();
+    const { clientId } = await createManualClient(app);
+    const page = await authorizeGetConsent(app, clientId);
+    const handle = /name="handle" value="([^"]+)"/.exec(page)?.[1] ?? "";
+    const updated = await app.request(`${ISSUER}/api/oauth-clients/${clientId}`, {
+      method: "PUT",
+      headers: { "content-type": "application/json", authorization: `Bearer ${ADMIN_TOKEN}` },
+      body: JSON.stringify({ scopes: ["mcp:access"] }),
+    });
+    expect(updated.status).toBe(200);
+    const approved = await app.request(`${ISSUER}/oauth/mcp/authorize`, {
+      method: "POST",
+      headers: { "content-type": "application/x-www-form-urlencoded", origin: ISSUER },
+      body: new URLSearchParams({ handle, decision: "approve", admin_token: ADMIN_TOKEN }),
+    });
+    expect(approved.status).toBe(302);
+    const redirect = new URL(approved.headers.get("location") ?? "");
+    expect(redirect.searchParams.get("error")).toBe("invalid_scope");
+    expect(redirect.searchParams.has("code")).toBe(false);
+    expect(await database.oauthCodeStore.listByClient(clientId)).toEqual([]);
+    expect(await database.runtimeTokenStore.list()).toEqual([]);
+
+    const { location, verifier } = await authorizeAndApprove(app, clientId, "mcp:access");
+    const tokenResponse = await exchangeCode(app, clientId, location.searchParams.get("code") ?? "", verifier);
+    expect(tokenResponse.status).toBe(200);
+    const tokens = await readJson(tokenResponse);
+    expect(tokens.scope).toBe("mcp:access");
+    expect(tokens).not.toHaveProperty("refresh_token");
+  });
+});
