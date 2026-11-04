@@ -50,6 +50,7 @@ export class CredentialResolver {
   private readonly oauthCredentials?: IOAuthCredentialRefresher;
   private readonly providerHttpDispatch?: ProviderHttpDispatchOptions;
   private readonly oauthCredentialRefreshes = new Map<string, Promise<OAuthCredential>>();
+  private readonly disconnectingConnections = new Set<string>();
 
   constructor(options: CredentialResolverOptions) {
     this.store = options.store;
@@ -71,10 +72,25 @@ export class CredentialResolver {
       : undefined;
   }
 
+  /** Keep new refreshes out of a disconnect while allowing an existing refresh to finish. */
+  async withDisconnect<T>(connectionId: string | undefined, work: () => Promise<T>): Promise<T> {
+    if (!connectionId) return work();
+    if (this.disconnectingConnections.has(connectionId))
+      throw new ConnectionError("connection_changed", "The connection is being disconnected.");
+    this.disconnectingConnections.add(connectionId);
+    try {
+      return await work();
+    } finally {
+      this.disconnectingConnections.delete(connectionId);
+    }
+  }
+
   private async resolveOAuthCredential(
     connection: StoredLocalConnection,
     credential: OAuthCredential,
   ): Promise<OAuthCredential> {
+    if (this.disconnectingConnections.has(connection.id))
+      throw new ConnectionError("connection_changed", "The connection is being disconnected.");
     const service = connection.service;
     if (credential.metadata.oauthReauthRequired === true) {
       throw new ConnectionError(

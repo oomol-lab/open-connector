@@ -569,39 +569,41 @@ export class ConnectionService {
         this.logger?.warn({ service, connectionName, error: describeError(error) }, "oauth token revocation skipped");
       }
     }
-    if (stored && stored.source !== "saas" && stored.credential.authType === "oauth2") {
-      const credential = stored.credential;
-      const refresh = this.credentials.getPendingRefresh(stored);
-      if (refresh) {
-        // A failed early refresh can leave the original access token usable for revocation.
-        const refreshed = await refresh.catch(() => credential);
-        const current = await this.store.get(service, connectionName);
-        if (
-          current?.source === "saas" ||
-          current?.id !== stored.id ||
-          current.credential.authType !== "oauth2" ||
-          current.credential.accessToken !== refreshed.accessToken ||
-          current.credential.refreshToken !== refreshed.refreshToken ||
-          current.credential.metadata.oauthAuthorizationId !== refreshed.metadata.oauthAuthorizationId
-        ) {
-          throw new ConnectionError("connection_changed", "The connection changed before it could be disconnected.");
+    return this.credentials.withDisconnect(stored?.id, async () => {
+      if (stored && stored.source !== "saas" && stored.credential.authType === "oauth2") {
+        const credential = stored.credential;
+        const refresh = this.credentials.getPendingRefresh(stored);
+        if (refresh) {
+          // A failed early refresh can leave the original access token usable for revocation.
+          const refreshed = await refresh.catch(() => credential);
+          const current = await this.store.get(service, connectionName);
+          if (
+            current?.source === "saas" ||
+            current?.id !== stored.id ||
+            current.credential.authType !== "oauth2" ||
+            current.credential.accessToken !== refreshed.accessToken ||
+            current.credential.refreshToken !== refreshed.refreshToken ||
+            current.credential.metadata.oauthAuthorizationId !== refreshed.metadata.oauthAuthorizationId
+          ) {
+            throw new ConnectionError("connection_changed", "The connection changed before it could be disconnected.");
+          }
+          stored = current;
         }
-        stored = current;
       }
-    }
-    await this.store.delete(service, connectionName, stored);
-    const revoked =
-      options.revoke !== true
-        ? "skipped"
-        : readFailed
-          ? "failed"
-          : await this.revokeDeletedCredential(service, connectionName, stored);
-    const provider = this.catalog.providers.find((provider) => provider.service === service);
-    if (provider && this.supportsAuth(provider, "no_auth")) {
-      return { ...(await this.connectWithoutAuth(service, { connectionName })), revoked };
-    }
+      await this.store.delete(service, connectionName, stored);
+      const revoked =
+        options.revoke !== true
+          ? "skipped"
+          : readFailed
+            ? "failed"
+            : await this.revokeDeletedCredential(service, connectionName, stored);
+      const provider = this.catalog.providers.find((provider) => provider.service === service);
+      if (provider && this.supportsAuth(provider, "no_auth")) {
+        return { ...(await this.connectWithoutAuth(service, { connectionName })), revoked };
+      }
 
-    return { service, connectionName, configured: false, revoked };
+      return { service, connectionName, configured: false, revoked };
+    });
   }
 
   /**

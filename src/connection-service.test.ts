@@ -1627,6 +1627,50 @@ describe("ConnectionService", () => {
 });
 
 describe("ConnectionService disconnect revocation", () => {
+  it("blocks a new refresh while the selected connection is being deleted", async () => {
+    const store = new MemoryConnectionStore();
+    const credential: Extract<ResolvedCredential, { authType: "oauth2" }> = {
+      authType: "oauth2",
+      accessToken: "old-access",
+      refreshToken: "old-refresh",
+      tokenType: "Bearer",
+      expiresAt: new Date(Date.now() - 60_000).toISOString(),
+      profile: testProfile,
+      metadata: {},
+    };
+    await store.set("example", "default", credential);
+    const started = Promise.withResolvers<void>();
+    const releaseRefresh = Promise.withResolvers<void>();
+    const refresh = vi.fn(async () => {
+      started.resolve();
+      await releaseRefresh.promise;
+      return { ...credential, accessToken: "rotated-access", refreshToken: "rotated-refresh" };
+    });
+    const service = createService([oauthProvider], {
+      store,
+      oauthCredentials: { refresh, revoke: async () => "done" },
+    });
+    const deleting = Promise.withResolvers<void>();
+    const releaseDelete = Promise.withResolvers<void>();
+    const remove = store.delete.bind(store);
+    vi.spyOn(store, "delete").mockImplementationOnce(async (...args) => {
+      deleting.resolve();
+      await releaseDelete.promise;
+      await remove(...args);
+    });
+    const disconnect = service.disconnect("example", undefined, { revoke: true });
+    await deleting.promise;
+    const execution = service.getCredential("example").catch((error: unknown) => error);
+    await Promise.race([started.promise, execution]);
+    releaseDelete.resolve();
+    await expect(disconnect).resolves.toMatchObject({ revoked: "done", configured: false });
+    releaseRefresh.resolve();
+
+    await expect(execution).resolves.toMatchObject({ code: "connection_changed" });
+    expect(refresh).not.toHaveBeenCalled();
+    await expect(store.get("example", "default")).resolves.toBeUndefined();
+  });
+
   it.each(["success", "failure"])("preserves a reconnection while disconnect awaits a refresh %s", async (outcome) => {
     const store = new MemoryConnectionStore();
     const started = Promise.withResolvers<void>();
@@ -1833,6 +1877,36 @@ describe("ConnectionService disconnect revocation", () => {
     return body;
   }
 
+  it("preserves a refresh that finishes while the disconnect credential snapshot is being read", async () => {
+    const { service, store } = await connectRevocable(revocableProvider, createTestLogger(), {
+      expiresAt: new Date(Date.now() + 30_000).toISOString(),
+    });
+    const started = Promise.withResolvers<void>();
+    const release = Promise.withResolvers<void>();
+    const fetcher = stubRevocationResponse(async () => {
+      started.resolve();
+      await release.promise;
+      return Response.json({ access_token: "rotated-access", refresh_token: "rotated-refresh", expires_in: 3600 });
+    });
+    const execution = service.getCredential("revocable");
+    await started.promise;
+    const get = store.get.bind(store);
+    vi.spyOn(store, "get").mockImplementationOnce(async (...args) => {
+      const snapshot = await get(...args);
+      release.resolve();
+      await execution;
+      return snapshot;
+    });
+
+    await expect(service.disconnect("revocable", undefined, { revoke: true })).rejects.toMatchObject({
+      code: "connection_changed",
+    });
+    await expect(store.get("revocable", "default")).resolves.toMatchObject({
+      credential: { accessToken: "rotated-access", refreshToken: "rotated-refresh" },
+    });
+    expect(fetcher).toHaveBeenCalledOnce();
+  });
+
   it("preserves a replacement written after selecting the credential to revoke", async () => {
     const { service, store } = await connectRevocable(revocableProvider);
     const fetcher = stubRevocationResponse(() => new Response(null, { status: 200 }));
@@ -2014,6 +2088,7 @@ describe("ConnectionService disconnect revocation", () => {
 
     expect(fetcher).not.toHaveBeenCalled();
     await expect(store.get("revocable", "default")).resolves.toMatchObject({ credential: { authType: "oauth2" } });
+    await expect(service.getCredential("revocable")).resolves.toMatchObject({ accessToken: "access-token" });
   });
 });
 
