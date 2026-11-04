@@ -130,5 +130,22 @@
         <a href="https://pethost.dev/templates/open-connector/"><strong>一键部署</strong></a>
       </td>
     </tr>
+    <tr>
+      <td valign="middle" align="center">
+        <a href="https://zop.dev/"><img src="../../assets/deployment-options/zopday.svg" alt="ZopDay" width="140"></a>
+      </td>
+      <td valign="top">
+        一键部署，运行已发布的 <code>ghcr.io/oomol-lab/open-connector</code> 镜像，并提供独立的
+        HTTPS 地址。ZopDay 提供容器、处理 TLS，并提供管理面板。您需要自行注册 OAuth 应用。
+        <br><br>
+        <strong>优点：</strong>从 Docker 镜像一键部署、容器管理面板，以及用于自有云环境的 Helm Charts。
+        <br><br>
+        <strong>价格：</strong>见
+        <a href="https://zop.dev/zopday#pricing">ZopDay 定价</a>。
+      </td>
+      <td valign="middle" align="center">
+        <a href="https://zop.dev/zopday/app/deploy?image=ghcr.io/oomol-lab/open-connector&amp;port=3000&amp;name=open-connector&amp;utm_source=github&amp;utm_medium=one_click&amp;utm_content=open-connector"><strong>一键部署</strong></a>
+      </td>
+    </tr>
   </tbody>
 </table>

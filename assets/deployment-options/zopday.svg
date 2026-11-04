@@ -1,0 +1,19 @@
+<svg width="176" height="50" viewBox="0 0 176 50" xmlns="http://www.w3.org/2000/svg">
+  <title>ZopDay</title>
+  <style>
+  .zopday-logotype {
+    fill: #0a0a0a;
+  }
+  .zopday-tile {
+    fill: #FF6B35;
+  }
+  @media (prefers-color-scheme: dark) {
+    .zopday-logotype {
+      fill: #fafafa;
+    }
+  }
+  </style>
+  <rect class="zopday-tile" x="4" y="5" width="40" height="40" rx="9" />
+  <text x="24" y="33" fill="#fff" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="26" font-weight="700" text-anchor="middle">Z</text>
+  <text class="zopday-logotype" x="54" y="33" font-family="-apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif" font-size="22" font-weight="700" letter-spacing="0.5">ZopDay</text>
+</svg>

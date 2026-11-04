@@ -155,5 +155,24 @@ path that includes managed OAuth.
         <a href="https://pethost.dev/templates/open-connector/"><strong>One-click deploy</strong></a>
       </td>
     </tr>
+    <tr>
+      <td valign="middle" align="center">
+        <a href="https://zop.dev/"><img src="../../assets/deployment-options/zopday.svg" alt="ZopDay" width="140"></a>
+      </td>
+      <td valign="top">
+        One-click deploy that runs the published <code>ghcr.io/oomol-lab/open-connector</code>
+        image with its own HTTPS address. ZopDay provisions a container, handles TLS, and gives
+        you a management dashboard. You register OAuth apps yourself.
+        <br><br>
+        <strong>Advantages:</strong> one-click deploy from the Docker image, container management
+        dashboard, and Helm Charts available for own-cloud setups.
+        <br><br>
+        <strong>Pricing:</strong> see
+        <a href="https://zop.dev/zopday#pricing">ZopDay pricing</a>.
+      </td>
+      <td valign="middle" align="center">
+        <a href="https://zop.dev/zopday/app/deploy?image=ghcr.io/oomol-lab/open-connector&amp;port=3000&amp;name=open-connector&amp;utm_source=github&amp;utm_medium=one_click&amp;utm_content=open-connector"><strong>One-click deploy</strong></a>
+      </td>
+    </tr>
   </tbody>
 </table>
