@@ -55,7 +55,9 @@ export class OAuthCredentialRefreshService implements IOAuthCredentialRefresher 
 
     const refreshToken = credential.refreshToken ?? "";
     const createError: OAuthTokenErrorFactory = (message, failure) =>
-      failure?.errorCode === "invalid_grant" && (failure.status === 400 || failure.status === 401)
+      failure &&
+      (failure.errorCode === "invalid_grant" || (service === "github" && failure.errorCode === "bad_refresh_token")) &&
+      [200, 400, 401].includes(failure.status)
         ? new ConnectionError("oauth_reauth_required", `OAuth authorization is no longer valid. Reconnect ${service}.`)
         : new ConnectionError("oauth_token_refresh_failed", message);
     const providerOAuth = await this.providerLoader?.loadProviderOAuthRuntime?.(service);
@@ -135,9 +137,6 @@ export class OAuthCredentialRefreshService implements IOAuthCredentialRefresher 
     } catch {
       return "unsupported";
     }
-    if (!auth.revocationUrl) {
-      return "unsupported";
-    }
     const token = credential.refreshToken || credential.accessToken;
     if (!token) {
       return "unsupported";
@@ -146,6 +145,18 @@ export class OAuthCredentialRefreshService implements IOAuthCredentialRefresher 
       new ConnectionError("oauth_token_revocation_failed", message);
     const config =
       readOAuthClientConfigMetadata(service, credential.metadata) ?? (await this.clientConfigs.getConfig(service));
+    const providerOAuth = await this.providerLoader?.loadProviderOAuthRuntime?.(service);
+    if (providerOAuth?.revokeAccessToken) {
+      if (!config) throw createError(`Configure an OAuth client for ${service} before revoking its token.`);
+      await providerOAuth.revokeAccessToken({
+        accessToken: credential.accessToken,
+        clientConfig: config,
+        fetcher: providerFetch,
+        createError,
+      });
+      return "done";
+    }
+    if (!auth.revocationUrl) return "unsupported";
     let revocationUrl: string;
     if (config) {
       revocationUrl = this.clientConfigs.resolveEndpointUrl(service, auth.revocationUrl, config);

@@ -613,6 +613,7 @@ const issueCommentPaginationFields = {
 export const githubActions: ActionDefinition[] = [
   action({
     name: "get_current_user",
+    authTypes: ["oauth2", "api_key"],
     operationType: "read",
     description:
       "Get the current authenticated GitHub user profile using a personal access token or OAuth user credential. GitHub App installation credentials are not supported.",
@@ -2794,6 +2795,7 @@ export const githubActions: ActionDefinition[] = [
 ];
 
 interface GitHubActionInput {
+  authTypes?: ActionDefinition["authTypes"];
   name: string;
   operationType: ActionDefinition["operationType"];
   description: string;

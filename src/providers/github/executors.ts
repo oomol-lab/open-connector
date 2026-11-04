@@ -28,6 +28,7 @@ import { searchActionHandlers } from "./runtime-search.ts";
 import { githubApiBaseUrl, githubApiVersion, githubDefaultAcceptHeader, githubRequestJson } from "./runtime-shared.ts";
 import { githubRepoEvent } from "./trigger-on-repo-event.ts";
 import { githubPullRequestListener } from "./trigger-watch-pull-request.ts";
+export { githubOAuthRuntime as oauth } from "./oauth.ts";
 
 const service = "github";
 const { get_current_user, ...installationHandlers } = combineProviderActionHandlers<"github", GitHubActionHandler>(

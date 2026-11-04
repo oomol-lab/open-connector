@@ -63,6 +63,13 @@ export interface OAuthAccessTokenRefreshInput {
   createError: OAuthTokenErrorFactory;
 }
 
+export interface OAuthTokenRevokeInput {
+  accessToken: string;
+  clientConfig: OAuthClientConfig;
+  fetcher: typeof fetch;
+  createError: OAuthTokenErrorFactory;
+}
+
 /** Provider-local overrides for token protocols that do not follow the standard OAuth request shape. */
 export interface ProviderOAuthRuntime {
   buildAuthorizationUrl?(input: {
@@ -72,6 +79,7 @@ export interface ProviderOAuthRuntime {
   }): string | Promise<string>;
   exchangeCode?(input: OAuthCodeExchangeInput): Promise<OAuthTokenResult>;
   refreshAccessToken?(input: OAuthAccessTokenRefreshInput): Promise<OAuthTokenResult>;
+  revokeAccessToken?(input: OAuthTokenRevokeInput): Promise<void>;
 }
 
 export interface OAuthTokenRequestOptions {
@@ -285,7 +293,7 @@ async function requestToken(input: TokenRequest): Promise<OAuthTokenResult> {
     const bytes = await readTokenResponseBytes(response, input.createError);
     const rawPayload = decodeTokenPayload(bytes);
     const payload = unwrapTokenPayload(rawPayload, input.responseEnvelope);
-    if (!response.ok || !isEnvelopeSuccess(rawPayload, input.responseEnvelope)) {
+    if (!response.ok || optionalString(payload.error) || !isEnvelopeSuccess(rawPayload, input.responseEnvelope)) {
       const providerMessage = readTokenErrorMessage(rawPayload, payload, input.responseEnvelope);
       const bodyDescription = bytes.byteLength === 0 ? "empty body" : "unrecognized response body";
       throw input.createError(

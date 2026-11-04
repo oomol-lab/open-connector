@@ -2,6 +2,7 @@ import type { ExecutionContext, ResolvedCredential } from "../../core/types.ts";
 
 import { generateKeyPairSync } from "node:crypto";
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
+import { githubActions } from "./actions.ts";
 import { clearGitHubInstallationTokenCache } from "./app-installation.ts";
 import { credentialValidators, executors, proxy } from "./executors.ts";
 
@@ -115,6 +116,11 @@ describe("GitHub App installation credential", () => {
     expect(requests[1]!.headers.get("authorization")).toBe(`Bearer ${installationToken}`);
     expect(requests[2]!.headers.get("authorization")).toBe(`Bearer ${installationToken}`);
     expect(new URL(requests[1]!.url).searchParams.get("affiliation")).toBe("all");
+  });
+
+  it("declares the current-user action's supported credential methods", () => {
+    const action = githubActions.find((entry) => entry.name === "get_current_user");
+    expect(action?.authTypes).toEqual(["oauth2", "api_key"]);
   });
 
   it("rejects get_current_user for installations before making any request", async () => {

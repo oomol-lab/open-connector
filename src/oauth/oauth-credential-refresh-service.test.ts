@@ -2,6 +2,7 @@ import type { ResolvedCredential } from "../core/types.ts";
 import type { OAuthClientConfigService } from "./oauth-client-config-service.ts";
 
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { githubOAuthRuntime } from "../providers/github/oauth.ts";
 import { ProviderLoader } from "../providers/provider-loader.ts";
 import { OAuthCredentialRefreshService } from "./oauth-credential-refresh-service.ts";
 
@@ -42,6 +43,41 @@ describe("OAuthCredentialRefreshService", () => {
   afterEach(() => {
     vi.unstubAllGlobals();
     vi.restoreAllMocks();
+  });
+
+  it.each([200, 400, 401])("requires reconnect for GitHub bad_refresh_token on HTTP %i", async (status) => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () =>
+        Response.json({ error: "bad_refresh_token", error_description: "must not echo client-secret" }, { status }),
+      ),
+    );
+    await expect(
+      new OAuthCredentialRefreshService(clientConfigs).refresh("github", expiredCredential({})),
+    ).rejects.toMatchObject({ code: "oauth_reauth_required" });
+  });
+
+  it.each(["example", "github"])(
+    "does not misclassify transient HTTP 429 for %s as expired authorization",
+    async (service) => {
+      vi.stubGlobal(
+        "fetch",
+        vi.fn(async () => Response.json({ error: "bad_refresh_token" }, { status: 429 })),
+      );
+      await expect(
+        new OAuthCredentialRefreshService(clientConfigs).refresh(service, expiredCredential({})),
+      ).rejects.toMatchObject({ code: "oauth_token_refresh_failed" });
+    },
+  );
+
+  it("keeps another provider's bad_refresh_token classification generic", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => Response.json({ error: "bad_refresh_token" }, { status: 400 })),
+    );
+    await expect(
+      new OAuthCredentialRefreshService(clientConfigs).refresh("example", expiredCredential({})),
+    ).rejects.toMatchObject({ code: "oauth_token_refresh_failed" });
   });
 
   // A refresh rotates tokens INSIDE an existing authorization — it is not a
@@ -336,6 +372,35 @@ describe("OAuthCredentialRefreshService revoke", () => {
   afterEach(() => {
     vi.unstubAllGlobals();
     vi.restoreAllMocks();
+  });
+
+  it("dispatches GitHub singular-token revocation through the provider runtime", async () => {
+    const fetcher = vi.fn(async () => new Response(null, { status: 204 }));
+    vi.stubGlobal("fetch", fetcher);
+    const providerLoader = new ProviderLoader({ github: async () => ({ executors: {}, oauth: githubOAuthRuntime }) });
+    const service = new OAuthCredentialRefreshService(clientConfigs, providerLoader);
+    await expect(service.revoke("github", expiredCredential({}))).resolves.toBe("done");
+    const [url, request] = fetcher.mock.calls[0] as unknown as [string, RequestInit];
+    expect(String(url)).toBe("https://api.github.com/applications/client-id/token");
+    expect(request.method).toBe("DELETE");
+    expect(new Headers(request.headers).get("authorization")).toBe(
+      `Basic ${Buffer.from("client-id:client-secret").toString("base64")}`,
+    );
+    expect(JSON.parse(String(request.body))).toEqual({ access_token: "old-access-token" });
+    expect(String(url)).not.toContain("/grant");
+  });
+
+  it("does not expose GitHub revocation response or transport credential data", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => Response.json({ message: "client-secret old-access-token" }, { status: 403 })),
+    );
+    const providerLoader = new ProviderLoader({ github: async () => ({ executors: {}, oauth: githubOAuthRuntime }) });
+    const service = new OAuthCredentialRefreshService(clientConfigs, providerLoader);
+    await expect(service.revoke("github", expiredCredential({}))).rejects.toMatchObject({
+      code: "oauth_token_revocation_failed",
+      message: "GitHub token revocation failed.",
+    });
   });
 
   function revokingConfigs(revocationUrl: string | undefined, config: unknown): OAuthClientConfigService {
