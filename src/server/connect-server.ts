@@ -175,7 +175,7 @@ export class ConnectServer {
           logger.info(
             {
               method: context.req.method,
-              path: context.req.path,
+              path: loggableRequestPath(context.req.path),
               status: context.res.status,
               cancelled: context.req.raw.signal.aborted,
               timings: getExecutionTimings(),
@@ -405,7 +405,7 @@ export class ConnectServer {
         this.options.logger?.warn(
           {
             method: context.req.method,
-            path: context.req.path,
+            path: loggableRequestPath(context.req.path),
             code: error.code,
             status: error.status,
             reason: error.message,
@@ -445,7 +445,7 @@ export class ConnectServer {
         {
           err: error,
           method: context.req.method,
-          path: context.req.path,
+          path: loggableRequestPath(context.req.path),
         },
         "request failed",
       );
@@ -461,4 +461,8 @@ export class ConnectServer {
 
     return app;
   }
+}
+
+function loggableRequestPath(path: string): string {
+  return path.startsWith("/api/files/") ? "/api/files/:fileId" : path;
 }

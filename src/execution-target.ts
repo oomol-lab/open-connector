@@ -5,6 +5,7 @@ import type { ExecutionContext } from "./core/types.ts";
 import type { MarketplaceService } from "./marketplace/marketplace-service.ts";
 
 import { ConnectionError } from "./connection-error.ts";
+import { waitForSignal } from "./core/cancellation.ts";
 import { connectionExecutionError, ExecutionError, ExecutionPolicyError } from "./core/execution-error.ts";
 import { measureExecutionPhase } from "./core/execution-timing.ts";
 
@@ -49,10 +50,9 @@ export async function resolveExecutionTarget(input: ResolveExecutionTargetInput)
       );
       input.signal?.throwIfAborted();
       authorize(summary);
-      const connection = await input.connections.resolveConnection(
-        input.service,
-        input.connectionName,
-        input.connectionId,
+      const connection = await waitForSignal(
+        input.connections.resolveConnection(input.service, input.connectionName, input.connectionId),
+        input.signal,
       );
       input.signal?.throwIfAborted();
       authorize(connection.summary);

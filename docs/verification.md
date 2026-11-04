@@ -15,7 +15,8 @@ such as example scripts, smoke tests, or public status pages.
 ## Runtime execution timings
 
 When a runtime logger is configured, each HTTP request emits `runtime request completed` with
-the method, query-free path, response status, cancellation state and a `timings` object. The
+the method, query-free path, response status, cancellation state and a `timings` object. Transit
+file paths are logged as `/api/files/:fileId` to avoid exposing download capabilities. The
 runtime-generated `timings.requestId` also appears as `requestId` in the Action start and completion
 logs, allowing the request and its execution to be correlated. Completion logs include failed and
 cancelled requests. Timings do not record request headers, bodies or credential values.

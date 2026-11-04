@@ -553,6 +553,9 @@ Caller cancellation returns HTTP 400 with `errorCode: "execution_cancelled"`. An
 request stops before credential resolution; cancellation after dispatch does not undo provider
 side effects or automatically replay the request.
 
+Cancellation during a shared OAuth refresh ends only that caller's credential wait. The refresh
+continues and persists its tokens so other callers can use the updated credential.
+
 Most proxies run under the same 30 second per-request budget as actions, covering the upstream request
 and the response body read. A provider that does not answer in time returns HTTP 500 with `errorCode`
 `provider_error` and `data.status` 504. A minority of providers ship a hand-written proxy that keeps

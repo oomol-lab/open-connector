@@ -4433,8 +4433,10 @@ describe("ConnectServer", () => {
   it("uploads, serves, and deletes local transit files", async () => {
     const rootDir = await createTempDir();
     try {
+      const { entries, logger } = createTestLogger();
       const app = createTestServer([apiKeyProvider], {
         transitFiles: createTestTransitFiles(rootDir),
+        logger,
       }).createApp();
       const form = new FormData();
       form.set("file", new File(["hello transit"], "report.TXT", { type: "text/plain" }));
@@ -4472,9 +4474,32 @@ describe("ConnectServer", () => {
 
       const missing = await app.request(`/api/files/${uploadBody.fileId}`);
       expect(missing.status).toBe(404);
+      expect(
+        entries.filter((entry) => entry.message === "runtime request completed").map((entry) => entry.fields.path),
+      ).toEqual(["/api/files", "/api/files/:fileId", "/api/files/:fileId", "/api/files/:fileId"]);
+      expect(JSON.stringify(entries)).not.toContain(uploadBody.fileId);
     } finally {
       await rm(rootDir, { recursive: true, force: true });
     }
+  });
+
+  it("redacts transit file capabilities from failed request logs", async () => {
+    const { entries, logger } = createTestLogger();
+    const transitFiles = createTestTransitFiles(".tmp/test-transit-files");
+    vi.spyOn(transitFiles, "response").mockRejectedValue(new Error("Download failed."));
+    const app = createTestServer([apiKeyProvider], { transitFiles, logger }).createApp();
+    const fileId = `${"a".repeat(32)}.txt`;
+
+    const response = await app.request(`/api/files/${fileId}?token=private-query`);
+
+    expect(response.status).toBe(500);
+    expect(entries.find((entry) => entry.message === "request failed")?.fields.path).toBe("/api/files/:fileId");
+    expect(entries.find((entry) => entry.message === "runtime request completed")?.fields).toMatchObject({
+      path: "/api/files/:fileId",
+      status: 500,
+    });
+    expect(JSON.stringify(entries)).not.toContain(fileId);
+    expect(JSON.stringify(entries)).not.toContain("private-query");
   });
 
   it("uses the injected Node transit upload handler", async () => {

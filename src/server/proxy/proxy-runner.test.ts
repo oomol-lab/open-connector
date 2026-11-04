@@ -1,4 +1,4 @@
-import type { ConnectionService, ConnectionSummary } from "../../connection-service.ts";
+import type { ConnectionSummary } from "../../connection-service.ts";
 import type {
   ActionExecutor,
   CredentialValidators,
@@ -12,13 +12,16 @@ import type { RuntimeStatus } from "../api/runtime-api.ts";
 import type { Logger } from "../logger.ts";
 import type { RunProxyInput } from "./proxy-runner.ts";
 
+import { setImmediate } from "node:timers/promises";
 import { describe, expect, it, vi } from "vitest";
 import { createCatalogStore } from "../../catalog-store.ts";
 import { ConnectionError } from "../../connection-error.ts";
+import { ConnectionService } from "../../connection-service.ts";
 import { ActionPolicyService } from "../../core/action-policy.ts";
 import { providerErrorCodes } from "../../core/provider-error-codes.ts";
 import { serializeProxyFailure } from "../api/runtime-api.ts";
 import { serializeRuntimeActionResult } from "../api/runtime-api.ts";
+import { SqliteRuntimeDatabase } from "../storage/sqlite/runtime-store.ts";
 import { ProxyRunner } from "./proxy-runner.ts";
 
 const provider: ProviderDefinition = {
@@ -565,6 +568,99 @@ describe("ProxyRunner", () => {
     ).resolves.toMatchObject({ ok: false, status: 400, errorCode: "execution_cancelled" });
     expect(proxy).not.toHaveBeenCalled();
   });
+
+  it.each(["success", "failure"])(
+    "cancels a credential wait without interrupting a shared OAuth refresh ending in %s",
+    async (outcome) => {
+      const oauthProvider: ProviderDefinition = {
+        ...provider,
+        authTypes: ["oauth2"],
+        auth: [
+          {
+            type: "oauth2",
+            authorizationUrl: "https://example.com/authorize",
+            tokenUrl: "https://example.com/token",
+            scopes: [],
+            tokenEndpointAuthMethod: "client_secret_post",
+          },
+        ],
+      };
+      const expired: Extract<ResolvedCredential, { authType: "oauth2" }> = {
+        authType: "oauth2",
+        accessToken: "expired-token",
+        refreshToken: "old-refresh-token",
+        tokenType: "Bearer",
+        expiresAt: "2000-01-01T00:00:00.000Z",
+        profile: credential.profile,
+        metadata: {},
+      };
+      const fresh = {
+        ...expired,
+        accessToken: "fresh-token",
+        refreshToken: "rotated-refresh-token",
+        expiresAt: new Date(Date.now() + 3_600_000).toISOString(),
+      };
+      const started = Promise.withResolvers<void>();
+      const refreshed = Promise.withResolvers<typeof expired>();
+      const refresh = vi.fn(() => {
+        started.resolve();
+        return refreshed.promise;
+      });
+      const database = new SqliteRuntimeDatabase(":memory:");
+      await database.connectionStore.set("example", "default", expired);
+      const proxy = vi.fn<ProviderProxyExecutor>(async (_input, context) => {
+        expect(await context.getCredential("example")).toMatchObject({ accessToken: "fresh-token" });
+        return { ok: true, response: { status: 200, headers: {}, data: null } };
+      });
+      const providerLoader = new TestProviderLoader(proxy);
+      const loadExecutor = vi.spyOn(providerLoader, "loadProxyExecutor");
+      const runner = createRunner({
+        provider: oauthProvider,
+        providerLoader,
+        connections: new ConnectionService({
+          catalog: createCatalogStore([oauthProvider]),
+          providerLoader,
+          store: database.connectionStore,
+          oauthCredentials: { refresh },
+        }),
+      });
+      const controller = new AbortController();
+      const request = { service: "example", input: { endpoint: "/items", method: "GET" }, policy: openPolicy };
+      const cancelled = runProxyHttp(runner, { ...request, signal: controller.signal });
+      const active = runProxyHttp(runner, request);
+      try {
+        await started.promise;
+        controller.abort();
+        await expect(Promise.race([cancelled, setImmediate()])).resolves.toMatchObject({
+          ok: false,
+          status: 400,
+          errorCode: "execution_cancelled",
+        });
+        expect(loadExecutor).not.toHaveBeenCalled();
+        expect(proxy).not.toHaveBeenCalled();
+        await expect(database.connectionStore.get("example", "default")).resolves.toMatchObject({
+          credential: expired,
+        });
+
+        if (outcome === "failure")
+          refreshed.reject(new ConnectionError("oauth_token_refresh_failed", "Refresh failed."));
+        else refreshed.resolve(fresh);
+
+        await expect(active).resolves.toMatchObject(
+          outcome === "success" ? { ok: true } : { ok: false, status: 409, errorCode: "oauth_token_refresh_failed" },
+        );
+        expect(refresh).toHaveBeenCalledOnce();
+        expect(proxy).toHaveBeenCalledTimes(outcome === "success" ? 1 : 0);
+        await expect(database.connectionStore.get("example", "default")).resolves.toMatchObject({
+          credential: outcome === "success" ? fresh : expired,
+        });
+      } finally {
+        refreshed.resolve(fresh);
+        await Promise.allSettled([cancelled, active]);
+        database.close();
+      }
+    },
+  );
 
   it("returns execution_cancelled when the proxy executor throws on abort", async () => {
     const controller = new AbortController();
