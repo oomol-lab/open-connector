@@ -473,7 +473,7 @@ export class ConnectionService {
   }
 
   async getStoredConnection(id: string): Promise<StoredConnection> {
-    const connection = (await this.store.list()).find((item) => item.id === id);
+    const connection = await this.store.getById(id);
     if (!connection) throw new ConnectionError("connection_not_found", "Connection not found.");
     return connection;
   }

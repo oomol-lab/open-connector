@@ -3,6 +3,51 @@ import { describe, expect, it, vi } from "vitest";
 import { createLocalAuthMiddleware } from "./auth.ts";
 
 describe("createLocalAuthMiddleware", () => {
+  it.each(["required", "jwt", "oauth", "mixed"])(
+    "skips token existence queries when %s configuration already requires authentication",
+    async (mode) => {
+      const hasRuntimeTokens = vi.fn(async (): Promise<boolean> => {
+        throw new Error("Unexpected existence query.");
+      });
+      const grant = { tokenId: "fixture", allowedActions: [], blockedActions: [], allowedProxies: [] };
+      const app = new Hono();
+      app.use(
+        "*",
+        createLocalAuthMiddleware({
+          hasRuntimeTokens,
+          requireRuntimeAuth: mode === "required",
+          verifyRuntimeJwt: mode === "jwt" ? async (token) => token === "valid" : undefined,
+          authMode: mode === "oauth" ? "oauth" : mode === "mixed" ? "mixed" : "runtime_token",
+          resolveRuntimeToken:
+            mode === "required" ? async (token) => (token === "valid" ? grant : undefined) : undefined,
+          resolveOAuthToken:
+            mode === "oauth" || mode === "mixed" ? async (token) => (token === "valid" ? grant : undefined) : undefined,
+        }),
+      );
+      app.get("/v1/actions", (context) => context.json({ ok: true }));
+
+      expect((await app.request("/v1/actions", { headers: authorize("Bearer", "valid") })).status).toBe(200);
+      expect((await app.request("/v1/actions", { headers: authorize("Bearer", "invalid") })).status).toBe(401);
+      expect((await app.request("/v1/actions")).status).toBe(401);
+      expect(hasRuntimeTokens).not.toHaveBeenCalled();
+    },
+  );
+
+  it("still checks token existence when it determines whether anonymous runtime access is allowed", async () => {
+    let active = false;
+    const hasRuntimeTokens = vi.fn(async () => active);
+    const app = new Hono();
+    app.use("*", createLocalAuthMiddleware({ hasRuntimeTokens }));
+    app.get("/v1/actions", (context) => context.json({ ok: true }));
+
+    expect((await app.request("/v1/actions")).status).toBe(200);
+    active = true;
+    expect((await app.request("/v1/actions")).status).toBe(401);
+    active = false;
+    expect((await app.request("/v1/actions")).status).toBe(200);
+    expect(hasRuntimeTokens).toHaveBeenCalledTimes(3);
+  });
+
   it("keeps runtime endpoints protected before creation and after revocation of the last token", async () => {
     let active = false;
     const app = new Hono();

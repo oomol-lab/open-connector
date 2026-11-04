@@ -12,7 +12,8 @@ import type { IRunLogStore, RunLog, RunLogCaller, RunLogListInput, RunLogPage } 
 
 import { ConnectionError } from "../../connection-error.ts";
 import { ExecutionError, ExecutionPolicyError } from "../../core/execution-error.ts";
-import { executeAction as executeProviderAction } from "../../core/execution.ts";
+import { getExecutionTimings, measureExecutionPhase, withExecutionTimings } from "../../core/execution-timing.ts";
+import { executeAction as executeProviderAction, unavailableActionExecutor } from "../../core/execution.ts";
 import { withRuntimeExecution } from "../../core/runtime-execution.ts";
 import { resolveExecutionTarget } from "../../execution-target.ts";
 import {
@@ -67,10 +68,11 @@ export class ActionRunner {
 
   async run(input: RunActionInput): Promise<ActionRunResult | undefined> {
     const action = this.options.catalog.actionsById.get(input.actionId);
+    const run = () => this.runAction(input);
     return withRuntimeExecution(
       this.options,
       { operation: "action", service: action?.service, actionId: action?.id },
-      () => this.runAction(input),
+      () => (this.options.logger ? withExecutionTimings(run) : run()),
     );
   }
 
@@ -94,6 +96,7 @@ export class ActionRunner {
       service: action.service,
       caller: input.caller,
       executionId,
+      requestId: getExecutionTimings()?.requestId,
     };
     this.options.logger?.info(logContext, "action run started");
     const startedAtMs = Date.now();
@@ -110,49 +113,52 @@ export class ActionRunner {
       result = cancelledExecutionResult();
     } else {
       try {
-        connection = await resolveExecutionTarget({
-          connections: this.options.connections,
-          service: action.service,
-          connectionName: input.connectionName,
-          connectionId: input.connectionId,
-          operation: "action",
-          actionId: action.id,
-          marketplace: this.options.marketplace,
-          policy: input.policy,
-          signal: input.signal,
-        });
-        const executor =
-          action.execution.locallyExecutable && connection.kind === "local"
-            ? await this.options.providerLoader.loadActionExecutor(
-                action.service,
-                action.id,
-                this.options.catalog.providers.find((provider) => provider.service === action.service)?.displayName,
-              )
-            : undefined;
+        const definition = await measureExecutionPhase("schemaMs", () => this.options.catalog.getAction(action.id));
+        if (!definition) throw new ExecutionError("unknown_action", `Unknown action: ${action.id}`, "not_found");
         input.signal?.throwIfAborted();
-        const saasReference = connection.kind === "saas" ? connection.reference : undefined;
-        const resolvedConnection = connection;
-        result = await withProviderHttpDispatchResult(
-          {
-            operation: "action",
-            service: action.service,
-            actionId: action.id,
-            executionId,
-            connectionId: connection.summary?.id,
-            connectionName: connection.summary?.connectionName,
-          },
-          async () => {
-            const definition = await this.options.catalog.getAction(action.id);
-            if (!definition) throw new ExecutionError("unknown_action", `Unknown action: ${action.id}`, "not_found");
+        result = await executeProviderAction(
+          definition,
+          async (actionInput, context) => {
+            connection = await resolveExecutionTarget({
+              connections: this.options.connections,
+              service: action.service,
+              connectionName: input.connectionName,
+              connectionId: input.connectionId,
+              operation: "action",
+              actionId: action.id,
+              marketplace: this.options.marketplace,
+              policy: input.policy,
+              signal: input.signal,
+            });
+            const executor =
+              action.execution.locallyExecutable && connection.kind === "local"
+                ? await measureExecutionPhase("executorLoadMs", () =>
+                    this.options.providerLoader.loadActionExecutor(
+                      action.service,
+                      action.id,
+                      this.options.catalog.providers.find((provider) => provider.service === action.service)
+                        ?.displayName,
+                    ),
+                  )
+                : undefined;
             input.signal?.throwIfAborted();
-            return executeProviderAction(
-              definition,
-              saasReference
-                ? async (actionInput) => {
+            const target = connection;
+            return measureExecutionPhase("providerMs", () =>
+              withProviderHttpDispatchResult(
+                {
+                  operation: "action",
+                  service: action.service,
+                  actionId: action.id,
+                  executionId,
+                  connectionId: target.summary?.id,
+                  connectionName: target.summary?.connectionName,
+                },
+                async () => {
+                  if (target.kind === "saas") {
                     if (!this.options.saas)
                       throw new SaasError("oauth_source_unavailable", "SaaS execution is unavailable.", 503);
                     const remote = await this.options.saas.executeAction(
-                      saasReference,
+                      target.reference,
                       action.service,
                       action.id,
                       actionInput,
@@ -161,17 +167,19 @@ export class ActionRunner {
                     remoteExecutionId = remote.executionId;
                     return { ok: true, output: remote.output };
                   }
-                : resolvedConnection.kind === "marketplace"
-                  ? (actionInput) => this.options.marketplace!.execute(action.id, actionInput, input.signal)
-                  : executor,
-              input.input,
-              this.createExecutionContext(
-                resolvedConnection.kind === "local" ? resolvedConnection.getCredential : async () => undefined,
-                input.signal,
+                  if (target.kind === "marketplace")
+                    return this.options.marketplace!.execute(action.id, actionInput, input.signal);
+                  return (executor ?? unavailableActionExecutor)(actionInput, context);
+                },
+                this.options.providerHttpDispatch,
               ),
             );
           },
-          this.options.providerHttpDispatch,
+          input.input,
+          this.createExecutionContext(
+            async (service) => (connection?.kind === "local" ? connection.getCredential(service) : undefined),
+            input.signal,
+          ),
         );
         if (input.signal?.aborted) {
           result = cancelledExecutionResult();
@@ -225,7 +233,7 @@ export class ActionRunner {
 
     let auditPersisted = false;
     try {
-      const write = await this.options.runs.add(runLog);
+      const write = await measureExecutionPhase("auditMs", () => this.options.runs.add(runLog));
       auditPersisted = true;
       if (!write.retentionApplied) {
         this.options.logger?.warn({ ...logContext, auditPersisted }, "run audit retention failed");
@@ -242,6 +250,7 @@ export class ActionRunner {
       ok: result.ok,
       errorCode: result.error?.code,
       auditPersisted,
+      timings: getExecutionTimings(),
     };
     if (result.ok) {
       this.options.logger?.info(completedLogContext, "action run completed");

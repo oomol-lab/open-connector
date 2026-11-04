@@ -4,6 +4,7 @@ import type { ResolvedCredential } from "./core/types.ts";
 import type { IOAuthCredentialRefresher } from "./oauth/oauth-credential-refresh-service.ts";
 
 import { ConnectionError } from "./connection-error.ts";
+import { measureExecutionPhase } from "./core/execution-timing.ts";
 import { withProviderHttpDispatchResult } from "./providers/provider-runtime.ts";
 
 type OAuthCredential = Extract<ResolvedCredential, { authType: "oauth2" }>;
@@ -92,32 +93,35 @@ export class CredentialResolver {
       );
     }
 
-    if (!this.oauthCredentials) {
+    const refresher = this.oauthCredentials;
+    if (!refresher) {
       throw new ConnectionError(
         "oauth_refresh_unavailable",
         `${service} OAuth access token expired and this runtime cannot refresh it.`,
       );
     }
 
-    // Single-flight on the refresh token being spent, not the row revision: a single-use
-    // (rotating) refresh token must reach the provider once even when an unrelated write
-    // bumps the revision mid-refresh. A new authorization must refresh independently,
-    // even when the provider reuses the same refresh token across reconnects.
-    const refreshKey = oauthRefreshKey(connection.id, credential);
-    const currentRefresh = this.oauthCredentialRefreshes.get(refreshKey);
-    if (currentRefresh) {
-      return currentRefresh;
-    }
-
-    const refresh = this.refreshOAuthCredential(connection, credential, this.oauthCredentials);
-    this.oauthCredentialRefreshes.set(refreshKey, refresh);
-    try {
-      return await refresh;
-    } finally {
-      if (this.oauthCredentialRefreshes.get(refreshKey) === refresh) {
-        this.oauthCredentialRefreshes.delete(refreshKey);
+    return measureExecutionPhase("oauthRefreshMs", async () => {
+      // Single-flight on the refresh token being spent, not the row revision: a single-use
+      // (rotating) refresh token must reach the provider once even when an unrelated write
+      // bumps the revision mid-refresh. A new authorization must refresh independently,
+      // even when the provider reuses the same refresh token across reconnects.
+      const refreshKey = oauthRefreshKey(connection.id, credential);
+      const currentRefresh = this.oauthCredentialRefreshes.get(refreshKey);
+      if (currentRefresh) {
+        return currentRefresh;
       }
-    }
+
+      const refresh = this.refreshOAuthCredential(connection, credential, refresher);
+      this.oauthCredentialRefreshes.set(refreshKey, refresh);
+      try {
+        return await refresh;
+      } finally {
+        if (this.oauthCredentialRefreshes.get(refreshKey) === refresh) {
+          this.oauthCredentialRefreshes.delete(refreshKey);
+        }
+      }
+    });
   }
 
   private async refreshOAuthCredential(

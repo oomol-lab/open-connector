@@ -23,7 +23,7 @@ describe("D1RuntimeDatabase", () => {
       secretCodec: new AesGcmSecretCodec("local-test-key"),
     });
 
-    await database.connectionStore.set("github", "default", {
+    const connection = await database.connectionStore.set("github", "default", {
       authType: "api_key",
       apiKey: "github-token",
       values: { apiKey: "github-token" },
@@ -49,6 +49,8 @@ describe("D1RuntimeDatabase", () => {
         metadata: { login: "octocat" },
       },
     });
+    await expect(database.connectionStore.getById(connection.id)).resolves.toEqual(connection);
+    await expect(database.connectionStore.getById("missing-id")).resolves.toBeUndefined();
     await expect(database.oauthClientConfigStore.get("gmail")).resolves.toMatchObject({
       clientId: "client-id",
       clientSecret: "client-secret",
@@ -61,6 +63,7 @@ describe("D1RuntimeDatabase", () => {
     await expect(database.oauthClientConfigStore.list()).resolves.toMatchObject([{ service: "gmail" }]);
 
     await database.connectionStore.delete("github", "default");
+    await expect(database.connectionStore.getById(connection.id)).resolves.toBeUndefined();
     await database.oauthClientConfigStore.delete("gmail");
     await expect(database.connectionStore.get("github", "default")).resolves.toBeUndefined();
     await expect(database.oauthClientConfigStore.get("gmail")).resolves.toBeUndefined();
@@ -187,6 +190,7 @@ describe("D1RuntimeDatabase", () => {
   it("stores runtime token hashes and supports verification and revocation", async () => {
     const database = new D1RuntimeDatabase(new SqliteD1Database(), { secretCodec: new AesGcmSecretCodec("saas-test") });
     const tokens = new RuntimeTokenService(database.runtimeTokenStore);
+    await expect(database.runtimeTokenStore.hasAny()).resolves.toBe(false);
 
     const created = await tokens.createToken("Claude Desktop", {
       allowedActions: ["github.*"],
@@ -195,6 +199,7 @@ describe("D1RuntimeDatabase", () => {
       allowedConnections: ["example:work"],
     });
     expect(created.token).toMatch(/^oct_/);
+    await expect(database.runtimeTokenStore.hasAny()).resolves.toBe(true);
     expect(created.record.tokenHash).not.toBe(created.token);
     expect(created.record.allowedConnections).toEqual(["example:work"]);
 
@@ -232,6 +237,7 @@ describe("D1RuntimeDatabase", () => {
     });
 
     await expect(tokens.revokeToken(created.record.id)).resolves.toBe(true);
+    await expect(database.runtimeTokenStore.hasAny()).resolves.toBe(false);
     await expect(tokens.listTokens()).resolves.toEqual([]);
     await expect(tokens.verifyToken(created.token)).resolves.toBe(false);
     await expect(tokens.revokeToken(created.record.id)).resolves.toBe(false);

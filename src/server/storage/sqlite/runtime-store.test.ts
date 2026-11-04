@@ -5,7 +5,7 @@ import { mkdir, mkdtemp, readdir, readFile, rm, writeFile } from "node:fs/promis
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { DatabaseSync } from "node:sqlite";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { AesGcmSecretCodec } from "../../secrets/secret-codec.ts";
 import { connectionRequestStoreTests } from "../connection-request-store.cases.ts";
 import { createDirectoryMigrationSource, defaultMigrationSource } from "../migration-source.ts";
@@ -26,6 +26,31 @@ afterEach(async () => {
 });
 
 describe("SqliteRuntimeDatabase", () => {
+  it("decodes only the connection selected by ID", async () => {
+    const codec = new AesGcmSecretCodec("lookup-test");
+    const database = new SqliteRuntimeDatabase(":memory:", { secretCodec: codec });
+    try {
+      const credential = {
+        authType: "api_key" as const,
+        apiKey: "github-token",
+        values: {},
+        profile: githubProfile,
+        metadata: {},
+      };
+      await database.connectionStore.set("github", "other", credential);
+      const selected = await database.connectionStore.set("github", "work", credential);
+      const decode = vi.spyOn(codec, "decode");
+
+      await expect(database.connectionStore.getById(selected.id)).resolves.toEqual(selected);
+      await expect(database.connectionStore.getById("missing-id")).resolves.toBeUndefined();
+      expect(decode).toHaveBeenCalledOnce();
+      await database.connectionStore.delete("github", "work");
+      await expect(database.connectionStore.getById(selected.id)).resolves.toBeUndefined();
+    } finally {
+      database.close();
+    }
+  });
+
   it("logs applied migrations and the ready state", async () => {
     const databasePath = await createDatabasePath();
     const entries: Array<{ fields: Record<string, unknown>; message: string }> = [];
@@ -776,6 +801,7 @@ describe("SqliteRuntimeDatabase", () => {
     const databasePath = await createDatabasePath();
     const database = new SqliteRuntimeDatabase(databasePath);
     const tokens = new RuntimeTokenService(database.runtimeTokenStore);
+    await expect(database.runtimeTokenStore.hasAny()).resolves.toBe(false);
 
     const created = await tokens.createToken("Claude Desktop", {
       allowedActions: ["github.*"],
@@ -784,6 +810,7 @@ describe("SqliteRuntimeDatabase", () => {
       allowedConnections: ["example:work"],
     });
     expect(created.token).toMatch(/^oct_/);
+    await expect(database.runtimeTokenStore.hasAny()).resolves.toBe(true);
     expect(created.record.name).toBe("Claude Desktop");
     expect(created.record.tokenHash).not.toBe(created.token);
     expect(created.record.allowedConnections).toEqual(["example:work"]);
@@ -827,6 +854,7 @@ describe("SqliteRuntimeDatabase", () => {
     });
 
     await expect(tokens.revokeToken(created.record.id)).resolves.toBe(true);
+    await expect(database.runtimeTokenStore.hasAny()).resolves.toBe(false);
     await expect(tokens.listTokens()).resolves.toEqual([]);
     await expect(tokens.verifyToken(created.token)).resolves.toBe(false);
     await expect(tokens.revokeToken(created.record.id)).resolves.toBe(false);

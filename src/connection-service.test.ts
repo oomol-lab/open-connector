@@ -10,6 +10,7 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { createCatalogStore } from "./catalog-store.ts";
 import { ConnectionError } from "./connection-error.ts";
 import { ConnectionService } from "./connection-service.ts";
+import { getExecutionTimings, withExecutionTimings } from "./core/execution-timing.ts";
 import { OAuthClientConfigService } from "./oauth/oauth-client-config-service.ts";
 import { OAuthCredentialRefreshService } from "./oauth/oauth-credential-refresh-service.ts";
 import { provider as githubProvider } from "./providers/github/definition.ts";
@@ -139,6 +140,39 @@ afterEach(() => {
 });
 
 describe("ConnectionService", () => {
+  it("resolves connection IDs without listing other connections and rejects deleted IDs", async () => {
+    const store = new MemoryConnectionStore();
+    const credential: ResolvedCredential = {
+      authType: "api_key",
+      apiKey: "secret",
+      values: {},
+      profile: testProfile,
+      metadata: {},
+    };
+    await store.set("uptimerobot", "other", credential);
+    const stored = await store.set("uptimerobot", "work", credential);
+    const list = vi.spyOn(store, "list").mockRejectedValue(new Error("Unrelated connections must not be read."));
+    const service = createService([apiKeyProvider], { store });
+
+    await expect(service.getConnectionSummary("uptimerobot", undefined, stored.id)).resolves.toMatchObject({
+      id: stored.id,
+      connectionName: "work",
+    });
+    await expect(service.resolveConnection("uptimerobot", undefined, stored.id)).resolves.toMatchObject({
+      source: "local",
+      summary: { id: stored.id },
+      credential,
+    });
+    await expect(service.resolveConnection("uptimerobot", "other", stored.id)).rejects.toMatchObject({
+      code: "connection_not_found",
+    });
+    await store.delete("uptimerobot", "work");
+    await expect(service.resolveConnection("uptimerobot", undefined, stored.id)).rejects.toMatchObject({
+      code: "connection_not_found",
+    });
+    expect(list).not.toHaveBeenCalled();
+  });
+
   it("rejects connections for providers unavailable in the current runtime", async () => {
     const service = createService([catalogOnlyProvider]);
 
@@ -900,13 +934,25 @@ describe("ConnectionService", () => {
     );
     vi.stubGlobal("fetch", fetcher);
 
-    const credentials = await Promise.all([service.getCredential("example"), service.getCredential("example")]);
+    const requests = await Promise.all(
+      [0, 1].map(() =>
+        withExecutionTimings(async () => ({
+          credential: await service.getCredential("example"),
+          timings: getExecutionTimings()!,
+        })),
+      ),
+    );
+    const credentials = requests.map((request) => request.credential);
 
     expect(credentials).toEqual([
       expect.objectContaining({ accessToken: "fresh-token" }),
       expect.objectContaining({ accessToken: "fresh-token" }),
     ]);
     expect(fetcher).toHaveBeenCalledOnce();
+    expect(requests[0].timings.requestId).not.toBe(requests[1].timings.requestId);
+    requests.forEach((request) => {
+      expect(request.timings.phases.oauthRefreshMs).toEqual(expect.any(Number));
+    });
   });
 
   it("binds OAuth refresh to the resolved stored connection identity", async () => {
@@ -958,6 +1004,7 @@ describe("ConnectionService", () => {
     const memory = new MemoryConnectionStore();
     const store: IConnectionStore = {
       get: memory.get.bind(memory),
+      getById: memory.getById.bind(memory),
       getRetirementGeneration: memory.getRetirementGeneration.bind(memory),
       setIfCurrentGeneration: memory.setIfCurrentGeneration.bind(memory),
       set: memory.set.bind(memory),
@@ -1394,6 +1441,7 @@ describe("ConnectionService", () => {
       let updates = 0;
       const store: IConnectionStore = {
         get: memory.get.bind(memory),
+        getById: memory.getById.bind(memory),
         getRetirementGeneration: memory.getRetirementGeneration.bind(memory),
         setIfCurrentGeneration: memory.setIfCurrentGeneration.bind(memory),
         set: memory.set.bind(memory),
@@ -1950,6 +1998,10 @@ class FakeProviderLoader implements IProviderLoader {
 
 class MemoryConnectionStore implements IConnectionStore {
   private readonly store = new Map<string, StoredConnection>();
+
+  async getById(id: string): Promise<StoredConnection | undefined> {
+    return [...this.store.values()].find((connection) => connection.id === id);
+  }
 
   async get(service: string, connectionName: string): Promise<StoredConnection | undefined> {
     return this.store.get(createConnectionKey(service, connectionName));

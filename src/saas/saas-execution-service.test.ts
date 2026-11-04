@@ -175,6 +175,109 @@ async function setup() {
   };
 }
 
+it("shares one capability discovery across concurrent actions and proxies while dispatching every operation once", async () => {
+  const f = await setup();
+  f.behavior.execute = async (url) =>
+    String(url).includes("/proxy/")
+      ? Response.json({
+          success: true,
+          data: { status: 200, headers: {}, data: { value: "remote" } },
+          meta: { executionId: "remote-proxy", service: "example" },
+        })
+      : Response.json({ success: true, data: { executionId: "remote-action", actionId: action.id, output: {} } });
+  const results = await Promise.all(Array.from({ length: 10 }, () => Promise.all([f.runAction(), f.runProxy()])));
+  results.forEach(([run, proxy]) => {
+    expect(run?.result.ok).toBe(true);
+    expect(proxy.ok).toBe(true);
+  });
+  expect(f.fetcher.mock.calls.filter(([url]) => String(url).endsWith("/oauth/provider-configs"))).toHaveLength(1);
+  expect(f.fetcher.mock.calls.filter(([url]) => String(url).includes("/actions/"))).toHaveLength(10);
+  expect(f.fetcher.mock.calls.filter(([url]) => String(url).includes("/proxy/"))).toHaveLength(10);
+  expect(f.forbidden).not.toHaveBeenCalled();
+});
+
+it.each([
+  ["provider_config_not_found", 404],
+  ["provider_not_found", 404],
+  ["provider_not_configured", 503],
+  ["oauth_source_unauthorized", 401],
+])("invalidates cached capabilities after %s without replaying the action", async (code, status) => {
+  const f = await setup();
+  await f.runAction();
+  f.fetcher.mockClear();
+  const healthy = f.behavior.execute;
+  f.behavior.execute = async () =>
+    code === "oauth_source_unauthorized"
+      ? new Response("Rejected", { status })
+      : Response.json(
+          { errorCode: code, errorMessage: "private upstream error", executionId: "remote-rejection" },
+          { status },
+        );
+
+  const rejected = await f.runAction();
+  expect(rejected?.result.error?.code).toBe(code);
+  expect(f.fetcher).toHaveBeenCalledOnce();
+  expect(String(f.fetcher.mock.calls[0][0])).toContain("/actions/");
+  expect(JSON.stringify(rejected)).not.toContain("private upstream error");
+  f.behavior.execute = healthy;
+  expect((await f.runAction())?.result.ok).toBe(true);
+  expect(f.fetcher).toHaveBeenCalledTimes(3);
+  expect(f.fetcher.mock.calls.filter(([url]) => String(url).includes("/actions/"))).toHaveLength(2);
+  expect(f.fetcher.mock.calls.filter(([url]) => String(url).endsWith("/oauth/provider-configs"))).toHaveLength(1);
+});
+
+it("refreshes proxy capabilities after remote rejection without replay or a local fallback", async () => {
+  const f = await setup();
+  await f.runAction();
+  f.fetcher.mockClear();
+  f.behavior.execute = async () =>
+    Response.json(
+      {
+        errorCode: "proxy_not_supported",
+        errorMessage: "private upstream error",
+        executionId: "remote-rejection",
+      },
+      { status: 501 },
+    );
+  expect(await f.runProxy()).toMatchObject({ status: 501, errorCode: "proxy_not_supported" });
+  expect(f.fetcher).toHaveBeenCalledOnce();
+  f.discovery.providerConfigs[0].proxyAvailable = false;
+  expect(await f.runProxy()).toMatchObject({ status: 501, errorCode: "proxy_not_supported" });
+  expect(f.fetcher).toHaveBeenCalledTimes(2);
+  expect(f.fetcher.mock.calls.filter(([url]) => String(url).includes("/proxy/"))).toHaveLength(1);
+  expect(f.forbidden).not.toHaveBeenCalled();
+});
+
+it.each(["rate_limit", "network", "policy_denied"])(
+  "preserves cached capabilities and remote failure semantics after %s",
+  async (failure) => {
+    const f = await setup();
+    await f.runAction();
+    f.fetcher.mockClear();
+    f.behavior.execute = async () => {
+      if (failure === "network") throw new TypeError("Private transport details");
+      return Response.json(
+        {
+          errorCode: failure === "rate_limit" ? "rate_limited" : "policy_denied",
+          errorMessage: "private upstream error",
+          executionId: "remote-denial",
+        },
+        { status: failure === "rate_limit" ? 429 : 403, headers: { "retry-after": "7" } },
+      );
+    };
+    const first = await f.runAction();
+    const second = await f.runAction();
+    const expected =
+      failure === "network" ? "oauth_source_unavailable" : failure === "rate_limit" ? "rate_limited" : "policy_denied";
+    expect(first?.result.error?.code).toBe(expected);
+    expect(second?.result.error?.code).toBe(expected);
+    if (failure === "rate_limit") expect(first?.retryAfter).toBe("7");
+    expect(f.fetcher).toHaveBeenCalledTimes(2);
+    expect(f.fetcher.mock.calls.every(([url]) => String(url).includes("/actions/"))).toBe(true);
+    expect(f.forbidden).not.toHaveBeenCalled();
+  },
+);
+
 it("executes the exact account remotely and persists distinct local and remote IDs without revising the connection", async () => {
   const f = await setup();
   const before = await f.db.connectionStore.get("example", "work");

@@ -339,6 +339,8 @@ describe("PostgresRuntimeDatabase with PGlite", () => {
     await database.close();
 
     database = await PostgresRuntimeDatabase.open(testServer.url);
+    await expect(database.connectionStore.getById(connection.id)).resolves.toEqual(connection);
+    await expect(database.connectionStore.getById("missing-id")).resolves.toBeUndefined();
     await expect(database.connectionStore.get("github", "default")).resolves.toMatchObject({
       id: connection.id,
       credential: { apiKey: "github-token" },
@@ -574,6 +576,7 @@ describe("PostgresRuntimeDatabase with PGlite", () => {
 
   it("stores tokens and policy and filters paginated run logs", async () => {
     const tokens = new RuntimeTokenService(database.runtimeTokenStore);
+    await expect(database.runtimeTokenStore.hasAny()).resolves.toBe(false);
     const token = await tokens.createToken("Claude Desktop", {
       allowedActions: ["github.*"],
       blockedActions: ["github.delete_repository"],
@@ -581,6 +584,7 @@ describe("PostgresRuntimeDatabase with PGlite", () => {
       allowedConnections: ["connection-work", "connection-personal"],
     });
     await expect(tokens.verifyToken(token.token)).resolves.toBe(true);
+    await expect(database.runtimeTokenStore.hasAny()).resolves.toBe(true);
     await expect(tokens.resolveToken(token.token)).resolves.toMatchObject({
       allowedConnections: ["connection-work", "connection-personal"],
     });
@@ -631,6 +635,7 @@ describe("PostgresRuntimeDatabase with PGlite", () => {
     ).resolves.toMatchObject({ items: [{ id: "gmail-1" }] });
     await expect(database.runLogStore.get("news-1")).resolves.toMatchObject({ id: "news-1" });
     await expect(tokens.revokeToken(token.record.id)).resolves.toBe(true);
+    await expect(database.runtimeTokenStore.hasAny()).resolves.toBe(false);
     await expect(tokens.verifyToken(token.token)).resolves.toBe(false);
   });
 

@@ -8,7 +8,8 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { getProviderNetworkPolicy } from "../core/provider-network-policy.ts";
 import { createConnectorRuntime } from "./connector-runtime.ts";
 import { AesGcmSecretCodec } from "./secrets/secret-codec.ts";
-import { SqliteRuntimeDatabase } from "./storage/sqlite/runtime-store.ts";
+import { RuntimeTokenService } from "./storage/runtime-token-service.ts";
+import { SqliteRuntimeDatabase, SqliteRuntimeTokenStore } from "./storage/sqlite/runtime-store.ts";
 
 let runtime: ConnectorRuntime | undefined;
 const directories: string[] = [];
@@ -22,6 +23,34 @@ afterEach(async () => {
 });
 
 describe("headless runtime", () => {
+  it("authenticates stored tokens without listing them and observes revocation immediately", async () => {
+    const options = await fixture();
+    await mkdir(options.dataDir, { recursive: true });
+    const database = new SqliteRuntimeDatabase(join(options.dataDir, "connect.sqlite"), {
+      secretCodec: new AesGcmSecretCodec(options.encryptionKey!),
+    });
+    const list = vi
+      .spyOn(SqliteRuntimeTokenStore.prototype, "list")
+      .mockRejectedValue(new Error("Token authentication must not list all tokens."));
+    try {
+      const tokens = new RuntimeTokenService(database.runtimeTokenStore);
+      const first = await tokens.createToken("first");
+      const second = await tokens.createToken("second");
+      runtime = await createConnectorRuntime({ ...options, runtimeToken: undefined });
+
+      expect(runtime.runtimeAuthConfigured).toBe(true);
+      expect((await request("/v1/health", undefined, "invalid-token")).status).toBe(401);
+      expect((await request("/v1/health", undefined, first.token)).status).toBe(200);
+      await tokens.revokeToken(first.record.id);
+      expect((await request("/v1/health", undefined, first.token)).status).toBe(401);
+      expect((await request("/v1/health", undefined, second.token)).status).toBe(200);
+      expect(list).not.toHaveBeenCalled();
+    } finally {
+      list.mockRestore();
+      database.close();
+    }
+  });
+
   it.each([45, undefined])(
     "preserves console and runtime denial formats with retry delay %s",
     async (retryAfterSeconds) => {

@@ -106,7 +106,7 @@ export async function createConnectApp(options: ConnectAppOptions): Promise<Conn
     () => marketplace.initialize(),
   );
   const runtimeTokens = new RuntimeTokenService(options.runtimeDatabase.runtimeTokenStore, options.logger);
-  const hasStoredRuntimeTokens = async (): Promise<boolean> => (await runtimeTokens.listTokens()).length > 0;
+  const hasStoredRuntimeTokens = (): Promise<boolean> => options.runtimeDatabase.runtimeTokenStore.hasAny();
   const oauthConfig = options.oauth?.enabled
     ? resolveOAuthServerConfig({
         issuer: options.oauth.issuer ?? options.publicOrigin,

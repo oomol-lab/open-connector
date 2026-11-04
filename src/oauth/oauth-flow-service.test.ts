@@ -1414,6 +1414,10 @@ class EmptyProviderLoader implements IProviderLoader {
 class MemoryConnectionStore implements IConnectionStore {
   private readonly store = new Map<string, StoredConnection>();
 
+  async getById(id: string): Promise<StoredConnection | undefined> {
+    return [...this.store.values()].find((connection) => connection.id === id);
+  }
+
   async get(service: string, connectionName: string): Promise<StoredConnection | undefined> {
     return this.store.get(createConnectionKey(service, connectionName));
   }

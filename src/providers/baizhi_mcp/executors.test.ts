@@ -136,6 +136,10 @@ it("registers a bounded provider and dispatches a live-schema tool with a Header
 class MemoryConnectionStore implements IConnectionStore {
   private stored?: StoredConnection;
 
+  async getById(id: string): Promise<StoredConnection | undefined> {
+    return this.stored?.id === id ? this.stored : undefined;
+  }
+
   async get(service: string, connectionName: string): Promise<StoredConnection | undefined> {
     return this.stored?.service === service && this.stored.connectionName === connectionName ? this.stored : undefined;
   }

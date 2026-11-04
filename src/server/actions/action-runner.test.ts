@@ -52,6 +52,80 @@ afterEach(() => {
 });
 
 describe("ActionRunner", () => {
+  it("rejects invalid input before reading or refreshing credentials or loading executors", async () => {
+    const provider: ProviderDefinition = {
+      ...exampleProvider,
+      authTypes: ["oauth2"],
+      auth: [
+        {
+          type: "oauth2",
+          authorizationUrl: "https://example.com/authorize",
+          tokenUrl: "https://example.com/token",
+          scopes: [],
+          tokenEndpointAuthMethod: "client_secret_post",
+        },
+      ],
+      actions: [
+        {
+          ...echoAction,
+          inputSchema: { type: "object", required: ["message"], properties: { message: { type: "string" } } },
+        },
+      ],
+    };
+    const catalog = createCatalogStore([provider], { executableActionIds: [echoAction.id] });
+    const store = new MemoryConnectionStore();
+    await store.set("example", "default", {
+      authType: "oauth2",
+      accessToken: "expired-token",
+      refreshToken: "refresh-token",
+      tokenType: "Bearer",
+      expiresAt: "2000-01-01T00:00:00.000Z",
+      profile: credential.profile,
+      metadata: {},
+    });
+    const read = vi.spyOn(store, "get");
+    const refresh = vi.fn(async (): Promise<never> => {
+      throw new Error("Refresh must not run.");
+    });
+    const execute = vi.fn(async () => ({ ok: true, output: {} }));
+    const providerLoader = new TestProviderLoader(execute);
+    const loadExecutor = vi.spyOn(providerLoader, "loadActionExecutor");
+    const runs = new MemoryRunLogStore();
+    const runner = new ActionRunner({
+      catalog,
+      providerLoader,
+      runs,
+      connections: new ConnectionService({ catalog, providerLoader, store, oauthCredentials: { refresh } }),
+    });
+
+    const run = await runner.run({ actionId: echoAction.id, input: {}, caller: "http", policy: openPolicy });
+
+    expect(run).toMatchObject({
+      auditPersisted: true,
+      result: { ok: false, error: { code: "invalid_input", details: expect.any(Array) } },
+    });
+    expect(read).not.toHaveBeenCalled();
+    expect(refresh).not.toHaveBeenCalled();
+    expect(loadExecutor).not.toHaveBeenCalled();
+    expect(execute).not.toHaveBeenCalled();
+    expect(runs.items).toMatchObject([{ errorCode: "invalid_input" }]);
+  });
+
+  it("preserves executor_unavailable when a validated action has no local handler", async () => {
+    const runner = createRunner({
+      runs: new MemoryRunLogStore(),
+      logger: createTestLogger().logger,
+      providerLoader: {
+        loadActionExecutor: async () => undefined,
+        loadProxyExecutor: async () => undefined,
+        loadCredentialValidators: async () => undefined,
+      },
+    });
+
+    const run = await runner.run({ actionId: echoAction.id, input: {}, caller: "http", policy: openPolicy });
+    expect(run?.result).toMatchObject({ ok: false, error: { code: "executor_unavailable" } });
+  });
+
   it.each([
     ["unsupported", 501],
     ["timeout", 504],
@@ -102,12 +176,15 @@ describe("ActionRunner", () => {
     });
     const execute = vi.fn(async () => ({ ok: true, output: {} }));
     const providerLoader = new TestProviderLoader(execute);
+    const loadExecutor = vi.spyOn(providerLoader, "loadActionExecutor");
     const runs = new MemoryRunLogStore();
+    const connections = new ConnectionService({ catalog, providerLoader, store: new MemoryConnectionStore() });
+    const resolveConnection = vi.spyOn(connections, "resolveConnection");
     const runner = new ActionRunner({
       catalog,
       providerLoader,
       runs,
-      connections: new ConnectionService({ catalog, providerLoader, store: new MemoryConnectionStore() }),
+      connections,
     });
     const result = await runner.run({
       actionId: echoAction.id,
@@ -117,6 +194,8 @@ describe("ActionRunner", () => {
       signal: controller.signal,
     });
     expect(result?.result.error?.code).toBe("execution_cancelled");
+    expect(resolveConnection).not.toHaveBeenCalled();
+    expect(loadExecutor).not.toHaveBeenCalled();
     expect(execute).not.toHaveBeenCalled();
     expect(runs.items[0]?.errorCode).toBe("execution_cancelled");
   });
@@ -507,6 +586,10 @@ class TestProviderLoader implements IProviderLoader {
 
 class MemoryConnectionStore implements IConnectionStore {
   private readonly connections = new Map<string, StoredConnection>();
+
+  async getById(id: string): Promise<StoredConnection | undefined> {
+    return [...this.connections.values()].find((connection) => connection.id === id);
+  }
 
   async get(service: string, connectionName: string): Promise<StoredConnection | undefined> {
     return this.connections.get(`${service}:${connectionName}`);
