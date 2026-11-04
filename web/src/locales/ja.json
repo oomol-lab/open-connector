@@ -37,6 +37,7 @@
     "providers": "プロバイダー",
     "marketplace": "Marketplace",
     "oauthApps": "OAuth Apps",
+    "oauthClients": "OAuthクライアント",
     "actions": "アクション",
     "runs": "実行履歴",
     "access": "API Key",
@@ -67,6 +68,9 @@
       },
       "oauthApps": {
         "title": "OAuth Apps"
+      },
+      "oauthClients": {
+        "title": "OAuthクライアント"
       },
       "actions": {
         "title": "アクション"
@@ -448,6 +452,75 @@
       "editTitle": "{{name}} OAuth App を編集"
     }
   },
+  "oauthClients": {
+    "title": "OAuthクライアント",
+    "description": "OAuth 2.1でMCPエンドポイントに接続するクライアントを管理します。",
+    "newClient": "新規クライアント",
+    "emptyTitle": "OAuthクライアントがありません",
+    "emptyDescription": "クライアントを登録すると、MCPクライアントがOAuthで接続できるようになります。",
+    "clientName": "クライアント名",
+    "clientId": "クライアントID",
+    "registration": "登録方式",
+    "authMethod": "トークンエンドポイント認証",
+    "redirectUris": "リダイレクトURI",
+    "redirectUrisHint": "1行に1つのURI。HTTPS、またはループバックのHTTPのみ。",
+    "scopes": "スコープ",
+    "created": "作成",
+    "confidential": "機密",
+    "public": "公開",
+    "registrationType": {
+      "manual": "手動",
+      "dcr": "動的 (DCR)",
+      "cimd": "メタデータ (CIMD)"
+    },
+    "authMethodValue": {
+      "none": "公開 (なし)",
+      "client_secret_basic": "Basic",
+      "client_secret_post": "ボディ送信"
+    },
+    "edit": "編集",
+    "rotateSecret": "シークレットをローテーション",
+    "delete": "削除",
+    "save": "保存",
+    "create": "クライアントを作成",
+    "createDialog": {
+      "title": "新しいOAuthクライアント",
+      "description": "OAuth 2.1認証用のクライアントを登録します。"
+    },
+    "editDialog": {
+      "title": "{{name}}を編集",
+      "description": "クライアント名、リダイレクトURI、スコープを更新します。"
+    },
+    "deleteDialog": {
+      "title": "{{name}}を削除",
+      "description": "このクライアントに発行されたすべてのトークンが失効し、元に戻せません。",
+      "confirm": "クライアントを削除"
+    },
+    "secret": {
+      "title": "{{name}}のクライアントシークレット",
+      "description": "今すぐこのシークレットをコピーしてください。",
+      "warning": "このシークレットは一度しか表示されず、後から取得できません。",
+      "copy": "コピー",
+      "copied": "コピーしました",
+      "done": "完了"
+    },
+    "toasts": {
+      "created": "クライアントを作成しました。",
+      "updated": "クライアントを更新しました。",
+      "rotated": "シークレットをローテーションしました。",
+      "deleted": "クライアントを削除しました。",
+      "saveFailed": "クライアントを保存できませんでした。",
+      "rotateFailed": "シークレットをローテーションできませんでした。",
+      "deleteFailed": "クライアントを削除できませんでした。"
+    },
+    "errors": {
+      "nameRequired": "クライアント名は必須です。",
+      "redirectUriRequired": "リダイレクトURIが少なくとも1つ必要です。",
+      "redirectUriInvalid": "リダイレクトURIは絶対HTTPS URL、またはループバックのHTTPである必要があります。",
+      "scopeInvalid": "サポートされていないスコープが選択されています。",
+      "loadFailed": "OAuthクライアントを読み込めませんでした。"
+    }
+  },
   "actions": {
     "connection": "接続",
     "selectConnection": "接続を選択",
@@ -725,7 +798,12 @@
       "urlError": "認証情報、クエリ、フラグメントを含まない完全なHTTPまたはHTTPSのURLを入力してください。",
       "authLabel": "ランタイム認証",
       "tokenAuth": "Runtime Tokenを使用",
+      "oauthAuth": "OAuth 2.1",
       "noAuth": "認証は無効",
+      "oauthHelp": "MCPクライアントはOAuth 2.1認可サーバーを自動的に検出します。必要に応じて動的クライアント登録も利用できます。",
+      "oauthPkceNote": "PKCE S256は必須で、authorizeリクエストとtokenリクエストにはresourceパラメーター（MCPリソースURI）を送信する必要があります。",
+      "oauthDiscovery": "OAuth 2.1ディスカバリーエンドポイント",
+      "oauthCliSdkNote": "OAuth 2.1 は MCP クライアントに適用されます。以下の CLI と SDK の例は Runtime Token で認証しますが、OAuth 専用のゲートウェイでは拒否されます。これらの例ではゲートウェイを mixed モードにするか、OAuth アクセストークンを指定してください。",
       "tokenHelp": "トークンを作成し、<RUNTIME_TOKEN>を置き換えてください。このページではトークンを保存しません。",
       "createToken": "Runtime Tokenを作成",
       "tokenDifferenceTitle": "どのキーを使いますか？",

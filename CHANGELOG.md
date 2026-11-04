@@ -2,6 +2,14 @@
 
 ## Unreleased
 
+### Added
+
+- Inbound OAuth 2.1 authorization server for MCP clients on Node deployments: protected resource
+  metadata (RFC 9728), authorization-code flow with PKCE S256, dynamic client registration
+  (RFC 7591), token revocation (RFC 7009), and ES256-signed JWT access tokens. Enable with
+  `OOMOL_CONNECT_OAUTH_ENABLED=true`; see the `OOMOL_CONNECT_OAUTH_*` variables in
+  [Configuration](docs/configuration.md).
+
 ### Changed
 
 - OpenConnector is now licensed under the OpenConnector License, a modified Apache License 2.0.

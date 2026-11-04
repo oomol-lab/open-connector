@@ -215,6 +215,15 @@ http://localhost:3000/mcp
 The local MCP endpoint supports stateless `POST` JSON-RPC requests with JSON responses. It does not
 keep `GET` SSE streams open.
 
+When the Node MCP OAuth 2.1 authorization server is enabled
+(`OOMOL_CONNECT_OAUTH_ENABLED=true`) **and** the auth mode accepts OAuth tokens
+(`OOMOL_CONNECT_OAUTH_AUTH_MODE=oauth` or `mixed`; the default `runtime_token` rejects
+them), `/v1/*` and `/mcp` accept OAuth 2.1 access tokens issued by the built-in
+authorization server (`mixed` keeps accepting runtime tokens alongside them). Clients can discover the
+endpoints through `/.well-known/oauth-protected-resource` and
+`/.well-known/oauth-authorization-server`; see [Configuration](configuration.md) for the
+`OOMOL_CONNECT_OAUTH_*` settings.
+
 The MCP server exposes a small discovery-oriented tool set:
 
 - `list_apps`

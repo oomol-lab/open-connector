@@ -4649,6 +4649,11 @@ function createTestServer(providers: ProviderDefinition[], options: CreateTestSe
     transitFiles,
     uploadTransitFile: options.uploadTransitFile,
     runtimeTokens,
+    oauthClients: requestDatabase.oauthClientStore,
+    oauthCodes: requestDatabase.oauthCodeStore,
+    oauthTokens: requestDatabase.oauthTokenStore,
+    oauthKeys: requestDatabase.oauthSigningKeyStore,
+    runtimeTokenStore: requestDatabase.runtimeTokenStore,
     runtimePolicyStore: options.runtimePolicyStore ?? new MemoryRuntimePolicyStore(),
     registerStaticRoutes: staticRoot ? (app) => registerStaticRoutes(app, { root: staticRoot }) : undefined,
     auth: {
@@ -4973,6 +4978,10 @@ class MemoryRuntimeTokenStore implements IRuntimeTokenStore {
 
   async findByHash(tokenHash: string): Promise<RuntimeTokenRecord | undefined> {
     return [...this.tokens.values()].find((token) => token.tokenHash === tokenHash);
+  }
+
+  async findById(id: string): Promise<RuntimeTokenRecord | undefined> {
+    return this.tokens.get(id);
   }
 
   async updatePolicy(id: string, policy: TokenPolicy): Promise<RuntimeTokenRecord | undefined> {

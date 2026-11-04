@@ -37,6 +37,7 @@ export interface IRuntimeTokenStore {
   add(record: RuntimeTokenRecord): Promise<void>;
   list(): Promise<RuntimeTokenRecord[]>;
   findByHash(tokenHash: string): Promise<RuntimeTokenRecord | undefined>;
+  findById(id: string): Promise<RuntimeTokenRecord | undefined>;
   updatePolicy(id: string, policy: TokenPolicy): Promise<RuntimeTokenRecord | undefined>;
   revoke(id: string): Promise<boolean>;
   markUsed(id: string, usedAt: string): Promise<void>;

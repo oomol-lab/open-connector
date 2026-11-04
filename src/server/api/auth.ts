@@ -4,6 +4,7 @@ import type { Context, MiddlewareHandler } from "hono";
 
 import { deleteCookie, getCookie, setCookie } from "hono/cookie";
 import { isChannelEventVerifyRequest } from "../event-verification/registry.ts";
+import { constantTimeEqual } from "./auth-utils.ts";
 import { isConsoleShellRequest } from "./console-paths.ts";
 import { jsonError } from "./http-utils.ts";
 import { writeRuntimeFailure } from "./runtime-api.ts";
@@ -25,6 +26,17 @@ export interface LocalAuthOptions {
   hasRuntimeTokens?(): Promise<boolean>;
   resolveRuntimeToken?(token: string): Promise<RuntimeGrant | undefined>;
   verifyRuntimeJwt?: RuntimeJwtVerifier;
+  /**
+   * Which credentials the runtime scope (`/mcp`, `/v1`) accepts.
+   * `runtime_token` (default) preserves the historical behavior exactly;
+   * `oauth` accepts only OAuth access tokens; `mixed` accepts both;
+   * `none` leaves runtime endpoints unauthenticated.
+   */
+  authMode?: "none" | "runtime_token" | "oauth" | "mixed";
+  /** Resolves an OAuth access token (from the local authorization server) to its RuntimeGrant. */
+  resolveOAuthToken?(token: string): Promise<RuntimeGrant | undefined>;
+  /** RFC 9728 challenge emitted on runtime 401s when the OAuth AS is enabled. */
+  oauthChallenge?: string;
 }
 
 export interface LocalAuthSession {
@@ -32,7 +44,7 @@ export interface LocalAuthSession {
   authenticated: boolean;
 }
 
-type AuthScope = "admin" | "runtime";
+type AuthScope = "admin" | "runtime" | "oauth";
 
 const adminBearerRequests = new WeakSet<Request>();
 
@@ -49,13 +61,17 @@ export function readRuntimeGrant(context: Context): RuntimeGrant | undefined {
 export function createLocalAuthMiddleware(options: LocalAuthOptions): MiddlewareHandler {
   const adminToken = normalizeToken(options.adminToken);
   const runtimeToken = normalizeToken(options.runtimeToken);
+  // `oauth` mode must never fall through to unauthenticated, even when the
+  // OAuth authorization server itself is disabled (fail closed).
   if (
     !adminToken &&
     !runtimeToken &&
     !options.requireRuntimeAuth &&
     !options.hasRuntimeTokens &&
     !options.resolveRuntimeToken &&
-    !options.verifyRuntimeJwt
+    !options.verifyRuntimeJwt &&
+    !options.resolveOAuthToken &&
+    options.authMode !== "oauth"
   ) {
     return async (_context, next) => {
       await next();
@@ -117,6 +133,11 @@ export function createLocalAuthMiddleware(options: LocalAuthOptions): Middleware
         errorCode: "unauthorized",
         message: "A valid local bearer token is required.",
       });
+    }
+    // RFC 9728 discovery: MCP clients learn the authorization server's
+    // metadata location from this challenge on the resource's 401.
+    if (options.oauthChallenge && readAuthScope(context.req.path) === "runtime") {
+      context.header("WWW-Authenticate", options.oauthChallenge);
     }
     return jsonError(context, 401, "unauthorized", "A valid local bearer token is required.");
   };
@@ -187,15 +208,34 @@ async function installAdminCookieForBearer(context: Context, options: LocalAuthO
 }
 
 async function hasValidToken(context: Context, options: LocalAuthOptions, scope: AuthScope): Promise<boolean> {
-  const token = tokenForScope(options, scope);
+  // The authorization server's own endpoints authenticate their callers
+  // (admin consent, client credentials); the middleware must let them through.
+  if (scope === "oauth") {
+    return true;
+  }
+  if (scope === "runtime" && options.authMode === "none") {
+    return true;
+  }
+  // In `oauth` mode a configured static runtime token is not accepted: OAuth-only
+  // means OAuth-only, so skip straight to runtime-token resolution below.
+  const skipStaticRuntimeToken = scope === "runtime" && options.authMode === "oauth";
+  const token = skipStaticRuntimeToken ? undefined : tokenForScope(options, scope);
   if (!token) {
     if (scope === "admin") {
       return true;
     }
+    const authMode = options.authMode ?? "runtime_token";
+    const acceptsOAuth = (authMode === "oauth" || authMode === "mixed") && options.resolveOAuthToken !== undefined;
     const hasRuntimeTokens = options.hasRuntimeTokens
       ? await options.hasRuntimeTokens()
       : options.resolveRuntimeToken !== undefined;
-    if (!options.requireRuntimeAuth && !hasRuntimeTokens && !options.verifyRuntimeJwt) {
+    if (
+      authMode !== "oauth" &&
+      !acceptsOAuth &&
+      !options.requireRuntimeAuth &&
+      !hasRuntimeTokens &&
+      !options.verifyRuntimeJwt
+    ) {
       return true;
     }
     return hasValidRuntimeToken(context, options);
@@ -256,23 +296,11 @@ function base64Url(value: ArrayBuffer | ArrayBufferView): string {
 }
 
 // Deployment secrets (`OOMOL_CONNECT_ADMIN_TOKEN` / `OOMOL_CONNECT_RUNTIME_TOKEN`) are long-lived,
-// so the credential is compared in constant time instead of with `===`, which short-circuits on the
-// first differing character and leaks how much of the token an attacker already guessed. Stored
+// so the credential is compared in constant time instead of with `===`, which short-circuits on
+// the first differing character and leaks how much of the token an attacker already guessed. Stored
 // runtime tokens already get the same treatment through `timingSafeEqual` on their hashes.
 function matchesConfiguredToken(context: Context, token: string): boolean {
   return constantTimeEqual(readBearerCredential(context), token);
-}
-
-function constantTimeEqual(left: string, right: string): boolean {
-  if (left.length !== right.length) {
-    return false;
-  }
-
-  let difference = 0;
-  for (let index = 0; index < left.length; index += 1) {
-    difference |= left.charCodeAt(index) ^ right.charCodeAt(index);
-  }
-  return difference === 0;
 }
 
 function normalizeToken(token: string | undefined): string | undefined {
@@ -282,7 +310,23 @@ function normalizeToken(token: string | undefined): string | undefined {
 
 function readAuthScope(path: string): AuthScope {
   if (isConnectionManagementPath(path)) return "admin";
+  if (isOAuthServerPath(path)) return "oauth";
   return path === "/mcp" || path.startsWith("/mcp/") || path === "/v1" || path.startsWith("/v1/") ? "runtime" : "admin";
+}
+
+/**
+ * Paths served by the local authorization server (`src/server/oauth/`). They
+ * self-enforce their own authentication — admin consent, client credentials,
+ * or none by design — so the global middleware must not demand an admin or
+ * runtime token for them.
+ */
+function isOAuthServerPath(path: string): boolean {
+  return (
+    path === "/oauth/mcp" ||
+    path.startsWith("/oauth/mcp/") ||
+    path === "/oauth/jwks" ||
+    path.startsWith("/.well-known/oauth-")
+  );
 }
 
 function canUseAdminAuth(path: string, method: string): boolean {
@@ -300,12 +344,26 @@ async function hasValidRuntimeToken(context: Context, options: LocalAuthOptions)
   if (!token) {
     return false;
   }
-  const grant = await options.resolveRuntimeToken?.(token);
-  if (grant) {
-    runtimeGrants.set(context.req.raw, grant);
-    return true;
+  // `oauth` mode accepts only OAuth access tokens; `runtime_token` (the
+  // default) preserves the historical oct_/JWT behavior; `mixed` accepts both.
+  if (options.authMode !== "oauth") {
+    const grant = await options.resolveRuntimeToken?.(token);
+    if (grant) {
+      runtimeGrants.set(context.req.raw, grant);
+      return true;
+    }
+    if (await (options.verifyRuntimeJwt?.(token) ?? false)) {
+      return true;
+    }
   }
-  return await (options.verifyRuntimeJwt?.(token) ?? false);
+  if (options.authMode === "oauth" || options.authMode === "mixed") {
+    const grant = await options.resolveOAuthToken?.(token);
+    if (grant) {
+      runtimeGrants.set(context.req.raw, grant);
+      return true;
+    }
+  }
+  return false;
 }
 
 function readBearerToken(context: Context): string | undefined {

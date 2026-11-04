@@ -62,6 +62,8 @@ describe("SqliteRuntimeDatabase", () => {
       "0017_trigger_subscriptions.sql",
       "0018_connection_retirement.sql",
       "0019_trigger_sources.sql",
+      "0020_oauth_tables.sql",
+      "0021_oauth_refresh_replay.sql",
     ];
     expect(entries.filter((entry) => entry.message === "sqlite migration started")).toEqual(
       migrations.map((migration) => ({ fields: { migration }, message: "sqlite migration started" })),
@@ -1339,4 +1341,290 @@ it("rolls back a SaaS reconnect and its cleanup when the terminal request write 
     raw.close();
     database.close();
   }
+});
+
+describe("SqliteOAuthClientStore", () => {
+  it("round-trips client records", async () => {
+    const database = new SqliteRuntimeDatabase(await createDatabasePath());
+    try {
+      const record = {
+        clientId: "client-1",
+        clientName: "ChatGPT",
+        registrationType: "dcr" as const,
+        redirectUris: ["https://chatgpt.com/oidc/callback", "http://127.0.0.1:1455/callback"],
+        scopes: ["mcp:access", "offline_access"],
+        tokenEndpointAuthMethod: "none" as const,
+        createdAt: "2026-11-03T00:00:00.000Z",
+      };
+      await database.oauthClientStore.add(record);
+      expect(await database.oauthClientStore.get("client-1")).toEqual(record);
+      expect(await database.oauthClientStore.list()).toEqual([record]);
+
+      const updated = { ...record, clientName: "ChatGPT (renamed)", rotatedAt: "2026-11-03T01:00:00.000Z" };
+      await database.oauthClientStore.update(updated);
+      expect(await database.oauthClientStore.get("client-1")).toEqual(updated);
+      expect(await database.oauthClientStore.delete("client-1")).toBe(true);
+      expect(await database.oauthClientStore.get("client-1")).toBeUndefined();
+      expect(await database.oauthClientStore.delete("client-1")).toBe(false);
+    } finally {
+      database.close();
+    }
+  });
+});
+
+describe("SqliteOAuthCodeStore", () => {
+  it("consumes an authorization code exactly once", async () => {
+    const database = new SqliteRuntimeDatabase(await createDatabasePath());
+    try {
+      const now = Date.now();
+      const record = {
+        codeHash: "code-hash-1",
+        clientId: "client-1",
+        redirectUri: "https://chatgpt.com/oidc/callback",
+        scope: "mcp:access",
+        codeChallenge: "challenge",
+        resource: "https://mcp.example.com",
+        runtimeTokenId: "token-1",
+        issuedAt: new Date(now).toISOString(),
+        expiresAt: now + 60_000,
+      };
+      await database.oauthCodeStore.add(record);
+
+      const consumed = await database.oauthCodeStore.consume("code-hash-1");
+      expect(consumed).toMatchObject({ codeHash: "code-hash-1", consumedAt: expect.any(Number) });
+      expect(await database.oauthCodeStore.consume("code-hash-1")).toBeUndefined();
+    } finally {
+      database.close();
+    }
+  });
+
+  it("rejects expired codes and deletes them", async () => {
+    const database = new SqliteRuntimeDatabase(await createDatabasePath());
+    try {
+      const now = Date.now();
+      await database.oauthCodeStore.add({
+        codeHash: "expired",
+        clientId: "client-1",
+        redirectUri: "https://chatgpt.com/oidc/callback",
+        scope: "mcp:access",
+        runtimeTokenId: "token-1",
+        issuedAt: new Date(now - 120_000).toISOString(),
+        expiresAt: now - 60_000,
+      });
+      expect(await database.oauthCodeStore.consume("expired")).toBeUndefined();
+      await database.oauthCodeStore.deleteExpired(now);
+      expect(await database.oauthCodeStore.consume("expired")).toBeUndefined();
+    } finally {
+      database.close();
+    }
+  });
+});
+
+describe("SqliteOAuthTokenStore", () => {
+  it("round-trips tokens and revokes by grant", async () => {
+    const database = new SqliteRuntimeDatabase(await createDatabasePath());
+    try {
+      const now = Date.now();
+      const base = {
+        clientId: "client-1",
+        runtimeTokenId: "grant-1",
+        scope: "mcp:access",
+        resource: "https://mcp.example.com",
+        issuedAt: new Date(now).toISOString(),
+        expiresAt: now + 3_600_000,
+      };
+      await database.oauthTokenStore.add({ ...base, tokenHash: "access-1", refreshTokenHash: "refresh-1" });
+      await database.oauthTokenStore.add({ ...base, tokenHash: "access-2", runtimeTokenId: "grant-2" });
+
+      expect(await database.oauthTokenStore.findByAccessTokenHash("access-1")).toMatchObject({
+        tokenHash: "access-1",
+        refreshTokenHash: "refresh-1",
+      });
+      expect(await database.oauthTokenStore.findByRefreshTokenHash("refresh-1")).toMatchObject({
+        tokenHash: "access-1",
+      });
+      expect(await database.oauthTokenStore.findByRefreshTokenHash("access-1")).toBeUndefined();
+      expect((await database.oauthTokenStore.listByClient("client-1")).map((t) => t.tokenHash)).toEqual([
+        "access-1",
+        "access-2",
+      ]);
+
+      expect(await database.oauthTokenStore.revokeByGrant("client-1", "grant-1")).toBe(1);
+      expect(await database.oauthTokenStore.revokeByGrant("client-1", "grant-1")).toBe(0);
+      expect((await database.oauthTokenStore.findByAccessTokenHash("access-1"))?.revokedAt).toEqual(expect.any(Number));
+      expect((await database.oauthTokenStore.findByAccessTokenHash("access-2"))?.revokedAt).toBeUndefined();
+    } finally {
+      database.close();
+    }
+  });
+
+  it("rotates refresh tokens atomically with their successor", async () => {
+    const database = new SqliteRuntimeDatabase(await createDatabasePath());
+    try {
+      const now = Date.now();
+      const base = {
+        clientId: "client-1",
+        runtimeTokenId: "grant-1",
+        scope: "mcp:access offline_access",
+        issuedAt: new Date(now).toISOString(),
+        expiresAt: now + 3_600_000,
+        refreshExpiresAt: now + 86_400_000,
+      };
+      await database.oauthTokenStore.add({ ...base, tokenHash: "access-1", refreshTokenHash: "refresh-1" });
+
+      const consumed = await database.oauthTokenStore.rotateRefreshToken("refresh-1", {
+        ...base,
+        tokenHash: "access-1b",
+        refreshTokenHash: "refresh-1b",
+      });
+      expect(consumed).toMatchObject({
+        tokenHash: "access-1",
+        clientId: "client-1",
+        refreshTokenHash: "refresh-1",
+        refreshConsumedAt: expect.any(Number),
+      });
+      expect(await database.oauthTokenStore.findByAccessTokenHash("access-1b")).toMatchObject({
+        tokenHash: "access-1b",
+        refreshTokenHash: "refresh-1b",
+      });
+
+      // The consumed row stays findable by hash (with refreshConsumedAt set)
+      // so a replayed token maps back to its grant, but a second rotation
+      // fails, inserts nothing, and leaves the store unchanged.
+      expect(
+        await database.oauthTokenStore.rotateRefreshToken("refresh-1", {
+          ...base,
+          tokenHash: "access-1c",
+          refreshTokenHash: "refresh-1c",
+        }),
+      ).toBeUndefined();
+      expect(await database.oauthTokenStore.findByRefreshTokenHash("refresh-1")).toMatchObject({
+        tokenHash: "access-1",
+        refreshConsumedAt: expect.any(Number),
+      });
+      expect(await database.oauthTokenStore.findByAccessTokenHash("access-1c")).toBeUndefined();
+
+      // Revoked tokens are not rotatable, and no successor is inserted.
+      await database.oauthTokenStore.add({
+        ...base,
+        tokenHash: "access-2",
+        refreshTokenHash: "refresh-2",
+        revokedAt: now,
+      });
+      expect(
+        await database.oauthTokenStore.rotateRefreshToken("refresh-2", {
+          ...base,
+          tokenHash: "access-2b",
+          refreshTokenHash: "refresh-2b",
+        }),
+      ).toBeUndefined();
+      expect(await database.oauthTokenStore.findByAccessTokenHash("access-2b")).toBeUndefined();
+      expect(await database.oauthTokenStore.findByRefreshTokenHash("refresh-2")).toMatchObject({
+        tokenHash: "access-2",
+      });
+
+      // Expired refresh tokens are not rotatable.
+      await database.oauthTokenStore.add({
+        ...base,
+        tokenHash: "access-3",
+        refreshTokenHash: "refresh-3",
+        refreshExpiresAt: now - 1_000,
+      });
+      expect(
+        await database.oauthTokenStore.rotateRefreshToken("refresh-3", {
+          ...base,
+          tokenHash: "access-3b",
+          refreshTokenHash: "refresh-3b",
+        }),
+      ).toBeUndefined();
+      expect(await database.oauthTokenStore.findByAccessTokenHash("access-3b")).toBeUndefined();
+
+      // Unknown hashes are not rotatable.
+      expect(
+        await database.oauthTokenStore.rotateRefreshToken("unknown", {
+          ...base,
+          tokenHash: "access-4",
+          refreshTokenHash: "refresh-4",
+        }),
+      ).toBeUndefined();
+      expect(await database.oauthTokenStore.findByAccessTokenHash("access-4")).toBeUndefined();
+    } finally {
+      database.close();
+    }
+  });
+
+  it("deletes fully expired tokens but keeps refreshable ones", async () => {
+    const database = new SqliteRuntimeDatabase(await createDatabasePath());
+    try {
+      const now = Date.now();
+      await database.oauthTokenStore.add({
+        tokenHash: "gone",
+        clientId: "client-1",
+        runtimeTokenId: "grant-1",
+        scope: "mcp:access",
+        issuedAt: new Date(now - 120_000).toISOString(),
+        expiresAt: now - 60_000,
+      });
+      await database.oauthTokenStore.add({
+        tokenHash: "kept",
+        refreshTokenHash: "kept-refresh",
+        clientId: "client-1",
+        runtimeTokenId: "grant-1",
+        scope: "mcp:access offline_access",
+        issuedAt: new Date(now - 120_000).toISOString(),
+        expiresAt: now - 60_000,
+        refreshExpiresAt: now + 60_000,
+      });
+      // A consumed refresh token is swept on the same refreshExpiresAt
+      // clock: once that passes it is cleaned up like any other row.
+      await database.oauthTokenStore.add({
+        tokenHash: "consumed",
+        refreshTokenHash: "consumed-refresh",
+        clientId: "client-1",
+        runtimeTokenId: "grant-1",
+        scope: "mcp:access offline_access",
+        issuedAt: new Date(now - 120_000).toISOString(),
+        expiresAt: now - 60_000,
+        refreshExpiresAt: now - 1_000,
+        refreshConsumedAt: now - 90_000,
+      });
+      await database.oauthTokenStore.deleteExpired(now);
+      expect(await database.oauthTokenStore.findByAccessTokenHash("gone")).toBeUndefined();
+      expect(await database.oauthTokenStore.findByAccessTokenHash("kept")).toBeDefined();
+      expect(await database.oauthTokenStore.findByAccessTokenHash("consumed")).toBeUndefined();
+    } finally {
+      database.close();
+    }
+  });
+});
+
+describe("SqliteOAuthSigningKeyStore", () => {
+  it("generates an ES256 key on first active() and persists it", async () => {
+    const path = await createDatabasePath();
+    const first = new SqliteRuntimeDatabase(path);
+    let kid: string;
+    try {
+      const key = await first.oauthSigningKeyStore.active();
+      kid = key.kid;
+      expect(kid).toEqual(expect.any(String));
+      expect(key.privateKeyJwk.crv).toBe("P-256");
+      expect(key.privateKeyJwk.kty).toBe("EC");
+      expect(key.retiredAt).toBeUndefined();
+      expect(await first.oauthSigningKeyStore.active()).toEqual(key);
+      expect((await first.oauthSigningKeyStore.all()).map((k) => k.kid)).toEqual([kid]);
+    } finally {
+      first.close();
+    }
+
+    const second = new SqliteRuntimeDatabase(path);
+    try {
+      expect((await second.oauthSigningKeyStore.active()).kid).toBe(kid);
+      await second.oauthSigningKeyStore.retire(kid);
+      expect((await second.oauthSigningKeyStore.all()).length).toBe(0);
+      const replacement = await second.oauthSigningKeyStore.active();
+      expect(replacement.kid).not.toBe(kid);
+    } finally {
+      second.close();
+    }
+  });
 });
