@@ -419,6 +419,23 @@ describe("OAuthCredentialRefreshService revoke", () => {
     expect(credential.accessToken).toBe("old-access-token");
   });
 
+  it("revokes a still-valid token without depending on an early refresh", async () => {
+    const fetcher = vi.fn(async (_url: string | URL | Request, init?: RequestInit) =>
+      init?.method === "POST"
+        ? Response.json({ error: "temporarily_unavailable" }, { status: 429 })
+        : new Response(null, { status: 204 }),
+    );
+    vi.stubGlobal("fetch", fetcher);
+    const loader = new ProviderLoader({ github: async () => ({ executors: {}, oauth: githubOAuthRuntime }) });
+    const credential = { ...expiredCredential({}), expiresAt: new Date(Date.now() + 30_000).toISOString() };
+    await expect(new OAuthCredentialRefreshService(clientConfigs, loader).revoke("github", credential)).resolves.toBe(
+      "done",
+    );
+    expect(fetcher).toHaveBeenCalledTimes(1);
+    expect(fetcher.mock.calls[0]?.[1]?.method).toBe("DELETE");
+    expect(JSON.parse(String(fetcher.mock.calls[0]?.[1]?.body))).toEqual({ access_token: "old-access-token" });
+  });
+
   it("does not report successful revocation when the required refresh fails", async () => {
     const fetcher = vi.fn(async () => Response.json({ error: "temporarily_unavailable" }, { status: 429 }));
     vi.stubGlobal("fetch", fetcher);

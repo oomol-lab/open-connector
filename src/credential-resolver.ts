@@ -175,11 +175,14 @@ export class CredentialResolver {
   }
 }
 
-export function isOAuthCredentialExpired(credential: Extract<ResolvedCredential, { authType: "oauth2" }>): boolean {
+export function isOAuthCredentialExpired(
+  credential: Extract<ResolvedCredential, { authType: "oauth2" }>,
+  refreshWindowMs = 60_000,
+): boolean {
   if (!credential.expiresAt) {
     return false;
   }
 
   const expiresAt = Date.parse(credential.expiresAt);
-  return Number.isFinite(expiresAt) && expiresAt <= Date.now() + 60_000;
+  return Number.isFinite(expiresAt) && expiresAt <= Date.now() + refreshWindowMs;
 }
