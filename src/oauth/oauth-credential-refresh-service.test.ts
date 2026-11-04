@@ -397,6 +397,32 @@ describe("OAuthCredentialRefreshService revoke", () => {
     expect(String(url)).not.toContain("/grant");
   });
 
+  it("retires an orphaned token through the token-scoped hook without refreshing again", async () => {
+    const fetcher = vi.fn(async () => new Response(null, { status: 204 }));
+    vi.stubGlobal("fetch", fetcher);
+    const loader = new ProviderLoader({ github: async () => ({ executors: {}, oauth: githubOAuthRuntime }) });
+    await expect(
+      new OAuthCredentialRefreshService(clientConfigs, loader).revokeAccessToken("github", expiredCredential({})),
+    ).resolves.toBe("done");
+    expect(fetcher).toHaveBeenCalledOnce();
+    const [url, request] = fetcher.mock.calls[0] as unknown as [string, RequestInit];
+    expect(String(url)).toBe("https://api.github.com/applications/client-id/token");
+    expect(request.method).toBe("DELETE");
+    expect(JSON.parse(String(request.body))).toEqual({ access_token: "old-access-token" });
+  });
+
+  it("never falls back to a grant-wide endpoint for orphaned-token cleanup", async () => {
+    const configs = revokingConfigs("https://provider.example.com/oauth/revoke", undefined);
+    const readConfig = vi.spyOn(configs, "getConfig").mockRejectedValue(new Error("Storage unavailable"));
+    const fetcher = vi.fn();
+    vi.stubGlobal("fetch", fetcher);
+    await expect(
+      new OAuthCredentialRefreshService(configs).revokeAccessToken("example", expiredCredential({})),
+    ).resolves.toBe("unsupported");
+    expect(readConfig).not.toHaveBeenCalled();
+    expect(fetcher).not.toHaveBeenCalled();
+  });
+
   it("refreshes an expired credential before revoking its individual access token", async () => {
     const fetcher = vi
       .fn()

@@ -195,8 +195,14 @@ export class CredentialResolver {
     for (let attempt = 0; attempt < OAUTH_REFRESH_PERSIST_ATTEMPTS; attempt++) {
       if (await this.store.updateCredential(target, true)) return target.credential as OAuthCredential;
       const current = await this.store.get(service, connectionName);
+      if (!current) {
+        // Another runtime can delete the row while the provider rotates its token.
+        // Only an explicitly token-scoped hook can safely retire this untracked result.
+        await refresher.revokeAccessToken?.(service, nextCredential);
+        break;
+      }
       if (
-        current?.source === "saas" ||
+        current.source === "saas" ||
         current?.id !== id ||
         current.credential.authType !== "oauth2" ||
         current.credential.refreshToken !== spent.refreshToken ||

@@ -29,6 +29,8 @@ export interface IOAuthCredentialRefresher {
    * `unsupported` (none declared); a refusal or an unreachable endpoint throws.
    */
   revoke?(service: string, credential: OAuthCredential): Promise<"done" | "unsupported">;
+  /** Revoke this token pair only, preserving unrelated authorizations. Never use a grant-wide endpoint. */
+  revokeAccessToken?(service: string, credential: OAuthCredential): Promise<"done" | "unsupported">;
 }
 
 /**
@@ -132,26 +134,38 @@ export class OAuthCredentialRefreshService implements IOAuthCredentialRefresher 
    * determines whether related tokens and the underlying grant are revoked.
    */
   async revoke(service: string, credential: OAuthCredential): Promise<"done" | "unsupported"> {
+    return this.revokeCredential(service, credential, false);
+  }
+
+  async revokeAccessToken(service: string, credential: OAuthCredential): Promise<"done" | "unsupported"> {
+    return this.revokeCredential(service, credential, true);
+  }
+
+  private async revokeCredential(
+    service: string,
+    credential: OAuthCredential,
+    accessTokenOnly: boolean,
+  ): Promise<"done" | "unsupported"> {
     let auth: OAuth2AuthDefinition;
     try {
       auth = this.clientConfigs.getOAuthDefinition(service);
     } catch {
       return "unsupported";
     }
-    const token = credential.refreshToken || credential.accessToken;
+    const token = accessTokenOnly ? credential.accessToken : credential.refreshToken || credential.accessToken;
     if (!token) {
       return "unsupported";
     }
     const createError = (message: string): ConnectionError =>
       new ConnectionError("oauth_token_revocation_failed", message);
     const providerOAuth = await this.providerLoader?.loadProviderOAuthRuntime?.(service);
-    if (!providerOAuth?.revokeAccessToken && !auth.revocationUrl) return "unsupported";
+    if (!providerOAuth?.revokeAccessToken && (accessTokenOnly || !auth.revocationUrl)) return "unsupported";
     const config =
       readOAuthClientConfigMetadata(service, credential.metadata) ?? (await this.clientConfigs.getConfig(service));
     if (providerOAuth?.revokeAccessToken) {
       if (!config) throw createError(`Configure an OAuth client for ${service} before revoking its token.`);
       const current =
-        credential.refreshToken && isOAuthCredentialExpired(credential, 0)
+        !accessTokenOnly && credential.refreshToken && isOAuthCredentialExpired(credential, 0)
           ? await this.refresh(service, credential)
           : credential;
       await providerOAuth.revokeAccessToken({

@@ -79,6 +79,7 @@ export interface ProviderOAuthRuntime {
   }): string | Promise<string>;
   exchangeCode?(input: OAuthCodeExchangeInput): Promise<OAuthTokenResult>;
   refreshAccessToken?(input: OAuthAccessTokenRefreshInput): Promise<OAuthTokenResult>;
+  /** Revoke the supplied token pair only, leaving unrelated authorizations intact. */
   revokeAccessToken?(input: OAuthTokenRevokeInput): Promise<void>;
 }
 

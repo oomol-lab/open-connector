@@ -1406,7 +1406,8 @@ describe("ConnectionService", () => {
     it("does not overwrite a credential a reconnect stored during the refresh", async () => {
       const store = new MemoryConnectionStore();
       const refresher = createRotatingRefresher();
-      const service = createService([oauthProvider], { store, oauthCredentials: refresher });
+      const revokeAccessToken = vi.fn(async (): Promise<"done"> => "done");
+      const service = createService([oauthProvider], { store, oauthCredentials: { ...refresher, revokeAccessToken } });
       const original = await store.set("example", "default", expiredRotating);
 
       const first = service.getCredential("example");
@@ -1426,6 +1427,7 @@ describe("ConnectionService", () => {
       refresher.release();
 
       await expect(first).rejects.toMatchObject({ code: "connection_not_found" });
+      expect(revokeAccessToken).not.toHaveBeenCalled();
       await expect(store.get("example", "default")).resolves.toMatchObject({
         id: original.id,
         credential: {
@@ -1627,6 +1629,54 @@ describe("ConnectionService", () => {
 });
 
 describe("ConnectionService disconnect revocation", () => {
+  it.each(["done", "unsupported", "failed"])(
+    "handles orphaned refresh cleanup after another runtime disconnects (%s)",
+    async (outcome) => {
+      const store = new MemoryConnectionStore();
+      const started = Promise.withResolvers<void>();
+      const release = Promise.withResolvers<void>();
+      const credential: Extract<ResolvedCredential, { authType: "oauth2" }> = {
+        authType: "oauth2",
+        accessToken: "old-access",
+        refreshToken: "old-refresh",
+        tokenType: "Bearer",
+        expiresAt: new Date(Date.now() - 60_000).toISOString(),
+        profile: testProfile,
+        metadata: {},
+      };
+      const rotated = { ...credential, accessToken: "rotated-access", refreshToken: "rotated-refresh" };
+      const revoke = vi.fn(async (): Promise<"done"> => "done");
+      const revokeAccessToken = vi.fn(async (): Promise<"done" | "unsupported"> => {
+        if (outcome === "failed") throw new ConnectionError("oauth_token_revocation_failed", "Cleanup failed.");
+        return outcome === "done" ? "done" : "unsupported";
+      });
+      const refresher = {
+        revoke,
+        revokeAccessToken,
+        async refresh() {
+          started.resolve();
+          await release.promise;
+          return rotated;
+        },
+      };
+      const first = createService([oauthProvider], { store, oauthCredentials: refresher });
+      const second = createService([oauthProvider], { store, oauthCredentials: refresher });
+      await store.set("example", "default", credential);
+      const execution = first.getCredential("example").catch((error: unknown) => error);
+      await started.promise;
+      await expect(second.disconnect("example", undefined, { revoke: true })).resolves.toMatchObject({
+        revoked: "done",
+      });
+      release.resolve();
+      await expect(execution).resolves.toMatchObject({
+        code: outcome === "failed" ? "oauth_token_revocation_failed" : "connection_not_found",
+      });
+      expect(revoke).toHaveBeenCalledExactlyOnceWith("example", credential);
+      expect(revokeAccessToken).toHaveBeenCalledExactlyOnceWith("example", rotated);
+      await expect(store.get("example", "default")).resolves.toBeUndefined();
+    },
+  );
+
   it("rejects a stale credential read that resumes after disconnect", async () => {
     const store = new MemoryConnectionStore();
     const credential: Extract<ResolvedCredential, { authType: "oauth2" }> = {
