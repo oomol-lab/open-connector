@@ -824,6 +824,12 @@ export function createOpenApiDocument(options: OpenApiDocumentOptions = {}): Ope
                 locallyExecutable: jsonSchema.boolean(),
                 catalogOnly: jsonSchema.boolean(),
                 requiredAuthTypes: jsonSchema.array(jsonSchema.string()),
+                authTypesSource: {
+                  type: "string",
+                  enum: ["action", "provider"],
+                  description:
+                    "Whether authentication types are declared by this action or inherited from the provider.",
+                },
                 noAuthRunnable: jsonSchema.boolean(),
                 needsCredential: jsonSchema.boolean(),
               },
@@ -832,6 +838,7 @@ export function createOpenApiDocument(options: OpenApiDocumentOptions = {}): Ope
                   "locallyExecutable",
                   "catalogOnly",
                   "requiredAuthTypes",
+                  "authTypesSource",
                   "noAuthRunnable",
                   "needsCredential",
                 ],

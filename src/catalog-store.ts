@@ -15,6 +15,7 @@ export type ActionExecutionStatus = {
   locallyExecutable: boolean;
   catalogOnly: boolean;
   requiredAuthTypes: AuthType[];
+  authTypesSource: "action" | "provider";
   noAuthRunnable: boolean;
   needsCredential: boolean;
 };
@@ -272,16 +273,21 @@ export function resolveExecutableActionIds(
 
 function createActionExecutionStatus(
   provider: Pick<ProviderDefinition, "authTypes">,
-  action: Pick<ActionDefinition, "id">,
+  action: Pick<ActionDefinition, "id" | "authTypes">,
   executableActions: Set<string>,
 ): ActionExecutionStatus {
   const locallyExecutable = executableActions.has(action.id);
+  const authTypes = action.authTypes ?? provider.authTypes;
+  if (action.authTypes && (!authTypes.length || authTypes.some((type) => !provider.authTypes.includes(type)))) {
+    throw new Error(`Invalid action authentication types: ${action.id}`);
+  }
   return {
     locallyExecutable,
     catalogOnly: !locallyExecutable,
-    requiredAuthTypes: provider.authTypes,
-    noAuthRunnable: provider.authTypes.includes("no_auth"),
-    needsCredential: !provider.authTypes.includes("no_auth"),
+    requiredAuthTypes: authTypes,
+    authTypesSource: action.authTypes ? "action" : "provider",
+    noAuthRunnable: authTypes.includes("no_auth"),
+    needsCredential: !authTypes.includes("no_auth"),
   };
 }
 

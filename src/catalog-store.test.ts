@@ -9,7 +9,10 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { catalogIndexFileName, createCatalogIndex } from "./catalog-index.ts";
 import { defaultLazySchemaCacheFiles } from "./catalog-lazy-schemas.ts";
 import { createCatalogStore, loadCatalog, resolveExecutableActionIds } from "./catalog-store.ts";
+import { defineProviderAction } from "./core/provider-definition.ts";
 import { validateActionInput } from "./core/validation.ts";
+import { createOpenApiDocument } from "./server/api/openapi.ts";
+import { serializeRuntimeAction } from "./server/api/runtime-api.ts";
 
 vi.mock("@cfworker/json-schema", async (importOriginal) => {
   const actual = await importOriginal<typeof import("@cfworker/json-schema")>();
@@ -24,6 +27,78 @@ afterEach(async () => {
 });
 
 describe("catalog store", () => {
+  it.each(["eager", "lazy", "indexed"])("preserves action authentication provenance (%s)", async (mode) => {
+    const provider = providerFixture("example", ["personal", "public", "inherited"]);
+    provider.authTypes = ["oauth2", "api_key", "no_auth"];
+    provider.auth = [
+      {
+        type: "oauth2",
+        authorizationUrl: "https://example.test/auth",
+        tokenUrl: "https://example.test/token",
+        scopes: [],
+        tokenEndpointAuthMethod: "none",
+      },
+      { type: "api_key" },
+      { type: "no_auth" },
+    ];
+    provider.actions[0]!.authTypes = ["oauth2", "api_key"];
+    provider.actions[1]!.authTypes = ["no_auth"];
+    const before = structuredClone(provider);
+    const directory = await writeCatalogDir([provider]);
+    const catalog = await loadCatalog(directory, {
+      lazySchemas: mode !== "eager",
+      lazySchemaIndexFile: mode === "indexed" ? await writeCatalogIndex(directory, [provider]) : undefined,
+      executableServices: ["example"],
+    });
+    const personal = await catalog.getAction("example.personal");
+    expect(personal?.execution).toEqual({
+      locallyExecutable: true,
+      catalogOnly: false,
+      requiredAuthTypes: ["oauth2", "api_key"],
+      authTypesSource: "action",
+      noAuthRunnable: false,
+      needsCredential: true,
+    });
+    expect((await catalog.getAction("example.public"))?.execution).toMatchObject({
+      requiredAuthTypes: ["no_auth"],
+      authTypesSource: "action",
+      noAuthRunnable: true,
+      needsCredential: false,
+    });
+    expect((await catalog.getAction("example.inherited"))?.execution).toMatchObject({
+      requiredAuthTypes: provider.authTypes,
+      authTypesSource: "provider",
+    });
+    const wire = serializeRuntimeAction(personal!);
+    const schema = createOpenApiDocument().components.schemas.RuntimeActionMetadata;
+    expect(new jsonSchema.Validator(schema).validate(wire).valid).toBe(true);
+    expect(wire.execution.authTypesSource).toBe("action");
+    expect(catalog.actionsById.get("example.personal")?.execution).toEqual(personal?.execution);
+    expect(provider).toEqual(before);
+  });
+
+  it("retains action authentication declarations through the provider helper", () => {
+    const authTypes = ["api_key"] as const;
+    const action = defineProviderAction("example", {
+      name: "read",
+      description: "Read example.",
+      operationType: "read",
+      authTypes,
+      inputSchema: { type: "object" },
+      outputSchema: { type: "object" },
+    });
+    expect(action.authTypes).toEqual(authTypes);
+    expect(action.authTypes).not.toBe(authTypes);
+  });
+
+  it("rejects empty and unsupported action authentication metadata", () => {
+    for (const authTypes of [[], ["oauth2"]] as const) {
+      const provider = providerFixture("example", ["read"]);
+      provider.actions[0]!.authTypes = [...authTypes];
+      expect(() => createCatalogStore([provider])).toThrow("Invalid action authentication types");
+    }
+  });
+
   it.each([false, true])("reuses compiled validators while definitions are resident (lazy=%s)", async (lazySchemas) => {
     const catalogDir = await writeCatalogDir([
       providerFixture("example", ["ping"]),
