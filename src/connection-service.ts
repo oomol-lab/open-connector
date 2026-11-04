@@ -564,6 +564,12 @@ export class ConnectionService {
     if (options.revoke === true) {
       try {
         stored = await this.store.get(service, connectionName);
+        if (stored && stored.source !== "saas") {
+          const credential = stored.credential;
+          const refresh = this.credentials.getPendingRefresh(stored);
+          // A failed refresh leaves the original token available to the provider's revocation path.
+          if (refresh) stored = { ...stored, credential: await refresh.catch(() => credential) };
+        }
       } catch (error) {
         readFailed = true;
         this.logger?.warn({ service, connectionName, error: describeError(error) }, "oauth token revocation skipped");

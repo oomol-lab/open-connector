@@ -12,6 +12,9 @@ import { ConnectionError } from "./connection-error.ts";
 import { ConnectionService } from "./connection-service.ts";
 import { OAuthClientConfigService } from "./oauth/oauth-client-config-service.ts";
 import { OAuthCredentialRefreshService } from "./oauth/oauth-credential-refresh-service.ts";
+import { provider as githubProvider } from "./providers/github/definition.ts";
+import { githubOAuthRuntime } from "./providers/github/oauth.ts";
+import { ProviderLoader } from "./providers/provider-loader.ts";
 
 const hackernewsProvider: ProviderDefinition = {
   service: "hackernews",
@@ -1576,6 +1579,85 @@ describe("ConnectionService", () => {
 });
 
 describe("ConnectionService disconnect revocation", () => {
+  it.each([
+    { remainingMs: -60_000, refreshStatus: 200 },
+    { remainingMs: 30_000, refreshStatus: 200 },
+    { remainingMs: 30_000, refreshStatus: 429 },
+  ])(
+    "disconnects GitHub during a refresh ($remainingMs ms remaining, HTTP $refreshStatus)",
+    async ({ remainingMs, refreshStatus }) => {
+      const store = new MemoryConnectionStore();
+      const configs = createOAuthClientConfigs([githubProvider]);
+      await configs.upsertConfig({ service: "github", clientId: "client-id", clientSecret: "client-secret" });
+      const providerLoader = new ProviderLoader({ github: async () => ({ executors: {}, oauth: githubOAuthRuntime }) });
+      const service = createService([githubProvider], {
+        store,
+        providerLoader,
+        oauthCredentials: new OAuthCredentialRefreshService(configs, providerLoader),
+      });
+      await store.set("github", "default", {
+        authType: "oauth2",
+        accessToken: "old-access",
+        tokenType: "Bearer",
+        refreshToken: "single-use-refresh",
+        expiresAt: new Date(Date.now() + remainingMs).toISOString(),
+        profile: testProfile,
+        metadata: {},
+      });
+      const started = Promise.withResolvers<void>();
+      const release = Promise.withResolvers<void>();
+      let refreshCount = 0;
+      const fetcher = vi.fn(async (_url: RequestInfo | URL, init?: RequestInit) => {
+        if (init?.method === "POST") {
+          refreshCount++;
+          if (refreshCount > 1) return Response.json({ error: "bad_refresh_token" });
+          started.resolve();
+          await release.promise;
+          return refreshStatus === 200
+            ? Response.json({ access_token: "rotated-access", refresh_token: "rotated-refresh", expires_in: 28800 })
+            : Response.json({ error: "temporarily_unavailable" }, { status: refreshStatus });
+        }
+        await expect(store.get("github", "default")).resolves.toBeUndefined();
+        const body = JSON.parse(String(init?.body));
+        const accessToken = refreshStatus === 200 ? "rotated-access" : "old-access";
+        return new Response(null, { status: body.access_token === accessToken ? 204 : 422 });
+      });
+      vi.stubGlobal("fetch", fetcher);
+      const execution = service.getCredential("github").catch((error: unknown) => error);
+      await started.promise;
+      const disconnectRead = Promise.withResolvers<void>();
+      const get = store.get.bind(store);
+      vi.spyOn(store, "get").mockImplementationOnce(async (...args) => {
+        const stored = await get(...args);
+        disconnectRead.resolve();
+        return stored;
+      });
+      const disconnect = service.disconnect("github", undefined, { revoke: true });
+      await disconnectRead.promise;
+      release.resolve();
+
+      await expect(disconnect).resolves.toMatchObject({
+        configured: false,
+        revoked: "done",
+      });
+      expect(refreshCount).toBe(1);
+      await expect(store.get("github", "default")).resolves.toBeUndefined();
+      expect(fetcher).toHaveBeenCalledTimes(2);
+      expect(fetcher.mock.calls[1]?.[1]?.method).toBe("DELETE");
+      expect(JSON.parse(String(fetcher.mock.calls[1]?.[1]?.body))).toEqual({
+        access_token: refreshStatus === 200 ? "rotated-access" : "old-access",
+      });
+      if (refreshStatus === 200) {
+        await expect(execution).resolves.toMatchObject({
+          accessToken: "rotated-access",
+          refreshToken: "rotated-refresh",
+        });
+      } else {
+        await expect(execution).resolves.toMatchObject({ code: "oauth_token_refresh_failed" });
+      }
+    },
+  );
+
   const revocableProvider: ProviderDefinition = {
     ...oauthProvider,
     service: "revocable",

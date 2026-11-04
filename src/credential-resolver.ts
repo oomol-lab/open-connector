@@ -62,6 +62,14 @@ export class CredentialResolver {
       : connection.credential;
   }
 
+  /** Read an active refresh before deleting its connection, so revocation can use the rotated token. */
+  getPendingRefresh(connection: StoredLocalConnection): Promise<OAuthCredential> | undefined {
+    const credential = connection.credential;
+    return credential.authType === "oauth2"
+      ? this.oauthCredentialRefreshes.get(oauthRefreshKey(connection.id, credential))
+      : undefined;
+  }
+
   private async resolveOAuthCredential(
     connection: StoredLocalConnection,
     credential: OAuthCredential,
@@ -95,11 +103,7 @@ export class CredentialResolver {
     // (rotating) refresh token must reach the provider once even when an unrelated write
     // bumps the revision mid-refresh. A new authorization must refresh independently,
     // even when the provider reuses the same refresh token across reconnects.
-    const refreshKey = JSON.stringify([
-      connection.id,
-      credential.refreshToken,
-      credential.metadata.oauthAuthorizationId,
-    ]);
+    const refreshKey = oauthRefreshKey(connection.id, credential);
     const currentRefresh = this.oauthCredentialRefreshes.get(refreshKey);
     if (currentRefresh) {
       return currentRefresh;
@@ -173,6 +177,10 @@ export class CredentialResolver {
       `${service} connection changed while its OAuth credential was refreshing. Retry the action.`,
     );
   }
+}
+
+function oauthRefreshKey(connectionId: string, credential: OAuthCredential): string {
+  return JSON.stringify([connectionId, credential.refreshToken, credential.metadata.oauthAuthorizationId]);
 }
 
 export function isOAuthCredentialExpired(
