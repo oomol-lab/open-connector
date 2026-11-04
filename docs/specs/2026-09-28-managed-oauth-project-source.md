@@ -130,6 +130,8 @@ mode 决定新建连接的授权路径。已有连接及重连使用其原有来
 
 不增加 localExecutionEnabled、token-export 权限或 access-token 接口。Project key 的既有执行授权继续由 SaaS 检查。
 
+执行路径允许每个 runtime 复用最长 30 秒的已校验能力快照，并合并同一绑定和 key 的并发发现。每次执行仍从数据库读取 project 绑定和 key，缓存不能代替 SaaS 执行接口的当次授权。管理端健康、配置列表和授权准备保持实时发现并更新快照；保存/删除 project、绑定或 key 变化以及远端明确的 project/config 能力拒绝使旧快照失效。能力变化在没有显式刷新的情况下最多延迟 30 秒反映到本地。失败结果不缓存，失效只影响后续调用，不自动重放业务 POST。共享发现按等待者管理取消，最后一个等待者取消时中止 GET 并丢弃未完成快照。
+
 全局本地 catalog 保持完整；本地 catalog 与远端 action 的交集仅用于指定 SaaS 来源/连接的能力展示和执行检查。未选择连接的 action 列表不因绑定 SaaS 而删除本地可执行能力，远端也不能借发现数据加载任意本地代码。选中连接后再检查该来源是否支持 action；proxy 能力同样按来源判断。ID 相同不保证 schema 相同；双方均校验输入。远端 schema 不兼容时明确报错，不换成本地执行、不静默删改字段。上线样本验证双方动作 schema；远端能力变更可通过显式刷新和重新读取配置更新，未知 action 不自动重放。
 
 选择 config 时校验 service、authType、可用性，并预检 effectiveScopes 覆盖本地 UI 声明的必选原生授权项。SaaS 在授权和每次执行时验证实际权限，Connect 的 scope 摘要不能授权原本被 SaaS 拒绝的 action。首版 scopes/extra/secretExtra 在 SaaS config 上管理，不允许按次覆盖。

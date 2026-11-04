@@ -228,6 +228,11 @@ export class D1RuntimeTokenStore implements IRuntimeTokenStore {
     return results.map(readRuntimeTokenRow);
   }
 
+  async hasAny(): Promise<boolean> {
+    const row = await this.database.prepare("select 1 from runtime_tokens limit 1").first();
+    return row !== null;
+  }
+
   async findByHash(tokenHash: string): Promise<RuntimeTokenRecord | undefined> {
     const row = await this.database
       .prepare(

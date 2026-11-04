@@ -3,6 +3,7 @@ import type { RuntimeJwtVerifier } from "./runtime-jwt.ts";
 import type { Context, MiddlewareHandler } from "hono";
 
 import { deleteCookie, getCookie, setCookie } from "hono/cookie";
+import { measureExecutionPhase } from "../../core/execution-timing.ts";
 import { isChannelEventVerifyRequest } from "../event-verification/registry.ts";
 import { constantTimeEqual } from "./auth-utils.ts";
 import { isConsoleShellRequest } from "./console-paths.ts";
@@ -78,10 +79,9 @@ export function createLocalAuthMiddleware(options: LocalAuthOptions): Middleware
     };
   }
 
-  return async (context, next) => {
+  const authenticate = async (context: Context): Promise<Response | undefined> => {
     const scope = readAuthScope(context.req.path);
     if (isPublicPath(context.req.path, context.req.method)) {
-      await next();
       return;
     }
 
@@ -103,7 +103,6 @@ export function createLocalAuthMiddleware(options: LocalAuthOptions): Middleware
       if (scope === "admin") {
         await installAdminCookieForBearer(context, options);
       }
-      await next();
       return;
     }
 
@@ -116,7 +115,6 @@ export function createLocalAuthMiddleware(options: LocalAuthOptions): Middleware
       (await hasValidToken(context, options, "admin"))
     ) {
       await installAdminCookieForBearer(context, options);
-      await next();
       return;
     }
 
@@ -140,6 +138,12 @@ export function createLocalAuthMiddleware(options: LocalAuthOptions): Middleware
       context.header("WWW-Authenticate", options.oauthChallenge);
     }
     return jsonError(context, 401, "unauthorized", "A valid local bearer token is required.");
+  };
+
+  return async (context, next) => {
+    const response = await measureExecutionPhase("authMs", () => authenticate(context));
+    if (response) return response;
+    await next();
   };
 }
 
@@ -226,17 +230,11 @@ async function hasValidToken(context: Context, options: LocalAuthOptions, scope:
     }
     const authMode = options.authMode ?? "runtime_token";
     const acceptsOAuth = (authMode === "oauth" || authMode === "mixed") && options.resolveOAuthToken !== undefined;
-    const hasRuntimeTokens = options.hasRuntimeTokens
-      ? await options.hasRuntimeTokens()
-      : options.resolveRuntimeToken !== undefined;
-    if (
-      authMode !== "oauth" &&
-      !acceptsOAuth &&
-      !options.requireRuntimeAuth &&
-      !hasRuntimeTokens &&
-      !options.verifyRuntimeJwt
-    ) {
-      return true;
+    if (authMode !== "oauth" && !acceptsOAuth && !options.requireRuntimeAuth && !options.verifyRuntimeJwt) {
+      const hasRuntimeTokens = options.hasRuntimeTokens
+        ? await options.hasRuntimeTokens()
+        : options.resolveRuntimeToken !== undefined;
+      if (!hasRuntimeTokens) return true;
     }
     return hasValidRuntimeToken(context, options);
   }

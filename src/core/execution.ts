@@ -1,6 +1,15 @@
 import type { ActionDefinition, ActionExecutor, ExecutionContext, ExecutionResult } from "./types.ts";
 
+import { measureExecutionPhaseSync } from "./execution-timing.ts";
 import { validateActionInput } from "./validation.ts";
+
+export const unavailableActionExecutor: ActionExecutor = async () => ({
+  ok: false,
+  error: {
+    code: "executor_unavailable",
+    message: "Execution for this action is not available in the local runtime yet.",
+  },
+});
 
 /**
  * Validate input and run a local executor for an action.
@@ -15,16 +24,10 @@ export async function executeAction(
   context: ExecutionContext,
 ): Promise<ExecutionResult> {
   if (!executor) {
-    return {
-      ok: false,
-      error: {
-        code: "executor_unavailable",
-        message: "Execution for this action is not available in the local runtime yet.",
-      },
-    };
+    return unavailableActionExecutor(input, context);
   }
 
-  const validation = validateActionInput(action, input);
+  const validation = measureExecutionPhaseSync("schemaMs", () => validateActionInput(action, input));
   if (!validation.valid) {
     return {
       ok: false,

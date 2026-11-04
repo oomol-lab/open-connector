@@ -370,6 +370,7 @@ export class SqliteOAuthClientConfigStore implements IOAuthClientConfigStore {
 
 export class SqliteRuntimeTokenStore implements IRuntimeTokenStore {
   private readonly database: DatabaseSync;
+  private hasAnyStatement?: StatementSync;
   private findByHashStatement?: StatementSync;
   private markUsedStatement?: StatementSync;
 
@@ -412,6 +413,11 @@ export class SqliteRuntimeTokenStore implements IRuntimeTokenStore {
       )
       .all()
       .map(readRuntimeTokenRow);
+  }
+
+  async hasAny(): Promise<boolean> {
+    this.hasAnyStatement ??= this.database.prepare("select 1 from runtime_tokens limit 1");
+    return this.hasAnyStatement.get() !== undefined;
   }
 
   async findByHash(tokenHash: string): Promise<RuntimeTokenRecord | undefined> {

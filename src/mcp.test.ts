@@ -352,7 +352,7 @@ describe("MCP server", () => {
     }, runs);
   });
 
-  it("returns the selected connection when execution fails", async () => {
+  it("returns validation errors before resolving the selected connection", async () => {
     await withAuthenticatedMcpClient(async (client) => {
       const result = await client.callTool({
         name: "execute_action",
@@ -372,11 +372,8 @@ describe("MCP server", () => {
         },
         executionId: expect.any(String),
         auditPersisted: true,
-        connection: {
-          connectionName: "secondary",
-          profile: secondaryCredential.profile,
-        },
       });
+      expect(result.structuredContent).not.toHaveProperty("connection");
     });
   });
 
@@ -460,17 +457,12 @@ describe("MCP server", () => {
         ok: false,
         executionId: expect.any(String),
         auditPersisted: true,
-        connection: {
-          service: "example",
-          connectionName: "default",
-          authType: "no_auth",
-          default: true,
-        },
         error: {
           code: "invalid_input",
           message: "Action input does not match the action schema.",
         },
       });
+      expect(result.structuredContent).not.toHaveProperty("connection");
     });
   });
 
@@ -844,6 +836,10 @@ class EchoProviderLoader implements IProviderLoader {
 
 class MemoryConnectionStore implements IConnectionStore {
   private readonly connections = new Map<string, StoredConnection>();
+
+  async getById(id: string): Promise<StoredConnection | undefined> {
+    return [...this.connections.values()].find((connection) => connection.id === id);
+  }
 
   constructor(connections: StoredConnection[] = []) {
     for (const connection of connections) {

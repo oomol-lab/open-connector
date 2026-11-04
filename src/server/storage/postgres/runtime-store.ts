@@ -417,6 +417,11 @@ class PostgresRuntimeTokenStore implements IRuntimeTokenStore {
     return result.rows.map(readRuntimeTokenRow);
   }
 
+  async hasAny(): Promise<boolean> {
+    const result = await this.pool.query("select 1 from runtime_tokens limit 1");
+    return result.rows.length > 0;
+  }
+
   async findByHash(tokenHash: string): Promise<RuntimeTokenRecord | undefined> {
     const result = await this.pool.query<RuntimeRow>(
       `

@@ -33,6 +33,7 @@ import { ActionPolicyService } from "../core/action-policy.ts";
 import { createActionSearchIndexProvider } from "../core/action-search.ts";
 import { optionalRecord } from "../core/cast.ts";
 import { ExecutionError } from "../core/execution-error.ts";
+import { getExecutionTimings, withExecutionTimings } from "../core/execution-timing.ts";
 import { withRuntimeExecution } from "../core/runtime-execution.ts";
 import { ProviderDispatchRequestError, toProviderExecutionError } from "../providers/provider-runtime.ts";
 import { SaasError } from "../saas/saas-client.ts";
@@ -163,8 +164,26 @@ export class ConnectServer {
     const app = new Hono();
     const auth = this.options.auth ?? {};
 
-    app.use("*", async (_context, next) => {
-      await withRuntimeExecution(this.options, { operation: "runtime" }, next);
+    app.use("*", async (context, next) => {
+      const run = () => withRuntimeExecution(this.options, { operation: "runtime" }, next);
+      const logger = this.options.logger;
+      if (!logger) return run();
+      await withExecutionTimings(async () => {
+        try {
+          await run();
+        } finally {
+          logger.info(
+            {
+              method: context.req.method,
+              path: loggableRequestPath(context.req.path),
+              status: context.res.status,
+              cancelled: context.req.raw.signal.aborted,
+              timings: getExecutionTimings(),
+            },
+            "runtime request completed",
+          );
+        }
+      });
     });
 
     app.use("*", async (context, next) => {
@@ -386,7 +405,7 @@ export class ConnectServer {
         this.options.logger?.warn(
           {
             method: context.req.method,
-            path: context.req.path,
+            path: loggableRequestPath(context.req.path),
             code: error.code,
             status: error.status,
             reason: error.message,
@@ -426,7 +445,7 @@ export class ConnectServer {
         {
           err: error,
           method: context.req.method,
-          path: context.req.path,
+          path: loggableRequestPath(context.req.path),
         },
         "request failed",
       );
@@ -442,4 +461,8 @@ export class ConnectServer {
 
     return app;
   }
+}
+
+function loggableRequestPath(path: string): string {
+  return path.startsWith("/api/files/") ? "/api/files/:fileId" : path;
 }

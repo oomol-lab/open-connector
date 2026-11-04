@@ -10,6 +10,7 @@ import type { SaasExecutionService } from "../../saas/saas-execution-service.ts"
 import { ConnectionError } from "../../connection-error.ts";
 import { optionalRecord, requiredRecord, requiredString } from "../../core/cast.ts";
 import { connectionExecutionError, ExecutionError } from "../../core/execution-error.ts";
+import { measureExecutionPhase } from "../../core/execution-timing.ts";
 import { withRuntimeExecution } from "../../core/runtime-execution.ts";
 import { resolveExecutionTarget } from "../../execution-target.ts";
 import {
@@ -117,6 +118,7 @@ export class ProxyRunner {
         connectionId: input.connectionId,
         operation: "proxy",
         policy: input.policy,
+        signal: input.signal,
       });
       this.options.logger?.info(logContext, "proxy request started");
       if (target.kind === "saas") {
@@ -125,11 +127,8 @@ export class ProxyRunner {
         if (!this.options.saas) throw new SaasError("oauth_source_unavailable", "SaaS execution is unavailable.", 503);
         const { alias: _alias, connectionName: _connectionName, ...remoteRequest } = optionalRecord(input.input)!;
         remoteRequest.method = request.input.method;
-        const remote = await this.options.saas.executeProxy(
-          target.reference,
-          provider.service,
-          remoteRequest,
-          input.signal,
+        const remote = await measureExecutionPhase("providerMs", () =>
+          this.options.saas!.executeProxy(target.reference, provider.service, remoteRequest, input.signal),
         );
         input.signal?.throwIfAborted();
         this.options.logger?.info(
@@ -148,7 +147,10 @@ export class ProxyRunner {
           meta: { service: provider.service, executionId, remoteExecutionId: remote.executionId },
         };
       }
-      const executor = await this.options.providerLoader.loadProxyExecutor(provider.service, provider.displayName);
+      const executor = await measureExecutionPhase("executorLoadMs", () =>
+        this.options.providerLoader.loadProxyExecutor(provider.service, provider.displayName),
+      );
+      input.signal?.throwIfAborted();
       if (!executor)
         return {
           ok: false,
@@ -157,20 +159,23 @@ export class ProxyRunner {
           message: `Proxy execution is not supported for ${provider.service}.`,
           meta: { service: provider.service },
         };
-      const result = await withProviderHttpDispatchResult(
-        {
-          operation: "proxy",
-          service: provider.service,
-          connectionId: target.summary?.id,
-          connectionName: target.summary?.connectionName,
-        },
-        () =>
-          executor(request.input, {
-            getCredential: target.getCredential,
-            signal: input.signal,
-          }),
-        this.options.providerHttpDispatch,
+      const result = await measureExecutionPhase("providerMs", () =>
+        withProviderHttpDispatchResult(
+          {
+            operation: "proxy",
+            service: provider.service,
+            connectionId: target.summary?.id,
+            connectionName: target.summary?.connectionName,
+          },
+          () =>
+            executor(request.input, {
+              getCredential: target.getCredential,
+              signal: input.signal,
+            }),
+          this.options.providerHttpDispatch,
+        ),
       );
+      input.signal?.throwIfAborted();
       const durationMs = Date.now() - startedAtMs;
       if (result.ok) {
         this.options.logger?.info(
@@ -194,7 +199,7 @@ export class ProxyRunner {
       return failure;
     } catch (error) {
       const durationMs = Date.now() - startedAtMs;
-      if (executionId && input.signal?.aborted)
+      if (input.signal?.aborted)
         return {
           ok: false,
           kind: "invalid_input",

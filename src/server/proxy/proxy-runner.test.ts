@@ -1,4 +1,4 @@
-import type { ConnectionService, ConnectionSummary } from "../../connection-service.ts";
+import type { ConnectionSummary } from "../../connection-service.ts";
 import type {
   ActionExecutor,
   CredentialValidators,
@@ -12,13 +12,16 @@ import type { RuntimeStatus } from "../api/runtime-api.ts";
 import type { Logger } from "../logger.ts";
 import type { RunProxyInput } from "./proxy-runner.ts";
 
+import { setImmediate } from "node:timers/promises";
 import { describe, expect, it, vi } from "vitest";
 import { createCatalogStore } from "../../catalog-store.ts";
 import { ConnectionError } from "../../connection-error.ts";
+import { ConnectionService } from "../../connection-service.ts";
 import { ActionPolicyService } from "../../core/action-policy.ts";
 import { providerErrorCodes } from "../../core/provider-error-codes.ts";
 import { serializeProxyFailure } from "../api/runtime-api.ts";
 import { serializeRuntimeActionResult } from "../api/runtime-api.ts";
+import { SqliteRuntimeDatabase } from "../storage/sqlite/runtime-store.ts";
 import { ProxyRunner } from "./proxy-runner.ts";
 
 const provider: ProviderDefinition = {
@@ -497,28 +500,169 @@ describe("ProxyRunner", () => {
     expect(seenSignal?.aborted).toBe(false);
   });
 
-  it("hands the proxy executor an already aborted signal when the caller aborted first", async () => {
+  it("rejects an already cancelled proxy before reading credentials or loading the executor", async () => {
     const controller = new AbortController();
     controller.abort();
-    let aborted: boolean | undefined;
-    const proxy: ProviderProxyExecutor = vi.fn(async (_input, context): Promise<ProxyExecutionResult> => {
-      aborted = context.signal?.aborted;
-      return { ok: true, response: { status: 200, headers: {}, data: null } };
-    });
-    const runner = createRunner({ providerLoader: new TestProviderLoader(proxy) });
+    const proxy = vi.fn<ProviderProxyExecutor>();
+    const providerLoader = new TestProviderLoader(proxy);
+    const loadExecutor = vi.spyOn(providerLoader, "loadProxyExecutor");
+    const connections = createConnections();
+    const runner = createRunner({ providerLoader, connections });
 
-    await runProxyHttp(runner, {
-      service: "example",
-      input: { endpoint: "/items", method: "GET" },
-      policy: openPolicy,
-      signal: controller.signal,
-    });
-    expect(aborted).toBe(true);
+    await expect(
+      runProxyHttp(runner, {
+        service: "example",
+        input: { endpoint: "/items", method: "GET" },
+        policy: openPolicy,
+        signal: controller.signal,
+      }),
+    ).resolves.toMatchObject({ ok: false, status: 400, errorCode: "execution_cancelled" });
+    expect(connections.getConnectionSummary).not.toHaveBeenCalled();
+    expect(connections.resolveConnection).not.toHaveBeenCalled();
+    expect(loadExecutor).not.toHaveBeenCalled();
+    expect(proxy).not.toHaveBeenCalled();
   });
 
-  // An aborted proxy request must settle on the existing failure envelope rather than hang. This is the
-  // shape a hand-written proxy produces: it lets the abort propagate, so the runner catches a rejection.
-  it("surfaces an abort raised during proxy execution as a stable runtime failure", async () => {
+  it("stops before credential refresh when cancelled during connection lookup", async () => {
+    const controller = new AbortController();
+    const connections = createConnections();
+    const read = vi.mocked(connections.getConnectionSummary).getMockImplementation()!;
+    vi.mocked(connections.getConnectionSummary).mockImplementation(async (...args) => {
+      const summary = await read(...args);
+      controller.abort();
+      return summary;
+    });
+    const providerLoader = new TestProviderLoader();
+    const loadExecutor = vi.spyOn(providerLoader, "loadProxyExecutor");
+    const runner = createRunner({ providerLoader, connections });
+
+    await expect(
+      runProxyHttp(runner, {
+        service: "example",
+        input: { endpoint: "/items", method: "GET" },
+        policy: openPolicy,
+        signal: controller.signal,
+      }),
+    ).resolves.toMatchObject({ ok: false, status: 400, errorCode: "execution_cancelled" });
+    expect(connections.resolveConnection).not.toHaveBeenCalled();
+    expect(loadExecutor).not.toHaveBeenCalled();
+  });
+
+  it("does not invoke a proxy cancelled during executor loading", async () => {
+    const controller = new AbortController();
+    const proxy = vi.fn<ProviderProxyExecutor>();
+    const providerLoader = new TestProviderLoader(proxy);
+    vi.spyOn(providerLoader, "loadProxyExecutor").mockImplementation(async () => {
+      controller.abort();
+      return proxy;
+    });
+    const runner = createRunner({ providerLoader });
+
+    await expect(
+      runProxyHttp(runner, {
+        service: "example",
+        input: { endpoint: "/items", method: "GET" },
+        policy: openPolicy,
+        signal: controller.signal,
+      }),
+    ).resolves.toMatchObject({ ok: false, status: 400, errorCode: "execution_cancelled" });
+    expect(proxy).not.toHaveBeenCalled();
+  });
+
+  it.each(["success", "failure"])(
+    "cancels a credential wait without interrupting a shared OAuth refresh ending in %s",
+    async (outcome) => {
+      const oauthProvider: ProviderDefinition = {
+        ...provider,
+        authTypes: ["oauth2"],
+        auth: [
+          {
+            type: "oauth2",
+            authorizationUrl: "https://example.com/authorize",
+            tokenUrl: "https://example.com/token",
+            scopes: [],
+            tokenEndpointAuthMethod: "client_secret_post",
+          },
+        ],
+      };
+      const expired: Extract<ResolvedCredential, { authType: "oauth2" }> = {
+        authType: "oauth2",
+        accessToken: "expired-token",
+        refreshToken: "old-refresh-token",
+        tokenType: "Bearer",
+        expiresAt: "2000-01-01T00:00:00.000Z",
+        profile: credential.profile,
+        metadata: {},
+      };
+      const fresh = {
+        ...expired,
+        accessToken: "fresh-token",
+        refreshToken: "rotated-refresh-token",
+        expiresAt: new Date(Date.now() + 3_600_000).toISOString(),
+      };
+      const started = Promise.withResolvers<void>();
+      const refreshed = Promise.withResolvers<typeof expired>();
+      const refresh = vi.fn(() => {
+        started.resolve();
+        return refreshed.promise;
+      });
+      const database = new SqliteRuntimeDatabase(":memory:");
+      await database.connectionStore.set("example", "default", expired);
+      const proxy = vi.fn<ProviderProxyExecutor>(async (_input, context) => {
+        expect(await context.getCredential("example")).toMatchObject({ accessToken: "fresh-token" });
+        return { ok: true, response: { status: 200, headers: {}, data: null } };
+      });
+      const providerLoader = new TestProviderLoader(proxy);
+      const loadExecutor = vi.spyOn(providerLoader, "loadProxyExecutor");
+      const runner = createRunner({
+        provider: oauthProvider,
+        providerLoader,
+        connections: new ConnectionService({
+          catalog: createCatalogStore([oauthProvider]),
+          providerLoader,
+          store: database.connectionStore,
+          oauthCredentials: { refresh },
+        }),
+      });
+      const controller = new AbortController();
+      const request = { service: "example", input: { endpoint: "/items", method: "GET" }, policy: openPolicy };
+      const cancelled = runProxyHttp(runner, { ...request, signal: controller.signal });
+      const active = runProxyHttp(runner, request);
+      try {
+        await started.promise;
+        controller.abort();
+        await expect(Promise.race([cancelled, setImmediate()])).resolves.toMatchObject({
+          ok: false,
+          status: 400,
+          errorCode: "execution_cancelled",
+        });
+        expect(loadExecutor).not.toHaveBeenCalled();
+        expect(proxy).not.toHaveBeenCalled();
+        await expect(database.connectionStore.get("example", "default")).resolves.toMatchObject({
+          credential: expired,
+        });
+
+        if (outcome === "failure")
+          refreshed.reject(new ConnectionError("oauth_token_refresh_failed", "Refresh failed."));
+        else refreshed.resolve(fresh);
+
+        await expect(active).resolves.toMatchObject(
+          outcome === "success" ? { ok: true } : { ok: false, status: 409, errorCode: "oauth_token_refresh_failed" },
+        );
+        expect(refresh).toHaveBeenCalledOnce();
+        expect(proxy).toHaveBeenCalledTimes(outcome === "success" ? 1 : 0);
+        await expect(database.connectionStore.get("example", "default")).resolves.toMatchObject({
+          credential: outcome === "success" ? fresh : expired,
+        });
+      } finally {
+        refreshed.resolve(fresh);
+        await Promise.allSettled([cancelled, active]);
+        database.close();
+      }
+    },
+  );
+
+  it("returns execution_cancelled when the proxy executor throws on abort", async () => {
     const controller = new AbortController();
     const proxy: ProviderProxyExecutor = vi.fn(async (_input, context): Promise<ProxyExecutionResult> => {
       controller.abort();
@@ -536,26 +680,19 @@ describe("ProxyRunner", () => {
       }),
     ).resolves.toEqual({
       ok: false,
-      status: 500,
-      errorCode: "internal_error",
-      message: "Proxy request failed unexpectedly.",
+      status: 400,
+      errorCode: "execution_cancelled",
+      message: "Proxy execution was cancelled.",
       meta: { service: "example" },
     });
   });
 
-  // The shape most proxies produce: defineProviderProxy catches the abort and reports it as an error
-  // result, so a cancelled request lands on mapProxyErrorStatus's fall-through rather than the 500 above.
-  it("maps an abort a proxy executor reports as an error result onto the existing 400 envelope", async () => {
+  it.each([true, false])("returns execution_cancelled when an aborted executor returns ok=%s", async (ok) => {
     const controller = new AbortController();
-    const proxy: ProviderProxyExecutor = vi.fn(async (_input, context): Promise<ProxyExecutionResult> => {
+    const proxy: ProviderProxyExecutor = vi.fn(async (): Promise<ProxyExecutionResult> => {
       controller.abort();
-      try {
-        context.signal?.throwIfAborted();
-        return { ok: true, response: { status: 200, headers: {}, data: null } };
-      } catch {
-        // What toProviderProxyError builds for an error that is not a ProviderRequestError.
-        return { ok: false, error: { code: "internal_error", message: "provider request failed" } };
-      }
+      if (ok) return { ok: true, response: { status: 200, headers: {}, data: null } };
+      return { ok: false, error: { code: "internal_error", message: "provider request failed" } };
     });
     const runner = createRunner({ providerLoader: new TestProviderLoader(proxy) });
 
@@ -569,9 +706,8 @@ describe("ProxyRunner", () => {
     ).resolves.toEqual({
       ok: false,
       status: 400,
-      errorCode: "internal_error",
-      message: "provider request failed",
-      data: null,
+      errorCode: "execution_cancelled",
+      message: "Proxy execution was cancelled.",
       meta: { service: "example" },
     });
   });
