@@ -39,6 +39,7 @@ export interface IConnectionStore {
   get(service: string, connectionName: string): Promise<StoredConnection | undefined>;
   getById(id: string): Promise<StoredConnection | undefined>;
   getRetirementGeneration(service: string, connectionName: string): Promise<string>;
+  wasRevocationRequested(retirementGeneration: string, authorizationKey: string): Promise<boolean>;
   setIfCurrentGeneration(
     service: string,
     connectionName: string,
@@ -48,6 +49,11 @@ export interface IConnectionStore {
   set(service: string, connectionName: string, credential: ResolvedCredential): Promise<StoredLocalConnection>;
   updateCredential(input: StoredLocalConnection, refresh?: boolean): Promise<boolean>;
   /** When a target is supplied, reject changes to its identity or revision without retiring the replacement. */
-  delete(service: string, connectionName: string, target?: Pick<StoredConnection, "id" | "revision">): Promise<void>;
+  delete(
+    service: string,
+    connectionName: string,
+    target?: Pick<StoredConnection, "id" | "revision">,
+    authorizationKey?: string,
+  ): Promise<void>;
   list(): Promise<StoredConnection[]>;
 }

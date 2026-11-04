@@ -28,6 +28,7 @@ import { optionalString } from "./core/cast.ts";
 import { normalizeCredentialValues } from "./core/credential-fields.ts";
 import { apiKeyCredentialFields } from "./core/provider-setup.ts";
 import { CredentialResolver, isOAuthCredentialExpired } from "./credential-resolver.ts";
+import { oauthAuthorizationKey } from "./oauth/oauth-authorization-key.ts";
 import {
   providerFetch,
   ProviderDispatchRequestError,
@@ -590,7 +591,11 @@ export class ConnectionService {
           stored = current;
         }
       }
-      await this.store.delete(service, connectionName, stored);
+      const authorizationKey =
+        options.revoke === true && stored?.source !== "saas" && stored?.credential.authType === "oauth2"
+          ? oauthAuthorizationKey(stored)
+          : undefined;
+      await this.store.delete(service, connectionName, stored, authorizationKey);
       const revoked =
         options.revoke !== true
           ? "skipped"

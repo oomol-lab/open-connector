@@ -5,6 +5,7 @@ import type { IOAuthCredentialRefresher } from "./oauth/oauth-credential-refresh
 
 import { ConnectionError } from "./connection-error.ts";
 import { measureExecutionPhase } from "./core/execution-timing.ts";
+import { oauthAuthorizationKey } from "./oauth/oauth-authorization-key.ts";
 import { withProviderHttpDispatchResult } from "./providers/provider-runtime.ts";
 
 type OAuthCredential = Extract<ResolvedCredential, { authType: "oauth2" }>;
@@ -145,6 +146,10 @@ export class CredentialResolver {
     credential: OAuthCredential,
     refresher: IOAuthCredentialRefresher,
   ): Promise<OAuthCredential> {
+    const retirementGeneration = await this.store.getRetirementGeneration(
+      connection.service,
+      connection.connectionName,
+    );
     const selected = await this.store.get(connection.service, connection.connectionName);
     if (this.disconnectingConnections.has(connection.id)) {
       throw new ConnectionError("connection_changed", "The connection is being disconnected.");
@@ -195,20 +200,27 @@ export class CredentialResolver {
     for (let attempt = 0; attempt < OAUTH_REFRESH_PERSIST_ATTEMPTS; attempt++) {
       if (await this.store.updateCredential(target, true)) return target.credential as OAuthCredential;
       const current = await this.store.get(service, connectionName);
-      if (!current) {
-        // Another runtime can delete the row while the provider rotates its token.
-        // Only an explicitly token-scoped hook can safely retire this untracked result.
-        await refresher.revokeAccessToken?.(service, nextCredential);
-        break;
-      }
       if (
-        current.source === "saas" ||
+        current?.source === "saas" ||
         current?.id !== id ||
         current.credential.authType !== "oauth2" ||
         current.credential.refreshToken !== spent.refreshToken ||
         current.credential.metadata.oauthAuthorizationId !== spent.metadata.oauthAuthorizationId
       ) {
-        // Deleted, converted, reconnected, or already rotated elsewhere: never overwrite it.
+        // A disconnected generation can finish after a replacement was installed.
+        // Never revoke a token pair that the replacement still holds.
+        const sharesToken =
+          current !== undefined &&
+          current.source !== "saas" &&
+          current.credential.authType === "oauth2" &&
+          (current.credential.accessToken === nextCredential.accessToken ||
+            (nextCredential.refreshToken !== undefined &&
+              current.credential.refreshToken === nextCredential.refreshToken));
+        if (
+          !sharesToken &&
+          (await this.store.wasRevocationRequested(retirementGeneration, oauthAuthorizationKey(selected)))
+        )
+          await refresher.revokeAccessToken?.(service, nextCredential);
         break;
       }
       target = {

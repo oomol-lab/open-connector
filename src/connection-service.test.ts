@@ -1006,6 +1006,7 @@ describe("ConnectionService", () => {
       get: memory.get.bind(memory),
       getById: memory.getById.bind(memory),
       getRetirementGeneration: memory.getRetirementGeneration.bind(memory),
+      wasRevocationRequested: memory.wasRevocationRequested.bind(memory),
       setIfCurrentGeneration: memory.setIfCurrentGeneration.bind(memory),
       set: memory.set.bind(memory),
       updateCredential: memory.updateCredential.bind(memory),
@@ -1445,6 +1446,7 @@ describe("ConnectionService", () => {
         get: memory.get.bind(memory),
         getById: memory.getById.bind(memory),
         getRetirementGeneration: memory.getRetirementGeneration.bind(memory),
+        wasRevocationRequested: memory.wasRevocationRequested.bind(memory),
         setIfCurrentGeneration: memory.setIfCurrentGeneration.bind(memory),
         set: memory.set.bind(memory),
         updateCredential: async (input, refresh) => {
@@ -1629,9 +1631,19 @@ describe("ConnectionService", () => {
 });
 
 describe("ConnectionService disconnect revocation", () => {
-  it.each(["done", "unsupported", "failed"])(
-    "handles orphaned refresh cleanup after another runtime disconnects (%s)",
-    async (outcome) => {
+  it.each([
+    { outcome: "done", intent: "revoke", replacement: "none" },
+    { outcome: "unsupported", intent: "revoke", replacement: "none" },
+    { outcome: "failed", intent: "revoke", replacement: "none" },
+    { outcome: "done", intent: "keep", replacement: "none" },
+    { outcome: "done", intent: "replace-first", replacement: "none" },
+    { outcome: "done", intent: "default", replacement: "none" },
+    { outcome: "done", intent: "revoke", replacement: "distinct" },
+    { outcome: "done", intent: "revoke", replacement: "access" },
+    { outcome: "done", intent: "revoke", replacement: "refresh" },
+  ])(
+    "handles orphaned refresh cleanup ($outcome, $intent, replacement $replacement)",
+    async ({ outcome, intent, replacement }) => {
       const store = new MemoryConnectionStore();
       const started = Promise.withResolvers<void>();
       const release = Promise.withResolvers<void>();
@@ -1664,16 +1676,40 @@ describe("ConnectionService disconnect revocation", () => {
       await store.set("example", "default", credential);
       const execution = first.getCredential("example").catch((error: unknown) => error);
       await started.promise;
-      await expect(second.disconnect("example", undefined, { revoke: true })).resolves.toMatchObject({
-        revoked: "done",
+      const revokedCredential =
+        intent === "replace-first"
+          ? {
+              ...credential,
+              accessToken: "replacement-access",
+              refreshToken: "replacement-refresh",
+              metadata: { oauthAuthorizationId: "new-authorization" },
+            }
+          : credential;
+      if (intent === "replace-first") await store.set("example", "default", revokedCredential);
+      const requested = intent === "revoke" || intent === "replace-first";
+      await expect(
+        second.disconnect("example", undefined, intent === "default" ? {} : { revoke: requested }),
+      ).resolves.toMatchObject({
+        revoked: requested ? "done" : "skipped",
       });
+      const installed =
+        replacement === "none"
+          ? undefined
+          : await store.set("example", "default", {
+              ...credential,
+              accessToken: replacement === "access" ? rotated.accessToken : "replacement-access",
+              refreshToken: replacement === "refresh" ? rotated.refreshToken : "replacement-refresh",
+            });
+      const cleanup = requested && intent !== "replace-first" && replacement !== "access" && replacement !== "refresh";
       release.resolve();
       await expect(execution).resolves.toMatchObject({
-        code: outcome === "failed" ? "oauth_token_revocation_failed" : "connection_not_found",
+        code: cleanup && outcome === "failed" ? "oauth_token_revocation_failed" : "connection_not_found",
       });
-      expect(revoke).toHaveBeenCalledExactlyOnceWith("example", credential);
-      expect(revokeAccessToken).toHaveBeenCalledExactlyOnceWith("example", rotated);
-      await expect(store.get("example", "default")).resolves.toBeUndefined();
+      if (requested) expect(revoke).toHaveBeenCalledExactlyOnceWith("example", revokedCredential);
+      else expect(revoke).not.toHaveBeenCalled();
+      if (cleanup) expect(revokeAccessToken).toHaveBeenCalledExactlyOnceWith("example", rotated);
+      else expect(revokeAccessToken).not.toHaveBeenCalled();
+      await expect(store.get("example", "default")).resolves.toEqual(installed);
     },
   );
 
@@ -2250,6 +2286,12 @@ class MemoryConnectionStore implements IConnectionStore {
     return this.store.get(createConnectionKey(service, connectionName));
   }
 
+  private readonly revocationGenerations = new Set<string>();
+
+  async wasRevocationRequested(retirementGeneration: string, authorizationKey: string): Promise<boolean> {
+    return this.revocationGenerations.has(JSON.stringify([retirementGeneration, authorizationKey]));
+  }
+
   private readonly retirementGenerations = new Map<string, string>();
 
   async getRetirementGeneration(service: string, connectionName: string): Promise<string> {
@@ -2297,10 +2339,15 @@ class MemoryConnectionStore implements IConnectionStore {
     service: string,
     connectionName: string,
     target?: Pick<StoredConnection, "id" | "revision">,
+    authorizationKey?: string,
   ): Promise<void> {
     const current = this.store.get(createConnectionKey(service, connectionName));
     if (target && (current?.id !== target.id || current?.revision !== target.revision))
       throw new ConnectionError("connection_changed", "The connection changed before it could be disconnected.");
+    if (authorizationKey)
+      this.revocationGenerations.add(
+        JSON.stringify([await this.getRetirementGeneration(service, connectionName), authorizationKey]),
+      );
     this.retirementGenerations.set(JSON.stringify([service, connectionName]), crypto.randomUUID());
     this.store.delete(createConnectionKey(service, connectionName));
   }

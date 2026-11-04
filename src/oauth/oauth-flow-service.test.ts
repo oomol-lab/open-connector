@@ -1422,6 +1422,12 @@ class MemoryConnectionStore implements IConnectionStore {
     return this.store.get(createConnectionKey(service, connectionName));
   }
 
+  private readonly revocationGenerations = new Set<string>();
+
+  async wasRevocationRequested(retirementGeneration: string, authorizationKey: string): Promise<boolean> {
+    return this.revocationGenerations.has(JSON.stringify([retirementGeneration, authorizationKey]));
+  }
+
   private readonly retirementGenerations = new Map<string, string>();
 
   async getRetirementGeneration(service: string, connectionName: string): Promise<string> {
@@ -1465,7 +1471,16 @@ class MemoryConnectionStore implements IConnectionStore {
     return true;
   }
 
-  async delete(service: string, connectionName: string): Promise<void> {
+  async delete(
+    service: string,
+    connectionName: string,
+    _target?: Pick<StoredConnection, "id" | "revision">,
+    authorizationKey?: string,
+  ): Promise<void> {
+    if (authorizationKey)
+      this.revocationGenerations.add(
+        JSON.stringify([await this.getRetirementGeneration(service, connectionName), authorizationKey]),
+      );
     this.retirementGenerations.set(JSON.stringify([service, connectionName]), crypto.randomUUID());
     this.store.delete(createConnectionKey(service, connectionName));
   }
