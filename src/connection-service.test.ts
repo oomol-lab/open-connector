@@ -1627,6 +1627,46 @@ describe("ConnectionService", () => {
 });
 
 describe("ConnectionService disconnect revocation", () => {
+  it("rejects a stale credential read that resumes after disconnect", async () => {
+    const store = new MemoryConnectionStore();
+    const credential: Extract<ResolvedCredential, { authType: "oauth2" }> = {
+      authType: "oauth2",
+      accessToken: "old-access",
+      refreshToken: "old-refresh",
+      tokenType: "Bearer",
+      expiresAt: new Date(Date.now() - 60_000).toISOString(),
+      profile: testProfile,
+      metadata: {},
+    };
+    await store.set("example", "default", credential);
+    const refresh = vi.fn(async () => ({
+      ...credential,
+      accessToken: "rotated-access",
+      refreshToken: "rotated-refresh",
+    }));
+    const service = createService([oauthProvider], {
+      store,
+      oauthCredentials: { refresh, revoke: async () => "done" },
+    });
+    const captured = Promise.withResolvers<void>();
+    const releaseRead = Promise.withResolvers<void>();
+    const get = store.get.bind(store);
+    vi.spyOn(store, "get").mockImplementationOnce(async (...args) => {
+      const snapshot = await get(...args);
+      captured.resolve();
+      await releaseRead.promise;
+      return snapshot;
+    });
+    const execution = service.getCredential("example").catch((error: unknown) => error);
+    await captured.promise;
+    await expect(service.disconnect("example", undefined, { revoke: true })).resolves.toMatchObject({
+      revoked: "done",
+    });
+    releaseRead.resolve();
+    await expect(execution).resolves.toMatchObject({ code: "connection_not_found" });
+    expect(refresh).not.toHaveBeenCalled();
+  });
+
   it("blocks a new refresh while the selected connection is being deleted", async () => {
     const store = new MemoryConnectionStore();
     const credential: Extract<ResolvedCredential, { authType: "oauth2" }> = {
