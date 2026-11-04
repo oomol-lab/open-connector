@@ -86,6 +86,12 @@ export function triggerStoreTests(getDatabase: () => RuntimeDatabase): void {
       code: "connection_has_subscriptions",
       status: 409,
     });
+    const generation = await database.connectionStore.getRetirementGeneration("github", "trigger-account");
+    await expect(database.connectionStore.delete("github", "trigger-account", connection)).rejects.toMatchObject({
+      code: "connection_has_subscriptions",
+      status: 409,
+    });
+    expect(await database.connectionStore.getRetirementGeneration("github", "trigger-account")).toBe(generation);
     await expect(
       database.connectionStore.set("github", "trigger-account", credential("different")),
     ).rejects.toMatchObject({ code: "connection_has_subscriptions" });

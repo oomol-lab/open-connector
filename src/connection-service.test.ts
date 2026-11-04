@@ -1627,6 +1627,61 @@ describe("ConnectionService", () => {
 });
 
 describe("ConnectionService disconnect revocation", () => {
+  it.each(["success", "failure"])("preserves a reconnection while disconnect awaits a refresh %s", async (outcome) => {
+    const store = new MemoryConnectionStore();
+    const started = Promise.withResolvers<void>();
+    const release = Promise.withResolvers<void>();
+    const revoke = vi.fn(async (): Promise<"done"> => "done");
+    const credential: Extract<ResolvedCredential, { authType: "oauth2" }> = {
+      authType: "oauth2",
+      accessToken: "old-access",
+      refreshToken: "old-refresh",
+      tokenType: "Bearer",
+      expiresAt: new Date(Date.now() - 60_000).toISOString(),
+      profile: testProfile,
+      metadata: { oauthAuthorizationId: "old-authorization" },
+    };
+    const service = createService([oauthProvider], {
+      store,
+      oauthCredentials: {
+        revoke,
+        async refresh() {
+          started.resolve();
+          await release.promise;
+          if (outcome === "failure") throw new ConnectionError("oauth_token_refresh_failed", "Refresh failed.");
+          return { ...credential, accessToken: "rotated-access", refreshToken: "rotated-refresh" };
+        },
+      },
+    });
+    await store.set("example", "default", credential);
+    const execution = service.getCredential("example").catch((error: unknown) => error);
+    await started.promise;
+    const selected = Promise.withResolvers<void>();
+    const get = store.get.bind(store);
+    vi.spyOn(store, "get").mockImplementationOnce(async (...args) => {
+      const stored = await get(...args);
+      selected.resolve();
+      return stored;
+    });
+    const disconnect = service.disconnect("example", undefined, { revoke: true }).catch((error: unknown) => error);
+    await selected.promise;
+    const replacement = await store.set("example", "default", {
+      ...credential,
+      accessToken: "replacement-access",
+      refreshToken: "replacement-refresh",
+      expiresAt: new Date(Date.now() + 3600_000).toISOString(),
+      metadata: { oauthAuthorizationId: "replacement-authorization" },
+    });
+    release.resolve();
+
+    await expect(disconnect).resolves.toMatchObject({ code: "connection_changed" });
+    await expect(store.get("example", "default")).resolves.toEqual(replacement);
+    expect(revoke).not.toHaveBeenCalled();
+    await expect(execution).resolves.toMatchObject({
+      code: outcome === "success" ? "connection_not_found" : "oauth_token_refresh_failed",
+    });
+  });
+
   it.each([
     { remainingMs: -60_000, refreshStatus: 200 },
     { remainingMs: 30_000, refreshStatus: 200 },
@@ -1777,6 +1832,29 @@ describe("ConnectionService disconnect revocation", () => {
     }
     return body;
   }
+
+  it("preserves a replacement written after selecting the credential to revoke", async () => {
+    const { service, store } = await connectRevocable(revocableProvider);
+    const fetcher = stubRevocationResponse(() => new Response(null, { status: 200 }));
+    const remove = store.delete.bind(store);
+    let replacement: StoredConnection | undefined;
+    vi.spyOn(store, "delete").mockImplementationOnce(async (...args) => {
+      replacement = await store.set("revocable", "default", {
+        authType: "api_key",
+        apiKey: "replacement-key",
+        values: {},
+        profile: testProfile,
+        metadata: {},
+      });
+      await remove(...args);
+    });
+
+    await expect(service.disconnect("revocable", undefined, { revoke: true })).rejects.toMatchObject({
+      code: "connection_changed",
+    });
+    await expect(store.get("revocable", "default")).resolves.toEqual(replacement);
+    expect(fetcher).not.toHaveBeenCalled();
+  });
 
   it("deletes the connection before posting the refresh token once", async () => {
     const { service, store, logger } = await connectRevocable(revocableProvider);
@@ -2050,7 +2128,14 @@ class MemoryConnectionStore implements IConnectionStore {
     return true;
   }
 
-  async delete(service: string, connectionName: string): Promise<void> {
+  async delete(
+    service: string,
+    connectionName: string,
+    target?: Pick<StoredConnection, "id" | "revision">,
+  ): Promise<void> {
+    const current = this.store.get(createConnectionKey(service, connectionName));
+    if (target && (current?.id !== target.id || current?.revision !== target.revision))
+      throw new ConnectionError("connection_changed", "The connection changed before it could be disconnected.");
     this.retirementGenerations.set(JSON.stringify([service, connectionName]), crypto.randomUUID());
     this.store.delete(createConnectionKey(service, connectionName));
   }

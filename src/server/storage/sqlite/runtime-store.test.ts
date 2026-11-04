@@ -8,6 +8,7 @@ import { DatabaseSync } from "node:sqlite";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { AesGcmSecretCodec } from "../../secrets/secret-codec.ts";
 import { connectionRequestStoreTests } from "../connection-request-store.cases.ts";
+import { connectionStoreTests } from "../connection-store.cases.ts";
 import { createDirectoryMigrationSource, defaultMigrationSource } from "../migration-source.ts";
 import { RuntimeTokenService } from "../runtime-token-service.ts";
 import { saasProjectStoreTests, saasMaintenanceTests } from "../saas-project-store.cases.ts";
@@ -1173,6 +1174,7 @@ describe("SQLite connection requests", () => {
     database.close();
   });
   connectionRequestStoreTests(() => database);
+  connectionStoreTests(() => database);
   triggerStoreTests(() => database);
   saasProjectStoreTests(() => database);
 });
