@@ -299,7 +299,7 @@ async function requestToken(input: TokenRequest): Promise<OAuthTokenResult> {
     }
 
     const accessToken = requiredString(payload.access_token ?? payload.token, "access_token", input.createError);
-    const tokenType = optionalString(payload.token_type) ?? "Bearer";
+    const tokenType = canonicalTokenType(optionalString(payload.token_type));
     return {
       accessToken,
       tokenType,
@@ -359,6 +359,13 @@ function describeCause(error: unknown): string {
   // AbortError) is often the only thing distinguishing the failure.
   const prefix = error.name === "Error" || error.name === "" ? "" : `${error.name}: `;
   return `${prefix}${error.message}${suffix}`;
+}
+
+function canonicalTokenType(value: string | undefined): string {
+  if (value === undefined || value.toLowerCase() === "bearer") {
+    return "Bearer";
+  }
+  return value;
 }
 
 function createTokenMetadata(payload: Record<string, unknown>): Record<string, unknown> {
