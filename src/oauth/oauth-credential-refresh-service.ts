@@ -143,9 +143,10 @@ export class OAuthCredentialRefreshService implements IOAuthCredentialRefresher 
     }
     const createError = (message: string): ConnectionError =>
       new ConnectionError("oauth_token_revocation_failed", message);
+    const providerOAuth = await this.providerLoader?.loadProviderOAuthRuntime?.(service);
+    if (!providerOAuth?.revokeAccessToken && !auth.revocationUrl) return "unsupported";
     const config =
       readOAuthClientConfigMetadata(service, credential.metadata) ?? (await this.clientConfigs.getConfig(service));
-    const providerOAuth = await this.providerLoader?.loadProviderOAuthRuntime?.(service);
     if (providerOAuth?.revokeAccessToken) {
       if (!config) throw createError(`Configure an OAuth client for ${service} before revoking its token.`);
       await providerOAuth.revokeAccessToken({

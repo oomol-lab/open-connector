@@ -421,9 +421,12 @@ describe("OAuthCredentialRefreshService revoke", () => {
   it("answers unsupported, without a request, when the definition names no revocation endpoint", async () => {
     const fetcher = vi.fn();
     vi.stubGlobal("fetch", fetcher);
-    const service = new OAuthCredentialRefreshService(revokingConfigs(undefined, undefined));
+    const configs = revokingConfigs(undefined, undefined);
+    const readConfig = vi.spyOn(configs, "getConfig").mockRejectedValue(new Error("Configuration storage unavailable"));
+    const service = new OAuthCredentialRefreshService(configs);
 
     await expect(service.revoke("example", expiredCredential({}))).resolves.toBe("unsupported");
+    expect(readConfig).not.toHaveBeenCalled();
     expect(fetcher).not.toHaveBeenCalled();
   });
 
