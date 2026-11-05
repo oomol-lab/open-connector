@@ -41,6 +41,26 @@ describe("OOMOL RAG connection boundary", () => {
     expect(result.ok).toBe(false);
   });
 
+  it.each([401, 403, 429])("preserves a non-JSON upstream rejection with status %s", async (status) => {
+    const fetcher = vi.fn(async () => new Response("<html>Request rejected</html>", { status }));
+    await expect(
+      credentialValidators.apiKey!(
+        { apiKey: "test-key", values: { teamId: "team-1" } },
+        { fetcher: fetcher as typeof fetch },
+      ),
+    ).rejects.toMatchObject({ status });
+  });
+
+  it("still rejects malformed JSON on a successful response", async () => {
+    const fetcher = vi.fn(async () => new Response("not json", { status: 200 }));
+    await expect(
+      credentialValidators.apiKey!(
+        { apiKey: "test-key", values: { teamId: "team-1" } },
+        { fetcher: fetcher as typeof fetch },
+      ),
+    ).rejects.toMatchObject({ status: 502 });
+  });
+
   it("preserves denied team access without leaking a credential echoed upstream", async () => {
     const fetcher = vi.fn(async () => Response.json({ error: "denied test-key" }, { status: 403 }));
     await expect(
