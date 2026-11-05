@@ -87,14 +87,11 @@ export function triggerStoreTests(getDatabase: () => RuntimeDatabase): void {
       status: 409,
     });
     const generation = await database.connectionStore.getRetirementGeneration("github", "trigger-account");
-    await expect(
-      database.connectionStore.delete("github", "trigger-account", connection, "blocked-authorization"),
-    ).rejects.toMatchObject({
+    await expect(database.connectionStore.delete("github", "trigger-account", connection)).rejects.toMatchObject({
       code: "connection_has_subscriptions",
       status: 409,
     });
     expect(await database.connectionStore.getRetirementGeneration("github", "trigger-account")).toBe(generation);
-    expect(await database.connectionStore.wasRevocationRequested(generation, "blocked-authorization")).toBe(false);
     await expect(
       database.connectionStore.set("github", "trigger-account", credential("different")),
     ).rejects.toMatchObject({ code: "connection_has_subscriptions" });

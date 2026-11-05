@@ -1,4 +1,3 @@
-import type { ProviderHttpAttempt, ProviderHttpDispatchOptions } from "../core/provider-http-dispatch.ts";
 import type { ProviderDefinition } from "../core/types.ts";
 import type { PGliteTestServer } from "../server/storage/postgres/test-database.ts";
 import type { RuntimeDatabase } from "../server/storage/runtime-database.ts";
@@ -10,7 +9,6 @@ import { Pool } from "pg";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { createCatalogStore } from "../catalog-store.ts";
 import { ConnectionService } from "../connection-service.ts";
-import { withRuntimeExecution } from "../core/runtime-execution.ts";
 import { provider as githubProvider } from "../providers/github/definition.ts";
 import { githubOAuthRuntime } from "../providers/github/oauth.ts";
 import { ProviderLoader } from "../providers/provider-loader.ts";
@@ -20,7 +18,6 @@ import { migratePostgresDatabase } from "../server/storage/postgres/migrations.t
 import { PostgresRuntimeDatabase } from "../server/storage/postgres/runtime-store.ts";
 import { startPGliteTestServer } from "../server/storage/postgres/test-database.ts";
 import { SqliteRuntimeDatabase } from "../server/storage/sqlite/runtime-store.ts";
-import { oauthAuthorizationKey } from "./oauth-authorization-key.ts";
 import { OAuthClientConfigService } from "./oauth-client-config-service.ts";
 import { OAuthCredentialRefreshService } from "./oauth-credential-refresh-service.ts";
 import { OAuthFlowService } from "./oauth-flow-service.ts";
@@ -55,13 +52,9 @@ afterEach(async () => {
 });
 
 describe("OAuth retirement across runtime sessions", () => {
-  it.each([
-    { scope: "standalone", denyCleanup: false },
-    { scope: "action", denyCleanup: false },
-    { scope: "action", denyCleanup: true },
-  ])(
-    "binds orphaned token cleanup to its stored connection ($scope, deny cleanup: $denyCleanup)",
-    async ({ scope, denyCleanup }) => {
+  it.each([undefined, false, true])(
+    "does not automatically revoke a late refresh after disconnect (revoke: %s)",
+    async (revoke) => {
       const fixture = await openFixture("sqlite");
       cleanups.push(() => fixture.close());
       const catalog = createCatalogStore([githubProvider]);
@@ -72,34 +65,25 @@ describe("OAuth retirement across runtime sessions", () => {
         store: fixture.first.oauthClientConfigStore,
       });
       await clientConfigs.upsertConfig({ service: "github", clientId: "client-id", clientSecret: "client-secret" });
-      const original = await fixture.first.connectionStore.set("github", "work", {
+      await fixture.first.connectionStore.set("github", "work", {
         authType: "oauth2",
         accessToken: "old-access",
         refreshToken: "old-refresh",
         tokenType: "Bearer",
-        expiresAt: new Date(Date.now() - 60_000).toISOString(),
+        expiresAt: new Date(Date.now() + 30_000).toISOString(),
         profile: { accountId: "account", displayName: "Account", grantedScopes: [] },
         metadata: {},
       });
-      const attempts: ProviderHttpAttempt[] = [];
-      const providerHttpDispatch: ProviderHttpDispatchOptions = {
-        beforeAttempt: (attempt) => {
-          attempts.push(attempt);
-          return attempt.context.operation === "oauth" &&
-            attempt.context.connectionId === original.id &&
-            attempt.context.connectionName === "work" &&
-            !(denyCleanup && attempt.method === "DELETE")
-            ? { allow: true }
-            : { allow: false, retryAfterSeconds: 7 };
-        },
-      };
-      const connections = new ConnectionService({
-        catalog,
-        providerLoader,
-        store: fixture.first.connectionStore,
-        oauthCredentials: new OAuthCredentialRefreshService(clientConfigs, providerLoader),
-        providerHttpDispatch,
-      });
+      const second = await fixture.openSecond();
+      const [refreshing, disconnecting] = [fixture.first, second].map(
+        (database) =>
+          new ConnectionService({
+            catalog,
+            providerLoader,
+            store: database.connectionStore,
+            oauthCredentials: new OAuthCredentialRefreshService(clientConfigs, providerLoader),
+          }),
+      );
       const entered = Promise.withResolvers<void>();
       const released = Promise.withResolvers<void>();
       const fetcher = vi.fn(async (_url: RequestInfo | URL, init?: RequestInit) => {
@@ -108,40 +92,23 @@ describe("OAuth retirement across runtime sessions", () => {
           await released.promise;
           return Response.json({ access_token: "rotated-access", refresh_token: "rotated-refresh", expires_in: 3600 });
         }
-        return new Response(null, { status: 204 });
+        return Response.json({ message: "Invalid token" }, { status: 422 });
       });
       vi.stubGlobal("fetch", fetcher);
-      const execution = (
-        scope === "action"
-          ? withRuntimeExecution(
-              { providerHttpDispatch },
-              { operation: "action", service: "github", actionId: "github.get_current_user" },
-              () => connections.getCredential("github", "work"),
-            )
-          : connections.getCredential("github", "work")
-      ).catch((error: unknown) => error);
+      const execution = refreshing.getCredential("github", "work").catch((error: unknown) => error);
       await entered.promise;
-      const second = await fixture.openSecond();
-      await second.connectionStore.delete("github", "work", original, oauthAuthorizationKey(original));
+      await expect(disconnecting.disconnect("github", "work", { revoke })).resolves.toMatchObject({
+        configured: false,
+        revoked: revoke === true ? "failed" : "skipped",
+      });
       released.resolve();
 
-      await expect(execution).resolves.toMatchObject(
-        denyCleanup
-          ? { code: "rate_limited", status: 429, details: { retryAfterSeconds: 7 } }
-          : { code: "connection_not_found" },
+      await expect(execution).resolves.toMatchObject({ code: "connection_not_found" });
+      expect(fetcher.mock.calls.map(([, init]) => init?.method)).toEqual(
+        revoke === true ? ["POST", "DELETE"] : ["POST"],
       );
-      expect(attempts).toHaveLength(2);
-      attempts.forEach((attempt) => {
-        expect(attempt.context).toMatchObject({
-          operation: "oauth",
-          service: "github",
-          connectionId: original.id,
-          connectionName: "work",
-        });
-      });
-      expect(fetcher.mock.calls.map(([, init]) => init?.method)).toEqual(denyCleanup ? ["POST"] : ["POST", "DELETE"]);
-      if (!denyCleanup) {
-        expect(fetcher.mock.calls[1]?.[1]?.body).toBe(JSON.stringify({ access_token: "rotated-access" }));
+      if (revoke === true) {
+        expect(fetcher.mock.calls[1]?.[1]?.body).toBe(JSON.stringify({ access_token: "old-access" }));
       }
       await expect(second.connectionStore.get("github", "work")).resolves.toBeUndefined();
     },

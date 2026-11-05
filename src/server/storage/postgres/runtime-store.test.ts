@@ -169,7 +169,6 @@ describe("PostgreSQL migrations with PGlite", () => {
           { name: "0019_trigger_sources.sql" },
           { name: "0020_oauth_tables.sql" },
           { name: "0021_oauth_refresh_replay.sql" },
-          { name: "0022_connection_revocations.sql" },
         ],
       });
 
@@ -236,7 +235,6 @@ describe("PostgreSQL migrations with a custom migration source", () => {
           { name: "0019_trigger_sources.sql" },
           { name: "0020_oauth_tables.sql" },
           { name: "0021_oauth_refresh_replay.sql" },
-          { name: "0022_connection_revocations.sql" },
           { name: "9998_custom.sql" },
         ],
       });

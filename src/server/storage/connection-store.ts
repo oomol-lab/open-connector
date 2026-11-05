@@ -63,16 +63,6 @@ export class SqlConnectionStore implements IConnectionStore {
     return row.generation as string;
   }
 
-  async wasRevocationRequested(retirementGeneration: string, authorizationKey: string): Promise<boolean> {
-    const [[row]] = await this.transaction([
-      {
-        sql: "select generation from connection_revocations where generation = ? and authorization_key = ?",
-        values: [retirementGeneration, authorizationKey],
-      },
-    ]);
-    return row !== undefined;
-  }
-
   async set(service: string, connectionName: string, credential: ResolvedCredential): Promise<StoredLocalConnection> {
     const stored = await this.writeCredential(service, connectionName, credential);
     if (!stored) throw new Error("Connection upsert did not return the stored row.");
@@ -178,7 +168,6 @@ export class SqlConnectionStore implements IConnectionStore {
     service: string,
     connectionName: string,
     target?: Pick<StoredConnection, "id" | "revision">,
-    authorizationKey?: string,
   ): Promise<void> {
     // Only a matching, unblocked target can authorize this transaction's retirement and cleanup.
     const generation = crypto.randomUUID();
@@ -201,12 +190,6 @@ export class SqlConnectionStore implements IConnectionStore {
       {
         sql: "update connections set revision = revision where service = ? and connection_name = ?",
         values: [service, connectionName],
-      },
-      {
-        sql: `insert into connection_revocations (generation, authorization_key)
-          select generation, ? from connection_retirements where service = ? and connection_name = ? and ? = 1 and ${eligible}
-          on conflict do nothing`,
-        values: [authorizationKey ?? "", service, connectionName, authorizationKey ? 1 : 0, ...eligibilityValues],
       },
       {
         sql: `update connection_retirements set generation = ? where service = ? and connection_name = ? and ${eligible}`,
@@ -237,7 +220,7 @@ export class SqlConnectionStore implements IConnectionStore {
       },
     ]);
     const current = results.at(-1)![0];
-    if (target && !results[6]![0] && (current?.id !== target.id || current?.revision !== target.revision))
+    if (target && !results[5]![0] && (current?.id !== target.id || current?.revision !== target.revision))
       throw new ConnectionError("connection_changed", "The connection changed before it could be disconnected.");
     if (current)
       throw new HttpRequestError(

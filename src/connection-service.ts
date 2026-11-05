@@ -28,7 +28,6 @@ import { optionalString } from "./core/cast.ts";
 import { normalizeCredentialValues } from "./core/credential-fields.ts";
 import { apiKeyCredentialFields } from "./core/provider-setup.ts";
 import { CredentialResolver, isOAuthCredentialExpired } from "./credential-resolver.ts";
-import { oauthAuthorizationKey } from "./oauth/oauth-authorization-key.ts";
 import {
   providerFetch,
   ProviderDispatchRequestError,
@@ -89,7 +88,7 @@ export interface ConnectionServiceOptions {
 
 export interface DisconnectOptions {
   /**
-   * `true` also revokes the OAuth grant at the provider once the credential is
+   * `true` also requests OAuth token revocation at the provider once the credential is
    * deleted here, and the answer's `revoked` says how that went. Omitted or
    * `false` (the default) deletes the credential alone and answers `skipped` —
    * the right call when another connection of the same account shares the
@@ -590,11 +589,7 @@ export class ConnectionService {
           stored = current;
         }
       }
-      const authorizationKey =
-        options.revoke === true && stored?.source !== "saas" && stored?.credential.authType === "oauth2"
-          ? oauthAuthorizationKey(stored)
-          : undefined;
-      await this.store.delete(service, connectionName, stored, authorizationKey);
+      await this.store.delete(service, connectionName, stored);
       const revoked =
         options.revoke !== true ? "skipped" : await this.revokeDeletedCredential(service, connectionName, stored);
       const provider = this.catalog.providers.find((provider) => provider.service === service);

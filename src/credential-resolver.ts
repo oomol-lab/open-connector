@@ -5,7 +5,6 @@ import type { IOAuthCredentialRefresher } from "./oauth/oauth-credential-refresh
 
 import { ConnectionError } from "./connection-error.ts";
 import { measureExecutionPhase } from "./core/execution-timing.ts";
-import { oauthAuthorizationKey } from "./oauth/oauth-authorization-key.ts";
 import { withProviderHttpDispatchResult } from "./providers/provider-runtime.ts";
 
 type OAuthCredential = Extract<ResolvedCredential, { authType: "oauth2" }>;
@@ -146,10 +145,6 @@ export class CredentialResolver {
     credential: OAuthCredential,
     refresher: IOAuthCredentialRefresher,
   ): Promise<OAuthCredential> {
-    const retirementGeneration = await this.store.getRetirementGeneration(
-      connection.service,
-      connection.connectionName,
-    );
     const selected = await this.store.get(connection.service, connection.connectionName);
     if (this.disconnectingConnections.has(connection.id)) {
       throw new ConnectionError("connection_changed", "The connection is being disconnected.");
@@ -214,28 +209,6 @@ export class CredentialResolver {
         credential: mergeRefreshedOAuthCredential(current.credential, spent, nextCredential),
       };
     }
-    const current = await this.store.get(service, connectionName);
-    const currentCredential =
-      current?.source !== "saas" && current?.credential.authType === "oauth2" ? current.credential : undefined;
-    // Never revoke a token pair held by a replacement or a refresh that did persist.
-    const sharesToken =
-      currentCredential !== undefined &&
-      (currentCredential.accessToken === nextCredential.accessToken ||
-        (nextCredential.refreshToken !== undefined && currentCredential.refreshToken === nextCredential.refreshToken));
-    const stillSpent =
-      current?.id === id &&
-      currentCredential?.accessToken === spent.accessToken &&
-      currentCredential?.refreshToken === spent.refreshToken &&
-      currentCredential?.metadata.oauthAuthorizationId === spent.metadata.oauthAuthorizationId;
-    if (
-      !sharesToken &&
-      (stillSpent || (await this.store.wasRevocationRequested(retirementGeneration, oauthAuthorizationKey(selected))))
-    )
-      await withProviderHttpDispatchResult(
-        { operation: "oauth", service, connectionId: id, connectionName },
-        () => refresher.revokeAccessToken?.(service, nextCredential),
-        this.providerHttpDispatch,
-      );
     throw new ConnectionError(
       "connection_not_found",
       `${service} connection changed while its OAuth credential was refreshing. Retry the action.`,
