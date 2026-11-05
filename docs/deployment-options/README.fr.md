@@ -160,5 +160,24 @@ les apps OAuth ; OOMOL hébergé est le chemin qui inclut l'OAuth géré.
         <a href="https://pethost.dev/templates/open-connector/"><strong>Déployer en un clic</strong></a>
       </td>
     </tr>
+    <tr>
+      <td valign="middle" align="center">
+        <a href="https://zop.dev/"><img src="../../assets/deployment-options/zopday.svg" alt="ZopDay" width="140"></a>
+      </td>
+      <td valign="top">
+        Exécutez l'image publiée <code>ghcr.io/oomol-lab/open-connector</code> avec HTTPS et un
+        tableau de bord de gestion. Avant le premier démarrage, configurez l'URL publique,
+        les jetons d'authentification, la clé de chiffrement et le stockage persistant.
+        Vous enregistrez les applications OAuth vous-même.
+        <br><br>
+        <strong>Avantages :</strong> tableau de bord de gestion des conteneurs et déploiements Helm dans votre propre cloud.
+        <br><br>
+        <strong>Prix :</strong> voir
+        <a href="https://zop.dev/zopday#pricing">les tarifs ZopDay</a>.
+      </td>
+      <td valign="middle" align="center">
+        <a href="../zopday.md"><strong>Guide de déploiement (anglais)</strong></a>
+      </td>
+    </tr>
   </tbody>
 </table>

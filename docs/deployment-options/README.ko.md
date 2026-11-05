@@ -142,5 +142,22 @@ platform에서는 OAuth app을 직접 등록해야 합니다. 관리형 OAuth가
         <a href="https://pethost.dev/templates/open-connector/"><strong>원클릭 배포</strong></a>
       </td>
     </tr>
+    <tr>
+      <td valign="middle" align="center">
+        <a href="https://zop.dev/"><img src="../../assets/deployment-options/zopday.svg" alt="ZopDay" width="140"></a>
+      </td>
+      <td valign="top">
+        게시된 <code>ghcr.io/oomol-lab/open-connector</code> 이미지를 HTTPS 및 관리 대시보드와 함께 실행합니다.
+        최초 시작 전에 공개 URL, 인증 토큰, 암호화 키 및 영구 스토리지를 설정해야 합니다. OAuth 앱 등록은 직접 수행합니다.
+        <br><br>
+        <strong>장점:</strong> 컨테이너 관리 대시보드와 자체 클라우드에서의 Helm 배포.
+        <br><br>
+        <strong>가격:</strong>
+        <a href="https://zop.dev/zopday#pricing">ZopDay 가격</a>을 참고하세요.
+      </td>
+      <td valign="middle" align="center">
+        <a href="../zopday.md"><strong>배포 가이드 (영어)</strong></a>
+      </td>
+    </tr>
   </tbody>
 </table>
