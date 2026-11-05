@@ -45,6 +45,7 @@ export async function requestOomolRag(
     const payload = await readProviderJsonBody(response, {
       emptyBody: undefined,
       invalidJsonMessage: "OOMOL RAG returned invalid JSON",
+      invalidJsonFallback: response.ok ? undefined : () => null,
     });
     if (!response.ok) {
       const record = optionalRecord(payload);
