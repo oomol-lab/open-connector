@@ -62,3 +62,28 @@ Use `save_article_markdown` with `articleId`, the latest `revision`, a new stabl
 Supported: headings 1–6, paragraphs, bold/italic/strikethrough, inline and fenced/indented code, links and reference links, ordered/nested/task lists, blockquotes, GFM tables and horizontal rules. Standalone HTTP(S) images become image blocks; inline images become links with a warning. HTML and unsupported/relative URLs remain literal text; conversion does not fetch remote resources. Review the returned `warnings` before publishing. Limits: 200,000 source characters, 1 MiB converted content, bounded nesting and table dimensions.
 
 Both Markdown actions save a BlockNote format-3 draft. They never publish implicitly; use the existing publication workflow with the returned article revision when publication is requested.
+
+### Edit individual blocks without replacing the article
+
+Read `get_article` to obtain the current `revision` and block IDs (including nested `children`). Call `patch_article_blocks` with `articleId`, that revision, a stable `saveId`, and ordered `operations`. The backend applies the whole batch in one transaction, increments the revision once, and retains the article title. Any invalid or missing target rolls back every operation.
+
+```json
+{
+  "articleId": "<article ID>",
+  "revision": 3,
+  "saveId": "<stable patch ID>",
+  "operations": [
+    {"op": "update", "blockId": "paragraph-1", "props": {"textAlignment": "center"}},
+    {"op": "insert", "position": "after", "blockId": "paragraph-1", "blocks": [
+      {"id": "new-paragraph", "type": "paragraph", "content": [{"type": "text", "text": "Added paragraph", "styles": {}}]}
+    ]},
+    {"op": "delete", "blockId": "obsolete-block"}
+  ]
+}
+```
+
+`update` merges only provided property keys. Omit `content` to preserve text and inline formatting; if supplied, it replaces only the selected block's inline/table content and should include the desired inline styles. The block's ID, type and children cannot be overwritten through an update. Other blocks, images, tables and formatting remain intact.
+
+`insert` accepts `before`/`after` with a sibling `blockId`, or `start`/`end` with an optional `parentId` for children (omit it for root placement). Every inserted block and nested child needs a new, stable ID unique within the article. Later operations can target those new IDs. IDs deleted in the same batch cannot be reused. `delete` removes the target and its entire subtree; it does not remove other blocks or their image assets.
+
+Use 1–100 operations on a format-3 BlockNote article. Retry the exact same original revision, save ID and operations after an uncertain response. Different payloads with the same save ID conflict. On a version conflict, read and reconcile before creating a new patch intent; never silently replace the revision. Saving a patch does not publish; use `publish_article` when knowledge-base synchronization is requested.

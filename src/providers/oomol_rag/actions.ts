@@ -67,7 +67,90 @@ const markdownOutput = s.object(
   },
 );
 
+const blockId = s.nonWhitespaceString("An existing BlockNote block ID from get_article, including nested blocks.", {
+  maxLength: 128,
+});
+const insertedBlocks = s.array(
+  "Native BlockNote blocks to insert. Every new block and nested child must have a caller-stable ID unique within the article; IDs deleted in this batch cannot be reused.",
+  s.looseRequiredObject("A new native BlockNote block; preserve its props, styled content and children as needed.", {
+    id: s.nonWhitespaceString("A stable new block ID.", { maxLength: 128 }),
+    type: s.nonWhitespaceString("The native BlockNote block type."),
+  }),
+  { minItems: 1, maxItems: 1000 },
+);
+const blockOperations = s.oneOf(
+  [
+    {
+      ...s.object(
+        "Update only the supplied content or properties of a block. ID, type, children and omitted fields are preserved.",
+        {
+          op: s.literal("update", { description: "Update a block." }),
+          blockId,
+          content: s.anyOf(
+            "Replacement inline-content array or native table-content object for this block only. Include desired inline styles; [] clears inline content. Omit to preserve content and formatting.",
+            [
+              s.array("Native inline content.", s.looseObject("A styled text or link node.", {})),
+              s.looseObject("Native table content.", {}),
+            ],
+          ),
+          props: {
+            ...s.record(
+              "Properties to merge by key; omitted properties are preserved. Only properties supported by the block type are accepted.",
+              s.unknown("The native BlockNote property value."),
+            ),
+            minProperties: 1,
+          },
+        },
+        { optional: ["content", "props"] },
+      ),
+      anyOf: [{ required: ["content"] }, { required: ["props"] }],
+    },
+    s.requiredObject("Insert blocks immediately before or after an existing sibling anchor.", {
+      op: s.literal("insert", { description: "Insert blocks." }),
+      position: s.stringEnum("Sibling placement.", ["before", "after"]),
+      blockId,
+      blocks: insertedBlocks,
+    }),
+    s.object(
+      "Insert at the start or end of a parent's children, or of the document when parentId is omitted.",
+      {
+        op: s.literal("insert", { description: "Insert blocks." }),
+        position: s.stringEnum("Child or root placement.", ["start", "end"]),
+        parentId: blockId,
+        blocks: insertedBlocks,
+      },
+      { optional: ["parentId"] },
+    ),
+    s.requiredObject("Delete the selected block and its descendants. Other blocks and their assets are preserved.", {
+      op: s.literal("delete", { description: "Delete a block subtree." }),
+      blockId,
+    }),
+  ],
+  { description: "One ordered block operation. All operations succeed together or none are saved." },
+);
+
 export const oomolRagActions: readonly ProviderActionDefinition[] = [
+  defineProviderAction(service, {
+    name: "patch_article_blocks",
+    operationType: "write",
+    requiredScopes: [],
+    description:
+      "Atomically update, insert or delete BlockNote blocks by ID without replacing the article. Updates merge properties and replace only explicitly supplied block content, preserving other blocks, children, images and formatting. Operations run in order; a missing ID or invalid operation rolls back the entire batch. Requires format version 3 and the expected revision. Retry with identical saveId, revision and operations. Saves a draft; does not publish.",
+    inputSchema: s.requiredObject("An atomic incremental edit of an article draft.", {
+      articleId,
+      revision,
+      saveId: stableId(
+        "Stable patch-operation ID. Reuse it only for retries with the same original revision and operations.",
+      ),
+      operations: s.array(
+        "Ordered operations applied in one transaction, incrementing the revision once.",
+        blockOperations,
+        { minItems: 1, maxItems: 100 },
+      ),
+    }),
+    outputSchema: articleOutput,
+  }),
+
   defineProviderAction(service, {
     name: "create_article_from_markdown",
     operationType: "write",
