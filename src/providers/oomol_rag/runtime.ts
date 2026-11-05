@@ -9,7 +9,9 @@ import {
   requiredStringArray,
 } from "../../core/cast.ts";
 import { encodePathSegment } from "../../core/request.ts";
+import { providerInputError } from "../provider-runtime.ts";
 import { requiredInputString, requiredResponseRecord, providerResponseError } from "../provider-runtime.ts";
+import { markdownToBlockNote } from "./markdown.ts";
 import { requestOomolRag } from "./request.ts";
 
 export async function executeOomolRagAction(
@@ -17,6 +19,36 @@ export async function executeOomolRagAction(
   input: Record<string, unknown>,
   context: OomolRagContext,
 ): Promise<unknown> {
+  if (name === "create_article_from_markdown" || name === "save_article_markdown") {
+    let converted;
+    try {
+      converted = markdownToBlockNote(requiredRawString(input.markdown, "markdown", providerInputError));
+    } catch (error) {
+      throw providerInputError(error instanceof Error ? error.message : "Markdown conversion failed");
+    }
+    const articleId = requiredInputString(input.articleId, "articleId");
+    if (name === "create_article_from_markdown") {
+      await requestOomolRag(context, {
+        path: "/v1/articles",
+        method: "POST",
+        body: { id: articleId, title: input.title },
+      });
+    }
+    const article = parseArticle(
+      await requestOomolRag(context, {
+        path: `/v1/articles/${encodePathSegment(articleId)}/draft`,
+        method: "POST",
+        body: {
+          revision: name === "create_article_from_markdown" ? 1 : input.revision,
+          save_id: input.saveId,
+          format_version: 3,
+          title: input.title,
+          content: converted.content,
+        },
+      }),
+    );
+    return { article, warnings: converted.warnings };
+  }
   if (name === "retrieve") {
     const payload = requiredResponseRecord(
       await requestOomolRag(context, {

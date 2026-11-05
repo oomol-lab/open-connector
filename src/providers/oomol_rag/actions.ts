@@ -49,7 +49,55 @@ const articleSchema = s.object(
 const articleOutput = s.object("The article state.", { article: articleSchema });
 const identityInput = s.object("The article to operate on.", { articleId });
 
+const markdown = s.string(
+  "Markdown source to convert to native BlockNote. Supports CommonMark and GFM headings, lists, task lists, tables, links and code. Empty input clears the body. HTML remains literal text; standalone HTTP(S) images become image blocks, inline images become links. Relative or unsafe URLs remain literal text with warnings. No remote content is fetched.",
+  { maxLength: 200000 },
+);
+const markdownSaveId = stableId(
+  "Stable save-operation ID. Reuse the same ID and exact payload after an uncertain result.",
+);
+const markdownOutput = s.object(
+  "The saved draft and conversion warnings. Saving does not publish to the knowledge base.",
+  {
+    article: articleSchema,
+    warnings: s.array(
+      "Conversion warning codes describing content preserved as text or simplified; review them before publishing.",
+      s.string("A conversion warning code."),
+    ),
+  },
+);
+
 export const oomolRagActions: readonly ProviderActionDefinition[] = [
+  defineProviderAction(service, {
+    name: "create_article_from_markdown",
+    operationType: "write",
+    requiredScopes: [],
+    description:
+      "Create and save an editable article from Markdown as an unpublished draft. Requires stable articleId and saveId. Creation then saving are two requests: if saving fails, a blank draft may remain; retry the identical IDs and payload to resume. Never overwrites an existing edited article; a revision conflict requires inspection.",
+    inputSchema: s.object("The new Markdown article and retry identities.", {
+      articleId,
+      saveId: markdownSaveId,
+      title,
+      markdown,
+    }),
+    outputSchema: markdownOutput,
+  }),
+  defineProviderAction(service, {
+    name: "save_article_markdown",
+    operationType: "write",
+    requiredScopes: [],
+    description:
+      "Replace the entire article body and title from Markdown, saving a BlockNote draft at the expected revision. This is full replacement, not append or patch; blocks and private images absent from Markdown are removed from the draft. Read and reconcile before saving; on 409 never blindly retry with a new revision. Does not publish.",
+    inputSchema: s.object("A full Markdown replacement of an existing draft.", {
+      articleId,
+      revision,
+      saveId: markdownSaveId,
+      title,
+      markdown,
+    }),
+    outputSchema: markdownOutput,
+  }),
+
   defineProviderAction(service, {
     name: "create_article",
     operationType: "write",
