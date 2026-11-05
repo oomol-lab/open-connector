@@ -40,6 +40,29 @@ export function saasProjectStoreTests(getDatabase: () => RuntimeDatabase): void 
       return lease;
     }
 
+    it("does not queue cleanup when a conditional delete selects a replaced SaaS connection", async () => {
+      const database = getDatabase();
+      const first = await ready();
+      expect(await database.connectionRequestStore.completeSaas(first)).toBe("connected");
+      const selected = (await database.connectionStore.get("example", first.pending.connectionName))!;
+      const second = await ready(
+        { ...pending(), connectionName: first.pending.connectionName, target: selected },
+        { ...candidate, connectedAccountId: "replacement-account" },
+      );
+      expect(await database.connectionRequestStore.completeSaas(second)).toBe("connected");
+      const cleanup = (await database.saasProjectStore.claimCleanup(Date.now()))!;
+      await database.saasProjectStore.finishCleanup(cleanup);
+      const replacement = await database.connectionStore.get("example", first.pending.connectionName);
+
+      await expect(
+        database.connectionStore.delete("example", first.pending.connectionName, selected),
+      ).rejects.toMatchObject({
+        code: "connection_changed",
+      });
+      await expect(database.connectionStore.get("example", first.pending.connectionName)).resolves.toEqual(replacement);
+      await expect(database.saasProjectStore.claimCleanup(Date.now())).resolves.toBeUndefined();
+    });
+
     it("resets only SaaS data and makes an identical retry a no-op", async () => {
       const database = getDatabase();
       const store = database.saasProjectStore;

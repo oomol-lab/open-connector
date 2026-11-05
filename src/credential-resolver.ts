@@ -50,6 +50,7 @@ export class CredentialResolver {
   private readonly oauthCredentials?: IOAuthCredentialRefresher;
   private readonly providerHttpDispatch?: ProviderHttpDispatchOptions;
   private readonly oauthCredentialRefreshes = new Map<string, Promise<OAuthCredential>>();
+  private readonly disconnectingConnections = new Set<string>();
 
   constructor(options: CredentialResolverOptions) {
     this.store = options.store;
@@ -63,10 +64,33 @@ export class CredentialResolver {
       : connection.credential;
   }
 
+  /** Read an active refresh before deleting its connection, so revocation can use the rotated token. */
+  getPendingRefresh(connection: StoredLocalConnection): Promise<OAuthCredential> | undefined {
+    const credential = connection.credential;
+    return credential.authType === "oauth2"
+      ? this.oauthCredentialRefreshes.get(oauthRefreshKey(connection.id, credential))
+      : undefined;
+  }
+
+  /** Keep new refreshes out of a disconnect while allowing an existing refresh to finish. */
+  async withDisconnect<T>(connectionId: string | undefined, work: () => Promise<T>): Promise<T> {
+    if (!connectionId) return work();
+    if (this.disconnectingConnections.has(connectionId))
+      throw new ConnectionError("connection_changed", "The connection is being disconnected.");
+    this.disconnectingConnections.add(connectionId);
+    try {
+      return await work();
+    } finally {
+      this.disconnectingConnections.delete(connectionId);
+    }
+  }
+
   private async resolveOAuthCredential(
     connection: StoredLocalConnection,
     credential: OAuthCredential,
   ): Promise<OAuthCredential> {
+    if (this.disconnectingConnections.has(connection.id))
+      throw new ConnectionError("connection_changed", "The connection is being disconnected.");
     const service = connection.service;
     if (credential.metadata.oauthReauthRequired === true) {
       throw new ConnectionError(
@@ -98,11 +122,7 @@ export class CredentialResolver {
       // (rotating) refresh token must reach the provider once even when an unrelated write
       // bumps the revision mid-refresh. A new authorization must refresh independently,
       // even when the provider reuses the same refresh token across reconnects.
-      const refreshKey = JSON.stringify([
-        connection.id,
-        credential.refreshToken,
-        credential.metadata.oauthAuthorizationId,
-      ]);
+      const refreshKey = oauthRefreshKey(connection.id, credential);
       const currentRefresh = this.oauthCredentialRefreshes.get(refreshKey);
       if (currentRefresh) {
         return currentRefresh;
@@ -125,12 +145,30 @@ export class CredentialResolver {
     credential: OAuthCredential,
     refresher: IOAuthCredentialRefresher,
   ): Promise<OAuthCredential> {
-    const { id, revision, service, connectionName } = connection;
+    const selected = await this.store.get(connection.service, connection.connectionName);
+    if (this.disconnectingConnections.has(connection.id)) {
+      throw new ConnectionError("connection_changed", "The connection is being disconnected.");
+    }
+    if (
+      selected?.source === "saas" ||
+      selected?.id !== connection.id ||
+      selected.credential.authType !== "oauth2" ||
+      selected.credential.accessToken !== credential.accessToken ||
+      selected.credential.refreshToken !== credential.refreshToken ||
+      selected.credential.metadata.oauthAuthorizationId !== credential.metadata.oauthAuthorizationId
+    ) {
+      throw new ConnectionError(
+        "connection_not_found",
+        `${connection.service} connection changed before its OAuth credential could refresh.`,
+      );
+    }
+    const { id, revision, service, connectionName } = selected;
+    const spent = selected.credential;
     let nextCredential: OAuthCredential;
     try {
       nextCredential = await withProviderHttpDispatchResult(
         { operation: "oauth", service, connectionId: id, connectionName },
-        () => refresher.refresh(service, credential),
+        () => refresher.refresh(service, spent),
         this.providerHttpDispatch,
       );
     } catch (error) {
@@ -142,7 +180,7 @@ export class CredentialResolver {
             revision,
             service,
             connectionName,
-            credential: { ...credential, metadata: { ...credential.metadata, oauthReauthRequired: true } },
+            credential: { ...spent, metadata: { ...spent.metadata, oauthReauthRequired: true } },
           },
           true,
         );
@@ -153,7 +191,7 @@ export class CredentialResolver {
     // tokens, discarding `nextCredential` loses the connection for good, so a lost
     // revision race re-reads the row and lands the refreshed token fields on the latest
     // revision, as long as that row still holds the credential this refresh spent.
-    let target: StoredLocalConnection = { ...connection, source: "local", credential: nextCredential };
+    let target: StoredLocalConnection = { ...selected, source: "local", credential: nextCredential };
     for (let attempt = 0; attempt < OAUTH_REFRESH_PERSIST_ATTEMPTS; attempt++) {
       if (await this.store.updateCredential(target, true)) return target.credential as OAuthCredential;
       const current = await this.store.get(service, connectionName);
@@ -161,15 +199,14 @@ export class CredentialResolver {
         current?.source === "saas" ||
         current?.id !== id ||
         current.credential.authType !== "oauth2" ||
-        current.credential.refreshToken !== credential.refreshToken ||
-        current.credential.metadata.oauthAuthorizationId !== credential.metadata.oauthAuthorizationId
+        current.credential.refreshToken !== spent.refreshToken ||
+        current.credential.metadata.oauthAuthorizationId !== spent.metadata.oauthAuthorizationId
       ) {
-        // Deleted, converted, reconnected, or already rotated elsewhere: never overwrite it.
         break;
       }
       target = {
         ...current,
-        credential: mergeRefreshedOAuthCredential(current.credential, credential, nextCredential),
+        credential: mergeRefreshedOAuthCredential(current.credential, spent, nextCredential),
       };
     }
     throw new ConnectionError(
@@ -179,11 +216,18 @@ export class CredentialResolver {
   }
 }
 
-export function isOAuthCredentialExpired(credential: Extract<ResolvedCredential, { authType: "oauth2" }>): boolean {
+function oauthRefreshKey(connectionId: string, credential: OAuthCredential): string {
+  return JSON.stringify([connectionId, credential.refreshToken, credential.metadata.oauthAuthorizationId]);
+}
+
+export function isOAuthCredentialExpired(
+  credential: Extract<ResolvedCredential, { authType: "oauth2" }>,
+  refreshWindowMs = 60_000,
+): boolean {
   if (!credential.expiresAt) {
     return false;
   }
 
   const expiresAt = Date.parse(credential.expiresAt);
-  return Number.isFinite(expiresAt) && expiresAt <= Date.now() + 60_000;
+  return Number.isFinite(expiresAt) && expiresAt <= Date.now() + refreshWindowMs;
 }

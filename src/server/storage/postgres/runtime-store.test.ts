@@ -7,6 +7,7 @@ import { Client, Pool } from "pg";
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { AesGcmSecretCodec } from "../../secrets/secret-codec.ts";
 import { connectionRequestStoreTests } from "../connection-request-store.cases.ts";
+import { connectionStoreTests } from "../connection-store.cases.ts";
 import { defaultMigrationSource } from "../migration-source.ts";
 import { createNodeRuntimeDatabase, migratePostgresRuntimeDatabase } from "../node-runtime-database.ts";
 import { RuntimeTokenService } from "../runtime-token-service.ts";
@@ -318,6 +319,7 @@ describe("PostgresRuntimeDatabase with PGlite", () => {
   });
 
   connectionRequestStoreTests(() => database);
+  connectionStoreTests(() => database);
   triggerStoreTests(() => database);
 
   it("persists connections and OAuth data across database instances", async () => {

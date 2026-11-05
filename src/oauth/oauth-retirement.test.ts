@@ -9,6 +9,8 @@ import { Pool } from "pg";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { createCatalogStore } from "../catalog-store.ts";
 import { ConnectionService } from "../connection-service.ts";
+import { provider as githubProvider } from "../providers/github/definition.ts";
+import { githubOAuthRuntime } from "../providers/github/oauth.ts";
 import { ProviderLoader } from "../providers/provider-loader.ts";
 import { D1RuntimeDatabase } from "../server/storage/d1/runtime-store.ts";
 import { SqliteD1Database } from "../server/storage/d1/test-database.ts";
@@ -17,6 +19,7 @@ import { PostgresRuntimeDatabase } from "../server/storage/postgres/runtime-stor
 import { startPGliteTestServer } from "../server/storage/postgres/test-database.ts";
 import { SqliteRuntimeDatabase } from "../server/storage/sqlite/runtime-store.ts";
 import { OAuthClientConfigService } from "./oauth-client-config-service.ts";
+import { OAuthCredentialRefreshService } from "./oauth-credential-refresh-service.ts";
 import { OAuthFlowService } from "./oauth-flow-service.ts";
 
 const provider: ProviderDefinition = {
@@ -49,6 +52,68 @@ afterEach(async () => {
 });
 
 describe("OAuth retirement across runtime sessions", () => {
+  it.each([undefined, false, true])(
+    "does not automatically revoke a late refresh after disconnect (revoke: %s)",
+    async (revoke) => {
+      const fixture = await openFixture("sqlite");
+      cleanups.push(() => fixture.close());
+      const catalog = createCatalogStore([githubProvider]);
+      const providerLoader = new ProviderLoader({ github: async () => ({ executors: {}, oauth: githubOAuthRuntime }) });
+      const clientConfigs = new OAuthClientConfigService({
+        catalog,
+        origin: "https://runtime.example.com",
+        store: fixture.first.oauthClientConfigStore,
+      });
+      await clientConfigs.upsertConfig({ service: "github", clientId: "client-id", clientSecret: "client-secret" });
+      await fixture.first.connectionStore.set("github", "work", {
+        authType: "oauth2",
+        accessToken: "old-access",
+        refreshToken: "old-refresh",
+        tokenType: "Bearer",
+        expiresAt: new Date(Date.now() + 30_000).toISOString(),
+        profile: { accountId: "account", displayName: "Account", grantedScopes: [] },
+        metadata: {},
+      });
+      const second = await fixture.openSecond();
+      const [refreshing, disconnecting] = [fixture.first, second].map(
+        (database) =>
+          new ConnectionService({
+            catalog,
+            providerLoader,
+            store: database.connectionStore,
+            oauthCredentials: new OAuthCredentialRefreshService(clientConfigs, providerLoader),
+          }),
+      );
+      const entered = Promise.withResolvers<void>();
+      const released = Promise.withResolvers<void>();
+      const fetcher = vi.fn(async (_url: RequestInfo | URL, init?: RequestInit) => {
+        if (init?.method === "POST") {
+          entered.resolve();
+          await released.promise;
+          return Response.json({ access_token: "rotated-access", refresh_token: "rotated-refresh", expires_in: 3600 });
+        }
+        return Response.json({ message: "Invalid token" }, { status: 422 });
+      });
+      vi.stubGlobal("fetch", fetcher);
+      const execution = refreshing.getCredential("github", "work").catch((error: unknown) => error);
+      await entered.promise;
+      await expect(disconnecting.disconnect("github", "work", { revoke })).resolves.toMatchObject({
+        configured: false,
+        revoked: revoke === true ? "failed" : "skipped",
+      });
+      released.resolve();
+
+      await expect(execution).resolves.toMatchObject({ code: "connection_not_found" });
+      expect(fetcher.mock.calls.map(([, init]) => init?.method)).toEqual(
+        revoke === true ? ["POST", "DELETE"] : ["POST"],
+      );
+      if (revoke === true) {
+        expect(fetcher.mock.calls[1]?.[1]?.body).toBe(JSON.stringify({ access_token: "old-access" }));
+      }
+      await expect(second.connectionStore.get("github", "work")).resolves.toBeUndefined();
+    },
+  );
+
   it.each(["sqlite", "d1", "postgres"] as const)(
     "%s cannot resurrect a disconnected or already absent alias after delayed token exchange",
     async (backend) => {

@@ -4,6 +4,7 @@ import type { ISecretCodec } from "../secrets/secret-codec-core.ts";
 import type { RequestTransaction } from "./connection-request-store.ts";
 import type { RuntimeRow } from "./runtime-sql.ts";
 
+import { ConnectionError } from "../../connection-error.ts";
 import { HttpRequestError } from "../api/http-utils.ts";
 import { initializeRetirement, lockRetirement, retirementMatches } from "./connection-retirement.ts";
 import { queueSaasConnections, readSaasConnection } from "./saas-project-store.ts";
@@ -163,8 +164,23 @@ export class SqlConnectionStore implements IConnectionStore {
     return row !== undefined;
   }
 
-  async delete(service: string, connectionName: string): Promise<void> {
-    const retired = "not exists (select 1 from connections where service = ? and connection_name = ?)";
+  async delete(
+    service: string,
+    connectionName: string,
+    target?: Pick<StoredConnection, "id" | "revision">,
+  ): Promise<void> {
+    // Only a matching, unblocked target can authorize this transaction's retirement and cleanup.
+    const generation = crypto.randomUUID();
+    const retirement = retirementMatches(service, connectionName, generation);
+    const retired = `not exists (select 1 from connections where service = ? and connection_name = ?) and ${retirement.sql}`;
+    const subscriptions = `exists (select 1 from trigger_subscriptions where connection_id = connections.id
+      and mode <> 'resource-set' and status in ('active', 'deleting'))`;
+    const eligible = target
+      ? `exists (select 1 from connections where service = ? and connection_name = ? and id = ? and revision = ? and not ${subscriptions})`
+      : `not exists (select 1 from connections where service = ? and connection_name = ? and ${subscriptions})`;
+    const eligibilityValues = target
+      ? [service, connectionName, target.id, target.revision]
+      : [service, connectionName];
     const results = await this.transaction([
       initializeRetirement(service, connectionName, crypto.randomUUID()),
       {
@@ -175,32 +191,38 @@ export class SqlConnectionStore implements IConnectionStore {
         sql: "update connections set revision = revision where service = ? and connection_name = ?",
         values: [service, connectionName],
       },
-      queueSaasConnections("service = ? and connection_name = ?", [service, connectionName]),
       {
-        sql: `delete from connections where service = ? and connection_name = ? and not exists
-        (select 1 from trigger_subscriptions where connection_id = connections.id and mode <> 'resource-set' and status in ('active', 'deleting'))`,
-        values: [service, connectionName],
+        sql: `update connection_retirements set generation = ? where service = ? and connection_name = ? and ${eligible}`,
+        values: [generation, service, connectionName, ...eligibilityValues],
       },
+      queueSaasConnections(`service = ? and connection_name = ? and ${retirement.sql}`, [
+        service,
+        connectionName,
+        ...retirement.values,
+      ]),
       {
-        sql: `update connection_retirements set generation = ? where service = ? and connection_name = ? and ${retired}`,
-        values: [crypto.randomUUID(), service, connectionName, service, connectionName],
+        sql: `delete from connections where service = ? and connection_name = ? and ${retirement.sql} returning id`,
+        values: [service, connectionName, ...retirement.values],
       },
       {
         sql: `delete from oauth_states where service = ? and connection_name = ? and ${retired}`,
-        values: [service, connectionName, service, connectionName],
+        values: [service, connectionName, service, connectionName, ...retirement.values],
       },
       {
         sql: `update connection_requests set phase = 'completed', status = 'failed', error_code = 'connection_retired',
           error_message = 'The connection was disconnected during authorization.', value = null, updated_at = ?
           where kind = 'local' and service = ? and connection_name = ? and phase in ('pending', 'processing') and ${retired}`,
-        values: [Date.now(), service, connectionName, service, connectionName],
+        values: [Date.now(), service, connectionName, service, connectionName, ...retirement.values],
       },
       {
-        sql: "select id from connections where service = ? and connection_name = ?",
+        sql: "select id, revision from connections where service = ? and connection_name = ?",
         values: [service, connectionName],
       },
     ]);
-    if (results.at(-1)![0])
+    const current = results.at(-1)![0];
+    if (target && !results[5]![0] && (current?.id !== target.id || current?.revision !== target.revision))
+      throw new ConnectionError("connection_changed", "The connection changed before it could be disconnected.");
+    if (current)
       throw new HttpRequestError(
         "connection_has_subscriptions",
         "Cancel or abandon remote Trigger subscriptions before disconnecting this connection.",

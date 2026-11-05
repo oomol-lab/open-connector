@@ -5,6 +5,7 @@ import type { OAuthTokenErrorFactory, OAuthTokenResult } from "./oauth-token.ts"
 
 import { ConnectionError } from "../connection-error.ts";
 import { optionalRecord, optionalString, stringRecord } from "../core/cast.ts";
+import { isOAuthCredentialExpired } from "../credential-resolver.ts";
 import { providerFetch } from "../providers/provider-runtime.ts";
 import { readOAuthClientConfigMetadata } from "./oauth-client-config-service.ts";
 import { expiresAtFromLifetime, requestRefreshToken, requestTokenRevocation } from "./oauth-token.ts";
@@ -12,7 +13,7 @@ import { expiresAtFromLifetime, requestRefreshToken, requestTokenRevocation } fr
 type OAuthCredential = Extract<ResolvedCredential, { authType: "oauth2" }>;
 
 /**
- * What a disconnect did about the grant at the provider: `done` when the
+ * What a disconnect did about token revocation at the provider: `done` when the
  * provider's revocation endpoint accepted the token, `failed` when it did not
  * (or could not be reached) — the credential is deleted locally either way —
  * `unsupported` when the provider declares no revocation endpoint or the
@@ -24,8 +25,8 @@ export type OAuthRevocationOutcome = "done" | "failed" | "unsupported" | "skippe
 export interface IOAuthCredentialRefresher {
   refresh(service: string, credential: OAuthCredential): Promise<OAuthCredential>;
   /**
-   * Revoke the credential at the provider's `revocationUrl`: `done` or
-   * `unsupported` (none declared); a refusal or an unreachable endpoint throws.
+   * Revoke the credential through the provider's revocation protocol: `done` or
+   * `unsupported`; a refusal or an unreachable endpoint throws.
    */
   revoke?(service: string, credential: OAuthCredential): Promise<"done" | "unsupported">;
 }
@@ -55,7 +56,9 @@ export class OAuthCredentialRefreshService implements IOAuthCredentialRefresher 
 
     const refreshToken = credential.refreshToken ?? "";
     const createError: OAuthTokenErrorFactory = (message, failure) =>
-      failure?.errorCode === "invalid_grant" && (failure.status === 400 || failure.status === 401)
+      failure &&
+      (failure.errorCode === "invalid_grant" || (service === "github" && failure.errorCode === "bad_refresh_token")) &&
+      [200, 400, 401].includes(failure.status)
         ? new ConnectionError("oauth_reauth_required", `OAuth authorization is no longer valid. Reconnect ${service}.`)
         : new ConnectionError("oauth_token_refresh_failed", message);
     const providerOAuth = await this.providerLoader?.loadProviderOAuthRuntime?.(service);
@@ -135,17 +138,31 @@ export class OAuthCredentialRefreshService implements IOAuthCredentialRefresher 
     } catch {
       return "unsupported";
     }
-    if (!auth.revocationUrl) {
-      return "unsupported";
-    }
     const token = credential.refreshToken || credential.accessToken;
     if (!token) {
       return "unsupported";
     }
     const createError = (message: string): ConnectionError =>
       new ConnectionError("oauth_token_revocation_failed", message);
+    const providerOAuth = await this.providerLoader?.loadProviderOAuthRuntime?.(service);
+    if (!providerOAuth?.revokeAccessToken && !auth.revocationUrl) return "unsupported";
     const config =
       readOAuthClientConfigMetadata(service, credential.metadata) ?? (await this.clientConfigs.getConfig(service));
+    if (providerOAuth?.revokeAccessToken) {
+      if (!config) throw createError(`Configure an OAuth client for ${service} before revoking its token.`);
+      const current =
+        credential.refreshToken && isOAuthCredentialExpired(credential, 0)
+          ? await this.refresh(service, credential)
+          : credential;
+      await providerOAuth.revokeAccessToken({
+        accessToken: current.accessToken,
+        clientConfig: config,
+        fetcher: providerFetch,
+        createError,
+      });
+      return "done";
+    }
+    if (!auth.revocationUrl) return "unsupported";
     let revocationUrl: string;
     if (config) {
       revocationUrl = this.clientConfigs.resolveEndpointUrl(service, auth.revocationUrl, config);
