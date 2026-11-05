@@ -60,10 +60,15 @@ export function markdownToBlockNote(markdown: string): MarkdownConversion {
     styles,
   });
   function safeURL(value: string, image = false): boolean {
+    if (/[\u0000-\u0020\u007f]|%(?![0-9a-f]{2})/iu.test(value)) return false;
     try {
       const url = new URL(value);
       return (
-        ((url.protocol === "https:" || url.protocol === "http:") && !!url.hostname && !url.username && !url.password) ||
+        (/^https?:\/\//iu.test(value) &&
+          (url.protocol === "https:" || url.protocol === "http:") &&
+          !!url.hostname &&
+          !url.username &&
+          !url.password) ||
         (!image && url.protocol === "mailto:")
       );
     } catch {
