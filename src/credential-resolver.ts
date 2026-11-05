@@ -231,7 +231,11 @@ export class CredentialResolver {
       !sharesToken &&
       (stillSpent || (await this.store.wasRevocationRequested(retirementGeneration, oauthAuthorizationKey(selected))))
     )
-      await refresher.revokeAccessToken?.(service, nextCredential);
+      await withProviderHttpDispatchResult(
+        { operation: "oauth", service, connectionId: id, connectionName },
+        () => refresher.revokeAccessToken?.(service, nextCredential),
+        this.providerHttpDispatch,
+      );
     throw new ConnectionError(
       "connection_not_found",
       `${service} connection changed while its OAuth credential was refreshing. Retry the action.`,
