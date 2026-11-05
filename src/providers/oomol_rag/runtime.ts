@@ -19,6 +19,18 @@ export async function executeOomolRagAction(
   input: Record<string, unknown>,
   context: OomolRagContext,
 ): Promise<unknown> {
+  if (name === "patch_article_blocks") {
+    const articleId = requiredInputString(input.articleId, "articleId");
+    return {
+      article: parseArticle(
+        await requestOomolRag(context, {
+          path: `/v1/articles/${encodePathSegment(articleId)}/blocks`,
+          method: "POST",
+          body: { revision: input.revision, save_id: input.saveId, operations: input.operations },
+        }),
+      ),
+    };
+  }
   if (name === "create_article_from_markdown" || name === "save_article_markdown") {
     let converted;
     try {
