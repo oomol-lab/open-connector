@@ -73,11 +73,20 @@ Read `get_article` to obtain the current `revision` and block IDs (including nes
   "revision": 3,
   "saveId": "<stable patch ID>",
   "operations": [
-    {"op": "update", "blockId": "paragraph-1", "props": {"textAlignment": "center"}},
-    {"op": "insert", "position": "after", "blockId": "paragraph-1", "blocks": [
-      {"id": "new-paragraph", "type": "paragraph", "content": [{"type": "text", "text": "Added paragraph", "styles": {}}]}
-    ]},
-    {"op": "delete", "blockId": "obsolete-block"}
+    { "op": "update", "blockId": "paragraph-1", "props": { "textAlignment": "center" } },
+    {
+      "op": "insert",
+      "position": "after",
+      "blockId": "paragraph-1",
+      "blocks": [
+        {
+          "id": "new-paragraph",
+          "type": "paragraph",
+          "content": [{ "type": "text", "text": "Added paragraph", "styles": {} }]
+        }
+      ]
+    },
+    { "op": "delete", "blockId": "obsolete-block" }
   ]
 }
 ```
