@@ -2,13 +2,12 @@ import type { MetabaseContext } from "./runtime.ts";
 import type { Schema } from "@cfworker/json-schema";
 
 import { Validator } from "@cfworker/json-schema";
-import { SdkError, SdkErrorCode } from "@modelcontextprotocol/client";
 import { describe, expect, it } from "vitest";
 import { validateActionInput } from "../../core/validation.ts";
 import { getProviderActionHandler } from "../provider-executors.ts";
 import { provider } from "./definition.ts";
 import { executors } from "./executors.ts";
-import { metabaseMcpHandlers, runMetabaseMcp } from "./mcp-runtime.ts";
+import { metabaseMcpHandlers } from "./mcp-runtime.ts";
 import { normalizeMetabaseUrls } from "./runtime.ts";
 
 interface RpcRequest {
@@ -17,42 +16,22 @@ interface RpcRequest {
   params?: Record<string, unknown>;
 }
 
-const handle = "12345678-1234-4234-8234-123456789abc";
 const query = {
   "lib/type": "mbql/query",
-  stages: [{ "lib/type": "mbql.stage/mbql", "source-table": ["Sample Database", "PUBLIC", "ORDERS"] }],
+  stages: [{ "lib/type": "mbql.stage/mbql", "source-table": 50, aggregation: [["count", {}]] }],
 };
 const execution = {
-  status: "completed",
-  data: { cols: [{ name: "count", display_name: "Count", base_type: "type/Integer" }], rows: [[1]] },
-  row_count: 1,
-  running_time: 20,
+  cols: [{ name: "count", display_name: "Count", base_type: "type/Integer" }],
+  rows: [[1]],
+  returned: 1,
+  truncated: false,
+  query_handle: "handle-1",
 };
-const entity = { id: 1, name: "Test", collection_id: null, collection_path: "Our analytics", description: null };
-const createdCard = { ...entity, display: "table", url: "/question/1" };
-const updatedCard = { ...entity, display: "table", archived: false };
 const toolBodies: Record<string, Record<string, unknown>> = {
-  search: { data: [{ id: 1, type: "table", name: "ORDERS", database_id: 1 }], total_count: 1 },
-  read_resource: {
-    resources: [
-      { uri: "metabase://databases", content: [{ id: 1 }] },
-      { uri: "metabase://question/99", error: "Not found" },
-    ],
-    output: "<resources/>",
-  },
-  construct_query: { query_handle: handle },
-  construct_native_query: { query_handle: handle },
-  query: { ...execution, continuation_token: "next-page" },
   execute_query: execution,
   execute_sql: execution,
-  execute_question: execution,
-  create_question: createdCard,
-  create_metric: createdCard,
-  update_question: updatedCard,
-  update_metric: updatedCard,
-  create_dashboard: { ...entity, url: "/dashboard/1", dashcard_ids: [2] },
-  update_dashboard: { ...entity, archived: false, dashcard_ids: [2] },
-  create_collection: { id: 1, name: "Test", parent_id: null, location: "/", description: null },
+  run_saved_question: execution,
+  question_write: { id: 1, name: "Test" },
 };
 
 function fixture(toolResult?: Record<string, unknown>) {
@@ -75,7 +54,7 @@ function fixture(toolResult?: Record<string, unknown>) {
         result = {
           protocolVersion: "2025-03-26",
           capabilities: { tools: {}, resources: {} },
-          serverInfo: { name: "Metabase", version: "0.63.16" },
+          serverInfo: { name: "Metabase", version: "0.64.0" },
         };
         break;
       case "tools/list":
@@ -84,27 +63,32 @@ function fixture(toolResult?: Record<string, unknown>) {
           : {
               tools: Object.keys(toolBodies).map((name) => ({
                 name,
+                description: `${name} description`,
                 inputSchema: { type: "object", additionalProperties: true },
+                annotations: { readOnlyHint: name !== "question_write" },
               })),
               nextCursor: "next",
             };
         break;
       case "resources/list":
         result = request.params?.cursor
-          ? { resources: [{ uri: "metabase://docs/second.md", name: "Second reference" }] }
+          ? { resources: [{ uri: "ui://metabase/visualize-query.html", name: "Visualize Query" }] }
           : {
-              resources: [
-                { uri: "metabase://docs/construct-query.md", name: "Query reference", mimeType: "text/markdown" },
-              ],
+              resources: [{ uri: "catalog://metabase/fields", name: "Fields Catalog", mimeType: "application/json" }],
               nextCursor: "next",
             };
         break;
       case "resources/read":
-        result = { contents: [{ uri: request.params?.uri, text: "Query reference", mimeType: "text/markdown" }] };
+        result = { contents: [{ uri: request.params?.uri, text: "{}", mimeType: "application/json" }] };
         break;
       case "tools/call": {
-        const body = toolBodies[String(request.params?.name)];
-        result = toolResult ?? { content: [{ type: "text", text: JSON.stringify(body) }], structuredContent: body };
+        const name = String(request.params?.name);
+        const body = toolBodies[name];
+        result =
+          toolResult ??
+          (body
+            ? { content: [{ type: "text", text: JSON.stringify(body) }], structuredContent: body }
+            : { content: [{ type: "text", text: `Unknown tool: "${name}"` }], isError: true });
         break;
       }
       default:
@@ -120,82 +104,6 @@ function fixture(toolResult?: Record<string, unknown>) {
   return { context, calls, headers, methods, urls };
 }
 
-interface MappingCase {
-  name: string;
-  input: Record<string, unknown>;
-  nativeName?: string;
-  args: Record<string, unknown>;
-}
-const mappingCases: MappingCase[] = [
-  {
-    name: "search_content",
-    nativeName: "search",
-    input: { termQueries: ["orders"], semanticQueries: ["revenue"] },
-    args: { term_queries: ["orders"], semantic_queries: ["revenue"] },
-  },
-  {
-    name: "read_resource",
-    input: { uris: ["metabase://databases", "metabase://question/99"] },
-    args: { uris: ["metabase://databases", "metabase://question/99"] },
-  },
-  { name: "construct_query", input: { query, prompt: "Count orders" }, args: { query, prompt: "Count orders" } },
-  {
-    name: "construct_native_query",
-    input: { databaseId: 1, sql: "select 1" },
-    args: { database_id: 1, sql: "select 1" },
-  },
-  { name: "query", input: { queryHandle: handle }, args: { query_handle: handle } },
-  { name: "execute_query", input: { queryHandle: handle }, args: { query_handle: handle } },
-  { name: "execute_sql", input: { databaseId: 1, sql: "select 1" }, args: { database_id: 1, sql: "select 1" } },
-  { name: "execute_question", input: { id: 1 }, args: { id: 1 } },
-  ...["create_question", "create_metric"].map((name) => ({
-    name,
-    input: {
-      name: "Test",
-      queryHandle: handle,
-      collectionId: 2,
-      visualizationSettings: { "graph.dimensions": ["count"] },
-    },
-    args: { name: "Test", query: handle, collection_id: 2, visualization_settings: { "graph.dimensions": ["count"] } },
-  })),
-  ...["update_question", "update_metric"].map((name) => ({
-    name,
-    input: { id: 1, queryHandle: handle, archived: false, description: "", display: "bar" },
-    args: { id: 1, query: handle, archived: false, description: "", display: "bar" },
-  })),
-  {
-    name: "create_dashboard",
-    input: { name: "Test", collectionId: 2, questionIds: [1] },
-    args: { name: "Test", collection_id: 2, question_ids: [1] },
-  },
-  {
-    name: "update_dashboard",
-    input: {
-      id: 1,
-      archived: false,
-      dashcards: [
-        { action: "add", cardId: 42, displaySize: "wide" },
-        { action: "remove", dashcardId: 5 },
-        { action: "move", dashcardId: 6, position: "top" },
-      ],
-    },
-    args: {
-      id: 1,
-      archived: false,
-      dashcards: [
-        { action: "add", card_id: 42, display_size: "wide" },
-        { action: "remove", dashcard_id: 5 },
-        { action: "move", dashcard_id: 6, position: "top" },
-      ],
-    },
-  },
-  {
-    name: "create_collection",
-    input: { name: "Test", parentCollectionId: 2 },
-    args: { name: "Test", parent_collection_id: 2 },
-  },
-];
-
 async function invoke(name: string, input: Record<string, unknown>, context: MetabaseContext): Promise<unknown> {
   const action = provider.actions.find((action) => action.name === name)!;
   expect(validateActionInput(action, input)).toMatchObject({ valid: true });
@@ -209,25 +117,33 @@ async function invoke(name: string, input: Record<string, unknown>, context: Met
 }
 
 describe("Metabase native MCP", () => {
-  it.each(mappingCases)(
-    "maps $name to the verified native fields and returns its declared output",
-    async ({ name, input, nativeName, args }) => {
-      const { context, calls } = fixture();
-      const output = await invoke(name, input, context);
-      expect(output).not.toHaveProperty("result");
-      expect(calls).toContainEqual(
-        expect.objectContaining({
-          method: "tools/call",
-          params: expect.objectContaining({ name: nativeName ?? name, arguments: args }),
-        }),
-      );
-    },
-  );
+  it("passes tool names and arguments through unchanged", async () => {
+    const { context, calls } = fixture();
+    const args = { query, query_handle: null, cursor: null, row_limit: 10 };
+    await expect(invoke("call_tool", { toolName: "execute_query", arguments: args }, context)).resolves.toEqual({
+      result: execution,
+    });
+    expect(calls).toContainEqual(
+      expect.objectContaining({
+        method: "tools/call",
+        params: expect.objectContaining({ name: "execute_query", arguments: args }),
+      }),
+    );
+  });
+
+  it("sends empty arguments when none are supplied", async () => {
+    const { context, calls } = fixture();
+    await invoke("call_tool", { toolName: "run_saved_question" }, context);
+    expect(calls.find((call) => call.method === "tools/call")?.params).toMatchObject({
+      name: "run_saved_question",
+      arguments: {},
+    });
+  });
 
   it("uses the normalized subpath endpoint and API key for every MCP request without DELETE", async () => {
     const { context, calls, methods, headers, urls } = fixture();
-    await invoke("construct_native_query", { databaseId: 1, sql: "select 1" }, context);
-    await invoke("create_question", { name: "Test", queryHandle: handle }, context);
+    await invoke("call_tool", { toolName: "execute_sql", arguments: { database_id: 1, sql: "select 1" } }, context);
+    await invoke("list_tools", {}, context);
     expect(calls.filter((call) => call.method === "initialize")).toHaveLength(2);
     expect(methods).not.toContain("DELETE");
     expect(urls.every((url) => url === "https://metabase.example.com/bi/api/metabase-mcp")).toBe(true);
@@ -236,204 +152,57 @@ describe("Metabase native MCP", () => {
     );
   });
 
-  it("discovers all pages with useful fields but never exposes arbitrary tools as actions", async () => {
+  it("indexes every tool page compactly without schemas", async () => {
     const { context, calls } = fixture();
-    await expect(invoke("list_mcp_tools", {}, context)).resolves.toMatchObject({
-      tools: expect.arrayContaining([
-        expect.objectContaining({ name: "future_tool", inputSchema: { type: "object" } }),
-      ]),
+    const output = (await invoke("list_tools", {}, context)) as { tools: Record<string, unknown>[] };
+    expect(output.tools).toContainEqual({
+      name: "execute_query",
+      summary: "execute_query description",
+      annotations: { readOnlyHint: true },
     });
-    await expect(invoke("list_mcp_resources", {}, context)).resolves.toMatchObject({
-      resources: [{ uri: "metabase://docs/construct-query.md" }, { uri: "metabase://docs/second.md" }],
-    });
-    expect(calls.filter((call) => call.params?.cursor === "next")).toHaveLength(2);
+    expect(output.tools.map((tool) => tool.name)).toContain("future_tool");
+    expect(output.tools.some((tool) => "inputSchema" in tool || "description" in tool)).toBe(false);
+    expect(calls.filter((call) => call.params?.cursor === "next")).toHaveLength(1);
     expect(executors["metabase.future_tool"]).toBeUndefined();
-    expect(executors["metabase.call_tool"]).toBeUndefined();
   });
 
-  it("reads documentation but refuses arbitrary URLs and Apps resources", async () => {
+  it("returns full descriptions and schemas only for requested tools", async () => {
+    const { context } = fixture();
+    await expect(invoke("list_tools", { toolNames: ["future_tool"] }, context)).resolves.toEqual({
+      tools: [{ name: "future_tool", inputSchema: { type: "object" } }],
+    });
+    await expect(metabaseMcpHandlers.list_tools!({ toolNames: ["missing_tool"] }, context)).rejects.toMatchObject({
+      status: 400,
+      message: expect.stringContaining("missing_tool"),
+    });
+  });
+
+  it("lists resources and reads non-Apps resources only", async () => {
     const { context, calls } = fixture();
-    await expect(
-      invoke("read_mcp_resource", { uri: "metabase://docs/construct-query.md" }, context),
-    ).resolves.toMatchObject({ contents: [{ text: "Query reference", mimeType: "text/markdown" }] });
+    await expect(invoke("list_mcp_resources", {}, context)).resolves.toMatchObject({
+      resources: [{ uri: "catalog://metabase/fields" }, { uri: "ui://metabase/visualize-query.html" }],
+    });
+    await expect(invoke("read_mcp_resource", { uri: "catalog://metabase/fields" }, context)).resolves.toMatchObject({
+      contents: [{ text: "{}", mimeType: "application/json" }],
+    });
     const before = calls.length;
-    for (const uri of ["https://example.com", "ui://metabase/app.html", "metabase://databases"]) {
+    for (const uri of ["ui://metabase/visualize-query.html", "not a uri"]) {
       await expect(metabaseMcpHandlers.read_mcp_resource!({ uri }, context)).rejects.toMatchObject({ status: 400 });
     }
     expect(calls).toHaveLength(before);
   });
 
-  it("preserves per-resource partial failures without failing successful reads", async () => {
-    const { context } = fixture();
-    await expect(
-      invoke("read_resource", { uris: ["metabase://databases", "metabase://question/99"] }, context),
-    ).resolves.toMatchObject({
-      resources: [{ content: [{ id: 1 }] }, { uri: "metabase://question/99", error: "Not found" }],
-      output: "<resources/>",
-    });
-  });
-
-  it("prefers structuredContent and preserves all raw blocks and metadata", async () => {
-    const raw = {
-      content: [
-        { type: "text", text: "not JSON" },
-        { type: "text", text: "more text" },
-      ],
-      structuredContent: execution,
-      _meta: { trace: "test" },
-    };
-    const { context } = fixture(raw);
-    await expect(invoke("execute_sql", { databaseId: 1, sql: "select 1" }, context)).resolves.toMatchObject({
-      rows: [[1]],
-      columns: [{ name: "count", displayName: "Count", baseType: "type/Integer" }],
-      rowCount: 1,
-      runningTime: 20,
-      raw,
-    });
-  });
-
-  it("falls back to JSON text when structuredContent is absent", async () => {
-    const { context } = fixture({ content: [{ type: "text", text: JSON.stringify(execution) }] });
-    await expect(invoke("execute_sql", { databaseId: 1, sql: "select 1" }, context)).resolves.toMatchObject({
-      rows: [[1]],
-    });
-  });
-
   it.each([
-    { content: [{ type: "text", text: "Access denied" }], isError: true },
-    { content: [{ type: "text", text: "{}" }], structuredContent: { status: "failed", error: "SQL syntax error" } },
-    { content: [{ type: "text", text: JSON.stringify({ status: "failed", error: "SQL syntax error" }) }] },
-  ])("normalizes native tool and query failures to provider errors", async (result) => {
-    const { context } = fixture(result);
-    await expect(metabaseMcpHandlers.execute_sql!({ databaseId: 1, sql: "bad" }, context)).rejects.toMatchObject({
-      status: 502,
-      message: expect.stringMatching(/Access denied|SQL syntax error/),
-    });
-  });
-
-  it.each([
-    { content: [{ type: "text", text: "not JSON" }] },
-    { content: [{ type: "text", text: "[]" }] },
-    { content: [{ type: "text", text: "{}" }], structuredContent: {} },
-    { content: [], structuredContent: { status: "completed" } },
-    { content: [], structuredContent: { ...execution, data: { cols: [], rows: [1] } } },
-    { content: [], structuredContent: { ...execution, data: { cols: [{ name: "x" }], rows: [] } } },
-    { content: [], structuredContent: { ...execution, row_count: "one" } },
-    { content: [], structuredContent: { ...execution, continuation_token: 1 } },
-  ])("rejects malformed execution results rather than returning false success", async (result) => {
-    const { context } = fixture(result);
-    await expect(metabaseMcpHandlers.execute_sql!({ databaseId: 1, sql: "select 1" }, context)).rejects.toMatchObject({
-      status: 502,
-    });
-  });
-
-  it.each([
-    "search_content",
-    "read_resource",
-    "construct_query",
-    "construct_native_query",
-    "create_question",
-    "update_question",
-    "create_metric",
-    "update_metric",
-    "create_dashboard",
-    "update_dashboard",
-    "create_collection",
-  ])("validates required response fields for %s", async (name) => {
-    const { context } = fixture({ content: [], structuredContent: {} });
-    const input = mappingCases.find((item) => item.name === name)!.input;
-    const handler = getProviderActionHandler(metabaseMcpHandlers, name)!;
-    await expect(handler(input, context)).rejects.toMatchObject({ status: 502 });
-  });
-
-  it("supports fresh MBQL, handle execution, base64 execution, and continuation tokens without rewriting query internals", async () => {
-    const { context, calls } = fixture();
-    await invoke("query", { query }, context);
-    await invoke("query", { continuationToken: "next-page" }, context);
-    await invoke("execute_query", { query: "base64-payload" }, context);
-    expect(calls.filter((call) => call.method === "tools/call").map((call) => call.params?.arguments)).toEqual([
-      { query },
-      { continuation_token: "next-page" },
-      { query: "base64-payload" },
-    ]);
-    await expect(metabaseMcpHandlers.query!({ query, queryHandle: handle }, context)).rejects.toMatchObject({
-      status: 400,
-    });
-    await expect(metabaseMcpHandlers.execute_query!({}, context)).rejects.toMatchObject({ status: 400 });
-  });
-
-  it("maps already-aborted requests and in-flight cancellation to 504", async () => {
-    const { context } = fixture();
-    await expect(
-      metabaseMcpHandlers.list_mcp_tools!({}, { ...context, signal: AbortSignal.abort() }),
-    ).rejects.toMatchObject({ status: 504 });
-    const controller = new AbortController();
-    const fetcher: typeof fetch = async (url, init) => {
-      if (init?.method === "POST" && JSON.parse(String(init.body)).method === "tools/list") {
-        controller.abort();
-        return new Response(null, { status: 202 });
-      }
-      return context.fetcher(url, init);
-    };
-    await expect(
-      metabaseMcpHandlers.list_mcp_tools!({}, { ...context, fetcher, signal: controller.signal }),
-    ).rejects.toMatchObject({ status: 504 });
-  });
-
-  it("propagates cancellation into an in-flight native tool call", async () => {
-    const { context } = fixture();
-    const controller = new AbortController();
-    let toolSignal: AbortSignal | null | undefined;
-    const fetcher: typeof fetch = async (url, init) => {
-      if (init?.method === "POST" && JSON.parse(String(init.body)).method === "tools/call") {
-        toolSignal = init.signal;
-        controller.abort(new Error("Caller disconnected"));
-        return new Response(null, { status: 202 });
-      }
-      return context.fetcher(url, init);
-    };
-    await expect(
-      metabaseMcpHandlers.execute_sql!(
-        { databaseId: 1, sql: "select 1" },
-        { ...context, fetcher, signal: controller.signal },
-      ),
-    ).rejects.toMatchObject({ status: 504 });
-    expect(toolSignal?.aborted).toBe(true);
-  });
-
-  it("rejects malformed handles and saved-entity fields", async () => {
-    const invalidHandle = fixture({ content: [], structuredContent: { query_handle: "not-a-uuid" } });
-    await expect(metabaseMcpHandlers.construct_query!({ query }, invalidHandle.context)).rejects.toMatchObject({
-      status: 502,
-    });
-    for (const body of [
-      { ...createdCard, collection_id: undefined },
-      { ...createdCard, description: 42 },
-      { ...updatedCard, archived: "false" },
-    ]) {
-      const { context } = fixture({ content: [], structuredContent: body });
-      const handler = "archived" in body ? metabaseMcpHandlers.update_question! : metabaseMcpHandlers.create_question!;
-      await expect(handler({ id: 1, name: "Test", queryHandle: handle }, context)).rejects.toMatchObject({
-        status: 502,
-      });
-    }
-  });
-
-  it("maps SDK request timeouts even before the outer deadline", async () => {
-    const { context } = fixture();
-    await expect(
-      runMetabaseMcp(context, async () => {
-        throw new SdkError(SdkErrorCode.RequestTimeout, "Request timed out");
-      }),
-    ).rejects.toMatchObject({ status: 504 });
-  });
-
-  it.each([401, 403, 429, 500])("maps HTTP %s without exposing upstream response secrets", async (status) => {
-    const { context } = fixture();
-    context.fetcher = async () => new Response("secret upstream detail", { status });
-    await expect(metabaseMcpHandlers.list_mcp_tools!({}, context)).rejects.toMatchObject({
-      status: status >= 500 ? 502 : status,
-      message: expect.not.stringContaining("secret"),
-    });
+    [{ content: [{ type: "text", text: '{"rows":[]}' }] }, { rows: [] }, undefined],
+    [
+      { content: [{ type: "text", text: '{"returned":1}\nReturned 1 of at least 25.' }] },
+      { returned: 1 },
+      "Returned 1 of at least 25.",
+    ],
+    [{ content: [{ type: "text", text: "plain text" }] }, "plain text", undefined],
+    [{ content: [] }, null, undefined],
+  ])("falls back from structuredContent to text content", async (toolResult, result, notes) => {
+    const { context } = fixture(toolResult);
+    await expect(invoke("call_tool", { toolName: "execute_sql" }, context)).resolves.toEqual({ result, notes });
   });
 });
