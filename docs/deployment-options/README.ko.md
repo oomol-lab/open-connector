@@ -147,15 +147,16 @@ platform에서는 OAuth app을 직접 등록해야 합니다. 관리형 OAuth가
         <a href="https://zop.dev/"><img src="../../assets/deployment-options/zopday.svg" alt="ZopDay" width="140"></a>
       </td>
       <td valign="top">
-        게시된 <code>ghcr.io/oomol-lab/open-connector</code> 이미지를 전용 HTTPS 주소로 실행하는 원클릭 배포입니다. ZopDay가 컨테이너를 프로비저닝하고, TLS를 처리하며, 관리 대시보드를 제공합니다. OAuth 앱 등록은 직접 수행합니다.
+        게시된 <code>ghcr.io/oomol-lab/open-connector</code> 이미지를 HTTPS 및 관리 대시보드와 함께 실행합니다.
+        최초 시작 전에 공개 URL, 인증 토큰, 암호화 키 및 영구 스토리지를 설정해야 합니다. OAuth 앱 등록은 직접 수행합니다.
         <br><br>
-        <strong>장점:</strong> Docker 이미지에서 원클릭 배포, 컨테이너 관리 대시보드, 자체 클라우드 설정을 위한 Helm Charts.
+        <strong>장점:</strong> 컨테이너 관리 대시보드와 자체 클라우드에서의 Helm 배포.
         <br><br>
         <strong>가격:</strong>
         <a href="https://zop.dev/zopday#pricing">ZopDay 가격</a>을 참고하세요.
       </td>
       <td valign="middle" align="center">
-        <a href="https://zop.dev/zopday/app/deploy?image=ghcr.io/oomol-lab/open-connector&amp;port=3000&amp;name=open-connector&amp;utm_source=github&amp;utm_medium=one_click&amp;utm_content=open-connector"><strong>원클릭 배포</strong></a>
+        <a href="../zopday.md"><strong>배포 가이드 (영어)</strong></a>
       </td>
     </tr>
   </tbody>

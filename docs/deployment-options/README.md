@@ -160,18 +160,17 @@ path that includes managed OAuth.
         <a href="https://zop.dev/"><img src="../../assets/deployment-options/zopday.svg" alt="ZopDay" width="140"></a>
       </td>
       <td valign="top">
-        One-click deploy that runs the published <code>ghcr.io/oomol-lab/open-connector</code>
-        image with its own HTTPS address. ZopDay provisions a container, handles TLS, and gives
-        you a management dashboard. You register OAuth apps yourself.
+        Run the published <code>ghcr.io/oomol-lab/open-connector</code> image with HTTPS and a
+        management dashboard. Before the first start, configure the public origin, authentication
+        tokens, encryption key, and persistent storage. You register OAuth apps yourself.
         <br><br>
-        <strong>Advantages:</strong> one-click deploy from the Docker image, container management
-        dashboard, and Helm Charts available for own-cloud setups.
+        <strong>Advantages:</strong> container management dashboard and Helm deployments on your own cloud.
         <br><br>
         <strong>Pricing:</strong> see
         <a href="https://zop.dev/zopday#pricing">ZopDay pricing</a>.
       </td>
       <td valign="middle" align="center">
-        <a href="https://zop.dev/zopday/app/deploy?image=ghcr.io/oomol-lab/open-connector&amp;port=3000&amp;name=open-connector&amp;utm_source=github&amp;utm_medium=one_click&amp;utm_content=open-connector"><strong>One-click deploy</strong></a>
+        <a href="../zopday.md"><strong>Deploy guide</strong></a>
       </td>
     </tr>
   </tbody>

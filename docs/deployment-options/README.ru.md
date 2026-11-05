@@ -162,19 +162,17 @@
         <a href="https://zop.dev/"><img src="../../assets/deployment-options/zopday.svg" alt="ZopDay" width="140"></a>
       </td>
       <td valign="top">
-        Развертывание в один клик запускает опубликованный образ
-        <code>ghcr.io/oomol-lab/open-connector</code> с собственным HTTPS-адресом. ZopDay создает
-        контейнер, обеспечивает TLS и предоставляет панель управления. OAuth-приложения регистрируются
-        самостоятельно.
+        Запустите опубликованный образ <code>ghcr.io/oomol-lab/open-connector</code> с HTTPS и панелью управления.
+        Перед первым запуском настройте публичный URL, токены аутентификации, ключ шифрования и постоянное хранилище.
+        OAuth-приложения регистрируются самостоятельно.
         <br><br>
-        <strong>Преимущества:</strong> развертывание из Docker-образа в один клик, панель управления
-        контейнерами и Helm Charts для собственной облачной инфраструктуры.
+        <strong>Преимущества:</strong> панель управления контейнерами и развертывание через Helm в собственном облаке.
         <br><br>
         <strong>Цена:</strong> см.
         <a href="https://zop.dev/zopday#pricing">тарифы ZopDay</a>.
       </td>
       <td valign="middle" align="center">
-        <a href="https://zop.dev/zopday/app/deploy?image=ghcr.io/oomol-lab/open-connector&amp;port=3000&amp;name=open-connector&amp;utm_source=github&amp;utm_medium=one_click&amp;utm_content=open-connector"><strong>Развернуть в один клик</strong></a>
+        <a href="../zopday.md"><strong>Руководство по развертыванию (англ.)</strong></a>
       </td>
     </tr>
   </tbody>

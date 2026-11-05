@@ -149,16 +149,16 @@ platform では OAuth app を自分で登録する必要があります。マネ
         <a href="https://zop.dev/"><img src="../../assets/deployment-options/zopday.svg" alt="ZopDay" width="140"></a>
       </td>
       <td valign="top">
-        公開済みの <code>ghcr.io/oomol-lab/open-connector</code> イメージを専用の HTTPS
-        アドレスで実行するワンクリックデプロイです。ZopDay がコンテナのプロビジョニング、TLS の処理、管理ダッシュボードの提供を行います。OAuth アプリの登録はご自身で行います。
+        公開済みの <code>ghcr.io/oomol-lab/open-connector</code> イメージを HTTPS と管理ダッシュボード付きで実行できます。
+        初回起動前に公開 URL、認証トークン、暗号化キー、永続ストレージを設定してください。OAuth アプリの登録はご自身で行います。
         <br><br>
-        <strong>利点:</strong> Docker イメージからのワンクリックデプロイ、コンテナ管理ダッシュボード、自社クラウド環境向けの Helm Charts。
+        <strong>利点:</strong> コンテナ管理ダッシュボードと、自社クラウドでの Helm デプロイ。
         <br><br>
         <strong>料金:</strong>
         <a href="https://zop.dev/zopday#pricing">ZopDay の料金</a> を参照してください。
       </td>
       <td valign="middle" align="center">
-        <a href="https://zop.dev/zopday/app/deploy?image=ghcr.io/oomol-lab/open-connector&amp;port=3000&amp;name=open-connector&amp;utm_source=github&amp;utm_medium=one_click&amp;utm_content=open-connector"><strong>ワンクリックデプロイ</strong></a>
+        <a href="../zopday.md"><strong>デプロイガイド（英語）</strong></a>
       </td>
     </tr>
   </tbody>

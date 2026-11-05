@@ -165,19 +165,18 @@ les apps OAuth ; OOMOL hébergé est le chemin qui inclut l'OAuth géré.
         <a href="https://zop.dev/"><img src="../../assets/deployment-options/zopday.svg" alt="ZopDay" width="140"></a>
       </td>
       <td valign="top">
-        Déploiement en un clic qui exécute l'image publiée
-        <code>ghcr.io/oomol-lab/open-connector</code> avec sa propre adresse HTTPS. ZopDay
-        provisionne un conteneur, gère le TLS et fournit un tableau de bord de gestion. Vous
-        enregistrez les applications OAuth vous-même.
+        Exécutez l'image publiée <code>ghcr.io/oomol-lab/open-connector</code> avec HTTPS et un
+        tableau de bord de gestion. Avant le premier démarrage, configurez l'URL publique,
+        les jetons d'authentification, la clé de chiffrement et le stockage persistant.
+        Vous enregistrez les applications OAuth vous-même.
         <br><br>
-        <strong>Avantages :</strong> déploiement en un clic depuis l'image Docker, tableau de bord
-        de gestion des conteneurs, et Helm Charts disponibles pour les environnements cloud privés.
+        <strong>Avantages :</strong> tableau de bord de gestion des conteneurs et déploiements Helm dans votre propre cloud.
         <br><br>
         <strong>Prix :</strong> voir
         <a href="https://zop.dev/zopday#pricing">les tarifs ZopDay</a>.
       </td>
       <td valign="middle" align="center">
-        <a href="https://zop.dev/zopday/app/deploy?image=ghcr.io/oomol-lab/open-connector&amp;port=3000&amp;name=open-connector&amp;utm_source=github&amp;utm_medium=one_click&amp;utm_content=open-connector"><strong>Déployer en un clic</strong></a>
+        <a href="../zopday.md"><strong>Guide de déploiement (anglais)</strong></a>
       </td>
     </tr>
   </tbody>
