@@ -232,7 +232,23 @@ The MCP server exposes a small discovery-oriented tool set:
 - `get_action_guide`
 - `execute_action`
 
-Use `list_connections` to discover configured accounts before selecting one. Both
+Start with `search_actions({ "query": "create issue", "service": "github" })`.
+The query must be nonempty (up to 256 characters). Search returns at most 5 compact
+summaries by default (`limit`: 1–20), with `id`, `description`, and `available`.
+Actions denied by policy are omitted before applying the limit. Availability uses
+known local execution and connection state; it does not validate credentials upstream.
+Schemas are loaded only when requesting a guide or executing an action.
+
+`list_apps` browses provider names, optionally filtered by `query`. Providers with
+no policy-allowed actions are omitted. `list_connections` requires a `service` and
+returns account labels, connection names, default selection, and availability.
+Virtual no-auth entries are omitted because they require no account selection.
+Both lists accept `limit` (default 20, maximum 50) and return a top-level
+`nextCursor` beside `ok` and `data`. Pass that cursor with the same filters to read
+the next page; `null` marks the end. Pages are not snapshots across catalog or
+connection changes. Text and structured MCP content contain the same page.
+
+Use `list_connections` when choosing among accounts for a service. Both
 `get_action_guide` and `execute_action` accept an optional `connectionName`:
 
 `get_action_guide` request:
@@ -260,9 +276,8 @@ Omitting `connectionName` uses the `default` connection. A requested named conne
 the runtime does not silently fall back to another account. Connection results expose only safe
 account identity fields and never include stored credentials. Persistent tokens with a non-empty
 `allowedConnections` list see only those connections in `list_connections` and related discovery;
-`list_apps` omits a provider's default connection identity when that connection's ID is not
-granted. `get_action_guide` and `execute_action` deny ungranted credential connections before lookup.
-Virtual `no_auth` connections remain available.
+`list_apps` contains no account identity. `get_action_guide` and `execute_action` deny ungranted credential connections before lookup.
+No-auth actions remain executable without selecting a connection.
 
 Action input validation runs before credential resolution and provider executor loading. Schema
 errors return `invalid_input` without refreshing OAuth credentials. MCP validation errors include

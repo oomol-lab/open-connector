@@ -19,6 +19,7 @@ export interface ActionSearchOptions {
   fuzzy?: number;
   prefix?: boolean;
   service?: string;
+  acceptsAction?: (actionId: string) => boolean;
 }
 
 export interface ActionSearchIndexProvider {
@@ -232,7 +233,13 @@ export function searchActions(
   query: string,
   options: ActionSearchOptions = {},
 ): ActionSearchDocument[] {
-  const { limit = DEFAULT_ACTION_SEARCH_LIMIT, fuzzy = DEFAULT_ACTION_SEARCH_FUZZY, prefix = true, service } = options;
+  const {
+    limit = DEFAULT_ACTION_SEARCH_LIMIT,
+    fuzzy = DEFAULT_ACTION_SEARCH_FUZZY,
+    prefix = true,
+    service,
+    acceptsAction,
+  } = options;
   const results = index.search(query, {
     fuzzy,
     prefix,
@@ -240,7 +247,10 @@ export function searchActions(
     boost: DEFAULT_ACTION_SEARCH_BOOST,
     weights: { fuzzy: 0.5, prefix: 0.1 },
     processTerm: searchProcessTerm,
-    filter: service ? (result) => result.service === service : undefined,
+    filter:
+      service || acceptsAction
+        ? (result) => (!service || result.service === service) && (!acceptsAction || acceptsAction(result.id as string))
+        : undefined,
   });
   return results.slice(0, limit).map(toActionSearchResult);
 }

@@ -173,10 +173,11 @@ export class ConnectionService {
     this.marketplace = input.marketplace;
   }
 
-  async listConnections(): Promise<ConnectionSummary[]> {
+  async listConnections(services?: ReadonlySet<string>): Promise<ConnectionSummary[]> {
     const configured = await this.store.list();
     const configuredByService = new Map<string, StoredConnection[]>();
     for (const connection of configured) {
+      if (services && !services.has(connection.service)) continue;
       const serviceConnections = configuredByService.get(connection.service) ?? [];
       serviceConnections.push(connection);
       configuredByService.set(connection.service, serviceConnections);
@@ -184,7 +185,9 @@ export class ConnectionService {
 
     const preferences = await this.loadProviderPreferences();
     return this.catalog.providers.flatMap((provider) =>
-      this.summarizeProviderConnections(provider, configuredByService.get(provider.service) ?? [], preferences),
+      !services || services.has(provider.service)
+        ? this.summarizeProviderConnections(provider, configuredByService.get(provider.service) ?? [], preferences)
+        : [],
     );
   }
 

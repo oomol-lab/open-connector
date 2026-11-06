@@ -173,6 +173,25 @@ describe("ConnectionService", () => {
     expect(list).not.toHaveBeenCalled();
   });
 
+  it("batches selected services in one store read without changing unfiltered listings", async () => {
+    const store = new MemoryConnectionStore();
+    await store.set("uptimerobot", "work", {
+      authType: "api_key",
+      apiKey: "secret",
+      values: {},
+      profile: testProfile,
+      metadata: {},
+    });
+    const service = createService([apiKeyProvider, hackernewsProvider], { store });
+    const all = await service.listConnections();
+    expect(all.map((connection) => connection.service)).toEqual(["hackernews", "uptimerobot"]);
+    const list = vi.spyOn(store, "list");
+    const selected = await service.listConnections(new Set(["uptimerobot"]));
+    expect(selected).toEqual(all.filter((connection) => connection.service === "uptimerobot"));
+    expect(list).toHaveBeenCalledOnce();
+    await expect(service.listConnections(new Set())).resolves.toEqual([]);
+  });
+
   it("rejects connections for providers unavailable in the current runtime", async () => {
     const service = createService([catalogOnlyProvider]);
 
