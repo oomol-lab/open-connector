@@ -10,7 +10,7 @@ import { Hono } from "hono";
 import { optionalString } from "../../core/cast.ts";
 import { withClientLock } from "../oauth/client-lock.ts";
 import { isValidRedirectUri } from "../oauth/client-metadata.ts";
-import { accessScope, supportedScopes } from "../oauth/config.ts";
+import { supportedScopes } from "../oauth/config.ts";
 import { hashToken, randomToken } from "../oauth/jwks.ts";
 import { jsonError, readJsonBody } from "./http-utils.ts";
 
@@ -76,7 +76,7 @@ export function createOAuthClientRoutes({ clients, codes, tokens, runtimeTokens 
       clientName: input.clientName ?? "",
       registrationType: "manual",
       redirectUris: input.redirectUris ?? [],
-      scopes: input.scopes ?? [accessScope],
+      scopes: input.scopes ?? [...supportedScopes],
       tokenEndpointAuthMethod: input.tokenEndpointAuthMethod ?? "client_secret_basic",
       clientSecretHash: clientSecret === undefined ? undefined : hashToken(clientSecret),
       createdAt: new Date().toISOString(),

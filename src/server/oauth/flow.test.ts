@@ -510,3 +510,75 @@ describe("consent scope enforcement", () => {
     expect(tokens).not.toHaveProperty("refresh_token");
   });
 });
+
+describe("oauth client scope defaults", () => {
+  it("registers a DCR client without scope with all supported scopes and authorizes offline access", async () => {
+    const { app } = await setup();
+    const registered = await app.request(`${ISSUER}/oauth/mcp/register`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        client_name: "ChatGPT",
+        redirect_uris: [REDIRECT],
+        token_endpoint_auth_method: "none",
+      }),
+    });
+    expect(registered.status).toBe(201);
+    const registration = await readJson(registered);
+    expect(registration.scopes).toEqual(["mcp:access", "offline_access"]);
+
+    // ChatGPT requests both scopes at authorize; this must not fail with invalid_scope.
+    const { verifier } = pkcePair();
+    const { location } = await authorizeAndApprove(app, String(registration.client_id));
+    const tokenResponse = await exchangeCode(
+      app,
+      String(registration.client_id),
+      location.searchParams.get("code") ?? "",
+      verifier,
+    );
+    expect(tokenResponse.status).toBe(200);
+  });
+
+  it("registers an explicit scope subset restricted to that subset", async () => {
+    const { app } = await setup();
+    const registered = await app.request(`${ISSUER}/oauth/mcp/register`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        client_name: "Restricted client",
+        redirect_uris: [REDIRECT],
+        token_endpoint_auth_method: "none",
+        scope: "mcp:access",
+      }),
+    });
+    expect(registered.status).toBe(201);
+    const registration = await readJson(registered);
+    expect(registration.scopes).toEqual(["mcp:access"]);
+
+    const { challenge } = pkcePair();
+    const authorizeUrl = new URL(`${ISSUER}/oauth/mcp/authorize`);
+    authorizeUrl.searchParams.set("response_type", "code");
+    authorizeUrl.searchParams.set("client_id", String(registration.client_id));
+    authorizeUrl.searchParams.set("redirect_uri", REDIRECT);
+    authorizeUrl.searchParams.set("scope", "mcp:access offline_access");
+    authorizeUrl.searchParams.set("code_challenge", challenge);
+    authorizeUrl.searchParams.set("code_challenge_method", "S256");
+    const response = await app.request(authorizeUrl, { redirect: "manual" });
+    expect(response.status).toBe(302);
+    const redirect = new URL(response.headers.get("location") ?? "");
+    expect(redirect.searchParams.get("error")).toBe("invalid_scope");
+  });
+});
+
+describe("consent-minted runtime token policy", () => {
+  it("mints the backing runtime token with no additional action restriction", async () => {
+    const { app, database } = await setup();
+    const { clientId } = await createManualClient(app);
+    const { location } = await authorizeAndApprove(app, clientId);
+    expect(location.searchParams.get("code")).toBeTruthy();
+    const backingTokenId = (await database.oauthCodeStore.listByClient(clientId))[0]?.runtimeTokenId;
+    expect(backingTokenId).toBeTruthy();
+    const backing = await database.runtimeTokenStore.findById(backingTokenId as string);
+    expect(backing?.allowedActions).toEqual([]);
+  });
+});

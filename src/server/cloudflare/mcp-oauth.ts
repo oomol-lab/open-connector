@@ -134,7 +134,10 @@ export function createMcpOAuthHandler(origin: string, runtime: RuntimeHandler): 
           const client = await oauth.describeConsent(approved.request);
           const tokens = runtimeTokens(env);
           const backing = await tokens.createToken(`MCP OAuth • ${client.clientName.slice(0, 120)}`, {
-            allowedActions: ["*"],
+            // No additional restriction: authorization is governed by the
+            // deployment and runtime policy layers, exactly like a manually
+            // created token.
+            allowedActions: [],
             blockedActions: [],
             allowedProxies: [],
             allowedConnections: [],

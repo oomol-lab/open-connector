@@ -384,7 +384,9 @@ export async function handleAuthorizePost(context: Context, deps: AuthorizeDepen
       });
     }
     const backing = await deps.runtimeTokens.createToken(`MCP OAuth • ${current.clientName.slice(0, 120)}`, {
-      allowedActions: ["*"],
+      // No additional restriction: authorization is governed by the deployment
+      // and runtime policy layers, exactly like a manually created token.
+      allowedActions: [],
       blockedActions: [],
       allowedProxies: [],
       allowedConnections: [],
