@@ -169,7 +169,7 @@ describe("Metabase REST compatibility", () => {
           : { tools: [] };
       return Response.json({ jsonrpc: "2.0", id: request.id, result });
     });
-    await expect(executors["metabase.list_mcp_tools"]!({}, { getCredential })).resolves.toMatchObject({
+    await expect(executors["metabase.list_tools"]!({}, { getCredential })).resolves.toMatchObject({
       ok: true,
       output: { tools: [] },
     });
@@ -185,7 +185,7 @@ describe("Metabase REST compatibility", () => {
       ok: true,
       output: { user: { id: 1 } },
     });
-    await expect(executors["metabase.list_mcp_tools"]!({}, context)).resolves.toMatchObject({ ok: false });
+    await expect(executors["metabase.list_tools"]!({}, context)).resolves.toMatchObject({ ok: false });
   });
 
   it("retains HTTPS public-only URL policy even with the deployment private-network flag enabled", () => {
@@ -208,7 +208,7 @@ describe("Metabase REST compatibility", () => {
   it("rejects missing credentials for both REST and MCP before egress", async () => {
     const fetcher = vi.fn();
     vi.stubGlobal("fetch", fetcher);
-    for (const name of ["get_current_user", "list_mcp_tools"])
+    for (const name of ["get_current_user", "list_tools"])
       await expect(executors[`metabase.${name}`]!({}, { getCredential: async () => undefined })).resolves.toMatchObject(
         { ok: false },
       );
