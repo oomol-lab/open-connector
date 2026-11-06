@@ -171,8 +171,8 @@ function readPostizCollection(value: unknown, label: string): unknown[] {
  * removed. The `/api/public/v1` suffix is appended when missing so both the
  * bare instance root (https://postiz.example.com) and a reverse-proxy path
  * prefix (https://postiz.example.com/api) resolve to the public API, matching
- * the documented self-hosted base URL. Private/overlay targets are only
- * accepted when the deployment opts in through
+ * the documented self-hosted base URL. Plain-HTTP and private/overlay targets
+ * are only accepted when the deployment opts in through
  * `OOMOL_CONNECT_ALLOW_PRIVATE_NETWORK`.
  */
 function normalizePostizApiBaseUrl(value: unknown): string {
@@ -180,13 +180,17 @@ function normalizePostizApiBaseUrl(value: unknown): string {
   if (!instanceUrl) {
     return defaultPostizApiBaseUrl;
   }
+  const allowPrivateNetwork = isPrivateNetworkAccessAllowed();
   const url = assertPublicHttpUrl(instanceUrl, {
     fieldName: "baseUrl",
     createError: providerInputError,
-    allowPrivateNetwork: isPrivateNetworkAccessAllowed(),
+    allowPrivateNetwork,
   });
   if (url.username || url.password) {
     throw providerInputError("baseUrl must not include credentials");
+  }
+  if (url.protocol === "http:" && !allowPrivateNetwork) {
+    throw providerInputError("baseUrl must use https");
   }
   url.hash = "";
   url.search = "";

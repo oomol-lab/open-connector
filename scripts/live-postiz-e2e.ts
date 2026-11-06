@@ -38,63 +38,68 @@ function step(name: string, ok: boolean, detail: unknown): void {
 }
 
 await withProviderNetworkPolicy({ allowPrivateNetwork: true }, async () => {
-// 1. Credential validation against <base>/api/public/v1/is-connected.
-const validation = await (credentialValidators.apiKey!(
-  { apiKey, values: { apiKey, baseUrl } },
-  { fetcher: globalThis.fetch },
-) as Promise<{ metadata: { apiBaseUrl: string } }>)
-  .then((r) => ({ ok: true as const, r }), (e: Error) => ({ ok: false as const, e }));
-step(
-  "validate /is-connected",
-  validation.ok && String(validation.r.metadata.apiBaseUrl).endsWith("/api/public/v1"),
-  validation.ok ? validation.r.metadata : validation.e.message,
-);
-const liveBaseUrl = validation.ok ? String(validation.r.metadata.apiBaseUrl) : null;
+  // 1. Credential validation against <base>/api/public/v1/is-connected.
+  const validation = await (
+    credentialValidators.apiKey!({ apiKey, values: { apiKey, baseUrl } }, { fetcher: globalThis.fetch }) as Promise<{
+      metadata: { apiBaseUrl: string };
+    }>
+  ).then(
+    (r) => ({ ok: true as const, r }),
+    (e: Error) => ({ ok: false as const, e }),
+  );
+  step(
+    "validate /is-connected",
+    validation.ok && String(validation.r.metadata.apiBaseUrl).endsWith("/api/public/v1"),
+    validation.ok ? validation.r.metadata : validation.e.message,
+  );
+  const liveBaseUrl = validation.ok ? String(validation.r.metadata.apiBaseUrl) : null;
 
-// 2. list_integrations — real channels come back.
-const integrations = await executors["postiz.list_integrations"]!({}, context);
-const integrationList = Array.isArray(integrations.output) ? (integrations.output as Array<Record<string, unknown>>) : [];
-step(
-  "list_integrations",
-  integrations.ok && Array.isArray(integrations.output),
-  integrations.ok ? integrationList.map((i) => `${i.name} (${i.identifier})`) : integrations.error,
-);
+  // 2. list_integrations — real channels come back.
+  const integrations = await executors["postiz.list_integrations"]!({}, context);
+  const integrationList = Array.isArray(integrations.output)
+    ? (integrations.output as Array<Record<string, unknown>>)
+    : [];
+  step(
+    "list_integrations",
+    integrations.ok && Array.isArray(integrations.output),
+    integrations.ok ? integrationList.map((i) => `${i.name} (${i.identifier})`) : integrations.error,
+  );
 
-// 3. Raw proxy passthrough.
-const proxied = await proxy({ method: "GET", endpoint: "/integrations" }, context);
-step("proxy GET /integrations", proxied.ok, proxied.ok ? undefined : proxied.error);
+  // 3. Raw proxy passthrough.
+  const proxied = await proxy({ method: "GET", endpoint: "/integrations" }, context);
+  step("proxy GET /integrations", proxied.ok, proxied.ok ? undefined : proxied.error);
 
-// 4. list_posts over a short past window.
-const now = new Date();
-const start = new Date(now.getTime() - 7 * 24 * 3600 * 1000);
-const posts = await executors["postiz.list_posts"]!(
-  { startDate: start.toISOString(), endDate: now.toISOString() },
-  context,
-);
-step("list_posts", posts.ok, posts.ok ? "ok" : posts.error);
-
-// 5. Optional draft post (never publishes; requires a channel id).
-const draftChannel = process.env.POSTIZ_DRAFT_CHANNEL;
-if (draftChannel && integrationList.some((i) => i.id === draftChannel)) {
-  const created = await executors["postiz.create_post"]!(
-    {
-      type: "draft",
-      date: new Date(now.getTime() + 3600 * 1000).toISOString(),
-      shortLink: false,
-      tags: [],
-      posts: [
-        {
-          integration: { id: draftChannel },
-          value: [{ content: "open-connector postiz provider: self-hosted base URL end-to-end check", image: [] }],
-        },
-      ],
-    },
+  // 4. list_posts over a short past window.
+  const now = new Date();
+  const start = new Date(now.getTime() - 7 * 24 * 3600 * 1000);
+  const posts = await executors["postiz.list_posts"]!(
+    { startDate: start.toISOString(), endDate: now.toISOString() },
     context,
   );
-  step("create_post (draft)", created.ok, created.ok ? created.output : created.error);
-} else {
-  console.log("SKIP  create_post (draft)  POSTIZ_DRAFT_CHANNEL not set or unknown channel");
-}
+  step("list_posts", posts.ok, posts.ok ? "ok" : posts.error);
+
+  // 5. Optional draft post (never publishes; requires a channel id).
+  const draftChannel = process.env.POSTIZ_DRAFT_CHANNEL;
+  if (draftChannel && integrationList.some((i) => i.id === draftChannel)) {
+    const created = await executors["postiz.create_post"]!(
+      {
+        type: "draft",
+        date: new Date(now.getTime() + 3600 * 1000).toISOString(),
+        shortLink: false,
+        tags: [],
+        posts: [
+          {
+            integration: { id: draftChannel },
+            value: [{ content: "open-connector postiz provider: self-hosted base URL end-to-end check", image: [] }],
+          },
+        ],
+      },
+      context,
+    );
+    step("create_post (draft)", created.ok, created.ok ? created.output : created.error);
+  } else {
+    console.log("SKIP  create_post (draft)  POSTIZ_DRAFT_CHANNEL not set or unknown channel");
+  }
 
   console.log(`\nbase URL resolved to: ${liveBaseUrl ?? "(validation failed)"}`);
 });

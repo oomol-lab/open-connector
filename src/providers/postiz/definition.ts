@@ -5,7 +5,8 @@ import { postizActions } from "./actions.ts";
 export const provider: ProviderDefinition = {
   service: "postiz",
   displayName: "Postiz",
-  description: "List connected social channels and create, schedule, or publish posts through Postiz, cloud or self-hosted.",
+  description:
+    "List connected social channels and create, schedule, or publish posts through Postiz, cloud or self-hosted.",
   categories: ["Social", "Marketing"],
   authTypes: ["api_key"],
   auth: [

@@ -57,6 +57,15 @@ async function runEntryPoints(baseUrl?: string): Promise<Record<string, EntryPoi
   };
 }
 
+function expectAllRejected(outcomes: Record<string, EntryPointOutcome>, message?: string): void {
+  for (const [name, outcome] of Object.entries(outcomes)) {
+    expect(outcome, name).toMatchObject({ ok: false });
+    if (message !== undefined) {
+      expect(outcome.message, name).toContain(message);
+    }
+  }
+}
+
 async function executeWithFetch(
   action: string,
   input: Record<string, unknown>,
@@ -102,22 +111,16 @@ describe("postiz base URL resolution", () => {
   });
 
   it("keeps a reverse-proxy /api prefix and appends only /public/v1", async () => {
-    const result = await executeWithFetch(
-      "list_integrations",
-      {},
-      `${selfHostedInstanceUrl}/api`,
-      () => Response.json([]),
+    const result = await executeWithFetch("list_integrations", {}, `${selfHostedInstanceUrl}/api`, () =>
+      Response.json([]),
     );
     expect(result).toMatchObject({ ok: true });
     expect(result.urls).toEqual([`${selfHostedInstanceUrl}/api/public/v1/integrations`]);
   });
 
   it("keeps an already complete /api/public/v1 base URL", async () => {
-    const result = await executeWithFetch(
-      "list_integrations",
-      {},
-      `${selfHostedInstanceUrl}/api/public/v1/`,
-      () => Response.json([]),
+    const result = await executeWithFetch("list_integrations", {}, `${selfHostedInstanceUrl}/api/public/v1/`, () =>
+      Response.json([]),
     );
     expect(result).toMatchObject({ ok: true });
     expect(result.urls).toEqual([`${selfHostedInstanceUrl}/api/public/v1/integrations`]);
@@ -126,10 +129,7 @@ describe("postiz base URL resolution", () => {
   it("sends the API key as the raw Authorization header", async () => {
     const fetch = vi.fn(async (_input: RequestInfo | URL, _init?: RequestInit) => Response.json([]));
     vi.stubGlobal("fetch", fetch);
-    const credential = apiKeyCredential(selfHostedInstanceUrl) as Extract<
-      ResolvedCredential,
-      { authType: "api_key" }
-    >;
+    const credential = apiKeyCredential(selfHostedInstanceUrl) as Extract<ResolvedCredential, { authType: "api_key" }>;
     const result = await executors["postiz.list_integrations"]!({}, executionContext(credential));
     expect(result.ok).toBe(true);
     const headers = new Headers(fetch.mock.calls[0]![1]!.headers as HeadersInit);
@@ -139,11 +139,8 @@ describe("postiz base URL resolution", () => {
 
 describe("postiz action wiring", () => {
   it("passes the group filter and returns the integrations collection", async () => {
-    const result = await executeWithFetch(
-      "list_integrations",
-      { group: "grp_1" },
-      selfHostedInstanceUrl,
-      () => Response.json([{ id: "int_1", name: "Channel", identifier: "x" }]),
+    const result = await executeWithFetch("list_integrations", { group: "grp_1" }, selfHostedInstanceUrl, () =>
+      Response.json([{ id: "int_1", name: "Channel", identifier: "x" }]),
     );
     expect(result).toMatchObject({ ok: true });
     expect(result.urls![0]).toContain("group=grp_1");
@@ -162,11 +159,8 @@ describe("postiz action wiring", () => {
   });
 
   it("surfaces provider error messages from non-2FA responses", async () => {
-    const result = await executeWithFetch(
-      "list_integrations",
-      {},
-      selfHostedInstanceUrl,
-      () => Response.json({ message: "Unauthorized" }, { status: 401 }),
+    const result = await executeWithFetch("list_integrations", {}, selfHostedInstanceUrl, () =>
+      Response.json({ message: "Unauthorized" }, { status: 401 }),
     );
     expect(result.ok).toBe(false);
     expect(result.error?.message).toContain("Unauthorized");
@@ -175,15 +169,15 @@ describe("postiz action wiring", () => {
 
 describe("postiz credential validation", () => {
   it("confirms the key against /is-connected on the resolved base URL and stores it in metadata", async () => {
-    const fetch = vi.fn(async (_input: RequestInfo | URL, _init?: RequestInit) =>
-      Response.json({ connected: true }),
-    );
+    const fetch = vi.fn(async (_input: RequestInfo | URL, _init?: RequestInit) => Response.json({ connected: true }));
     vi.stubGlobal("fetch", fetch);
     const result = await credentialValidators.apiKey!(
       { apiKey: "postiz-test-key", values: { apiKey: "postiz-test-key", baseUrl: selfHostedInstanceUrl } },
       { fetcher: globalThis.fetch },
     );
-    expect(fetch.mock.calls.map(([url]) => String(url))).toEqual([`${selfHostedInstanceUrl}/api/public/v1/is-connected`]);
+    expect(fetch.mock.calls.map(([url]) => String(url))).toEqual([
+      `${selfHostedInstanceUrl}/api/public/v1/is-connected`,
+    ]);
     expect(result).toMatchObject({
       metadata: { apiBaseUrl: `${selfHostedInstanceUrl}/api/public/v1` },
       grantedScopes: [],
@@ -191,9 +185,7 @@ describe("postiz credential validation", () => {
   });
 
   it("rejects a key the instance does not confirm", async () => {
-    const fetch = vi.fn(async (_input: RequestInfo | URL, _init?: RequestInit) =>
-      Response.json({ connected: false }),
-    );
+    const fetch = vi.fn(async (_input: RequestInfo | URL, _init?: RequestInit) => Response.json({ connected: false }));
     vi.stubGlobal("fetch", fetch);
     await expect(
       credentialValidators.apiKey!(
@@ -235,6 +227,23 @@ describe("postiz private-network access", () => {
         `${lanInstanceUrl}/api/public/v1/integrations`,
         `${lanInstanceUrl}/api/public/v1/integrations`,
       ]);
+    });
+  });
+
+  it("rejects a plain-HTTP public host by default and reaches it once opted in", async () => {
+    const fetch = vi.fn(async (_input: RequestInfo | URL, _init?: RequestInit) => Response.json([]));
+    vi.stubGlobal("fetch", fetch);
+    setDefaultGuardedFetchDnsLookup(async () => [{ address: "93.184.216.34", family: 4 }]);
+
+    expectAllRejected(await runEntryPoints("http://selfhosted.example.org"), "baseUrl must use https");
+    expect(fetch).not.toHaveBeenCalled();
+
+    return withProviderNetworkPolicy({ allowPrivateNetwork: true }, async () => {
+      const outcomes = await runEntryPoints("http://selfhosted.example.org");
+      expect(outcomes).toMatchObject({ validate: { ok: true }, execute: { ok: true }, proxy: { ok: true } });
+      expect(outcomes.validate!.result).toMatchObject({
+        metadata: { apiBaseUrl: "http://selfhosted.example.org/api/public/v1" },
+      });
     });
   });
 
