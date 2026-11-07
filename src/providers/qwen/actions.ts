@@ -49,9 +49,10 @@ const speechTranscriptSchema = s.object(
   },
   { required: ["channelId", "text", "contentDuration", "sentences"] },
 );
-const qwenAudioTtsModelSchema = s.stringEnum("The Qwen-Audio 3.0 TTS model bound to the voice.", [
+const qwenAudioTtsModelSchema = s.stringEnum("The Qwen-Audio TTS model bound to the voice.", [
   "qwen-audio-3.0-tts-flash",
   "qwen-audio-3.0-tts-plus",
+  "qwen-audio-3.1-tts-plus",
 ]);
 const customVoiceSchema = s.object(
   "A Qwen-Audio custom voice.",
@@ -207,11 +208,11 @@ export const qwenActions: ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "generate_speech",
     operationType: "write",
-    description: "Generate speech with Qwen-Audio 3.0 TTS.",
+    description: "Generate speech with Qwen-Audio TTS.",
     inputSchema: s.actionInput(
       {
         model: s.withDefault(
-          s.stringEnum("The Qwen-Audio 3.0 TTS model.", ["qwen-audio-3.0-tts-flash", "qwen-audio-3.0-tts-plus"]),
+          s.stringEnum("The Qwen-Audio TTS model.", ["qwen-audio-3.0-tts-flash", "qwen-audio-3.0-tts-plus"]),
           "qwen-audio-3.0-tts-flash",
         ),
         text: s.string("The text to synthesize.", { minLength: 1 }),
@@ -265,7 +266,7 @@ export const qwenActions: ProviderActionDefinition[] = [
         enableAigcTag: s.boolean("Whether to embed an AIGC provenance tag in the generated audio."),
       },
       ["text"],
-      "A Qwen-Audio 3.0 speech synthesis request.",
+      "A Qwen-Audio speech synthesis request.",
     ),
     outputSchema: s.actionOutput(
       {
@@ -475,7 +476,7 @@ export const qwenActions: ProviderActionDefinition[] = [
   defineProviderAction(service, {
     name: "submit_speech_recognition",
     operationType: "write",
-    description: "Submit a Qwen-Audio 3.0 asynchronous audio or video transcription task.",
+    description: "Submit a Qwen-Audio asynchronous audio or video transcription task.",
     followUpActions: ["qwen.get_speech_recognition"],
     asyncLifecycle: {
       startActionId: "qwen.submit_speech_recognition",
@@ -530,14 +531,14 @@ export const qwenActions: ProviderActionDefinition[] = [
         }),
       },
       ["fileUrl"],
-      "A Qwen-Audio 3.0 file transcription request.",
+      "A Qwen-Audio file transcription request.",
     ),
     outputSchema: s.actionOutput({ taskId: speechTaskIdSchema }, "The submitted speech recognition task handle."),
   }),
   defineProviderAction(service, {
     name: "get_speech_recognition",
     operationType: "read",
-    description: "Retrieve a Qwen-Audio 3.0 transcription task and its normalized result.",
+    description: "Retrieve a Qwen-Audio transcription task and its normalized result.",
     asyncLifecycle: {
       startActionId: "qwen.submit_speech_recognition",
       statusActionId: "qwen.get_speech_recognition",
