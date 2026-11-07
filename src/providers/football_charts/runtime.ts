@@ -197,7 +197,7 @@ export async function readFootballChartsError(
     return new ProviderRequestError(400, message, details);
   }
   if (status === 401 || status === 403) {
-    return new ProviderRequestError(status, message, details);
+    return new ProviderRequestError(status, message, details, "provider_error");
   }
   if (status === 429) {
     return new ProviderRequestError(429, message, details, "rate_limited");

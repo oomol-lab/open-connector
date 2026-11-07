@@ -8,7 +8,7 @@ const coinId = s.string("The CoinGecko coin ID, such as bitcoin.");
 const currency = s.string("A CoinGecko quote-currency code, such as usd.");
 const cryptoOutput = s.looseObject("The CoinGecko market data returned by AIsa.");
 
-const getCryptoPricesAction: ActionDefinition = defineProviderAction(service, {
+export const getCryptoPricesAction: ActionDefinition = defineProviderAction(service, {
   name: "get_crypto_prices",
   operationType: "read",
   description: "Get current prices and optional market metrics for multiple coins.",
@@ -37,7 +37,7 @@ const getCryptoPricesAction: ActionDefinition = defineProviderAction(service, {
   outputSchema: cryptoOutput,
 });
 
-const listCryptoMarketsAction: ActionDefinition = defineProviderAction(service, {
+export const listCryptoMarketsAction: ActionDefinition = defineProviderAction(service, {
   name: "list_crypto_markets",
   operationType: "read",
   description: "List coin markets with price, capitalization, volume, and change metrics.",
@@ -65,7 +65,7 @@ const listCryptoMarketsAction: ActionDefinition = defineProviderAction(service, 
   outputSchema: s.array("The CoinGecko market rows.", s.looseObject("One coin market row.")),
 });
 
-const getCryptoCoinAction: ActionDefinition = defineProviderAction(service, {
+export const getCryptoCoinAction: ActionDefinition = defineProviderAction(service, {
   name: "get_crypto_coin",
   operationType: "read",
   description: "Get metadata, market data, and community signals for one coin.",
@@ -88,7 +88,7 @@ const getCryptoCoinAction: ActionDefinition = defineProviderAction(service, {
   outputSchema: cryptoOutput,
 });
 
-const getCryptoMarketChartAction: ActionDefinition = defineProviderAction(service, {
+export const getCryptoMarketChartAction: ActionDefinition = defineProviderAction(service, {
   name: "get_crypto_market_chart",
   operationType: "read",
   description: "Get price, market-cap, and volume history for a coin over a Unix-time range.",
@@ -107,7 +107,7 @@ const getCryptoMarketChartAction: ActionDefinition = defineProviderAction(servic
   outputSchema: cryptoOutput,
 });
 
-const getCryptoOhlcAction: ActionDefinition = defineProviderAction(service, {
+export const getCryptoOhlcAction: ActionDefinition = defineProviderAction(service, {
   name: "get_crypto_ohlc",
   operationType: "read",
   description: "Get open, high, low, and close price candles for one coin.",
@@ -128,7 +128,7 @@ const getCryptoOhlcAction: ActionDefinition = defineProviderAction(service, {
   ),
 });
 
-const getTokenPricesAction: ActionDefinition = defineProviderAction(service, {
+export const getTokenPricesAction: ActionDefinition = defineProviderAction(service, {
   name: "get_token_prices",
   operationType: "read",
   description: "Get current prices for token contracts on one asset platform.",
@@ -147,7 +147,7 @@ const getTokenPricesAction: ActionDefinition = defineProviderAction(service, {
   outputSchema: cryptoOutput,
 });
 
-const getTokenDataAction: ActionDefinition = defineProviderAction(service, {
+export const getTokenDataAction: ActionDefinition = defineProviderAction(service, {
   name: "get_token_data",
   operationType: "read",
   description: "Get CoinGecko metadata and market data for a token contract.",
@@ -159,7 +159,7 @@ const getTokenDataAction: ActionDefinition = defineProviderAction(service, {
   outputSchema: cryptoOutput,
 });
 
-const listCryptoExchangesAction: ActionDefinition = defineProviderAction(service, {
+export const listCryptoExchangesAction: ActionDefinition = defineProviderAction(service, {
   name: "list_crypto_exchanges",
   operationType: "read",
   description: "List exchanges ranked by trust score and trading volume.",
@@ -175,7 +175,7 @@ const listCryptoExchangesAction: ActionDefinition = defineProviderAction(service
   outputSchema: s.array("The CoinGecko exchanges.", s.looseObject("One exchange summary.")),
 });
 
-const listCryptoCategoriesAction: ActionDefinition = defineProviderAction(service, {
+export const listCryptoCategoriesAction: ActionDefinition = defineProviderAction(service, {
   name: "list_crypto_categories",
   operationType: "read",
   description: "List cryptocurrency categories and their aggregate market performance.",
@@ -188,26 +188,7 @@ const listCryptoCategoriesAction: ActionDefinition = defineProviderAction(servic
   outputSchema: s.array("The CoinGecko market categories.", s.looseObject("One category summary.")),
 });
 
-const getCryptoNewsAction: ActionDefinition = defineProviderAction(service, {
-  name: "get_crypto_news",
-  operationType: "read",
-  description: "Get recent cryptocurrency news with optional coin and language filters.",
-  requiredScopes: [],
-  inputSchema: s.object(
-    "Coin, language, article type, and pagination filters for crypto news.",
-    {
-      coinId,
-      language: s.string("The news language code."),
-      articleType: s.stringEnum("The CoinGecko news content type.", ["news", "guides"]),
-      page: s.integer("The one-based result page.", { minimum: 1 }),
-      perPage: s.integer("The maximum articles per page.", { minimum: 1 }),
-    },
-    { optional: ["coinId", "language", "articleType", "page", "perPage"] },
-  ),
-  outputSchema: cryptoOutput,
-});
-
-const getTrendingCryptoAction: ActionDefinition = defineProviderAction(service, {
+export const getTrendingCryptoAction: ActionDefinition = defineProviderAction(service, {
   name: "get_trending_crypto",
   operationType: "read",
   description: "Get coins, NFTs, and categories currently trending on CoinGecko.",
@@ -216,7 +197,7 @@ const getTrendingCryptoAction: ActionDefinition = defineProviderAction(service, 
   outputSchema: cryptoOutput,
 });
 
-export const cryptoActions: ActionDefinition[] = [
+export const cryptoActions: readonly ActionDefinition[] = [
   getCryptoPricesAction,
   listCryptoMarketsAction,
   getCryptoCoinAction,
@@ -226,6 +207,5 @@ export const cryptoActions: ActionDefinition[] = [
   getTokenDataAction,
   listCryptoExchangesAction,
   listCryptoCategoriesAction,
-  getCryptoNewsAction,
   getTrendingCryptoAction,
 ];

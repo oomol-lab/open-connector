@@ -48,13 +48,18 @@ function metabaseToolOutput(result: unknown): MetabaseToolOutput {
   return { result: parsed.value, notes: parsed.rest || undefined };
 }
 
-function parseLeadingJson(text: string): { value: unknown; rest: string } | undefined {
-  const ends = [...text.matchAll(/\n/g)].map((match) => match.index);
-  for (const end of [text.length, ...ends]) {
+interface LeadingJson {
+  value: unknown;
+  rest: string;
+}
+
+function parseLeadingJson(text: string): LeadingJson | undefined {
+  let end = text.length;
+  while (end !== -1) {
     try {
       return { value: JSON.parse(text.slice(0, end)) as unknown, rest: text.slice(end).trim() };
     } catch {
-      continue;
+      end = text.indexOf("\n", end === text.length ? 0 : end + 1);
     }
   }
   return undefined;
@@ -85,18 +90,29 @@ export const metabaseMcpHandlers: ProviderActionHandlerSubset<"metabase", Provid
     return { tools: tools.filter((tool) => wanted.includes(tool.name)) };
   },
   async call_tool(input, context) {
-    return metabaseToolOutput(
-      await callMcpTool({
-        ...metabaseMcpConnection(context),
-        toolName: requiredInputString(input.toolName, "toolName"),
-        arguments: optionalRecord(input.arguments) ?? {},
-      }),
-    );
+    const result = await callMcpTool({
+      ...metabaseMcpConnection(context),
+      toolName: requiredInputString(input.toolName, "toolName"),
+      arguments: optionalRecord(input.arguments) ?? {},
+    });
+    return metabaseToolOutput(result);
   },
   async list_mcp_resources(_input, context) {
-    const { resources } = await withMcpToolClient(metabaseMcpConnection(context), (client) =>
-      client.listResources({}, { signal: context.signal, timeout: requestTimeoutMs }),
-    );
+    const resources = await withMcpToolClient(metabaseMcpConnection(context), async (client) => {
+      const result = await client.listResources({}, { timeout: requestTimeoutMs });
+      const resources = [...result.resources];
+      let cursor = result.nextCursor;
+      const seen = new Set<string>();
+      while (cursor) {
+        if (seen.has(cursor) || seen.size >= 100)
+          throw providerResponseError("Metabase resource pagination did not terminate");
+        seen.add(cursor);
+        const page = await client.listResources({ cursor }, { timeout: requestTimeoutMs });
+        resources.push(...page.resources);
+        cursor = page.nextCursor;
+      }
+      return resources;
+    });
     return {
       resources: resources.map((resource) => ({
         uri: resource.uri,

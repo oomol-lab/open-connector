@@ -368,8 +368,8 @@ export const jsonSchema = {
 
   looseObject(
     propertiesOrDescription: Record<string, JsonSchema> | string = {},
-    optionsOrProperties: JsonSchemaOptions | Record<string, JsonSchema> = {},
-    maybeOptions: JsonSchemaOptions = {},
+    optionsOrProperties: ObjectOptions | Record<string, JsonSchema> = {},
+    maybeOptions: ObjectOptions = {},
   ): JsonSchema {
     const properties =
       typeof propertiesOrDescription === "string"
@@ -381,7 +381,7 @@ export const jsonSchema = {
             ...maybeOptions,
             description: propertiesOrDescription,
           }
-        : (optionsOrProperties as JsonSchemaOptions);
+        : (optionsOrProperties as ObjectOptions);
     return this.object(properties, { ...resolvedOptions, additionalProperties: true });
   },
 

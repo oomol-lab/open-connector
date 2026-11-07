@@ -15,6 +15,7 @@ import { defineProviderProxy } from "../provider-proxy.ts";
 import { ProviderRequestError, requiredResponseRecord } from "../provider-runtime.ts";
 import { bulkHandlers } from "./bulk.ts";
 import { catalogHandlers } from "./catalog.ts";
+import { createShopifyClientCredentialsTokenSource } from "./client-credentials.ts";
 import { buildShopifyApiBaseUrl, requestShopifyGraphQL } from "./client.ts";
 import { contentActionHandlers } from "./content-runtime.ts";
 import { customersHandlers } from "./customers.ts";
@@ -28,6 +29,7 @@ import { shopHandlers } from "./shop.ts";
 import { shopifyShopEvent } from "./trigger-on-shop-event.ts";
 
 const service = "shopify";
+const getClientCredentialsToken = createShopifyClientCredentialsTokenSource();
 
 export const executors: ProviderExecutors = defineProviderExecutors({
   service,
@@ -45,7 +47,7 @@ export const executors: ProviderExecutors = defineProviderExecutors({
   async createContext(context: ExecutionContext, fetcher: typeof fetch) {
     const credential = await requireShopifyCredential(context);
     return {
-      accessToken: shopifyAccessToken(credential),
+      accessToken: await shopifyAccessToken(credential, fetcher),
       shopDomain: shopifyCredentialDomain(credential),
       fetcher,
       signal: context.signal,
@@ -60,14 +62,24 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
     return buildShopifyApiBaseUrl(shopifyCredentialDomain(await requireShopifyCredential(context)));
   },
   auth: { type: "none" },
-  async customizeRequest({ context, headers }) {
+  async customizeRequest({ context, headers, fetcher }) {
     headers.set("accept", "application/json");
     headers.set("content-type", "application/json");
-    headers.set("x-shopify-access-token", shopifyAccessToken(await requireShopifyCredential(context)));
+    headers.set("x-shopify-access-token", await shopifyAccessToken(await requireShopifyCredential(context), fetcher));
   },
 });
 
 export const credentialValidators: CredentialValidators = {
+  async customCredential(input, { fetcher, signal }) {
+    const token = await getClientCredentialsToken(input.values, fetcher);
+    return validateShopifyCredential(
+      token.accessToken,
+      token.shopDomain,
+      parseShopifyScopes(token.providerScopes.join(",")),
+      fetcher,
+      signal,
+    );
+  },
   apiKey(input, { fetcher, signal }) {
     return validateShopifyCredential(
       input.apiKey,
@@ -88,22 +100,28 @@ export const credentialValidators: CredentialValidators = {
   },
 };
 
-type ShopifyCredential = Exclude<ResolvedCredential, { authType: "no_auth" | "custom_credential" }>;
+type ShopifyCredential = Exclude<ResolvedCredential, { authType: "no_auth" }>;
 
 async function requireShopifyCredential(context: ExecutionContext): Promise<ShopifyCredential> {
   const credential = await context.getCredential(service);
-  if (credential?.authType === "api_key" || credential?.authType === "oauth2") {
+  if (
+    credential?.authType === "api_key" ||
+    credential?.authType === "oauth2" ||
+    credential?.authType === "custom_credential"
+  ) {
     return credential;
   }
   throw new ProviderRequestError(401, "Configure Shopify credentials first.");
 }
 
-function shopifyAccessToken(credential: ShopifyCredential): string {
+async function shopifyAccessToken(credential: ShopifyCredential, fetcher: typeof fetch): Promise<string> {
+  if (credential.authType === "custom_credential")
+    return (await getClientCredentialsToken(credential.values, fetcher)).accessToken;
   return credential.authType === "api_key" ? credential.apiKey : credential.accessToken;
 }
 
 function shopifyCredentialDomain(credential: ShopifyCredential): string {
-  if (credential.authType === "api_key") {
+  if (credential.authType === "api_key" || credential.authType === "custom_credential") {
     return normalizeShopDomain(optionalString(credential.values.shopDomain));
   }
   const clientExtra = optionalRecord(credential.metadata.oauthClientExtra);

@@ -354,7 +354,7 @@ export function createConsoleOAuthRoutes({
 
   app.get("/oauth/callback", async (context) => {
     const state = context.req.query("state");
-    const code = context.req.query("code");
+    const code = context.req.query("code") ?? context.req.query("spapi_oauth_code");
     const logContext = {
       path: context.req.path,
       hasState: Boolean(state),

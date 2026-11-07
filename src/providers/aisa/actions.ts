@@ -11,7 +11,10 @@ import { dataForSeoActions } from "./dataforseo-actions.ts";
 import { dataForSeoReferenceAction } from "./dataforseo-reference-actions.ts";
 import { dataForSeoResearchActions } from "./dataforseo-research-actions.ts";
 import { financialActions } from "./financial-actions.ts";
+import { financialResearchActions } from "./financial-research-actions.ts";
 import { aisaFirecrawlActions } from "./firecrawl-actions.ts";
+import { fredActions } from "./fred-actions.ts";
+import { redditActions } from "./reddit-actions.ts";
 import { seoActions } from "./seo-actions.ts";
 import { similarwebActions } from "./similarweb-actions.ts";
 import { socialActions } from "./social-actions.ts";
@@ -236,40 +239,6 @@ const polymarketEventsAction = defineProviderAction(service, {
   ),
 });
 
-const polymarketActivityAction = defineProviderAction(service, {
-  name: "get_polymarket_activity",
-  operationType: "read",
-  description: "Get one wallet's Polymarket split, merge, and redemption activity.",
-  requiredScopes: [],
-  inputSchema: s.object(
-    "Filters for getting one wallet's Polymarket activity through AIsa.",
-    {
-      user: s.string("The wallet address whose Polymarket activity should be returned.", {
-        pattern: "^0x[0-9a-fA-F]{40}$",
-      }),
-      startTimestamp: s.integer("Return activity at or after this Unix timestamp."),
-      endTimestamp: s.integer("Return activity at or before this Unix timestamp."),
-      marketSlug: s.string("The Polymarket market slug to filter by."),
-      conditionId: s.string("The Polymarket condition ID to filter by."),
-      limit: s.integer("The maximum number of activity records to return.", {
-        minimum: 1,
-        maximum: 1000,
-      }),
-      paginationKey: s.string("The pagination key returned by the previous response."),
-    },
-    {
-      optional: ["startTimestamp", "endTimestamp", "marketSlug", "conditionId", "limit", "paginationKey"],
-    },
-  ),
-  outputSchema: s.requiredObject("A page of Polymarket wallet activity returned by AIsa.", {
-    activities: s.array(
-      "The wallet activity records matching the filters.",
-      s.looseObject("A Polymarket split, merge, or redemption activity record."),
-    ),
-    pagination: s.looseObject("Pagination metadata, including the next pagination key when available."),
-  }),
-});
-
 const creditsBalanceAction = defineProviderAction(service, {
   name: "get_credits_balance",
   operationType: "read",
@@ -299,26 +268,28 @@ const usageAction = defineProviderAction(service, {
   outputSchema: s.looseObject("AIsa usage totals and daily buckets for the requested time window."),
 });
 
-export const aisaActions: ActionDefinition[] = [
-  ...ahrefsActions,
-  ...aktaActions,
-  dataForSeoReferenceAction,
-  ...dataForSeoResearchActions,
-  ...webActions,
-  ...aisaFirecrawlActions,
+export const aisaActions: readonly ActionDefinition[] = [
+  ...redditActions,
+  ...fredActions,
+  ...financialResearchActions,
   creditsBalanceAction,
   usageAction,
   kalshiMarketsAction,
   kalshiTradesAction,
   polymarketMarketsAction,
   polymarketEventsAction,
-  polymarketActivityAction,
   ...similarwebActions,
   ...creatorActions,
   ...seoActions,
+  ...ahrefsActions,
+  ...aktaActions,
   ...financialActions,
   ...dataForSeoActions,
+  ...dataForSeoResearchActions,
+  dataForSeoReferenceAction,
   ...cryptoActions,
   ...socialActions,
   ...apolloActions,
+  ...webActions,
+  ...aisaFirecrawlActions,
 ];

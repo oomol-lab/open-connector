@@ -319,7 +319,7 @@ async function resolveUploadSource(
     const file =
       name === transitFile.file.name && mimeType === transitFile.file.type
         ? transitFile.file
-        : new File([await transitFile.file.arrayBuffer()], name, { type: mimeType });
+        : new File([transitFile.file], name, { type: mimeType });
     assertUploadSourceSize(transitFile.sizeBytes);
     return { file };
   }
