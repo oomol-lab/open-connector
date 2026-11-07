@@ -16,7 +16,15 @@ import { fusionApiOperations } from "./operations.ts";
 
 export const fusionApiDefaultBaseUrl = "https://fusion-api.oomol.com";
 const fusionApiLongRunningRequestTimeoutMs = 300_000;
-const fusionApiLongRunningPaths = new Set(["/v1/deepseek-ocr/action/recognize", "/v1/jina-reader/action/read"]);
+const fusionApiLongRunningPaths = new Set([
+  "/v1/deepseek-ocr/action/recognize",
+  "/v1/jina-reader/action/read",
+  "/v1/qwen-voice-cloning/action/create",
+  "/v1/qwen-voice-design/action/create",
+  "/v1/qwen-voice-design/action/generate",
+  "/v1/qwen-tts/action/generate",
+  "/v1/cosyvoice-tts/action/generate",
+]);
 const fusionApiValidationPath = "/openapi/qwen-image?hideTaskStateAPI=true";
 
 type FusionApiActionContext = ApiKeyProviderContext;
