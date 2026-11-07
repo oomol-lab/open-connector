@@ -33,7 +33,8 @@ async function readResponse(response: Response): Promise<Record<string, unknown>
   let payload: Record<string, unknown>;
   try {
     payload = requiredResponseRecord(await response.json(), "TikTok Shop response");
-  } catch {
+  } catch (error) {
+    if (isAbortLikeError(error)) throw error;
     throw new ProviderRequestError(
       response.ok ? 502 : response.status,
       "TikTok Shop returned an invalid JSON response",

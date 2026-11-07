@@ -185,7 +185,7 @@ export function parseAlipayResponse(
       throw new ProviderRequestError(502, "Alipay response signature verification failed", undefined, "provider_error");
     }
   }
-  if (status >= 400 || code !== "10000") {
+  if (status < 200 || status >= 300 || code !== "10000") {
     let message = [code, optionalString(body.msg), optionalString(body.sub_code), optionalString(body.sub_msg)]
       .filter(Boolean)
       .join(": ");
@@ -205,8 +205,9 @@ export function requestAlipay(
   method: string,
   parameters: URLSearchParams,
   fetcher: typeof fetch,
+  callerSignal?: AbortSignal,
 ): Promise<Record<string, unknown>> {
-  return runProviderRequest({ label: "Alipay" }, async (signal) => {
+  return runProviderRequest({ label: "Alipay", signal: callerSignal }, async (signal) => {
     const response = await fetcher(credential.gateway, {
       method: "POST",
       headers: {

@@ -13,7 +13,7 @@ const slots = {
 
 describe("cal runtime reads the Cal.com v2 data envelope", () => {
   it.each([
-    ["list_event_types", {}, [eventType], { eventTypes: [eventType], nextCursor: null }],
+    ["list_event_types", {}, [eventType], { eventTypes: [eventType] }],
     ["get_event_type", { eventTypeId: 7466762 }, eventType, { eventType }],
     [
       "get_available_slots_info",
@@ -21,7 +21,7 @@ describe("cal runtime reads the Cal.com v2 data envelope", () => {
       slots,
       { slots },
     ],
-    ["list_bookings", {}, [booking], { bookings: [booking], nextCursor: null }],
+    ["list_bookings", {}, [booking], { bookings: [booking], pagination: null }],
     ["get_booking", { bookingUid: "booking-1" }, booking, { booking }],
     ["create_booking", { eventTypeId: 7466762, start: "2026-11-11T12:00:00.000Z" }, booking, { booking }],
     [
@@ -31,7 +31,7 @@ describe("cal runtime reads the Cal.com v2 data envelope", () => {
       { booking: [booking, booking] },
     ],
     ["cancel_booking", { bookingUid: "booking-1" }, booking, { booking }],
-    ["list_schedules", {}, [schedule], { schedules: [schedule], nextCursor: null }],
+    ["list_schedules", {}, [schedule], { schedules: [schedule] }],
     ["get_default_schedule", {}, schedule, { schedule }],
   ] as const)("returns the %s result from data", async (name, input, data, expected) => {
     const fetcher = stubCalResponse({ status: "success", data });

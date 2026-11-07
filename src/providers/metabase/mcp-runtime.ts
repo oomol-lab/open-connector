@@ -4,7 +4,12 @@ import type { MetabaseContext } from "./runtime.ts";
 
 import { objectArray, optionalRecord, optionalStringArray, requiredRawString } from "../../core/cast.ts";
 import { callMcpTool, listMcpTools, withMcpToolClient } from "../mcp-tools.ts";
-import { providerInputError, providerResponseError, requiredInputString } from "../provider-runtime.ts";
+import {
+  providerInputError,
+  providerResponseError,
+  requiredInputString,
+  runProviderRequest,
+} from "../provider-runtime.ts";
 
 const requestTimeoutMs = 60_000;
 
@@ -98,21 +103,25 @@ export const metabaseMcpHandlers: ProviderActionHandlerSubset<"metabase", Provid
     return metabaseToolOutput(result);
   },
   async list_mcp_resources(_input, context) {
-    const resources = await withMcpToolClient(metabaseMcpConnection(context), async (client) => {
-      const result = await client.listResources({}, { timeout: requestTimeoutMs });
-      const resources = [...result.resources];
-      let cursor = result.nextCursor;
-      const seen = new Set<string>();
-      while (cursor) {
-        if (seen.has(cursor) || seen.size >= 100)
-          throw providerResponseError("Metabase resource pagination did not terminate");
-        seen.add(cursor);
-        const page = await client.listResources({ cursor }, { timeout: requestTimeoutMs });
-        resources.push(...page.resources);
-        cursor = page.nextCursor;
-      }
-      return resources;
-    });
+    const resources = await runProviderRequest(
+      { label: "Metabase MCP", timeoutMs: requestTimeoutMs, signal: context.signal },
+      (signal) =>
+        withMcpToolClient({ ...metabaseMcpConnection(context), signal }, async (client) => {
+          const result = await client.listResources({}, { timeout: requestTimeoutMs, signal });
+          const resources = [...result.resources];
+          let cursor = result.nextCursor;
+          const seen = new Set<string>();
+          while (cursor) {
+            if (seen.has(cursor) || seen.size >= 100)
+              throw providerResponseError("Metabase resource pagination did not terminate");
+            seen.add(cursor);
+            const page = await client.listResources({ cursor }, { timeout: requestTimeoutMs, signal });
+            resources.push(...page.resources);
+            cursor = page.nextCursor;
+          }
+          return resources;
+        }),
+    );
     return {
       resources: resources.map((resource) => ({
         uri: resource.uri,

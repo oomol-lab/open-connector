@@ -169,29 +169,34 @@ export const incomeStatementsAction: ActionDefinition = defineProviderAction(ser
           "The exchange the ticker is listed on. Omit for US listings. Use `LSE` for the London Stock Exchange; any ticker of the company, including a second share class, returns the company's statements.",
       },
       filingDate: {
+        format: "date",
         type: "string",
         description:
-          'Filter by exact SEC filing date in YYYY-MM-DD format. Rows without a known filing date are excluded.\n\nProvider reference (supplier schema): `{"format":"date","type":"string"}`.',
+          "Filter by exact SEC filing date in YYYY-MM-DD format. Rows without a known filing date are excluded.",
       },
       filingDateGt: {
+        format: "date",
         type: "string",
         description:
-          'Filter by SEC filing date greater than date in YYYY-MM-DD format. Rows without a known filing date are excluded.\n\nProvider reference (supplier schema): `{"format":"date","type":"string"}`.',
+          "Filter by SEC filing date greater than date in YYYY-MM-DD format. Rows without a known filing date are excluded.",
       },
       filingDateGte: {
+        format: "date",
         type: "string",
         description:
-          'Filter by SEC filing date greater than or equal to date in YYYY-MM-DD format. Rows without a known filing date are excluded.\n\nProvider reference (supplier schema): `{"format":"date","type":"string"}`.',
+          "Filter by SEC filing date greater than or equal to date in YYYY-MM-DD format. Rows without a known filing date are excluded.",
       },
       filingDateLt: {
+        format: "date",
         type: "string",
         description:
-          'Filter by SEC filing date less than date in YYYY-MM-DD format. Rows without a known filing date are excluded.\n\nProvider reference (supplier schema): `{"format":"date","type":"string"}`.',
+          "Filter by SEC filing date less than date in YYYY-MM-DD format. Rows without a known filing date are excluded.",
       },
       filingDateLte: {
+        format: "date",
         type: "string",
         description:
-          'Filter by SEC filing date less than or equal to date in YYYY-MM-DD format. Useful for point-in-time queries: returns only data that was publicly filed by the given date. Rows without a known filing date are excluded.\n\nProvider reference (supplier schema): `{"format":"date","type":"string"}`.',
+          "Filter by SEC filing date less than or equal to date in YYYY-MM-DD format. Useful for point-in-time queries: returns only data that was publicly filed by the given date. Rows without a known filing date are excluded.",
       },
       isin: {
         type: "string",
@@ -214,29 +219,29 @@ export const incomeStatementsAction: ActionDefinition = defineProviderAction(ser
         description: "The reporting period to return.",
       },
       reportPeriod: {
+        format: "date",
         type: "string",
-        description:
-          'Filter by exact report period date in YYYY-MM-DD format.\n\nProvider reference (supplier schema): `{"format":"date","type":"string"}`.',
+        description: "Filter by exact report period date in YYYY-MM-DD format.",
       },
       reportPeriodGt: {
+        format: "date",
         type: "string",
-        description:
-          'Filter by report period greater than date in YYYY-MM-DD format.\n\nProvider reference (supplier schema): `{"format":"date","type":"string"}`.',
+        description: "Filter by report period greater than date in YYYY-MM-DD format.",
       },
       reportPeriodGte: {
+        format: "date",
         type: "string",
-        description:
-          'Filter by report period greater than or equal to date in YYYY-MM-DD format.\n\nProvider reference (supplier schema): `{"format":"date","type":"string"}`.',
+        description: "Filter by report period greater than or equal to date in YYYY-MM-DD format.",
       },
       reportPeriodLt: {
+        format: "date",
         type: "string",
-        description:
-          'Filter by report period less than date in YYYY-MM-DD format.\n\nProvider reference (supplier schema): `{"format":"date","type":"string"}`.',
+        description: "Filter by report period less than date in YYYY-MM-DD format.",
       },
       reportPeriodLte: {
+        format: "date",
         type: "string",
-        description:
-          'Filter by report period less than or equal to date in YYYY-MM-DD format.\n\nProvider reference (supplier schema): `{"format":"date","type":"string"}`.',
+        description: "Filter by report period less than or equal to date in YYYY-MM-DD format.",
       },
       ticker: {
         type: "string",
@@ -294,29 +299,34 @@ export const balanceSheetsAction: ActionDefinition = defineProviderAction(servic
           "The exchange the ticker is listed on. Omit for US listings. Use `LSE` for the London Stock Exchange; any ticker of the company, including a second share class, returns the company's statements.",
       },
       filingDate: {
+        format: "date",
         type: "string",
         description:
-          'Filter by exact SEC filing date in YYYY-MM-DD format. Rows without a known filing date are excluded.\n\nProvider reference (supplier schema): `{"format":"date","type":"string"}`.',
+          "Filter by exact SEC filing date in YYYY-MM-DD format. Rows without a known filing date are excluded.",
       },
       filingDateGt: {
+        format: "date",
         type: "string",
         description:
-          'Filter by SEC filing date greater than date in YYYY-MM-DD format. Rows without a known filing date are excluded.\n\nProvider reference (supplier schema): `{"format":"date","type":"string"}`.',
+          "Filter by SEC filing date greater than date in YYYY-MM-DD format. Rows without a known filing date are excluded.",
       },
       filingDateGte: {
+        format: "date",
         type: "string",
         description:
-          'Filter by SEC filing date greater than or equal to date in YYYY-MM-DD format. Rows without a known filing date are excluded.\n\nProvider reference (supplier schema): `{"format":"date","type":"string"}`.',
+          "Filter by SEC filing date greater than or equal to date in YYYY-MM-DD format. Rows without a known filing date are excluded.",
       },
       filingDateLt: {
+        format: "date",
         type: "string",
         description:
-          'Filter by SEC filing date less than date in YYYY-MM-DD format. Rows without a known filing date are excluded.\n\nProvider reference (supplier schema): `{"format":"date","type":"string"}`.',
+          "Filter by SEC filing date less than date in YYYY-MM-DD format. Rows without a known filing date are excluded.",
       },
       filingDateLte: {
+        format: "date",
         type: "string",
         description:
-          'Filter by SEC filing date less than or equal to date in YYYY-MM-DD format. Useful for point-in-time queries: returns only data that was publicly filed by the given date. Rows without a known filing date are excluded.\n\nProvider reference (supplier schema): `{"format":"date","type":"string"}`.',
+          "Filter by SEC filing date less than or equal to date in YYYY-MM-DD format. Useful for point-in-time queries: returns only data that was publicly filed by the given date. Rows without a known filing date are excluded.",
       },
       isin: {
         type: "string",
@@ -339,29 +349,29 @@ export const balanceSheetsAction: ActionDefinition = defineProviderAction(servic
         description: "The reporting period to return.",
       },
       reportPeriod: {
+        format: "date",
         type: "string",
-        description:
-          'Filter by exact report period date in YYYY-MM-DD format.\n\nProvider reference (supplier schema): `{"format":"date","type":"string"}`.',
+        description: "Filter by exact report period date in YYYY-MM-DD format.",
       },
       reportPeriodGt: {
+        format: "date",
         type: "string",
-        description:
-          'Filter by report period greater than date in YYYY-MM-DD format.\n\nProvider reference (supplier schema): `{"format":"date","type":"string"}`.',
+        description: "Filter by report period greater than date in YYYY-MM-DD format.",
       },
       reportPeriodGte: {
+        format: "date",
         type: "string",
-        description:
-          'Filter by report period greater than or equal to date in YYYY-MM-DD format.\n\nProvider reference (supplier schema): `{"format":"date","type":"string"}`.',
+        description: "Filter by report period greater than or equal to date in YYYY-MM-DD format.",
       },
       reportPeriodLt: {
+        format: "date",
         type: "string",
-        description:
-          'Filter by report period less than date in YYYY-MM-DD format.\n\nProvider reference (supplier schema): `{"format":"date","type":"string"}`.',
+        description: "Filter by report period less than date in YYYY-MM-DD format.",
       },
       reportPeriodLte: {
+        format: "date",
         type: "string",
-        description:
-          'Filter by report period less than or equal to date in YYYY-MM-DD format.\n\nProvider reference (supplier schema): `{"format":"date","type":"string"}`.',
+        description: "Filter by report period less than or equal to date in YYYY-MM-DD format.",
       },
       ticker: {
         type: "string",
@@ -769,9 +779,9 @@ export const insiderTradesAction: ActionDefinition = defineProviderAction(servic
         description: "The exact filing date in YYYY-MM-DD format.",
       },
       filingDateGt: {
+        format: "date",
         type: "string",
-        description:
-          'Filter by filing date greater than this date (YYYY-MM-DD).\n\nProvider reference (supplier schema): `{"format":"date","type":"string"}`.',
+        description: "Filter by filing date greater than this date (YYYY-MM-DD).",
       },
       filingDateFrom: {
         type: "string",
@@ -779,9 +789,9 @@ export const insiderTradesAction: ActionDefinition = defineProviderAction(servic
         description: "Return filings on or after this date.",
       },
       filingDateLt: {
+        format: "date",
         type: "string",
-        description:
-          'Filter by filing date less than this date (YYYY-MM-DD).\n\nProvider reference (supplier schema): `{"format":"date","type":"string"}`.',
+        description: "Filter by filing date less than this date (YYYY-MM-DD).",
       },
       filingDateTo: {
         type: "string",

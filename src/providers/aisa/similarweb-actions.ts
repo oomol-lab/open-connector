@@ -28,7 +28,7 @@ function similarwebOutput(description: string) {
   });
 }
 
-export const similarwebTrafficEngagementAction: ActionDefinition = defineProviderAction(service, {
+const similarwebTrafficEngagementAction: ActionDefinition = defineProviderAction(service, {
   name: "get_similarweb_traffic_engagement",
   operationType: "read",
   description: "Get monthly visits and engagement metrics for a website from Similarweb.",
@@ -50,7 +50,7 @@ export const similarwebTrafficEngagementAction: ActionDefinition = defineProvide
   outputSchema: similarwebOutput("Monthly Similarweb traffic and engagement measurements."),
 });
 
-export const similarwebRankingAction: ActionDefinition = defineProviderAction(service, {
+const similarwebRankingAction: ActionDefinition = defineProviderAction(service, {
   name: "get_similarweb_ranking",
   operationType: "read",
   description: "Get monthly global, country, and category rankings for a website.",
@@ -63,7 +63,7 @@ export const similarwebRankingAction: ActionDefinition = defineProviderAction(se
   outputSchema: similarwebOutput("Monthly Similarweb ranking measurements."),
 });
 
-export const similarwebPpcSpendAction: ActionDefinition = defineProviderAction(service, {
+const similarwebPpcSpendAction: ActionDefinition = defineProviderAction(service, {
   name: "get_similarweb_ppc_spend",
   operationType: "read",
   description: "Get estimated monthly paid-search spending for a website.",
@@ -76,7 +76,7 @@ export const similarwebPpcSpendAction: ActionDefinition = defineProviderAction(s
   outputSchema: similarwebOutput("Monthly Similarweb paid-search spending estimates."),
 });
 
-export const similarwebTopSitesAction: ActionDefinition = defineProviderAction(service, {
+const similarwebTopSitesAction: ActionDefinition = defineProviderAction(service, {
   name: "get_similarweb_top_sites",
   operationType: "read",
   description: "List the highest-ranked websites in an industry category.",
@@ -94,7 +94,7 @@ export const similarwebTopSitesAction: ActionDefinition = defineProviderAction(s
   outputSchema: similarwebOutput("A ranked page of websites in the requested category."),
 });
 
-export const similarwebMarketingChannelsAction: ActionDefinition = defineProviderAction(service, {
+const similarwebMarketingChannelsAction: ActionDefinition = defineProviderAction(service, {
   name: "get_similarweb_marketing_channels",
   operationType: "read",
   description: "Get direct, search, social, referral, mail, and display traffic shares.",
@@ -121,7 +121,7 @@ const rowQueryFields = {
 
 const optionalRowQueryFields = ["country", "webSource", "mainDomainOnly", "offset", "trafficSource"];
 
-export const similarwebReferralsAction: ActionDefinition = defineProviderAction(service, {
+const similarwebReferralsAction: ActionDefinition = defineProviderAction(service, {
   name: "get_similarweb_referrals",
   operationType: "read",
   description: "List websites that send referral traffic to the target domain.",
@@ -132,7 +132,7 @@ export const similarwebReferralsAction: ActionDefinition = defineProviderAction(
   outputSchema: similarwebOutput("Similarweb referral sources and their traffic measurements."),
 });
 
-export const similarwebAdNetworksAction: ActionDefinition = defineProviderAction(service, {
+const similarwebAdNetworksAction: ActionDefinition = defineProviderAction(service, {
   name: "get_similarweb_ad_networks",
   operationType: "read",
   description: "List display-ad networks associated with a website.",
@@ -143,7 +143,7 @@ export const similarwebAdNetworksAction: ActionDefinition = defineProviderAction
   outputSchema: similarwebOutput("Similarweb ad networks and their traffic measurements."),
 });
 
-export const similarwebSimilarSitesAction: ActionDefinition = defineProviderAction(service, {
+const similarwebSimilarSitesAction: ActionDefinition = defineProviderAction(service, {
   name: "get_similarweb_similar_sites",
   operationType: "read",
   description: "List websites whose audience and traffic profile resemble a target website.",
@@ -154,7 +154,7 @@ export const similarwebSimilarSitesAction: ActionDefinition = defineProviderActi
   outputSchema: similarwebOutput("Similar websites and their affinity measurements."),
 });
 
-export const similarwebDemographicsAction: ActionDefinition = defineProviderAction(service, {
+const similarwebDemographicsAction: ActionDefinition = defineProviderAction(service, {
   name: "get_similarweb_demographics",
   operationType: "read",
   description: "Get age and gender distributions for a website's audience in one month.",
@@ -174,7 +174,7 @@ export const similarwebDemographicsAction: ActionDefinition = defineProviderActi
   outputSchema: similarwebOutput("Similarweb audience age and gender measurements."),
 });
 
-export const similarwebDeduplicatedAudienceAction: ActionDefinition = defineProviderAction(service, {
+const similarwebDeduplicatedAudienceAction: ActionDefinition = defineProviderAction(service, {
   name: "get_similarweb_deduplicated_audience",
   operationType: "read",
   description: "Get deduplicated desktop and mobile-web audience measurements.",
@@ -187,7 +187,7 @@ export const similarwebDeduplicatedAudienceAction: ActionDefinition = defineProv
   outputSchema: similarwebOutput("Similarweb deduplicated audience measurements."),
 });
 
-export const similarwebAudienceInterestAction: ActionDefinition = defineProviderAction(service, {
+const similarwebAudienceInterestAction: ActionDefinition = defineProviderAction(service, {
   name: "get_similarweb_audience_interests",
   operationType: "read",
   description: "List topics and categories that interest a website's audience.",
@@ -198,7 +198,7 @@ export const similarwebAudienceInterestAction: ActionDefinition = defineProvider
   outputSchema: similarwebOutput("Similarweb audience interests and affinity measurements."),
 });
 
-export const similarwebAudienceOverlapAction: ActionDefinition = defineProviderAction(service, {
+const similarwebAudienceOverlapAction: ActionDefinition = defineProviderAction(service, {
   name: "get_similarweb_audience_overlap",
   operationType: "read",
   description: "Compare duplicated and exclusive audiences across two to five websites.",
@@ -220,7 +220,7 @@ export const similarwebAudienceOverlapAction: ActionDefinition = defineProviderA
   outputSchema: similarwebOutput("Similarweb audience-overlap measurements for the domains."),
 });
 
-export const similarwebTechnologiesAction: ActionDefinition = defineProviderAction(service, {
+const similarwebTechnologiesAction: ActionDefinition = defineProviderAction(service, {
   name: "get_similarweb_technologies",
   operationType: "read",
   description: "List technologies detected on a website for the latest available month.",
@@ -241,7 +241,7 @@ export const similarwebTechnologiesAction: ActionDefinition = defineProviderActi
   outputSchema: similarwebOutput("Technologies detected by Similarweb on the website."),
 });
 
-export const similarwebPopularPagesAction: ActionDefinition = defineProviderAction(service, {
+const similarwebPopularPagesAction: ActionDefinition = defineProviderAction(service, {
   name: "get_similarweb_popular_pages",
   operationType: "read",
   description: "List the pages that receive the most traffic on a website.",
@@ -252,7 +252,7 @@ export const similarwebPopularPagesAction: ActionDefinition = defineProviderActi
   outputSchema: similarwebOutput("Popular pages and their Similarweb traffic measurements."),
 });
 
-export const similarwebSubdomainsAction: ActionDefinition = defineProviderAction(service, {
+const similarwebSubdomainsAction: ActionDefinition = defineProviderAction(service, {
   name: "get_similarweb_subdomains",
   operationType: "read",
   description: "List the subdomains that receive traffic for a website.",
@@ -263,7 +263,7 @@ export const similarwebSubdomainsAction: ActionDefinition = defineProviderAction
   outputSchema: similarwebOutput("Subdomains and their Similarweb traffic measurements."),
 });
 
-export const similarwebKeywordCompetitorsAction: ActionDefinition = defineProviderAction(service, {
+const similarwebKeywordCompetitorsAction: ActionDefinition = defineProviderAction(service, {
   name: "get_similarweb_keyword_competitors",
   operationType: "read",
   description: "List domains competing with a website for organic and paid search clicks.",
@@ -285,7 +285,7 @@ export const similarwebKeywordCompetitorsAction: ActionDefinition = defineProvid
   outputSchema: similarwebOutput("Search competitors and their Similarweb click measurements."),
 });
 
-export const similarwebWebsiteKeywordsAction: ActionDefinition = defineProviderAction(service, {
+const similarwebWebsiteKeywordsAction: ActionDefinition = defineProviderAction(service, {
   name: "get_similarweb_website_keywords",
   operationType: "read",
   description: "List organic and paid keywords that send search traffic to a website.",
@@ -303,29 +303,22 @@ const serpInputFields = {
   startMonth,
   endMonth,
   limit,
-  country,
+  country: s.stringEnum("The supported geography for this endpoint on AIsa: worldwide.", ["ww"]),
   offset,
 };
 
-export const similarwebSerpPlayersTimeseriesAction: ActionDefinition = defineProviderAction(service, {
+const similarwebSerpPlayersTimeseriesAction: ActionDefinition = defineProviderAction(service, {
   name: "get_similarweb_serp_players_timeseries",
   operationType: "read",
   description: "Track how search clicks shift among domains competing for a keyword over time.",
   requiredScopes: [],
-  inputSchema: s.object(
-    "Filters for a Similarweb SERP-player time series.",
-    {
-      ...serpInputFields,
-      country: s.stringEnum("The supported geography for this endpoint on AIsa: worldwide.", ["ww"]),
-    },
-    {
-      optional: ["country", "offset"],
-    },
-  ),
+  inputSchema: s.object("Filters for a Similarweb SERP-player time series.", serpInputFields, {
+    optional: ["country", "offset"],
+  }),
   outputSchema: similarwebOutput("Monthly click measurements for domains competing for the keyword."),
 });
 
-export const similarwebSerpPlayersAggregatedAction: ActionDefinition = defineProviderAction(service, {
+const similarwebSerpPlayersAggregatedAction: ActionDefinition = defineProviderAction(service, {
   name: "get_similarweb_serp_players_aggregated",
   operationType: "read",
   description: "Compare domains capturing the most search clicks for a keyword.",
@@ -336,7 +329,7 @@ export const similarwebSerpPlayersAggregatedAction: ActionDefinition = definePro
   outputSchema: similarwebOutput("Aggregated click measurements for domains competing for the keyword."),
 });
 
-export const similarwebLandingPagesAction: ActionDefinition = defineProviderAction(service, {
+const similarwebLandingPagesAction: ActionDefinition = defineProviderAction(service, {
   name: "get_similarweb_landing_pages",
   operationType: "read",
   description: "List pages receiving organic or paid search traffic for a website.",
@@ -347,7 +340,7 @@ export const similarwebLandingPagesAction: ActionDefinition = defineProviderActi
   outputSchema: similarwebOutput("Search landing pages and their Similarweb traffic measurements."),
 });
 
-export const similarwebTrafficSnapshotAction: ActionDefinition = defineProviderAction(service, {
+const similarwebTrafficSnapshotAction: ActionDefinition = defineProviderAction(service, {
   name: "get_similarweb_traffic_snapshot",
   operationType: "read",
   description: "Get the latest visits and engagement snapshot for a website.",
@@ -360,7 +353,7 @@ export const similarwebTrafficSnapshotAction: ActionDefinition = defineProviderA
   outputSchema: similarwebOutput("The latest Similarweb traffic and engagement snapshot."),
 });
 
-export const similarwebTrafficTrendAction: ActionDefinition = defineProviderAction(service, {
+const similarwebTrafficTrendAction: ActionDefinition = defineProviderAction(service, {
   name: "get_similarweb_traffic_trend",
   operationType: "read",
   description: "Get the recent monthly traffic trend for a website.",
@@ -373,7 +366,7 @@ export const similarwebTrafficTrendAction: ActionDefinition = defineProviderActi
   outputSchema: similarwebOutput("The recent Similarweb monthly traffic time series."),
 });
 
-export const similarwebTopGeographiesAction: ActionDefinition = defineProviderAction(service, {
+const similarwebTopGeographiesAction: ActionDefinition = defineProviderAction(service, {
   name: "get_similarweb_top_geographies",
   operationType: "read",
   description: "Get the top countries by share of a website's traffic for the latest month.",

@@ -18,6 +18,7 @@ export const oauth: ProviderOAuthRuntime = {
     return authorizationUrl.toString();
   },
   async exchangeCode(input) {
+    etsyApiKey(input.clientConfig);
     const token = await exchangeToken(
       {
         grant_type: "authorization_code",
@@ -39,6 +40,7 @@ export const oauth: ProviderOAuthRuntime = {
     };
   },
   async refreshAccessToken(input) {
+    etsyApiKey(input.clientConfig);
     const token = await exchangeToken(
       { grant_type: "refresh_token", refresh_token: input.refreshToken },
       input.clientConfig,

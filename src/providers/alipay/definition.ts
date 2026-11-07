@@ -55,7 +55,7 @@ export const provider: ProviderDefinition = {
           required: false,
           secret: true,
           description:
-            "Leave empty when connecting your own application through the AI Pay setup flow. Only service-provider applications calling on behalf of an authorized merchant need that merchant’s app_auth_token.",
+            "For service providers acting for an authorized merchant. Leave empty for your own app. Included in generated checkout URLs.",
           inputType: "password",
         },
       ],

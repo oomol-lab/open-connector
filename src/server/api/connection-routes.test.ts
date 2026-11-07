@@ -610,8 +610,11 @@ it("accepts the SP-API authorization code alias only with a valid unconsumed OAu
   expect((await call("/oauth/callback?state=unknown&spapi_oauth_code=amazon-code")).status).toBe(400);
   const request = await start();
   expect(
-    (await call(`/oauth/callback?state=${request.stateHandle}&spapi_oauth_code=amazon-code&selling_partner_id=seller`))
-      .status,
+    (
+      await call(
+        `/oauth/callback?state=${request.stateHandle}&code=&spapi_oauth_code=amazon-code&selling_partner_id=seller`,
+      )
+    ).status,
   ).toBe(200);
   expect((await call(`/oauth/callback?state=${request.stateHandle}&spapi_oauth_code=again`)).status).toBe(400);
 });

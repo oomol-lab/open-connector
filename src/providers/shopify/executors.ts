@@ -71,7 +71,7 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
 
 export const credentialValidators: CredentialValidators = {
   async customCredential(input, { fetcher, signal }) {
-    const token = await getClientCredentialsToken(input.values, fetcher);
+    const token = await getClientCredentialsToken(input.values, fetcher, true);
     return validateShopifyCredential(
       token.accessToken,
       token.shopDomain,

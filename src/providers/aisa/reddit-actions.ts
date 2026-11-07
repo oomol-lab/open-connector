@@ -37,8 +37,7 @@ export const redditActions: ProviderActionDefinition[] = [
         },
         sort: {
           type: "string",
-          description:
-            'Sort by\n\nProvider reference (supplier schema): `{"enum":["relevance","new","top","comment_count"],"type":"string"}`.',
+          description: "Sort by",
         },
         time: {
           type: "string",
@@ -46,8 +45,7 @@ export const redditActions: ProviderActionDefinition[] = [
         },
         timeframe: {
           type: "string",
-          description:
-            'Timeframe\n\nProvider reference (supplier schema): `{"enum":["all","day","week","month","year"],"type":"string"}`.',
+          description: "Timeframe",
         },
         trim: {
           type: "string",
@@ -116,7 +114,7 @@ export const redditActions: ProviderActionDefinition[] = [
         sort: {
           type: "string",
           description:
-            'Sort order. For posts/media: relevance, hot, top, new, comments. For comments: relevance, top, new\n\nProvider reference (supplier schema): `{"enum":["relevance","hot","top","new","comments"],"type":"string"}`.',
+            "Sort order. For posts/media: relevance, hot, top, new, comments. For comments: relevance, top, new",
         },
         subreddit: {
           type: "string",
@@ -125,8 +123,7 @@ export const redditActions: ProviderActionDefinition[] = [
         },
         timeframe: {
           type: "string",
-          description:
-            'Timeframe to filter results\n\nProvider reference (supplier schema): `{"enum":["all","year","month","week","day","hour"],"type":"string"}`.',
+          description: "Timeframe to filter results",
         },
       },
       required: ["query", "subreddit"],

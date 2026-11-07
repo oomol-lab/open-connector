@@ -21,11 +21,13 @@ export function createShopifyClientCredentialsTokenSource() {
   return async function getToken(
     values: Record<string, string>,
     fetcher: typeof fetch,
+    forceRefresh = false,
   ): Promise<ShopifyClientCredentialsToken> {
     const shopDomain = normalizeShopDomain(values.shopDomain);
     const clientId = requiredInputString(values.clientId, "clientId");
     const clientSecret = requiredInputString(values.clientSecret, "clientSecret");
     const key = sha256Hex(JSON.stringify([shopDomain, clientId, clientSecret]));
+    if (forceRefresh) tokens.delete(key);
     const existing = tokens.get(key);
     if (existing) {
       const token = await existing;
@@ -73,6 +75,7 @@ export function createShopifyClientCredentialsTokenSource() {
         expiresAt: requestedAt + Math.max(0, expiresIn * 1000 - 60_000),
       };
     });
+    tokens.delete(key);
     tokens.set(key, pending);
     if (tokens.size > 256) {
       const oldest = tokens.keys().next().value;

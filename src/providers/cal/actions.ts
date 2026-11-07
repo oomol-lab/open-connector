@@ -30,11 +30,6 @@ const rawArray = (description: string, itemDescription: string): JsonSchema =>
   s.array(description, rawObject(itemDescription));
 const nullableRawObject = (description: string): JsonSchema => s.nullable(rawObject(description));
 const emptyInputSchema = s.actionInput({}, [], "This action does not require any input.");
-const limitField = s.integer("The maximum number of records to return.", { minimum: 1, maximum: 200 });
-const cursorField = s.nonEmptyString("The opaque pagination cursor returned by Cal.com.");
-const nextCursorField = s.nullableString(
-  "The opaque cursor for the next page, or null when there are no more results.",
-);
 const teamIdField = s.integer("The numeric Cal.com team ID.");
 const usernameField = s.nonEmptyString("The Cal.com username to scope the request to.");
 const bookingUidField = s.nonEmptyString("The unique Cal.com booking UID.");
@@ -67,7 +62,6 @@ const eventTypeOutputSchema = s.actionOutput(
 const eventTypesOutputSchema = s.actionOutput(
   {
     eventTypes: rawArray("The event types returned by Cal.com.", "One Cal.com event type."),
-    nextCursor: nextCursorField,
   },
   "The output payload for listing event types.",
 );
@@ -111,7 +105,7 @@ const destinationCalendarOutputSchema = s.actionOutput(
 const bookingsOutputSchema = s.actionOutput(
   {
     bookings: rawArray("The bookings returned by Cal.com.", "One Cal.com booking."),
-    nextCursor: nextCursorField,
+    pagination: nullableRawObject("Cal.com pagination metadata, or null when omitted by the server."),
   },
   "The output payload for booking-list actions.",
 );
@@ -150,7 +144,6 @@ const resultOutputSchema = s.actionOutput(
 const schedulesOutputSchema = s.actionOutput(
   {
     schedules: rawArray("The schedules returned by Cal.com.", "One Cal.com schedule."),
-    nextCursor: nextCursorField,
   },
   "The output payload for schedule-list actions.",
 );
@@ -185,15 +178,13 @@ const updateMyProfileInputSchema = s.looseObject("Profile fields to update on th
 const listEventTypesInputSchema = s.object(
   "Input payload for listing Cal.com event types.",
   {
-    limit: limitField,
-    cursor: cursorField,
     teamId: teamIdField,
     username: usernameField,
     status: s.string("Filter event types by status."),
     schedulingType: s.string("Filter event types by scheduling type."),
     onlyActive: s.boolean("Whether to return only active event types."),
   },
-  { optional: ["limit", "cursor", "teamId", "username", "status", "schedulingType", "onlyActive"] },
+  { optional: ["teamId", "username", "status", "schedulingType", "onlyActive"] },
 );
 const eventTypeLookupInputSchema = s.object(
   "Input payload for fetching an event type by numeric ID.",
@@ -310,8 +301,8 @@ const bookingListInputSchema = s.object(
     beforeStart: isoDateTimeField,
     afterEnd: isoDateTimeField,
     beforeEnd: isoDateTimeField,
-    limit: limitField,
-    cursor: cursorField,
+    take: s.integer("The maximum number of bookings to return.", { minimum: 1, maximum: 250 }),
+    skip: s.integer("The number of bookings to skip.", { minimum: 0 }),
   },
   {
     optional: [
@@ -325,13 +316,13 @@ const bookingListInputSchema = s.object(
       "beforeStart",
       "afterEnd",
       "beforeEnd",
-      "limit",
-      "cursor",
+      "take",
+      "skip",
     ],
   },
 );
 const fetchAllBookingsInputSchema = s.object(
-  "Compatibility input payload for listing bookings.",
+  "Input payload for listing bookings.",
   {
     skip: s.nonNegativeInteger("The number of bookings to skip before returning results."),
     take: s.integer("The maximum number of bookings to return.", { minimum: 1, maximum: 200 }),
@@ -484,14 +475,7 @@ const rescheduleBookingInputSchema = s.object(
     optional: ["rescheduledBy", "reason", "reschedulingReason", "emailVerificationCode"],
   },
 );
-const listSchedulesInputSchema = s.object(
-  "Input payload for listing Cal.com schedules.",
-  {
-    limit: limitField,
-    cursor: cursorField,
-  },
-  { optional: ["limit", "cursor"] },
-);
+const listSchedulesInputSchema = s.object("Input payload for listing Cal.com schedules.", {}, {});
 const scheduleIdInputSchema = s.actionInput(
   {
     scheduleId: scheduleIdField,
@@ -756,7 +740,7 @@ export const calActions: ActionDefinition[] = [
   action(
     "fetch_all_bookings",
     "read",
-    "Compatibility alias for listing bookings with optional filters and pagination.",
+    "List bookings with optional filters and pagination.",
     fetchAllBookingsInputSchema,
     bookingsOutputSchema,
     bookingRead,

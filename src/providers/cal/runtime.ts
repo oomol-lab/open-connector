@@ -50,6 +50,7 @@ type CalActionHandler = ProviderRuntimeHandler<OAuthProviderContext>;
 
 interface CalEnvelope<T> {
   status?: string;
+  pagination?: Record<string, unknown>;
   data?: T;
   error?: { message?: string } | string;
   message?: string;
@@ -279,8 +280,6 @@ async function calListEventTypes(
     path: "/v2/event-types",
     apiVersion: calEventTypesApiVersion,
     query: compactObject({
-      limit: input.limit,
-      cursor: input.cursor,
       teamId: input.teamId,
       username: input.username,
       status: input.status,
@@ -291,7 +290,6 @@ async function calListEventTypes(
 
   return {
     eventTypes: looseArray(data),
-    nextCursor: null,
   };
 }
 
@@ -478,7 +476,7 @@ async function calListBookings(
   input: Record<string, unknown>,
   context: CalActionContext,
 ): Promise<Record<string, unknown>> {
-  const data = await calRequest<unknown>({
+  const payload = await calRequestEnvelope<unknown>({
     context,
     path: "/v2/bookings",
     apiVersion: calBookingsApiVersion,
@@ -493,14 +491,14 @@ async function calListBookings(
       beforeStart: input.beforeStart,
       afterEnd: input.afterEnd,
       beforeEnd: input.beforeEnd,
-      limit: input.limit,
-      cursor: input.cursor,
+      take: input.take,
+      skip: input.skip,
     }),
   });
 
   return {
-    bookings: looseArray(data),
-    nextCursor: null,
+    bookings: looseArray(payload.data),
+    pagination: payload.pagination ?? null,
   };
 }
 
@@ -515,7 +513,7 @@ async function calFetchAllBookings(
         .join(",")
     : input.status;
 
-  const data = await calRequest<unknown>({
+  const payload = await calRequestEnvelope<unknown>({
     context,
     path: "/v2/bookings",
     apiVersion: calBookingsApiVersion,
@@ -538,8 +536,8 @@ async function calFetchAllBookings(
   });
 
   return {
-    bookings: looseArray(data),
-    nextCursor: null,
+    bookings: looseArray(payload.data),
+    pagination: payload.pagination ?? null,
   };
 }
 
@@ -739,15 +737,10 @@ async function calListSchedules(
     context,
     path: "/v2/schedules",
     apiVersion: calSchedulesApiVersion,
-    query: compactObject({
-      limit: input.limit,
-      cursor: input.cursor,
-    }),
   });
 
   return {
     schedules: looseArray(data),
-    nextCursor: null,
   };
 }
 
@@ -819,14 +812,21 @@ async function calGetDefaultSchedule(context: CalActionContext): Promise<Record<
   return { schedule: recordOrEmpty(data) };
 }
 
-async function calRequest<T>(input: {
+interface CalRequestInput {
   context: CalActionContext;
   path: string;
   method?: string;
   apiVersion?: string;
   query?: Record<string, unknown>;
   body?: unknown;
-}): Promise<T> {
+}
+
+async function calRequest<T>(input: CalRequestInput): Promise<T> {
+  const payload = await calRequestEnvelope<T>(input);
+  return (payload.data ?? payload) as T;
+}
+
+async function calRequestEnvelope<T>(input: CalRequestInput): Promise<CalEnvelope<T>> {
   const url = new URL(`${calApiBaseUrl}${input.path}`);
   for (const [key, value] of Object.entries(input.query ?? {})) {
     if (value !== undefined) {
@@ -842,8 +842,7 @@ async function calRequest<T>(input: {
   });
 
   await assertCalResponse(response);
-  const payload = (await readCalJson(response)) as CalEnvelope<T>;
-  return (payload.data ?? payload) as T;
+  return (await readCalJson(response)) as CalEnvelope<T>;
 }
 
 function readCalBooking(data: unknown): Record<string, unknown> | unknown[] {

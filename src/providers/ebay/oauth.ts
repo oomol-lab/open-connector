@@ -8,10 +8,18 @@ import {
   requiredInputString,
   runProviderRequest,
 } from "../provider-runtime.ts";
-import { ebayApiBaseUrl, ebayScopes } from "./constants.ts";
+import { ebayApiBaseUrl, ebayScopes, ebayIdentityScope } from "./constants.ts";
 import { readEbayResponse } from "./runtime.ts";
 export const oauth: ProviderOAuthRuntime = {
   buildAuthorizationUrl({ authorizationUrl, clientConfig }) {
+    if (!(clientConfig.requestedScopes ?? ebayScopes).includes(ebayIdentityScope)) {
+      throw new ProviderRequestError(
+        400,
+        "eBay requires commerce.identity.readonly to identify the connected account",
+        undefined,
+        "invalid_input",
+      );
+    }
     authorizationUrl.searchParams.set("redirect_uri", requiredInputString(clientConfig.extra.ruName, "ruName"));
     return authorizationUrl.toString();
   },
@@ -39,6 +47,7 @@ export const oauth: ProviderOAuthRuntime = {
       input.clientConfig,
       input.clientConfig.requestedScopes ?? ebayScopes,
       input.fetcher,
+      input.createError,
     );
     return { ...token, refreshToken: token.refreshToken || input.refreshToken };
   },
@@ -48,6 +57,7 @@ async function exchangeToken(
   clientConfig: OAuthClientConfig,
   fallbackScopes: string[],
   fetcher: typeof fetch,
+  invalidGrantError?: (message: string) => Error,
 ): Promise<OAuthTokenResult> {
   return runProviderRequest({ label: "eBay OAuth" }, async (signal) => {
     const response = await fetcher(`${ebayApiBaseUrl}/identity/v1/oauth2/token`, {
@@ -61,7 +71,7 @@ async function exchangeToken(
       signal,
       redirect: "manual",
     });
-    const payload = await readEbayResponse(response);
+    const payload = await readEbayResponse(response, invalidGrantError);
     const accessToken = optionalString(payload.access_token);
     const expiresIn = optionalInteger(payload.expires_in);
     if (!accessToken || expiresIn == null || expiresIn <= 0)

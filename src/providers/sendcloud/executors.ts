@@ -49,6 +49,10 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
       for (const [key, value] of Object.entries(values)) url.searchParams.set(key, value);
       return;
     }
+    const contentType = headers.get("content-type")?.split(";", 1)[0]?.trim().toLowerCase();
+    if (typeof body === "string" && contentType && contentType !== "application/x-www-form-urlencoded") {
+      throw new ProviderRequestError(400, "SendCloud string bodies must use application/x-www-form-urlencoded");
+    }
     const form = new URLSearchParams(optionalRawString(body));
     if (body != null && typeof body !== "string") {
       const record = optionalRecord(body);

@@ -36,6 +36,7 @@ const reserved: Record<string, string[]> = {
 };
 interface AlipayContext {
   credential: AlipayCredential;
+  signal?: AbortSignal;
   fetcher: typeof fetch;
 }
 
@@ -44,7 +45,7 @@ export const executors: ProviderExecutors = defineProviderExecutors({
   skipDnsValidation: true,
   async createContext(context, fetcher) {
     const credential = await requireCustomCredential(context, "alipay");
-    return { credential: readAlipayCredential(credential.values), fetcher };
+    return { credential: readAlipayCredential(credential.values), fetcher, signal: context.signal };
   },
   handlers: Object.fromEntries(
     Object.entries(methods).map(([name, method]) => [
@@ -61,7 +62,7 @@ export const executors: ProviderExecutors = defineProviderExecutors({
         const parameters = signAlipayParameters(context.credential, method, business, common);
         if (page)
           return { payment_url: `${context.credential.gateway}?${parameters}`, out_trade_no: data.out_trade_no };
-        return requestAlipay(context.credential, method, parameters, context.fetcher);
+        return requestAlipay(context.credential, method, parameters, context.fetcher, context.signal);
       },
     ]),
   ),

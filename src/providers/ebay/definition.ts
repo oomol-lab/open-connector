@@ -1,6 +1,7 @@
 import type { ProviderDefinition } from "../../core/types.ts";
 
 import { ebayActions } from "./actions.ts";
+import { ebayScopes } from "./constants.ts";
 
 export const provider: ProviderDefinition = {
   service: "ebay",
@@ -13,11 +14,7 @@ export const provider: ProviderDefinition = {
       type: "oauth2",
       authorizationUrl: "https://auth.ebay.com/oauth2/authorize",
       tokenUrl: "https://api.ebay.com/identity/v1/oauth2/token",
-      scopes: [
-        "https://api.ebay.com/oauth/api_scope",
-        "https://api.ebay.com/oauth/api_scope/sell.fulfillment",
-        "https://api.ebay.com/oauth/api_scope/commerce.identity.readonly",
-      ],
+      scopes: ebayScopes,
       tokenEndpointAuthMethod: "client_secret_basic",
       clientConfigFields: [
         {

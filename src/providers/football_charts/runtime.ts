@@ -186,8 +186,9 @@ export async function readFootballChartsError(
     optionalString(errorObj?.message) ??
     optionalString(body?.message) ??
     `Football Charts request failed with HTTP ${status}`;
-  const message = apiKey ? upstreamMessage.replaceAll(apiKey, "[REDACTED]") : upstreamMessage;
-  const containsApiKey = apiKey && JSON.stringify(payload).includes(JSON.stringify(apiKey).slice(1, -1));
+  const secret = apiKey?.trim();
+  const message = secret ? upstreamMessage.replaceAll(secret, "[REDACTED]") : upstreamMessage;
+  const containsApiKey = secret && JSON.stringify(payload).includes(JSON.stringify(secret).slice(1, -1));
   const details = withRetryAfterSeconds(response, containsApiKey ? {} : payload);
 
   if (status === 403 && errorCode === "season_gated") {

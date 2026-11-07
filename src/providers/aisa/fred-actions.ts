@@ -95,6 +95,7 @@ export const fredActions: ProviderActionDefinition[] = [
         },
       },
       required: ["searchText"],
+      dependentRequired: { excludeTagNames: ["tagNames"] },
       additionalProperties: false,
     },
     outputSchema: s.looseObject("The upstream research response, including additional fields and pagination metadata."),

@@ -1,8 +1,13 @@
 import type { OAuthClientConfig } from "../../oauth/oauth-client-config-service.ts";
 import type { OAuthTokenResult, ProviderOAuthRuntime } from "../../oauth/oauth-token.ts";
 
-import { optionalNumber, optionalString } from "../../core/cast.ts";
-import { ProviderRequestError, requiredInputString, runProviderRequest } from "../provider-runtime.ts";
+import { optionalNumber, optionalString, requiredString } from "../../core/cast.ts";
+import {
+  ProviderRequestError,
+  requiredInputString,
+  runProviderRequest,
+  providerResponseError,
+} from "../provider-runtime.ts";
 import { readAmazonResponse } from "./runtime.ts";
 interface AmazonStore {
   host: string;
@@ -69,6 +74,7 @@ export const oauth: ProviderOAuthRuntime = {
       { grant_type: "authorization_code", code: input.code, redirect_uri: input.redirectUri },
       [],
       input.fetcher,
+      input.signal,
     );
     if (!token.refreshToken) throw input.createError("Amazon LWA response is missing refresh_token");
     return { ...token, metadata: { ...token.metadata, sellerId, region: resolveStore(input.clientConfig).region } };
@@ -88,8 +94,9 @@ async function exchangeToken(
   parameters: Record<string, string>,
   fallbackScopes: string[],
   fetcher: typeof fetch,
+  callerSignal?: AbortSignal,
 ): Promise<OAuthTokenResult> {
-  return runProviderRequest({ label: "Amazon LWA" }, async (signal) => {
+  return runProviderRequest({ label: "Amazon LWA", signal: callerSignal }, async (signal) => {
     const response = await fetcher("https://api.amazon.com/auth/o2/token", {
       method: "POST",
       headers: { "content-type": "application/x-www-form-urlencoded", accept: "application/json" },
@@ -112,7 +119,7 @@ async function exchangeToken(
     }
     const scope = optionalString(payload.scope);
     return {
-      accessToken: requiredInputString(payload.access_token, "Amazon LWA access_token"),
+      accessToken: requiredString(payload.access_token, "Amazon LWA access_token", providerResponseError),
       refreshToken: optionalString(payload.refresh_token) ?? "",
       tokenType: optionalString(payload.token_type) ?? "bearer",
       expiresAt: new Date(Date.now() + expiresIn * 1000).toISOString(),

@@ -53,7 +53,9 @@ const paymentInput = s.object(
   { optional: ["return_url", "notify_url", "extra_biz_content"] },
 );
 const paymentOutput = s.requiredObject("Locally generated signed URL. The buyer must open it to initiate payment.", {
-  payment_url: s.string("Signed Alipay checkout URL. Generating this URL does not create or settle a transaction."),
+  payment_url: s.string(
+    "Open this signed URL to pay. If appAuthToken is configured, the URL includes it; share only with the buyer.",
+  ),
   out_trade_no: s.string("Merchant order number included in the payment URL."),
 });
 const queryInput = s.requireAnyProperty(

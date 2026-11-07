@@ -1,6 +1,9 @@
 import { looseArray, optionalNumber, optionalRecord, optionalString } from "../../core/cast.ts";
 import { ProviderRequestError, requiredResponseRecord, runProviderRequest } from "../provider-runtime.ts";
-export async function readEbayResponse(response: Response): Promise<Record<string, unknown>> {
+export async function readEbayResponse(
+  response: Response,
+  invalidGrantError?: (message: string) => Error,
+): Promise<Record<string, unknown>> {
   const text = await response.text();
   let payload: unknown;
   try {
@@ -10,6 +13,9 @@ export async function readEbayResponse(response: Response): Promise<Record<strin
   }
   if (!response.ok) {
     const body = optionalRecord(payload);
+    if (body?.error === "invalid_grant" && invalidGrantError) {
+      throw invalidGrantError("eBay refresh token was rejected (invalid_grant)");
+    }
     const messages = looseArray(body?.errors)
       .map((value) => {
         const error = optionalRecord(value);
