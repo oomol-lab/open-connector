@@ -4,6 +4,7 @@ import type {
   ProviderExecutors,
   ProviderProxyExecutor,
 } from "../../core/types.ts";
+import type { ProviderRuntimeHandler } from "../provider-executors.ts";
 
 import { optionalRecord, optionalString } from "../../core/cast.ts";
 import { assertPublicHttpUrl, isPrivateNetworkAccessAllowed } from "../../core/request.ts";
@@ -22,32 +23,29 @@ import {
 
 const service = "postiz";
 const defaultPostizApiBaseUrl = "https://api.postiz.com/public/v1";
-const selfHostedApiSuffix = "api/public/v1";
-
-const handlers = {
-  list_integrations: async (input: Record<string, unknown>, context: PostizActionContext) =>
-    readPostizCollection(
-      await request(context, "/integrations", { query: { group: optionalString(input.group) } }),
-      "integrations",
-    ),
-  list_posts: async (input: Record<string, unknown>, context: PostizActionContext) =>
-    requiredResponseRecord(
-      await request(context, "/posts", {
-        query: {
-          startDate: optionalString(input.startDate),
-          endDate: optionalString(input.endDate),
-          customer: optionalString(input.customer),
-        },
-      }),
-      "Postiz posts",
-    ),
-  upload_from_url: async (input: Record<string, unknown>, context: PostizActionContext) =>
-    requiredResponseRecord(
-      await request(context, "/upload-from-url", { method: "POST", body: { url: input.url } }),
-      "Postiz uploaded media",
-    ),
-  create_post: async (input: Record<string, unknown>, context: PostizActionContext) =>
-    readPostizCollection(await request(context, "/posts", { method: "POST", body: input }), "created posts"),
+const handlers: Record<string, ProviderRuntimeHandler<PostizActionContext>> = {
+  async list_integrations(input, context) {
+    const result = await request(context, "/integrations", { query: { group: optionalString(input.group) } });
+    return readPostizCollection(result, "integrations");
+  },
+  async list_posts(input, context) {
+    const result = await request(context, "/posts", {
+      query: {
+        startDate: optionalString(input.startDate),
+        endDate: optionalString(input.endDate),
+        customer: optionalString(input.customer),
+      },
+    });
+    return requiredResponseRecord(result, "Postiz posts");
+  },
+  async upload_from_url(input, context) {
+    const result = await request(context, "/upload-from-url", { method: "POST", body: { url: input.url } });
+    return requiredResponseRecord(result, "Postiz uploaded media");
+  },
+  async create_post(input, context) {
+    const result = await request(context, "/posts", { method: "POST", body: input });
+    return readPostizCollection(result, "created posts");
+  },
 };
 
 export const executors: ProviderExecutors = defineProviderExecutors<PostizActionContext>({
@@ -81,20 +79,13 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
 export const credentialValidators: CredentialValidators = {
   async apiKey(input, { fetcher, signal }) {
     const apiBaseUrl = normalizePostizApiBaseUrl(input.values.baseUrl);
-    const result = optionalRecord(
-      await request(
-        {
-          apiKey: input.apiKey,
-          apiBaseUrl,
-          // Re-guard the shared validator fetcher with the private-network
-          // opt-in so a self-hosted instance on a private network validates
-          // when the deployment allows it.
-          fetcher: createProviderFetch({ fetch: fetcher, allowPrivateNetwork: isPrivateNetworkAccessAllowed }),
-          signal,
-        },
-        "/is-connected",
-      ),
-    );
+    const context: PostizActionContext = {
+      apiKey: input.apiKey,
+      apiBaseUrl,
+      fetcher: createProviderFetch({ fetch: fetcher, allowPrivateNetwork: isPrivateNetworkAccessAllowed }),
+      signal,
+    };
+    const result = optionalRecord(await request(context, "/is-connected"));
     if (result?.connected !== true) {
       throw new ProviderRequestError(502, "Postiz did not confirm the API key connection");
     }
@@ -119,11 +110,7 @@ interface RequestOptions {
   body?: unknown;
 }
 
-async function request(
-  context: Pick<PostizActionContext, "apiKey" | "apiBaseUrl" | "fetcher" | "signal">,
-  path: string,
-  options: RequestOptions = {},
-): Promise<unknown> {
+async function request(context: PostizActionContext, path: string, options: RequestOptions = {}): Promise<unknown> {
   return runProviderRequest({ signal: context.signal, label: "Postiz" }, async (signal) => {
     const url = new URL(`${context.apiBaseUrl}${path}`);
     for (const [key, value] of Object.entries(options.query ?? {})) {
@@ -164,17 +151,6 @@ function readPostizCollection(value: unknown, label: string): unknown[] {
   return value;
 }
 
-/**
- * Resolves the Postiz API base URL for a connection. Empty input targets the
- * Postiz cloud API; otherwise the self-hosted instance URL is validated,
- * embedded credentials are rejected, and query, hash, and trailing slashes are
- * removed. The `/api/public/v1` suffix is appended when missing so both the
- * bare instance root (https://postiz.example.com) and a reverse-proxy path
- * prefix (https://postiz.example.com/api) resolve to the public API, matching
- * the documented self-hosted base URL. Plain-HTTP and private/overlay targets
- * are only accepted when the deployment opts in through
- * `OOMOL_CONNECT_ALLOW_PRIVATE_NETWORK`.
- */
 function normalizePostizApiBaseUrl(value: unknown): string {
   const instanceUrl = optionalString(value);
   if (!instanceUrl) {
@@ -194,11 +170,11 @@ function normalizePostizApiBaseUrl(value: unknown): string {
   }
   url.hash = "";
   url.search = "";
-  url.pathname = url.pathname.replace(/\/+$/u, "");
-  if (!url.pathname.endsWith("/public/v1")) {
-    const base = url.pathname === "/" ? "" : url.pathname.replace(/\/+$/u, "");
-    const stem = base.endsWith("/api") ? base.slice(0, -4) : base;
-    url.pathname = stem === "" ? `/${selfHostedApiSuffix}` : `${stem}/${selfHostedApiSuffix}`;
+  let pathname = url.pathname.replace(/\/+$/u, "");
+  if (!pathname.endsWith("/public/v1")) {
+    if (pathname.endsWith("/api")) pathname = pathname.slice(0, -4);
+    pathname += "/api/public/v1";
   }
-  return url.toString().replace(/\/$/u, "");
+  url.pathname = pathname;
+  return url.toString();
 }
