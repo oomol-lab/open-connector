@@ -15,7 +15,7 @@ export const provider: ProviderDefinition = {
       label: "API Key",
       placeholder: "pdfless_api_key",
       description:
-        "Pdfless API key used with the apikey header. Create it from your Pdfless account as described at https://pdfless.com/docs.",
+        "Pdfless API key used with the apikey header. Create it from your Pdfless account as described at https://docs.pdfless.com/authentication.",
       extraFields: [],
     },
   ],
