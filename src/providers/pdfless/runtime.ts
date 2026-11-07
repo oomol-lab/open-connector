@@ -1,24 +1,47 @@
 import type { CredentialValidationResult, ProviderExecutors } from "../../core/types.ts";
 import type { ProviderActionHandlers } from "../provider-executors.ts";
 import type { ApiKeyProviderContext } from "../provider-executors.ts";
+import type { ProviderFetch } from "../provider-runtime.ts";
 
 import {
   compactObject,
   nullableInteger,
+  optionalBoolean,
   optionalInteger,
+  optionalRawString,
   optionalRecord,
   optionalString,
   optionalStringOrNull,
 } from "../../core/cast.ts";
 import { defineApiKeyProviderExecutors } from "../provider-executors.ts";
-import { ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
+import { uploadProviderUrlToTransitFile } from "../provider-files.ts";
+import {
+  ProviderRequestError,
+  providerUserAgent,
+  readProviderJsonBody,
+  requiredInputString,
+  requiredResponseRecord,
+  runProviderRequest,
+} from "../provider-runtime.ts";
 
 export const pdflessApiBaseUrl = "https://api.pdfless.com";
 const pdflessWorkspacePath = "/v1/workspaces";
+const pdflessPdfsPath = "/v1/pdfs";
 
 type PdflessRequestPhase = "validate" | "execute";
 type PdflessActionContext = ApiKeyProviderContext;
 type PdflessActionHandler = (input: Record<string, unknown>, context: PdflessActionContext) => Promise<unknown>;
+
+interface PdflessRequest {
+  path: string;
+  method?: "GET" | "POST";
+  query?: Record<string, number | undefined>;
+  body?: Record<string, unknown>;
+  apiKey: string;
+  fetcher: ProviderFetch;
+  phase: PdflessRequestPhase;
+  signal?: AbortSignal;
+}
 
 interface PdflessWorkspace {
   name: string | null;
@@ -38,12 +61,23 @@ interface PdflessTemplate {
   updatedAt: string | null;
 }
 
-export const pdflessActionHandlers: ProviderActionHandlers<"pdfless", PdflessActionHandler> = {
+interface PdflessGeneratedPdf {
+  templateId: string | null;
+  referenceId: string | null;
+  downloadUrl: string;
+  expiresAt: string | null;
+  createdAt: string | null;
+}
+
+const pdflessActionHandlers: ProviderActionHandlers<"pdfless", PdflessActionHandler> = {
   get_workspace(_input, context) {
     return pdflessGetWorkspace(context);
   },
   list_document_templates(input, context) {
     return pdflessListDocumentTemplates(input, context);
+  },
+  create_pdf(input, context) {
+    return pdflessCreatePdf(input, context);
   },
 };
 
@@ -51,9 +85,14 @@ export const executors: ProviderExecutors = defineApiKeyProviderExecutors("pdfle
 
 export async function validatePdflessCredential(
   input: Record<string, string>,
-  fetcher: typeof fetch,
+  fetcher: ProviderFetch,
 ): Promise<CredentialValidationResult> {
-  const payload = await pdflessGet(pdflessWorkspacePath, {}, input.apiKey, fetcher, "validate");
+  const payload = await pdflessRequest({
+    path: pdflessWorkspacePath,
+    apiKey: input.apiKey,
+    fetcher,
+    phase: "validate",
+  });
   const workspace = normalizeWorkspacePayload(payload);
 
   return {
@@ -76,7 +115,13 @@ export async function validatePdflessCredential(
 }
 
 async function pdflessGetWorkspace(context: PdflessActionContext): Promise<unknown> {
-  const payload = await pdflessGet(pdflessWorkspacePath, {}, context.apiKey, context.fetcher, "execute");
+  const payload = await pdflessRequest({
+    path: pdflessWorkspacePath,
+    apiKey: context.apiKey,
+    fetcher: context.fetcher,
+    phase: "execute",
+    signal: context.signal,
+  });
   return {
     workspace: normalizeWorkspacePayload(payload),
   };
@@ -86,79 +131,102 @@ async function pdflessListDocumentTemplates(
   input: Record<string, unknown>,
   context: PdflessActionContext,
 ): Promise<unknown> {
-  const payload = await pdflessGet(
-    "/v1/document-templates",
-    compactObject({
+  const payload = await pdflessRequest({
+    path: "/v1/document-templates",
+    query: compactObject({
       Page: optionalInteger(input.page),
       PageSize: optionalInteger(input.pageSize),
     }),
-    context.apiKey,
-    context.fetcher,
-    "execute",
-  );
+    apiKey: context.apiKey,
+    fetcher: context.fetcher,
+    phase: "execute",
+    signal: context.signal,
+  });
 
   return normalizeTemplateListPayload(payload);
 }
 
-async function pdflessGet(
-  path: string,
-  query: Record<string, number | undefined>,
-  apiKey: string,
-  fetcher: typeof fetch,
-  phase: PdflessRequestPhase,
-): Promise<unknown> {
-  const url = new URL(path, pdflessApiBaseUrl);
-  for (const [key, value] of Object.entries(query)) {
+async function pdflessCreatePdf(input: Record<string, unknown>, context: PdflessActionContext): Promise<unknown> {
+  const templateId = requiredInputString(input.templateId, "templateId");
+  const payload = await pdflessRequest({
+    path: pdflessPdfsPath,
+    method: "POST",
+    body: compactObject({
+      template_id: templateId,
+      payload: optionalRecord(input.payload),
+      reference_id: optionalString(input.referenceId),
+      encryption_user_password: optionalRawString(input.encryptionUserPassword),
+      encryption_owner_password: optionalRawString(input.encryptionOwnerPassword),
+      encryption_allow_printing: optionalBoolean(input.encryptionAllowPrinting),
+      encryption_allow_modifying: optionalBoolean(input.encryptionAllowModifying),
+      encryption_allow_modify_annotations: optionalBoolean(input.encryptionAllowModifyAnnotations),
+      encryption_allow_content_copying: optionalBoolean(input.encryptionAllowContentCopying),
+      encryption_allow_screenreaders: optionalBoolean(input.encryptionAllowScreenreaders),
+      encryption_allow_form_filling: optionalBoolean(input.encryptionAllowFormFilling),
+      encryption_allow_document_assembly: optionalBoolean(input.encryptionAllowDocumentAssembly),
+    }),
+    apiKey: context.apiKey,
+    fetcher: context.fetcher,
+    phase: "execute",
+    signal: context.signal,
+  });
+  const pdf = normalizePdfPayload(payload);
+  return {
+    ...pdf,
+    transitFile: await uploadProviderUrlToTransitFile(
+      { url: pdf.downloadUrl, name: `${templateId}.pdf`, source: "Pdfless" },
+      context,
+    ),
+  };
+}
+
+async function pdflessRequest(request: PdflessRequest): Promise<unknown> {
+  const url = new URL(request.path, pdflessApiBaseUrl);
+  for (const [key, value] of Object.entries(request.query ?? {})) {
     if (value !== undefined) {
       url.searchParams.set(key, String(value));
     }
   }
 
-  let response: Response;
-  try {
-    response = await fetcher(url, {
-      method: "GET",
-      headers: pdflessHeaders(apiKey),
+  return runProviderRequest({ signal: request.signal, label: "Pdfless" }, async (signal) => {
+    const response = await request.fetcher(url, {
+      method: request.method ?? "GET",
+      headers: pdflessHeaders(request.apiKey, request.body !== undefined),
+      body: request.body === undefined ? undefined : JSON.stringify(request.body),
+      signal,
     });
-  } catch (error) {
-    throw new ProviderRequestError(
-      502,
-      error instanceof Error ? `Pdfless request failed: ${error.message}` : "Pdfless request failed",
-    );
-  }
+    const payload = await readProviderJsonBody(response, {
+      emptyBody: null,
+      invalidJsonMessage: "Pdfless returned a non-JSON response",
+      invalidJsonFallback: (text) => text,
+    });
+    if (!response.ok) {
+      throw mapPdflessError(response, payload, request.phase);
+    }
 
-  const payload = await readPdflessPayload(response);
-  if (!response.ok) {
-    throw mapPdflessError(response, payload, phase);
-  }
-
-  return payload;
+    return payload;
+  });
 }
 
-function pdflessHeaders(apiKey: string): Record<string, string> {
-  return {
+function pdflessHeaders(apiKey: string, hasJsonBody: boolean): Record<string, string> {
+  const headers: Record<string, string> = {
     accept: "application/json",
     apikey: apiKey,
     "user-agent": providerUserAgent,
   };
-}
-
-async function readPdflessPayload(response: Response): Promise<unknown> {
-  const text = await response.text().catch(() => "");
-  if (!text.trim()) {
-    return null;
+  if (hasJsonBody) {
+    headers["content-type"] = "application/json";
   }
-
-  try {
-    return JSON.parse(text) as unknown;
-  } catch {
-    return text;
-  }
+  return headers;
 }
 
 function mapPdflessError(response: Response, payload: unknown, phase: PdflessRequestPhase): ProviderRequestError {
   const message = extractPdflessErrorMessage(payload) ?? (response.statusText || "Pdfless request failed");
 
+  // quota_exceeded is a consumed monthly quota, not a bad credential, whatever status carries it.
+  if (optionalString(optionalRecord(payload)?.error_code) === "quota_exceeded") {
+    return new ProviderRequestError(402, message, payload, "insufficient_credit");
+  }
   if (response.status === 429) {
     return new ProviderRequestError(429, message, payload);
   }
@@ -243,12 +311,19 @@ function normalizePagination(payload: Record<string, unknown>): Record<string, n
   };
 }
 
-function unwrapPdflessRecord(payload: unknown): Record<string, unknown> {
-  const record = optionalRecord(payload);
-  if (!record) {
-    throw new ProviderRequestError(502, "Pdfless response must be an object");
-  }
+function normalizePdfPayload(payload: unknown): PdflessGeneratedPdf {
+  const record = unwrapPdflessRecord(payload);
+  return {
+    templateId: optionalStringOrNull(record.template_id),
+    referenceId: optionalStringOrNull(record.reference_id),
+    downloadUrl: readRequiredString(record.download_url, "download_url"),
+    expiresAt: optionalStringOrNull(record.expires),
+    createdAt: optionalStringOrNull(record.created_at),
+  };
+}
 
+function unwrapPdflessRecord(payload: unknown): Record<string, unknown> {
+  const record = requiredResponseRecord(payload, "Pdfless response");
   return optionalRecord(record.data) ?? record;
 }
 
