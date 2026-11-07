@@ -33,7 +33,7 @@ interface MinimaxActionContext {
 }
 type MinimaxActionHandler = (input: Record<string, unknown>, context: MinimaxActionContext) => Promise<unknown>;
 
-export const minimaxActionHandlers: ProviderActionHandlers<"minimax", MinimaxActionHandler> = {
+const minimaxActionHandlers: ProviderActionHandlers<"minimax", MinimaxActionHandler> = {
   async list_models(input, context) {
     const payload = await minimaxGetJson("/v1/models", context);
     return input.include_legacy === true ? payload : selectMinimaxModels(payload);

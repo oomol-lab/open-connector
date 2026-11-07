@@ -337,8 +337,7 @@ To restore eager loading, which keeps the complete catalog in memory:
 OOMOL_CONNECT_CATALOG_LAZY_SCHEMAS=false npm run dev
 ```
 
-Embedded hosts use `lazySchemas: false` for the same behavior. This default changed
-from eager loading for the standalone server; see the [release notes](../CHANGELOG.md).
+Embedded hosts use `lazySchemas: false` for the same behavior.
 
 Action metadata stays in memory: ids, names, descriptions, required scopes, provider permissions,
 follow-up and async lifecycle links, and execution flags. Only the two schema fields are read back

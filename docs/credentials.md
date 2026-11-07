@@ -136,6 +136,27 @@ curl -s -X PUT http://localhost:3000/api/connections/example \
 
 The accepted keys come from the provider's `auth[].fields`.
 
+### MQTT connections
+
+MQTT requires a broker with a `ws://` or `wss://` listener. Raw `mqtt://` and `mqtts://`
+connections, client TLS certificates and custom certificate authorities are not supported.
+Private-network brokers require a self-hosted Node deployment with
+`OOMOL_CONNECT_ALLOW_PRIVATE_NETWORK` enabled; Cloudflare Workers cannot reach LAN brokers.
+
+The default protocol is MQTT 3.1.1. Set `protocolVersion` to `5.0` for MQTT 5; a failed
+handshake does not retry with a different version. Each action opens a new clean connection
+and closes it before returning, using a random Client ID unless `clientId` is configured.
+
+For Alibaba Cloud ApsaraMQ device authentication, configure `aliyunInstanceId` and a
+`clientId` in `GroupID@@@DeviceID` format. Supply both `aliyunDeviceAccessKeyId` and
+`aliyunDeviceAccessKeySecret` together, either in the saved connection or in each action.
+Other cloud-vendor signing schemes are not supported.
+
+`publish_message` accepts UTF-8 or base64 payloads, QoS 0, 1 or 2, and optional retain.
+`receive_messages` collects at most 100 messages over at most 30 seconds. It does not keep
+a background subscription or offline inbox; non-retained messages between calls are missed.
+The provider has no workflow trigger or generic HTTP proxy.
+
 ## OAuth2 Connections
 
 OAuth2 providers require your own provider OAuth app. List OAuth-capable providers and copy the
