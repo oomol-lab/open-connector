@@ -1,8 +1,13 @@
 import type { FeishuJsonRequest } from "./client.ts";
 
-import { optionalBoolean, optionalNumber, optionalRecord, optionalString } from "../../../core/cast.ts";
-import { requiredResponseRecord } from "../../provider-runtime.ts";
-import { providerInputError, ProviderRequestError } from "../../provider-runtime.ts";
+import { objectArray, optionalBoolean, optionalNumber, optionalRecord, optionalString } from "../../../core/cast.ts";
+import {
+  providerInputError,
+  ProviderRequestError,
+  providerResponseError,
+  requiredResponseRecord,
+} from "../../provider-runtime.ts";
+import { readFeishuResponsePage } from "./response.ts";
 
 interface FeishuDriveActionHandler {
   (input: Record<string, unknown>): Promise<unknown>;
@@ -126,11 +131,12 @@ async function searchDriveItems(input: Record<string, unknown>, request: FeishuJ
       page_token: optionalString(input.pageToken),
     },
   });
+  const page = readFeishuResponsePage(data, "res_units");
   return {
-    items: Array.isArray(data.res_units) ? data.res_units : [],
+    items: page.items,
     total: optionalNumber(data.total),
-    hasMore: data.has_more === true,
-    pageToken: optionalString(data.page_token),
+    hasMore: page.hasMore,
+    pageToken: page.pageToken,
     notice: optionalString(data.notice),
   };
 }
@@ -146,7 +152,7 @@ async function listDriveFiles(input: Record<string, unknown>, request: FeishuJso
       direction: optionalString(input.direction),
     },
   });
-  return normalizePage(data, "files");
+  return readFeishuResponsePage(data, "files", ["page_token", "next_page_token"]);
 }
 
 async function createDriveFolder(input: Record<string, unknown>, request: FeishuJsonRequest) {
@@ -252,7 +258,7 @@ async function listDriveComments(input: Record<string, unknown>, request: Feishu
       page_token: optionalString(input.pageToken),
     },
   });
-  return normalizePage(data, "items");
+  return readFeishuResponsePage(data, "items", ["page_token", "next_page_token"]);
 }
 
 async function createDriveComment(input: Record<string, unknown>, request: FeishuJsonRequest) {
@@ -328,20 +334,10 @@ async function listDrivePermissions(input: Record<string, unknown>, request: Fei
       perm_type: optionalString(input.permType),
     },
   });
-  // Feishu answers `GET /drive/v1/permissions/:token/members` with the
-  // collaborators under `data.items`, not `data.members`. Reading the output
-  // name as if it were the wire key missed every time, and the `: []` below
-  // turned the miss into a successful empty list — so every ACL read reported
-  // that nobody has access, with `success: true`.
-  //
-  // Every other list endpoint in this file already names the wire key
-  // explicitly (`normalizePage(data, "files")`, `normalizePage(data,
-  // "items")`); this one assumed it matched the field it returns, and was the
-  // only place that did.
-  //
-  // `members` is still read after `items`, so a wire that ever answers under
-  // that name keeps working rather than breaking in the other direction.
-  const rows = Array.isArray(data.items) ? data.items : Array.isArray(data.members) ? data.members : [];
+  // The wire key is items; accept members only when items is absent. An
+  // invalid authoritative list must not become a complete empty grant.
+  const field = Object.hasOwn(data, "items") ? "items" : "members";
+  const rows = objectArray(data[field], `Feishu response ${field}`, providerResponseError);
   return { members: rows };
 }
 
@@ -401,14 +397,6 @@ async function removeDrivePermission(input: Record<string, unknown>, request: Fe
     },
   });
   return { deleted: true };
-}
-
-function normalizePage(data: Record<string, unknown>, itemKey: string) {
-  return {
-    items: Array.isArray(data[itemKey]) ? data[itemKey] : [],
-    hasMore: data.has_more === true,
-    pageToken: optionalString(data.page_token) ?? optionalString(data.next_page_token),
-  };
 }
 
 function commentPath(input: Record<string, unknown>) {
