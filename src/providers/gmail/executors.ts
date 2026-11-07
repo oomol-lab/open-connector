@@ -501,6 +501,8 @@ async function replyToThread(input: Record<string, unknown>, context: ActionCont
 
   const recipients = buildRecipients(input);
   const replyHeaders = resolveReplyHeaders(target);
+  const subject = optionalRawString(input.subject) ?? replyHeaders.subject;
+  assertMatchingReplySubject(subject, replyHeaders.subject);
   const response = await sendThreadMessage(
     userId,
     accessToken,
@@ -510,9 +512,10 @@ async function replyToThread(input: Record<string, unknown>, context: ActionCont
       to: recipients.to.length > 0 ? recipients.to : [replyHeaders.to],
       cc: recipients.cc,
       bcc: recipients.bcc,
-      subject: replyHeaders.subject,
+      subject,
       body: optionalRawString(input.messageBody) ?? optionalRawString(input.body),
       isHtml: input.isHtml === true,
+      from: optionalRawString(input.fromEmail),
       inReplyTo: replyHeaders.inReplyTo,
       references: replyHeaders.references,
       attachments,
