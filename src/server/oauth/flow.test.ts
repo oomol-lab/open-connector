@@ -216,7 +216,9 @@ describe("authorization code flow", () => {
 
     // The backing runtime token exists and is named after the client.
     const runtimeTokens = await database.runtimeTokenStore.list();
-    expect(runtimeTokens.some((record) => record.name.startsWith("MCP OAuth •"))).toBe(true);
+    expect(runtimeTokens).toHaveLength(1);
+    expect(runtimeTokens[0]?.name).toMatch(/^MCP OAuth •/);
+    expect(runtimeTokens[0]?.allowedActions).toEqual([]);
   });
 
   it("rejects a wrong verifier, burns the code, and rejects replay", async () => {
@@ -527,16 +529,14 @@ describe("oauth client scope defaults", () => {
     const registration = await readJson(registered);
     expect(registration.scopes).toEqual(["mcp:access", "offline_access"]);
 
-    // ChatGPT requests both scopes at authorize; this must not fail with invalid_scope.
-    const { verifier } = pkcePair();
-    const { location } = await authorizeAndApprove(app, String(registration.client_id));
-    const tokenResponse = await exchangeCode(
-      app,
-      String(registration.client_id),
-      location.searchParams.get("code") ?? "",
-      verifier,
-    );
+    const clientId = String(registration.client_id);
+    const { location, verifier } = await authorizeAndApprove(app, clientId);
+    const code = location.searchParams.get("code") ?? "";
+    const tokenResponse = await exchangeCode(app, clientId, code, verifier);
     expect(tokenResponse.status).toBe(200);
+    const tokens = await readJson(tokenResponse);
+    expect(tokens.scope).toBe("mcp:access offline_access");
+    expect(typeof tokens.refresh_token).toBe("string");
   });
 
   it("registers an explicit scope subset restricted to that subset", async () => {
@@ -567,18 +567,5 @@ describe("oauth client scope defaults", () => {
     expect(response.status).toBe(302);
     const redirect = new URL(response.headers.get("location") ?? "");
     expect(redirect.searchParams.get("error")).toBe("invalid_scope");
-  });
-});
-
-describe("consent-minted runtime token policy", () => {
-  it("mints the backing runtime token with no additional action restriction", async () => {
-    const { app, database } = await setup();
-    const { clientId } = await createManualClient(app);
-    const { location } = await authorizeAndApprove(app, clientId);
-    expect(location.searchParams.get("code")).toBeTruthy();
-    const backingTokenId = (await database.oauthCodeStore.listByClient(clientId))[0]?.runtimeTokenId;
-    expect(backingTokenId).toBeTruthy();
-    const backing = await database.runtimeTokenStore.findById(backingTokenId as string);
-    expect(backing?.allowedActions).toEqual([]);
   });
 });

@@ -24,28 +24,12 @@ describe("normalizeClientMetadata", () => {
     });
   });
 
-  it("defaults a CIMD document without scope to the supported scopes", () => {
-    const metadata = normalizeClientMetadata({
-      client_id: "https://client.example/mcp.json",
-      redirect_uris: ["https://client.example/callback"],
-    });
-    expect(metadata?.scopes).toEqual(["mcp:access", "offline_access"]);
-  });
-
-  it("keeps an explicitly requested scope subset restricted", () => {
+  it.each(["mcp:access", "offline_access"])("preserves the declared scope %s", (scope) => {
     const metadata = normalizeClientMetadata({
       redirect_uris: ["https://client.example/callback"],
-      scope: "mcp:access",
+      scope,
     });
-    expect(metadata?.scopes).toEqual(["mcp:access"]);
-  });
-
-  it("honors declared scopes exactly and never injects unregistered scopes", () => {
-    const metadata = normalizeClientMetadata({
-      redirect_uris: ["https://client.example/callback"],
-      scope: "offline_access",
-    });
-    expect(metadata?.scopes).toEqual(["offline_access"]);
+    expect(metadata?.scopes).toEqual([scope]);
   });
 
   it("keeps a CIMD client_id and defaults its name", () => {
@@ -55,6 +39,7 @@ describe("normalizeClientMetadata", () => {
     });
     expect(metadata?.clientId).toBe("https://client.example/mcp.json");
     expect(metadata?.clientName).toBe("https://client.example/mcp.json");
+    expect(metadata?.scopes).toEqual(["mcp:access", "offline_access"]);
   });
 
   it("rejects empty redirect_uris", () => {

@@ -156,7 +156,6 @@ describe("consent origin check", () => {
 
   it("still rejects a cross-origin consent POST with 403", async () => {
     const { app } = await setup();
-    const clientId = await createManualClient(app);
     const response = await app.request(`${ISSUER}/oauth/mcp/authorize`, {
       method: "POST",
       headers: { "content-type": "application/x-www-form-urlencoded", origin: "https://evil.example" },

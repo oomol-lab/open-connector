@@ -1,6 +1,6 @@
 import type { OAuthTokenEndpointAuthMethod } from "../storage/oauth-as-stores.ts";
 
-import { optionalRecord } from "../../core/cast.ts";
+import { optionalRawString, optionalRecord } from "../../core/cast.ts";
 import { supportedScopes } from "./config.ts";
 
 /**
@@ -66,26 +66,12 @@ export function normalizeClientMetadata(value: unknown): OAuthClientMetadata | u
   if (unknownScope !== undefined) {
     throw new ClientMetadataError("invalid_client_metadata", `Unsupported scope: ${unknownScope}`);
   }
-  // RFC 7591 section 2: omitted scope defaults to the server's supported scopes,
-  // so clients like ChatGPT that register without a scope can still request
-  // offline_access at the authorize endpoint. Declared scopes are honored
-  // exactly as requested; the server never grants unregistered scopes.
-  const resolvedScopes = scopes.length > 0 ? [...new Set(scopes)] : [...supportedScopes];
-  if (typeof record.client_id === "string" && record.client_id.length > 0) {
-    return {
-      clientId: record.client_id,
-      clientName: name || record.client_id,
-      redirectUris,
-      scopes: resolvedScopes,
-      tokenEndpointAuthMethod: authMethod,
-      grantTypes: readStringArray(record.grant_types) ?? ["authorization_code"],
-      responseTypes: readStringArray(record.response_types) ?? ["code"],
-    };
-  }
+  const clientId = optionalRawString(record.client_id) || undefined;
   return {
-    clientName: name || "Unnamed client",
+    clientId,
+    clientName: name || clientId || "Unnamed client",
     redirectUris,
-    scopes: resolvedScopes,
+    scopes: scopes.length > 0 ? [...new Set(scopes)] : [...supportedScopes],
     tokenEndpointAuthMethod: authMethod,
     grantTypes: readStringArray(record.grant_types) ?? ["authorization_code"],
     responseTypes: readStringArray(record.response_types) ?? ["code"],
