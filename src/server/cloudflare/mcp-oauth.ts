@@ -134,7 +134,7 @@ export function createMcpOAuthHandler(origin: string, runtime: RuntimeHandler): 
           const client = await oauth.describeConsent(approved.request);
           const tokens = runtimeTokens(env);
           const backing = await tokens.createToken(`MCP OAuth • ${client.clientName.slice(0, 120)}`, {
-            allowedActions: ["*"],
+            allowedActions: [],
             blockedActions: [],
             allowedProxies: [],
             allowedConnections: [],

@@ -2,6 +2,19 @@
 
 ## Unreleased
 
+### Fixed
+
+- OAuth clients registered through dynamic client registration or a CIMD document without an
+  explicit scope now default to all supported scopes instead of only `mcp:access`. Clients such
+  as ChatGPT that request `mcp:access offline_access` at the authorize endpoint no longer fail
+  with `invalid_scope`. Clients registered before this change keep their stored scopes; widen an
+  affected client explicitly with `PUT /api/oauth-clients/:clientId` or delete it so the client
+  registers again. Existing records are never widened automatically because explicitly restricted
+  clients store their scopes the same way.
+- Runtime tokens minted on OAuth consent approval now carry no additional action restriction
+  (an empty allowed-action policy governed by the deployment and runtime policy layers) instead
+  of allowing all actions.
+
 ### Added
 
 - Inbound OAuth 2.1 authorization server for MCP clients on Node deployments: protected resource

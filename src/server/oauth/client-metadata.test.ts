@@ -17,11 +17,19 @@ describe("normalizeClientMetadata", () => {
     ).toEqual({
       clientName: "My Client",
       redirectUris: ["https://client.example/callback"],
-      scopes: ["mcp:access"],
+      scopes: ["mcp:access", "offline_access"],
       tokenEndpointAuthMethod: "none",
       grantTypes: ["authorization_code"],
       responseTypes: ["code"],
     });
+  });
+
+  it.each(["mcp:access", "offline_access"])("preserves the declared scope %s", (scope) => {
+    const metadata = normalizeClientMetadata({
+      redirect_uris: ["https://client.example/callback"],
+      scope,
+    });
+    expect(metadata?.scopes).toEqual([scope]);
   });
 
   it("keeps a CIMD client_id and defaults its name", () => {
@@ -31,6 +39,7 @@ describe("normalizeClientMetadata", () => {
     });
     expect(metadata?.clientId).toBe("https://client.example/mcp.json");
     expect(metadata?.clientName).toBe("https://client.example/mcp.json");
+    expect(metadata?.scopes).toEqual(["mcp:access", "offline_access"]);
   });
 
   it("rejects empty redirect_uris", () => {

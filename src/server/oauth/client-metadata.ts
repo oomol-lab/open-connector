@@ -1,7 +1,7 @@
 import type { OAuthTokenEndpointAuthMethod } from "../storage/oauth-as-stores.ts";
 
-import { optionalRecord } from "../../core/cast.ts";
-import { accessScope, supportedScopes } from "./config.ts";
+import { optionalRawString, optionalRecord } from "../../core/cast.ts";
+import { supportedScopes } from "./config.ts";
 
 /**
  * Client metadata shared by dynamic registration (RFC 7591) and client ID
@@ -66,21 +66,12 @@ export function normalizeClientMetadata(value: unknown): OAuthClientMetadata | u
   if (unknownScope !== undefined) {
     throw new ClientMetadataError("invalid_client_metadata", `Unsupported scope: ${unknownScope}`);
   }
-  if (typeof record.client_id === "string" && record.client_id.length > 0) {
-    return {
-      clientId: record.client_id,
-      clientName: name || record.client_id,
-      redirectUris,
-      scopes: scopes.includes(accessScope) ? [...new Set(scopes)] : [accessScope, ...new Set(scopes)],
-      tokenEndpointAuthMethod: authMethod,
-      grantTypes: readStringArray(record.grant_types) ?? ["authorization_code"],
-      responseTypes: readStringArray(record.response_types) ?? ["code"],
-    };
-  }
+  const clientId = optionalRawString(record.client_id) || undefined;
   return {
-    clientName: name || "Unnamed client",
+    clientId,
+    clientName: name || clientId || "Unnamed client",
     redirectUris,
-    scopes: scopes.includes(accessScope) ? [...new Set(scopes)] : [accessScope, ...new Set(scopes)],
+    scopes: scopes.length > 0 ? [...new Set(scopes)] : [...supportedScopes],
     tokenEndpointAuthMethod: authMethod,
     grantTypes: readStringArray(record.grant_types) ?? ["authorization_code"],
     responseTypes: readStringArray(record.response_types) ?? ["code"],

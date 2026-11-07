@@ -216,7 +216,9 @@ describe("authorization code flow", () => {
 
     // The backing runtime token exists and is named after the client.
     const runtimeTokens = await database.runtimeTokenStore.list();
-    expect(runtimeTokens.some((record) => record.name.startsWith("MCP OAuth •"))).toBe(true);
+    expect(runtimeTokens).toHaveLength(1);
+    expect(runtimeTokens[0]?.name).toMatch(/^MCP OAuth •/);
+    expect(runtimeTokens[0]?.allowedActions).toEqual([]);
   });
 
   it("rejects a wrong verifier, burns the code, and rejects replay", async () => {
@@ -508,5 +510,62 @@ describe("consent scope enforcement", () => {
     const tokens = await readJson(tokenResponse);
     expect(tokens.scope).toBe("mcp:access");
     expect(tokens).not.toHaveProperty("refresh_token");
+  });
+});
+
+describe("oauth client scope defaults", () => {
+  it("registers a DCR client without scope with all supported scopes and authorizes offline access", async () => {
+    const { app } = await setup();
+    const registered = await app.request(`${ISSUER}/oauth/mcp/register`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        client_name: "ChatGPT",
+        redirect_uris: [REDIRECT],
+        token_endpoint_auth_method: "none",
+      }),
+    });
+    expect(registered.status).toBe(201);
+    const registration = await readJson(registered);
+    expect(registration.scopes).toEqual(["mcp:access", "offline_access"]);
+
+    const clientId = String(registration.client_id);
+    const { location, verifier } = await authorizeAndApprove(app, clientId);
+    const code = location.searchParams.get("code") ?? "";
+    const tokenResponse = await exchangeCode(app, clientId, code, verifier);
+    expect(tokenResponse.status).toBe(200);
+    const tokens = await readJson(tokenResponse);
+    expect(tokens.scope).toBe("mcp:access offline_access");
+    expect(typeof tokens.refresh_token).toBe("string");
+  });
+
+  it("registers an explicit scope subset restricted to that subset", async () => {
+    const { app } = await setup();
+    const registered = await app.request(`${ISSUER}/oauth/mcp/register`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({
+        client_name: "Restricted client",
+        redirect_uris: [REDIRECT],
+        token_endpoint_auth_method: "none",
+        scope: "mcp:access",
+      }),
+    });
+    expect(registered.status).toBe(201);
+    const registration = await readJson(registered);
+    expect(registration.scopes).toEqual(["mcp:access"]);
+
+    const { challenge } = pkcePair();
+    const authorizeUrl = new URL(`${ISSUER}/oauth/mcp/authorize`);
+    authorizeUrl.searchParams.set("response_type", "code");
+    authorizeUrl.searchParams.set("client_id", String(registration.client_id));
+    authorizeUrl.searchParams.set("redirect_uri", REDIRECT);
+    authorizeUrl.searchParams.set("scope", "mcp:access offline_access");
+    authorizeUrl.searchParams.set("code_challenge", challenge);
+    authorizeUrl.searchParams.set("code_challenge_method", "S256");
+    const response = await app.request(authorizeUrl, { redirect: "manual" });
+    expect(response.status).toBe(302);
+    const redirect = new URL(response.headers.get("location") ?? "");
+    expect(redirect.searchParams.get("error")).toBe("invalid_scope");
   });
 });

@@ -60,6 +60,8 @@ export function markdownToBlockNote(markdown: string): MarkdownConversion {
     styles,
   });
   function safeURL(value: string, image = false): boolean {
+    // Reject control characters before URL parsing can normalize them away.
+    // oxlint-disable-next-line no-control-regex
     if (/[\u0000-\u0020\u007f]|%(?![0-9a-f]{2})/iu.test(value)) return false;
     try {
       const url = new URL(value);
