@@ -26,6 +26,7 @@ import {
 
 export const pdflessApiBaseUrl = "https://api.pdfless.com";
 const pdflessWorkspacePath = "/v1/workspaces";
+const pdflessDocumentTemplatesPath = "/v1/document-templates";
 const pdflessPdfsPath = "/v1/pdfs";
 
 type PdflessRequestPhase = "validate" | "execute";
@@ -132,7 +133,7 @@ async function pdflessListDocumentTemplates(
   context: PdflessActionContext,
 ): Promise<unknown> {
   const payload = await pdflessRequest({
-    path: "/v1/document-templates",
+    path: pdflessDocumentTemplatesPath,
     query: compactObject({
       Page: optionalInteger(input.page),
       PageSize: optionalInteger(input.pageSize),

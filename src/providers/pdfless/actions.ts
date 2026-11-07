@@ -30,13 +30,16 @@ const paginationSchema = s.object("Pagination information returned with the temp
   totalPages: s.integer("The total number of pages."),
 });
 
-const transitFileSchema = s.object("A copy of the generated PDF stored in local transit storage.", {
-  fileId: s.nonEmptyString("The local transit file identifier."),
-  downloadUrl: s.url("The local URL for downloading the transit file."),
-  sizeBytes: s.number("The transit file size in bytes."),
-  name: s.nonEmptyString("The transit file name."),
-  mimeType: s.nonEmptyString("The transit file MIME type."),
-});
+const transitFileSchema = s.object(
+  "A copy of the generated PDF in local transit storage, or null when transit storage is disabled.",
+  {
+    fileId: s.nonEmptyString("The local transit file identifier."),
+    downloadUrl: s.url("The local URL for downloading the transit file."),
+    sizeBytes: s.number("The transit file size in bytes."),
+    name: s.nonEmptyString("The transit file name."),
+    mimeType: s.nonEmptyString("The transit file MIME type."),
+  },
+);
 
 export const pdflessActions: ActionDefinition[] = [
   defineProviderAction(service, {
@@ -125,10 +128,7 @@ export const pdflessActions: ActionDefinition[] = [
       downloadUrl: s.url("The Pdfless URL for downloading the PDF. It expires 10 minutes after generation."),
       expiresAt: s.nullableString("The ISO 8601 timestamp when downloadUrl expires."),
       createdAt: s.nullableString("The ISO 8601 timestamp when the PDF was created."),
-      transitFile: s.describe(
-        s.nullable(transitFileSchema),
-        "A copy of the generated PDF in local transit storage, or null when transit storage is disabled.",
-      ),
+      transitFile: s.nullable(transitFileSchema),
     }),
   }),
 ];
