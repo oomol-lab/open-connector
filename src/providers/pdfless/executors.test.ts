@@ -142,6 +142,28 @@ describe("Pdfless create_pdf", () => {
     },
   );
 
+  it("reports a plan-gated feature refusal as invalid_input instead of a reconnect prompt", async () => {
+    const message = "Your subscription plan does not include PDF encryption";
+    stubResponses([
+      Response.json(
+        {
+          message,
+          error_code: "subscription_limits",
+          documentation_url: "https://www.pdfless.com/pricing",
+          correlation_id: "025d3711-d206-4394-b58e-b35e4f158776",
+        },
+        { status: 403 },
+      ),
+    ]);
+
+    const result = await executors["pdfless.create_pdf"]!(
+      { templateId, encryptionUserPassword: "secret" },
+      contextWithKey(),
+    );
+
+    expect(result).toMatchObject({ ok: false, error: { code: "invalid_input", message } });
+  });
+
   it("fails with provider_error when the success envelope has no download URL", async () => {
     stubResponses([Response.json({ data: {}, status: "success" })]);
 

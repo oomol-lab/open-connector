@@ -91,10 +91,10 @@ export const pdflessActions: ActionDefinition[] = [
           "The caller's own identifier for this PDF. Pdfless stores it and returns it in the response.",
         ),
         encryptionUserPassword: s.nonEmptyString(
-          "When set, the PDF is encrypted and this password is required to open it.",
+          "When set, the PDF is encrypted and this password is required to open it. Requires a subscription plan that includes PDF encryption.",
         ),
         encryptionOwnerPassword: s.nonEmptyString(
-          "The permission password that lifts the restrictions set by the encryptionAllow* flags.",
+          "The permission password that lifts the restrictions set by the encryptionAllow* flags. Requires a subscription plan that includes PDF encryption.",
         ),
         encryptionAllowPrinting: s.boolean("Whether an encrypted PDF may be printed."),
         encryptionAllowModifying: s.boolean("Whether an encrypted PDF may be modified."),

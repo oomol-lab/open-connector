@@ -224,9 +224,14 @@ function pdflessHeaders(apiKey: string, hasJsonBody: boolean): Record<string, st
 function mapPdflessError(response: Response, payload: unknown, phase: PdflessRequestPhase): ProviderRequestError {
   const message = extractPdflessErrorMessage(payload) ?? (response.statusText || "Pdfless request failed");
 
-  // quota_exceeded is a consumed monthly quota, not a bad credential, whatever status carries it.
-  if (optionalString(optionalRecord(payload)?.error_code) === "quota_exceeded") {
+  // Neither code is a bad credential, whatever status carries it: quota_exceeded is a consumed
+  // monthly quota, and subscription_limits a feature the workspace's plan does not include.
+  const errorCode = optionalString(optionalRecord(payload)?.error_code);
+  if (errorCode === "quota_exceeded") {
     return new ProviderRequestError(402, message, payload, "insufficient_credit");
+  }
+  if (errorCode === "subscription_limits") {
+    return new ProviderRequestError(400, message, payload);
   }
   if (response.status === 429) {
     return new ProviderRequestError(429, message, payload);
