@@ -13,6 +13,7 @@ export function createFeishuMarkdownRuntimeContext(input: {
     async download({ fileToken, version }) {
       return withFeishuRawResponse(
         {
+          openBaseUrl: input.context.openBaseUrl,
           accessToken: input.context.accessToken,
           fetcher: input.context.fetcher,
           signal: input.context.signal,
@@ -47,6 +48,7 @@ export function createFeishuMarkdownRuntimeContext(input: {
       }
       body.set("file", new Blob([bytes.slice().buffer], { type: "text/markdown; charset=utf-8" }), fileName);
       const data = await requestFeishuMultipart({
+        openBaseUrl: input.context.openBaseUrl,
         accessToken: input.context.accessToken,
         fetcher: input.context.fetcher,
         signal: input.context.signal,

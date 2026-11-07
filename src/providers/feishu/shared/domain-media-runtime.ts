@@ -25,6 +25,7 @@ interface DomainMediaHandler {
 
 export interface FeishuDomainMediaRuntimeDeps {
   readonly request: FeishuJsonRequest;
+  readonly openBaseUrl: string;
   readonly accessToken: string;
   readonly fetcher: typeof fetch;
   readonly transitFiles?: TransitFileWriter;
@@ -343,6 +344,7 @@ async function uploadTaskAttachment(input: Record<string, unknown>, deps: Feishu
   setFormFile(body, "file", source);
   const userIdType = optionalString(input.userIdType) ?? "open_id";
   const data = await requestFeishuMultipart({
+    openBaseUrl: deps.openBaseUrl,
     accessToken: deps.accessToken,
     fetcher: deps.fetcher,
     signal: deps.signal,
@@ -445,6 +447,7 @@ async function uploadOkrImage(input: Record<string, unknown>, deps: FeishuDomain
     body.set("target_type", String(targetTypeValue));
     setFormFile(body, "data", source);
     const data = await requestFeishuMultipart({
+      openBaseUrl: deps.openBaseUrl,
       accessToken: deps.accessToken,
       fetcher: deps.fetcher,
       signal: deps.signal,
@@ -554,6 +557,7 @@ async function uploadDriveMedia(
     }
     setFormFile(body, "file", { ...source, bytes });
     const data = await requestFeishuMultipart({
+      openBaseUrl: deps.openBaseUrl,
       accessToken: deps.accessToken,
       fetcher: deps.fetcher,
       signal: deps.signal,
@@ -592,6 +596,7 @@ async function uploadDriveMedia(
       mimeType: "application/octet-stream",
     });
     await requestFeishuMultipart({
+      openBaseUrl: deps.openBaseUrl,
       accessToken: deps.accessToken,
       fetcher: deps.fetcher,
       signal: deps.signal,
@@ -641,6 +646,7 @@ async function downloadFeishuRaw(
   const transit = requireTransit(deps);
   return withFeishuRawResponse(
     {
+      openBaseUrl: deps.openBaseUrl,
       accessToken: deps.accessToken,
       fetcher: deps.fetcher,
       signal: deps.signal,
