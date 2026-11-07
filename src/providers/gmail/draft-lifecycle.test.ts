@@ -292,6 +292,38 @@ describe("Gmail attachment workflows", () => {
 });
 
 describe("Gmail reply and draft threading", () => {
+  it("preserves the send-as alias, display name and supplied matching subject in thread replies", async () => {
+    const test = fixture();
+    await gmailActionHandlers.reply_to_thread(
+      {
+        threadId: "thread-1",
+        to: "recipient@example.com",
+        body: "Reply",
+        fromEmail: "Team <marketing@example.com>",
+        subject: "Re: Re: Topic",
+      },
+      test.context,
+    );
+    const parsed = await simpleParser(Buffer.from(test.sent[0]!, "base64url"));
+    expect(parsed.from?.value).toEqual([{ name: "Team", address: "marketing@example.com" }]);
+    expect(parsed.subject).toBe("Re: Re: Topic");
+    expect(parsed.inReplyTo).toBe("<original@example.com>");
+    expect(parsed.references).toEqual(["<root@example.com>", "<original@example.com>"]);
+    const write = test.requests.find((request) => request.init.method === "POST")!;
+    expect(JSON.parse(String(write.init.body)).threadId).toBe("thread-1");
+  });
+
+  it("rejects a mismatched subject before sending a thread reply", async () => {
+    const test = fixture();
+    await expect(
+      gmailActionHandlers.reply_to_thread(
+        { threadId: "thread-1", subject: "Another topic", body: "Reply" },
+        test.context,
+      ),
+    ).rejects.toMatchObject({ status: 400 });
+    expect(test.requests.every((request) => !request.init.method)).toBe(true);
+  });
+
   it.each([
     { name: "encoded tabs", encoded: "=?UTF-8?Q?Project=09update?=", subject: "Project\tupdate" },
     { name: "UTF-7", encoded: "=?UTF-7?Q?Project_+IKw-_update?=", subject: "Project € update" },
