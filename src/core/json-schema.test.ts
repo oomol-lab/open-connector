@@ -265,3 +265,10 @@ describe("conditional and strict numeric constraints", () => {
     }
   });
 });
+
+it("enforces explicit required fields on loose objects while retaining upstream additions", () => {
+  const schema = jsonSchema.looseObject("Result", { code: jsonSchema.string("Status code") }, { required: ["code"] });
+  const validator = new Validator(schema);
+  expect(validator.validate({ code: "ok", future: { enabled: true } }).valid).toBe(true);
+  expect(validator.validate({ future: true }).valid).toBe(false);
+});

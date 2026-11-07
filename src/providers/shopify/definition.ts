@@ -13,8 +13,39 @@ export const provider: ProviderDefinition = {
   service,
   displayName: "Shopify",
   categories: ["Marketing", "Data"],
-  authTypes: ["oauth2", "api_key"],
+  authTypes: ["oauth2", "api_key", "custom_credential"],
   auth: [
+    {
+      type: "custom_credential",
+      fields: [
+        {
+          key: "shopDomain",
+          label: "Shop domain",
+          inputType: "text",
+          required: true,
+          secret: false,
+          description: "The store's myshopify.com domain.",
+        },
+        {
+          key: "clientId",
+          label: "Client ID",
+          inputType: "text",
+          required: true,
+          secret: false,
+          description:
+            "Client ID of an app owned by the same organization as the store. Create and install it from https://dev.shopify.com/dashboard/.",
+        },
+        {
+          key: "clientSecret",
+          label: "Client Secret",
+          inputType: "password",
+          required: true,
+          secret: true,
+          description:
+            "The same app's client secret. The connector obtains and refreshes its short-lived Admin API access token.",
+        },
+      ],
+    },
     {
       type: "oauth2",
       authorizationUrl: shopifyAuthorizationUrl,

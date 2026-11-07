@@ -1030,7 +1030,7 @@ function buildReactionPayload(input: Record<string, unknown>): Record<string, un
 async function resolveSlackFileContent(
   input: Record<string, unknown>,
   context: SlackActionContext,
-): Promise<Uint8Array> {
+): Promise<Uint8Array<ArrayBuffer>> {
   const fileUrl = requiredString(input.fileUrl, "fileUrl", (message) => new ProviderRequestError(400, message));
   assertFetchableFileUrl(fileUrl);
   const timeout = createProviderTimeout(context.signal);
@@ -1063,12 +1063,11 @@ async function resolveSlackFileContent(
 async function uploadSlackFileContent(
   uploadUrl: string,
   filename: string,
-  content: Uint8Array,
+  content: Uint8Array<ArrayBuffer>,
   mimeType: string | undefined,
   context: SlackActionContext,
 ): Promise<void> {
-  const bytes = new Uint8Array(content);
-  const body = bytes.buffer.slice(bytes.byteOffset, bytes.byteOffset + bytes.byteLength);
+  const body = new Blob([content]);
   const response = await context.fetcher(uploadUrl, {
     method: "POST",
     headers: {

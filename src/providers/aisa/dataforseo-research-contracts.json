@@ -5439,5 +5439,1411 @@
         }
       ]
     }
+  },
+  {
+    "name": "get_dataforseo_ai_mentions_history",
+    "path": "/apis/v1/dataforseo/ai_optimization/llm_mentions/historical/live",
+    "description": "Get historical AI mentions for a domain or brand.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "dateFrom": {
+          "description": "start date of the time range optional field minimal value 2025-08-01 date format \"yyyy-mm-dd\"",
+          "type": ["string", "null"],
+          "format": "date"
+        },
+        "dateTo": {
+          "description": "end date of the time range optional field Note value specified in date_from cannot exceed the value in date_to date format \"yyyy-mm-dd\"",
+          "type": ["string", "null"],
+          "format": "date"
+        },
+        "languageCode": {
+          "description": "search language code optional field if you use this field, you don't need to specify language_name ; you can receive the list of available languages of the search engine with their language_code by making a separate request to the https://api.dataforseo.com/v3/ai_optimization/llm_mentions/locations_and_languages default value: en Note: chat_gpt data is available for en only",
+          "type": ["string", "null"]
+        },
+        "languageName": {
+          "description": "full name of search language optional field if you use this field, you don't need to specify language_code ; if you don't specify this field, the language_code with en value will be used by default; you can receive the list of available languages of the search engine with their language_name by making a separate request to the https://api.dataforseo.com/v3/ai_optimization/llm_mentions/locations_and_languages Note: chat_gpt data is available for English only",
+          "type": ["string", "null"]
+        },
+        "locationCode": {
+          "description": "search location code optional field if you use this field, you don't need to specify location_name you can receive the list of available locations of the search engine with their location_code by making a separate request to the https://api.dataforseo.com/v3/ai_optimization/llm_mentions/locations_and_languages default value: 2840 Note: chat_gpt data is available for 2840 only",
+          "type": ["integer", "null"]
+        },
+        "locationName": {
+          "description": "full name of search location optional field if you use this field, you don't need to specify location_code if you don't specify this field, the location_code with 2840 value will be used by default; you can receive the list of available locations of the search engine with their location_name by making a separate request to the https://api.dataforseo.com/v3/ai_optimization/llm_mentions/locations_and_languages Note: chat_gpt data is available for United States only",
+          "type": ["string", "null"]
+        },
+        "platform": {
+          "description": "target platform optional field possible values: chat_gpt , google Note: if the platform is not specified, the data is returned for both platforms Note #2: chat_gpt data is available for the United States and English only",
+          "type": ["string", "null"]
+        },
+        "tag": {
+          "description": "user-defined task identifier optional field the character limit is 255 you can use this parameter to identify the task and match it with the result you will find the specified tag value in the data object of the response",
+          "type": ["string", "null"]
+        },
+        "target": {
+          "description": "array of objects containing target entities required field you can specify up to 10 entities (objects) in the target field one target entity can contain either one domain or one keyword and related parameters examples: target array with a domain entity",
+          "items": {
+            "oneOf": [
+              {
+                "required": ["domain"]
+              },
+              {
+                "required": ["keyword"]
+              }
+            ],
+            "properties": {
+              "domain": {
+                "description": "target domain required field if you don't specify keyword you can specify up to 63 characters in the domain field; a domain should be specified without https:// and www.",
+                "type": "string"
+              },
+              "include_subdomains": {
+                "description": "indicates if the subdomains of the target domain will be included in the search optional field if set to true, the subdomains will be included in the search default value: false",
+                "type": "boolean"
+              },
+              "keyword": {
+                "description": "target keyword required field if you don't specify domain you can specify up to 250 characters in the keyword field all %## will be decoded (plus character ‘+’ will be decoded to a space character) if you need to use the “%” character for your keyword, please specify it as “%25”; if you need to use the “+” character for your keyword, please specify it as “%2B”learn more about rules and limitations of keyword and keywords fields in DataForSEO APIs in this Help Center article",
+                "type": "string"
+              },
+              "match_type": {
+                "description": "target keyword match type optional field word_match - full-text search for terms that match the specified seed keyword with additional words included before, after, or within the key phrase (e.g., search for “light” will return results with “light bulb”, “light switch”); partial_match - substring search that finds all instances containing the specified sequence of characters, even if it appears inside a longer word (e.g., search for “light” will return results with “lighting”, “highlight”); possible values: word_match, partial_match default value: word_match",
+                "type": "string"
+              },
+              "search_filter": {
+                "description": "Entity search filter: include or exclude; defaults to include.",
+                "type": "string"
+              },
+              "search_scope": {
+                "description": "Search scope. Domain entities: any, sources, search_results. Keyword entities: any, question, answer, brand_entities, fan_out_queries. Default: any.",
+                "items": {
+                  "type": "string",
+                  "description": "The search scope value value."
+                },
+                "type": "array"
+              }
+            },
+            "type": "object",
+            "description": "The target value value.",
+            "additionalProperties": false
+          },
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 10
+        }
+      },
+      "description": "Get historical AI mentions for a domain or brand. Top-level fields use camelCase; nested provider fields and filters retain their original names.",
+      "additionalProperties": false,
+      "required": ["target"]
+    }
+  },
+  {
+    "name": "get_dataforseo_ai_mentions_delta",
+    "path": "/apis/v1/dataforseo/ai_optimization/llm_mentions/timeseries_delta/live",
+    "description": "Compare changes in AI mentions across time periods.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "dateFrom": {
+          "description": "start date of the time range required field minimal value: 2025-08-01 date format: \"yyyy-mm-dd\"",
+          "type": "string",
+          "format": "date"
+        },
+        "dateTo": {
+          "description": "end date of the time range required field Note: the value specified in date_from cannot exceed the value in date_to date format: \"yyyy-mm-dd\"",
+          "type": "string",
+          "format": "date"
+        },
+        "groupRange": {
+          "description": "timeseries delta range required field possible values: day , week , month , year",
+          "type": "string"
+        },
+        "languageCode": {
+          "description": "search language code optional field if you use this field, you don't need to specify language_name ; you can receive the list of available languages of the search engine with their language_code by making a separate request to the https://api.dataforseo.com/v3/ai_optimization/llm_mentions/locations_and_languages default value: en Note: chat_gpt data is available for en only",
+          "type": ["string", "null"]
+        },
+        "languageName": {
+          "description": "full name of search language optional field if you use this field, you don't need to specify language_code ; if you don't specify this field, the language_code with en value will be used by default; you can receive the list of available languages of the search engine with their language_name by making a separate request to the https://api.dataforseo.com/v3/ai_optimization/llm_mentions/locations_and_languages Note: chat_gpt data is available for English only",
+          "type": ["string", "null"]
+        },
+        "locationCode": {
+          "description": "search location code optional field if you use this field, you don't need to specify location_name you can receive the list of available locations of the search engine with their location_code by making a separate request to the https://api.dataforseo.com/v3/ai_optimization/llm_mentions/locations_and_languages default value: 2840 Note: chat_gpt data is available for 2840 only",
+          "type": ["integer", "null"]
+        },
+        "locationName": {
+          "description": "full name of search location optional field if you use this field, you don't need to specify location_code if you don't specify this field, the location_code with 2840 value will be used by default; you can receive the list of available locations of the search engine with their location_name by making a separate request to the https://api.dataforseo.com/v3/ai_optimization/llm_mentions/locations_and_languages Note: chat_gpt data is available for United States only",
+          "type": ["string", "null"]
+        },
+        "platform": {
+          "description": "target platform optional field possible values: chat_gpt , google default value: google Note: if the platform is not specified, the data is returned for both platforms Note #2: chat_gpt data is available for the United States and English only",
+          "type": ["string", "null"]
+        },
+        "tag": {
+          "description": "user-defined task identifier optional field the character limit is 255 you can use this parameter to identify the task and match it with the result you will find the specified tag value in the data object of the response",
+          "type": ["string", "null"]
+        },
+        "target": {
+          "description": "array of objects containing target entities required field you can specify up to 10 entities (objects) in the target field one target entity can contain either one domain or one keyword and related parameters examples: target array with a domain entity",
+          "items": {
+            "oneOf": [
+              {
+                "required": ["domain"]
+              },
+              {
+                "required": ["keyword"]
+              }
+            ],
+            "properties": {
+              "domain": {
+                "description": "target domain required field if you don't specify keyword you can specify up to 63 characters in the domain field; a domain should be specified without https:// and www.",
+                "type": "string"
+              },
+              "include_subdomains": {
+                "description": "indicates if the subdomains of the target domain will be included in the search optional field if set to true, the subdomains will be included in the search default value: false",
+                "type": "boolean"
+              },
+              "keyword": {
+                "description": "target keyword required field if you don't specify domain you can specify up to 250 characters in the keyword field all %## will be decoded (plus character ‘+’ will be decoded to a space character) if you need to use the “%” character for your keyword, please specify it as “%25”; if you need to use the “+” character for your keyword, please specify it as “%2B”learn more about rules and limitations of keyword and keywords fields in DataForSEO APIs in this Help Center article",
+                "type": "string"
+              },
+              "match_type": {
+                "description": "target keyword match type optional field word_match - full-text search for terms that match the specified seed keyword with additional words included before, after, or within the key phrase (e.g., search for “light” will return results with “light bulb”, “light switch”); partial_match - substring search that finds all instances containing the specified sequence of characters, even if it appears inside a longer word (e.g., search for “light” will return results with “lighting”, “highlight”); possible values: word_match, partial_match default value: word_match",
+                "type": "string"
+              },
+              "search_filter": {
+                "description": "Entity search filter: include or exclude; defaults to include.",
+                "type": "string"
+              },
+              "search_scope": {
+                "description": "Search scope. Domain entities: any, sources, search_results. Keyword entities: any, question, answer, brand_entities, fan_out_queries. Default: any.",
+                "items": {
+                  "type": "string",
+                  "description": "The search scope value value."
+                },
+                "type": "array"
+              }
+            },
+            "type": "object",
+            "description": "The target value value.",
+            "additionalProperties": false
+          },
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 10
+        }
+      },
+      "description": "Compare changes in AI mentions across time periods. Top-level fields use camelCase; nested provider fields and filters retain their original names.",
+      "additionalProperties": false,
+      "required": ["target"]
+    }
+  },
+  {
+    "name": "get_dataforseo_ai_mentions_new_lost",
+    "path": "/apis/v1/dataforseo/ai_optimization/llm_mentions/timeseries_new_lost/live",
+    "description": "Track new and lost AI mentions over time.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "dateFrom": {
+          "description": "start date of the time range required field minimal value: 2025-08-01 date format: \"yyyy-mm-dd\"",
+          "type": "string",
+          "format": "date"
+        },
+        "dateTo": {
+          "description": "end date of the time range required field Note: the value specified in date_from cannot exceed the value in date_to date format: \"yyyy-mm-dd\"",
+          "type": "string",
+          "format": "date"
+        },
+        "groupRange": {
+          "description": "timeseries range required field possible values: day , week , month , year",
+          "type": "string"
+        },
+        "languageCode": {
+          "description": "search language code optional field if you use this field, you don't need to specify language_name ; you can receive the list of available languages of the search engine with their language_code by making a separate request to the https://api.dataforseo.com/v3/ai_optimization/llm_mentions/locations_and_languages default value: en Note: chat_gpt data is available for en only",
+          "type": ["string", "null"]
+        },
+        "languageName": {
+          "description": "full name of search language optional field if you use this field, you don't need to specify language_code ; if you don't specify this field, the language_code with en value will be used by default; you can receive the list of available languages of the search engine with their language_name by making a separate request to the https://api.dataforseo.com/v3/ai_optimization/llm_mentions/locations_and_languages Note: chat_gpt data is available for English only",
+          "type": ["string", "null"]
+        },
+        "locationCode": {
+          "description": "search location code optional field if you use this field, you don't need to specify location_name you can receive the list of available locations of the search engine with their location_code by making a separate request to the https://api.dataforseo.com/v3/ai_optimization/llm_mentions/locations_and_languages default value: 2840 Note: chat_gpt data is available for 2840 only",
+          "type": ["integer", "null"]
+        },
+        "locationName": {
+          "description": "full name of search location optional field if you use this field, you don't need to specify location_code if you don't specify this field, the location_code with 2840 value will be used by default; you can receive the list of available locations of the search engine with their location_name by making a separate request to the https://api.dataforseo.com/v3/ai_optimization/llm_mentions/locations_and_languages Note: chat_gpt data is available for United States only",
+          "type": ["string", "null"]
+        },
+        "platform": {
+          "description": "target platform optional field possible values: chat_gpt , google default value: google Note: if the platform is not specified, the data is returned for both platforms Note #2: chat_gpt data is available for the United States and English only",
+          "type": ["string", "null"]
+        },
+        "tag": {
+          "description": "user-defined task identifier optional field the character limit is 255 you can use this parameter to identify the task and match it with the result you will find the specified tag value in the data object of the response",
+          "type": ["string", "null"]
+        },
+        "target": {
+          "description": "array of objects containing target entities required field you can specify up to 10 entities (objects) in the target field one target entity can contain either one domain or one keyword and related parameters examples: target array with a domain entity",
+          "items": {
+            "oneOf": [
+              {
+                "required": ["domain"]
+              },
+              {
+                "required": ["keyword"]
+              }
+            ],
+            "properties": {
+              "domain": {
+                "description": "target domain required field if you don't specify keyword you can specify up to 63 characters in the domain field; a domain should be specified without https:// and www.",
+                "type": "string"
+              },
+              "include_subdomains": {
+                "description": "indicates if the subdomains of the target domain will be included in the search optional field if set to true, the subdomains will be included in the search default value: false",
+                "type": "boolean"
+              },
+              "keyword": {
+                "description": "target keyword required field if you don't specify domain you can specify up to 250 characters in the keyword field all %## will be decoded (plus character ‘+’ will be decoded to a space character) if you need to use the “%” character for your keyword, please specify it as “%25”; if you need to use the “+” character for your keyword, please specify it as “%2B”learn more about rules and limitations of keyword and keywords fields in DataForSEO APIs in this Help Center article",
+                "type": "string"
+              },
+              "match_type": {
+                "description": "target keyword match type optional field word_match - full-text search for terms that match the specified seed keyword with additional words included before, after, or within the key phrase (e.g., search for “light” will return results with “light bulb”, “light switch”); partial_match - substring search that finds all instances containing the specified sequence of characters, even if it appears inside a longer word (e.g., search for “light” will return results with “lighting”, “highlight”); possible values: word_match, partial_match default value: word_match",
+                "type": "string"
+              },
+              "search_filter": {
+                "description": "Entity search filter: include or exclude; defaults to include.",
+                "type": "string"
+              },
+              "search_scope": {
+                "description": "Search scope. Domain entities: any, sources, search_results. Keyword entities: any, question, answer, brand_entities, fan_out_queries. Default: any.",
+                "items": {
+                  "type": "string",
+                  "description": "The search scope value value."
+                },
+                "type": "array"
+              }
+            },
+            "type": "object",
+            "description": "The target value value.",
+            "additionalProperties": false
+          },
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 10
+        }
+      },
+      "description": "Track new and lost AI mentions over time. Top-level fields use camelCase; nested provider fields and filters retain their original names.",
+      "additionalProperties": false,
+      "required": ["target"]
+    }
+  },
+  {
+    "name": "compare_dataforseo_ai_mentions",
+    "path": "/apis/v1/dataforseo/ai_optimization/llm_mentions/multi_target_metrics/live",
+    "description": "Compare AI visibility for named groups of domains and brands.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "filters": {
+          "description": "array of results filtering parameters optional field you can add several filters at once (8 filters maximum) you should set a logical operator and , or between the conditions the following operators are supported: = , <> , in , not_in , like , not_like , ilike , not_ilike , match , not_match you can use the % operator with like and not_like to match any string of zero or more characters example: [\"ai_search_volume\",\">\",1000] The full list of possible filters is available here.",
+          "items": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "The filters value value."
+              },
+              {
+                "type": "number",
+                "description": "The filters value value."
+              },
+              {
+                "type": "boolean",
+                "description": "The filters value value."
+              },
+              {
+                "additionalProperties": {
+                  "description": "A provider filter operand; nested JSON values retain their original keys."
+                },
+                "type": ["object", "null"],
+                "description": "The filters value value."
+              },
+              {
+                "items": {
+                  "description": "A provider filter operand; nested JSON values retain their original keys."
+                },
+                "type": "array",
+                "description": "The filters value value."
+              }
+            ],
+            "description": "JSON representation of filter values and nested expressions. Field names, operators, condition counts and operand compatibility remain provider-validated as documented for each endpoint; this is not a complete filter-language validator."
+          },
+          "type": ["array", "null"]
+        },
+        "initialDatasetFilters": {
+          "description": "array of filter expressions applied before aggregation optional field you can use this array to filter expressions applied to the raw mentions database before aggregation to limit the rows contributing to the result; you can add several filters at once (8 filters maximum) you should set a logical operator and , or between the conditions the following operators are supported: = , <> , in , not_in , like , not_like , ilike , not_ilike , match , not_match you can use the % operator with like and not_like to match any string of zero or more characters example: [\"ai_search_volume\",\">\",1000] the full list of possible filters is available here. learn more about the initial dataset filters in this help center article.",
+          "items": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "The initial dataset filters value value."
+              },
+              {
+                "type": "number",
+                "description": "The initial dataset filters value value."
+              },
+              {
+                "type": "boolean",
+                "description": "The initial dataset filters value value."
+              },
+              {
+                "additionalProperties": {
+                  "description": "A provider filter operand; nested JSON values retain their original keys."
+                },
+                "type": ["object", "null"],
+                "description": "The initial dataset filters value value."
+              },
+              {
+                "items": {
+                  "description": "A provider filter operand; nested JSON values retain their original keys."
+                },
+                "type": "array",
+                "description": "The initial dataset filters value value."
+              }
+            ],
+            "description": "JSON representation of filter values and nested expressions. Field names, operators, condition counts and operand compatibility remain provider-validated as documented for each endpoint; this is not a complete filter-language validator."
+          },
+          "type": ["array", "null"]
+        },
+        "internalListLimit": {
+          "description": "maximum number of elements within internal arrays optional field you can use this field to limit the number of elements within the following arrays: sources_domain search_results_domain minimum value: 1 maximum value: 10 default value: 5",
+          "type": ["integer", "null"],
+          "minimum": 1,
+          "maximum": 10
+        },
+        "languageCode": {
+          "description": "search language code optional field if you use this field, you don't need to specify language_name ; you can receive the list of available languages of the search engine with their language_code by making a separate request to the https://api.dataforseo.com/v3/ai_optimization/llm_mentions/locations_and_languages default value: en Note: chat_gpt data is available for en only",
+          "type": ["string", "null"]
+        },
+        "languageName": {
+          "description": "full name of search language optional field if you use this field, you don't need to specify language_code ; if you don't specify this field, the language_code with en value will be used by default; you can receive the list of available languages of the search engine with their language_name by making a separate request to the https://api.dataforseo.com/v3/ai_optimization/llm_mentions/locations_and_languages Note: chat_gpt data is available for English only",
+          "type": ["string", "null"]
+        },
+        "limit": {
+          "description": "the maximum number of returned objects optional field default value: 100 maximum value: 1000",
+          "type": ["integer", "null"],
+          "maximum": 1000
+        },
+        "locationCode": {
+          "description": "search location code optional field if you use this field, you don't need to specify location_name you can receive the list of available locations of the search engine with their location_code by making a separate request to the https://api.dataforseo.com/v3/ai_optimization/llm_mentions/locations_and_languages default value: 2840 Note: chat_gpt data is available for 2840 only",
+          "type": ["integer", "null"]
+        },
+        "locationName": {
+          "description": "full name of search location optional field if you use this field, you don't need to specify location_code if you don't specify this field, the location_code with 2840 value will be used by default; you can receive the list of available locations of the search engine with their location_name by making a separate request to the https://api.dataforseo.com/v3/ai_optimization/llm_mentions/locations_and_languages Note: chat_gpt data is available for United States only",
+          "type": ["string", "null"]
+        },
+        "offset": {
+          "description": "offset in the results array of the returned mentions data optional field default value: 0 example: if you specify the 10 value, the first ten mentions objects in the results array will be omitted and the data will be provided for the successive objects; Note: the maximum value is 1000000 , use the search_after_token if you would like to offset more results",
+          "type": ["integer", "null"]
+        },
+        "orderBy": {
+          "description": "results sorting rules optional field you can use the same values as in the filters array to sort the results possible sorting types: asc - results will be sorted in the ascending order desc - results will be sorted in the descending order you should use a comma to set up a sorting type example: [\"ai_search_volume,desc\"] Note: you can set no more than three sorting rules in a single request you should use a comma to separate several sorting rules",
+          "items": {
+            "type": "string",
+            "description": "The order by value value."
+          },
+          "type": ["array", "null"]
+        },
+        "platform": {
+          "description": "target platform optional field possible values: chat_gpt , google default value: google Note: if the platform is not specified, the data is returned for both platforms Note #2: chat_gpt data is available for the United States and English only",
+          "type": ["string", "null"]
+        },
+        "tag": {
+          "description": "user-defined task identifier optional field the character limit is 255 you can use this parameter to identify the task and match it with the result you will find the specified tag value in the data object of the response",
+          "type": ["string", "null"]
+        },
+        "targets": {
+          "type": "array",
+          "description": "Two to ten named groups of target entities to compare.",
+          "minItems": 2,
+          "items": {
+            "type": "object",
+            "description": "A named target group.",
+            "properties": {
+              "key": {
+                "type": "string",
+                "maxLength": 250,
+                "description": "The label used to identify this group in comparisons."
+              },
+              "target": {
+                "description": "array of objects containing target entities required field you can specify up to 10 entities (objects) in the target field one target entity can contain either one domain or one keyword and related parametersexamples: target array with a domain entity [{\"domain\": \"en.wikipedia.org\", \"search_filter\": \"exclude\"}] target array with a keyword entity [{\"keyword\": \"bmw\", \"search_scope\": [\"question\"], \"match_type \": \"partial_match\"}] target array with multiple entities [{\"domain\": \"en.wikipedia.org\", \"search_filter\": \"exclude\"}, {\"keyword\": \"bmw\", \"match_type \": \"partial_match\", \"search_scope\": [\"answer\"]}]",
+                "items": {
+                  "oneOf": [
+                    {
+                      "required": ["domain"]
+                    },
+                    {
+                      "required": ["keyword"]
+                    }
+                  ],
+                  "properties": {
+                    "domain": {
+                      "description": "target domain required field if you don't specify keyword you can specify up to 63 characters in the domain field; a domain should be specified without https:// and www.",
+                      "type": "string"
+                    },
+                    "include_subdomains": {
+                      "description": "indicates if the subdomains of the target domain will be included in the search optional field if set to true, the subdomains will be included in the search default value: false",
+                      "type": "boolean"
+                    },
+                    "keyword": {
+                      "description": "target keyword required field if you don't specify domain you can specify up to 250 characters in the keyword field all %## will be decoded (plus character ‘+’ will be decoded to a space character) if you need to use the “%” character for your keyword, please specify it as “%25”; if you need to use the “+” character for your keyword, please specify it as “%2B”learn more about rules and limitations of keyword and keywords fields in DataForSEO APIs in this Help Center article",
+                      "type": "string"
+                    },
+                    "match_type": {
+                      "description": "target keyword match type optional field word_match - full-text search for terms that match the specified seed keyword with additional words included before, after, or within the key phrase (e.g., search for “light” will return results with “light bulb”, “light switch”); partial_match - substring search that finds all instances containing the specified sequence of characters, even if it appears inside a longer word (e.g., search for “light” will return results with “lighting”, “highlight”); possible values: word_match, partial_match default value: word_match",
+                      "type": "string"
+                    },
+                    "search_filter": {
+                      "description": "Entity search filter: include or exclude; defaults to include.",
+                      "type": "string"
+                    },
+                    "search_scope": {
+                      "description": "Search scope. Domain entities: any, sources, search_results. Keyword entities: any, question, answer, brand_entities, fan_out_queries. Default: any.",
+                      "items": {
+                        "type": "string",
+                        "description": "The search scope value value."
+                      },
+                      "type": "array"
+                    }
+                  },
+                  "type": "object",
+                  "description": "The target value value.",
+                  "additionalProperties": false
+                },
+                "type": "array",
+                "minItems": 1,
+                "maxItems": 10
+              }
+            },
+            "required": ["key", "target"],
+            "additionalProperties": false
+          },
+          "maxItems": 10
+        }
+      },
+      "description": "Compare AI visibility for named groups of domains and brands. Top-level fields use camelCase; nested provider fields and filters retain their original names.",
+      "additionalProperties": false,
+      "required": ["targets"]
+    }
+  },
+  {
+    "name": "get_dataforseo_keyword_gap",
+    "path": "/apis/v1/dataforseo/dataforseo_labs/google/domain_intersection/live",
+    "description": "Find shared or missing Google keywords between two domains.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "filters": {
+          "description": "array of results filtering parameters optional field you can add several filters at once (8 filters maximum) you should set a logical operator and, or between the conditions the following operators are supported: regex, not_regex, <, <=, >, >=, =, <>, in, not_in, match, not_match, ilike, not_ilike, like, not_like you can use the % operator with like and not_like, as well as ilike and not_ilike to match any string of zero or more characters example: [\"keyword_data.keyword_info.search_volume\",\"in\",[100,1000]] [[\"first_domain_serp_element.etv\",\">\",0],\"and\",[\"first_domain_serp_element.description\",\"like\",\"%goat%\"]] [[\"keyword_data.keyword_info.search_volume\",\">\",100], \"and\", [[\"first_domain_serp_element.description\",\"like\",\"%goat%\"], \"or\", [\"second_domain_serp_element.type\",\"=\",\"organic\"]]] for more information about filters, please refer to Dataforseo Labs - Filters or this help center guide",
+          "items": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "The filters value value."
+              },
+              {
+                "type": "number",
+                "description": "The filters value value."
+              },
+              {
+                "type": "boolean",
+                "description": "The filters value value."
+              },
+              {
+                "additionalProperties": {
+                  "description": "A provider filter operand; nested JSON values retain their original keys."
+                },
+                "type": ["object", "null"],
+                "description": "The filters value value."
+              },
+              {
+                "items": {
+                  "description": "A provider filter operand; nested JSON values retain their original keys."
+                },
+                "type": "array",
+                "description": "The filters value value."
+              }
+            ],
+            "description": "JSON representation of filter values and nested expressions. Field names, operators, condition counts and operand compatibility remain provider-validated as documented for each endpoint; this is not a complete filter-language validator."
+          },
+          "type": ["array", "null"]
+        },
+        "includeClickstreamData": {
+          "description": "include or exclude data from clickstream-based metrics in the result optional field if the parameter is set to true, you will receive clickstream_keyword_info, clickstream_etv, keyword_info_normalized_with_clickstream, and keyword_info_normalized_with_bing fields in the response default value: false with this parameter enabled, you will be charged double the price for the request learn more about how clickstream-based metrics are calculated in this help center article",
+          "type": ["boolean", "null"]
+        },
+        "includeSerpInfo": {
+          "description": "include data from SERP for each keyword optional field if set to true, we will return a serp_info array containing SERP data (number of search results, relevant URL, and SERP features) for every keyword in the response default value: false",
+          "type": ["boolean", "null"]
+        },
+        "intersections": {
+          "description": "domain intersections in SERP optional field if you set intersections to true, you will get the keywords for which both target domains specified as target1 and target2 have results within the same SERP; the corresponding SERP elements for both domains will be provided in the results array Note: this endpoint will not provide results if the number of intersecting keywords exceeds 10 million if you specify intersections: false, you will get the keywords for which the domain specified as target1 has results in SERP, and the domain specified as target2 doesn't; thus, the corresponding SERP elements and other data will be provided for the domain specified as target1only default value: true",
+          "type": ["boolean", "null"]
+        },
+        "itemTypes": {
+          "description": "search results type indicates type of search results included in the response optional field possible values: [\"organic\", \"paid\", \"featured_snippet\", \"local_pack\"] default value: [\"organic\", \"paid\"]",
+          "items": {
+            "type": "string",
+            "description": "The item types value value."
+          },
+          "type": ["array", "null"]
+        },
+        "languageCode": {
+          "description": "language code required field if you don't specify language_name Note: it is required to specify either language_name or language_code you can receive the list of available languages with their language_code by making a separate request to the https://api.dataforseo.com/v3/dataforseo_labs/locations_and_languages example: en",
+          "type": ["string", "null"]
+        },
+        "languageName": {
+          "description": "full name of the language required field if you don't specify language_code Note: it is required to specify either language_name or language_code you can receive the list of available languages with their language_name by making a separate request to the https://api.dataforseo.com/v3/dataforseo_labs/locations_and_languages example: English",
+          "type": ["string", "null"]
+        },
+        "limit": {
+          "description": "the maximum number of returned keywords optional field default value: 100 maximum value: 1000",
+          "type": ["integer", "null"],
+          "maximum": 1000
+        },
+        "locationCode": {
+          "description": "location code required field if you don't specify location_name Note: it is required to specify either location_name or location_code you can receive the list of available locations with their location_code by making a separate request to the https://api.dataforseo.com/v3/dataforseo_labs/locations_and_languages example: 2840",
+          "type": ["integer", "null"]
+        },
+        "locationName": {
+          "description": "full name of the location required field if you don't specify location_code Note: it is required to specify either location_name or location_code you can receive the list of available locations with their location_name by making a separate request to the https://api.dataforseo.com/v3/dataforseo_labs/locations_and_languages example: United Kingdom",
+          "type": ["string", "null"]
+        },
+        "offset": {
+          "description": "offset in the items array of returned keywords optional field default value: 0 if you specify the 10 value, the first ten keywords in the results array will be omitted and the data will be provided for the successive keywords",
+          "type": ["integer", "null"]
+        },
+        "orderBy": {
+          "description": "results sorting rules optional field you can use the same values as in the filters array to sort the results possible sorting types: asc - results will be sorted in the ascending order desc - results will be sorted in the descending order you should use a comma to set up a sorting parameter example: [\"keyword_data.keyword_info.competition,desc\"] default rule: [\"keyword_data.keyword_info.search_volume,desc\"] note that you can set no more than three sorting rules in a single request you should use a comma to separate several sorting rules example: [\"keyword_data.keyword_info.search_volume,desc\",\"keyword_data.keyword_info.cpc,desc\"]",
+          "items": {
+            "type": "string",
+            "description": "The order by value value."
+          },
+          "type": ["array", "null"]
+        },
+        "tag": {
+          "description": "user-defined task identifier optional field the character limit is 255 you can use this parameter to identify the task and match it with the result you will find the specified tag value in the data object of the response",
+          "type": ["string", "null"]
+        },
+        "target1": {
+          "description": "domain required field the domain name of the first target website the domain should be specified without https:// and www.",
+          "type": "string"
+        },
+        "target2": {
+          "description": "domain required field the domain name of the second target website the domain should be specified without https:// and www.",
+          "type": "string"
+        }
+      },
+      "description": "Find shared or missing Google keywords between two domains. Top-level fields use camelCase; nested provider fields and filters retain their original names.",
+      "additionalProperties": false,
+      "allOf": [
+        {
+          "anyOf": [
+            {
+              "required": ["locationCode"],
+              "properties": {
+                "locationCode": {
+                  "not": {
+                    "type": "null"
+                  }
+                }
+              }
+            },
+            {
+              "required": ["locationName"],
+              "properties": {
+                "locationName": {
+                  "not": {
+                    "type": "null"
+                  }
+                }
+              }
+            }
+          ]
+        },
+        {
+          "anyOf": [
+            {
+              "required": ["languageCode"],
+              "properties": {
+                "languageCode": {
+                  "not": {
+                    "type": "null"
+                  }
+                }
+              }
+            },
+            {
+              "required": ["languageName"],
+              "properties": {
+                "languageName": {
+                  "not": {
+                    "type": "null"
+                  }
+                }
+              }
+            }
+          ]
+        }
+      ],
+      "required": ["target1", "target2"]
+    }
+  },
+  {
+    "name": "get_dataforseo_backlink_gap",
+    "path": "/apis/v1/dataforseo/backlinks/domain_intersection/live",
+    "description": "Compare referring domains linking to selected websites or pages.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "backlinksFilters": {
+          "description": "filter the backlinks of your target optional field you can use this field to filter the initial backlinks that will be included in the dataset for aggregated metrics for your target you can filter the backlinks by all fields available in the response of this endpoint using this parameter, you can include only dofollow backlinks in the response and create a flexible backlinks dataset to calculate the metrics for example: \"backlinks_filters\": [[\"dofollow\", \"=\", true]]",
+          "items": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "The backlinks filters value value."
+              },
+              {
+                "type": "number",
+                "description": "The backlinks filters value value."
+              },
+              {
+                "type": "boolean",
+                "description": "The backlinks filters value value."
+              },
+              {
+                "additionalProperties": {
+                  "description": "A provider filter operand; nested JSON values retain their original keys."
+                },
+                "type": ["object", "null"],
+                "description": "The backlinks filters value value."
+              },
+              {
+                "items": {
+                  "description": "A provider filter operand; nested JSON values retain their original keys."
+                },
+                "type": "array",
+                "description": "The backlinks filters value value."
+              }
+            ],
+            "description": "JSON representation of filter values and nested expressions. Field names, operators, condition counts and operand compatibility remain provider-validated as documented for each endpoint; this is not a complete filter-language validator."
+          },
+          "type": ["array", "null"]
+        },
+        "backlinksStatusType": {
+          "description": "set what backlinks to return and count optional field you can use this field to choose what backlinks will be returned and used for aggregated metrics for your targets ; possible values: all - all backlinks will be returned and counted; live - backlinks found during the last check will be returned and counted; lost - lost backlinks will be returned and counted; default value: live",
+          "type": ["string", "null"]
+        },
+        "excludeInternalBacklinks": {
+          "description": "indicates whether the backlinks from subdomains of the target are excluded optional field if set to false , the backlinks from subdomains of the target will be omitted and you won't receive the same domain in the response; default value: true",
+          "type": ["boolean", "null"]
+        },
+        "excludeTargets": {
+          "description": "domains, subdomains or webpages you want to exclude optional field you can specify up to 10 domains, subdomains or webpages if you use this array, results will contain the referring domains that link to targets but don't link to exclude_targets example: `\"exclude_targets\": [ \"bbc.com\", \"https://www.apple.com/iphone/*\", \"https://dataforseo.com/apis/*\"]`",
+          "items": {
+            "type": "string",
+            "description": "The exclude targets value value."
+          },
+          "type": ["array", "null"]
+        },
+        "filters": {
+          "description": "array of results filtering parameters optional field you can add several filters at once (8 filters maximum) you should set a logical operator and , or between the conditions the following operators are supported: regex , not_regex , = , <> , in , not_in , like , not_like , ilike , not_ilike , match , not_match you can use the % operator with like and not_like to match any string of zero or more characters example: [\"1.internal_links_count\",\">\",\"1\"] [[\"2.referring_pages\",\">\",\"2\"], \"and\", [\"1.backlinks\",\">\",\"10\"]] [[\"1.first_seen\",\">\",\"2017-10-23 11:31:45 +00:00\"], \"and\", [[\"2.target\",\"like\",\"%dataforseo.com%\"],\"or\",[\"1.referring_domains\",\">\",\"10\"]]] The full list of possible filters is available here.",
+          "items": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "The filters value value."
+              },
+              {
+                "type": "number",
+                "description": "The filters value value."
+              },
+              {
+                "type": "boolean",
+                "description": "The filters value value."
+              },
+              {
+                "additionalProperties": {
+                  "description": "A provider filter operand; nested JSON values retain their original keys."
+                },
+                "type": ["object", "null"],
+                "description": "The filters value value."
+              },
+              {
+                "items": {
+                  "description": "A provider filter operand; nested JSON values retain their original keys."
+                },
+                "type": "array",
+                "description": "The filters value value."
+              }
+            ],
+            "description": "JSON representation of filter values and nested expressions. Field names, operators, condition counts and operand compatibility remain provider-validated as documented for each endpoint; this is not a complete filter-language validator."
+          },
+          "type": ["array", "null"]
+        },
+        "includeIndirectLinks": {
+          "description": "indicates if indirect links to the targets will be included in the results optional field if set to true , the results will include data on indirect links pointing to a page that either redirects to a target, or points to a canonical page if set to false , indirect links will be ignored default value: true",
+          "type": ["boolean", "null"]
+        },
+        "includeSubdomains": {
+          "description": "indicates if the subdomains of the target will be included in the search optional field if set to false , the subdomains will be ignored default value: true",
+          "type": ["boolean", "null"]
+        },
+        "internalListLimit": {
+          "description": "maximum number of elements within internal arrays optional field you can use this field to limit the number of elements within the following arrays: referring_links_tld referring_links_types referring_links_attributes referring_links_platform_types referring_links_semantic_locations default value: 10 maximum value: 1000",
+          "type": ["integer", "null"],
+          "maximum": 1000
+        },
+        "intersectionMode": {
+          "description": "indicates whether to intersect backlinks optional field use this field to intersect or merge results for the specified domains possible values: all , partial all - results are based on all backlinks; partial - results are based on the intersecting backlinks only; default value: all",
+          "type": ["string", "null"]
+        },
+        "limit": {
+          "description": "the maximum number of returned results optional field default value: 100 maximum value: 1000",
+          "type": ["integer", "null"],
+          "maximum": 1000
+        },
+        "offset": {
+          "description": "offset in the array of returned results optional field default value: 0 if you specify the 10 value, the first ten backlinks in the results array will be omitted and the data will be provided for the successive backlinks",
+          "type": ["integer", "null"]
+        },
+        "orderBy": {
+          "description": "results sorting rules optional field you can use the same values as in the filters array to sort the results possible sorting types: asc - results will be sorted in the ascending order desc - results will be sorted in the descending order you should use a comma to set up a sorting type example: [\"backlinks,desc\"] note that you can set no more than three sorting rules in a single request you should use a comma to separate several sorting rules example: [\"backlinks,desc\",\"rank,asc\"]",
+          "items": {
+            "type": "string",
+            "description": "The order by value value."
+          },
+          "type": ["array", "null"]
+        },
+        "rankScale": {
+          "description": "defines the scale used for calculating and displaying the rank , domain_from_rank , and page_from_rank values optional field you can use this parameter to choose whether rank values are presented on a 0–100 or 0–1000 scale possible values: one_hundred — rank values are displayed on a 0–100 scale one_thousand — rank values are displayed on a 0–1000 scale default value: one_thousand learn more about how this parameter works and how ranking metrics are calculated in this Help Center article",
+          "type": ["string", "null"]
+        },
+        "tag": {
+          "description": "user-defined task identifier optional field the character limit is 255 you can use this parameter to identify the task and match it with the result you will find the specified tag value in the data object of the response",
+          "type": ["string", "null"]
+        },
+        "targets": {
+          "additionalProperties": {
+            "type": ["string", "null"],
+            "description": "The targets value value."
+          },
+          "description": "domains, subdomains or webpages to get links for required field you can set up to 20 domains, subdomains or webpages a domain or a subdomain should be specified without https:// and www. a page should be specified with absolute URL (including http:// or https:// ) example: `\"targets\": { \"1\": \"http://planet.postgresql.org/\", \"2\": \"http://gborg.postgresql.org/\" }`",
+          "type": "object",
+          "minProperties": 1,
+          "maxProperties": 20
+        }
+      },
+      "description": "Compare referring domains linking to selected websites or pages. Top-level fields use camelCase; nested provider fields and filters retain their original names.",
+      "additionalProperties": false,
+      "required": ["targets"]
+    }
+  },
+  {
+    "name": "get_dataforseo_backlink_history",
+    "path": "/apis/v1/dataforseo/backlinks/history/live",
+    "description": "Get historical backlink metrics for a domain.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "dateFrom": {
+          "description": "starting date of the time range optional field minimum value 2019-01-01 if you don't specify this field, the minimum value will be used by default date format: \"yyyy-mm-dd\" example: \"2019-01-15\"",
+          "type": ["string", "null"],
+          "format": "date"
+        },
+        "dateTo": {
+          "description": "ending date of the time range optional field if you don't specify this field, the today's date will be used by default date format: \"yyyy-mm-dd\" example: \"2019-01-15\"",
+          "type": ["string", "null"],
+          "format": "date"
+        },
+        "rankScale": {
+          "description": "defines the scale used for calculating and displaying the rank , domain_from_rank , and page_from_rank values optional field you can use this parameter to choose whether rank values are presented on a 0–100 or 0–1000 scale possible values: one_hundred — rank values are displayed on a 0–100 scale one_thousand — rank values are displayed on a 0–1000 scale default value: one_thousand learn more about how this parameter works and how ranking metrics are calculated in this Help Center article",
+          "type": ["string", "null"]
+        },
+        "tag": {
+          "description": "user-defined task identifier optional field the character limit is 255 you can use this parameter to identify the task and match it with the result you will find the specified tag value in the data object of the response",
+          "type": ["string", "null"]
+        },
+        "target": {
+          "description": "domain required field a domain should be specified without https:// and www.",
+          "type": "string"
+        }
+      },
+      "description": "Get historical backlink metrics for a domain. Top-level fields use camelCase; nested provider fields and filters retain their original names.",
+      "additionalProperties": false,
+      "required": ["target"]
+    }
+  },
+  {
+    "name": "get_dataforseo_backlinks_new_lost",
+    "path": "/apis/v1/dataforseo/backlinks/timeseries_new_lost_summary/live",
+    "description": "Track newly acquired and lost backlinks over time.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "dateFrom": {
+          "description": "starting date of the time range optional field this field indicates the date which will be used as a threshold for new and lost backlinks and referring domains; the backlinks and referring domains that appeared in our index after the specified date will be considered as new; the backlinks and referring domains that weren't found after the specified date, but were present before, will be considered as lost; minimum value: 2019-01-30 maximum value shouldn't exceed the date specified in the date_to date format: \"yyyy-mm-dd\" example: \"2021-01-01\"",
+          "type": ["string", "null"],
+          "format": "date"
+        },
+        "dateTo": {
+          "description": "ending date of the time range optional field if you don't specify this field, the today's date will be used by default minimum value shouldn't preceed the date specified in the date_from maximum value: today's date date format: \"yyyy-mm-dd\" example: \"2021-01-15\"",
+          "type": ["string", "null"],
+          "format": "date"
+        },
+        "groupRange": {
+          "description": "time range which will be used to group the results optional field default value: month possible values: day , week , month , year note: for day , we will return items corresponding to all dates between and including date_from and date_to ; for week / month / year , we will return items corresponding to full weeks/months/years, where each item will indicate the last day of the week/month/year for example, if you specify: \"group_range\": \"month\", \"date_from\": \"2022-03-23\", \"date_to\": \"2022-05-13\" we will return items falling between 2022-03-01 and 2022-05-31, namely, three items corresponding to the following dates: 2022-03-31 , 2022-04-30 , 2022-05-31 if there is no data for a certain day / week / month / year , we will return 0",
+          "type": ["string", "null"]
+        },
+        "includeSubdomains": {
+          "description": "indicates if the subdomains of the target will be included in the search optional field if set to false , the subdomains will be ignored default value: true",
+          "type": ["boolean", "null"]
+        },
+        "tag": {
+          "description": "user-defined task identifier optional field the character limit is 255 you can use this parameter to identify the task and match it with the result you will find the specified tag value in the data object of the response",
+          "type": ["string", "null"]
+        },
+        "target": {
+          "description": "domain to get data for required field a domain should be specified without https:// and www. example: \"forbes.com\"",
+          "type": "string"
+        }
+      },
+      "description": "Track newly acquired and lost backlinks over time. Top-level fields use camelCase; nested provider fields and filters retain their original names.",
+      "additionalProperties": false,
+      "required": ["target"]
+    }
+  },
+  {
+    "name": "list_dataforseo_backlinks",
+    "path": "/apis/v1/dataforseo/backlinks/backlinks/live",
+    "description": "List backlinks with filters, sorting, and pagination.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "backlinksStatusType": {
+          "description": "set what backlinks to return and count optional field you can use this field to choose what backlinks will be returned and used for aggregated metrics for your target ; possible values: all - all backlinks will be returned and counted; live - backlinks found during the last check will be returned and counted; lost - lost backlinks will be returned and counted; default value: live",
+          "type": ["string", "null"]
+        },
+        "customMode": {
+          "additionalProperties": {
+            "type": ["object", "null"],
+            "description": "The custom mode value value."
+          },
+          "description": "detailed results grouping type optional field use this object to get a specific number of backlinks per field if you use custom_mode , then mode will be ignored example: \"custom_mode\": {\"field\": \"domain\", \"value\": 100}",
+          "type": ["object", "null"]
+        },
+        "excludeInternalBacklinks": {
+          "description": "indicates if internal backlinks from subdomains to the target will be excluded from the results optional field if set to true , the results will not include data on internal backlinks from subdomains of the same domain as target if set to false , internal links will be included in the results default value: true",
+          "type": ["boolean", "null"]
+        },
+        "filters": {
+          "description": "array of results filtering parameters optional field you can add several filters at once (8 filters maximum) you should set a logical operator and , or between the conditions the following operators are supported: = , <> , in , not_in , like , not_like , ilike , not_ilike , regex , not_regex , match , not_match you can use the % operator with like and not_like to match any string of zero or more characters example: [\"rank\",\">\",\"80\"] [[\"page_from_rank\",\">\",\"55\"], \"and\", [\"dofollow\",\"=\",true]] [[\"first_seen\",\">\",\"2017-10-23 11:31:45 +00:00\"], \"and\", [[\"anchor\",\"like\",\"%seo%\"],\"or\",[\"text_pre\",\"like\",\"%seo%\"]]] The full list of possible filters is available here.",
+          "items": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "The filters value value."
+              },
+              {
+                "type": "number",
+                "description": "The filters value value."
+              },
+              {
+                "type": "boolean",
+                "description": "The filters value value."
+              },
+              {
+                "additionalProperties": {
+                  "description": "A provider filter operand; nested JSON values retain their original keys."
+                },
+                "type": ["object", "null"],
+                "description": "The filters value value."
+              },
+              {
+                "items": {
+                  "description": "A provider filter operand; nested JSON values retain their original keys."
+                },
+                "type": "array",
+                "description": "The filters value value."
+              }
+            ],
+            "description": "JSON representation of filter values and nested expressions. Field names, operators, condition counts and operand compatibility remain provider-validated as documented for each endpoint; this is not a complete filter-language validator."
+          },
+          "type": ["array", "null"]
+        },
+        "includeSubdomains": {
+          "description": "indicates if the subdomains of the target will be included in the search optional field if set to false , the subdomains will be ignored default value: true",
+          "type": ["boolean", "null"]
+        },
+        "limit": {
+          "description": "the maximum number of returned backlinks optional field default value: 100 maximum value: 1000",
+          "type": ["integer", "null"],
+          "maximum": 1000
+        },
+        "mode": {
+          "description": "results grouping type optional field possible grouping types: as_is - returns all backlinks one_per_domain - returns one backlink per domain one_per_anchor - returns one backlink per anchor default value: as_is",
+          "type": ["string", "null"]
+        },
+        "offset": {
+          "description": "offset in the results array of the returned backlinks optional field default value: 0 if you specify the 10 value, the first ten backlinks in the results array will be omitted and the data will be provided for the successive backlinks; Note: the maximum value is 20,000 , use the search_after_token if you would like to offset more results",
+          "type": ["integer", "null"]
+        },
+        "orderBy": {
+          "description": "results sorting rules optional field you can use the same values as in the filters array to sort the results possible sorting types: asc - results will be sorted in the ascending order desc - results will be sorted in the descending order you should use a comma to set up a sorting type example: [\"rank,desc\"] note that you can set no more than three sorting rules in a single request you should use a comma to separate several sorting rules example: [\"domain_from_rank,desc\",\"page_from_rank,asc\"]",
+          "items": {
+            "type": "string",
+            "description": "The order by value value."
+          },
+          "type": ["array", "null"]
+        },
+        "rankScale": {
+          "description": "defines the scale used for calculating and displaying the rank , domain_from_rank , and page_from_rank values optional field you can use this parameter to choose whether rank values are presented on a 0–100 or 0–1000 scale possible values: one_hundred — rank values are displayed on a 0–100 scale one_thousand — rank values are displayed on a 0–1000 scale default value: one_thousand learn more about how this parameter works and how ranking metrics are calculated in this Help Center article",
+          "type": ["string", "null"]
+        },
+        "searchAfterToken": {
+          "description": "token for subsequent requests optional field provided in the identical filed of the response to each request; use this parameter to avoid timeouts while trying to obtain over 20,000 results in a single request; by specifying the unique search_after_token value from the response array, you will get the subsequent results of the initial task; search_after_token values are unique for each subsequent task ; Note: if the search_after_token is specified in the request, all other parameters should be identical to the previous request",
+          "type": ["string", "null"]
+        },
+        "tag": {
+          "description": "user-defined task identifier optional field the character limit is 255 you can use this parameter to identify the task and match it with the result you will find the specified tag value in the data object of the response",
+          "type": ["string", "null"]
+        },
+        "target": {
+          "description": "domain, subdomain or webpage to get backlinks for required field a domain or a subdomain should be specified without https:// and www. a page should be specified with absolute URL (including http:// or https:// )",
+          "type": "string"
+        }
+      },
+      "description": "List backlinks with filters, sorting, and pagination. Top-level fields use camelCase; nested provider fields and filters retain their original names.",
+      "additionalProperties": false,
+      "required": ["target"]
+    }
+  },
+  {
+    "name": "search_dataforseo_business_listings",
+    "path": "/apis/v1/dataforseo/business_data/business_listings/search/live",
+    "description": "Find business listings by category, location, title, and review filters.",
+    "inputSchema": {
+      "type": "object",
+      "properties": {
+        "categories": {
+          "description": "business categories optional field the categories you specify are used to search for business listings; if you don't use this field, we will return business listings found in the specified location; you can specify up to 10 categories",
+          "items": {
+            "type": "string",
+            "description": "The categories value value."
+          },
+          "type": ["array", "null"]
+        },
+        "description": {
+          "description": "description of the element in SERP optional field the description of the business entity for which the results are collected; can contain up to 200 characters",
+          "type": ["string", "null"]
+        },
+        "filters": {
+          "description": "array of results filtering parameters optional field you can add several filters at once (8 filters maximum) you should set a logical operator and , or between the conditions the following operators are supported: regex , not_regex , < , <= , > , >= , = , <> , in , not_in , like , not_like , ilike , not_ilike , match , not_match you can use the % operator with like and not_like to match any string of zero or more characters example: [\"rating.value\",\">\",3] you can receive the list of available filters_by making a separate request to https://api.dataforseo.com/v3/business_data/business_listings/available_filters The full list of possible filters is available here. n",
+          "items": {
+            "anyOf": [
+              {
+                "type": "string",
+                "description": "The filters value value."
+              },
+              {
+                "type": "number",
+                "description": "The filters value value."
+              },
+              {
+                "type": "boolean",
+                "description": "The filters value value."
+              },
+              {
+                "additionalProperties": {
+                  "description": "A provider filter operand; nested JSON values retain their original keys."
+                },
+                "type": ["object", "null"],
+                "description": "The filters value value."
+              },
+              {
+                "items": {
+                  "description": "A provider filter operand; nested JSON values retain their original keys."
+                },
+                "type": "array",
+                "description": "The filters value value."
+              }
+            ],
+            "description": "JSON representation of filter values and nested expressions. Field names, operators, condition counts and operand compatibility remain provider-validated as documented for each endpoint; this is not a complete filter-language validator."
+          },
+          "type": ["array", "null"]
+        },
+        "isClaimed": {
+          "description": "indicates whether the business is verified by its owner on Google Maps optional field",
+          "type": ["boolean", "null"]
+        },
+        "limit": {
+          "description": "the maximum number of returned businesses optional field default value: 100 maximum value: 1000",
+          "type": ["integer", "null"],
+          "maximum": 1000
+        },
+        "locationCoordinate": {
+          "description": "GPS coordinates of a location optional field location_coordinate parameter should be specified in the \"latitude,longitude,radius\" format the maximum number of decimal digits for \"latitude\" and \"longitude\" : 7 the value of \"radius\" is specified in kilometres (km) the minimum value for \"radius\" : 1 the maximum value for \"radius\" : 100000 example: 53.476225,-2.243572,200 learn more about how to set location parameters in this API on our Help Center",
+          "type": ["string", "null"]
+        },
+        "offset": {
+          "description": "offset in the results array of returned businesses optional field default value: 0 if you specify the 10 value, the first ten entities in the results array will be omitted and the data will be provided for the successive entities Note: we recommend using this parameter only when retrieving up to 10,000 results for retrieving over 10,000 results, use the offset_token instead",
+          "type": ["integer", "null"]
+        },
+        "offsetToken": {
+          "description": "token for subsequent requests optional field provided in the identical filed of the response to each request; use this parameter to avoid timeouts while trying to obtain over 100,000 results in a single request; by specifying the unique offset_token value from the response array, you will get the subsequent results of the initial task; offset_token values are unique for each subsequent task Note: if the offset_token is specified in the request, all other parameters should be identical to the previous request learn more about this parameter on our Help Center",
+          "type": ["string", "null"]
+        },
+        "orderBy": {
+          "description": "results sorting rules optional field you can use the same values as in the filters array to sort the results possible sorting types: asc - results will be sorted in the ascending order desc - results will be sorted in the descending order you should use a comma to set up a sorting parameter example: [\"rating.value,desc\"] note that you can set no more than three sorting rules in a single request you should use a comma to separate several sorting rules example: [\"rating.value,desc\",\"rating.votes_count,desc\"]",
+          "items": {
+            "type": "string",
+            "description": "The order by value value."
+          },
+          "type": ["array", "null"]
+        },
+        "tag": {
+          "description": "user-defined task identifier optional field the character limit is 255 you can use this parameter to identify the task and match it with the result you will find the specified tag value in the data object of the response",
+          "type": ["string", "null"]
+        },
+        "title": {
+          "description": "title of the element in SERP optional field the name of the business entity for which the results are collected; can contain up to 200 characters",
+          "type": ["string", "null"]
+        }
+      },
+      "description": "Find business listings by category, location, title, and review filters. Top-level fields use camelCase; nested provider fields and filters retain their original names.",
+      "additionalProperties": false,
+      "required": []
+    }
+  },
+  {
+    "name": "get_dataforseo_llm_mention_metrics",
+    "path": "/apis/v1/dataforseo/ai_optimization/llm_mentions/aggregated_metrics/live",
+    "description": "Aggregate AI mentions with initial dataset filters.",
+    "inputSchema": {
+      "properties": {
+        "initialDatasetFilters": {
+          "description": "array of filter expressions applied before aggregation optional field you can use this array to filter expressions applied to the raw mentions database before aggregation to limit the rows contributing to the result;you can add several filters at once (8 filters maximum) you should set a logical operator and, or between the conditions the following operators are supported: =, , in, not_in, like, not_like, ilike, not_ilike, match, not_match you can use the % operator with like and not_like to match any string of zero or more characters example: [\"ai_search_volume\",\">\",\"1000\"]the full list of possible filters is available here. learn more about the initial dataset filters in this help center article.",
+          "items": {
+            "description": "The initial dataset filters value value."
+          },
+          "type": "array"
+        },
+        "internalListLimit": {
+          "description": "maximum number of elements within internal arrays optional field you can use this field to limit the number of elements within the following arrays: sources_domain search_results_domain minimum value: 1 maximum value: 20 default value: 10",
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 20
+        },
+        "languageCode": {
+          "description": "search language code optional field if you use this field, you don't need to specify language_name; you can receive the list of available languages of the search engine with their language_code_by making a separate request to the https://api.dataforseo.com/v3/ai_optimization/llm_mentions/locations_and_languages default value: en Note: chat_gpt data is available for en onlyn",
+          "type": "string"
+        },
+        "languageName": {
+          "description": "full name of search language optional field if you use this field, you don't need to specify language_code; if you don't specify this field, the language_code with en value will be used by default; you can receive the list of available languages of the search engine with their language_name by making a separate request to the https://api.dataforseo.com/v3/ai_optimization/llm_mentions/locations_and_languages Note: chat_gpt data is available for English only",
+          "type": "string"
+        },
+        "locationCode": {
+          "description": "search location code optional field if you use this field, you don't need to specify location_name you can receive the list of available locations of the search engine with their location_code by making a separate request to the https://api.dataforseo.com/v3/ai_optimization/llm_mentions/locations_and_languages default value: 2840 Note: chat_gpt data is available for 2840 only",
+          "type": "integer"
+        },
+        "locationName": {
+          "description": "full name of search location optional field if you use this field, you don't need to specify location_code if you don't specify this field, the location_code with 2840 value will be used by default; you can receive the list of available locations of the search engine with their location_name by making a separate request to the https://api.dataforseo.com/v3/ai_optimization/llm_mentions/locations_and_languages Note: chat_gpt data is available for United States only",
+          "type": "string"
+        },
+        "platform": {
+          "description": "target platform optional field possible values: chat_gpt, google default value: google Note: the data returned depends on the selected platform Note #2:chat_gpt data is available for the United States and English only",
+          "type": "string"
+        },
+        "tag": {
+          "description": "user-defined task identifier optional field the character limit is 255 you can use this parameter to identify the task and match it with the result you will find the specified tag value in the data object of the response",
+          "type": "string"
+        },
+        "target": {
+          "description": "array of objects containing target entities required field you can specify up to 10 entities (objects) in the target field one target entity can contain either one domain or one keyword and related parametersexamples: target array with a domain entity [{\"domain\": \"en.wikipedia.org\", \"search_filter\": \"exclude\"}] target array with a keyword entity [{\"keyword\": \"bmw\", \"search_scope\": [\"question\"], \"match_type \": \"partial_match\"}] target array with multiple entities [{\"domain\": \"en.wikipedia.org\", \"search_filter\": \"exclude\"}, {\"keyword\": \"bmw\", \"match_type \": \"partial_match\", \"search_scope\": [\"answer\"]}]",
+          "items": {
+            "oneOf": [
+              {
+                "required": ["domain"]
+              },
+              {
+                "required": ["keyword"]
+              }
+            ],
+            "properties": {
+              "domain": {
+                "description": "target domain required field if you don't specify keyword you can specify up to 63 characters in the domain field; a domain should be specified without https:// and www.",
+                "type": "string"
+              },
+              "include_subdomains": {
+                "description": "indicates if the subdomains of the target domain will be included in the search optional field if set to true, the subdomains will be included in the search default value: false",
+                "type": "boolean"
+              },
+              "keyword": {
+                "description": "target keyword required field if you don't specify domain you can specify up to 250 characters in the keyword field all %## will be decoded (plus character ‘+’ will be decoded to a space character) if you need to use the “%” character for your keyword, please specify it as “%25”; if you need to use the “+” character for your keyword, please specify it as “%2B”learn more about rules and limitations of keyword and keywords fields in DataForSEO APIs in this Help Center article",
+                "type": "string"
+              },
+              "match_type": {
+                "description": "target keyword match type optional field word_match - full-text search for terms that match the specified seed keyword with additional words included before, after, or within the key phrase (e.g., search for “light” will return results with “light bulb”, “light switch”); partial_match - substring search that finds all instances containing the specified sequence of characters, even if it appears inside a longer word (e.g., search for “light” will return results with “lighting”, “highlight”); possible values: word_match, partial_match default value: word_match",
+                "type": "string"
+              },
+              "search_filter": {
+                "description": "Entity search filter: include or exclude; defaults to include.",
+                "type": "string"
+              },
+              "search_scope": {
+                "description": "Search scope. Domain entities: any, sources, search_results. Keyword entities: any, question, answer, brand_entities, fan_out_queries. Default: any.",
+                "items": {
+                  "type": "string",
+                  "description": "The search scope value value."
+                },
+                "type": "array"
+              }
+            },
+            "type": "object",
+            "description": "The target value value.",
+            "additionalProperties": false
+          },
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 10
+        }
+      },
+      "required": ["target"],
+      "type": "object",
+      "description": "Aggregate AI mentions with initial dataset filters. Top-level fields use camelCase; nested entity and filter fields retain upstream names.",
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "search_dataforseo_llm_mentions",
+    "path": "/apis/v1/dataforseo/ai_optimization/llm_mentions/search/live",
+    "description": "Search AI mentions with filters, sorting, and pagination.",
+    "inputSchema": {
+      "properties": {
+        "filters": {
+          "description": "array of results filtering parameters optional field you can add several filters at once (8 filters maximum) you should set a logical operator and, or between the conditions the following operators are supported: =, , in, not_in, like, not_like, ilike, not_ilike, match, not_match you can use the % operator with like and not_like to match any string of zero or more characters example: [\"ai_search_volume\",\">\",\"1000\"]The full list of possible filters is available here.",
+          "items": {
+            "description": "The filters value value."
+          },
+          "type": "array"
+        },
+        "languageCode": {
+          "description": "search language code optional field if you use this field, you don't need to specify language_name; you can receive the list of available languages of the search engine with their language_code_by making a separate request to the https://api.dataforseo.com/v3/ai_optimization/llm_mentions/locations_and_languages default value: en Note: chat_gpt data is available for en onlyn",
+          "type": "string"
+        },
+        "languageName": {
+          "description": "full name of search language optional field if you use this field, you don't need to specify language_code; if you don't specify this field, the language_code with en value will be used by default; you can receive the list of available languages of the search engine with their language_name by making a separate request to the https://api.dataforseo.com/v3/ai_optimization/llm_mentions/locations_and_languages Note: chat_gpt data is available for English only",
+          "type": "string"
+        },
+        "limit": {
+          "description": "the maximum number of returned objects optional fielddefault value: 100 maximum value: 1000",
+          "type": "integer",
+          "maximum": 1000
+        },
+        "locationCode": {
+          "description": "search location code optional field if you use this field, you don't need to specify location_name you can receive the list of available locations of the search engine with their location_code by making a separate request to the https://api.dataforseo.com/v3/ai_optimization/llm_mentions/locations_and_languages default value: 2840 Note: chat_gpt data is available for 2840 only",
+          "type": "integer"
+        },
+        "locationName": {
+          "description": "full name of search location optional field if you use this field, you don't need to specify location_code if you don't specify this field, the location_code with 2840 value will be used by default; you can receive the list of available locations of the search engine with their location_name by making a separate request to the https://api.dataforseo.com/v3/ai_optimization/llm_mentions/locations_and_languages Note: chat_gpt data is available for United States only",
+          "type": "string"
+        },
+        "offset": {
+          "description": "offset in the results array of the returned mentions data optional fielddefault value: 0 example: if you specify the 10 value, the first ten mentions objects in the results array will be omitted and the data will be provided for the successive objects; Note: the maximum value is 9,000, use the search_after_token if you would like to offset more results",
+          "type": "integer"
+        },
+        "orderBy": {
+          "description": "results sorting rules optional field you can use the same values as in the filters array to sort the results possible sorting types: asc - results will be sorted in the ascending order desc - results will be sorted in the descending order you should use a comma to set up a sorting type example: [\"ai_search_volume,desc\"] note that you can set no more than three sorting rules in a single request you should use a comma to separate several sorting rules",
+          "items": {
+            "type": "string",
+            "description": "The order by value value."
+          },
+          "type": "array"
+        },
+        "platform": {
+          "description": "target platform optional field possible values: chat_gpt, google default value: google Note: the data returned depends on the selected platform Note #2:chat_gpt data is available for the United States and English only",
+          "type": "string"
+        },
+        "searchAfterToken": {
+          "description": "token for subsequent requests optional field provided in the identical filed of the response to each request; use this parameter to avoid timeouts while trying to obtain over 20,000 results in a single request; by specifying the unique search_after_token value from the response array, you will get the subsequent results of the initial task; search_after_token values are unique for each subsequent task ; Note: if the search_after_token is specified in the request, all other parameters should be identical to the previous request",
+          "type": "string"
+        },
+        "tag": {
+          "description": "user-defined task identifier optional field the character limit is 255 you can use this parameter to identify the task and match it with the result you will find the specified tag value in the data object of the response",
+          "type": "string"
+        },
+        "target": {
+          "description": "array of objects containing target entities required field you can specify up to 10 entities (objects) in the target field one target entity can contain either one domain or one keyword and related parametersexamples: target array with a domain entity [{\"domain\": \"en.wikipedia.org\", \"search_filter\": \"exclude\"}] target array with a keyword entity [{\"keyword\": \"bmw\", \"search_scope\": [\"question\"], \"match_type \": \"partial_match\"}] target array with multiple entities [{\"domain\": \"en.wikipedia.org\", \"search_filter\": \"exclude\"}, {\"keyword\": \"bmw\", \"match_type \": \"partial_match\", \"search_scope\": [\"answer\"]}]",
+          "items": {
+            "oneOf": [
+              {
+                "required": ["domain"]
+              },
+              {
+                "required": ["keyword"]
+              }
+            ],
+            "properties": {
+              "domain": {
+                "description": "target domain required field if you don't specify keyword you can specify up to 63 characters in the domain field; a domain should be specified without https:// and www.",
+                "type": "string"
+              },
+              "include_subdomains": {
+                "description": "indicates if the subdomains of the target domain will be included in the search optional field if set to true, the subdomains will be included in the search default value: false",
+                "type": "boolean"
+              },
+              "keyword": {
+                "description": "target keyword required field if you don't specify domain you can specify up to 250 characters in the keyword field all %## will be decoded (plus character ‘+’ will be decoded to a space character) if you need to use the “%” character for your keyword, please specify it as “%25”; if you need to use the “+” character for your keyword, please specify it as “%2B”learn more about rules and limitations of keyword and keywords fields in DataForSEO APIs in this Help Center article",
+                "type": "string"
+              },
+              "match_type": {
+                "description": "target keyword match type defines how the specified keyword is matched optional field possible values: word_match - full-text search for terms that match the specified seed keyword with additional words included before, after, or within the key phrase (e.g., search for \"light\" will return results with \"light bulb\", \"light switch\"); partial_match - substring search that finds all instances containing the specified sequence of characters, even if it appears inside a longer word (e.g., search for \"light\" will return results with \"lighting\", \"highlight\"); default value: word_match",
+                "type": "string"
+              },
+              "search_filter": {
+                "description": "Entity search filter: include or exclude; defaults to include.",
+                "type": "string"
+              },
+              "search_scope": {
+                "description": "Search scope. Domain entities: any, sources, search_results. Keyword entities: any, question, answer, brand_entities, fan_out_queries. Default: any.",
+                "items": {
+                  "type": "string",
+                  "description": "The search scope value value."
+                },
+                "type": "array"
+              }
+            },
+            "type": "object",
+            "description": "The target value value.",
+            "additionalProperties": false
+          },
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 10
+        }
+      },
+      "required": ["target"],
+      "type": "object",
+      "description": "Search AI mentions with filters, sorting, and pagination. Top-level fields use camelCase; nested entity and filter fields retain upstream names.",
+      "additionalProperties": false
+    }
+  },
+  {
+    "name": "get_dataforseo_llm_mention_top_domains",
+    "path": "/apis/v1/dataforseo/ai_optimization/llm_mentions/top_domains/live",
+    "description": "Rank domains cited in AI mentions with per-list limits.",
+    "inputSchema": {
+      "properties": {
+        "initialDatasetFilters": {
+          "description": "array of filter expressions applied before aggregation optional field you can use this array to filter expressions applied to the raw mentions database before aggregation to limit the rows contributing to the result;you can add several filters at once (8 filters maximum) you should set a logical operator and, or between the conditions the following operators are supported: =, , in, not_in, like, not_like, ilike, not_ilike, match, not_match you can use the % operator with like and not_like to match any string of zero or more characters example: [\"ai_search_volume\",\">\",\"1000\"]the full list of possible filters is available here. learn more about the initial dataset filters in this help center article.",
+          "items": {
+            "description": "The initial dataset filters value value."
+          },
+          "type": "array"
+        },
+        "internalListLimit": {
+          "description": "maximum number of elements within internal arrays optional field you can use this field to limit the number of elements within the following arrays: sources_domain search_results_domain minimum value: 1 maximum value: 10 default value: 5",
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 10
+        },
+        "itemsListLimit": {
+          "description": "maximum number of results in the items array optional field you can use this parameter to limit the number of data objects you receive in the items array minimum value: 1 maximum value: 10 default value: 5",
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 10
+        },
+        "languageCode": {
+          "description": "search language code optional field if you use this field, you don't need to specify language_name; you can receive the list of available languages of the search engine with their language_code_by making a separate request to the https://api.dataforseo.com/v3/ai_optimization/llm_mentions/locations_and_languages default value: en Note: chat_gpt data is available for en onlyn",
+          "type": "string"
+        },
+        "languageName": {
+          "description": "full name of search language optional field if you use this field, you don't need to specify language_code; if you don't specify this field, the language_code with en value will be used by default; you can receive the list of available languages of the search engine with their language_name by making a separate request to the https://api.dataforseo.com/v3/ai_optimization/llm_mentions/locations_and_languages Note: chat_gpt data is available for English only",
+          "type": "string"
+        },
+        "linksScope": {
+          "description": "links source scope optional field this parameter specifies which links will be used to extract domains and aggregation data possible values: sources, search_results default value: sources",
+          "type": "string"
+        },
+        "locationCode": {
+          "description": "search location code optional field if you use this field, you don't need to specify location_name you can receive the list of available locations of the search engine with their location_code by making a separate request to the https://api.dataforseo.com/v3/ai_optimization/llm_mentions/locations_and_languages default value: 2840 Note: chat_gpt data is available for 2840 only",
+          "type": "integer"
+        },
+        "locationName": {
+          "description": "full name of search location optional field if you use this field, you don't need to specify location_code if you don't specify this field, the location_code with 2840 value will be used by default; you can receive the list of available locations of the search engine with their location_name by making a separate request to the https://api.dataforseo.com/v3/ai_optimization/llm_mentions/locations_and_languages Note: chat_gpt data is available for United States only",
+          "type": "string"
+        },
+        "platform": {
+          "description": "target platform optional field possible values: chat_gpt, google default value: google Note: the data returned depends on the selected platform Note #2:chat_gpt data is available for the United States and English only",
+          "type": "string"
+        },
+        "tag": {
+          "description": "user-defined task identifier optional field the character limit is 255 you can use this parameter to identify the task and match it with the result you will find the specified tag value in the data object of the response",
+          "type": "string"
+        },
+        "target": {
+          "description": "array of objects containing target entities required field you can specify up to 10 entities (objects) in the target field one target entity can contain either one domain or one keyword and related parametersexamples: target array with a domain entity [{\"domain\": \"en.wikipedia.org\", \"search_filter\": \"exclude\"}] target array with a keyword entity [{\"keyword\": \"bmw\", \"search_scope\": [\"question\"], \"match_type \": \"partial_match\"}] target array with multiple entities [{\"domain\": \"en.wikipedia.org\", \"search_filter\": \"exclude\"}, {\"keyword\": \"bmw\", \"match_type \": \"partial_match\", \"search_scope\": [\"answer\"]}]",
+          "items": {
+            "oneOf": [
+              {
+                "required": ["domain"]
+              },
+              {
+                "required": ["keyword"]
+              }
+            ],
+            "properties": {
+              "domain": {
+                "description": "target domain required field if you don't specify keyword you can specify up to 63 characters in the domain field; a domain should be specified without https:// and www.",
+                "type": "string"
+              },
+              "include_subdomains": {
+                "description": "indicates if the subdomains of the target domain will be included in the search optional field if set to true, the subdomains will be included in the search default value: false",
+                "type": "boolean"
+              },
+              "keyword": {
+                "description": "target keyword required field if you don't specify domain you can specify up to 250 characters in the keyword field all %## will be decoded (plus character ‘+’ will be decoded to a space character) if you need to use the “%” character for your keyword, please specify it as “%25”; if you need to use the “+” character for your keyword, please specify it as “%2B”learn more about rules and limitations of keyword and keywords fields in DataForSEO APIs in this Help Center article",
+                "type": "string"
+              },
+              "match_type": {
+                "description": "target keyword match type optional field possible values: word_match, partial_match word_match - full-text search for terms that match the specified seed keyword with additional words included before, after, or within the seed key phrase. partial_match - searches for any occurrence of the keyword or its parts within the content default value: word_match",
+                "type": "string"
+              },
+              "search_filter": {
+                "description": "Entity search filter: include or exclude; defaults to include.",
+                "type": "string"
+              },
+              "search_scope": {
+                "description": "Search scope. Domain entities: any, sources, search_results. Keyword entities: any, question, answer, brand_entities, fan_out_queries. Default: any.",
+                "items": {
+                  "type": "string",
+                  "description": "The search scope value value."
+                },
+                "type": "array"
+              }
+            },
+            "type": "object",
+            "description": "The target value value.",
+            "additionalProperties": false
+          },
+          "type": "array",
+          "minItems": 1,
+          "maxItems": 10
+        }
+      },
+      "required": ["target"],
+      "type": "object",
+      "description": "Rank domains cited in AI mentions with per-list limits. Top-level fields use camelCase; nested entity and filter fields retain upstream names.",
+      "additionalProperties": false
+    }
   }
 ]

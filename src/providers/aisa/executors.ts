@@ -1,7 +1,7 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 import type { ApiKeyProviderContext } from "../provider-executors.ts";
 
-import { optionalRecord, optionalString } from "../../core/cast.ts";
+import { looseArray, optionalNumber, optionalRecord, optionalString } from "../../core/cast.ts";
 import { readSchemaProperties } from "../../core/json-schema.ts";
 import { randomUUIDv7 } from "../../core/uuid-v7.ts";
 import { defineApiKeyProviderExecutors } from "../provider-executors.ts";
@@ -65,20 +65,6 @@ function dataForSeoLlmRoute(path: string): AisaActionRoute {
   });
 }
 
-function dataForSeoMentionRoute(path: string): AisaActionRoute {
-  return dataForSeoRoute(path, {
-    targets: "target",
-    locationName: "locationName",
-    locationCode: "locationCode",
-    languageName: "languageName",
-    languageCode: "languageCode",
-    platform: "platform",
-    linksScope: "linksScope",
-    limit: "limit",
-    tag: "tag",
-  });
-}
-
 const similarwebMonthQuery = {
   startMonth: "start_date",
   endMonth: "end_date",
@@ -96,12 +82,170 @@ const similarwebRowsQuery = {
 };
 
 const aisaActionRoutes: Record<string, AisaActionRoute> = {
+  search_reddit_subreddit: {
+    path: "/apis/v1/reddit/subreddit/search",
+    query: {
+      cursor: "cursor",
+      query: "query",
+      sort: "sort",
+      subreddit: "subreddit",
+      timeframe: "timeframe",
+    },
+  },
+  get_reddit_post_comments: {
+    path: "/apis/v1/reddit/post/comments",
+    query: {
+      cursor: "cursor",
+      trim: "trim",
+      trimmed: "trimmed",
+      url: "url",
+    },
+  },
+  search_reddit_posts: {
+    path: "/apis/v1/reddit/search",
+    query: {
+      after: "after",
+      count: "count",
+      filter: "filter",
+      limit: "limit",
+      query: "query",
+      sort: "sort",
+      time: "time",
+      timeframe: "timeframe",
+      trim: "trim",
+      trimmed: "trimmed",
+    },
+  },
+  get_fred_release_dates: {
+    path: "/apis/v1/fred/releases/dates",
+    query: {
+      includeReleaseDatesWithNoData: "include_release_dates_with_no_data",
+      limit: "limit",
+      offset: "offset",
+      orderBy: "order_by",
+      realtimeEnd: "realtime_end",
+      realtimeStart: "realtime_start",
+      sortOrder: "sort_order",
+    },
+    fixedQuery: {
+      file_type: "json",
+    },
+  },
+  get_fred_observations: {
+    path: "/apis/v1/fred/series/observations",
+    query: {
+      aggregationMethod: "aggregation_method",
+      frequency: "frequency",
+      limit: "limit",
+      observationEnd: "observation_end",
+      observationStart: "observation_start",
+      offset: "offset",
+      outputType: "output_type",
+      realtimeEnd: "realtime_end",
+      realtimeStart: "realtime_start",
+      seriesId: "series_id",
+      sortOrder: "sort_order",
+      units: "units",
+      vintageDates: "vintage_dates",
+    },
+    fixedQuery: {
+      file_type: "json",
+    },
+  },
+  get_fred_series: {
+    path: "/apis/v1/fred/series",
+    query: {
+      realtimeEnd: "realtime_end",
+      realtimeStart: "realtime_start",
+      seriesId: "series_id",
+    },
+    fixedQuery: {
+      file_type: "json",
+    },
+  },
+  search_fred_series: {
+    path: "/apis/v1/fred/series/search",
+    query: {
+      excludeTagNames: "exclude_tag_names",
+      filterValue: "filter_value",
+      filterVariable: "filter_variable",
+      limit: "limit",
+      offset: "offset",
+      orderBy: "order_by",
+      realtimeEnd: "realtime_end",
+      realtimeStart: "realtime_start",
+      searchText: "search_text",
+      searchType: "search_type",
+      sortOrder: "sort_order",
+      tagNames: "tag_names",
+    },
+    fixedQuery: {
+      file_type: "json",
+    },
+  },
+  get_company_non_gaap_metrics: {
+    path: "/apis/v1/financial/kpi/non-gaap",
+    query: {
+      cursor: "cursor",
+      limit: "limit",
+      metricName: "metric_name",
+      period: "period",
+      reportPeriodGte: "report_period_gte",
+      reportPeriodLte: "report_period_lte",
+      ticker: "ticker",
+    },
+  },
+  get_company_kpis: {
+    path: "/apis/v1/financial/kpi/metrics",
+    query: {
+      cursor: "cursor",
+      limit: "limit",
+      metricName: "metric_name",
+      period: "period",
+      reportPeriodGte: "report_period_gte",
+      reportPeriodLte: "report_period_lte",
+      ticker: "ticker",
+    },
+  },
+  get_company_guidance: {
+    path: "/apis/v1/financial/kpi/guidance",
+    query: {
+      cursor: "cursor",
+      limit: "limit",
+      metricName: "metric_name",
+      period: "period",
+      reportPeriodGte: "report_period_gte",
+      reportPeriodLte: "report_period_lte",
+      ticker: "ticker",
+    },
+  },
+  search_financial_line_items: {
+    path: "/apis/v1/financial/financials/search/line-items",
+    query: {},
+    method: "POST",
+    body: {
+      limit: "limit",
+      lineItems: "line_items",
+      period: "period",
+      tickers: "tickers",
+    },
+  },
+  screen_stocks: {
+    path: "/apis/v1/financial/financials/search/screener",
+    query: {},
+    method: "POST",
+    body: {
+      filters: "filters",
+      limit: "limit",
+    },
+  },
   search_firecrawl: {
     path: "/apis/v1/firecrawl/search",
     method: "POST",
     query: {},
     body: { query: "query", limit: "limit" },
-    bodyDefaults: { enterprise: false, sources: ["web"] },
+    // Live requests reject enterprise: false; omit the optional field to use the upstream default.
+    bodyDefaults: { sources: ["web"] },
   },
   search_akta_companies: { path: "/apis/v1/akta/company/search", query: { query: "query" } },
   enrich_akta_company: {
@@ -143,8 +287,11 @@ const aisaActionRoutes: Record<string, AisaActionRoute> = {
         method: "POST" as const,
         query: {},
         bodyArray: true,
+        // LLM Mentions permits 120 seconds of processing; allow extra time for gateway transit.
+        timeoutMs: contract.path.includes("/ai_optimization/llm_mentions/") ? 180_000 : undefined,
+        // Map top-level parameters only; preserve nested filter expressions and caller objects.
         body: Object.fromEntries(
-          Object.keys(contract.inputSchema.properties).map((key) => [key, camelToSnakeCase(key)]),
+          Object.keys(readSchemaProperties(contract.inputSchema)).map((key) => [key, camelToSnakeCase(key)]),
         ),
       },
     ]),
@@ -193,7 +340,7 @@ const aisaActionRoutes: Record<string, AisaActionRoute> = {
     path: "/apis/v1/exa/search",
     method: "POST",
     query: {},
-    timeoutMs: 180000,
+    timeoutMs: 180_000,
     body: {
       query: "query",
       stream: "stream",
@@ -213,7 +360,7 @@ const aisaActionRoutes: Record<string, AisaActionRoute> = {
     path: "/apis/v1/exa/contents",
     method: "POST",
     query: {},
-    timeoutMs: 180000,
+    timeoutMs: 180_000,
     bodyDefaults: { text: true },
     body: {
       urls: "ids",
@@ -229,7 +376,7 @@ const aisaActionRoutes: Record<string, AisaActionRoute> = {
     path: "/apis/v1/exa/answer",
     method: "POST",
     query: {},
-    timeoutMs: 180000,
+    timeoutMs: 180_000,
     body: {
       query: "query",
       type: "type",
@@ -242,7 +389,7 @@ const aisaActionRoutes: Record<string, AisaActionRoute> = {
     path: "/apis/v1/firecrawl/scrape",
     method: "POST",
     query: {},
-    timeoutMs: 180000,
+    timeoutMs: 180_000,
     body: { url: "url" },
     bodyDefaults: { proxy: "basic", formats: ["markdown"], onlyCleanContent: false },
   },
@@ -250,14 +397,14 @@ const aisaActionRoutes: Record<string, AisaActionRoute> = {
     path: "/apis/v1/firecrawl/map",
     method: "POST",
     query: {},
-    timeoutMs: 180000,
+    timeoutMs: 180_000,
     body: { url: "url", limit: "limit" },
   },
   crawl_tavily: {
     path: "/apis/v1/tavily/crawl",
     method: "POST",
     query: {},
-    timeoutMs: 180000,
+    timeoutMs: 180_000,
     body: {
       url: "url",
       limit: "limit",
@@ -282,7 +429,7 @@ const aisaActionRoutes: Record<string, AisaActionRoute> = {
     path: "/apis/v1/tavily/extract",
     method: "POST",
     query: {},
-    timeoutMs: 90000,
+    timeoutMs: 90_000,
     body: {
       urls: "urls",
       query: "query",
@@ -324,15 +471,6 @@ const aisaActionRoutes: Record<string, AisaActionRoute> = {
       languageCode: "languageCode",
       tag: "tag",
     },
-  ),
-  get_dataforseo_llm_mention_metrics: dataForSeoMentionRoute(
-    "/apis/v1/dataforseo/ai_optimization/llm_mentions/aggregated_metrics/live",
-  ),
-  search_dataforseo_llm_mentions: dataForSeoMentionRoute(
-    "/apis/v1/dataforseo/ai_optimization/llm_mentions/search/live",
-  ),
-  get_dataforseo_llm_mention_top_domains: dataForSeoMentionRoute(
-    "/apis/v1/dataforseo/ai_optimization/llm_mentions/top_domains/live",
   ),
   get_crypto_prices: {
     path: "/apis/v1/coingecko/simple/price",
@@ -406,16 +544,6 @@ const aisaActionRoutes: Record<string, AisaActionRoute> = {
   list_crypto_categories: {
     path: "/apis/v1/coingecko/coins/categories",
     query: { order: "order" },
-  },
-  get_crypto_news: {
-    path: "/apis/v1/coingecko/news",
-    query: {
-      coinId: "coin_id",
-      language: "language",
-      articleType: "type",
-      page: "page",
-      perPage: "per_page",
-    },
   },
   get_trending_crypto: {
     path: "/apis/v1/coingecko/search/trending",
@@ -526,6 +654,18 @@ const aisaActionRoutes: Record<string, AisaActionRoute> = {
       employeeRanges: "organization_num_employees_ranges[]",
       page: "page",
       perPage: "per_page",
+      contactEmailStatus: "contact_email_status[]",
+      currentlyNotUsingAnyOfTechnologyUids: "currently_not_using_any_of_technology_uids[]",
+      currentlyUsingAllOfTechnologyUids: "currently_using_all_of_technology_uids[]",
+      currentlyUsingAnyOfTechnologyUids: "currently_using_any_of_technology_uids[]",
+      organizationJobLocations: "organization_job_locations[]",
+      organizationJobPostedAtRangeMax: "organization_job_posted_at_range[max]",
+      organizationJobPostedAtRangeMin: "organization_job_posted_at_range[min]",
+      organizationNumJobsRangeMax: "organization_num_jobs_range[max]",
+      organizationNumJobsRangeMin: "organization_num_jobs_range[min]",
+      qOrganizationJobTitles: "q_organization_job_titles[]",
+      revenueRangeMax: "revenue_range[max]",
+      revenueRangeMin: "revenue_range[min]",
     },
   },
   search_apollo_organizations: {
@@ -540,6 +680,22 @@ const aisaActionRoutes: Record<string, AisaActionRoute> = {
       organizationIds: "organization_ids[]",
       page: "page",
       perPage: "per_page",
+      currentlyUsingAnyOfTechnologyUids: "currently_using_any_of_technology_uids[]",
+      latestFundingAmountRangeMax: "latest_funding_amount_range[max]",
+      latestFundingAmountRangeMin: "latest_funding_amount_range[min]",
+      latestFundingDateRangeMax: "latest_funding_date_range[max]",
+      latestFundingDateRangeMin: "latest_funding_date_range[min]",
+      organizationJobLocations: "organization_job_locations[]",
+      organizationJobPostedAtRangeMax: "organization_job_posted_at_range[max]",
+      organizationJobPostedAtRangeMin: "organization_job_posted_at_range[min]",
+      organizationNumJobsRangeMax: "organization_num_jobs_range[max]",
+      organizationNumJobsRangeMin: "organization_num_jobs_range[min]",
+      qOrganizationJobTitles: "q_organization_job_titles[]",
+      qOrganizationKeywordTags: "q_organization_keyword_tags[]",
+      revenueRangeMax: "revenue_range[max]",
+      revenueRangeMin: "revenue_range[min]",
+      totalFundingRangeMax: "total_funding_range[max]",
+      totalFundingRangeMin: "total_funding_range[min]",
     },
   },
   get_apollo_organization: {
@@ -881,7 +1037,14 @@ const aisaActionRoutes: Record<string, AisaActionRoute> = {
   },
   get_stock_prices: {
     path: "/apis/v1/financial/prices",
-    query: { ticker: "ticker", interval: "interval", startDate: "start_date", endDate: "end_date" },
+    query: {
+      cursor: "cursor",
+      endDate: "end_date",
+      interval: "interval",
+      intervalMultiplier: "interval_multiplier",
+      startDate: "start_date",
+      ticker: "ticker",
+    },
   },
   get_company_facts: {
     path: "/apis/v1/financial/company/facts",
@@ -889,27 +1052,111 @@ const aisaActionRoutes: Record<string, AisaActionRoute> = {
   },
   get_income_statements: {
     path: "/apis/v1/financial/financials/income-statements",
-    query: { ticker: "ticker", cik: "cik", period: "period", limit: "limit" },
+    query: {
+      cik: "cik",
+      cursor: "cursor",
+      exchange: "exchange",
+      filingDate: "filing_date",
+      filingDateGt: "filing_date_gt",
+      filingDateGte: "filing_date_gte",
+      filingDateLt: "filing_date_lt",
+      filingDateLte: "filing_date_lte",
+      isin: "isin",
+      limit: "limit",
+      market: "market",
+      period: "period",
+      reportPeriod: "report_period",
+      reportPeriodGt: "report_period_gt",
+      reportPeriodGte: "report_period_gte",
+      reportPeriodLt: "report_period_lt",
+      reportPeriodLte: "report_period_lte",
+      ticker: "ticker",
+    },
   },
   get_balance_sheets: {
     path: "/apis/v1/financial/financials/balance-sheets",
-    query: { ticker: "ticker", cik: "cik", period: "period", limit: "limit" },
+    query: {
+      cik: "cik",
+      cursor: "cursor",
+      exchange: "exchange",
+      filingDate: "filing_date",
+      filingDateGt: "filing_date_gt",
+      filingDateGte: "filing_date_gte",
+      filingDateLt: "filing_date_lt",
+      filingDateLte: "filing_date_lte",
+      isin: "isin",
+      limit: "limit",
+      market: "market",
+      period: "period",
+      reportPeriod: "report_period",
+      reportPeriodGt: "report_period_gt",
+      reportPeriodGte: "report_period_gte",
+      reportPeriodLt: "report_period_lt",
+      reportPeriodLte: "report_period_lte",
+      ticker: "ticker",
+    },
   },
   get_cash_flow_statements: {
     path: "/apis/v1/financial/financials/cash-flow-statements",
-    query: { ticker: "ticker", cik: "cik", period: "period", limit: "limit" },
+    query: {
+      cik: "cik",
+      cursor: "cursor",
+      exchange: "exchange",
+      filingDate: "filing_date",
+      filingDateGt: "filing_date_gt",
+      filingDateGte: "filing_date_gte",
+      filingDateLt: "filing_date_lt",
+      filingDateLte: "filing_date_lte",
+      isin: "isin",
+      limit: "limit",
+      period: "period",
+      reportPeriod: "report_period",
+      reportPeriodGt: "report_period_gt",
+      reportPeriodGte: "report_period_gte",
+      reportPeriodLt: "report_period_lt",
+      reportPeriodLte: "report_period_lte",
+      ticker: "ticker",
+    },
   },
   get_financial_metrics: {
     path: "/apis/v1/financial/financial-metrics",
-    query: { ticker: "ticker", cik: "cik", period: "period", limit: "limit" },
+    query: {
+      cik: "cik",
+      cursor: "cursor",
+      exchange: "exchange",
+      filingDate: "filing_date",
+      filingDateGt: "filing_date_gt",
+      filingDateGte: "filing_date_gte",
+      filingDateLt: "filing_date_lt",
+      filingDateLte: "filing_date_lte",
+      isin: "isin",
+      limit: "limit",
+      period: "period",
+      reportPeriod: "report_period",
+      reportPeriodGt: "report_period_gt",
+      reportPeriodGte: "report_period_gte",
+      reportPeriodLt: "report_period_lt",
+      reportPeriodLte: "report_period_lte",
+      ticker: "ticker",
+    },
   },
   get_financial_metrics_snapshot: {
     path: "/apis/v1/financial/financial-metrics/snapshot",
-    query: { ticker: "ticker", cik: "cik" },
+    query: {
+      cik: "cik",
+      exchange: "exchange",
+      isin: "isin",
+      market: "market",
+      ticker: "ticker",
+    },
   },
   get_stock_earnings: {
     path: "/apis/v1/financial/earnings",
-    query: { ticker: "ticker" },
+    query: {
+      cursor: "cursor",
+      limit: "limit",
+      ticker: "ticker",
+    },
   },
   get_analyst_estimates: {
     path: "/apis/v1/financial/analyst-estimates",
@@ -918,22 +1165,36 @@ const aisaActionRoutes: Record<string, AisaActionRoute> = {
   get_insider_trades: {
     path: "/apis/v1/financial/insider-trades",
     query: {
-      ticker: "ticker",
+      cursor: "cursor",
+      filingDate: "filing_date",
+      filingDateGt: "filing_date_gt",
+      filingDateFrom: "filing_date_gte",
+      filingDateLt: "filing_date_lt",
+      filingDateTo: "filing_date_lte",
+      formType: "form_type",
       limit: "limit",
       insiderName: "name",
+      ticker: "ticker",
       transactionType: "transaction_type",
-      filingDate: "filing_date",
-      filingDateFrom: "filing_date_gte",
-      filingDateTo: "filing_date_lte",
     },
   },
   get_company_news: {
     path: "/apis/v1/financial/news",
-    query: { ticker: "ticker", limit: "limit" },
+    query: {
+      cursor: "cursor",
+      limit: "limit",
+      ticker: "ticker",
+    },
   },
   list_company_filings: {
     path: "/apis/v1/financial/filings",
-    query: { ticker: "ticker", cik: "cik", filingType: "filing_type", limit: "limit" },
+    query: {
+      cik: "cik",
+      cursor: "cursor",
+      filingType: "filing_type",
+      limit: "limit",
+      ticker: "ticker",
+    },
   },
   get_filing_items: {
     path: "/apis/v1/financial/filings/items",
@@ -1023,18 +1284,6 @@ const aisaActionRoutes: Record<string, AisaActionRoute> = {
       maxStartDate: "start_date_max",
       minEndDate: "end_date_min",
       maxEndDate: "end_date_max",
-    },
-  },
-  get_polymarket_activity: {
-    path: "/apis/v1/polymarket/activity",
-    query: {
-      user: "user",
-      startTimestamp: "start_time",
-      endTimestamp: "end_time",
-      marketSlug: "market_slug",
-      conditionId: "condition_id",
-      limit: "limit",
-      paginationKey: "pagination_key",
     },
   },
 };
@@ -1368,26 +1617,53 @@ function parseSemicolonRecords(text: string) {
   return records;
 }
 
-function createAisaError(response: Response, payload: unknown, phase: "validate" | "execute"): ProviderRequestError {
-  const errorValue = optionalRecord(payload)?.error;
+function createAisaError(response: Response, payload: unknown, phase: "validate" | "execute") {
+  const payloadObject = optionalRecord(payload);
+  const errorValue = payloadObject?.error;
   const error = optionalRecord(errorValue);
   const code = optionalString(error?.code);
-  const message =
+
+  const failedTask = looseArray(payloadObject?.tasks)
+    .map(optionalRecord)
+    .find((task) => (optionalNumber(task?.status_code) ?? 0) >= 40000 && optionalString(task?.status_message));
+  const taskMessage = failedTask
+    ? `DataForSEO task ${String(failedTask.status_code)}: ${String(failedTask.status_message)}`
+    : undefined;
+  const summary =
     optionalString(error?.message) ??
     optionalString(errorValue) ??
+    optionalString(payloadObject?.message) ??
+    taskMessage ??
     optionalString(payload) ??
-    optionalString(optionalRecord(payload)?.message) ??
     `AIsa request failed with status ${response.status}`;
-  if (response.status === 429) return new ProviderRequestError(429, message, payload);
-  if (response.status === 402) return new ProviderRequestError(402, message, payload, "insufficient_credit");
-  if (isCredentialErrorCode(code)) {
-    return phase === "validate" ? providerInputError(message) : new ProviderRequestError(409, message, payload);
+
+  const details = looseArray(payloadObject?.details).flatMap((value) => {
+    const detail = optionalRecord(value);
+    const message = optionalString(detail?.message);
+    if (!message) return [];
+    const path = looseArray(detail?.path)
+      .filter((part) => typeof part === "string" || typeof part === "number")
+      .join(".");
+    return [path ? `${path}: ${message}` : message];
+  });
+  const message = [summary, ...details].join("; ");
+
+  if (response.status === 429) {
+    return new ProviderRequestError(429, message, undefined, "rate_limited");
   }
-  if (response.status === 404) return new ProviderRequestError(404, message, payload, "provider_error");
+  if (response.status === 402) {
+    return new ProviderRequestError(402, message, undefined, "insufficient_credit");
+  }
+  if (phase === "validate" && isCredentialErrorCode(code)) {
+    return new ProviderRequestError(400, message, undefined, "invalid_input");
+  }
+  if (phase === "execute" && isCredentialErrorCode(code)) {
+    return new ProviderRequestError(409, message, undefined, "authorization_failed");
+  }
   if (response.status === 400 || response.status === 422) {
-    return new ProviderRequestError(400, message, payload, "invalid_input");
+    return new ProviderRequestError(400, message, undefined, "invalid_input");
   }
-  return new ProviderRequestError(response.status, message, payload);
+  return new ProviderRequestError(response.status, message, undefined, "provider_error");
 }
 
 function isCredentialErrorCode(code: string | undefined): boolean {

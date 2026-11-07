@@ -3,6 +3,7 @@ import type { GmailMimeAttachment } from "./mime.ts";
 
 import { Buffer } from "node:buffer";
 import { base64Bytes, objectArray, optionalString, requiredRawString } from "../../core/cast.ts";
+import { readBoundedResponseBytes } from "../../core/request.ts";
 import { readTransitFileInput } from "../provider-files.ts";
 import { providerInputError, ProviderRequestError } from "../provider-runtime.ts";
 import { gmailMaxAttachmentBytes, gmailMaxAttachmentCount } from "./limits.ts";
@@ -64,8 +65,13 @@ export async function readGmailAttachments(
     } else {
       const source = await readTransitFileInput(input.file, context);
       if (source.file.size > gmailMaxAttachmentBytes - totalBytes) throw attachmentTooLarge();
-      totalBytes += source.file.size;
-      contentBase64 = Buffer.from(await source.file.arrayBuffer()).toString("base64");
+      const bytes = await readBoundedResponseBytes(new Response(source.file.stream()), {
+        maxBytes: gmailMaxAttachmentBytes - totalBytes,
+        fieldName: field,
+        createError: attachmentTooLarge,
+      });
+      totalBytes += bytes.byteLength;
+      contentBase64 = Buffer.from(bytes.buffer, bytes.byteOffset, bytes.byteLength).toString("base64");
       filename ??= source.name;
       mimeType ??= optionalString(source.mimeType);
     }

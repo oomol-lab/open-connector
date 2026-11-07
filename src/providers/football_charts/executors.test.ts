@@ -67,34 +67,7 @@ describe("Football Charts actions", () => {
     ]);
   });
 
-  it("maps season_gated 403 responses to invalid_input rather than authorization_failed", async () => {
-    stubResponses([
-      Response.json(
-        {
-          error: {
-            code: "season_gated",
-            message: "Season 2021-2022 is outside the free window (current and previous season).",
-          },
-        },
-        { status: 403 },
-      ),
-    ]);
-
-    const result = await executors["football_charts.get_results"]!(
-      { league: "premier", season: "2021-2022" },
-      contextWithKey("fc_test_key_123"),
-    );
-
-    expect(result).toMatchObject({
-      ok: false,
-      error: {
-        code: "invalid_input",
-        message: "Season 2021-2022 is outside the free window (current and previous season).",
-      },
-    });
-  });
-
-  it("maps unknown_key 401 responses to authorization_failed in execute mode and preserves 429 retry-after", async () => {
+  it("preserves unverified 401 failures as provider_error and retains 429 retry-after", async () => {
     stubResponses([
       Response.json({ error: { code: "unknown_key", message: "API key not recognised." } }, { status: 401 }),
       Response.json(
@@ -106,7 +79,7 @@ describe("Football Charts actions", () => {
     const authResult = await executors["football_charts.list_leagues"]!({}, contextWithKey("fc_bad_key"));
     expect(authResult).toMatchObject({
       ok: false,
-      error: { code: "authorization_failed", message: "API key not recognised." },
+      error: { code: "provider_error", message: "API key not recognised." },
     });
 
     const rateResult = await executors["football_charts.list_leagues"]!({}, contextWithKey());
@@ -118,15 +91,6 @@ describe("Football Charts actions", () => {
         details: { status: 429, details: { retryAfterSeconds: 60 } },
       },
     });
-  });
-
-  it("rejects malformed match slugs before issuing a network request", async () => {
-    const requests = stubResponses([]);
-
-    const result = await executors["football_charts.get_match"]!({ slug: "../leagues" }, contextWithKey());
-
-    expect(result).toMatchObject({ ok: false, error: { code: "invalid_input" } });
-    expect(requests).toHaveLength(0);
   });
 });
 

@@ -37,7 +37,7 @@ const personIdentity = s.requireAnyProperty(
   ["firstName", "lastName", "name", "email", "hashedEmail", "organizationName", "domain", "personId", "linkedinUrl"],
 );
 
-const enrichApolloPersonAction: ActionDefinition = defineProviderAction(service, {
+export const enrichApolloPersonAction: ActionDefinition = defineProviderAction(service, {
   name: "enrich_apollo_person",
   operationType: "read",
   description: "Enrich one person from known identifiers using Apollo's global database.",
@@ -46,7 +46,7 @@ const enrichApolloPersonAction: ActionDefinition = defineProviderAction(service,
   outputSchema: apolloOutput,
 });
 
-const enrichApolloPeopleAction: ActionDefinition = defineProviderAction(service, {
+export const enrichApolloPeopleAction: ActionDefinition = defineProviderAction(service, {
   name: "enrich_apollo_people",
   operationType: "read",
   description: "Enrich up to ten people from known identifiers in one Apollo request.",
@@ -57,7 +57,7 @@ const enrichApolloPeopleAction: ActionDefinition = defineProviderAction(service,
   outputSchema: apolloOutput,
 });
 
-const enrichApolloOrganizationAction: ActionDefinition = defineProviderAction(service, {
+export const enrichApolloOrganizationAction: ActionDefinition = defineProviderAction(service, {
   name: "enrich_apollo_organization",
   operationType: "read",
   description: "Enrich one organization from its domain using Apollo's global database.",
@@ -68,7 +68,7 @@ const enrichApolloOrganizationAction: ActionDefinition = defineProviderAction(se
   outputSchema: apolloOutput,
 });
 
-const enrichApolloOrganizationsAction: ActionDefinition = defineProviderAction(service, {
+export const enrichApolloOrganizationsAction: ActionDefinition = defineProviderAction(service, {
   name: "enrich_apollo_organizations",
   operationType: "read",
   description: "Enrich multiple organizations from their domains in one Apollo request.",
@@ -83,103 +83,358 @@ const enrichApolloOrganizationsAction: ActionDefinition = defineProviderAction(s
   outputSchema: apolloOutput,
 });
 
-const searchApolloPeopleAction: ActionDefinition = defineProviderAction(service, {
+export const searchApolloPeopleAction: ActionDefinition = defineProviderAction(service, {
   name: "search_apollo_people",
   operationType: "read",
   description: "Search Apollo's global people database by role, location, employer, and seniority.",
   requiredScopes: [],
-  inputSchema: s.object(
-    "Filters and pagination for searching Apollo's global people database.",
-    {
-      titles: s.array("The current job titles to include.", s.string("A job title."), {
+  inputSchema: {
+    type: "object",
+    properties: {
+      titles: {
+        type: "array",
+        items: {
+          type: "string",
+          description: "A job title.",
+        },
         uniqueItems: true,
-      }),
-      includeSimilarTitles: s.boolean("Whether Apollo may include similar job titles."),
-      keywords: s.string("Free-text keywords used to filter people."),
-      personLocations: s.array("The person locations to include.", s.string("A location."), {
+        description: "The current job titles to include.",
+      },
+      includeSimilarTitles: {
+        type: "boolean",
+        description: "Whether Apollo may include similar job titles.",
+      },
+      keywords: {
+        type: "string",
+        description: "Free-text keywords used to filter people.",
+      },
+      personLocations: {
+        type: "array",
+        items: {
+          type: "string",
+          description: "A location.",
+        },
         uniqueItems: true,
-      }),
-      seniorities: s.array("The seniority levels to include.", s.string("A seniority level."), {
+        description: "The person locations to include.",
+      },
+      seniorities: {
+        type: "array",
+        items: {
+          type: "string",
+          description: "A seniority level.",
+        },
         uniqueItems: true,
-      }),
-      organizationLocations: s.array("The employer locations to include.", s.string("An employer location."), {
+        description: "The seniority levels to include.",
+      },
+      organizationLocations: {
+        type: "array",
+        items: {
+          type: "string",
+          description: "An employer location.",
+        },
         uniqueItems: true,
-      }),
-      organizationDomains: s.array("The employer domains to include.", s.string("An employer domain."), {
+        description: "The employer locations to include.",
+      },
+      organizationDomains: {
+        type: "array",
+        items: {
+          type: "string",
+          description: "An employer domain.",
+        },
         uniqueItems: true,
-      }),
-      organizationIds: s.array("The Apollo organization IDs to include.", s.string("An Apollo organization ID."), {
+        description: "The employer domains to include.",
+      },
+      organizationIds: {
+        type: "array",
+        items: {
+          type: "string",
+          description: "An Apollo organization ID.",
+        },
         uniqueItems: true,
-      }),
-      employeeRanges: s.array("The employer headcount ranges to include.", s.string("An Apollo headcount range."), {
+        description: "The Apollo organization IDs to include.",
+      },
+      employeeRanges: {
+        type: "array",
+        items: {
+          type: "string",
+          description: "An Apollo headcount range.",
+        },
         uniqueItems: true,
-      }),
-      page: s.integer("The one-based result page.", { minimum: 1 }),
-      perPage: s.integer("The maximum results per page.", { minimum: 1, maximum: 100 }),
+        description: "The employer headcount ranges to include.",
+      },
+      page: {
+        type: "integer",
+        minimum: 1,
+        description: "The one-based result page.",
+      },
+      perPage: {
+        type: "integer",
+        minimum: 1,
+        maximum: 100,
+        description: "The maximum results per page.",
+      },
+      contactEmailStatus: {
+        items: {
+          type: "string",
+          description: "One value of the contact_email_status[] filter.",
+        },
+        type: "array",
+        description:
+          "The email statuses for the people you want to find. You can add multiple statuses to expand your search. The statuses you can search include: verified unverified likely to engage unavailable",
+      },
+      currentlyNotUsingAnyOfTechnologyUids: {
+        items: {
+          type: "string",
+          description: "One value of the currently_not_using_any_of_technology_uids[] filter.",
+        },
+        type: "array",
+        description:
+          "Exclude people from your search based on any of the technologies their current employer uses. Apollo supports filtering by 1,500+ technologies. Apollo calculates technologies data from multiple sources. This data is updated regularly. Check out the full list of supported technologies by downloading this CSV file . Use underscores (_) to replace spaces and periods for the technologies listed in the CSV file. Examples: salesforce; google_analytics; wordpress_org",
+      },
+      currentlyUsingAllOfTechnologyUids: {
+        items: {
+          type: "string",
+          description: "One value of the currently_using_all_of_technology_uids[] filter.",
+        },
+        type: "array",
+        description:
+          "Find people based on all of the technologies their current employer uses. Apollo supports filtering by 1,500+ technologies. Apollo calculates technologies data from multiple sources. This data is updated regularly. Check out the full list of supported technologies by downloading this CSV file . Use underscores (_) to replace spaces and periods for the technologies listed in the CSV file. Examples: salesforce; google_analytics; wordpress_org",
+      },
+      currentlyUsingAnyOfTechnologyUids: {
+        items: {
+          type: "string",
+          description: "One value of the currently_using_any_of_technology_uids[] filter.",
+        },
+        type: "array",
+        description:
+          "Find people based on any of the technologies their current employer uses. Apollo supports filtering by 1,500+ technologies. Apollo calculates technologies data from multiple sources. This data is updated regularly. Check out the full list of supported technologies by downloading this CSV file . Use underscores (_) to replace spaces and periods for the technologies listed in the CSV file. Examples: salesforce; google_analytics; wordpress_org",
+      },
+      organizationJobLocations: {
+        items: {
+          type: "string",
+          description: "One value of the organization_job_locations[] filter.",
+        },
+        type: "array",
+        description:
+          "The locations of the jobs being actively recruited by the person's employer. Examples: atlanta; japan",
+      },
+      organizationJobPostedAtRangeMax: {
+        type: "string",
+        description:
+          "The latest date when jobs were posted by the person's current employer. Use this parameter in combination with organization_job_posted_at_range[min] to set a date range for when jobs posted. Example: 2025-09-25",
+      },
+      organizationJobPostedAtRangeMin: {
+        type: "string",
+        description:
+          "The earliest date when jobs were posted by the person's current employer. Use this parameter in combination with organization_job_posted_at_range[max] to set a date range for when jobs posted. Example: 2025-07-25",
+      },
+      organizationNumJobsRangeMax: {
+        type: "integer",
+        description:
+          "The maximum number of job postings active at the person's current employer. Use this parameter in combination with organization_num_jobs_range[min] to set a job postings range. Examples: 50; 500",
+      },
+      organizationNumJobsRangeMin: {
+        type: "integer",
+        description:
+          "The minimum number of job postings active at the person's current employer. Use this parameter in combination with organization_num_jobs_range[max] to set a job postings range. Examples: 50; 500",
+      },
+      qOrganizationJobTitles: {
+        items: {
+          type: "string",
+          description: "One value of the q_organization_job_titles[] filter.",
+        },
+        type: "array",
+        description:
+          "The job titles that are listed in active job postings at the person's current employer. Examples: sales manager; research analyst",
+      },
+      revenueRangeMax: {
+        type: "integer",
+        description:
+          "The maximum revenue the person's current employer generates. Use this parameter in combination with revenue_range[min] to set a revenue range. Do not enter currency symbols, commas, or decimal points in the figure. Examples: 500000; 1500000",
+      },
+      revenueRangeMin: {
+        type: "integer",
+        description:
+          "The minimum revenue the person's current employer generates. Use this parameter in combination with revenue_range[max] to set a revenue range. Do not enter currency symbols, commas, or decimal points in the figure. Examples: 500000; 1500000",
+      },
     },
-    {
-      optional: [
-        "titles",
-        "includeSimilarTitles",
-        "keywords",
-        "personLocations",
-        "seniorities",
-        "organizationLocations",
-        "organizationDomains",
-        "organizationIds",
-        "employeeRanges",
-        "page",
-        "perPage",
-      ],
-    },
-  ),
+    additionalProperties: false,
+    description: "Filters and pagination for searching Apollo's global people database.",
+  },
   outputSchema: apolloOutput,
 });
 
-const searchApolloOrganizationsAction: ActionDefinition = defineProviderAction(service, {
+export const searchApolloOrganizationsAction: ActionDefinition = defineProviderAction(service, {
   name: "search_apollo_organizations",
   operationType: "read",
   description: "Search Apollo's global organization database by domain, location, size, and name.",
   requiredScopes: [],
-  inputSchema: s.object(
-    "Filters and pagination for searching Apollo's global organization database.",
-    {
-      domains: s.array("The company domains to include.", s.string("A company domain."), {
+  inputSchema: {
+    type: "object",
+    properties: {
+      domains: {
+        type: "array",
+        items: {
+          type: "string",
+          description: "A company domain.",
+        },
         uniqueItems: true,
-      }),
-      employeeRanges: s.array("The company headcount ranges to include.", s.string("An Apollo headcount range."), {
+        description: "The company domains to include.",
+      },
+      employeeRanges: {
+        type: "array",
+        items: {
+          type: "string",
+          description: "An Apollo headcount range.",
+        },
         uniqueItems: true,
-      }),
-      locations: s.array("The company locations to include.", s.string("A location."), {
+        description: "The company headcount ranges to include.",
+      },
+      locations: {
+        type: "array",
+        items: {
+          type: "string",
+          description: "A location.",
+        },
         uniqueItems: true,
-      }),
-      excludedLocations: s.array("The company locations to exclude.", s.string("A location."), {
+        description: "The company locations to include.",
+      },
+      excludedLocations: {
+        type: "array",
+        items: {
+          type: "string",
+          description: "A location.",
+        },
         uniqueItems: true,
-      }),
-      name: s.string("Text to match against company names."),
-      organizationIds: s.array("The Apollo organization IDs to include.", s.string("An Apollo organization ID."), {
+        description: "The company locations to exclude.",
+      },
+      name: {
+        type: "string",
+        description: "Text to match against company names.",
+      },
+      organizationIds: {
+        type: "array",
+        items: {
+          type: "string",
+          description: "An Apollo organization ID.",
+        },
         uniqueItems: true,
-      }),
-      page: s.integer("The one-based result page.", { minimum: 1 }),
-      perPage: s.integer("The maximum results per page.", { minimum: 1, maximum: 100 }),
+        description: "The Apollo organization IDs to include.",
+      },
+      page: {
+        type: "integer",
+        minimum: 1,
+        description: "The one-based result page.",
+      },
+      perPage: {
+        type: "integer",
+        minimum: 1,
+        maximum: 100,
+        description: "The maximum results per page.",
+      },
+      currentlyUsingAnyOfTechnologyUids: {
+        items: {
+          type: "string",
+          description: "One value of the currently_using_any_of_technology_uids[] filter.",
+        },
+        type: "array",
+        description:
+          "Find organizations based on the technologies they currently use. Apollo supports filtering by 1,500+ technologies. Apollo calculates technologies data from multiple sources. This data is updated regularly. Check out the full list of supported technologies by downloading this CSV file . Use underscores (_) to replace spaces and periods for the technologies listed in the CSV file. Examples: salesforce; google_analytics; wordpress_org",
+      },
+      latestFundingAmountRangeMax: {
+        type: "integer",
+        description:
+          "The maximium amount the company received with its most recent funding round. Use this parameter in combination with latest_funding_amount_range[min] to set a monetary range for the company's most recent funding round. Do not enter currency symbols, commas, or decimal points in the figure. Examples: 5000000; 15000000",
+      },
+      latestFundingAmountRangeMin: {
+        type: "integer",
+        description:
+          "The minimum amount the company received with its most recent funding round. Use this parameter in combination with latest_funding_amount_range[max] to set a monetary range for the company's most recent funding round. Do not enter currency symbols, commas, or decimal points in the figure. Examples: 5000000; 15000000",
+      },
+      latestFundingDateRangeMax: {
+        type: "string",
+        description:
+          "The latest date when the company received its most recent funding round. Use this parameter in combination with latest_funding_date_range[min] to set a date range for when the company received its most recent funding round. Example: 2025-09-25",
+      },
+      latestFundingDateRangeMin: {
+        type: "string",
+        description:
+          "The earliest date when the company received its most recent funding round. Use this parameter in combination with latest_funding_date_range[max] to set a date range for when the company received its most recent funding round. Example: 2025-07-25",
+      },
+      organizationJobLocations: {
+        items: {
+          type: "string",
+          description: "One value of the organization_job_locations[] filter.",
+        },
+        type: "array",
+        description: "The locations of the jobs being actively recruited by the company. Examples: atlanta; japan",
+      },
+      organizationJobPostedAtRangeMax: {
+        type: "string",
+        description:
+          "The latest date when jobs were posted by the company. Use this parameter in combination with organization_job_posted_at_range[min] to set a date range for when jobs posted. Example: 2025-09-25",
+      },
+      organizationJobPostedAtRangeMin: {
+        type: "string",
+        description:
+          "The earliest date when jobs were posted by the company. Use this parameter in combination with organization_job_posted_at_range[max] to set a date range for when jobs posted. Example: 2025-07-25",
+      },
+      organizationNumJobsRangeMax: {
+        type: "integer",
+        description:
+          "The maximum number of job postings active at the company. Use this parameter in combination with organization_num_jobs_range[min] to set a job postings range. Examples: 50; 500",
+      },
+      organizationNumJobsRangeMin: {
+        type: "integer",
+        description:
+          "The minimum number of job postings active at the company. Use this parameter in combination with organization_num_jobs_range[max] to set a job postings range. Examples: 50; 500",
+      },
+      qOrganizationJobTitles: {
+        items: {
+          type: "string",
+          description: "One value of the q_organization_job_titles[] filter.",
+        },
+        type: "array",
+        description:
+          "The job titles that are listed in active job postings at the company. Examples: sales manager; research analyst",
+      },
+      qOrganizationKeywordTags: {
+        items: {
+          type: "string",
+          description: "One value of the q_organization_keyword_tags[] filter.",
+        },
+        type: "array",
+        description:
+          "Filter search results based on keywords associated with companies. For example, you can enter mining as a value to return only companies that have an association with the mining industry. Examples: mining; sales strategy; consulting",
+      },
+      revenueRangeMax: {
+        type: "integer",
+        description:
+          "Search for organizations based on their revenue. Use this parameter to set the upper range of organization revenue. Use the revenue_range[min] parameter to set the lower range of revenue. Do not enter currency symbols, commas, or decimal points in the figure. Example: 50000000",
+      },
+      revenueRangeMin: {
+        type: "integer",
+        description:
+          "Search for organizations based on their revenue. Use this parameter to set the lower range of organization revenue. Use the revenue_range[max] parameter to set the upper range of revenue. Do not enter currency symbols, commas, or decimal points in the figure. Example: 300000",
+      },
+      totalFundingRangeMax: {
+        type: "integer",
+        description:
+          "The maximum amount the company received during all of its funding rounds combined. Use this parameter in combination with total_funding_range[min] to set a monetary range for all of the company's funding rounds. Do not enter currency symbols, commas, or decimal points in the figure. Examples: 50000000; 350000000",
+      },
+      totalFundingRangeMin: {
+        type: "integer",
+        description:
+          "The minimum amount the company received during all of its funding rounds combined. Use this parameter in combination with total_funding_range[max] to set a monetary range for all of the company's funding rounds. Do not enter currency symbols, commas, or decimal points in the figure. Examples: 50000000; 350000000",
+      },
     },
-    {
-      optional: [
-        "domains",
-        "employeeRanges",
-        "locations",
-        "excludedLocations",
-        "name",
-        "organizationIds",
-        "page",
-        "perPage",
-      ],
-    },
-  ),
+    additionalProperties: false,
+    description: "Filters and pagination for searching Apollo's global organization database.",
+  },
   outputSchema: apolloOutput,
 });
 
-const getApolloOrganizationAction: ActionDefinition = defineProviderAction(service, {
+export const getApolloOrganizationAction: ActionDefinition = defineProviderAction(service, {
   name: "get_apollo_organization",
   operationType: "read",
   description: "Get one complete organization record from Apollo's global database.",
@@ -190,7 +445,7 @@ const getApolloOrganizationAction: ActionDefinition = defineProviderAction(servi
   outputSchema: apolloOutput,
 });
 
-const getApolloJobPostingsAction: ActionDefinition = defineProviderAction(service, {
+export const getApolloJobPostingsAction: ActionDefinition = defineProviderAction(service, {
   name: "get_apollo_job_postings",
   operationType: "read",
   description: "List live job postings for an Apollo organization.",
@@ -207,7 +462,7 @@ const getApolloJobPostingsAction: ActionDefinition = defineProviderAction(servic
   outputSchema: apolloOutput,
 });
 
-const searchApolloCompanyNewsAction: ActionDefinition = defineProviderAction(service, {
+export const searchApolloCompanyNewsAction: ActionDefinition = defineProviderAction(service, {
   name: "search_apollo_company_news",
   operationType: "read",
   description: "Search Apollo news articles for known organizations and event categories.",
@@ -237,7 +492,7 @@ const searchApolloCompanyNewsAction: ActionDefinition = defineProviderAction(ser
   outputSchema: apolloOutput,
 });
 
-export const apolloActions: ActionDefinition[] = [
+export const apolloActions: readonly ActionDefinition[] = [
   enrichApolloPersonAction,
   enrichApolloPeopleAction,
   enrichApolloOrganizationAction,

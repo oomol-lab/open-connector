@@ -574,7 +574,7 @@ async function aliyunPutObject(input: Record<string, unknown>, context: AliyunOs
     sourceFile?.bytes ??
     (optionalString(input.contentBase64) != null
       ? Buffer.from(String(input.contentBase64), "base64")
-      : String(input.contentText ?? ""));
+      : Buffer.from(String(input.contentText ?? ""), "utf8"));
   const result = await client.put(objectKey, body, {
     mime: resolvedContentType,
     meta: normalizeMetadataInput(optionalRecord(input.metadata)),

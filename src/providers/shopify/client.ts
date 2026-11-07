@@ -27,7 +27,7 @@ export async function requestShopifyJson(
   return runProviderRequest({ label: "Shopify", signal: init.signal ?? undefined }, async (signal) => {
     const headers = new Headers(init.headers);
     headers.set("accept", "application/json");
-    headers.set("content-type", "application/json");
+    if (!headers.has("content-type")) headers.set("content-type", "application/json");
     headers.set("user-agent", providerUserAgent);
     if (accessToken) headers.set("x-shopify-access-token", accessToken);
     const response = await fetcher(target, { ...init, headers, signal, redirect: "manual" });

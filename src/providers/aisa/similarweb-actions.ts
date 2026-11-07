@@ -303,7 +303,7 @@ const serpInputFields = {
   startMonth,
   endMonth,
   limit,
-  country,
+  country: s.stringEnum("The supported geography for this endpoint on AIsa: worldwide.", ["ww"]),
   offset,
 };
 
@@ -375,7 +375,7 @@ const similarwebTopGeographiesAction: ActionDefinition = defineProviderAction(se
   outputSchema: similarwebOutput("The top countries in the website's latest Similarweb traffic."),
 });
 
-export const similarwebActions: ActionDefinition[] = [
+export const similarwebActions: readonly ActionDefinition[] = [
   similarwebTrafficEngagementAction,
   similarwebRankingAction,
   similarwebPpcSpendAction,

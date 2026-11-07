@@ -84,7 +84,7 @@ export interface BoundedResponseBytesOptions {
 export async function readBoundedResponseBytes(
   response: Response,
   options: BoundedResponseBytesOptions,
-): Promise<Uint8Array> {
+): Promise<Uint8Array<ArrayBuffer>> {
   options.signal?.throwIfAborted();
   const contentLength = parseContentLength(response.headers.get("content-length"));
   if (contentLength !== undefined) {

@@ -188,25 +188,6 @@ const listCryptoCategoriesAction: ActionDefinition = defineProviderAction(servic
   outputSchema: s.array("The CoinGecko market categories.", s.looseObject("One category summary.")),
 });
 
-const getCryptoNewsAction: ActionDefinition = defineProviderAction(service, {
-  name: "get_crypto_news",
-  operationType: "read",
-  description: "Get recent cryptocurrency news with optional coin and language filters.",
-  requiredScopes: [],
-  inputSchema: s.object(
-    "Coin, language, article type, and pagination filters for crypto news.",
-    {
-      coinId,
-      language: s.string("The news language code."),
-      articleType: s.stringEnum("The CoinGecko news content type.", ["news", "guides"]),
-      page: s.integer("The one-based result page.", { minimum: 1 }),
-      perPage: s.integer("The maximum articles per page.", { minimum: 1 }),
-    },
-    { optional: ["coinId", "language", "articleType", "page", "perPage"] },
-  ),
-  outputSchema: cryptoOutput,
-});
-
 const getTrendingCryptoAction: ActionDefinition = defineProviderAction(service, {
   name: "get_trending_crypto",
   operationType: "read",
@@ -216,7 +197,7 @@ const getTrendingCryptoAction: ActionDefinition = defineProviderAction(service, 
   outputSchema: cryptoOutput,
 });
 
-export const cryptoActions: ActionDefinition[] = [
+export const cryptoActions: readonly ActionDefinition[] = [
   getCryptoPricesAction,
   listCryptoMarketsAction,
   getCryptoCoinAction,
@@ -226,6 +207,5 @@ export const cryptoActions: ActionDefinition[] = [
   getTokenDataAction,
   listCryptoExchangesAction,
   listCryptoCategoriesAction,
-  getCryptoNewsAction,
   getTrendingCryptoAction,
 ];

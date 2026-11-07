@@ -128,6 +128,7 @@
       "src/providers/acuity_scheduling/executors.ts": 1,
       "src/providers/aircall/executors.ts": 1,
       "src/providers/algolia/executors.ts": 1,
+      "src/providers/alipay/executors.ts": 1,
       "src/providers/aliyun_oss/executors.ts": 1,
       "src/providers/aliyun_sts/executors.ts": 1,
       "src/providers/alpaca/executors.ts": 1,
