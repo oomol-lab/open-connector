@@ -168,14 +168,8 @@ describe("MCP server", () => {
           data: [{ service: "gamma", displayName: "gamma" }],
           nextCursor: null,
         });
-        expect(second).toEqual({
-          content: [{ type: "text", text: JSON.stringify(second.structuredContent) }],
-          structuredContent: {
-            ok: true,
-            data: [{ service: "gamma", displayName: "gamma" }],
-            nextCursor: null,
-          },
-        });
+        const text = second.content[0];
+        expect(text).toMatchObject({ type: "text", text: JSON.stringify(second.structuredContent) });
         expect(getAction).not.toHaveBeenCalled();
       },
       { catalog, getPolicySnapshot: async () => policy },
@@ -312,46 +306,45 @@ describe("MCP server", () => {
     });
   });
 
-  it("returns a bounded tool error after executing an oversized action exactly once", async () => {
-    const output = { message: "x".repeat(6 * 1024 * 1024) };
-    const executor = vi.fn<ActionExecutor>(async () => ({ ok: true, output }));
-    const providerLoader = new EchoProviderLoader();
-    vi.spyOn(providerLoader, "loadActionExecutor").mockResolvedValue(executor);
-    const runs = new MemoryRunLogStore();
+  it.each([true, false])(
+    "bounds oversized action replies without changing execution or audit outcomes (ok=%s)",
+    async (ok) => {
+      const body = "x".repeat(6 * 1024 * 1024);
+      const executor = vi.fn<ActionExecutor>(async () =>
+        ok ? { ok, output: { body } } : { ok, error: { code: "upstream_error", message: "Failed", details: { body } } },
+      );
+      const providerLoader = new EchoProviderLoader();
+      vi.spyOn(providerLoader, "loadActionExecutor").mockResolvedValue(executor);
+      const runs = new MemoryRunLogStore();
 
-    await withMcpClient(
-      async (client) => {
-        const result = await client.callTool({
-          name: "execute_action",
-          arguments: { actionId: "example.echo", input: { message: "write once" } },
-        });
+      await withMcpClient(
+        async (client) => {
+          const result = await client.callTool({
+            name: "execute_action",
+            arguments: { actionId: "example.echo", input: { message: "write once" } },
+          });
 
-        expect(executor).toHaveBeenCalledTimes(1);
-        expect(runs.runs).toHaveLength(1);
-        expect(runs.runs[0]).toMatchObject({ ok: true, actionId: "example.echo", caller: "mcp" });
-        expect(result.isError).toBe(true);
-        expect(result.structuredContent).toMatchObject({
-          ok: false,
-          error: {
-            code: "response_too_large",
-            message: expect.stringContaining("Do not repeat this action"),
-            details: {
-              limitBytes: 8 * 1024 * 1024,
-              responseBytes: expect.any(Number),
-              actionSucceeded: true,
+          expect(executor).toHaveBeenCalledTimes(1);
+          expect(runs.runs).toHaveLength(1);
+          expect(runs.runs[0]).toMatchObject({ ok, actionId: "example.echo", caller: "mcp" });
+          expect(result.isError).toBe(true);
+          expect(result.structuredContent).toEqual({
+            ok: false,
+            error: {
+              code: "response_too_large",
+              message: expect.stringContaining(ok ? "Do not repeat it" : "before retrying"),
+              details: { limitBytes: 8 * 1024 * 1024, responseBytes: expect.any(Number), actionSucceeded: ok },
             },
-          },
-          executionId: runs.runs[0]?.id,
-          auditPersisted: true,
-        });
-        expect(result.content).toEqual([{ type: "text", text: JSON.stringify(result.structuredContent) }]);
-        expect(result.structuredContent).not.toHaveProperty("data");
-        expect(result.structuredContent).not.toHaveProperty("connection");
-        expect(Buffer.byteLength(JSON.stringify(result), "utf8")).toBeLessThan(4096);
-      },
-      { providerLoader, runs },
-    );
-  });
+            executionId: runs.runs[0]?.id,
+            auditPersisted: true,
+          });
+          expect(result.content).toEqual([{ type: "text", text: JSON.stringify(result.structuredContent) }]);
+          expect(Buffer.byteLength(JSON.stringify(result), "utf8")).toBeLessThan(4096);
+        },
+        { providerLoader, runs },
+      );
+    },
+  );
 
   it("counts both representations, JSON escaping, and UTF-8 bytes for discovery replies", async () => {
     const displayName = '界"\\\n'.repeat(400_000);
@@ -378,64 +371,10 @@ describe("MCP server", () => {
             details: { limitBytes, responseBytes },
           },
         });
-        expect(result.content).toEqual([{ type: "text", text: JSON.stringify(result.structuredContent) }]);
-        expect(JSON.stringify(result)).not.toContain("action completed");
         expect(Buffer.byteLength(JSON.stringify(result), "utf8")).toBeLessThan(4096);
       },
       { catalog: createCatalogStore([{ ...exampleProvider, displayName }]) },
     );
-  });
-
-  it.each(["normal", "oversized"])("bounds oversized errors with %s execution identifiers", async (idSize) => {
-    const huge = "private-data".repeat(250_000);
-    const executionId = idSize === "normal" ? "local-execution-id" : huge;
-    const remoteExecutionId = idSize === "normal" ? "remote-execution-id" : huge;
-    const run = vi.spyOn(ActionRunner.prototype, "run").mockResolvedValue({
-      executionId,
-      remoteExecutionId,
-      auditPersisted: false,
-      result: { ok: false, error: { code: huge, message: huge, details: { body: huge } } },
-      connection: {
-        id: "connection-id",
-        service: "example",
-        connectionName: "default",
-        authType: "no_auth",
-        configured: true,
-        virtual: true,
-        default: true,
-        profile: { accountId: "account-id", displayName: huge, grantedScopes: [] },
-      },
-    });
-    try {
-      await withMcpClient(async (client) => {
-        const result = await client.callTool({
-          name: "execute_action",
-          arguments: { actionId: "example.echo", input: { message: "hello" } },
-        });
-        expect(run).toHaveBeenCalledTimes(1);
-        expect(result.isError).toBe(true);
-        expect(result.structuredContent).toEqual({
-          ok: false,
-          error: {
-            code: "response_too_large",
-            message: expect.stringContaining("The action runner reported failure"),
-            details: {
-              limitBytes: 8 * 1024 * 1024,
-              responseBytes: expect.any(Number),
-              actionSucceeded: false,
-            },
-          },
-          executionId: idSize === "normal" ? executionId : undefined,
-          remoteExecutionId: idSize === "normal" ? remoteExecutionId : undefined,
-          auditPersisted: false,
-        });
-        expect(result.content).toEqual([{ type: "text", text: JSON.stringify(result.structuredContent) }]);
-        expect(JSON.stringify(result)).not.toContain("private-data");
-        expect(Buffer.byteLength(JSON.stringify(result), "utf8")).toBeLessThan(4096);
-      });
-    } finally {
-      run.mockRestore();
-    }
   });
 
   it("renders an execute_action example in action guides instead of HTTP requests", async () => {

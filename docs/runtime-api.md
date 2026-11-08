@@ -283,20 +283,6 @@ Action input validation runs before credential resolution and provider executor 
 errors return `invalid_input` without refreshing OAuth credentials. MCP validation errors include
 execution and audit metadata but omit the unresolved `connection` field.
 
-MCP tool replies have a fixed 8 MiB (8,388,608-byte) limit, measured as UTF-8 bytes of the complete
-serialized `CallToolResult`, including both text and structured content and JSON escaping. An oversized
-success or error is replaced with a small tool error: `isError: true`, `ok: false`, and
-`error.code: "response_too_large"`. Its message and `error.details` include `limitBytes` and
-`responseBytes`. The original output, error details, and connection profile are omitted.
-
-For calls that reached the action runner, `error.details.actionSucceeded` records the runner's outcome.
-When it is `true`, the action completed successfully: **do not repeat it**, because any writes have
-already taken effect. When it is `false`, the runner reported failure; check the execution record before
-retrying because side effects may have occurred. The reply retains `auditPersisted`, `executionId`, and
-an available `remoteExecutionId`; identifiers longer than 256 characters are omitted rather than
-shortened. Discovery replies have no action outcome or execution metadata. Use a smaller page or a
-more focused read request where the action supports it.
-
 Preview MCP tool metadata:
 
 ```bash
