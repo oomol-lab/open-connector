@@ -2,7 +2,7 @@ import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } f
 import type { ApiKeyProviderContext } from "../provider-executors.ts";
 import type { CloroEndpoint } from "./actions.ts";
 
-import { optionalRecord, optionalString } from "../../core/cast.ts";
+import { looseArray, optionalRawString, optionalRecord, optionalString } from "../../core/cast.ts";
 import { defineApiKeyProviderExecutors } from "../provider-executors.ts";
 import { defineProviderProxy } from "../provider-proxy.ts";
 import {
@@ -16,6 +16,22 @@ import {
 import { cloroActions } from "./actions.ts";
 import { cloroEndpointByName } from "./actions.ts";
 const baseUrl = "https://api.cloro.dev";
+// Bing reads the prompt from a query string, and Cloro rejects it past 3,500 characters
+// once URL-encoded. The schema maxLength counts raw characters, so a non-Latin prompt
+// can pass it and still fail upstream. This count matches the one Cloro uses.
+const bingPromptLimit = 3500;
+function bingPromptTooLong(prompt: unknown): boolean {
+  const text = optionalRawString(prompt);
+  return text !== undefined && encodeURIComponent(text.trim()).replaceAll("%20", "+").length > bingPromptLimit;
+}
+function bingPrompts(actionName: string, values: Record<string, unknown>): unknown[] {
+  if (actionName === "monitor_bing_aimode") return [values.prompt];
+  const tasks = actionName === "create_batch_tasks" ? values.tasks : actionName === "create_task" ? [values] : [];
+  return looseArray(tasks)
+    .map((task) => optionalRecord(task))
+    .filter((task) => task?.taskType === "BING_AIMODE")
+    .map((task) => optionalRecord(task?.payload)?.prompt);
+}
 async function request(
   apiKey: string,
   endpoint: Pick<CloroEndpoint, "path" | "method" | "timeoutMs" | "arrayField">,
@@ -74,6 +90,11 @@ async function execute(
   const { apiKey, fetcher } = context;
   const endpoint = cloroEndpointByName.get(actionName);
   if (!endpoint) throw providerInputError(`Unknown Cloro action: ${actionName}`);
+  if (bingPrompts(actionName, values).some(bingPromptTooLong)) {
+    throw providerInputError(
+      "Bing AI Mode prompt is longer than 3,500 characters after URL encoding. Non-Latin scripts allow fewer characters.",
+    );
+  }
   return request(apiKey, endpoint, values, fetcher, undefined, context.signal);
 }
 export const credentialValidators: CredentialValidators = {
