@@ -140,7 +140,7 @@ const mcpToolConfigs = {
   execute_action: {
     title: "Execute Action",
     description:
-      "Run one provider action by id against the provider's API, using the default connection or the named connectionName. The input object must match the action's input parameters. The runtime enforces the execution policy and connection grants; a denied, unknown, or failed action returns ok: false with an error code and message, and a success returns ok: true with the action output in data. Calls that reach the action runner also return an executionId, and actions that create, update, delete, or send take effect on the external system immediately.",
+      "Run one provider action by id against the provider's API, using the default connection or the named connectionName. The input object must match the action's input parameters. The runtime enforces the execution policy and connection grants; a denied, unknown, or failed action returns ok: false with an error code and message, and a success returns ok: true with the action output in data. If the reply exceeds the MCP size limit, response_too_large replaces it; error.details.actionSucceeded reports the action runner's outcome. Do not repeat an action that already succeeded. Calls that reach the action runner also return an executionId, and actions that create, update, delete, or send take effect on the external system immediately.",
     annotations: { readOnlyHint: false, destructiveHint: true, openWorldHint: true },
     inputSchema: z.object({
       actionId: z.string().describe("Full action id, for example hackernews.get_item."),
@@ -478,12 +478,8 @@ interface ToolError {
 }
 
 type ToolPayload = Record<string, unknown> &
-  (
-    | { ok: true; data: unknown; executionId?: never; auditPersisted?: never }
-    | { ok: false; error: ToolError; executionId?: never; auditPersisted?: never }
-    | ({ ok: true; data: unknown } & ToolExecutionMeta)
-    | ({ ok: false; error: ToolError } & ToolExecutionMeta)
-  );
+  Partial<ToolExecutionMeta> &
+  ({ ok: true; data: unknown } | { ok: false; error: ToolError });
 
 function successPayload(data: unknown): ToolPayload {
   return { ok: true, data };
@@ -531,6 +527,42 @@ function createExecutionMeta(run: ActionRunResult): ToolExecutionMeta {
 }
 
 function toolResult(payload: ToolPayload): CallToolResult {
+  const result = serializeToolResult(payload);
+  // Count both representations and JSON escaping, leaving headroom for transport framing.
+  const limitBytes = 8 * 1024 * 1024;
+  const responseBytes = new TextEncoder().encode(JSON.stringify(result)).byteLength;
+  if (responseBytes <= limitBytes) return result;
+
+  const actionSucceeded = payload.executionId === undefined ? undefined : payload.ok;
+  let guidance = "Use a smaller page or a more focused request where supported.";
+  if (actionSucceeded === true) {
+    guidance =
+      "The action completed successfully, but its result cannot be delivered. Do not repeat this action; any writes have already taken effect.";
+  } else if (actionSucceeded === false) {
+    guidance =
+      "The action runner reported failure. Check the execution record before retrying; side effects may have occurred.";
+  }
+  const oversized: ToolPayload = {
+    ok: false,
+    error: {
+      code: "response_too_large",
+      message: `MCP tool response is ${responseBytes} bytes, exceeding the ${limitBytes}-byte (8 MiB) limit. ${guidance}`,
+      details: { limitBytes, responseBytes, actionSucceeded },
+    },
+  };
+  if (payload.executionId !== undefined) {
+    // Omit overlong identifiers rather than returning misleading partial IDs. Never copy profiles or error details.
+    const maxExecutionIdLength = 256;
+    if (payload.executionId.length <= maxExecutionIdLength) oversized.executionId = payload.executionId;
+    if (payload.remoteExecutionId && payload.remoteExecutionId.length <= maxExecutionIdLength) {
+      oversized.remoteExecutionId = payload.remoteExecutionId;
+    }
+    oversized.auditPersisted = payload.auditPersisted;
+  }
+  return serializeToolResult(oversized);
+}
+
+function serializeToolResult(payload: ToolPayload): CallToolResult {
   return {
     content: [
       {
