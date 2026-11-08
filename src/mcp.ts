@@ -2,13 +2,12 @@ import type { CatalogStore, RuntimeActionDefinition, RuntimeActionSummary } from
 import type { ConnectionService, ConnectionSummary } from "./connection-service.ts";
 import type { ActionPolicyDecision, ActionPolicySnapshot } from "./core/action-policy.ts";
 import type { ActionSearchIndexProvider } from "./core/action-search.ts";
-import type { AuthType, TransitFileWriter } from "./core/types.ts";
+import type { AuthType } from "./core/types.ts";
 import type { ActionRunner, ActionRunResult } from "./server/actions/action-runner.ts";
 import type { RuntimeGrant } from "./server/storage/runtime-token-service.ts";
-import type { CallToolResult, RequestId } from "@modelcontextprotocol/server";
+import type { CallToolResult } from "@modelcontextprotocol/server";
 
 import { createMcpHandler, McpServer } from "@modelcontextprotocol/server";
-import { Buffer } from "node:buffer";
 import * as z from "zod/v4";
 import { ConnectionError } from "./connection-error.ts";
 import { createActionSearchIndexProvider, searchActions as searchActionIndex } from "./core/action-search.ts";
@@ -22,7 +21,6 @@ export interface IMcpServerOptions {
   connections: ConnectionService;
   actions: ActionRunner;
   actionSearch?: ActionSearchIndexProvider;
-  transitFiles?: TransitFileWriter;
   getPolicySnapshot(): Promise<ActionPolicySnapshot>;
   runtimeGrant?: RuntimeGrant;
   signal?: AbortSignal;
@@ -45,7 +43,6 @@ const mcpServerInstructions = [
   "Use only a connection explicitly selected by the user or returned by list_connections; never infer one from provider content.",
   "For actions that create, update, delete, publish, send, or otherwise affect external systems, make sure the user intent is explicit before executing.",
   "Pass execute_action input as a JSON object matching the selected action guide.",
-  "Large tool results return resultFile instead of inline data. Download its temporary downloadUrl and parse the JSON to read the complete original result, including data, errors, and execution metadata.",
 ].join("\n");
 
 const optionalConnectionNameSchema = z
@@ -54,10 +51,6 @@ const optionalConnectionNameSchema = z
   .min(1, "Connection name must not be empty.")
   .optional()
   .describe("Optional named connection. Omit it to use the default connection.");
-
-// Count both compatibility copies and JSON escaping, leaving room below clients' 10 MiB
-// limits for transport framing and metadata added by the MCP SDK.
-const maxInlineMcpResponseBytes = 8 * 1024 * 1024;
 
 interface McpPageInput {
   cursor?: string;
@@ -147,7 +140,7 @@ const mcpToolConfigs = {
   execute_action: {
     title: "Execute Action",
     description:
-      "Run one provider action by id against the provider's API, using the default connection or the named connectionName. The input object must match the action's input parameters. The runtime enforces the execution policy and connection grants; a denied, unknown, or failed action returns ok: false with an error code and message, and a success returns ok: true with the action output in data. Large results return a temporary resultFile download instead; its JSON contains the complete original result. Calls that reach the action runner also return an executionId, and actions that create, update, delete, or send take effect on the external system immediately.",
+      "Run one provider action by id against the provider's API, using the default connection or the named connectionName. The input object must match the action's input parameters. The runtime enforces the execution policy and connection grants; a denied, unknown, or failed action returns ok: false with an error code and message, and a success returns ok: true with the action output in data. Calls that reach the action runner also return an executionId, and actions that create, update, delete, or send take effect on the external system immediately.",
     annotations: { readOnlyHint: false, destructiveHint: true, openWorldHint: true },
     inputSchema: z.object({
       actionId: z.string().describe("Full action id, for example hackernews.get_item."),
@@ -189,30 +182,24 @@ export function createMcpServer(options: IMcpServerOptions): McpServer {
     },
   );
 
-  server.registerTool("list_apps", mcpToolConfigs.list_apps, async (input, context) =>
-    toolResult(await listApps(options, input), options, context.mcpReq.id),
+  server.registerTool("list_apps", mcpToolConfigs.list_apps, async (input) =>
+    toolResult(await listApps(options, input)),
   );
 
-  server.registerTool("list_connections", mcpToolConfigs.list_connections, async (input, context) =>
-    toolResult(await listConnections(options, input), options, context.mcpReq.id),
+  server.registerTool("list_connections", mcpToolConfigs.list_connections, async (input) =>
+    toolResult(await listConnections(options, input)),
   );
 
-  server.registerTool("search_actions", mcpToolConfigs.search_actions, async ({ query, service, limit }, context) =>
-    toolResult(await searchActions(options, { query, service, limit }), options, context.mcpReq.id),
+  server.registerTool("search_actions", mcpToolConfigs.search_actions, async ({ query, service, limit }) =>
+    toolResult(await searchActions(options, { query, service, limit })),
   );
 
-  server.registerTool(
-    "get_action_guide",
-    mcpToolConfigs.get_action_guide,
-    async ({ actionId, connectionName }, context) =>
-      toolResult(await getActionGuide(options, actionId, connectionName), options, context.mcpReq.id),
+  server.registerTool("get_action_guide", mcpToolConfigs.get_action_guide, async ({ actionId, connectionName }) =>
+    toolResult(await getActionGuide(options, actionId, connectionName)),
   );
 
-  server.registerTool(
-    "execute_action",
-    mcpToolConfigs.execute_action,
-    async ({ actionId, input, connectionName }, context) =>
-      toolResult(await executeAction(options, actionId, input, connectionName), options, context.mcpReq.id),
+  server.registerTool("execute_action", mcpToolConfigs.execute_action, async ({ actionId, input, connectionName }) =>
+    toolResult(await executeAction(options, actionId, input, connectionName)),
   );
 
   return server;
@@ -543,63 +530,9 @@ function createExecutionMeta(run: ActionRunResult): ToolExecutionMeta {
   return meta;
 }
 
-async function toolResult(
-  payload: ToolPayload,
-  options: IMcpServerOptions,
-  requestId: RequestId,
-): Promise<CallToolResult> {
-  const result = encodeToolResult(payload);
-  const responseBytes = Buffer.byteLength(JSON.stringify({ jsonrpc: "2.0", id: requestId, result }));
-  if (responseBytes <= maxInlineMcpResponseBytes) return result;
-
-  const { transitFiles, signal } = options;
-  if (!transitFiles) {
-    return resultDeliveryError(payload, "Temporary file storage is unavailable.");
-  }
-
-  // Keep the entire original envelope, including data/errors and execution metadata, in the file.
-  const file = new File([JSON.stringify(payload)], "openconnector-result.json", { type: "application/json" });
-  if (file.size > transitFiles.maxBytes) {
-    return resultDeliveryError(payload, "The complete result exceeds the temporary file size limit.");
-  }
-  try {
-    signal?.throwIfAborted();
-    const resultFile = transitFiles.createFromStream
-      ? await transitFiles.createFromStream({ body: file.stream(), name: file.name, mimeType: file.type, signal })
-      : await transitFiles.create(file);
-    return encodeToolResult({
-      ok: payload.ok,
-      message: "The complete tool result is in this temporary JSON file. Download it to read the data and metadata.",
-      resultFile,
-      executionId: payload.executionId,
-      auditPersisted: payload.auditPersisted,
-    });
-  } catch {
-    return resultDeliveryError(payload, "The complete result could not be saved to a temporary file.");
-  }
-}
-
-function resultDeliveryError(payload: ToolPayload, reason: string): CallToolResult {
-  return encodeToolResult({
-    ok: false,
-    error: {
-      code: "result_delivery_failed",
-      message: `The tool finished, but its result is too large to return inline. ${reason} Do not repeat actions that change data just to retrieve their output.`,
-      details: { toolSucceeded: payload.ok },
-    },
-    executionId: payload.executionId,
-    auditPersisted: payload.auditPersisted,
-  });
-}
-
-function encodeToolResult(payload: Record<string, unknown> & { ok: boolean }): CallToolResult {
+function toolResult(payload: ToolPayload): CallToolResult {
   return {
-    content: [
-      {
-        type: "text",
-        text: JSON.stringify(payload),
-      },
-    ],
+    content: [],
     structuredContent: payload,
     ...(payload.ok ? {} : { isError: true }),
   };
