@@ -283,6 +283,20 @@ Action input validation runs before credential resolution and provider executor 
 errors return `invalid_input` without refreshing OAuth credentials. MCP validation errors include
 execution and audit metadata but omit the unresolved `connection` field.
 
+Tool results include matching JSON in `content[0].text` and `structuredContent` for MCP client
+compatibility. If the serialized response exceeds 8 MiB, including both copies and JSON escaping,
+OpenConnector stores the complete original result in a temporary JSON file. Both fields then contain
+a small envelope with `ok`, `resultFile` (`fileId`, `downloadUrl`, `sizeBytes`, `name`, and `mimeType`),
+and execution metadata when available. Download and parse the file to read the original `data` or
+error and all its metadata; no messages or fields are truncated. The original error status is preserved.
+
+These files use the existing transit-file download routes, access rules, configured size limit, and
+expiry. Treat the download URL as a temporary bearer link. If storage is unavailable, fails, or cannot
+hold the complete result, the tool returns a small `result_delivery_failed` error with the execution
+ID when available and `error.details.toolSucceeded`. An output delivery failure does not undo an
+action; do not repeat an action that changes data just to retrieve its output. Ordinary small replies
+retain their existing shape.
+
 Preview MCP tool metadata:
 
 ```bash

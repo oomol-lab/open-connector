@@ -1,7 +1,13 @@
 import type { CatalogStore } from "./catalog-store.ts";
 import type { IConnectionStore, StoredConnection } from "./connection-store.ts";
 import type { ActionPolicySnapshot } from "./core/action-policy.ts";
-import type { ActionDefinition, ActionExecutor, ProviderDefinition, ResolvedCredential } from "./core/types.ts";
+import type {
+  ActionDefinition,
+  ActionExecutor,
+  ProviderDefinition,
+  ResolvedCredential,
+  TransitFileWriter,
+} from "./core/types.ts";
 import type { IProviderLoader } from "./providers/provider-loader.ts";
 import type { IRunLogStore, RunLog, RunLogPage } from "./server/storage/runtime-store.ts";
 import type { RuntimeGrant } from "./server/storage/runtime-token-service.ts";
@@ -93,6 +99,54 @@ const secondaryCredential: ResolvedCredential = {
 };
 
 describe("MCP server", () => {
+  it("keeps small results inline without creating a file", async () => {
+    const transitFiles: TransitFileWriter = { maxBytes: 1, create: vi.fn(), read: vi.fn(), delete: vi.fn() };
+    await withMcpClient(
+      async (client) => {
+        const result = await client.callTool({
+          name: "execute_action",
+          arguments: { actionId: "example.echo", input: { message: "small" } },
+        });
+        expect(result.structuredContent).toMatchObject({ ok: true, data: { message: "small" } });
+        expect(result.structuredContent).not.toHaveProperty("resultFile");
+        expect(JSON.parse((result.content[0] as { text: string }).text)).toEqual(
+          JSON.parse(JSON.stringify(result.structuredContent)),
+        );
+        expect(transitFiles.create).not.toHaveBeenCalled();
+      },
+      { transitFiles },
+    );
+  });
+
+  it.each(["unavailable", "too small", "write failed"])(
+    "returns a small delivery error when temporary storage is %s",
+    async (failure) => {
+      const create = vi.fn().mockRejectedValue(new Error("private storage path /secret/path"));
+      const transitFiles =
+        failure === "unavailable"
+          ? undefined
+          : { maxBytes: failure === "too small" ? 1 : 20 * 1024 * 1024, create, read: vi.fn(), delete: vi.fn() };
+      await withMcpClient(
+        async (client) => {
+          const result = await client.callTool({
+            name: "execute_action",
+            arguments: { actionId: "example.echo", input: { message: "x".repeat(5 * 1024 * 1024) } },
+          });
+          expect(result.isError).toBe(true);
+          expect(result.structuredContent).toMatchObject({
+            ok: false,
+            executionId: expect.any(String),
+            error: { code: "result_delivery_failed", details: { toolSucceeded: true } },
+          });
+          expect(JSON.stringify(result).length).toBeLessThan(4_096);
+          expect(JSON.stringify(result)).not.toContain("/secret/path");
+          expect(create).toHaveBeenCalledTimes(failure === "write failed" ? 1 : 0);
+        },
+        { transitFiles },
+      );
+    },
+  );
+
   it("searches without loading schemas and filters denied hits before limiting", async () => {
     const other: ActionDefinition = { ...echoAction, id: "example.echo_other", name: "echo_other" };
     const catalog = createCatalogStore([{ ...exampleProvider, actions: [echoAction, other] }]);
@@ -799,6 +853,7 @@ describe("MCP server", () => {
 interface McpPolicyOptions {
   getPolicySnapshot?(): Promise<ActionPolicySnapshot>;
   runtimeGrant?: RuntimeGrant;
+  transitFiles?: TransitFileWriter;
 }
 
 /** Default to an empty deployment policy scoped to the runtime grant, the way the server does without a store. */

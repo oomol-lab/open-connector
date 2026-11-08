@@ -2201,6 +2201,107 @@ describe("ConnectServer", () => {
     }
   });
 
+  it.each(["legacy", "auto"] as const)("downloads complete large MCP results using %s negotiation", async (mode) => {
+    const rootDir = await createTempDir();
+    const output = {
+      threadId: "synthetic-thread",
+      messages: Array.from({ length: 28 }, (_, index) => ({
+        messageId: `message-${index}`,
+        body: "x".repeat(270_000),
+      })),
+    };
+    // The provider data fits below the client limit; its two MCP representations do not.
+    expect(Buffer.byteLength(JSON.stringify(output))).toBeLessThan(8 * 1024 * 1024);
+    const execute = vi.fn(async () => ({ ok: true, output }));
+    const transitFiles = createTestTransitFiles(rootDir, { maxBytes: 20 * 1024 * 1024 });
+    const app = createTestServer(
+      [{ ...apiKeyProvider, authTypes: ["no_auth"], auth: [{ type: "no_auth" }], actions: [echoAction] }],
+      {
+        providerLoader: new ActionProviderLoader(execute),
+        transitFiles,
+      },
+    ).createApp();
+    const responseSizes: number[] = [];
+    const fetcher: typeof fetch = async (input, init) => {
+      const response = await app.fetch(new Request(input, init));
+      responseSizes.push((await response.clone().arrayBuffer()).byteLength);
+      return response;
+    };
+    const client = new Client({ name: "large-result-test", version: "0.0.0" }, { versionNegotiation: { mode } });
+    try {
+      await client.connect(new StreamableHTTPClientTransport(new URL("http://localhost:3000/mcp"), { fetch: fetcher }));
+      const result = await client.callTool({
+        name: "execute_action",
+        arguments: { actionId: "example.echo", input: { message: "read" } },
+      });
+      expect(execute).toHaveBeenCalledTimes(1);
+      expect(result.isError).not.toBe(true);
+      const payload = result.structuredContent as { ok: boolean; executionId: string; resultFile: TransitFileUpload };
+      expect(payload).toMatchObject({
+        ok: true,
+        executionId: expect.any(String),
+        resultFile: { mimeType: "application/json" },
+      });
+      expect(payload).not.toHaveProperty("data");
+      expect(JSON.parse((result.content[0] as { text: string }).text)).toEqual(payload);
+      expect(Math.max(...responseSizes)).toBeLessThan(8 * 1024 * 1024);
+      expect(JSON.stringify(result).length).toBeLessThan(4_096);
+
+      const download = await app.request(payload.resultFile.downloadUrl);
+      expect(download.status).toBe(200);
+      expect(download.headers.get("content-type")).toBe("application/json");
+      const bytes = await download.arrayBuffer();
+      expect(bytes.byteLength).toBe(payload.resultFile.sizeBytes);
+      expect(JSON.parse(new TextDecoder().decode(bytes))).toMatchObject({
+        ok: true,
+        data: output,
+        executionId: payload.executionId,
+      });
+      await transitFiles.delete(payload.resultFile.fileId);
+      expect((await app.request(payload.resultFile.downloadUrl)).status).toBe(404);
+    } finally {
+      await client.close();
+      await rm(rootDir, { recursive: true, force: true });
+    }
+  });
+
+  it.each(["success", "error"])("counts UTF-8 and escaped JSON in large MCP %s replies", async (outcome) => {
+    const rootDir = await createTempDir();
+    const output = { text: '郵"\\\n'.repeat(400_000) };
+    expect(Buffer.byteLength(JSON.stringify(output))).toBeLessThan(4 * 1024 * 1024);
+    const error = { code: "provider_error", message: "Synthetic failure", details: output };
+    const app = createTestServer(
+      [{ ...apiKeyProvider, authTypes: ["no_auth"], auth: [{ type: "no_auth" }], actions: [echoAction] }],
+      {
+        providerLoader: new ActionProviderLoader(async () =>
+          outcome === "success" ? { ok: true, output } : { ok: false, error },
+        ),
+        transitFiles: createTestTransitFiles(rootDir, { maxBytes: 20 * 1024 * 1024 }),
+      },
+    ).createApp();
+    const client = new Client({ name: "escaped-result-test", version: "0.0.0" });
+    try {
+      await client.connect(
+        new StreamableHTTPClientTransport(new URL("http://localhost:3000/mcp"), {
+          fetch: async (input, init) => app.fetch(new Request(input, init)),
+        }),
+      );
+      const result = await client.callTool({
+        name: "execute_action",
+        arguments: { actionId: "example.echo", input: { message: "read" } },
+      });
+      expect(Boolean(result.isError)).toBe(outcome === "error");
+      const payload = result.structuredContent as { ok: boolean; resultFile: TransitFileUpload };
+      expect(payload.ok).toBe(outcome === "success");
+      expect(Buffer.byteLength(JSON.stringify(result))).toBeLessThan(4_096);
+      const saved = await (await app.request(payload.resultFile.downloadUrl)).json();
+      expect(saved).toMatchObject(outcome === "success" ? { ok: true, data: output } : { ok: false, error });
+    } finally {
+      await client.close();
+      await rm(rootDir, { recursive: true, force: true });
+    }
+  });
+
   it("shows a provider error on the OAuth callback as a page, not JSON", async () => {
     const app = createTestServer([apiKeyProvider], { auth: { adminToken: "local-token" } }).createApp();
 

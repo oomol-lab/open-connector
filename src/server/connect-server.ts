@@ -273,6 +273,7 @@ export class ConnectServer {
         connections: this.options.connections,
         actions: this.options.actions,
         actionSearch: this.actionSearch,
+        transitFiles: this.options.transitFiles,
         getPolicySnapshot: this.getPolicySnapshot,
       }),
     );
