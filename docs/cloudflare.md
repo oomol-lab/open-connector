@@ -213,4 +213,8 @@ file limits, and credential encryption. `PORT`, `HOST`, `OOMOL_CONNECT_DATA_DIR`
 `OOMOL_CONNECT_CATALOG_LAZY_SCHEMAS`, and `OOMOL_CONNECT_CATALOG_SCHEMA_CACHE_FILES` are local
 Node-only settings on Workers.
 
+Connections that supply their own CA certificate, such as a [Kubernetes](configuration.md#kubernetes)
+cluster with a private certificate authority, need a Node runtime: Workers cannot supply a custom
+trust store, so those requests fail with a clear error.
+
 See [configuration.md](configuration.md) for all runtime environment variables.
