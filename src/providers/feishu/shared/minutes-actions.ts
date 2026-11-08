@@ -321,7 +321,8 @@ export function createFeishuMinutesActions(service: string): readonly ActionDefi
     defineProviderAction(service, {
       name: "get_vc_meeting",
       operationType: "read",
-      description: "Get Feishu video meeting metadata and participant data.",
+      description:
+        "Get Feishu video meeting metadata and participant data, or with queryMode 1 the meeting's artifacts: note_id and related_artifacts (note and verbatim document tokens, returned when the app also holds vc:meeting.artifact.note:read or vc:meeting.artifact.verbatim:read).",
       requiredScopes: ["vc:meeting.meetingevent:read"],
       providerPermissions: ["vc:meeting.meetingevent:read"],
       inputSchema: s.object(
@@ -329,9 +330,16 @@ export function createFeishuMinutesActions(service: string): readonly ActionDefi
         {
           meetingId,
           includeParticipants: s.boolean("Whether to include participant data."),
+          queryMode: s.withDefault(
+            s.integer("0 returns the meeting information; 1 returns only the meeting's artifacts.", {
+              minimum: 0,
+              maximum: 1,
+            }),
+            0,
+          ),
         },
         {
-          optional: ["includeParticipants"],
+          optional: ["includeParticipants", "queryMode"],
         },
       ),
       outputSchema: s.object(
