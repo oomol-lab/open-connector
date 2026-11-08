@@ -136,24 +136,7 @@ describe("GitHub App installation credential", () => {
     expect(requests).toHaveLength(0);
   });
 
-  it.each(["visibility", "sort", "direction"])(
-    "rejects unsupported installation listing parameter %s",
-    async (field) => {
-      const requests = stubFetch([() => mintResponse()]);
-      const input = { visibility: "public", sort: "updated", direction: "desc" };
-      const result = await executors["github.list_my_repositories"]!(
-        { [field]: input[field as keyof typeof input] },
-        installationContext,
-      );
-      expect(result).toMatchObject({
-        ok: false,
-        error: { code: "invalid_input", message: expect.stringContaining(`${field} is not supported`) },
-      });
-      expect(requests).toHaveLength(1);
-    },
-  );
-
-  it("lists the installation's repositories instead of the user's", async () => {
+  it("lists the installation's repositories instead of the user's and ignores user-listing parameters", async () => {
     const requests = stubFetch([
       () => mintResponse(),
       () =>
@@ -167,7 +150,10 @@ describe("GitHub App installation credential", () => {
         }),
     ]);
 
-    const result = await executors["github.list_my_repositories"]!({ perPage: 100, page: 1 }, installationContext);
+    const result = await executors["github.list_my_repositories"]!(
+      { visibility: "all", sort: "pushed", direction: "desc", perPage: 100, page: 1 },
+      installationContext,
+    );
 
     expect(result).toMatchObject({
       ok: true,
@@ -177,10 +163,11 @@ describe("GitHub App installation credential", () => {
     expect((result as { output: Record<string, unknown> }).output).not.toHaveProperty("total_count");
     const url = new URL(requests[1]!.url);
     expect(url.pathname).toBe("/installation/repositories");
-    expect(url.searchParams.get("per_page")).toBe("100");
-    expect(url.searchParams.get("page")).toBe("1");
-    // The installation listing has no sort; the user-listing parameter is not forwarded.
-    expect(url.searchParams.has("sort")).toBe(false);
+    // The installation listing has no visibility or ordering; only pagination is forwarded.
+    expect([...url.searchParams.entries()]).toEqual([
+      ["per_page", "100"],
+      ["page", "1"],
+    ]);
     expect(requests[1]!.headers.get("authorization")).toBe(`Bearer ${installationToken}`);
   });
 

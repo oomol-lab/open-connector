@@ -360,14 +360,8 @@ async function listInstallationRepositories(
   accessToken: string,
   fetcher: typeof fetch,
 ) {
-  for (const field of ["visibility", "sort", "direction"]) {
-    if (input[field] !== undefined) {
-      throw new ProviderRequestError(
-        400,
-        `${field} is not supported with a GitHub App installation credential. Omit it to list the installation's repositories.`,
-      );
-    }
-  }
+  // `/installation/repositories` has no visibility or ordering parameters, so the user-listing fields are ignored.
+  // The page is not sorted locally: one sorted page would misrepresent the order across pages.
   const page = await githubRequestJson<{ repositories?: Record<string, unknown>[] }>({
     path: "/installation/repositories",
     query: compactObject({
