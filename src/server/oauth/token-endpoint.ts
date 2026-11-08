@@ -208,14 +208,19 @@ async function exchangeAuthorizationCode(
   } else if (client.tokenEndpointAuthMethod === "none") {
     throw new TokenError("invalid_grant", "The authorization request did not include a PKCE challenge.");
   }
-  if (record.resource && resource && record.resource !== resource) {
+  // RFC 8707: the token request may only name a resource the authorization
+  // request already selected. A code issued without a resource still belongs
+  // to this server's single protected resource, so a token request cannot add
+  // a different audience after the fact.
+  const expectedResource = record.resource ?? `${deps.config.issuer}/mcp`;
+  if (resource !== undefined && resource !== expectedResource) {
     throw new TokenError("invalid_target", "resource does not match the authorization request.");
   }
   return issueTokens(deps, {
     clientId: client.clientId,
     runtimeTokenId: record.runtimeTokenId,
     scope: record.scope,
-    resource: record.resource ?? resource,
+    resource: expectedResource,
     refreshTokenTtl: deps.config.refreshTokenTtlSeconds,
   });
 }
