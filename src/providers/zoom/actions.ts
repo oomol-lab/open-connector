@@ -2,7 +2,14 @@ import type { ActionDefinition } from "../../core/types.ts";
 
 import { s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
-import { zoomMeetingListScope, zoomMeetingUpdateScope, zoomMeetingWriteScope, zoomUserReadScope } from "./scopes.ts";
+import {
+  zoomMeetingListScope,
+  zoomMeetingSummaryListScope,
+  zoomMeetingSummaryReadScope,
+  zoomMeetingUpdateScope,
+  zoomMeetingWriteScope,
+  zoomUserReadScope,
+} from "./scopes.ts";
 
 const service = "zoom";
 
@@ -140,6 +147,66 @@ const recurrenceSchema = s.object(
   },
 );
 
+const summaryTimeSchema = s.dateTime(
+  "A UTC date-time in Zoom's yyyy-MM-ddTHH:mm:ssZ form, such as 2026-11-01T00:00:00Z.",
+);
+
+const meetingSummaryMeetingProperties = {
+  meetingUuid: s.nullableString(
+    "The meeting instance UUID. Pass it to get_meeting_summary; it differs for every occurrence.",
+  ),
+  meetingId: s.nullable(
+    s.anyOf("The numeric Zoom meeting ID, shared by every occurrence of a recurring meeting.", [
+      s.integer("The numeric Zoom meeting ID."),
+      s.string("The string Zoom meeting ID."),
+    ]),
+  ),
+  meetingHostId: s.nullableString("The Zoom user ID of the meeting host."),
+  meetingHostEmail: s.nullableString("The email address of the meeting host."),
+  meetingTopic: s.nullableString("The meeting topic."),
+  meetingStartTime: s.nullableString("The time the meeting started."),
+  meetingEndTime: s.nullableString("The time the meeting ended."),
+  summaryStartTime: s.nullableString("The start of the meeting span the summary covers."),
+  summaryEndTime: s.nullableString("The end of the meeting span the summary covers."),
+  summaryCreatedTime: s.nullableString("The time Zoom created the summary."),
+  summaryLastModifiedTime: s.nullableString("The time the summary was last edited."),
+};
+
+const meetingSummaryListItemSchema = s.object(
+  "One AI Companion meeting summary listed for the user, without its content.",
+  meetingSummaryMeetingProperties,
+);
+
+const summaryDetailSchema = s.object("One labelled section of a legacy Zoom summary.", {
+  label: s.nullableString("The section label."),
+  summary: s.nullableString("The section text."),
+});
+
+const summaryDetailsSchema = s.array("Labelled sections of the legacy summary.", summaryDetailSchema);
+const nextStepsSchema = s.array("Legacy next-step strings Zoom extracted from the meeting.", s.string("A next step."));
+
+const meetingSummarySchema = s.object("The content and metadata of one Zoom AI Companion meeting summary.", {
+  ...meetingSummaryMeetingProperties,
+  summaryLastModifiedUserId: s.nullableString("The Zoom user ID of the last editor of the summary."),
+  summaryLastModifiedUserEmail: s.nullableString("The email address of the last editor of the summary."),
+  summaryTitle: s.nullableString("The summary title."),
+  summaryContent: s.nullableString("The full summary in Markdown, Zoom's unified summary field."),
+  summaryDocUrl: s.nullableString("The URL of the summary document in Zoom Docs, when Zoom returns one."),
+  summaryOverview: s.nullableString("The legacy overview paragraph. Zoom marks it deprecated."),
+  summaryDetails: summaryDetailsSchema,
+  nextSteps: nextStepsSchema,
+  editedSummary: s.nullable(
+    s.object("The user-edited version of the legacy fields, when someone edited the summary.", {
+      summaryOverview: s.nullableString("The edited overview paragraph."),
+      summaryDetails: s.anyOf("The edited details, as text or as labelled sections.", [
+        s.string("The edited details as text."),
+        summaryDetailsSchema,
+      ]),
+      nextSteps: nextStepsSchema,
+    }),
+  ),
+});
+
 const meetingWriteProperties = {
   topic: s.string("The meeting topic.", { minLength: 1, maxLength: 200 }),
   type: createMeetingTypeSchema,
@@ -157,11 +224,15 @@ export const zoomActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_user",
     operationType: "read",
-    description: "Fetch one Zoom user by user ID, email address, or me when supported by the app.",
+    description: "Fetch one Zoom user by user ID or email address, or the connected user when userId is me or omitted.",
     requiredScopes: [zoomUserReadScope],
-    inputSchema: s.object("The input payload for fetching one Zoom user.", {
-      userId: userIdSchema,
-    }),
+    inputSchema: s.object(
+      "The input payload for fetching one Zoom user.",
+      {
+        userId: s.withDefault(userIdSchema, "me"),
+      },
+      { optional: ["userId"] },
+    ),
     outputSchema: s.object("The response returned when fetching one Zoom user.", {
       user: userSchema,
     }),
@@ -189,6 +260,58 @@ export const zoomActions: ActionDefinition[] = [
     outputSchema: s.object("The response returned when listing Zoom meetings.", {
       pagination: paginationSchema,
       meetings: s.array("The normalized Zoom meetings returned for this page.", meetingSchema),
+    }),
+  }),
+  defineProviderAction(service, {
+    name: "list_user_meeting_summaries",
+    operationType: "read",
+    description:
+      "List a user's AI Companion meeting summaries in a time window, newest first, without their content. Zoom's page token expires 15 minutes after it is issued; an expired token is refused as invalid input.",
+    requiredScopes: [zoomMeetingSummaryListScope],
+    inputSchema: s.object(
+      "The input payload for listing Zoom meeting summaries.",
+      {
+        userId: s.withDefault(userIdSchema, "me"),
+        from: summaryTimeSchema,
+        to: summaryTimeSchema,
+        timeFilterField: s.stringEnum(
+          "Which summary time from and to filter on. Zoom defaults to summary_start_time.",
+          ["summary_start_time", "summary_created_time"],
+        ),
+        pageSize: s.integer("The number of summaries per page. Zoom defaults to 30.", { minimum: 1, maximum: 300 }),
+        nextPageToken: nextPageTokenSchema,
+      },
+      {
+        optional: ["userId", "from", "to", "timeFilterField", "pageSize", "nextPageToken"],
+      },
+    ),
+    outputSchema: s.object("The response returned when listing Zoom meeting summaries.", {
+      summaries: s.array("The summaries on this page; empty when the window has none.", meetingSummaryListItemSchema),
+      nextPageToken: s.nullableString("The token for the next page, or null on the last page."),
+      pageSize: s.nullableInteger("The page size Zoom applied."),
+      from: s.nullableString("The window start Zoom applied."),
+      to: s.nullableString("The window end Zoom applied."),
+    }),
+  }),
+  defineProviderAction(service, {
+    name: "get_meeting_summary",
+    operationType: "read",
+    description:
+      "Fetch the AI Companion summary of one meeting instance by its UUID. When the account shares summaries by email only, or the summary is in Trash, the result is available false with a reason instead of an error.",
+    requiredScopes: [zoomMeetingSummaryReadScope],
+    inputSchema: s.object("The input payload for fetching one Zoom meeting summary.", {
+      meetingUuid: s.nonEmptyString("The meeting instance UUID returned by list_user_meeting_summaries."),
+    }),
+    outputSchema: s.object("The response returned when fetching one Zoom meeting summary.", {
+      available: s.boolean("Whether Zoom returned the summary through the API."),
+      unavailableReason: s.nullable(
+        s.stringEnum(
+          "Why the summary is not available: shared_by_email_only means Zoom answered 403 code 2305, because the account shares summaries by email only or the summary is in Trash.",
+          ["shared_by_email_only"],
+        ),
+      ),
+      unavailableMessage: s.nullableString("Zoom's own message when the summary is not available."),
+      summary: s.nullable(meetingSummarySchema),
     }),
   }),
   defineProviderAction(service, {
