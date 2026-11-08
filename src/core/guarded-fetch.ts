@@ -181,6 +181,16 @@ export function unwrapGuardedFetch(fetcher: typeof fetch | undefined): typeof fe
 }
 
 /**
+ * Return the runtime network policy explicitly bound to a guarded fetch. A
+ * caller replacing the base transport passes it on as `network`, because the
+ * policy is otherwise read from the fetch being wrapped and a fresh transport
+ * carries none.
+ */
+export function readGuardedFetchNetworkPolicy(fetcher: typeof fetch): ProviderNetworkPolicy | undefined {
+  return guardedFetchPolicies.get(fetcher);
+}
+
+/**
  * Create a fetch-compatible function that enforces the shared SSRF policy on
  * every network hop instead of only on the caller-supplied URL:
  *
