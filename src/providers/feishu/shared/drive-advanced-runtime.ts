@@ -12,6 +12,7 @@ interface DriveAdvancedHandler {
 
 export interface FeishuDriveAdvancedRuntimeDeps {
   readonly request: FeishuJsonRequest;
+  readonly openBaseUrl: string;
   readonly accessToken: string;
   readonly fetcher: typeof fetch;
   readonly transitFiles?: TransitFileWriter;
@@ -453,6 +454,7 @@ async function downloadDriveArtifact(
   const transit = requireTransit(deps);
   return withFeishuRawResponse(
     {
+      openBaseUrl: deps.openBaseUrl,
       accessToken: deps.accessToken,
       fetcher: deps.fetcher,
       signal: deps.signal,

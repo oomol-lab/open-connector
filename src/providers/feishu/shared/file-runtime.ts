@@ -18,6 +18,7 @@ interface FeishuFileActionHandler {
 
 export interface FeishuFileRuntimeDeps {
   readonly request: FeishuJsonRequest;
+  readonly openBaseUrl: string;
   readonly accessToken: string;
   readonly fetcher: typeof fetch;
   readonly transitFiles?: TransitFileWriter;
@@ -475,6 +476,7 @@ async function uploadDriveBytesSinglePart(input: MultipartUploadInput, deps: Fei
   }
   body.set("file", new Blob([bytes.slice().buffer], { type: input.source.mimeType }), input.source.fileName);
   const data = await requestFeishuMultipart({
+    openBaseUrl: deps.openBaseUrl,
     accessToken: deps.accessToken,
     fetcher: deps.fetcher,
     signal: deps.signal,
@@ -513,6 +515,7 @@ async function uploadDriveBytesMultipart(input: MultipartUploadInput, deps: Feis
     partBody.set("size", String(chunk.byteLength));
     partBody.set("file", new Blob([chunk.slice().buffer], { type: "application/octet-stream" }), input.source.fileName);
     await requestFeishuMultipart({
+      openBaseUrl: deps.openBaseUrl,
       accessToken: deps.accessToken,
       fetcher: deps.fetcher,
       signal: deps.signal,
@@ -571,6 +574,7 @@ async function downloadRawFile(
   const transit = requireFileTransit(deps);
   return withFeishuRawResponse(
     {
+      openBaseUrl: deps.openBaseUrl,
       accessToken: deps.accessToken,
       fetcher: deps.fetcher,
       signal: deps.signal,

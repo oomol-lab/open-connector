@@ -223,6 +223,7 @@ async function createFeishuAppBotSharedHandlers(
 ): Promise<Record<string, (input: Record<string, unknown>) => Promise<unknown>>> {
   const accessToken = await fetchTenantAccessToken(context, context.fetcher, "execute", context.signal);
   const runtimeContext: FeishuActionRuntimeContext = {
+    openBaseUrl: feishuOpenBaseUrl,
     identity: "tenant",
     accessToken,
     fetcher: context.fetcher,
@@ -242,6 +243,7 @@ async function createFeishuAppBotSharedHandlers(
     ...createFeishuDriveActionHandlers(request),
     ...createFeishuDriveAdvancedActionHandlers({
       request,
+      openBaseUrl: feishuOpenBaseUrl,
       accessToken,
       fetcher: context.fetcher,
       transitFiles: context.transitFiles,
@@ -256,6 +258,7 @@ async function createFeishuAppBotSharedHandlers(
     ...createFeishuOkrActionHandlers(request),
     ...createFeishuFileActionHandlers({
       request,
+      openBaseUrl: feishuOpenBaseUrl,
       accessToken,
       fetcher: context.fetcher,
       transitFiles: context.transitFiles,
@@ -266,6 +269,7 @@ async function createFeishuAppBotSharedHandlers(
     ...createFeishuMarkdownActionHandlers(createFeishuMarkdownRuntimeContext({ request, context: runtimeContext })),
     ...createFeishuDomainMediaActionHandlers({
       request,
+      openBaseUrl: feishuOpenBaseUrl,
       accessToken,
       fetcher: context.fetcher,
       transitFiles: context.transitFiles,

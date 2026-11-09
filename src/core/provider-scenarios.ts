@@ -58,6 +58,7 @@ const scenarioByService = new Map<string, ProviderScenario>([
   ["feishu", "communication"],
   ["feishuappbot", "communication"],
   ["feishucustombot", "communication"],
+  ["lark", "communication"],
   ["figma", "productivity"],
   ["finage", "investment"],
   ["finchina", "investment"],

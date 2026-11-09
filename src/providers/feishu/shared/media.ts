@@ -64,6 +64,7 @@ export async function uploadFeishuMedia(
       body.set("image_type", "message");
       body.set("image", new Blob([bytes.slice().buffer], { type: source.mimeType }), source.fileName);
       const data = await requestFeishuMultipart({
+        openBaseUrl: context.openBaseUrl,
         accessToken: context.accessToken,
         fetcher: context.fetcher,
         signal: context.signal,
@@ -80,6 +81,7 @@ export async function uploadFeishuMedia(
       body.set("file_name", input.fileName ?? source.fileName);
       body.set("file", new Blob([bytes.slice().buffer], { type: source.mimeType }), source.fileName);
       const data = await requestFeishuMultipart({
+        openBaseUrl: context.openBaseUrl,
         accessToken: context.accessToken,
         fetcher: context.fetcher,
         signal: context.signal,
