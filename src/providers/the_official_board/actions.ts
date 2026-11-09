@@ -3,7 +3,7 @@ import type { ActionDefinition } from "../../core/types.ts";
 import { s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
 
-const service = "the_official_board" as const;
+const service = "the_official_board";
 
 const nonEmptyString = (description: string) => s.nonEmptyString(description);
 const resultItemSchema = s.looseObject(

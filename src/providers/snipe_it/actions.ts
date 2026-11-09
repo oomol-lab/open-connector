@@ -3,7 +3,7 @@ import type { ActionDefinition } from "../../core/types.ts";
 import { s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
 
-const service = "snipe_it" as const;
+const service = "snipe_it";
 
 const emptyInputSchema = s.object("No input parameters are required.", {});
 const looseRowSchema = s.looseObject("One object returned by the Snipe-IT API.");

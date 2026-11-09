@@ -3,7 +3,7 @@ import type { ActionDefinition } from "../../core/types.ts";
 import { jsonSchema as s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
 
-const service = "veremark" as const;
+const service = "veremark";
 
 const guidSchema = (description: string) => s.string(description, { format: "uuid" });
 

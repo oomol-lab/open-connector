@@ -3,7 +3,7 @@ import type { ActionDefinition } from "../../core/types.ts";
 import { s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
 
-const service = "terraform" as const;
+const service = "terraform";
 
 const nonEmptyStringSchema = (description: string) => s.string(description, { minLength: 1, pattern: "\\S" });
 

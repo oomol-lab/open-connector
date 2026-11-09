@@ -3,7 +3,7 @@ import type { ActionDefinition } from "../../core/types.ts";
 import { s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
 
-const service = "sellerspace" as const;
+const service = "sellerspace";
 
 const datePresetSchema = s.stringEnum(
   "The SellerSpace date preset: TD today, YD yesterday, WD this week, LW last week, MO this month, LM last month, SD trailing 7 days, HD trailing 15 days, NM trailing 30 days, or CU custom dates.",

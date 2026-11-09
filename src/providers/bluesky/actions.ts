@@ -3,7 +3,7 @@ import type { ProviderActionDefinition } from "../../core/provider-definition.ts
 import { s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
 
-const service = "bluesky" as const;
+const service = "bluesky";
 
 export const blueskyPostTextMaxBytes = 3000;
 export const blueskyPostTextMaxGraphemes = 300;

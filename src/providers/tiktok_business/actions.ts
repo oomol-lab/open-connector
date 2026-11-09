@@ -4,7 +4,7 @@ import type { JsonSchema } from "../../core/types.ts";
 import { s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
 
-const service = "tiktok_business" as const;
+const service = "tiktok_business";
 
 const businessReadPermissions = ["advertiser.read", "1", "2"];
 const reportingReadPermissions = ["report.read", "4"];

@@ -3,7 +3,7 @@ import type { ProviderActionDefinition } from "../../core/provider-definition.ts
 import { s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
 
-const service = "upsales" as const;
+const service = "upsales";
 
 const idField = (description: string) => s.positiveInteger(description);
 const limitField = s.integer("Maximum number of records to return, from 1 to 2000.", {

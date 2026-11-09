@@ -3,7 +3,7 @@ import type { ActionDefinition } from "../../core/types.ts";
 import { s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
 
-const service = "supermemory" as const;
+const service = "supermemory";
 
 const containerTagSchema = s.nonEmptyString("The user, project, or tenant container tag that scopes this operation.", {
   maxLength: 100,

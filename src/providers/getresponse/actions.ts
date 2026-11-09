@@ -4,7 +4,7 @@ import type { JsonSchema } from "../../core/types.ts";
 import { s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
 
-const service = "getresponse" as const;
+const service = "getresponse";
 
 const idSchema = s.nonEmptyString("A GetResponse resource identifier.");
 const pageSchema = s.integer("The one-based result page to request.", { minimum: 1 });

@@ -3,7 +3,7 @@ import type { ActionDefinition } from "../../core/types.ts";
 import { s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
 
-const service = "square" as const;
+const service = "square";
 
 const nonEmptyString = (description: string) => s.string(description, { minLength: 1 });
 const cursorSchema = nonEmptyString("Cursor token returned by a previous Square page.");

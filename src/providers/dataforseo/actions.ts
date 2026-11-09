@@ -4,7 +4,7 @@ import type { JsonSchema } from "../../core/types.ts";
 import { s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
 
-const service = "dataforseo" as const;
+const service = "dataforseo";
 
 const nonEmptyString = (description: string) => s.string({ minLength: 1, description });
 

@@ -3,7 +3,7 @@ import type { ActionDefinition } from "../../core/types.ts";
 import { s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
 
-const service = "formstack" as const;
+const service = "formstack";
 
 const formIdSchema = s.positiveInteger("The Formstack form ID.");
 const submissionIdSchema = s.positiveInteger("The Formstack submission ID.");

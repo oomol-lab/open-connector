@@ -3,7 +3,7 @@ import type { ActionDefinition } from "../../core/types.ts";
 import { s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
 
-const service = "doppler_marketing_automation" as const;
+const service = "doppler_marketing_automation";
 
 const rawObjectSchema = s.looseObject("The raw object returned by Doppler Email Marketing.");
 

@@ -3,7 +3,7 @@ import type { ActionDefinition } from "../../core/types.ts";
 import { s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
 
-const service = "mautic" as const;
+const service = "mautic";
 
 const contactIdSchema = s.positiveInteger("The numeric Mautic contact ID.");
 const segmentIdSchema = s.positiveInteger("The numeric Mautic segment ID.");

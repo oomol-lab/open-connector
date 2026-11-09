@@ -1,9 +1,57 @@
-import type { ProviderActionDefinition } from "../../core/provider-definition.ts";
+import type { ActionDefinition } from "../../core/types.ts";
 
-import { jsonSchema as s } from "../../core/json-schema.ts";
+import { s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
 
 export const dataForSeoReferencePaths: Record<string, string> = {
+  aiOptimizationClaudeLlmResponsesModels: "ai_optimization/claude/llm_responses/models",
+  aiOptimizationGeminiLlmScraperLanguages: "ai_optimization/gemini/llm_scraper/languages",
+  aiOptimizationGeminiLlmScraperLocations: "ai_optimization/gemini/llm_scraper/locations",
+  appDataAppleCategories: "app_data/apple/categories",
+  appDataAppleLanguages: "app_data/apple/languages",
+  appDataAppleLocations: "app_data/apple/locations",
+  appDataGoogleLanguages: "app_data/google/languages",
+  appDataGoogleLocations: "app_data/google/locations",
+  backlinksIndex: "backlinks/index",
+  contentAnalysisLanguages: "content_analysis/languages",
+  contentAnalysisLocations: "content_analysis/locations",
+  dataforseoLabsGoogleAvailableHistory: "dataforseo_labs/google/available_history",
+  dataforseoLabsGoogleCategoriesForKeywordsLanguages: "dataforseo_labs/google/categories_for_keywords/languages",
+  dataforseoLabsStatus: "dataforseo_labs/status",
+  domainAnalyticsTechnologiesAvailableFilters: "domain_analytics/technologies/available_filters",
+  domainAnalyticsTechnologiesLanguages: "domain_analytics/technologies/languages",
+  domainAnalyticsTechnologiesLocations: "domain_analytics/technologies/locations",
+  domainAnalyticsTechnologiesTechnologies: "domain_analytics/technologies/technologies",
+  keywordsDataBingAudienceEstimationIndustries: "keywords_data/bing/audience_estimation/industries",
+  keywordsDataBingAudienceEstimationJobFunctions: "keywords_data/bing/audience_estimation/job_functions",
+  keywordsDataBingKeywordPerformanceLocationsAndLanguages:
+    "keywords_data/bing/keyword_performance/locations_and_languages",
+  keywordsDataBingKeywordSuggestionsForUrlLanguages: "keywords_data/bing/keyword_suggestions_for_url/languages",
+  keywordsDataBingLanguages: "keywords_data/bing/languages",
+  keywordsDataBingLocations: "keywords_data/bing/locations",
+  keywordsDataBingSearchVolumeHistoryLocationsAndLanguages:
+    "keywords_data/bing/search_volume_history/locations_and_languages",
+  keywordsDataDataforseoTrendsLocations: "keywords_data/dataforseo_trends/locations",
+  keywordsDataGoogleAdsStatus: "keywords_data/google_ads/status",
+  keywordsDataGoogleTrendsCategories: "keywords_data/google_trends/categories",
+  merchantAmazonLanguages: "merchant/amazon/languages",
+  merchantGoogleLanguages: "merchant/google/languages",
+  onPageAvailableFilters: "on_page/available_filters",
+  onPageLighthouseAudits: "on_page/lighthouse/audits",
+  onPageLighthouseLanguages: "on_page/lighthouse/languages",
+  onPageLighthouseVersions: "on_page/lighthouse/versions",
+  serpBaiduLanguages: "serp/baidu/languages",
+  serpBingLanguages: "serp/bing/languages",
+  serpGoogleAdsAdvertisersLocations: "serp/google/ads_advertisers/locations",
+  serpGoogleAdsSearchLocations: "serp/google/ads_search/locations",
+  serpGoogleAiModeLanguages: "serp/google/ai_mode/languages",
+  serpGoogleEventsLocations: "serp/google/events/locations",
+  serpGoogleJobsLocations: "serp/google/jobs/locations",
+  serpGoogleLanguages: "serp/google/languages",
+  serpSeznamLanguages: "serp/seznam/languages",
+  serpYahooLanguages: "serp/yahoo/languages",
+  serpYahooLocations: "serp/yahoo/locations",
+  serpYoutubeLanguages: "serp/youtube/languages",
   chatgptModels: "ai_optimization/chat_gpt/llm_responses/models",
   geminiModels: "ai_optimization/gemini/llm_responses/models",
   perplexityModels: "ai_optimization/perplexity/llm_responses/models",
@@ -26,19 +74,21 @@ export const dataForSeoReferencePaths: Record<string, string> = {
   seznamLocations: "serp/seznam/locations",
   youtubeLocations: "serp/youtube/locations",
 };
-
-export const dataForSeoReferenceAction: ProviderActionDefinition<"get_dataforseo_reference_data"> =
-  defineProviderAction("aisa", {
-    name: "get_dataforseo_reference_data",
-    operationType: "read",
-    description:
-      "Look up DataForSEO model names, location codes, categories, or supported filter fields before a research query.",
-    requiredScopes: [],
-    inputSchema: s.requiredObject("The reference catalog to retrieve; availability differs by API family.", {
+export const dataForSeoReferenceAction: ActionDefinition = defineProviderAction("aisa", {
+  name: "get_dataforseo_reference_data",
+  operationType: "read",
+  description:
+    "Look up DataForSEO model names, location codes, categories, or supported filter fields before a research query.",
+  requiredScopes: [],
+  inputSchema: s.object(
+    "The reference catalog to retrieve; availability differs by API family.",
+    {
       resource: s.stringEnum(
         "The model, location, category, or filter catalog to retrieve.",
         Object.keys(dataForSeoReferencePaths),
       ),
-    }),
-    outputSchema: s.looseObject("The DataForSEO reference response with task statuses and result records preserved."),
-  });
+    },
+    { optional: [] },
+  ),
+  outputSchema: s.looseObject("The DataForSEO reference response with task statuses and result records preserved."),
+});

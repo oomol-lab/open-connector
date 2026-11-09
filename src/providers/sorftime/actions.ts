@@ -3,7 +3,7 @@ import type { ActionDefinition } from "../../core/types.ts";
 import { s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
 
-const service = "sorftime" as const;
+const service = "sorftime";
 
 function trimmedString(description: string) {
   return s.nonEmptyString(description);

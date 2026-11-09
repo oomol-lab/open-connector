@@ -3,7 +3,7 @@ import type { ActionDefinition } from "../../core/types.ts";
 import { s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
 
-const service = "instabot" as const;
+const service = "instabot";
 
 const userIdSchema = s.integer("The Instabot user object ID.", { minimum: 1 });
 const photoFileSchema = s.requiredObject("A reference to an existing Instabot File Object.", {

@@ -3,7 +3,7 @@ import type { ActionDefinition } from "../../core/types.ts";
 import { s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
 
-const service = "cufinder" as const;
+const service = "cufinder";
 
 const trimmedNonEmptyString = (description: string) => s.nonEmptyString(description);
 const countryCodeSchema = s.string(

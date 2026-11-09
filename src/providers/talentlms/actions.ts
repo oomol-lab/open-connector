@@ -3,7 +3,7 @@ import type { ActionDefinition } from "../../core/types.ts";
 import { s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
 
-const service = "talentlms" as const;
+const service = "talentlms";
 
 const idField = (description: string) => s.positiveInteger(description);
 const paginationInputFields = {

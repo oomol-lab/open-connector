@@ -89,8 +89,7 @@ function foreplayOutput(description: string) {
     metadata: s.looseObject("Pagination and request metadata returned by Foreplay."),
   });
 }
-
-const searchForeplayAdsAction: ActionDefinition = defineProviderAction(service, {
+const searchForeplayAdsAction = defineProviderAction(service, {
   name: "search_foreplay_ads",
   operationType: "read",
   description: "Search the Foreplay ad index by text, platform, format, niche, and activity.",
@@ -105,8 +104,7 @@ const searchForeplayAdsAction: ActionDefinition = defineProviderAction(service, 
   ),
   outputSchema: foreplayOutput("Foreplay ads matching the search and filters."),
 });
-
-const getForeplayBrandAdsAction: ActionDefinition = defineProviderAction(service, {
+const getForeplayBrandAdsAction = defineProviderAction(service, {
   name: "get_foreplay_brand_ads",
   operationType: "read",
   description: "List ads for one or more known Foreplay brand IDs.",
@@ -127,8 +125,7 @@ const getForeplayBrandAdsAction: ActionDefinition = defineProviderAction(service
   ),
   outputSchema: foreplayOutput("Foreplay ads associated with the requested brand IDs."),
 });
-
-const findForeplayBrandsAction: ActionDefinition = defineProviderAction(service, {
+const findForeplayBrandsAction = defineProviderAction(service, {
   name: "find_foreplay_brands",
   operationType: "read",
   description: "Find candidate advertising brands associated with a domain.",
@@ -147,8 +144,7 @@ const findForeplayBrandsAction: ActionDefinition = defineProviderAction(service,
   ),
   outputSchema: foreplayOutput("Candidate Foreplay brands, including brand IDs and ad-library page IDs."),
 });
-
-const getForeplayBrandAnalyticsAction: ActionDefinition = defineProviderAction(service, {
+const getForeplayBrandAnalyticsAction = defineProviderAction(service, {
   name: "get_foreplay_brand_analytics",
   operationType: "read",
   description: "Get daily running-ad distribution and creative velocity for a brand page.",
@@ -217,12 +213,15 @@ const creatorFilters = s.object(
     ],
   },
 );
+const waveInfluOutput = s.looseObject(
+  "The WaveInflu response returned through AIsa.",
+  {
+    data: s.unknown("The creator matches or contact result returned by WaveInflu."),
+  },
+  { required: [] },
+);
 
-const waveInfluOutput = s.looseObject("The WaveInflu response returned through AIsa.", {
-  data: s.unknown("The creator matches or contact result returned by WaveInflu."),
-});
-
-const findSimilarCreatorsAction: ActionDefinition = defineProviderAction(service, {
+const findSimilarCreatorsAction = defineProviderAction(service, {
   name: "find_similar_creators",
   operationType: "read",
   description: "Find creators similar to a seed account with optional audience filters.",
@@ -242,8 +241,7 @@ const findSimilarCreatorsAction: ActionDefinition = defineProviderAction(service
   ),
   outputSchema: waveInfluOutput,
 });
-
-const searchCreatorsAction: ActionDefinition = defineProviderAction(service, {
+const searchCreatorsAction = defineProviderAction(service, {
   name: "search_creators",
   operationType: "read",
   description: "Find creators from a natural-language brief and optional audience filters.",
@@ -263,21 +261,23 @@ const searchCreatorsAction: ActionDefinition = defineProviderAction(service, {
   ),
   outputSchema: waveInfluOutput,
 });
-
-const lookupCreatorEmailAction: ActionDefinition = defineProviderAction(service, {
+const lookupCreatorEmailAction = defineProviderAction(service, {
   name: "lookup_creator_email",
   operationType: "read",
   description: "Look up the public contact email for one creator profile; not-found results are billed.",
   requiredScopes: [],
-  inputSchema: s.requiredObject("The creator profile used for a WaveInflu email lookup.", {
-    profileUrl: s.string("An Instagram, TikTok, or YouTube creator profile URL.", {
-      format: "uri",
-    }),
-  }),
+  inputSchema: s.object(
+    "The creator profile used for a WaveInflu email lookup.",
+    {
+      profileUrl: s.string("An Instagram, TikTok, or YouTube creator profile URL.", {
+        format: "uri",
+      }),
+    },
+    { optional: [] },
+  ),
   outputSchema: waveInfluOutput,
 });
-
-export const creatorActions: ActionDefinition[] = [
+export const creatorActions: readonly ActionDefinition[] = [
   searchForeplayAdsAction,
   getForeplayBrandAdsAction,
   findForeplayBrandsAction,

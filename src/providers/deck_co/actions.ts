@@ -3,7 +3,7 @@ import type { ProviderActionDefinition } from "../../core/provider-definition.ts
 import { s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
 
-const service = "deck_co" as const;
+const service = "deck_co";
 
 const nonEmptyString = (description: string) => s.string(description, { minLength: 1 });
 const cursorSchema = nonEmptyString("Opaque cursor string returned by a previous Deck.co page.");

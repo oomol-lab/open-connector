@@ -3,7 +3,7 @@ import type { ActionDefinition } from "../../core/types.ts";
 import { s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
 
-const service = "speak_ai" as const;
+const service = "speak_ai";
 const rawObject = s.looseObject("A provider-defined object returned by Speak AI.");
 const mediaIdInput = s.object("The Speak AI media item to retrieve.", {
   mediaId: s.nonEmptyString("The unique Speak AI media identifier."),

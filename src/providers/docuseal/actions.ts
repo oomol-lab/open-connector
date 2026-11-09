@@ -3,7 +3,7 @@ import type { ActionDefinition } from "../../core/types.ts";
 import { s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
 
-const service = "docuseal" as const;
+const service = "docuseal";
 
 const idSchema = s.positiveInteger("The DocuSeal numeric identifier.");
 const nullableStringSchema = s.nullable(s.string("The string value returned by DocuSeal."));

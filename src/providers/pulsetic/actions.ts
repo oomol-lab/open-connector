@@ -3,7 +3,7 @@ import type { ActionDefinition } from "../../core/types.ts";
 import { s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
 
-const service = "pulsetic" as const;
+const service = "pulsetic";
 
 const monitorIdSchema = s.integer("The unique Pulsetic monitor ID.", { minimum: 1 });
 const pageSchema = s.integer("The page number to return.", { minimum: 1 });

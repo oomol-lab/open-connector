@@ -3,7 +3,7 @@ import type { ActionDefinition } from "../../core/types.ts";
 import { s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
 
-const service = "zip_archive_api" as const;
+const service = "zip_archive_api";
 
 const transitFileSchema = s.requiredObject("A file uploaded to connector transit storage.", {
   fileId: s.nonEmptyString("The local transit file identifier."),

@@ -5,11 +5,14 @@ import { defineProviderAction } from "../../core/provider-definition.ts";
 
 const service = "aisa";
 const dataForSeoOutput = s.looseObject("The DataForSEO live response returned by AIsa.");
-
-const message = s.requiredObject("One preceding conversation message.", {
-  role: s.stringEnum("The author of the preceding message.", ["user", "ai"]),
-  message: s.string("The preceding message content.", { maxLength: 500 }),
-});
+const message = s.object(
+  "One preceding conversation message.",
+  {
+    role: s.stringEnum("The author of the preceding message.", ["user", "ai"]),
+    message: s.string("The preceding message content.", { maxLength: 500 }),
+  },
+  { optional: [] },
+);
 
 const llmFields = {
   prompt: s.string("The question or task to send to the model.", { maxLength: 500 }),
@@ -37,8 +40,7 @@ const llmFields = {
   useReasoning: s.boolean("Whether to enable model reasoning when supported."),
   tag: s.string("A caller-defined identifier returned with the result.", { maxLength: 255 }),
 };
-
-export const queryChatGptVisibilityAction: ActionDefinition = defineProviderAction(service, {
+const queryChatGptVisibilityAction = defineProviderAction(service, {
   name: "query_dataforseo_chatgpt",
   operationType: "read",
   description: "Run a live ChatGPT response query for GEO research through DataForSEO.",
@@ -76,8 +78,7 @@ export const queryChatGptVisibilityAction: ActionDefinition = defineProviderActi
   ),
   outputSchema: dataForSeoOutput,
 });
-
-export const queryClaudeVisibilityAction: ActionDefinition = defineProviderAction(service, {
+const queryClaudeVisibilityAction = defineProviderAction(service, {
   name: "query_dataforseo_claude",
   operationType: "read",
   description: "Run a live Claude response query for GEO research through DataForSEO.",
@@ -117,8 +118,7 @@ export const queryClaudeVisibilityAction: ActionDefinition = defineProviderActio
   ),
   outputSchema: dataForSeoOutput,
 });
-
-export const queryGeminiVisibilityAction: ActionDefinition = defineProviderAction(service, {
+const queryGeminiVisibilityAction = defineProviderAction(service, {
   name: "query_dataforseo_gemini",
   operationType: "read",
   description: "Run a live Gemini response query for GEO research through DataForSEO.",
@@ -152,8 +152,7 @@ export const queryGeminiVisibilityAction: ActionDefinition = defineProviderActio
   ),
   outputSchema: dataForSeoOutput,
 });
-
-export const queryPerplexityVisibilityAction: ActionDefinition = defineProviderAction(service, {
+const queryPerplexityVisibilityAction = defineProviderAction(service, {
   name: "query_dataforseo_perplexity",
   operationType: "read",
   description: "Run a live Perplexity response query for GEO research through DataForSEO.",
@@ -185,8 +184,7 @@ export const queryPerplexityVisibilityAction: ActionDefinition = defineProviderA
   ),
   outputSchema: dataForSeoOutput,
 });
-
-export const getAiKeywordVolumeAction: ActionDefinition = defineProviderAction(service, {
+const getAiKeywordVolumeAction = defineProviderAction(service, {
   name: "get_dataforseo_ai_keyword_volume",
   operationType: "read",
   description: "Get AI-search volume estimates for up to 1,000 keywords.",
@@ -215,8 +213,7 @@ export const getAiKeywordVolumeAction: ActionDefinition = defineProviderAction(s
   ),
   outputSchema: dataForSeoOutput,
 });
-
-export const getKeywordTrendsAction: ActionDefinition = defineProviderAction(service, {
+const getKeywordTrendsAction = defineProviderAction(service, {
   name: "get_dataforseo_keyword_trends",
   operationType: "read",
   description:
@@ -270,46 +267,63 @@ export const getKeywordTrendsAction: ActionDefinition = defineProviderAction(ser
       tasks_error: s.integer("Number of tasks that failed."),
       tasks: s.array(
         "Live task responses, including business errors.",
-        s.looseObject("One upstream task response.", {
-          id: s.string("Upstream task identifier."),
-          status_code: s.integer("Task status code; 20000 indicates success."),
-          status_message: s.string("Task status message."),
-          result: s.nullable(
-            s.array(
-              "Trend results, or null when unavailable.",
-              s.looseObject("A trend result for the requested keywords and location.", {
-                keywords: s.array("Keywords in result order.", s.string("A result keyword.")),
-                items: s.array(
-                  "Trend graphs returned by the upstream service.",
-                  s.looseObject("One keyword popularity graph.", {
-                    keywords: s.array(
-                      "Keywords corresponding to the values and averages arrays.",
-                      s.string("A graph keyword."),
+        s.looseObject(
+          "One upstream task response.",
+          {
+            id: s.string("Upstream task identifier."),
+            status_code: s.integer("Task status code; 20000 indicates success."),
+            status_message: s.string("Task status message."),
+            result: s.nullable(
+              s.array(
+                "Trend results, or null when unavailable.",
+                s.looseObject(
+                  "A trend result for the requested keywords and location.",
+                  {
+                    keywords: s.array("Keywords in result order.", s.string("A result keyword.")),
+                    items: s.array(
+                      "Trend graphs returned by the upstream service.",
+                      s.looseObject(
+                        "One keyword popularity graph.",
+                        {
+                          keywords: s.array(
+                            "Keywords corresponding to the values and averages arrays.",
+                            s.string("A graph keyword."),
+                          ),
+                          averages: s.array(
+                            "Average relative popularity for each keyword over the time window.",
+                            s.number("Average popularity score."),
+                          ),
+                          data: s.array(
+                            "Time buckets; retain both dates because a bucket may span multiple days.",
+                            s.looseObject(
+                              "A popularity time bucket.",
+                              {
+                                date_from: s.string("First date in this bucket."),
+                                date_to: s.string("Last date in this bucket."),
+                                timestamp: s.integer("Bucket Unix timestamp in seconds."),
+                                values: s.array(
+                                  "Relative popularity in keyword order: 100 is the peak, and 0 indicates insufficient data. These are not search volumes.",
+                                  s.number("Relative popularity score."),
+                                ),
+                              },
+                              { required: [] },
+                            ),
+                          ),
+                        },
+                        { required: [] },
+                      ),
                     ),
-                    averages: s.array(
-                      "Average relative popularity for each keyword over the time window.",
-                      s.number("Average popularity score."),
-                    ),
-                    data: s.array(
-                      "Time buckets; retain both dates because a bucket may span multiple days.",
-                      s.looseObject("A popularity time bucket.", {
-                        date_from: s.string("First date in this bucket."),
-                        date_to: s.string("Last date in this bucket."),
-                        timestamp: s.integer("Bucket Unix timestamp in seconds."),
-                        values: s.array(
-                          "Relative popularity in keyword order: 100 is the peak, and 0 indicates insufficient data. These are not search volumes.",
-                          s.number("Relative popularity score."),
-                        ),
-                      }),
-                    ),
-                  }),
+                  },
+                  { required: [] },
                 ),
-              }),
+              ),
             ),
-          ),
-        }),
+          },
+          { required: [] },
+        ),
       ),
     },
+    { required: [] },
   ),
 });
 

@@ -3,7 +3,7 @@ import type { ActionDefinition } from "../../core/types.ts";
 import { s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
 
-const service = "capsule_crm" as const;
+const service = "capsule_crm";
 
 const emptyInputSchema = s.object("This action does not require any input.", {});
 const idInputSchema = (description: string) =>

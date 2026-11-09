@@ -3,7 +3,7 @@ import type { ProviderActionDefinition } from "../../core/provider-definition.ts
 import { s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
 
-const service = "razorpay" as const;
+const service = "razorpay";
 
 const trimmedString = (description: string, options: { maxLength?: number } = {}) =>
   s.string(description, {

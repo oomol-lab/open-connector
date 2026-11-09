@@ -3,7 +3,7 @@ import type { ActionDefinition } from "../../core/types.ts";
 import { s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
 
-const service = "invoice_ninja" as const;
+const service = "invoice_ninja";
 
 const resourceId = s.nonEmptyString("The Invoice Ninja hashed resource ID.");
 const paginationInputFields = {

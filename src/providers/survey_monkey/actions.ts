@@ -4,7 +4,7 @@ import { s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
 import { surveyMonkeyConnectorScopes } from "./scopes.ts";
 
-const service = "survey_monkey" as const;
+const service = "survey_monkey";
 
 const noInputSchema = s.object("No input parameters are required for this action.", {});
 

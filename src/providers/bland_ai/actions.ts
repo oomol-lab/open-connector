@@ -3,7 +3,7 @@ import type { ProviderActionDefinition } from "../../core/provider-definition.ts
 import { s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
 
-const service = "bland_ai" as const;
+const service = "bland_ai";
 
 const nonEmptyString = (description: string) => s.string(description, { minLength: 1 });
 const rawObjectSchema = s.looseObject("The raw object returned by Bland AI.");

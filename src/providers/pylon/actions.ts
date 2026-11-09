@@ -3,7 +3,7 @@ import type { ProviderActionDefinition } from "../../core/provider-definition.ts
 import { s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
 
-const service = "pylon" as const;
+const service = "pylon";
 
 const trimmedString = (description: string) => s.string(description, { minLength: 1 });
 

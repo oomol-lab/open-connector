@@ -6,7 +6,7 @@ import { defineProviderAction } from "../../core/provider-definition.ts";
 
 type SchemaProperties = Record<string, JsonSchema>;
 
-const service = "raygun" as const;
+const service = "raygun";
 
 const applicationIdentifierField = s.string("Raygun application identifier.", { minLength: 1 });
 const deploymentIdentifierField = s.string("Raygun deployment identifier.", { minLength: 1 });

@@ -3,7 +3,7 @@ import type { ActionDefinition } from "../../core/types.ts";
 import { s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
 
-const service = "mails_so" as const;
+const service = "mails_so";
 
 const validationResultType = s.stringEnum("The overall Mails validation result.", [
   "deliverable",

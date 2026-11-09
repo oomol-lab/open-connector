@@ -3,7 +3,7 @@ import type { ActionDefinition } from "../../core/types.ts";
 import { s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
 
-const service = "gangtise" as const;
+const service = "gangtise";
 
 const marketSchema = s.stringEnum("The Gangtise market to query.", [
   "a_share",

@@ -3,7 +3,7 @@ import type { ActionDefinition } from "../../core/types.ts";
 import { s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
 
-const service = "lightspeed_vt" as const;
+const service = "lightspeed_vt";
 
 const positiveId = (description: string) => s.integer(description, { minimum: 1 });
 const page = s.integer("The one-based result page to return.", { minimum: 1 });

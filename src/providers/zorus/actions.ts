@@ -3,7 +3,7 @@ import type { ProviderActionDefinition } from "../../core/provider-definition.ts
 import { s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
 
-const service = "zorus" as const;
+const service = "zorus";
 
 const uuidField = (description: string) => s.uuid(description);
 const optionalStringField = (description: string) => s.string(description, { minLength: 1 });

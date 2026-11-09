@@ -3,7 +3,7 @@ import type { ActionDefinition } from "../../core/types.ts";
 import { s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
 
-const service = "mailerlite" as const;
+const service = "mailerlite";
 
 const subscriberStatus = s.stringEnum("Subscriber status accepted by the MailerLite API.", [
   "active",

@@ -3,7 +3,7 @@ import type { ProviderActionDefinition } from "../../core/provider-definition.ts
 import { s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
 
-const service = "deepgram" as const;
+const service = "deepgram";
 
 const nonEmptyString = (description: string) => s.string({ minLength: 1, pattern: "\\S", description });
 

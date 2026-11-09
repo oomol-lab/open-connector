@@ -3,7 +3,7 @@ import type { ProviderActionDefinition } from "../../core/provider-definition.ts
 import { s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
 
-const service = "sage_hr" as const;
+const service = "sage_hr";
 
 const pageField = s.positiveInteger("The Sage HR page number to request.");
 const employeeIdField = s.positiveInteger("The Sage HR employee ID.");

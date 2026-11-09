@@ -513,3 +513,13 @@ export function recordOrEmpty(value: unknown): Record<string, unknown> {
 export function booleanString(value: unknown): string | undefined {
   return typeof value === "boolean" ? String(value) : undefined;
 }
+
+/** Require an array while preserving provider-defined element shapes. */
+export function requiredArray(
+  value: unknown,
+  fieldName: string,
+  createError: CastErrorFactory = (message) => new CastError(message),
+): unknown[] {
+  if (!Array.isArray(value)) throw createError(`${fieldName} must be an array`);
+  return value;
+}

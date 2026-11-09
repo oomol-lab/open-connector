@@ -3,7 +3,7 @@ import type { ActionDefinition } from "../../core/types.ts";
 import { s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
 
-const service = "sendfox" as const;
+const service = "sendfox";
 
 const contactIdSchema = s.positiveInteger("SendFox contact ID.");
 const listIdSchema = s.positiveInteger("SendFox list ID.");

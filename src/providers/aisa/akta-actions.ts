@@ -1,16 +1,19 @@
 import type { ActionDefinition } from "../../core/types.ts";
 
-import { jsonSchema as s } from "../../core/json-schema.ts";
+import { s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
 
 const company = s.looseObject("A company record with its identity and returned enrichment sections.");
-
-const listOutput = s.looseObject("The company research result returned by Akta.", {
-  data: s.array("The matching company records.", company),
-  count: s.integer("The number of returned companies."),
-  total_count: s.integer("The total matching companies, capped at 500 by Akta."),
-  credits_consumed: s.number("The Akta credits consumed by the request."),
-});
+const listOutput = s.looseObject(
+  "The company research result returned by Akta.",
+  {
+    data: s.array("The matching company records.", company),
+    count: s.integer("The number of returned companies."),
+    total_count: s.integer("The total matching companies, capped at 500 by Akta."),
+    credits_consumed: s.number("The Akta credits consumed."),
+  },
+  { required: [] },
+);
 
 export const aktaActions: readonly ActionDefinition[] = [
   defineProviderAction("aisa", {
@@ -21,9 +24,7 @@ export const aktaActions: readonly ActionDefinition[] = [
     inputSchema: s.object(
       "The company search query.",
       { query: s.string("A company name, website, or UUID.") },
-      {
-        optional: ["query"],
-      },
+      { optional: ["query"] },
     ),
     outputSchema: listOutput,
   }),
@@ -39,16 +40,18 @@ export const aktaActions: readonly ActionDefinition[] = [
         company: s.string("The company identifier accepted by Akta."),
         sections: s.string("The Akta enrichment section selection, passed unchanged to the upstream query parameter."),
       },
-      {
-        optional: ["company", "sections"],
-      },
+      { optional: ["company", "sections"] },
     ),
-    outputSchema: s.looseObject("The company enrichment returned by Akta.", {
-      status: s.string("The upstream result status."),
-      count: s.integer("The number of returned sections."),
-      credits_consumed: s.number("The Akta credits consumed."),
-      data: s.looseObject("Company data keyed by enrichment section."),
-    }),
+    outputSchema: s.looseObject(
+      "The company enrichment returned by Akta.",
+      {
+        status: s.string("The upstream result status."),
+        count: s.integer("The number of returned sections."),
+        credits_consumed: s.number("The Akta credits consumed."),
+        data: s.looseObject("Company data keyed by enrichment section."),
+      },
+      { required: [] },
+    ),
   }),
   defineProviderAction("aisa", {
     name: "search_akta_industries",
@@ -61,15 +64,17 @@ export const aktaActions: readonly ActionDefinition[] = [
         query: s.string("The industry search text."),
         level: s.string("The taxonomy level accepted by Akta."),
       },
-      {
-        optional: ["query", "level"],
-      },
+      { optional: ["query", "level"] },
     ),
-    outputSchema: s.looseObject("The matching industries returned by Akta.", {
-      data: s.array("The ranked industry records.", s.looseObject("An industry code and its associated metadata.")),
-      count: s.integer("The number of returned industries."),
-      credits_consumed: s.number("The Akta credits consumed."),
-    }),
+    outputSchema: s.looseObject(
+      "The matching industries returned by Akta.",
+      {
+        data: s.array("The ranked industry records.", s.looseObject("An industry code and its associated metadata.")),
+        count: s.integer("The number of returned industries."),
+        credits_consumed: s.number("The Akta credits consumed."),
+      },
+      { required: [] },
+    ),
   }),
   defineProviderAction("aisa", {
     name: "search_akta_company_list",

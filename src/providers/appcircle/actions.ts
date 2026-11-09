@@ -3,7 +3,7 @@ import type { ActionDefinition } from "../../core/types.ts";
 import { s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
 
-const service = "appcircle" as const;
+const service = "appcircle";
 
 const positiveIntegerSchema = (description: string) => s.integer(description, { minimum: 1 });
 const profileSchema = s.looseObject("An Appcircle profile returned by the selected module.");

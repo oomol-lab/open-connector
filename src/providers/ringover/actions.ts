@@ -3,7 +3,7 @@ import type { ProviderActionDefinition } from "../../core/provider-definition.ts
 import { s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
 
-const service = "ringover" as const;
+const service = "ringover";
 
 const ringoverObject = s.looseObject("A raw Ringover object returned by the Public API.");
 const rawPayload = s.unknown("The raw Ringover response payload.");

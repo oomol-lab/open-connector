@@ -3,7 +3,7 @@ import type { ActionDefinition } from "../../core/types.ts";
 import { s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
 
-const service = "leadboxer" as const;
+const service = "leadboxer";
 
 const datasetIdSchema = s.optional(
   s.nonEmptyString("The LeadBoxer dataset ID whose credits should be charged for the lookup."),

@@ -4,7 +4,7 @@ import { s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
 import { keepaDealAttributeNames } from "./deal-attributes.ts";
 
-const service = "keepa" as const;
+const service = "keepa";
 
 export const keepaMarketplaces = ["US", "GB", "DE", "FR", "JP", "CA", "IT", "ES", "IN", "MX", "BR"] as const;
 const keepaStandardMarketplaces = keepaMarketplaces.filter((marketplace) => marketplace !== "BR");

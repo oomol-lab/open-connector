@@ -3,7 +3,7 @@ import type { ActionDefinition } from "../../core/types.ts";
 import { s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
 
-const service = "insites" as const;
+const service = "insites";
 
 const reportIdSchema = s.nonEmptyString("The Insites audit report ID.");
 const auditPayloadSchema = s.looseObject("The account-configured Insites audit data returned for this website.");

@@ -3,7 +3,7 @@ import type { ActionDefinition } from "../../core/types.ts";
 import { s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
 
-const service = "smartrecruiters" as const;
+const service = "smartrecruiters";
 
 const idSchema = s.string("The SmartRecruiters resource identifier.", { minLength: 1 });
 const pageIdSchema = s.string("The SmartRecruiters pageId cursor returned by a previous page.", {

@@ -3,7 +3,7 @@ import type { ActionDefinition } from "../../core/types.ts";
 import { s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
 
-const service = "docsumo" as const;
+const service = "docsumo";
 
 function nonEmptyString(description: string) {
   return s.string(description, { minLength: 1 });

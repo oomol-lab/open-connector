@@ -11,36 +11,32 @@ const searchMode = s.stringEnum("Retrieval mode; deep modes may take longer to c
   "deep",
   "deep-reasoning",
 ]);
-
-const stream = s.literal(false, {
-  description: "Streaming is not supported by this JSON action; must be false.",
-});
-
+const stream = s.literal(false, { description: "Streaming is not supported by this JSON action; must be false." });
 const text = s.boolean("Return the full page text; defaults to true for get_exa_contents.");
-
 const highlights = s.boolean("Return highlighted relevant snippets.");
-
 const summary = s.boolean("Return an AI-generated summary of the page.");
-
 const outputSchema = s.looseObject("JSON Schema for a structured output.");
 
 const urls = s.stringArray("The URLs to retrieve.", {
   minItems: 1,
   itemDescription: "A page URL.",
 });
-
-const exaPage = s.looseObject("An Exa page, including additional upstream content fields.", {
-  id: s.string("The Exa result identifier, normally the page URL."),
-  url: s.string("The page URL."),
-  title: s.string("The page title."),
-  author: s.string("The page author."),
-  publishedDate: s.string("The publication date reported by the source."),
-  text: s.string("The retrieved page text."),
-  highlights: s.stringArray("Relevant snippets from the page.", {
-    itemDescription: "A relevant snippet.",
-  }),
-  summary: s.string("The generated page summary."),
-});
+const exaPage = s.looseObject(
+  "An Exa page, including additional upstream content fields.",
+  {
+    id: s.string("The Exa result identifier, normally the page URL."),
+    url: s.string("The page URL."),
+    title: s.string("The page title."),
+    author: s.string("The page author."),
+    publishedDate: s.string("The publication date reported by the source."),
+    text: s.string("The retrieved page text."),
+    highlights: s.stringArray("Relevant snippets from the page.", {
+      itemDescription: "A relevant snippet.",
+    }),
+    summary: s.string("The generated page summary."),
+  },
+  { required: [] },
+);
 
 const exaCommon = {
   requestId: s.string("The Exa request identifier."),
@@ -48,7 +44,6 @@ const exaCommon = {
 };
 
 const format = s.stringEnum("The extracted content format.", ["markdown", "text"]);
-
 const extractDepth = s.stringEnum("Extraction depth; advanced may take longer and cost more.", ["basic", "advanced"]);
 
 const chunksPerSource = s.integer("Maximum relevant chunks per source when an intent is provided.", {
@@ -57,26 +52,31 @@ const chunksPerSource = s.integer("Maximum relevant chunks per source when an in
 });
 
 const includeImages = s.boolean("Include extracted image URLs.");
-
 const includeFavicon = s.boolean("Include the page favicon URL.");
-
 const includeUsage = s.boolean("Include upstream credit usage; this is not the AIsa customer charge.");
-
-const tavilyPage = s.looseObject("A Tavily page with extracted content and optional metadata.", {
-  url: s.string("The page URL."),
-  title: s.string("The page title."),
-  raw_content: s.string("The extracted page content."),
-  images: s.stringArray("Extracted image URLs.", { itemDescription: "An image URL." }),
-  favicon: s.nullable(s.string("The page favicon URL.")),
-});
+const tavilyPage = s.looseObject(
+  "A Tavily page with extracted content and optional metadata.",
+  {
+    url: s.string("The page URL."),
+    title: s.string("The page title."),
+    raw_content: s.string("The extracted page content."),
+    images: s.stringArray("Extracted image URLs.", { itemDescription: "An image URL." }),
+    favicon: s.nullable(s.string("The page favicon URL.")),
+  },
+  { required: [] },
+);
 
 const tavilyCommon = {
   request_id: s.string("The Tavily request identifier."),
   response_time: s.number("The upstream execution time in seconds."),
   results: s.array("Successfully retrieved pages.", tavilyPage),
-  usage: s.looseObject("Upstream credit usage; not the AIsa customer charge.", {
-    credits: s.integer("Upstream credits consumed."),
-  }),
+  usage: s.looseObject(
+    "Upstream credit usage; not the AIsa customer charge.",
+    {
+      credits: s.integer("Upstream credits consumed."),
+    },
+    { required: [] },
+  ),
 };
 
 export const webActions: readonly ActionDefinition[] = [
@@ -94,24 +94,34 @@ export const webActions: readonly ActionDefinition[] = [
           maximum: 100,
         }),
       },
-      {
-        optional: ["limit"],
-      },
+      { optional: ["limit"] },
     ),
-    outputSchema: s.looseObject("The Firecrawl web search result.", {
-      success: s.boolean("Whether the search succeeded."),
-      creditsUsed: s.integer("Supplier credits consumed by the request."),
-      data: s.looseObject("The search result groups.", {
-        web: s.array(
-          "Ranked web search results.",
-          s.looseObject("A web search result.", {
-            title: s.string("The result title."),
-            url: s.string("The result URL."),
-            description: s.string("The result snippet."),
-          }),
+    outputSchema: s.looseObject(
+      "The Firecrawl web search result.",
+      {
+        success: s.boolean("Whether the search succeeded."),
+        creditsUsed: s.integer("Supplier credits consumed; customer billing uses AIsa cost headers."),
+        data: s.looseObject(
+          "The search result groups.",
+          {
+            web: s.array(
+              "Ranked web search results.",
+              s.looseObject(
+                "A web search result.",
+                {
+                  title: s.string("The result title."),
+                  url: s.string("The result URL."),
+                  description: s.string("The result snippet."),
+                },
+                { required: [] },
+              ),
+            ),
+          },
+          { required: [] },
         ),
-      }),
-    }),
+      },
+      { required: [] },
+    ),
   }),
   defineProviderAction("aisa", {
     name: "search_exa",
@@ -156,11 +166,15 @@ export const webActions: readonly ActionDefinition[] = [
       },
       { required: ["query"] },
     ),
-    outputSchema: s.looseObject("Exa search results with optional content and structured output.", {
-      ...exaCommon,
-      results: s.array("Ranked search results.", exaPage),
-      output: s.unknown("Structured output generated when outputSchema is supplied."),
-    }),
+    outputSchema: s.looseObject(
+      "Exa search results with optional content and structured output.",
+      {
+        ...exaCommon,
+        results: s.array("Ranked search results.", exaPage),
+        output: s.unknown("Structured output generated when outputSchema is supplied."),
+      },
+      { required: [] },
+    ),
   }),
   defineProviderAction("aisa", {
     name: "get_exa_contents",
@@ -181,14 +195,18 @@ export const webActions: readonly ActionDefinition[] = [
       },
       { required: ["urls"] },
     ),
-    outputSchema: s.looseObject("Exa page contents and per-URL statuses.", {
-      ...exaCommon,
-      results: s.array("Retrieved page contents.", exaPage),
-      statuses: s.array(
-        "Per-URL retrieval statuses, including failures.",
-        s.looseObject("An upstream retrieval status."),
-      ),
-    }),
+    outputSchema: s.looseObject(
+      "Exa page contents and per-URL statuses.",
+      {
+        ...exaCommon,
+        results: s.array("Retrieved page contents.", exaPage),
+        statuses: s.array(
+          "Per-URL retrieval statuses, including failures.",
+          s.looseObject("An upstream retrieval status."),
+        ),
+      },
+      { required: [] },
+    ),
   }),
   defineProviderAction("aisa", {
     name: "answer_exa",
@@ -206,11 +224,15 @@ export const webActions: readonly ActionDefinition[] = [
       },
       { required: ["query"] },
     ),
-    outputSchema: s.looseObject("An Exa answer with supporting citations.", {
-      ...exaCommon,
-      answer: s.unknown("The answer as text or structured output."),
-      citations: s.array("Sources supporting the answer.", exaPage),
-    }),
+    outputSchema: s.looseObject(
+      "An Exa answer with supporting citations.",
+      {
+        ...exaCommon,
+        answer: s.unknown("The answer as text or structured output."),
+        citations: s.array("Sources supporting the answer.", exaPage),
+      },
+      { required: [] },
+    ),
   }),
   defineProviderAction("aisa", {
     name: "scrape_firecrawl",
@@ -223,18 +245,24 @@ export const webActions: readonly ActionDefinition[] = [
       {
         url: s.string("The HTTPS page URL; PDF URLs are not supported.", { format: "uri" }),
       },
-      {
-        optional: [],
-      },
+      { optional: [] },
     ),
-    outputSchema: s.looseObject("The Firecrawl scrape response.", {
-      success: s.boolean("Whether the upstream scrape succeeded."),
-      creditsUsed: s.integer("Upstream credits consumed."),
-      data: s.looseObject("The scraped page and its metadata.", {
-        markdown: s.string("The page content in Markdown."),
-        metadata: s.looseObject("Page metadata, including title, source URL and HTTP status."),
-      }),
-    }),
+    outputSchema: s.looseObject(
+      "The Firecrawl scrape response.",
+      {
+        success: s.boolean("Whether the upstream scrape succeeded."),
+        creditsUsed: s.integer("Upstream credits consumed."),
+        data: s.looseObject(
+          "The scraped page and its metadata.",
+          {
+            markdown: s.string("The page content in Markdown."),
+            metadata: s.looseObject("Page metadata, including title, source URL and HTTP status."),
+          },
+          { required: [] },
+        ),
+      },
+      { required: [] },
+    ),
   }),
   defineProviderAction("aisa", {
     name: "map_firecrawl",
@@ -248,21 +276,27 @@ export const webActions: readonly ActionDefinition[] = [
         url: s.string("The HTTPS website URL.", { format: "uri" }),
         limit: s.integer("Maximum links to discover.", { minimum: 1, maximum: 100000 }),
       },
-      {
-        optional: [],
-      },
+      { optional: [] },
     ),
-    outputSchema: s.looseObject("Discovered Firecrawl website links.", {
-      success: s.boolean("Whether upstream link discovery succeeded."),
-      creditsUsed: s.integer("Upstream credits consumed."),
-      links: s.array(
-        "Discovered website links.",
-        s.looseObject("A discovered link.", {
-          url: s.string("The page URL."),
-          title: s.string("The page title."),
-        }),
-      ),
-    }),
+    outputSchema: s.looseObject(
+      "Discovered Firecrawl website links.",
+      {
+        success: s.boolean("Whether upstream link discovery succeeded."),
+        creditsUsed: s.integer("Upstream credits consumed."),
+        links: s.array(
+          "Discovered website links.",
+          s.looseObject(
+            "A discovered link.",
+            {
+              url: s.string("The page URL."),
+              title: s.string("The page title."),
+            },
+            { required: [] },
+          ),
+        ),
+      },
+      { required: [] },
+    ),
   }),
   defineProviderAction("aisa", {
     name: "crawl_tavily",
@@ -307,10 +341,14 @@ export const webActions: readonly ActionDefinition[] = [
       },
       { required: ["url", "limit"] },
     ),
-    outputSchema: s.looseObject("The synchronously retrieved Tavily crawl results.", {
-      ...tavilyCommon,
-      base_url: s.string("The crawled website base URL."),
-    }),
+    outputSchema: s.looseObject(
+      "The synchronously retrieved Tavily crawl results.",
+      {
+        ...tavilyCommon,
+        base_url: s.string("The crawled website base URL."),
+      },
+      { required: [] },
+    ),
   }),
   defineProviderAction("aisa", {
     name: "extract_tavily",
@@ -336,12 +374,16 @@ export const webActions: readonly ActionDefinition[] = [
       },
       { required: ["urls"] },
     ),
-    outputSchema: s.looseObject("Extracted Tavily pages and individual failures.", {
-      ...tavilyCommon,
-      failed_results: s.array(
-        "URLs that could not be processed, with upstream error details when available.",
-        s.unknown("An upstream URL failure entry."),
-      ),
-    }),
+    outputSchema: s.looseObject(
+      "Extracted Tavily pages and individual failures.",
+      {
+        ...tavilyCommon,
+        failed_results: s.array(
+          "URLs that could not be processed, with upstream error details when available.",
+          s.unknown("An upstream URL failure entry."),
+        ),
+      },
+      { required: [] },
+    ),
   }),
 ];

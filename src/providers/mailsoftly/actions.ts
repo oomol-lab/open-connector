@@ -3,7 +3,7 @@ import type { ActionDefinition } from "../../core/types.ts";
 import { s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
 
-const service = "mailsoftly" as const;
+const service = "mailsoftly";
 
 const emptyInputSchema = s.requiredObject("No input parameters are required.", {});
 const contactIdSchema = s.integer("The Mailsoftly contact ID.");

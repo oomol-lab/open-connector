@@ -3,7 +3,7 @@ import type { ProviderActionDefinition } from "../../core/provider-definition.ts
 import { s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
 
-const service = "quaderno" as const;
+const service = "quaderno";
 
 const rawObjectSchema = s.looseObject("The raw Quaderno API object.");
 const idSchema = s.string("The Quaderno object ID.", { minLength: 1 });

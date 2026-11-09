@@ -3,7 +3,7 @@ import type { ActionDefinition, JsonSchema } from "../../core/types.ts";
 import { s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
 
-const service = "mailersend" as const;
+const service = "mailersend";
 
 const page = s.positiveInteger("Page number to request from the MailerSend API.");
 const limit = s.integer("Maximum number of items to return per page.", { minimum: 1, maximum: 100 });

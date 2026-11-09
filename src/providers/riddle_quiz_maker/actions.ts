@@ -3,7 +3,7 @@ import type { ActionDefinition } from "../../core/types.ts";
 import { jsonSchema as s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
 
-const service = "riddle_quiz_maker" as const;
+const service = "riddle_quiz_maker";
 
 const riddleUuidSchema = s.string("The UUID of the Riddle to operate on.", { minLength: 1 });
 const projectIdSchema = s.integer("The numeric Riddle project ID.", { minimum: 1 });

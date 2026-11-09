@@ -3,7 +3,7 @@ import type { ActionDefinition } from "../../core/types.ts";
 import { s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
 
-const service = "deutschlandgpt" as const;
+const service = "deutschlandgpt";
 
 const jsonObjectSchema = s.record("A JSON object with arbitrary string keys.", s.unknown("Any JSON-compatible value."));
 

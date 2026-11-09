@@ -3,7 +3,7 @@ import type { ActionDefinition } from "../../core/types.ts";
 import { s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
 
-const service = "alt_text_generator_ai" as const;
+const service = "alt_text_generator_ai";
 
 const publicImageUrlSchema = s.url("The publicly reachable HTTP or HTTPS URL of the image to describe.");
 

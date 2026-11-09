@@ -4,7 +4,7 @@ import type { ActionDefinition, JsonSchema } from "../../core/types.ts";
 import { s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
 
-const service = "sendbird" as const;
+const service = "sendbird";
 
 const looseObjectSchema = s.looseObject("An object returned by the official Sendbird API.");
 const metadataSchema = s.record("A metadata object whose keys and values are strings.", s.string("A metadata value."));

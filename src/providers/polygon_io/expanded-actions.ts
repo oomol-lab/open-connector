@@ -3,7 +3,7 @@ import type { ActionDefinition, JsonSchema } from "../../core/types.ts";
 import { jsonSchema as s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
 
-const service = "polygon_io" as const;
+const service = "polygon_io";
 const ticker = s.nonEmptyString("The case-sensitive Massive ticker symbol, for example AAPL.");
 const text = (description: string) => s.nonEmptyString(description);
 const order = s.stringEnum("The order used when sorting returned results.", ["asc", "desc"]);

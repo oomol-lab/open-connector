@@ -3,7 +3,7 @@ import type { ActionDefinition } from "../../core/types.ts";
 import { s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
 
-const service = "monica_crm" as const;
+const service = "monica_crm";
 
 const resourceSchema = s.looseObject("A resource returned by the Monica API.");
 const paginationLinksSchema = s.looseObject("Pagination links returned by Monica.");

@@ -3,7 +3,7 @@ import type { ActionDefinition } from "../../core/types.ts";
 import { s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
 
-const service = "statista" as const;
+const service = "statista";
 
 const querySchema = s.string("The natural language or keyword query sent to Statista.", {
   minLength: 1,

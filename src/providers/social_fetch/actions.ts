@@ -3,7 +3,7 @@ import type { ActionDefinition } from "../../core/types.ts";
 import { s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
 
-const service = "social_fetch" as const;
+const service = "social_fetch";
 
 export const socialFetchProfilePlatforms = [
   "tiktok",

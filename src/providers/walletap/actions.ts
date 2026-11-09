@@ -3,7 +3,7 @@ import type { ActionDefinition } from "../../core/types.ts";
 import { jsonSchema as s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
 
-const service = "walletap" as const;
+const service = "walletap";
 const dataOutputSchema = s.object("A Walletap API response.", {
   data: s.unknown("The JSON payload returned by Walletap."),
 });

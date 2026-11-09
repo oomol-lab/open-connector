@@ -139,7 +139,7 @@ const createLinkOutputSchema = s.object("The created Terminus link.", {
   link: linkSchema,
 });
 
-const service = "terminus_app" as const;
+const service = "terminus_app";
 
 export const terminusAppActions: readonly ActionDefinition[] = [
   defineProviderAction(service, {

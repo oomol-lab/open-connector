@@ -2,9 +2,10 @@ import type { ActionDefinition } from "../../core/types.ts";
 
 import { s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
+import { attioCrmActions } from "./crm-actions.ts";
 
 const service = "attio";
-
+const nonEmptyString = (description: string) => s.nonEmptyString(description);
 const rawObjectSchema = s.looseObject("A raw Attio object returned by the API.");
 const rawRecordSchema = s.looseObject("A raw Attio record returned by the API.");
 const rawAttributeSchema = s.looseObject("A raw Attio attribute returned by the API.");
@@ -24,140 +25,202 @@ const paginationSchema = s.object(
   },
   { optional: ["limit", "offset"] },
 );
-
-const recordOutputSchema = s.object("A single Attio record result.", {
-  record: s.nullable(rawRecordSchema),
-});
-
-const listRecordsInputSchema = s.object(
-  "Input for querying Attio records.",
+const listObjectsOutputSchema = s.object(
+  "Objects returned by Attio.",
   {
-    object: s.nonEmptyString("The object ID or API slug, such as people or companies."),
-    filter: filterSchema,
-    filterViewId: s.uuid("A saved view UUID whose filter configuration should be applied."),
-    sorts: sortsSchema,
-    limit: s.integer("The maximum number of records to return.", { minimum: 1 }),
-    offset: s.integer("The zero-based pagination offset.", { minimum: 0 }),
+    objects: s.array("Attio objects in the workspace.", rawObjectSchema),
   },
-  { optional: ["filter", "filterViewId", "sorts", "limit", "offset"] },
+  { optional: [] },
 );
-listRecordsInputSchema.not = { required: ["filter", "filterViewId"] };
 
-export const attioActions: ActionDefinition[] = [
+const listAttributesOutputSchema = s.object(
+  "Attributes returned by Attio.",
+  {
+    attributes: s.array("Attio attributes for the requested object, list or activity.", rawAttributeSchema),
+    pagination: s.nullable(paginationSchema),
+  },
+  { optional: [] },
+);
+
+const recordOutputSchema = s.object(
+  "A single Attio record result.",
+  {
+    record: rawRecordSchema,
+  },
+  { optional: [] },
+);
+
+const listRecordsOutputSchema = s.object(
+  "Records returned by Attio.",
+  {
+    records: s.array("Attio records returned by the query.", rawRecordSchema),
+    pagination: s.nullable(paginationSchema),
+  },
+  { optional: [] },
+);
+
+const identifyOutputSchema = s.object(
+  "Attio credential metadata returned by /v2/self.",
+  {
+    active: s.boolean("Whether the token is active."),
+    workspaceId: s.nullable(s.string("The Attio workspace ID associated with the token.")),
+    workspaceName: s.nullable(s.string("The Attio workspace name associated with the token.")),
+    workspaceSlug: s.nullable(s.string("The Attio workspace slug associated with the token.")),
+    scope: s.nullable(s.string("The space-separated Attio scopes associated with the token.")),
+    raw: rawMetaSchema,
+  },
+  { optional: [] },
+);
+
+const deleteRecordOutputSchema = s.object(
+  "The delete status returned by Attio.",
+  {
+    deleted: s.boolean("Whether Attio accepted the record delete request."),
+    raw: s.unknown("The raw Attio delete response payload."),
+  },
+  { optional: [] },
+);
+
+export const attioActions: readonly ActionDefinition[] = [
+  ...attioCrmActions,
   defineProviderAction(service, {
     name: "identify",
-    operationType: "read",
     description: "Identify the current Attio access token, its workspace, and the scopes attached to it.",
+    operationType: "read",
     requiredScopes: [],
-    inputSchema: s.object("No input is required to identify an Attio token.", {}),
-    outputSchema: s.object("Attio credential metadata returned by /v2/self.", {
-      active: s.boolean("Whether the token is active."),
-      workspaceId: s.nullable(s.string("The Attio workspace ID associated with the token.")),
-      workspaceName: s.nullable(s.string("The Attio workspace name associated with the token.")),
-      workspaceSlug: s.nullable(s.string("The Attio workspace slug associated with the token.")),
-      scope: s.nullable(s.string("The space-separated Attio scopes associated with the token.")),
-      raw: rawMetaSchema,
-    }),
+    inputSchema: s.object("No input is required to identify an Attio token.", {}, { optional: [] }),
+    outputSchema: identifyOutputSchema,
   }),
   defineProviderAction(service, {
     name: "list_objects",
-    operationType: "read",
     description: "List all system-defined and user-defined objects in an Attio workspace.",
+    operationType: "read",
     requiredScopes: ["object_configuration:read"],
-    inputSchema: s.object("No input is required to list Attio objects.", {}),
-    outputSchema: s.object("Objects returned by Attio.", {
-      objects: s.array("Attio objects in the workspace.", rawObjectSchema),
-    }),
+    inputSchema: s.object("No input is required to list Attio objects.", {}, { optional: [] }),
+    outputSchema: listObjectsOutputSchema,
   }),
   defineProviderAction(service, {
     name: "get_object",
-    operationType: "read",
     description: "Get one Attio object by object ID or API slug.",
+    operationType: "read",
     requiredScopes: ["object_configuration:read"],
-    inputSchema: s.object("Input for retrieving an Attio object.", {
-      object: s.nonEmptyString("The object ID or API slug, such as people or companies."),
-    }),
-    outputSchema: s.object("The requested Attio object.", {
-      object: s.nullable(rawObjectSchema),
-    }),
+    inputSchema: s.object(
+      "Input for retrieving an Attio object.",
+      {
+        object: nonEmptyString("The object ID or API slug, such as people or companies."),
+      },
+      { optional: [] },
+    ),
+    outputSchema: s.object(
+      "The requested Attio object.",
+      {
+        object: rawObjectSchema,
+      },
+      { optional: [] },
+    ),
   }),
   defineProviderAction(service, {
     name: "list_attributes",
+    description:
+      "List attributes on an object, list or activity. Requires the selected target configuration read scope.",
     operationType: "read",
-    description: "List attributes defined on an Attio object or list.",
-    requiredScopes: ["object_configuration:read"],
+    requiredScopes: [],
     inputSchema: s.object(
       "Input for listing Attio attributes.",
       {
-        target: s.stringEnum("Whether to list attributes for an Attio object or list.", ["objects", "lists"]),
-        identifier: s.nonEmptyString("The object or list ID, or object/list API slug."),
+        target: s.stringEnum("Whether to list attributes for an object, list or activity.", [
+          "objects",
+          "lists",
+          "activities",
+        ]),
+        identifier: nonEmptyString("The object, list or activity UUID or API slug."),
         limit: s.integer("The maximum number of attributes to return.", { minimum: 1 }),
         offset: s.integer("The zero-based pagination offset.", { minimum: 0 }),
         showArchived: s.boolean("Whether to include archived attributes."),
       },
       { optional: ["limit", "offset", "showArchived"] },
     ),
-    outputSchema: s.object("Attributes returned by Attio.", {
-      attributes: s.array("Attio attributes for the requested object or list.", rawAttributeSchema),
-      pagination: s.nullable(paginationSchema),
-    }),
+    outputSchema: listAttributesOutputSchema,
   }),
   defineProviderAction(service, {
     name: "list_records",
-    operationType: "read",
     description:
       "List Attio records for an object with optional filtering, view filtering, sorting, limit, and offset.",
+    operationType: "read",
     requiredScopes: ["record_permission:read", "object_configuration:read"],
-    inputSchema: listRecordsInputSchema,
-    outputSchema: s.object("Records returned by Attio.", {
-      records: s.array("Attio records returned by the query.", rawRecordSchema),
-      pagination: s.nullable(paginationSchema),
-    }),
+    inputSchema: s.object(
+      "Input for querying Attio records.",
+      {
+        object: nonEmptyString("The object ID or API slug, such as people or companies."),
+        filter: filterSchema,
+        filterViewId: s.uuid("A saved view UUID whose filter configuration should be applied."),
+        sorts: sortsSchema,
+        limit: s.integer("The maximum number of records to return.", { minimum: 1 }),
+        offset: s.integer("The zero-based pagination offset.", { minimum: 0 }),
+      },
+      { optional: ["filter", "filterViewId", "sorts", "limit", "offset"] },
+    ),
+    outputSchema: listRecordsOutputSchema,
   }),
   defineProviderAction(service, {
     name: "get_record",
-    operationType: "read",
     description: "Get a single Attio record by object and record ID.",
+    operationType: "read",
     requiredScopes: ["record_permission:read", "object_configuration:read"],
-    inputSchema: s.object("Input for retrieving an Attio record.", {
-      object: s.nonEmptyString("The object ID or API slug, such as people or companies."),
-      recordId: s.uuid("The Attio record UUID."),
-    }),
+    inputSchema: s.object(
+      "Input for retrieving an Attio record.",
+      {
+        object: nonEmptyString("The object ID or API slug, such as people or companies."),
+        recordId: s.uuid("The Attio record UUID."),
+      },
+      { optional: [] },
+    ),
     outputSchema: recordOutputSchema,
   }),
   defineProviderAction(service, {
     name: "create_record",
-    operationType: "write",
     description: "Create a record for an Attio object using documented attribute value shapes.",
+    operationType: "write",
     requiredScopes: ["record_permission:read-write", "object_configuration:read"],
-    inputSchema: s.object("Input for creating an Attio record.", {
-      object: s.nonEmptyString("The object ID or API slug, such as people or companies."),
-      values: valuesSchema,
-    }),
+    inputSchema: s.object(
+      "Input for creating an Attio record.",
+      {
+        object: nonEmptyString("The object ID or API slug, such as people or companies."),
+        values: valuesSchema,
+      },
+      { optional: [] },
+    ),
     outputSchema: recordOutputSchema,
   }),
   defineProviderAction(service, {
     name: "upsert_record",
+    description:
+      "Create or update an Attio record for an object using a matching attribute that identifies at most one record.",
     operationType: "write",
-    description: "Create or update an Attio record for an object using a unique matching attribute.",
     requiredScopes: ["record_permission:read-write", "object_configuration:read"],
-    inputSchema: s.object("Input for upserting an Attio record.", {
-      object: s.nonEmptyString("The object ID or API slug, such as people or companies."),
-      matchingAttribute: s.nonEmptyString("The unique attribute API slug or ID used to find matches."),
-      values: valuesSchema,
-    }),
+    inputSchema: s.object(
+      "Input for upserting an Attio record.",
+      {
+        object: nonEmptyString("The object ID or API slug, such as people or companies."),
+        matchingAttribute: nonEmptyString(
+          "The matching attribute API slug or ID. It need not be unique, but multiple matching records are rejected.",
+        ),
+        values: valuesSchema,
+      },
+      { optional: [] },
+    ),
     outputSchema: recordOutputSchema,
   }),
   defineProviderAction(service, {
     name: "update_record",
-    operationType: "write",
     description:
       "Update an Attio record by appending or overwriting multiselect values according to Attio's PATCH and PUT semantics.",
+    operationType: "write",
     requiredScopes: ["record_permission:read-write", "object_configuration:read"],
     inputSchema: s.object(
       "Input for updating an Attio record.",
       {
-        object: s.nonEmptyString("The object ID or API slug, such as people or companies."),
+        object: nonEmptyString("The object ID or API slug, such as people or companies."),
         recordId: s.uuid("The Attio record UUID."),
         values: valuesSchema,
         mode: s.stringEnum("How Attio should handle multiselect attribute values.", [
@@ -171,16 +234,17 @@ export const attioActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_record",
-    operationType: "destructive",
     description: "Delete a single Attio record by object and record ID.",
+    operationType: "destructive",
     requiredScopes: ["record_permission:read-write", "object_configuration:read"],
-    inputSchema: s.object("Input for deleting an Attio record.", {
-      object: s.nonEmptyString("The object ID or API slug, such as people or companies."),
-      recordId: s.uuid("The Attio record UUID."),
-    }),
-    outputSchema: s.object("The delete status returned by Attio.", {
-      deleted: s.boolean("Whether Attio accepted the record delete request."),
-      raw: s.unknown("The raw Attio delete response payload."),
-    }),
+    inputSchema: s.object(
+      "Input for deleting an Attio record.",
+      {
+        object: nonEmptyString("The object ID or API slug, such as people or companies."),
+        recordId: s.uuid("The Attio record UUID."),
+      },
+      { optional: [] },
+    ),
+    outputSchema: deleteRecordOutputSchema,
   }),
-];
+] as const satisfies readonly ActionDefinition[];

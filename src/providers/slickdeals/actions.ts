@@ -3,7 +3,7 @@ import type { ProviderActionDefinition } from "../../core/provider-definition.ts
 import { s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
 
-const service = "slickdeals" as const;
+const service = "slickdeals";
 
 const pageSchema = s.positiveInteger("The 1-based result page to retrieve.");
 const perPageSchema = s.integer("The number of results to return per page.", {

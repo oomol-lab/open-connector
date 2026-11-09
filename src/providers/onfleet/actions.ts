@@ -3,7 +3,7 @@ import type { ActionDefinition } from "../../core/types.ts";
 import { s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
 
-const service = "onfleet" as const;
+const service = "onfleet";
 
 const taskIdSchema = s.nonWhitespaceString("The Onfleet task identifier.");
 const rawTaskSchema = s.looseObject("The task object returned by Onfleet.");
