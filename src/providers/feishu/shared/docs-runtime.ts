@@ -8,6 +8,7 @@ import {
   requiredString,
 } from "../../../core/cast.ts";
 import { providerInputError, ProviderRequestError, requiredResponseRecord } from "../../provider-runtime.ts";
+import { readFeishuResponsePage } from "./response.ts";
 
 interface FeishuDocsActionHandler {
   (input: Record<string, unknown>): Promise<unknown>;
@@ -228,11 +229,12 @@ async function searchDocuments(input: Record<string, unknown>, request: FeishuJs
       page_token: optionalString(input.pageToken),
     },
   });
+  const page = readFeishuResponsePage(data, "res_units");
   return {
-    results: Array.isArray(data.res_units) ? data.res_units : [],
+    results: page.items,
     total: typeof data.total === "number" ? data.total : undefined,
-    hasMore: data.has_more === true,
-    pageToken: optionalString(data.page_token),
+    hasMore: page.hasMore,
+    pageToken: page.pageToken,
     notice: optionalString(data.notice),
   };
 }

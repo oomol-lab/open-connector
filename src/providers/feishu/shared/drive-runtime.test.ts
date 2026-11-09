@@ -57,14 +57,23 @@ describe("Feishu drive permissions", () => {
     });
   });
 
-  /**
-   * Feishu omits the key entirely for a document with no collaborator rows,
-   * so an empty answer must stay an empty answer rather than an error — the
-   * caller is responsible for deciding whether empty is plausible, and ours
-   * refuses to mirror it.
-   */
-  it("answers an empty list when the response carries neither key", async () => {
-    const { handlers } = recordingRequest({});
-    await expect(handlers.list_drive_permissions(input)).resolves.toEqual({ members: [] });
+  it("rejects missing or malformed permissions instead of reporting a complete empty grant", async () => {
+    for (const response of [
+      {},
+      { has_more: false },
+      { members: null },
+      { items: null, members: permissionsResponse.items },
+      { items: "invalid", members: permissionsResponse.items },
+      { items: [permissionsResponse.items[0], null] },
+    ]) {
+      const { handlers } = recordingRequest(response);
+      await expect(handlers.list_drive_permissions(input)).rejects.toMatchObject({ status: 502 });
+    }
+    // Only an explicit array establishes an empty answer. A second key
+    // cannot override the authoritative items array, even when it is empty.
+    for (const response of [{ items: [] }, { members: [] }, { items: [], members: permissionsResponse.items }]) {
+      const { handlers } = recordingRequest(response);
+      await expect(handlers.list_drive_permissions(input)).resolves.toEqual({ members: [] });
+    }
   });
 });

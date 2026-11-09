@@ -292,7 +292,7 @@
       "src/providers/feishu/shared/sheets-advanced-runtime.ts": 1,
       "src/providers/feishu/shared/sheets-runtime.ts": 1,
       "src/providers/feishu/shared/task-runtime.ts": 2,
-      "src/providers/feishu/shared/wiki-runtime.ts": 2,
+      "src/providers/feishu/shared/wiki-runtime.ts": 1,
       "src/providers/fireflies/runtime.ts": 1,
       "src/providers/flexmail/executors.ts": 1,
       "src/providers/freshstatus/runtime.ts": 1,

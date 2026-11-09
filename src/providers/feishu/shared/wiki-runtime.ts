@@ -4,7 +4,7 @@ import { requiredRawString } from "../../../core/cast.ts";
 import { optionalRawString } from "../../../core/cast.ts";
 import { optionalBoolean, optionalNumber } from "../../../core/cast.ts";
 import { providerInputError } from "../../provider-runtime.ts";
-import { requireFeishuResponseString } from "./response.ts";
+import { readFeishuResponsePage, requireFeishuResponseString } from "./response.ts";
 
 interface WikiActionHandler {
   (input: Record<string, unknown>): Promise<unknown>;
@@ -271,7 +271,9 @@ async function listMembers(input: Record<string, unknown>, request: FeishuJsonRe
       page_token: optionalString(input.pageToken),
     },
   });
-  return normalizePage(data);
+  // The official SDK's ListSpaceMemberResponseBody uses members, unlike
+  // the items arrays returned by the Wiki space/node listing endpoints.
+  return normalizePage(data, "members");
 }
 
 async function addMember(input: Record<string, unknown>, request: FeishuJsonRequest) {
@@ -303,21 +305,13 @@ async function removeMember(input: Record<string, unknown>, request: FeishuJsonR
   return { removed: true, memberId };
 }
 
-function normalizePage(data: Record<string, unknown>) {
-  const hasMore = data.has_more === true;
+function normalizePage(data: Record<string, unknown>, itemField = "items") {
+  const page = readFeishuResponsePage(data, itemField);
   return {
-    items: recordArray(data.items),
-    hasMore,
-    pageToken: hasMore ? (optionalString(data.page_token) ?? null) : null,
+    items: page.items,
+    hasMore: page.hasMore,
+    pageToken: page.hasMore ? (page.pageToken ?? null) : null,
   };
-}
-
-function recordArray(value: unknown): Record<string, unknown>[] {
-  return Array.isArray(value)
-    ? value.filter(
-        (item): item is Record<string, unknown> => typeof item === "object" && item !== null && !Array.isArray(item),
-      )
-    : [];
 }
 
 function recordValue(value: unknown): Record<string, unknown> {
