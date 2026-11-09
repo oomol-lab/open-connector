@@ -30,7 +30,6 @@ export const credentialValidators: CredentialValidators = {
     const email = optionalString(user.email);
     return {
       profile: { accountId: id, displayName: name || email || (id ? `Help Scout User ${id}` : "Help Scout User") },
-      grantedScopes: input.profile.grantedScopes,
       metadata: { apiBaseUrl: helpscoutApiBaseUrl },
     };
   },

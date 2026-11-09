@@ -275,7 +275,6 @@ export async function validatePylonCredential(
     profile: {
       accountId: organizationId ?? "pylon-api-token",
       displayName: organizationName ?? "Pylon API Token",
-      grantedScopes: [],
     },
     metadata: compactObject({
       apiBaseUrl: pylonApiBaseUrl,

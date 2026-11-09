@@ -137,7 +137,6 @@ export async function validateParallelCredential(
     profile: {
       accountId: optionalString(record.search_id) ?? "parallel-api-key",
       displayName: optionalString(record.search_id) ?? "Parallel API key",
-      grantedScopes: [],
     },
     metadata: {
       apiBaseUrl: parallelApiBaseUrl,

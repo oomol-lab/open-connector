@@ -105,7 +105,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: "api_key",
         displayName: "ArcGIS Online API Key",
       },
-      grantedScopes: [],
       metadata: {
         validationEndpoint: arcgisOnlineValidationPath,
         apiBaseUrl: arcgisOnlineApiBaseUrl,

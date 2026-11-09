@@ -176,7 +176,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: `one_password:${new URL(baseUrl).host}:${buildTokenFingerprint(input.apiKey)}`,
         displayName: accountLabel,
       },
-      grantedScopes: [],
       metadata: {
         baseUrl,
         apiBaseUrl: baseUrl,

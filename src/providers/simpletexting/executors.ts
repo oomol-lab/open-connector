@@ -171,7 +171,6 @@ export const credentialValidators: CredentialValidators = {
     if (!email?.trim()) throw providerResponseError("SimpleTexting account response is missing email");
     return {
       profile: { displayName: email },
-      grantedScopes: [],
       metadata: { apiBaseUrl: baseUrl, validationEndpoint: "/api/tenant" },
     };
   },

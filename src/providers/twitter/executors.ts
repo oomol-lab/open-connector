@@ -107,7 +107,6 @@ export const credentialValidators: CredentialValidators = {
           accountId: "twitter:app_bearer_token",
           displayName: "X App Bearer Token",
         },
-        grantedScopes: [],
         metadata: {
           credentialMode: "app_bearer_token",
         },

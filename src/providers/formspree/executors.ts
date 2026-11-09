@@ -78,7 +78,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: formId,
         displayName: `Formspree ${formId}`,
       },
-      grantedScopes: [],
       metadata: {
         apiBaseUrl: formspreeApiBaseUrl,
         formId,

@@ -135,7 +135,6 @@ export async function validateAmapCredential(
       accountId: "amap_api_key",
       displayName: "AMap API Key",
     },
-    grantedScopes: [],
     metadata: {
       validationEndpoint: "/v3/weather/weatherInfo",
       apiBaseUrl: amapApiBaseUrl,

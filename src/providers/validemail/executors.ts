@@ -81,7 +81,6 @@ export const credentialValidators: CredentialValidators = {
     }
     return {
       profile: { displayName: "ValidEmail API Key" },
-      grantedScopes: [],
       metadata: { apiBaseUrl: baseUrl, validationEndpoint: "/balance" },
     };
   },

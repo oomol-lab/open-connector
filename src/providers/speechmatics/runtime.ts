@@ -190,7 +190,6 @@ export async function validateSpeechmaticsCredential(
       accountId: `speechmatics-api-key:${region}`,
       displayName: `Speechmatics API Key (${region})`,
     },
-    grantedScopes: [],
     metadata: {
       defaultRegion: region,
       apiBaseUrl: `https://${speechmaticsBatchHosts[region]}/v2`,

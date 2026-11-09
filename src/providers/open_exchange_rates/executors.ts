@@ -105,7 +105,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: "open_exchange_rates",
         displayName: "Open Exchange Rates App ID",
       },
-      grantedScopes: [],
       metadata: {
         validationEndpoint: "/latest.json",
         apiBaseUrl: openExchangeRatesApiBaseUrl,

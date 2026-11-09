@@ -24,7 +24,7 @@ export const executors: ProviderExecutors = defineApiKeyProviderExecutors(servic
 export const credentialValidators: CredentialValidators = {
   async apiKey(input, { fetcher }) {
     await validateSkyvernCredential(input.apiKey, fetcher);
-    return { profile: { displayName: "Skyvern API Key" }, grantedScopes: [], metadata: {} };
+    return { profile: { displayName: "Skyvern API Key" }, metadata: {} };
   },
 };
 

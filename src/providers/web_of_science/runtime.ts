@@ -108,9 +108,7 @@ export async function validateWebOfScienceCredential(
     profile: {
       accountId: "web_of_science:api_key",
       displayName: "Web of Science API Key",
-      grantedScopes: [],
     },
-    grantedScopes: [],
     metadata: compactObject({
       validationEndpoint: "/journals",
       apiVersion: "v1",

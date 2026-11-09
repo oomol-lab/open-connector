@@ -39,7 +39,7 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
 export const credentialValidators: CredentialValidators = {
   async apiKey(input, { fetcher }) {
     await requestAgify({ name: "michael" }, input.apiKey, fetcher, true);
-    return { profile: { accountId: "api_key", displayName: "Agify API Key" }, grantedScopes: [], metadata: {} };
+    return { profile: { accountId: "api_key", displayName: "Agify API Key" }, metadata: {} };
   },
 };
 async function requestAgify(input: AgifyInput, apiKey: string, fetcher: typeof fetch, validating: boolean) {

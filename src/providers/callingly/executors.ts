@@ -89,7 +89,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: String(accountId ?? "callingly"),
         displayName: "Callingly API Key",
       },
-      grantedScopes: [],
       metadata: compactObject({
         apiBaseUrl: callinglyApiBaseUrl,
         validationEndpoint: "/v1/teams",

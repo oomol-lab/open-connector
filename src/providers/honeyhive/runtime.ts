@@ -128,7 +128,6 @@ export async function validateHoneyhiveCredential(
   return {
     profile: {
       displayName: "HoneyHive Project",
-      grantedScopes: [],
     },
     metadata: {
       apiBaseUrl: honeyhiveApiBaseUrl,

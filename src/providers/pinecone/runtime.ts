@@ -213,7 +213,6 @@ export async function validatePineconeCredential(
     profile: {
       accountId: firstName ?? "pinecone-api-key",
       displayName: firstName ? `Pinecone project (${firstName})` : "Pinecone API key",
-      grantedScopes: [],
     },
     metadata: compactObject({
       apiBaseUrl: pineconeControlApiBaseUrl,

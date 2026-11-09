@@ -66,7 +66,7 @@ export async function validateParseurCredential(
   const apiKey = requiredString(input.apiKey, "apiKey", (message) => new ProviderRequestError(401, message));
   await parseurRequest({ path: "/" }, { apiKey, fetcher });
   return {
-    profile: { accountId: "parseur_api_key", displayName: "Parseur API Key", grantedScopes: [] },
+    profile: { accountId: "parseur_api_key", displayName: "Parseur API Key" },
     metadata: { apiBaseUrl: parseurApiBaseUrl, validationEndpoint: "/" },
   };
 }

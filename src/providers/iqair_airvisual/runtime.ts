@@ -48,9 +48,7 @@ export async function validateIqairAirvisualCredential(
     profile: {
       accountId: "iqair_airvisual",
       displayName: "IQAir AirVisual API Key",
-      grantedScopes: [],
     },
-    grantedScopes: [],
     metadata: {
       validationEndpoint: "/countries",
       apiBaseUrl: iqairAirvisualApiBaseUrl,

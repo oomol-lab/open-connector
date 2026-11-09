@@ -20,7 +20,6 @@ export const credentialValidators: CredentialValidators = {
     await requestFengshuiJson("/me", {}, requiredInputString(input.apiKey, "apiKey"), fetcher, signal);
     return {
       profile: { displayName: "Feng Shui API Key" },
-      grantedScopes: [],
       metadata: { apiBaseUrl: fengshuiApiBaseUrl, validationEndpoint: "/me" },
     };
   },

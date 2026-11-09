@@ -154,7 +154,6 @@ export async function validateSpeedtestTrackerCredential(
       accountId: `${service}:${buildInstanceKey(parsed)}`,
       displayName: `Speedtest Tracker ${parsed.host}`,
     },
-    grantedScopes: [],
     metadata: compactObject({
       baseUrl,
       validationEndpoint: buildApiUrl(baseUrl, validationPath).pathname,

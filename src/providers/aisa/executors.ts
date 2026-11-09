@@ -44,7 +44,6 @@ export const credentialValidators: CredentialValidators = {
     if (!payload) throw new ProviderRequestError(502, "AIsa balance response must be an object");
     return {
       profile: { accountId: "api_key", displayName: "AIsa API Key" },
-      grantedScopes: [],
       metadata: { apiOrigin: aisaApiOrigin },
     };
   },

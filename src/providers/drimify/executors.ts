@@ -101,7 +101,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: "api_key",
         displayName: "Drimify API Key",
       },
-      grantedScopes: [],
       metadata: {
         apiBaseUrl: drimifyApiBaseUrl,
         validationEndpoint: "/api/app_data_collections",

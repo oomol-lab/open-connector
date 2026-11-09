@@ -55,7 +55,6 @@ export async function validateMailWizzCredential(
   signal?: AbortSignal,
 ): Promise<{
   profile: { accountId: string; displayName: string };
-  grantedScopes: string[];
   metadata: Record<string, unknown>;
 }> {
   const context = createMailWizzContext(values, apiKey, fetcher, signal);
@@ -63,7 +62,6 @@ export async function validateMailWizzCredential(
   const host = new URL(context.baseUrl).host;
   return {
     profile: { accountId: `mailwizz:${host}`, displayName: `MailWizz ${host}` },
-    grantedScopes: [],
     metadata: { baseUrl: context.baseUrl },
   };
 }

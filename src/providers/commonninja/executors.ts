@@ -131,7 +131,6 @@ export const credentialValidators: CredentialValidators = {
     }
     return {
       profile: { displayName: optionalRawString(user.name) || optionalRawString(user.email) || "Common Ninja Account" },
-      grantedScopes: [],
       metadata: { accountId, apiBaseUrl: baseUrl },
     };
   },

@@ -188,7 +188,6 @@ export const credentialValidators: CredentialValidators = {
         accountId,
         displayName: accountLabel,
       },
-      grantedScopes: [],
       metadata: compactObject({
         userId: optionalString(user._id),
         emailAddress: optionalString(user.email_address),

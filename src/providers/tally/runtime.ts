@@ -50,7 +50,6 @@ export async function validateTallyCredential(
       accountId: userId ?? email ?? "tally-api-key",
       displayName: label,
     },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl: tallyApiBaseUrl,
       validationEndpoint: "/users/me",

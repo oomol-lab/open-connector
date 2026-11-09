@@ -91,7 +91,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: "docparser:api-key",
         displayName: "Docparser API Key",
       },
-      grantedScopes: [],
       metadata: {
         validationEndpoint: "/v1/ping",
         ping: payload.msg,

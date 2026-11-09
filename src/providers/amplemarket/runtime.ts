@@ -135,7 +135,6 @@ export async function validateAmplemarketCredential(
       accountId: accountId ?? "amplemarket_api_key",
       displayName: accountName ?? accountId ?? "Amplemarket API Key",
     },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl: amplemarketApiBaseUrl,
       validationEndpoint: "/account-info",

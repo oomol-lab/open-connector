@@ -115,7 +115,6 @@ export async function validateYGyCredential(
   );
   return {
     profile: { accountId: "y_gy", displayName: "Y.GY API Key" },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: yGyApiBaseUrl,
       validationEndpoint: "/link?limit=1&offset=0",

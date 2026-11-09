@@ -700,9 +700,7 @@ export async function validateListmonkCredential(
     profile: {
       accountId: `listmonk:${baseUrl}:${username}`,
       displayName: `Listmonk (${username} @ ${new URL(baseUrl).host})`,
-      grantedScopes: [],
     },
-    grantedScopes: [],
     metadata: {
       baseUrl,
       credentialHelpUrl: listmonkCredentialHelpUrl,

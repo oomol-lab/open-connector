@@ -121,7 +121,6 @@ export const credentialValidators: CredentialValidators = {
     }
     return {
       profile: { accountId: "api_key", displayName: "SumUp API Key" },
-      grantedScopes: [],
       metadata: { apiBaseUrl: "https://api.sumup.com", validationEndpoint },
     };
   },

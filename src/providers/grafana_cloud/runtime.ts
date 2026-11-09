@@ -92,7 +92,6 @@ export async function validateGrafanaCloudCredential(
       accountId: `grafana_cloud:${orgSlug}`,
       displayName: orgName,
     },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl: grafanaCloudApiBaseUrl,
       orgSlug,

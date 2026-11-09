@@ -210,7 +210,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: "sender",
         displayName: "Sender API Access Token",
       },
-      grantedScopes: [],
       metadata: {
         apiBaseUrl: senderApiBaseUrl,
         validationEndpoint: "/groups",

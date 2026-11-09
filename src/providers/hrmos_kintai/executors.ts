@@ -34,7 +34,6 @@ export const credentialValidators: CredentialValidators = {
     await authenticate(company, input.apiKey, fetcher, signal, true);
     return {
       profile: { accountId: company, displayName: company },
-      grantedScopes: [],
       metadata: { companyUrl: company },
     };
   },

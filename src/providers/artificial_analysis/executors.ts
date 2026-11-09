@@ -72,7 +72,6 @@ export const credentialValidators: CredentialValidators = {
     await request(input.apiKey, "/language/models/free", { page: 1 }, fetcher, signal);
     return {
       profile: { displayName: "Artificial Analysis API Key" },
-      grantedScopes: [],
       metadata: {},
     };
   },

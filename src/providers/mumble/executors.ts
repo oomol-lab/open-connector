@@ -82,7 +82,6 @@ export const credentialValidators: CredentialValidators = {
     await handlers.list_labels({}, context);
     return {
       profile: { displayName: "Mumble API Key" },
-      grantedScopes: [],
       metadata: { apiBaseUrl: baseUrl, validationEndpoint: "/get-labels" },
     };
   },

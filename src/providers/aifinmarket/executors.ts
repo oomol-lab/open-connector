@@ -36,7 +36,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: `aifinmarket:mcp:${keyHash}`,
         displayName: `Wind AIFin Market · ${keyHash.slice(-6)}`,
       },
-      grantedScopes: [],
       metadata: {
         mcpOrigin: "https://mcp.wind.com.cn",
         validationServerType: discovered.serverType,

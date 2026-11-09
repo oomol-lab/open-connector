@@ -186,7 +186,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: "api_key",
         displayName: "Interzoid API License",
       },
-      grantedScopes: [],
       metadata: compactObject({
         apiBaseUrl: interzoidApiBaseUrl,
         validationEndpoint: "/getremainingcredits",

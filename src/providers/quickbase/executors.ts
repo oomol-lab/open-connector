@@ -175,7 +175,6 @@ export const credentialValidators: CredentialValidators = {
           ? `Quickbase (${firstString(firstApp, ["name"])})`
           : `Quickbase (${realmHostname})`,
       },
-      grantedScopes: [],
       metadata: {
         apiBaseUrl,
         realmHostname,

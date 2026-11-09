@@ -166,7 +166,7 @@ export const executors: ProviderExecutors = defineApiKeyProviderExecutors("fxbao
 export const credentialValidators: CredentialValidators = {
   async apiKey(input) {
     requiredInputString(input.apiKey, "API Key");
-    return { profile: { displayName: "Fxbaogao API Key" }, grantedScopes: [], metadata: { apiBaseUrl: baseUrl } };
+    return { profile: { displayName: "Fxbaogao API Key" }, metadata: { apiBaseUrl: baseUrl } };
   },
 };
 export const proxy: ProviderProxyExecutor = defineProviderProxy({

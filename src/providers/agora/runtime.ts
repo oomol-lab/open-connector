@@ -81,7 +81,6 @@ export async function validateAgoraCredential(
       accountId: context.customerId,
       displayName: `Agora ${context.customerId}`,
     },
-    grantedScopes: [],
     metadata: compactObject({
       customerId: context.customerId,
       apiBaseUrl: agoraApiBaseUrl,

@@ -83,7 +83,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: `jin10:mcp:${tokenHash}`,
         displayName: `Jin10 MCP - ${tokenHash.slice(-6)}`,
       },
-      grantedScopes: [],
       metadata: {
         mcpEndpoint: jin10McpEndpoint,
         mcpTools: tools.map((tool) => tool.name).sort(),

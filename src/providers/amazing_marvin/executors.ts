@@ -120,7 +120,6 @@ export const credentialValidators: CredentialValidators = {
     );
     return {
       profile: { displayName: optionalRawString(payload.email) ?? "Amazing Marvin Account" },
-      grantedScopes: [],
       metadata: { validationEndpoint: "/api/me" },
     };
   },

@@ -89,7 +89,6 @@ export const credentialValidators: CredentialValidators = {
     await request("/credits/balance", input.apiKey, fetcher);
     return {
       profile: { displayName: "Rapid URL Indexer API Key" },
-      grantedScopes: [],
       metadata: { apiBaseUrl: baseUrl, validationEndpoint: "/credits/balance" },
     };
   },

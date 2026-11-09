@@ -85,7 +85,6 @@ export async function validateDataboxCredential(
   const record = requireDataboxPayloadObject(payload);
   return {
     profile: { accountId: "databox:token", displayName: "Databox API Key" },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl: databoxApiBaseUrl,
       validationEndpoint: validateKeyPath,

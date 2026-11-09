@@ -56,7 +56,6 @@ export async function validateMagileadsCredential(
       accountId: typeof id === "string" || typeof id === "number" ? String(id) : "magileads",
       displayName: [firstName, lastName].filter(Boolean).join(" ") || email || "Magileads API Key",
     },
-    grantedScopes: [],
     metadata: { apiBaseUrl: magileadsApiBaseUrl, validationEndpoint: "/users/me/quick" },
   };
 }

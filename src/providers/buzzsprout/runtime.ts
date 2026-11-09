@@ -113,12 +113,11 @@ export async function validateBuzzsproutCredential(
   apiKey: string,
   fetcher: typeof fetch,
   signal?: AbortSignal,
-): Promise<{ profile: { displayName: string }; grantedScopes: string[]; metadata: Record<string, unknown> }> {
+): Promise<{ profile: { displayName: string }; metadata: Record<string, unknown> }> {
   const context = { apiKey, fetcher, signal };
   const podcasts = objects(await request("/podcasts", context), "Buzzsprout podcasts");
   return {
     profile: { displayName: optionalString(optionalRecord(podcasts[0])?.title) ?? "Buzzsprout API Token" },
-    grantedScopes: [],
     metadata: { apiBaseUrl: buzzsproutApiBaseUrl, validationEndpoint: "/podcasts", podcastCount: podcasts.length },
   };
 }

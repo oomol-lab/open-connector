@@ -73,7 +73,6 @@ export async function validateBtcpayServerCredential(
       accountId: `btcpay_server:${buildInstanceKey(baseUrl)}`,
       displayName: buildAccountLabel(baseUrl, stores),
     },
-    grantedScopes: [],
     metadata: compactObject({
       baseUrl,
       validationEndpoint: buildValidationEndpoint(baseUrl, btcpayValidationPath),

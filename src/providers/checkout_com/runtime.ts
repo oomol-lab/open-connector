@@ -70,7 +70,6 @@ export async function validateCheckout(
   signal?: AbortSignal,
 ): Promise<{
   profile: { accountId: string; displayName: string };
-  grantedScopes: string[];
   metadata: Record<string, unknown>;
 }> {
   const env = environment(input.values.environment);
@@ -89,7 +88,6 @@ export async function validateCheckout(
       accountId: `${env}:${normalizedPrefix}`,
       displayName: env === "production" ? "Checkout.com Production API Key" : "Checkout.com Sandbox API Key",
     },
-    grantedScopes: [],
     metadata: {
       environment: env,
       prefix: normalizedPrefix,

@@ -94,7 +94,6 @@ export const credentialValidators: CredentialValidators = {
           firstString(store, ["name", "store_name"]) ??
           "Recharge API Token",
       },
-      grantedScopes: [],
       metadata: {
         apiBaseUrl,
         apiVersion,

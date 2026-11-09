@@ -157,7 +157,6 @@ export async function validateMojoHelpdeskCredential(
   );
   return {
     profile: { accountId: "mojo_helpdesk", displayName: "Mojo Helpdesk API Key" },
-    grantedScopes: [],
     metadata: { apiBaseUrl: mojoHelpdeskApiBaseUrl, validationEndpoint: validationPath },
   };
 }

@@ -80,7 +80,6 @@ export const credentialValidators: CredentialValidators = {
       fallbackAccountId: "dropbox_sign:oauth2",
       fallbackDisplayName: "Dropbox Sign OAuth",
       fetcher,
-      grantedScopes: input.profile.grantedScopes,
       signal,
     });
   },
@@ -91,7 +90,6 @@ interface DropboxSignValidationInput {
   fallbackAccountId: string;
   fallbackDisplayName: string;
   fetcher: typeof fetch;
-  grantedScopes?: string[];
   signal?: AbortSignal;
 }
 
@@ -109,7 +107,6 @@ async function validateDropboxSignCredential(input: DropboxSignValidationInput):
       accountId: account.accountId ? `dropbox_sign:${account.accountId}` : input.fallbackAccountId,
       displayName: account.emailAddress ?? account.accountId ?? input.fallbackDisplayName,
     },
-    grantedScopes: input.grantedScopes ?? [],
     metadata: compactObject({
       apiBaseUrl: dropboxSignApiBaseUrl,
       accountId: account.accountId ?? undefined,

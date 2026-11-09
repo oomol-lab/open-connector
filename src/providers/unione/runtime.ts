@@ -106,9 +106,7 @@ export async function validateUnioneCredential(
     profile: {
       accountId: projectId ? `unione:project:${projectId}` : userId !== undefined ? `unione:user:${userId}` : "unione",
       displayName: projectName ?? email ?? "UniOne API Key",
-      grantedScopes: [],
     },
-    grantedScopes: [],
     metadata: {
       validationEndpoint: unioneValidationPath,
       userId,

@@ -77,7 +77,6 @@ export async function validateDialpadWfmCredential(
       accountId: "access_token",
       displayName: "Dialpad WFM Access Token",
     },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: dialpadWfmApiBaseUrl,
       validationEndpoint:

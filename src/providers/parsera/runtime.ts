@@ -43,7 +43,6 @@ export async function validateParseraCredential(
     profile: {
       accountId: "parsera-api-key",
       displayName: "Parsera API Key",
-      grantedScopes: [],
     },
     metadata: compactObject({
       apiBaseUrl: parseraApiBaseUrl,

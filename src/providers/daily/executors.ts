@@ -160,7 +160,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: domainId ?? "api_key",
         displayName: domainName ?? "Daily API Key",
       },
-      grantedScopes: [],
       metadata: compactObject({
         apiBaseUrl: dailyApiBaseUrl,
         validationEndpoint: "/",

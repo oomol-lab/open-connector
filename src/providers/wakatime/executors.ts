@@ -66,7 +66,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: userId,
         displayName: accountLabel,
       },
-      grantedScopes: [],
       metadata: compactObject({
         apiBaseUrl: wakatimeApiBaseUrl,
         validationEndpoint: "/users/current",

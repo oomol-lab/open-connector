@@ -291,9 +291,7 @@ export const credentialValidators = {
       profile: {
         accountId: `shopify_partner:${organizationId}`,
         displayName: `Shopify Partner ${organizationId}`,
-        grantedScopes: [],
       },
-      grantedScopes: [],
       metadata: {
         organizationId,
         apiBaseUrl: buildShopifyPartnerApiBaseUrl(organizationId),

@@ -87,7 +87,6 @@ export async function validatePrtgClassicCredential(input: {
       accountId: `prtg_classic:${urls.instanceUrl}`,
       displayName: `PRTG ${new URL(urls.instanceUrl).hostname}`,
     },
-    grantedScopes: [],
     metadata: compactObject({
       instanceUrl: urls.instanceUrl,
       apiBaseUrl: urls.apiBaseUrl,

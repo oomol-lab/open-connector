@@ -151,9 +151,7 @@ export async function validateAmiliaCredential(
     profile: {
       accountId: `amilia:${organization}`,
       displayName: `Amilia: ${organization}`,
-      grantedScopes: [],
     },
-    grantedScopes: [],
     metadata: {
       organization,
       apiBaseUrl: buildAmiliaApiBaseUrl(organization),

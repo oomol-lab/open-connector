@@ -44,7 +44,6 @@ export async function validateCredential(
   await requestJson("/references/event_participation_types", "GET", {}, { apiKey, fetcher, signal }, "validate");
   return {
     profile: { displayName: "ExhibitDay Workspace" },
-    grantedScopes: [],
     metadata: { apiBaseUrl: exhibitdayApiBaseUrl },
   };
 }

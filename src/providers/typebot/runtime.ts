@@ -74,7 +74,6 @@ export async function validateTypebotCredential(
   const count = Array.isArray(workspaces) ? workspaces.length : 0;
   return {
     profile: { displayName: count === 1 ? "Typebot Workspace" : `Typebot (${count} workspaces)` },
-    grantedScopes: [],
     metadata: { apiBaseUrl: typebotApiBaseUrl, validationEndpoint: validationPath, workspaceCount: count },
   };
 }

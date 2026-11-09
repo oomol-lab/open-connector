@@ -3,7 +3,6 @@ import type { ProviderActionHandlers } from "../provider-executors.ts";
 import { Buffer } from "node:buffer";
 import { compactObject, optionalBoolean, optionalRecord, optionalString } from "../../core/cast.ts";
 import { ProviderRequestError, providerUserAgent, defaultProviderRequestTimeoutMs } from "../provider-runtime.ts";
-import { netlifyConnectorScopes } from "./actions.ts";
 
 export const netlifyApiBaseUrl = "https://api.netlify.com/api/v1";
 const netlifyValidationPath = "/user";
@@ -326,7 +325,6 @@ export async function validateNetlifyCredential(
     accountId: string;
     displayName: string;
   };
-  grantedScopes: string[];
   metadata: Record<string, unknown>;
 }> {
   const user = objectPayload(
@@ -347,7 +345,6 @@ export async function validateNetlifyCredential(
       accountId: userId ?? "netlify-user",
       displayName: fullName ?? email ?? userId ?? "Netlify User",
     },
-    grantedScopes: [...netlifyConnectorScopes],
     metadata: compactObject({
       apiBaseUrl: netlifyApiBaseUrl,
       validationEndpoint: netlifyValidationPath,

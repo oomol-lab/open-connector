@@ -196,7 +196,6 @@ export const credentialValidators: CredentialValidators = {
       profile: {
         displayName: "Hotjar API Key",
       },
-      grantedScopes: [],
       metadata: {
         apiBaseUrl: hotjarApiBaseUrl,
         tokenEndpoint: hotjarTokenUrl,

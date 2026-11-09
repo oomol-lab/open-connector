@@ -31,7 +31,6 @@ export function validateCredential(apiKey: string): CredentialValidationResult {
       accountId: "api_key",
       displayName: "ImageTranslate.AI API Key",
     },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl,
       validationMode: "format_only",

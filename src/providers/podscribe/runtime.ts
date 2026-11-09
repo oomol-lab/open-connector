@@ -44,7 +44,6 @@ export async function validatePodscribeCredential(
     profile: {
       displayName: "Podscribe API Key",
     },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: podscribeApiBaseUrl,
       validationEndpoint: validationPath,

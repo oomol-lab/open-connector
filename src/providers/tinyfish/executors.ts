@@ -153,7 +153,7 @@ export const credentialValidators: CredentialValidators = {
       (entry) => entry.origin === "search" && entry.path === "/usage",
     )!;
     await request(endpoint, { limit: 1 }, input.apiKey, fetcher, true, undefined, signal);
-    return { profile: { displayName: "TinyFish API Key" }, grantedScopes: [], metadata: {} };
+    return { profile: { displayName: "TinyFish API Key" }, metadata: {} };
   },
 };
 export const executors: ProviderExecutors = defineApiKeyProviderExecutors(

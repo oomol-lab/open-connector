@@ -117,7 +117,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: `${apiBaseUrl}:${defaultUserDir ?? "unknown-user-dir"}`,
         displayName: defaultUserDir ? `Formsite ${defaultUserDir}` : "Formsite API Key",
       },
-      grantedScopes: [],
       metadata: compactObject({
         apiBaseUrl,
         validationEndpoint: formsiteValidationPathSuffix,

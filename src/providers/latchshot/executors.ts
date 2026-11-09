@@ -64,7 +64,6 @@ export const credentialValidators: CredentialValidators = {
       profile: {
         accountId: "latchshot-api-key",
         displayName: `${result.customer.name} (${displayPlan(result.customer.plan)})`,
-        grantedScopes: [],
       },
       metadata: {
         apiBaseUrl: latchshotApiBaseUrl,

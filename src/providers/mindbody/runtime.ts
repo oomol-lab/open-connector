@@ -39,7 +39,6 @@ export async function validateMindbodyCredential(
       accountId: "mindbody:api-key",
       displayName: "Mindbody API Key",
     },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl: mindbodyApiBaseUrl,
       validationEndpoint: mindbodyBusinessDirectoryPath,

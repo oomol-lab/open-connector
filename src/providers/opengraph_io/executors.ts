@@ -89,9 +89,7 @@ export const credentialValidators: CredentialValidators = {
     return {
       profile: {
         displayName: "OpenGraph.io App ID",
-        grantedScopes: [],
       },
-      grantedScopes: [],
       metadata: compactObject({
         apiBaseUrl: opengraphIoApiBaseUrl,
         validationEndpoint: `${validationPath}?app_id=***`,

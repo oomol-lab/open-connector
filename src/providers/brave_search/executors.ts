@@ -87,7 +87,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: "brave_search",
         displayName: "Brave Search API Key",
       },
-      grantedScopes: [],
       metadata: {
         validationEndpoint: "/res/v1/web/search",
         validationQuery: "brave search",

@@ -86,7 +86,6 @@ export async function validateBrowserbaseCredential(
       accountId: `browserbase:project:${projectId}`,
       displayName: projectName ?? `Browserbase ${projectId}`,
     },
-    grantedScopes: [],
     metadata: compactObject({
       projectId,
       projectName,

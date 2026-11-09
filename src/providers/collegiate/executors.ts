@@ -52,7 +52,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: "api_key",
         displayName: "Merriam-Webster Collegiate API Key",
       },
-      grantedScopes: [],
       metadata: {
         apiBaseUrl: collegiateApiBaseUrl,
         dictionaryCode: service,

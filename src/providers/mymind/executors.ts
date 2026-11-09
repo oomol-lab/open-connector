@@ -436,7 +436,6 @@ export const credentialValidators: CredentialValidators = {
       // there is nothing to derive this from. Left empty rather than guessed;
       // the runtime does not gate execution on requiredScopes vs grantedScopes,
       // so an empty list here does not block any action.
-      grantedScopes: [],
       metadata: { apiBaseUrl: myMindApiBaseUrl, validationEndpoint: "/tags" },
     };
   },

@@ -78,7 +78,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: account,
         displayName: account,
       },
-      grantedScopes: [],
       metadata: {
         apiBaseUrl: "https://api.dataforseo.com/v3",
         login: account,

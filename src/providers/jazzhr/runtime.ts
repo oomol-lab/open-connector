@@ -129,7 +129,6 @@ export async function validateJazzhrCredential(
       accountId: stringifyOptional(firstUser?.id) ?? "jazzhr_api_key",
       displayName: buildJazzhrAccountLabel(firstUser),
     },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl: jazzhrApiBaseUrl,
       validationEndpoint: "/users",

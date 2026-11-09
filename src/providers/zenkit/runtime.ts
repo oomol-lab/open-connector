@@ -73,7 +73,6 @@ export async function validateZenkitCredential(
 
   return {
     profile: { displayName: label },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: zenkitApiBaseUrl,
       validationEndpoint: zenkitValidationPath,

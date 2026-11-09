@@ -245,7 +245,6 @@ export async function validateMaintainxCredential(
       accountId: "api_key",
       displayName: "MaintainX API key",
     },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: maintainxApiBaseUrl,
       validationEndpoint: "/locations",

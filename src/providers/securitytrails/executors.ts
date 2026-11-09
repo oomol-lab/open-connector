@@ -119,7 +119,6 @@ export const credentialValidators: CredentialValidators = {
       profile: {
         displayName: "SecurityTrails API Key",
       },
-      grantedScopes: [],
       metadata: {
         apiBaseUrl: securitytrailsApiBaseUrl,
         validationEndpoint: "/v1/ping",

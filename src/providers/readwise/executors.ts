@@ -163,9 +163,7 @@ export async function validateReadwiseCredential(
     profile: {
       accountId: "readwise-api-key",
       displayName: "Readwise API Key",
-      grantedScopes: [],
     },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: readwiseApiBaseUrl,
       validationEndpoint: validationPath,

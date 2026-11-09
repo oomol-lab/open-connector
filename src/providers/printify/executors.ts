@@ -123,7 +123,6 @@ export const credentialValidators: CredentialValidators = {
     const first = optionalRecord(shops[0]);
     return {
       profile: { displayName: optionalString(first?.title)?.trim() || "Printify Merchant" },
-      grantedScopes: [],
       metadata: { apiBaseUrl: baseUrl, shopCount: shops.length },
     };
   },

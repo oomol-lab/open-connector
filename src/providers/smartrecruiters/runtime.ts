@@ -101,7 +101,6 @@ export async function validateSmartRecruitersCredential(
       accountId: "smartrecruiters-api-key",
       displayName: "SmartRecruiters API Key",
     },
-    grantedScopes: [],
     metadata: compactObject({
       validationEndpoint: "/jobs",
       apiBaseUrl: smartrecruitersApiBaseUrl,

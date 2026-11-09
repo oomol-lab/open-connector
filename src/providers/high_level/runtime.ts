@@ -136,7 +136,6 @@ export async function validateHighLevelCredential(
       accountId: `high_level:${createHash("sha256").update(`${apiKey}:${locationId}`).digest("hex").slice(0, 16)}`,
       displayName: label,
     },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: highLevelApiBaseUrl,
       validationEndpoint,

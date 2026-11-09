@@ -85,7 +85,6 @@ export async function validateCloudflareEmailRoutingCredential(
     const verification = readObject(envelope.result, "cloudflare token verification");
     return {
       profile: { accountId: optionalString(verification.id), displayName: "Cloudflare Email Routing User API Token" },
-      grantedScopes: [],
       metadata: { validationEndpoint: "/user/tokens/verify", tokenStatus: optionalString(verification.status) },
     };
   }
@@ -97,7 +96,6 @@ export async function validateCloudflareEmailRoutingCredential(
       accountId: optionalString(user.id) ?? email,
       displayName: optionalString(user.email) ?? email,
     },
-    grantedScopes: [],
     metadata: compactObject({ validationEndpoint: "/user", email: optionalString(user.email) }),
   };
 }

@@ -102,7 +102,6 @@ export async function validateJiminnyCredential(
       accountId: organizationId ?? domain ?? "jiminny",
       displayName: organizationName ?? domain ?? "Jiminny Organization",
     },
-    grantedScopes: [],
     metadata: compactObject({
       organizationId,
       organizationName,

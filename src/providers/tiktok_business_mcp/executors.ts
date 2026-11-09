@@ -74,7 +74,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: `tiktok-business-mcp:${tokenHash}`,
         displayName: `TikTok for Business MCP - ${tokenHash.slice(-6)}`,
       },
-      grantedScopes: ["mcp:tt4b"],
       metadata: {
         mcpEndpoint: endpoint,
         discoveredToolCount: result.tools.length,

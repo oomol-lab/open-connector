@@ -184,7 +184,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: "api_key",
         displayName: "ProxiedMail API Token",
       },
-      grantedScopes: [],
       metadata: compactObject({
         apiBaseUrl: proxiedmailApiBaseUrl,
         validationEndpoint: "/proxy-bindings",

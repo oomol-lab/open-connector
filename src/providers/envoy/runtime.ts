@@ -201,9 +201,7 @@ export async function validateEnvoyCredential(
   return {
     profile: {
       displayName: "Envoy Client API Key",
-      grantedScopes: [],
     },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl: envoyApiBaseUrl,
       validationEndpoint: "/v1/employees",

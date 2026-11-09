@@ -126,7 +126,6 @@ async function validateVitallyCredential(
       accountId: `vitally:${region}:${subdomain ?? "eu"}`,
       displayName: region === "eu" ? "Vitally EU" : `Vitally ${subdomain}`,
     },
-    grantedScopes: [],
     metadata: compactObject({
       baseUrl,
       region,

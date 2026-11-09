@@ -89,7 +89,6 @@ export const credentialValidators: CredentialValidators = {
     await get(validationEndpoint, "application/xml", input.apiKey, fetcher, signal);
     return {
       profile: { accountId: "api_key", displayName: "USPTO API Key" },
-      grantedScopes: [],
       metadata: { apiBaseUrl: "https://tsdrapi.uspto.gov", validationEndpoint },
     };
   },

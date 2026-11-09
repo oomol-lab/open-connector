@@ -84,7 +84,6 @@ export async function validateTianapiCredential(
   });
   return {
     profile: { displayName: "TianAPI API Key" },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: tianapiApiBaseUrl,
       validationEndpoint: "/userinfo/index",

@@ -104,7 +104,6 @@ export async function validateMattermostCredential(
       accountId: profileId,
       displayName: buildAccountLabel(user, urls.instanceUrl),
     },
-    grantedScopes: [],
     metadata: compactObject({
       instanceUrl: urls.instanceUrl,
       apiBaseUrl: urls.apiBaseUrl,

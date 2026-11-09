@@ -106,7 +106,6 @@ export async function validateTomtomCredential(
       accountId: "tomtom-api-key",
       displayName: "TomTom API Key",
     },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: tomtomApiBaseUrl,
       validationEndpoint: tomtomValidationPath,

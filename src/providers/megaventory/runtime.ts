@@ -156,7 +156,6 @@ export async function validateMegaventoryCredential(
   await request("/APIkey/APIkeyGet", {}, { apiKey, fetcher, signal }, "validate");
   return {
     profile: { displayName: "Megaventory API Key" },
-    grantedScopes: [],
     metadata: { apiBaseUrl: megaventoryApiBaseUrl },
   };
 }

@@ -131,7 +131,6 @@ export const credentialValidators: CredentialValidators = {
         accountId,
         displayName: "Cloudflare Browser Run",
       },
-      grantedScopes: [],
       metadata: compactObject({
         apiBaseUrl: cloudflareBrowserRenderingApiBaseUrl,
         validationEndpoint,
@@ -157,7 +156,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: user.userId,
         displayName,
       },
-      grantedScopes: input.profile.grantedScopes,
       metadata: compactObject({
         apiBaseUrl: cloudflareBrowserRenderingApiBaseUrl,
         validationEndpoint: "/user",

@@ -129,7 +129,7 @@ async function execute(
 export const credentialValidators: CredentialValidators = {
   async apiKey(input, { fetcher, signal }) {
     await request(saperlyEndpointByName.get("get_usage")!, {}, input.apiKey, fetcher, signal);
-    return { profile: { displayName: "Saperly API Key" }, grantedScopes: [], metadata: { apiBaseUrl: baseUrl } };
+    return { profile: { displayName: "Saperly API Key" }, metadata: { apiBaseUrl: baseUrl } };
   },
 };
 export const executors: ProviderExecutors = defineApiKeyProviderExecutors(

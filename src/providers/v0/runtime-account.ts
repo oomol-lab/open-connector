@@ -29,7 +29,6 @@ export async function validateV0Credential(
       accountId: String(user.id),
       displayName: String(user.name ?? user.email ?? user.id),
     },
-    grantedScopes: [],
     metadata: {
       validationEndpoint: "/v1/user",
       ...user,

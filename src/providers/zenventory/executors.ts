@@ -98,7 +98,6 @@ export const credentialValidators: CredentialValidators = {
     );
     return {
       profile: { accountId: "api_key", displayName: "Zenventory API Key" },
-      grantedScopes: [],
       metadata: { apiBaseUrl: "https://app.zenventory.com/rest", validationEndpoint: "/items" },
     };
   },

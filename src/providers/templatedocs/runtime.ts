@@ -84,7 +84,6 @@ export async function validateTemplateDocsCredential(
   const record = optionalRecord(payload);
   return {
     profile: { displayName: "TemplateDocs API Key" },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl: templatedocsApiBaseUrl,
       validationEndpoint: "/v1/templates",

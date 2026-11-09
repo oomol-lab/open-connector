@@ -187,9 +187,7 @@ export const credentialValidators: CredentialValidators = {
       profile: {
         accountId: createHash("sha256").update(input.apiKey).digest("hex").slice(0, 16),
         displayName: "OpenSea API Key",
-        grantedScopes: [],
       },
-      grantedScopes: [],
       metadata: compactObject({
         apiBaseUrl: openseaApiBaseUrl,
         validationEndpoint: "/api/v2/collections",

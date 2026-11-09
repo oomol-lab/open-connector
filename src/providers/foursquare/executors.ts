@@ -150,7 +150,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: "foursquare-api-key",
         displayName: "Foursquare API Key",
       },
-      grantedScopes: [],
       metadata: {
         apiBaseUrl: foursquareApiBaseUrl,
         validationEndpoint: foursquareValidationPath,

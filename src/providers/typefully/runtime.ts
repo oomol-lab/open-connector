@@ -135,7 +135,6 @@ export async function validateTypefullyCredential(
   profile: {
     accountId: string;
     displayName: string;
-    grantedScopes: string[];
   };
   metadata: Record<string, unknown>;
 }> {
@@ -156,7 +155,6 @@ export async function validateTypefullyCredential(
     profile: {
       accountId: userId ? `typefully:user:${userId}` : "typefully",
       displayName: apiKeyLabel ?? name ?? email ?? "Typefully API Key",
-      grantedScopes: [],
     },
     metadata: compactObject({
       validationEndpoint: typefullyValidationPath,

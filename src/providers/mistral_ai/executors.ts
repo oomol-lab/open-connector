@@ -214,7 +214,6 @@ export const credentialValidators: CredentialValidators = {
       profile: {
         displayName: "Mistral AI API Key",
       },
-      grantedScopes: [],
       metadata: {
         validationEndpoint: "/v1/models",
         availableModels: (payload.data ?? [])

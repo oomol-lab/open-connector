@@ -45,7 +45,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: "threatfox-auth-key",
         displayName: "ThreatFox Auth-Key",
       },
-      grantedScopes: [],
       metadata: {
         apiBaseUrl: threatfoxApiBaseUrl,
         validationEndpoint: threatfoxApiPath,

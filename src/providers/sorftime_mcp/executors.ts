@@ -53,7 +53,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: `sorftime-mcp:${hash}`,
         displayName: `Sorftime MCP · ${hash.slice(-6)}`,
       },
-      grantedScopes: [],
       metadata: { mcpEndpoint: sorftimeMcpEndpoint, discoveredToolCount: tools.length },
     };
   },

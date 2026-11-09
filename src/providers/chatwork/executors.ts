@@ -160,7 +160,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: String(profile.account_id ?? "api_key"),
         displayName: optionalString(profile.name) ?? "Chatwork API Token",
       },
-      grantedScopes: [],
       metadata: compactObject({
         apiBaseUrl,
         validationEndpoint: "/me",

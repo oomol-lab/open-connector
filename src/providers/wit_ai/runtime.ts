@@ -135,7 +135,6 @@ export async function validateWitAiCredential(
         accountId: "wit-ai-token",
         displayName: "Wit.ai API Token",
       },
-      grantedScopes: [],
       metadata: {
         validationEndpoint: "/apps",
         appCount: 0,
@@ -147,7 +146,6 @@ export async function validateWitAiCredential(
       accountId: primary.id,
       displayName: primary.name,
     },
-    grantedScopes: [],
     metadata: compactObject({
       validationEndpoint: "/apps",
       appId: primary.id,

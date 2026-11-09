@@ -58,7 +58,6 @@ export async function validateMailsSoCredential(
       accountId: await buildMailsSoProviderAccountId(apiKey),
       displayName: "Mails API Key",
     },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: mailsSoApiBaseUrl,
       validationEndpoint: "/v1/validate",

@@ -83,7 +83,6 @@ export async function validateTabapiCredential(
   if (!valid) throw mapError(response.status, payload, "validate");
   return {
     profile: { accountId: "tabapi", displayName: "TabAPI API Key" },
-    grantedScopes: [],
     metadata: { apiBaseUrl: baseUrl, validationEndpoint: "/search/google", validationMode: "unbilled_invalid_request" },
   };
 }

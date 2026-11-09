@@ -75,7 +75,6 @@ export async function validateImagekitCredential(
       accountId: "api_key",
       displayName: "ImageKit API Key",
     },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: imagekitApiBaseUrl,
       validationEndpoint: "/v1/files",

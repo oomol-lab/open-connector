@@ -52,7 +52,6 @@ export const diffyActionHandlers: ProviderActionHandlers<
 
 export async function validateDiffyCredential(context: DiffyContext): Promise<{
   profile: { accountId: string; displayName: string };
-  grantedScopes: string[];
   metadata: Record<string, unknown>;
 }> {
   const token = await exchangeDiffyApiKey(context, "validate");
@@ -60,7 +59,6 @@ export async function validateDiffyCredential(context: DiffyContext): Promise<{
   const projects = readObjectArray(payload.projects, "Diffy projects response");
   return {
     profile: { accountId: "diffy:api-key", displayName: "Diffy API Key" },
-    grantedScopes: [],
     metadata: { apiBaseUrl: diffyApiBaseUrl, validationEndpoint: "/api/projects", projectCount: projects.length },
   };
 }

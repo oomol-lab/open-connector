@@ -242,7 +242,6 @@ export const credentialValidators: CredentialValidators = {
     const host = new URL(baseUrl).host;
     return {
       profile: { accountId: `easy8:${host}`, displayName: `Easy8 ${host}` },
-      grantedScopes: [],
       metadata: { baseUrl, apiBaseUrl: baseUrl, validationEndpoint: "/projects.json" },
     };
   },

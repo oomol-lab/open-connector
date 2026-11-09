@@ -14,7 +14,6 @@ import {
 import { providerInputError, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
 
 export const ticktickApiBaseUrl = "https://api.ticktick.com";
-const ticktickProviderScopes = ["ticktick.read", "ticktick.write"] as const;
 
 type TicktickPayload = Record<string, unknown>;
 type TicktickRequestPhase = "validate" | "execute";
@@ -306,7 +305,6 @@ function validationResult(
       accountId: `ticktick:${hashAccessToken(accessToken)}`,
       displayName,
     },
-    grantedScopes: [...ticktickProviderScopes],
     metadata: compactObject({
       apiBaseUrl: ticktickApiBaseUrl,
       validationEndpoint: "/open/v1/project",

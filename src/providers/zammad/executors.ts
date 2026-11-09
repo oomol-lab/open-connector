@@ -183,7 +183,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: userId === undefined ? `zammad:${new URL(resolvedBaseUrl).host}` : `zammad:user:${userId}`,
         displayName,
       },
-      grantedScopes: [],
       metadata: {
         baseUrl: resolvedBaseUrl,
         apiBaseUrl: resolvedBaseUrl,

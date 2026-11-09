@@ -88,7 +88,6 @@ export const credentialValidators: CredentialValidators = {
       profile: {
         displayName: optionalString(user.fullName) || optionalString(user.email) || "The Companies API Account",
       },
-      grantedScopes: [],
       metadata: {},
     };
   },

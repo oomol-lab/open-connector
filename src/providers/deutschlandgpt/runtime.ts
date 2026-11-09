@@ -28,7 +28,6 @@ export async function validateDeutschlandgptCredential(
   signal?: AbortSignal,
 ): Promise<{
   profile: { accountId: string; displayName: string };
-  grantedScopes: string[];
   metadata: Record<string, unknown>;
 }> {
   const payload = await request("/models", "GET", undefined, { apiKey, fetcher, signal }, true);
@@ -36,7 +35,6 @@ export async function validateDeutschlandgptCredential(
   if (!Array.isArray(record.data)) throw new ProviderRequestError(502, "DeutschlandGPT response missing models data");
   return {
     profile: { accountId: `deutschlandgpt:${apiKey.slice(-8)}`, displayName: "DeutschlandGPT API Key" },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: deutschlandgptApiBaseUrl,
       availableModels: record.data.flatMap((item) => {

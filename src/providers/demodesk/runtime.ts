@@ -141,7 +141,6 @@ export async function validateDemodeskCredential(
       accountId: userId ?? email ?? "api_key",
       displayName: fullName || email || "Demodesk API Key",
     },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl: demodeskApiBaseUrl,
       validationEndpoint: "/me",

@@ -92,7 +92,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: "api_key",
         displayName: "AbuseIPDB API Key",
       },
-      grantedScopes: [],
       metadata: {
         apiBaseUrl: abuseipdbApiBaseUrl,
         validationEndpoint: "/check",

@@ -68,7 +68,6 @@ export const credentialValidators: CredentialValidators = {
       readString(profile.email) ?? readString(profile.username) ?? readString(profile.first_name) ?? "Formaloo API Key";
     return {
       profile: { accountId: displayName, displayName },
-      grantedScopes: [],
       metadata: { apiBaseUrl: formalooApiBaseUrl },
     };
   },

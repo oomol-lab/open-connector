@@ -114,7 +114,6 @@ export async function validateArofloCredential(
   const object = await request("/clients", { _fields: "id,name" }, { apiKey, fetcher, signal }, "validate");
   return {
     profile: { accountId: "aroflo", displayName: "AroFlo API Token" },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl: arofloApiBaseUrl,
       validationEndpoint: "/clients",

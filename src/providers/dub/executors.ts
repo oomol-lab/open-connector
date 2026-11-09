@@ -99,7 +99,6 @@ export const credentialValidators: CredentialValidators = {
     await dubGetJson(dubLinksCountPath, {}, input.apiKey, fetcher, "validate", signal);
     return {
       profile: { accountId: "dub:api_key", displayName: "Dub API Key" },
-      grantedScopes: [],
       metadata: { apiBaseUrl: dubApiBaseUrl, validationEndpoint: dubLinksCountPath },
     };
   },

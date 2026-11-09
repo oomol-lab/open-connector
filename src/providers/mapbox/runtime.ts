@@ -154,7 +154,6 @@ export async function validateMapboxCredential(
       accountId: tokenUser ?? tokenAuthorization ?? "api_key",
       displayName: tokenUser ?? "Mapbox Access Token",
     },
-    grantedScopes: [],
     metadata: compactObject({
       validationEndpoint: mapboxValidationPath,
       apiBaseUrl: mapboxApiBaseUrl,

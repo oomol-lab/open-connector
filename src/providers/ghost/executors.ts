@@ -126,7 +126,6 @@ async function validateGhostCredential(
       accountId: url ?? siteUrl,
       displayName: title ?? new URL(siteUrl).hostname,
     },
-    grantedScopes: [],
     metadata: compactObject({
       siteUrl,
       contentBaseUrl,

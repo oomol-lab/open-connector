@@ -239,7 +239,6 @@ export async function validateTeamsBotCredential(
       accountId: credential.appId,
       displayName: `Microsoft Teams Bot ${credential.appId}`,
     },
-    grantedScopes: [],
     metadata: compactObject({ tenantId: credential.tenantId, serviceUrl: credential.serviceUrl }),
   };
 }

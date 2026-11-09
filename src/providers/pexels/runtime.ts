@@ -120,7 +120,6 @@ export async function validatePexelsCredential(
     profile: {
       accountId: "pexels-api-key",
       displayName: "Pexels API Key",
-      grantedScopes: [],
     },
     metadata: {
       apiBaseUrl: pexelsApiBaseUrl,

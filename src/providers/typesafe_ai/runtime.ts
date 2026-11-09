@@ -58,7 +58,6 @@ export async function validateTypesafeAiCredential(
   const models = parseModels(payload);
   return {
     profile: { accountId: "api_key", displayName: "TypeSafe AI API Key" },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: typesafeAiApiBaseUrl,
       validationEndpoint: "/v1/models",

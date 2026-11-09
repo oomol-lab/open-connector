@@ -142,7 +142,6 @@ export const credentialValidators: CredentialValidators = {
     );
     return {
       profile: { displayName: "Kenjo API Key" },
-      grantedScopes: [],
       metadata: { apiBaseUrl: baseUrl },
     };
   },

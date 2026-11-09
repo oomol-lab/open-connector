@@ -84,9 +84,7 @@ export async function validateShortcutCredential(
         readOptionalString(profile.mention_name) ??
         readOptionalString(profile.email_address) ??
         member.id,
-      grantedScopes: [],
     },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl: "https://api.app.shortcut.com/api/v3",
       validationEndpoint: "/member",

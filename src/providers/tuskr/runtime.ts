@@ -58,7 +58,6 @@ export async function validateTuskrCredential(
   await tuskrGet("/project", {}, context, "validate");
   return {
     profile: { accountId: `tuskr:${tenantId}`, displayName: "Tuskr API Token" },
-    grantedScopes: [],
     metadata: { apiBaseUrl: tuskrApiBaseUrl, tenantId, validationEndpoint: "/project" },
   };
 }

@@ -190,7 +190,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: "api_key",
         displayName: optionalString(tokenInfo.name) ?? optionalString(tokenInfo.email) ?? "IPinfo API Token",
       },
-      grantedScopes: [],
       metadata: compactObject({
         validationEndpoint: "/me",
         apiBaseUrl: ipinfoLegacyBaseUrl,

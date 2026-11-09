@@ -164,7 +164,6 @@ export async function validateMailersendCredential(
       accountId: firstDomainId ? `mailersend:domain:${firstDomainId}` : "mailersend",
       displayName: firstDomainName ?? "MailerSend API Key",
     },
-    grantedScopes: [],
     metadata: compactObject({
       validationEndpoint: validationPath,
       domainCount: domains.length,

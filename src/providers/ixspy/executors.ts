@@ -116,7 +116,6 @@ export const credentialValidators: CredentialValidators = {
     const data = requiredResponseRecord(payload.data, "IXSPY category data");
     return {
       profile: { accountId: "ixspy-api-key", displayName: "IXSPY API Key" },
-      grantedScopes: [],
       metadata: {
         apiBaseUrl: baseUrl,
         validationEndpoint: configs.list_category_children!.path,

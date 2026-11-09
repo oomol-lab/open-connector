@@ -42,7 +42,6 @@ export const textrazorActionHandlers: ProviderActionHandlers<"textrazor", Textra
 
 export async function validateTextrazorApiKey(context: TextrazorContext): Promise<{
   profile: { accountId: string; displayName: string };
-  grantedScopes: string[];
   metadata: Record<string, unknown>;
 }> {
   const payload = await textrazorAccountInfo(context, "validate");
@@ -52,7 +51,6 @@ export async function validateTextrazorApiKey(context: TextrazorContext): Promis
       accountId: "api_key",
       displayName: "TextRazor API Key",
     },
-    grantedScopes: [],
     metadata: compactObject({
       validationEndpoint: "/account/",
       apiBaseUrl: textrazorApiBaseUrl,

@@ -232,7 +232,6 @@ export const credentialValidators: CredentialValidators = {
         displayName:
           availableCredits === undefined ? "Nyne.ai API Key" : `Nyne.ai (${formatCredits(availableCredits)} credits)`,
       },
-      grantedScopes: [],
       metadata: compactObject({
         apiBaseUrl: nyneAiApiBaseUrl,
         validationEndpoint: "/usage",

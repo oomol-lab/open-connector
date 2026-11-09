@@ -67,7 +67,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: user.email ?? "eodhd-api-key",
         displayName: user.email ?? user.name ?? "EODHD API Key",
       },
-      grantedScopes: [],
       metadata: compactObject({
         apiBaseUrl: eodhdApisApiBaseUrl,
         validationEndpoint: "/user",

@@ -213,7 +213,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: firstProject?.id ? `mongodb-atlas:${firstProject.id}` : `mongodb-atlas:${input.apiKey.slice(-6)}`,
         displayName: firstProject?.name ? `MongoDB Atlas: ${firstProject.name}` : "MongoDB Atlas API Key",
       },
-      grantedScopes: [],
       metadata: jsonObject({
         apiBaseUrl: mongoDbAtlasAdministrationApiBaseUrl,
         validationEndpoint: "/groups",

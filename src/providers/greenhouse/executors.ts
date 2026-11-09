@@ -91,7 +91,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: userId !== undefined ? `greenhouse:user:${userId}` : "greenhouse-harvest-api-key",
         displayName: readFirstUserName(users) ?? "Greenhouse Harvest API",
       },
-      grantedScopes: [],
       metadata: {
         apiBaseUrl: greenhouseBaseUrl,
         validationEndpoint: validationPath,

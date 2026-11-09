@@ -208,9 +208,7 @@ export async function validateSimplesatCredential(
   return {
     profile: {
       displayName: "Simplesat API Key",
-      grantedScopes: [],
     },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: simplesatApiBaseUrl,
       validationEndpoint: `${simplesatValidationPath}?page_size=1`,

@@ -64,9 +64,7 @@ export async function validateTinypngCredential(
     profile: {
       accountId: "tinypng-api-key",
       displayName: "TinyPNG API Key",
-      grantedScopes: [],
     },
-    grantedScopes: [],
     metadata: compactObject({
       validationEndpoint: "/shrink",
       validationProbe: "empty_binary_upload",

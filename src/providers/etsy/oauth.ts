@@ -1,7 +1,7 @@
 import type { OAuthClientConfig } from "../../oauth/oauth-client-config-service.ts";
 import type { OAuthTokenResult, ProviderOAuthRuntime } from "../../oauth/oauth-token.ts";
 
-import { optionalString, optionalInteger } from "../../core/cast.ts";
+import { optionalString, optionalRawString, optionalInteger } from "../../core/cast.ts";
 import { ProviderRequestError, requiredInputString, runProviderRequest } from "../provider-runtime.ts";
 import { etsyTokenUrl, etsyDefaultScopes } from "./constants.ts";
 import { readEtsyResponse, etsyApiKey } from "./runtime.ts";
@@ -27,7 +27,6 @@ export const oauth: ProviderOAuthRuntime = {
         code_verifier: requiredInputString(input.codeVerifier, "codeVerifier"),
       },
       input.clientConfig,
-      input.clientConfig.requestedScopes ?? etsyDefaultScopes,
       input.fetcher,
     );
     if (!token.refreshToken) throw input.createError("Etsy token response is missing refresh_token");
@@ -44,7 +43,6 @@ export const oauth: ProviderOAuthRuntime = {
     const token = await exchangeToken(
       { grant_type: "refresh_token", refresh_token: input.refreshToken },
       input.clientConfig,
-      input.clientConfig.requestedScopes ?? etsyDefaultScopes,
       input.fetcher,
     );
     return {
@@ -60,7 +58,6 @@ export const oauth: ProviderOAuthRuntime = {
 async function exchangeToken(
   fields: Record<string, string>,
   clientConfig: OAuthClientConfig,
-  fallbackScopes: string[],
   fetcher: typeof fetch,
 ): Promise<OAuthTokenResult> {
   return runProviderRequest({ label: "Etsy OAuth" }, async (signal) => {
@@ -86,7 +83,7 @@ async function exchangeToken(
       refreshToken: optionalString(payload.refresh_token) ?? "",
       tokenType: optionalString(payload.token_type) ?? "Bearer",
       expiresAt: new Date(Date.now() + expiresIn * 1000).toISOString(),
-      metadata: { scope: optionalString(payload.scope) ?? fallbackScopes.join(" ") },
+      metadata: { scope: optionalRawString(payload.scope) },
     };
   });
 }

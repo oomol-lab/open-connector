@@ -124,7 +124,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: "zipcodebase",
         displayName: "Zipcodebase API Key",
       },
-      grantedScopes: [],
       metadata: compactObject({
         apiBaseUrl: zipcodebaseApiBaseUrl,
         validationEndpoint: "/status",

@@ -112,7 +112,6 @@ export async function validateOomnitzaCredential(
       accountId: `oomnitza:${credential.host}`,
       displayName: `Oomnitza ${credential.host}`,
     },
-    grantedScopes: [],
     metadata: {
       baseUrl: credential.baseUrl,
       host: credential.host,

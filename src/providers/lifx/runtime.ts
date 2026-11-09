@@ -159,9 +159,7 @@ export async function validateLifxCredential(
   return {
     profile: {
       displayName: label ? `LIFX: ${label}` : "LIFX Access Token",
-      grantedScopes: [],
     },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: lifxApiBaseUrl,
       validationEndpoint: "/lights/all",

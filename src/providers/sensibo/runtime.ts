@@ -121,7 +121,6 @@ export async function validateSensiboCredential(
       accountId: "sensibo",
       displayName: "Sensibo API Key",
     },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl: sensiboApiBaseUrl,
       validationEndpoint: sensiboValidationPath,

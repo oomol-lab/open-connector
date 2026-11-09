@@ -115,7 +115,6 @@ export async function validateTaigaCredential(
       accountId: `taiga:${new URL(credential.apiBaseUrl).host}:${id}`,
       displayName: fullName || username,
     },
-    grantedScopes: [],
     metadata: { apiBaseUrl: credential.apiBaseUrl },
   };
 }

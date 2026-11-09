@@ -361,7 +361,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: context.accountId,
         displayName: accountLabel,
       },
-      grantedScopes: [],
       metadata: compactObject({
         email,
         company,

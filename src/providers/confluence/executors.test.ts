@@ -89,9 +89,7 @@ describe("Confluence OAuth credentials", () => {
       profile: {
         accountId: "confluence",
         displayName: "Confluence Cloud",
-        grantedScopes: [],
       },
-      grantedScopes: [],
       metadata: {
         resourceCount: 0,
         validationEndpoint: "/oauth/token/accessible-resources",

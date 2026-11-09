@@ -125,7 +125,6 @@ export async function validateDoubaoSeedreamCredential(
   await requestArkJson({ apiKey, fetcher, signal }, {});
   return {
     profile: { accountId: "doubao_seedream:api_key", displayName: "Doubao Seedream API Key" },
-    grantedScopes: [],
     metadata: { apiBaseUrl: doubaoSeedreamApiBaseUrl },
   };
 }

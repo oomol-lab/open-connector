@@ -134,7 +134,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: "geoapify-api-key",
         displayName: "Geoapify API Key",
       },
-      grantedScopes: [],
       metadata: {
         validationEndpoint: geoapifyValidationPath,
         apiBaseUrl: geoapifyApiBaseUrl,

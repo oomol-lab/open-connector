@@ -320,7 +320,6 @@ export async function validateSvixCredential(
       accountId: "svix",
       displayName: "Svix API Key",
     },
-    grantedScopes: [],
     metadata: {
       serverUrl: optionalString(input.serverUrl),
       validationEndpoint: svixValidationPath,

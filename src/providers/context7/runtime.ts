@@ -41,7 +41,6 @@ export async function validateContext7Credential(input: {
     profile: {
       displayName: "Context7 API Key",
     },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: context7ApiBaseUrl,
       validationEndpoint: context7ValidationEndpoint,

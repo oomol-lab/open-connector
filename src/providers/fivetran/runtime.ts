@@ -109,7 +109,6 @@ export async function validateFivetranCredential(
       accountId,
       displayName: optionalString(data.account_name) ?? accountId,
     },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: fivetranApiBaseUrl,
       validationEndpoint: "/v1/account/info",

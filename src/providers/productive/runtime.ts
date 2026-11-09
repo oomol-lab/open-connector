@@ -60,9 +60,7 @@ export async function validateProductiveCredential(
         optionalString(organization.attributes.name) ??
         optionalString(organization.attributes.company_name) ??
         `Organization ${organization.id}`,
-      grantedScopes: [],
     },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl: productiveApiBaseUrl.replace(/\/$/, ""),
       validationEndpoint: "/organization",

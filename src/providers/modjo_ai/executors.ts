@@ -114,7 +114,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: "api_key",
         displayName: accountLabel,
       },
-      grantedScopes: [],
       metadata: {
         apiBaseUrl: modjoAiApiBaseUrl,
         validationEndpoint: "/users",

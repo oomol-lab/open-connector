@@ -66,7 +66,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: "edenai-api-key",
         displayName: "Eden AI API Key",
       },
-      grantedScopes: [],
       metadata: {
         validationEndpoint: "/v3/models",
         availableModels: data

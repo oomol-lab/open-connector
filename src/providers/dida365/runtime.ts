@@ -229,7 +229,6 @@ export async function fetchDida365CurrentAccount(
       accountId: `dida365:${createHash("sha256").update(accessToken).digest("hex").slice(0, 16)}`,
       displayName: sampleProjectName ? `Dida365 (${sampleProjectName})` : "Dida365 Account",
     },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl: dida365ApiBaseUrl,
       validationEndpoint: "/open/v1/project",

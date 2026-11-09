@@ -24,7 +24,6 @@ import {
   providerUserAgent,
   requiredInputString,
 } from "../provider-runtime.ts";
-import { figmaPersonalAccessTokenScopes } from "./scopes.ts";
 
 const service = "figma";
 const figmaApiBaseUrl = "https://api.figma.com";
@@ -213,7 +212,6 @@ export const credentialValidators: CredentialValidators = {
 
     return {
       profile: normalizeFigmaCurrentAccount(user),
-      grantedScopes: [...figmaPersonalAccessTokenScopes],
       metadata: {
         apiBaseUrl: figmaApiBaseUrl,
         validationEndpoint: "/v1/me",

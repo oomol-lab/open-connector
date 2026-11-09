@@ -92,7 +92,6 @@ export async function validateVerifiedemailCredential(
       accountId: "verifiedemail",
       displayName: "VerifiedEmail API Key",
     },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl: verifiedemailApiBaseUrl,
       validationEndpoint: "/v1/entitlements",

@@ -21,7 +21,6 @@ export const credentialValidators: CredentialValidators = {
     if (!input.apiKey.trim()) throw new ProviderRequestError(400, "ArchiveAPI secret key is required");
     return {
       profile: { displayName: "ArchiveAPI Secret Key" },
-      grantedScopes: [],
       metadata: { apiBaseUrl: zipArchiveApiBaseUrl, credentialValidation: "non_empty_only" },
     };
   },

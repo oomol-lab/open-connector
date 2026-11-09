@@ -126,7 +126,6 @@ export async function validateDrataCredential(
       accountId: readNonEmptyString(company.accountId) ?? readNonEmptyString(company.domain) ?? `drata_${region}`,
       displayName: readNonEmptyString(company.name) ?? readNonEmptyString(company.domain) ?? "Drata API Key",
     },
-    grantedScopes: [],
     metadata: compactObject({
       region,
       baseUrl,

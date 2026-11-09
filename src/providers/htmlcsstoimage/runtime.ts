@@ -75,7 +75,6 @@ export async function validateHtmlCssToImageCredential(
   options: { fetcher: typeof fetch; signal?: AbortSignal },
 ): Promise<{
   profile: { accountId: string; displayName: string };
-  grantedScopes: string[];
   metadata: Record<string, unknown>;
 }> {
   const credential = {
@@ -96,7 +95,6 @@ export async function validateHtmlCssToImageCredential(
       accountId: `htmlcsstoimage:${credential.userId}`,
       displayName: `HTML/CSS to Image ${credential.userId}`,
     },
-    grantedScopes: [],
     metadata: {
       userId: credential.userId,
       apiBaseUrl: htmlCssToImageApiBaseUrl,

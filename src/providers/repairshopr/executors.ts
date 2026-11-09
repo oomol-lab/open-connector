@@ -133,7 +133,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: userId === undefined ? `repairshopr:${subdomain}` : `repairshopr:${subdomain}:user:${userId}`,
         displayName: buildAccountLabel(user, subdomain),
       },
-      grantedScopes: [],
       metadata: compactObject({
         subdomain,
         apiBaseUrl,

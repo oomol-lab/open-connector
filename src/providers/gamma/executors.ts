@@ -86,7 +86,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: "gamma-api-key",
         displayName: "Gamma API Key",
       },
-      grantedScopes: [],
       metadata: {
         apiBaseUrl: gammaApiBaseUrl,
         validationEndpoint: "/v1.0/themes",

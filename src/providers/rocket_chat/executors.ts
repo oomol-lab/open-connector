@@ -191,7 +191,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: profileId,
         displayName: name ?? username ?? `Rocket.Chat User ${profileId}`,
       },
-      grantedScopes: [],
       metadata: compactObject({
         baseUrl: credential.baseUrl,
         apiBaseUrl: credential.apiBaseUrl,

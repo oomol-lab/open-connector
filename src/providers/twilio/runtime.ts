@@ -120,7 +120,6 @@ export async function validateTwilioCredential(
       accountId: optionalString(account.sid) ?? accountSid,
       displayName: optionalString(account.friendly_name) ?? accountSid,
     },
-    grantedScopes: [],
     metadata: {
       accountSid: optionalString(account.sid) ?? accountSid,
     },

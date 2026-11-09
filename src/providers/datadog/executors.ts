@@ -243,7 +243,6 @@ async function validateDatadogCredential(
       accountId: site,
       displayName: `Datadog ${site.toUpperCase()}`,
     },
-    grantedScopes: [],
     metadata: {
       site,
       baseUrl: datadogApiKeySites[site]!,

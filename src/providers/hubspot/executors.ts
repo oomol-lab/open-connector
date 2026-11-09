@@ -191,7 +191,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: profile.providerAccountId,
         displayName: profile.accountLabel,
       },
-      grantedScopes: ["mcp:tools"],
       metadata: profile.providerMetadata,
     };
   },

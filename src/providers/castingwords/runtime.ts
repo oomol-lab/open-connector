@@ -141,9 +141,7 @@ export async function validateCastingwordsCredential(
   return {
     profile: {
       displayName: "CastingWords API Key",
-      grantedScopes: [],
     },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: castingwordsApiBaseUrl,
       validationEndpoint: "/prepay_balance",

@@ -89,9 +89,7 @@ export const credentialValidators = {
       profile: {
         accountId,
         displayName: accountId ?? projectName ?? organizationName ?? "Refiner API Key",
-        grantedScopes: [],
       },
-      grantedScopes: [],
       metadata: compactObject({
         apiBaseUrl: refinerApiBaseUrl,
         validationEndpoint: refinerValidationPath,

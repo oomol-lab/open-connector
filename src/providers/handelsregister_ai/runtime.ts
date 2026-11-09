@@ -35,7 +35,6 @@ export const handelsregisterAiActionHandlers: ProviderActionHandlers<
 };
 export async function validateHandelsregisterAi(context: ApiKeyProviderContext): Promise<{
   profile: { accountId: string; displayName: string };
-  grantedScopes: string[];
   metadata: Record<string, unknown>;
 }> {
   const payload = await request("/v1/account", undefined, context, "validate");
@@ -43,7 +42,6 @@ export async function validateHandelsregisterAi(context: ApiKeyProviderContext):
   const label = optionalString(account?.name) ?? "Handelsregister AI API Key";
   return {
     profile: { accountId: "api_key", displayName: label },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: handelsregisterAiApiBaseUrl,
       validationEndpoint: "/v1/account",

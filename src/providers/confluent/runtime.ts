@@ -97,7 +97,6 @@ export const confluentActionHandlers: ProviderActionHandlers<
 
 export async function validateConfluentCredential(context: ConfluentContext): Promise<{
   profile: { accountId: string; displayName: string };
-  grantedScopes: string[];
   metadata: Record<string, unknown>;
 }> {
   const payload = requireRecord(
@@ -111,7 +110,6 @@ export async function validateConfluentCredential(context: ConfluentContext): Pr
       accountId: organizationId ?? context.apiKeyId,
       displayName: optionalTrimmedString(organization?.display_name) ?? `Confluent Cloud ${context.apiKeyId}`,
     },
-    grantedScopes: [],
     metadata: compactObject({ apiBaseUrl: confluentApiBaseUrl, apiKeyId: context.apiKeyId, organizationId }),
   };
 }

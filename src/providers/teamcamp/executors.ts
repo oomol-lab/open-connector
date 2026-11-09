@@ -135,7 +135,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: workspaceId ? `teamcamp:${workspaceId}` : undefined,
         displayName: workspaceName ?? email ?? createdBy ?? "Teamcamp API Key",
       },
-      grantedScopes: [],
       metadata: compactObject({
         apiBaseUrl: teamcampApiBaseUrl,
         validationEndpoint: "/verify",

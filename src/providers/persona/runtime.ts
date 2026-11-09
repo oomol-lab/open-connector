@@ -64,7 +64,6 @@ export async function validatePersonaCredential(
     profile: {
       accountId: "persona-api-key",
       displayName: "Persona API Key",
-      grantedScopes: [],
     },
     metadata: {
       apiBaseUrl: personaApiBaseUrl,

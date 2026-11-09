@@ -249,9 +249,7 @@ export async function validateCourierCredential(
     profile: {
       accountId: "courier-api-key",
       displayName: "Courier API Key",
-      grantedScopes: [],
     },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl: courierApiBaseUrl,
       validationEndpoint: courierValidationPath,

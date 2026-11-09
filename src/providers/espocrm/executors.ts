@@ -175,7 +175,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: readCurrentUserIdentifier(appUser.user),
         displayName: readCurrentUserLabel(appUser.user),
       },
-      grantedScopes: [],
       metadata: {
         baseUrl,
         validationEndpoint: espocrmAppUserPath,

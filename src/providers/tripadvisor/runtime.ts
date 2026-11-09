@@ -41,7 +41,6 @@ export async function validateTripadvisorCredential(
       accountId: "tripadvisor",
       displayName: "Tripadvisor API Key",
     },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl: tripadvisorApiBaseUrl,
       validationEndpoint: "/location/search",

@@ -53,7 +53,6 @@ export async function validateVectorshiftCredential(
     profile: {
       accountId: "vectorshift-api-key",
       displayName: "VectorShift API Key",
-      grantedScopes: [],
     },
     metadata: {
       apiBaseUrl: vectorshiftApiBaseUrl,

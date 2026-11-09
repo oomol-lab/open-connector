@@ -244,7 +244,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: buildFeishuCustomBotProviderAccountId(credential.webhookToken),
         displayName: buildFeishuCustomBotAccountLabel(credential.webhookToken),
       },
-      grantedScopes: [],
       metadata: compactObject({
         webhookHost: new URL(credential.webhookUrl).host,
         webhookPathSuffix: maskFeishuCustomBotToken(credential.webhookToken),

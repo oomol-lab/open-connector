@@ -103,7 +103,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: firstWorkspace?.id ?? "ninox-api-key",
         displayName: firstWorkspace?.name ?? "Ninox API Token",
       },
-      grantedScopes: [],
       metadata: compactObject({
         validationEndpoint: ninoxValidationPath,
         workspaceCount: workspaces.length,

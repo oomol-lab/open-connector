@@ -167,7 +167,6 @@ export async function validatePermitIoCredential(
           ? `Permit.io project ${projectId}`
           : `Permit.io organization ${organizationId}`,
     },
-    grantedScopes: [],
     metadata: {
       organizationId,
       projectId,

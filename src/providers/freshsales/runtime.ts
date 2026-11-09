@@ -144,7 +144,6 @@ export async function validateFreshsalesCredential(
   signal?: AbortSignal,
 ): Promise<{
   profile: { accountId: string; displayName: string };
-  grantedScopes: string[];
   metadata: Record<string, unknown>;
 }> {
   const bundleAlias = normalizeFreshsalesBundleAlias(values.bundleAlias);
@@ -164,7 +163,6 @@ export async function validateFreshsalesCredential(
       accountId: `freshsales:${bundleAlias}`,
       displayName: `Freshsales ${bundleAlias}`,
     },
-    grantedScopes: [],
     metadata: {
       bundleAlias,
       baseUrl,

@@ -131,7 +131,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: accountId ?? "api_key",
         displayName: accountName ?? "Faraday API Key",
       },
-      grantedScopes: [],
       metadata: {
         apiBaseUrl: faradayApiBaseUrl,
         validationEndpoint: "/accounts/current",

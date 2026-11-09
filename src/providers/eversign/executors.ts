@@ -30,7 +30,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: primary ? String(primary.businessId) : "eversign",
         displayName: primary?.businessName || "Xodo Sign API Key",
       },
-      grantedScopes: [],
       metadata: {
         apiBaseUrl: eversignApiBaseUrl,
         validationEndpoint: eversignValidationPath,

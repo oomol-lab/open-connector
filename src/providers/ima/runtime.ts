@@ -239,7 +239,6 @@ export async function validateImaCredential(
       accountId: clientId,
       displayName: clientId,
     },
-    grantedScopes: [],
     metadata: compactObject({
       clientId,
       validationEndpoint: "/openapi/note/v1/list_notebook",

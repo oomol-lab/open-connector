@@ -35,7 +35,6 @@ describe("Mailchimp credentials", () => {
 
     expect(result).toMatchObject({
       profile: { accountId: "42", displayName: "Example Audience" },
-      grantedScopes: [],
       metadata: {
         apiBaseUrl: "https://us21.api.mailchimp.com/3.0",
         dataCenter: "us21",

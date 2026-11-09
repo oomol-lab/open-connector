@@ -125,7 +125,6 @@ export async function validateFlyCredential(
   signal?: AbortSignal,
 ): Promise<{
   profile: { accountId: string; displayName: string };
-  grantedScopes: string[];
   metadata: Record<string, unknown>;
 }> {
   const payload = await requestFlyJson({
@@ -144,7 +143,6 @@ export async function validateFlyCredential(
       accountId: optionalString(tokenInfo?.token_id) ?? optionalString(tokenInfo?.user) ?? "fly:api-token",
       displayName: accountLabel,
     },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl: flyApiBaseUrl,
       validationEndpoint: `/${flyValidationPath}`,

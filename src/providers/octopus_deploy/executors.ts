@@ -184,7 +184,6 @@ export const credentialValidators: CredentialValidators = {
           optionalString(raw.EmailAddress) ??
           "Octopus Deploy API Key",
       },
-      grantedScopes: [],
       metadata: compactObject({
         apiBaseUrl,
         baseUrl: apiBaseUrl,

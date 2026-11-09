@@ -86,7 +86,6 @@ async function validateMailboxValidatorCredential(
       accountId: "api_key",
       displayName: "MailboxValidator API Key",
     },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl: mailboxValidatorApiBaseUrl,
       validationEndpoint: "/v2/validation/single",

@@ -97,7 +97,6 @@ export async function validateBenchmarkEmailCredential(
       accountId: clientId ?? login ?? email ?? "benchmark_email",
       displayName: email ?? login ?? "Benchmark Email API Token",
     },
-    grantedScopes: [],
     metadata: compactObject({
       baseUrl,
       validationMethod: benchmarkEmailValidationMethod,

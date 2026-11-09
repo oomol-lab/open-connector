@@ -71,7 +71,6 @@ export const credentialValidators: CredentialValidators = {
         accountId,
         displayName: username ?? name ?? accountId,
       },
-      grantedScopes: [],
       metadata: {
         username,
         name,

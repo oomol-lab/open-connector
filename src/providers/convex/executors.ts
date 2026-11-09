@@ -27,22 +27,6 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
     if (!headers.has("accept")) headers.set("accept", "application/json");
   },
 });
-const grantedScopes = [
-  "convex.token.read",
-  "convex.projects.read",
-  "convex.projects.write",
-  "convex.deployments.read",
-  "convex.deployments.write",
-  "convex.deploy_keys.read",
-  "convex.deploy_keys.write",
-  "convex.custom_domains.read",
-  "convex.custom_domains.write",
-  "convex.functions.execute",
-  "convex.http.query",
-  "convex.http.mutation",
-  "convex.http.action",
-  "convex.http.run",
-];
 
 interface ConvexContext {
   accessToken: string;
@@ -149,7 +133,6 @@ async function validateToken(accessToken: string, fetcher: typeof fetch, signal?
           ? `Convex Project ${projectId}`
           : `Convex Team ${teamId ?? "unknown"}`),
     },
-    grantedScopes,
     metadata: {
       tokenType: type,
       teamId,

@@ -348,7 +348,6 @@ export async function validateFirefliesCredential(
       accountId,
       displayName,
     },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: firefliesGraphqlBaseUrl,
       validationEndpoint: "/graphql",

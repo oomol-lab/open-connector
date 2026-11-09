@@ -109,7 +109,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: optionalString(firstOrganization?.id) ?? "polar-organization-access-token",
         displayName: buildAccountLabel(firstOrganization),
       },
-      grantedScopes: [],
       metadata: compactObject({
         apiBaseUrl: polarApiBaseUrl,
         validationEndpoint: polarValidationPath,

@@ -31,7 +31,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: trendshiftCredentialId(input.apiKey),
         displayName: "Trendshift API Token",
       },
-      grantedScopes: [],
       metadata: {
         apiBaseUrl: trendshiftApiBaseUrl,
         validationEndpoint: `${trendshiftValidationPath}?limit=1`,

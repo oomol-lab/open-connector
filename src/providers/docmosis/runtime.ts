@@ -92,7 +92,6 @@ export async function validateDocmosisCredential(
       accountId: summary.environmentName ?? "docmosis-environment",
       displayName: summary.environmentName ?? "Docmosis Environment",
     },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl,
       validationEndpoint: docmosisEnvironmentSummaryPath,

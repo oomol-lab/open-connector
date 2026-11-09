@@ -590,7 +590,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: organizationId ? `slab:${organizationId}` : "slab:api-key",
         displayName: organizationName ?? organizationHost ?? "Slab API Token",
       },
-      grantedScopes: [],
       metadata: {
         apiBaseUrl: slabApiBaseUrl,
         graphqlEndpoint: slabGraphqlPath,

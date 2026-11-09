@@ -158,7 +158,6 @@ export async function validateWebscraperIoCredential(
       accountId: account.email ?? "webscraper-io-api-token",
       displayName: buildAccountLabel(account),
     },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: webscraperIoApiBaseUrl,
       validationEndpoint: "/account",

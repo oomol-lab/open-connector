@@ -309,7 +309,6 @@ export async function validateMemosCredential(
       displayName:
         optionalString(user.displayName) ?? optionalString(user.email) ?? username ?? name ?? `Memos ${host}`,
     },
-    grantedScopes: [],
     metadata: compactObject({
       baseUrl: context.baseUrl,
       apiBaseUrl: context.baseUrl,

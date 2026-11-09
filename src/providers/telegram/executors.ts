@@ -592,7 +592,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: String(normalizedProfile.id),
         displayName: normalizedProfile.username ? `@${normalizedProfile.username}` : normalizedProfile.firstName,
       },
-      grantedScopes: [],
       metadata: {
         botId: normalizedProfile.id,
         username: normalizedProfile.username,

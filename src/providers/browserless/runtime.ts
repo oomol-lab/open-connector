@@ -82,7 +82,6 @@ export async function validateBrowserlessCredential(
       accountId: "api_token",
       displayName: "Browserless API Token",
     },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: browserlessApiBaseUrl,
       validationEndpoint: "/content",

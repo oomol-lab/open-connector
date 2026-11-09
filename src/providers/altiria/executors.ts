@@ -129,7 +129,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: `altiria:${url.host}:${usernameHash}`,
         displayName: `${credential.username} (${url.hostname})`,
       },
-      grantedScopes: [],
       metadata: {
         dashboardHost: credential.dashboardHost,
         validationEndpoint: "/groups",

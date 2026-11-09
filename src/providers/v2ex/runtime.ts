@@ -191,7 +191,6 @@ export async function validateV2exCredential(
     profile: {
       accountId: accountId ? `v2ex:${accountId}` : "v2ex-member",
       displayName: username ? `V2EX ${username}` : "V2EX Member",
-      grantedScopes: [],
     },
     metadata: {
       apiBaseUrl: v2exApiBaseUrl,

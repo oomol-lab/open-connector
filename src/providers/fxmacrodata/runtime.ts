@@ -109,7 +109,6 @@ export async function validateFxmacrodataCredential(
   });
   return {
     profile: { displayName: "FXMacroData API Key" },
-    grantedScopes: [],
     metadata: { apiBaseUrl: fxmacrodataApiBaseUrl, validationEndpoint: "/v1/data_catalogue/usd" },
   };
 }

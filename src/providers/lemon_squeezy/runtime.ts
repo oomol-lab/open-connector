@@ -323,7 +323,6 @@ export async function validateLemonSqueezyCredential(
       accountId,
       displayName,
     },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl: lemonSqueezyApiBaseUrl,
       validationEndpoint: lemonSqueezyValidationPath,

@@ -123,7 +123,6 @@ export const credentialValidators: CredentialValidators = {
       profile: {
         displayName: "Roam HQ API Key",
       },
-      grantedScopes: [],
       metadata: compactObject({
         apiBaseUrl: roamApiBaseUrl,
         validationEndpoint: "/test",

@@ -107,7 +107,6 @@ export const credentialValidators: CredentialValidators = {
     }
     return {
       profile: { displayName: "Planly API Key" },
-      grantedScopes: [],
       metadata: { apiBaseUrl: baseUrl },
     };
   },

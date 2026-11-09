@@ -108,7 +108,6 @@ export async function validateIlovepdfCredential(
   );
   return {
     profile: { displayName: "iLovePDF API Project" },
-    grantedScopes: [],
     metadata: {},
   };
 }

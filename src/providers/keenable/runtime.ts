@@ -81,7 +81,6 @@ export async function validateKeenableCredential(
   });
   return {
     profile: { displayName: "Keenable API Key" },
-    grantedScopes: [],
     metadata: { apiBaseUrl: keenableApiBaseUrl, validationEndpoint: "/v1/search" },
   };
 }

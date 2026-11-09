@@ -110,7 +110,6 @@ export async function validateU301Credential(
       accountId: workspaceId,
       displayName: "U301 API Key",
     },
-    grantedScopes: [],
     metadata: compactObject({
       workspaceId,
       validationEndpoint: u301DomainsPath,

@@ -182,9 +182,7 @@ export async function validatePromptLayerCredential(
   return {
     profile: {
       displayName: "PromptLayer API Key",
-      grantedScopes: [],
     },
-    grantedScopes: [],
     metadata: compactObject({
       validationEndpoint: "/prompt-templates",
       totalPromptTemplates: optionalInteger(payload.total),

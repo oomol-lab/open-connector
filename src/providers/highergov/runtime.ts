@@ -42,9 +42,7 @@ export async function validateHighergovCredential(
   return {
     profile: {
       displayName: "HigherGov API Key",
-      grantedScopes: [],
     },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: highergovApiBaseUrl,
       validationEndpoint: "/api-external/agency/",

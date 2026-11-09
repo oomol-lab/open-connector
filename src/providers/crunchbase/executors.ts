@@ -143,7 +143,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: "crunchbase",
         displayName: "Crunchbase API Key",
       },
-      grantedScopes: [],
       metadata: {
         apiBaseUrl: crunchbaseApiBaseUrl,
         validationEndpoint: "/data/autocompletes",

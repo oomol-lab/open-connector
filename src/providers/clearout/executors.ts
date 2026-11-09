@@ -124,7 +124,6 @@ async function validateClearoutCredential(
       accountId: "clearout",
       displayName: "Clearout API Token",
     },
-    grantedScopes: [],
     metadata: compactObject({
       baseUrl,
       validationEndpoint: "/email_verify/getcredits",

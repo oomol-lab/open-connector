@@ -121,7 +121,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: "clari_copilot:api-key",
         displayName: "Clari Copilot API Key",
       },
-      grantedScopes: [],
       metadata: {
         apiBaseUrl: clariCopilotApiBaseUrl,
         validationEndpoint: clariCopilotValidationPath,

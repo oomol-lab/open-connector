@@ -58,7 +58,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: `freshstatus:${credential.subdomain}`,
         displayName: `Freshstatus ${credential.subdomain}`,
       },
-      grantedScopes: [],
       metadata: {
         subdomain: credential.subdomain,
         apiBaseUrl: freshstatusApiBaseUrl,

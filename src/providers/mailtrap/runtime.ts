@@ -591,7 +591,6 @@ export async function validateMailtrapCredential(
       accountId: selectedAccountId === undefined ? "mailtrap" : String(selectedAccountId),
       displayName: selectedAccountName ?? "Mailtrap API Token",
     },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl: mailtrapApiBaseUrl,
       validationEndpoint: "/api/accounts",

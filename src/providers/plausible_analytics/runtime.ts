@@ -44,7 +44,6 @@ export async function validatePlausibleAnalyticsCredential(
   signal?: AbortSignal,
 ): Promise<{
   profile: { accountId: string; displayName: string };
-  grantedScopes: string[];
   metadata: Record<string, unknown>;
 }> {
   const siteId = normalizeRequiredSiteId(siteIdValue);
@@ -63,7 +62,6 @@ export async function validatePlausibleAnalyticsCredential(
   });
   return {
     profile: { accountId: buildProviderAccountId(baseUrl, siteId), displayName: `Plausible ${siteId}` },
-    grantedScopes: [],
     metadata: { baseUrl, siteId, validationEndpoint: statsPath },
   };
 }

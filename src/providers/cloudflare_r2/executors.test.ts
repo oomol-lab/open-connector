@@ -484,7 +484,6 @@ describe("Cloudflare R2 custom credential validation", () => {
 
     expect(result).toMatchObject({
       profile: { accountId: "account-1", displayName: "Cloudflare R2 - documents" },
-      grantedScopes: [],
       metadata: {
         validationEndpoint: "/accounts/account-1/r2/buckets?per_page=1",
         accountId: "account-1",

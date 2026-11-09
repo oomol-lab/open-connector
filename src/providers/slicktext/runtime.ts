@@ -32,7 +32,6 @@ export const slicktextActionHandlers: ProviderActionHandlers<
 };
 export async function validateSlicktext(context: ApiKeyProviderContext): Promise<{
   profile: { accountId: string; displayName: string };
-  grantedScopes: string[];
   metadata: Record<string, unknown>;
 }> {
   const brand = object(
@@ -43,7 +42,6 @@ export async function validateSlicktext(context: ApiKeyProviderContext): Promise
   const name = optionalString(brand.name);
   return {
     profile: { accountId: String(id), displayName: name ?? `SlickText Brand ${id}` },
-    grantedScopes: [],
     metadata: { apiBaseUrl: slicktextApiBaseUrl, validationEndpoint: "/brands", brandId: id },
   };
 }

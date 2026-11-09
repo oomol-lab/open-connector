@@ -105,7 +105,6 @@ export async function validateAnchorBrowserCredential(
       accountId: billing.tier || "anchor_browser_api_key",
       displayName: buildAccountLabel(billing),
     },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl: anchorBrowserApiBaseUrl,
       validationEndpoint: anchorBrowserValidationEndpoint,

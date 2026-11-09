@@ -72,7 +72,6 @@ export const credentialValidators: CredentialValidators = {
       profile: {
         displayName: "screenshot.fyi API Key",
       },
-      grantedScopes: [],
       metadata: {
         apiBaseUrl: screenshotFyiApiBaseUrl,
         validationEndpoint: screenshotFyiCapturePath,

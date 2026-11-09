@@ -35,7 +35,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: baseUrl,
         displayName: `Rakuraku Seisan ${new URL(baseUrl).host}${new URL(baseUrl).pathname}`,
       },
-      grantedScopes: [],
       metadata: { baseUrl, credentialValidation: "on_first_request" },
     };
   },

@@ -355,7 +355,6 @@ export async function validateAlphaVantageCredential(
       accountId: "alpha_vantage_api_key",
       displayName: "Alpha Vantage API Key",
     },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: alphaVantageApiBaseUrl,
       validationEndpoint: "/query",

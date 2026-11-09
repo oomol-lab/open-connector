@@ -96,13 +96,11 @@ export const loyjoyActionHandlers: ProviderActionHandlers<
 
 export async function validateLoyjoyApiKey(context: ApiKeyProviderContext): Promise<{
   profile: { accountId: string; displayName: string };
-  grantedScopes: string[];
   metadata: Record<string, unknown>;
 }> {
   await request("/processes", "GET", undefined, context, "validate");
   return {
     profile: { accountId: "api_key", displayName: "LoyJoy Tenant" },
-    grantedScopes: [],
     metadata: { apiBaseUrl: loyjoyApiBaseUrl, validationEndpoint: "/processes" },
   };
 }

@@ -124,7 +124,6 @@ export const credentialValidators: CredentialValidators = {
     requireSources(result);
     return {
       profile: { displayName: "Finlight API Key" },
-      grantedScopes: [],
       metadata: { validationEndpoint: "/v2/sources" },
     };
   },

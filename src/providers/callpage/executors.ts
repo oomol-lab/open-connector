@@ -74,7 +74,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: "callpage",
         displayName: "CallPage API Key",
       },
-      grantedScopes: [],
       metadata: compactObject({
         apiBaseUrl: callpageApiBaseUrl,
         validationEndpoint: callpageValidationPath,

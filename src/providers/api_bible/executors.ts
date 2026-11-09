@@ -95,7 +95,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: "api_key",
         displayName: "API.Bible API Key",
       },
-      grantedScopes: [],
       metadata: compactObject({
         validationEndpoint: apiBibleValidationPath,
         apiBaseUrl: apiBibleApiBaseUrl,

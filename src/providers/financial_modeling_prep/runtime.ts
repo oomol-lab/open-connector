@@ -439,7 +439,6 @@ export async function validateFinancialModelingPrepApiKey(
   signal?: AbortSignal,
 ): Promise<{
   profile: { accountId: string; displayName: string };
-  grantedScopes: string[];
   metadata: Record<string, unknown>;
 }> {
   const quote = await getQuote("AAPL", { apiKey, fetcher, signal }, "validate");
@@ -449,7 +448,6 @@ export async function validateFinancialModelingPrepApiKey(
       accountId: "financial_modeling_prep",
       displayName: "Financial Modeling Prep API Key",
     },
-    grantedScopes: [],
     metadata: compactObject({
       validationEndpoint: "/quote",
       apiBaseUrl: financialModelingPrepApiBaseUrl,

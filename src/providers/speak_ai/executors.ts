@@ -105,7 +105,6 @@ export const credentialValidators: CredentialValidators = {
     const token = await authenticate(input.apiKey, fetcher, "validate");
     return {
       profile: { accountId: token.email ?? "speak-ai-api-key", displayName: token.email ?? "Speak AI API Key" },
-      grantedScopes: [],
       metadata: { apiBaseUrl, validationEndpoint: "/auth/accessToken" },
     };
   },

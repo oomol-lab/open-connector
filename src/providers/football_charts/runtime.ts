@@ -156,7 +156,6 @@ export async function validateFootballChartsCredential(
       accountId: `football_charts:${apiKey.slice(0, 8)}`,
       displayName: "Football Charts API Key",
     },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: footballChartsApiBaseUrl,
       validationEndpoint: "/leagues/",

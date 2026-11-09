@@ -125,7 +125,6 @@ export async function validateXataCredential(
       accountId: firstOrganizationID ?? "xata:api_key",
       displayName: firstOrganizationName ?? "Xata API Key",
     },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl: xataApiBaseUrl,
       validationEndpoint: xataValidationPath,

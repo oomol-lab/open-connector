@@ -249,7 +249,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: organizationId ?? "tremendous-api-key",
         displayName: organizationName ? `Tremendous ${organizationName}` : "Tremendous API Key",
       },
-      grantedScopes: [],
       metadata: {
         apiBaseUrl: tremendousApiBaseUrl,
         validationEndpoint: tremendousValidationPath,

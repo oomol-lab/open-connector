@@ -135,7 +135,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: accountId ?? "callrail",
         displayName: accountName ?? "CallRail API Key",
       },
-      grantedScopes: [],
       metadata: compactObject({
         apiBaseUrl: callrailApiBaseUrl,
         validationEndpoint: "/v3/a.json",

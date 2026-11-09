@@ -76,7 +76,6 @@ export async function validateMem0ApiKey(
       accountId: "mem0",
       displayName: "Mem0 API Key",
     },
-    grantedScopes: [],
     metadata: compactObject({
       validationEndpoint: "/v1/events/",
       apiBaseUrl: mem0ApiBaseUrl,

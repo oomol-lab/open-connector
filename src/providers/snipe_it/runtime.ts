@@ -129,7 +129,6 @@ export async function validateSnipeItCredential(
       accountId: `snipe_it:${context.instanceUrl}`,
       displayName: buildAccountLabel(user, context.instanceUrl),
     },
-    grantedScopes: [],
     metadata: {
       instanceUrl: context.instanceUrl,
       apiBaseUrl: context.apiBaseUrl,

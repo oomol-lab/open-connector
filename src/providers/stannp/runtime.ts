@@ -198,7 +198,6 @@ export async function validateStannpCredential(
       accountId: `stannp:${region}`,
       displayName: `Stannp ${region.toUpperCase()} Account`,
     },
-    grantedScopes: [],
     metadata: {
       region,
       apiBaseUrl,

@@ -241,7 +241,6 @@ export async function validateBrexCredential(
       accountId: userId ?? "brex:user_token",
       displayName: email ?? userName ?? "Brex User Token",
     },
-    grantedScopes: [],
     metadata: compactObject({
       userId,
       userEmail: email,

@@ -135,9 +135,7 @@ export const credentialValidators: CredentialValidators = {
     return {
       profile: {
         displayName: "PassSlot App Key",
-        grantedScopes: [],
       },
-      grantedScopes: [],
       metadata: {
         apiBaseUrl: passslotApiBaseUrl,
         validationEndpoint: "/templates",

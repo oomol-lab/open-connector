@@ -75,7 +75,6 @@ export async function validateClockifyCredential(
       accountId: userId,
       displayName: optionalString(user.name) ?? optionalString(user.email) ?? "Clockify User",
     },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl: clockifyApiBaseUrl,
       validationEndpoint: "/user",

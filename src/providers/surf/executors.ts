@@ -154,7 +154,7 @@ export const credentialValidators: CredentialValidators = {
       fetcher,
       signal,
     );
-    return { profile: { displayName: "Surf API Key" }, grantedScopes: [], metadata: { validationEndpoint } };
+    return { profile: { displayName: "Surf API Key" }, metadata: { validationEndpoint } };
   },
 };
 export const executors: ProviderExecutors = defineApiKeyProviderExecutors(

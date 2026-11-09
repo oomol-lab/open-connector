@@ -183,7 +183,6 @@ export async function validateQuintaDbCredential(
       accountId: "quintadb_api_key",
       displayName: "QuintaDB API Key",
     },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: quintaDbApiBaseUrl,
       validationEndpoint: quintaDbValidationPath,

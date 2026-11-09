@@ -140,7 +140,6 @@ export async function validateMetaTraderApiCredential(
   const sessions = readArrayPayload(payload, "sessions", "MetaTraderAPI sessions response");
   return {
     profile: { displayName: "MetaTraderAPI API Key" },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: metatraderapiApiBaseUrl.slice(0, -1),
       validationEndpoint: "/sessions/",

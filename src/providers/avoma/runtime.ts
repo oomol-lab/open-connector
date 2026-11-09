@@ -72,7 +72,6 @@ export async function validateAvomaCredential(
     profile: {
       accountId: "api_key",
       displayName: "Avoma API Key",
-      grantedScopes: [],
     },
     metadata: {
       apiBaseUrl: avomaApiBaseUrl,

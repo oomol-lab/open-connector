@@ -35,9 +35,7 @@ export const credentialValidators: CredentialValidators = {
     return validateHeygenCredential(createHeygenApiKeyAuth(input.apiKey), options);
   },
   oauth2(input, options) {
-    return validateHeygenCredential(createHeygenOAuthAuth(input.accessToken, input.tokenType), options, {
-      grantedScopes: input.profile.grantedScopes,
-    });
+    return validateHeygenCredential(createHeygenOAuthAuth(input.accessToken, input.tokenType), options);
   },
 };
 

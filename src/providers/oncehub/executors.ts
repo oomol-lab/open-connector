@@ -98,7 +98,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: `oncehub:api_key:${tokenHash}`,
         displayName: "OnceHub API Key",
       },
-      grantedScopes: [],
       metadata: {
         apiBaseUrl: oncehubApiBaseUrl,
         validationEndpoint: oncehubValidationPath,

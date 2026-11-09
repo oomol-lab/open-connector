@@ -76,7 +76,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: "api_key",
         displayName: "ApiFlash Access Key",
       },
-      grantedScopes: [],
       metadata: compactObject({
         validationEndpoint: apiflashQuotaPath,
         apiBaseUrl: apiflashApiBaseUrl,

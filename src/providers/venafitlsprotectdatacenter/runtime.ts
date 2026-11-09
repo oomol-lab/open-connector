@@ -39,7 +39,6 @@ export async function validateVenafiDatacenterCredential(
       accountId: `venafi-datacenter:${url.host}:${fingerprint(credentials.username)}`,
       displayName: `${credentials.username} at ${url.hostname}`,
     },
-    grantedScopes: ["certificate:manage"],
     metadata: { domain: credentials.domain },
   };
 }

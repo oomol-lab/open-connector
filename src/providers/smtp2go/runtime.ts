@@ -178,9 +178,7 @@ export async function validateSmtp2goCredential(
   return {
     profile: {
       displayName: "SMTP2GO API Key",
-      grantedScopes: [],
     },
-    grantedScopes: [],
     metadata: compactObject({
       validationEndpoint: "/api_keys/permissions",
       permissionCount: permissions.length,

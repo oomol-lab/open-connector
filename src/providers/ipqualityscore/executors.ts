@@ -149,7 +149,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: "api_key",
         displayName: "IPQualityScore API Key",
       },
-      grantedScopes: [],
       metadata: compactObject({
         validationEndpoint: "/api/json/ip/{apiKey}/8.8.8.8",
         apiBaseUrl: ipqualityscoreApiBaseUrl,

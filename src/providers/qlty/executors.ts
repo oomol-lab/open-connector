@@ -156,7 +156,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: `qlty:${userId}`,
         displayName: optionalString(user.name) ?? login ?? email ?? "Qlty API Token",
       },
-      grantedScopes: [],
       metadata: compactObject({
         apiBaseUrl: qltyApiBaseUrl,
         validationEndpoint: "/user",

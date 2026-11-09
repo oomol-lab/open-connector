@@ -79,7 +79,6 @@ export const credentialValidators: CredentialValidators = {
       profile: {
         displayName: "Resource Flow API Key",
       },
-      grantedScopes: [],
       metadata: {
         apiBaseUrl: hubPlannerApiBaseUrl,
         validationEndpoint: hubPlannerValidationPath,

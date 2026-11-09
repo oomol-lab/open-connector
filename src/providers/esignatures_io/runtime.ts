@@ -65,7 +65,6 @@ export async function validateEsignaturesIoCredential(
     profile: {
       displayName: "eSignatures.com API Key",
     },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: esignaturesIoApiBaseUrl,
       validationEndpoint: "/templates",

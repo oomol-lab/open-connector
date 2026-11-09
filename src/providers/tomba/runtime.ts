@@ -110,7 +110,6 @@ export async function validateTombaCredential(
   signal?: AbortSignal,
 ): Promise<{
   profile: { accountId: string; displayName: string };
-  grantedScopes: string[];
   metadata: Record<string, unknown>;
 }> {
   const resolved = readTombaCredential(credential);
@@ -124,7 +123,6 @@ export async function validateTombaCredential(
       accountId: account.email ?? String(account.userId ?? "tomba_api_key"),
       displayName: account.email ?? "Tomba API Key",
     },
-    grantedScopes: [],
     metadata: compactObject({
       validationEndpoint: "/me",
       apiBaseUrl: tombaApiBaseUrl,

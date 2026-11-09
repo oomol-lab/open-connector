@@ -28,6 +28,7 @@ import { optionalString } from "./core/cast.ts";
 import { normalizeCredentialValues } from "./core/credential-fields.ts";
 import { apiKeyCredentialFields } from "./core/provider-setup.ts";
 import { CredentialResolver, isOAuthCredentialExpired } from "./credential-resolver.ts";
+import { readOAuthScopes } from "./oauth/oauth-scopes.ts";
 import {
   providerFetch,
   ProviderDispatchRequestError,
@@ -942,8 +943,8 @@ export class ConnectionService {
     const grantedScopes =
       validation.profile?.grantedScopes ??
       validation.grantedScopes ??
-      parseScopeString(readLegacyString(validation.metadata, "scope")) ??
-      parseScopeString(readLegacyString(previous?.metadata, "scope")) ??
+      readOAuthScopes(validation.metadata?.scope) ??
+      readOAuthScopes(previous?.metadata.scope) ??
       previous?.profile.grantedScopes;
 
     return {
@@ -998,10 +999,6 @@ export function normalizeConnectionName(value: string | undefined): string {
 
 function normalizeGrantedScopes(value: string[] | undefined): string[] {
   return [...new Set((value ?? []).map((scope) => scope.trim()).filter(Boolean))];
-}
-
-function parseScopeString(value: string | undefined): string[] | undefined {
-  return value ? value.split(/[,\s]+/) : undefined;
 }
 
 function readLegacyString(metadata: Record<string, unknown> | undefined, key: string): string | undefined {

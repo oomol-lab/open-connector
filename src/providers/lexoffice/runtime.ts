@@ -191,9 +191,7 @@ export async function validateLexofficeCredential(
     profile: {
       accountId: organizationId,
       displayName: companyName,
-      grantedScopes: [],
     },
-    grantedScopes: [],
     metadata: compactObject({
       organizationId,
       companyName,

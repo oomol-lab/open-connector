@@ -99,7 +99,6 @@ export async function validateStatistaCredential(
       accountId: "statista-api-key",
       displayName: "Statista API Key",
     },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: statistaApiBaseUrl,
       validationEndpoint: statistaValidationPath,

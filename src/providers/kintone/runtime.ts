@@ -134,7 +134,6 @@ export async function validateKintoneCredential(
       accountId: `kintone:${subdomain}:${buildTokenFingerprint(apiKey)}`,
       displayName: `Kintone ${subdomain}`,
     },
-    grantedScopes: [],
     metadata: compactObject({
       subdomain,
       apiBaseUrl,

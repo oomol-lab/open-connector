@@ -66,7 +66,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: `rootly:${resource.id}`,
         displayName: fullName || email || "Rootly API Key",
       },
-      grantedScopes: [],
       metadata: {
         apiBaseUrl: rootlyApiBaseUrl,
         validationEndpoint: "/users/me",

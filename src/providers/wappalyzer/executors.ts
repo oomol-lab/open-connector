@@ -66,7 +66,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: "wappalyzer:api-key",
         displayName: "Wappalyzer API Key",
       },
-      grantedScopes: [],
       metadata: {
         validationEndpoint: "/credits/balance",
         credits,

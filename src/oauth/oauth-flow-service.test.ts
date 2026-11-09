@@ -428,7 +428,7 @@ describe("OAuthFlowService", () => {
     expect(new URL(started.authorizationUrl).searchParams.get("scope")).toBe("read");
   });
 
-  it("resolves transitive option requirements and preserves the selected scopes", async () => {
+  it("resolves transitive option requirements without treating requested scopes as grants", async () => {
     const services = createServices([selectableOAuthProvider]);
     await services.clientConfigs.upsertConfig({
       service: "selectable",
@@ -448,7 +448,7 @@ describe("OAuthFlowService", () => {
 
     await services.flow.completeAuthorization({ state: started.state, code: "code" });
     await expect(services.connections.getCredential("selectable")).resolves.toMatchObject({
-      profile: { grantedScopes: ["core", "base", "middle", "feature"] },
+      profile: { grantedScopes: [] },
     });
   });
 

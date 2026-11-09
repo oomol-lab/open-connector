@@ -70,7 +70,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: "writer-api-key",
         displayName: "Writer API Key",
       },
-      grantedScopes: [],
       metadata: {
         validationEndpoint: "/v1/models",
         availableModels: models.map((model) => model.id).filter((model): model is string => typeof model === "string"),

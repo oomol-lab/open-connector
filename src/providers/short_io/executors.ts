@@ -89,7 +89,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: defaultDomainId === undefined ? "short-io-api-key" : String(defaultDomainId),
         displayName: defaultDomainHostname ?? "Short.io API Key",
       },
-      grantedScopes: [],
       metadata: compactObject({
         validationEndpoint: shortIoValidationPath,
         apiBaseUrl: shortIoApiBaseUrl,

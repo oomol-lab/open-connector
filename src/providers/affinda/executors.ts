@@ -171,7 +171,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: primaryOrganizationId,
         displayName: primaryOrganizationName ?? "Affinda API Key",
       },
-      grantedScopes: [],
       metadata: compactObject({
         apiBaseUrl,
         organizationCount: organizations.length,

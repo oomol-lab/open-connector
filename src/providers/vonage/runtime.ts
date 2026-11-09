@@ -124,7 +124,6 @@ export async function validateVonageCredential(
   const balance = normalizeBalance(await requestVonage({ path: "/account/get-balance", context, phase: "validate" }));
   return {
     profile: { accountId: `vonage:${context.apiKey}`, displayName: `Vonage ${context.apiKey}` },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: vonageApiBaseUrl,
       validationEndpoint: "/account/get-balance",

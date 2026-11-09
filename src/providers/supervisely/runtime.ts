@@ -115,7 +115,6 @@ export async function validateSuperviselyCredential(
       accountId: userId,
       displayName: email ?? login ?? name ?? "Supervisely API Token",
     },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: superviselyApiBaseUrl,
       validationEndpoint: "/users.me",

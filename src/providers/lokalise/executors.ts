@@ -75,7 +75,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: firstProjectId ?? service,
         displayName: firstProjectName ?? "Lokalise API Token",
       },
-      grantedScopes: [],
       metadata: compactObject({
         apiBaseUrl: lokaliseApiBaseUrl,
         validationEndpoint: "/projects",

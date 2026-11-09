@@ -67,7 +67,6 @@ export async function validateMingdaoCredential(
       accountId: `mingdao:${optionalString(app.appId) ?? apiKey}`,
       displayName: optionalString(app.name) ?? "Mingdao Application",
     },
-    grantedScopes: [],
     metadata: { appId: optionalString(app.appId), apiBaseUrl: mingdaoApiBaseUrl, validationEndpoint: "/v3/app" },
   };
 }

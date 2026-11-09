@@ -45,7 +45,7 @@ export const credentialValidators: CredentialValidators = {
       await requestNationalize(input.apiKey, new URLSearchParams({ name: "nguyen" }), fetcher, true, signal),
       "Nationalize credential validation",
     );
-    return { profile: { displayName: "Nationalize API Key" }, grantedScopes: [], metadata: { apiBaseUrl } };
+    return { profile: { displayName: "Nationalize API Key" }, metadata: { apiBaseUrl } };
   },
 };
 export const proxy: ProviderProxyExecutor = defineProviderProxy({

@@ -125,7 +125,6 @@ export async function validateAircallCredential(
       accountId: apiId,
       displayName: `Aircall API ${apiId}`,
     },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: aircallApiBaseUrl,
       validationEndpoint: aircallValidationPath,

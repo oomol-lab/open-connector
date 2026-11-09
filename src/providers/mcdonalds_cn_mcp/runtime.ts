@@ -51,7 +51,6 @@ export async function validateMcdonaldsCnMcpCredential(
       accountId: `mcdonalds-cn:mcp:${tokenHash}`,
       displayName: `McDonald's China MCP · ${tokenHash.slice(-6)}`,
     },
-    grantedScopes: [],
     metadata: {
       mcpEndpoint: mcdonaldsCnMcpEndpoint,
       discoveredToolCount: tools.length,

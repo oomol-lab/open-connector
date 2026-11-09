@@ -28,7 +28,7 @@ interface SendgridValidationResult {
     accountId: string;
     displayName: string;
   };
-  grantedScopes: string[];
+  grantedScopes?: string[];
   metadata: Record<string, unknown>;
 }
 
@@ -286,7 +286,6 @@ async function probeSendgridUserEmail(
           accountId: email ?? "api_key",
           displayName: email ?? "SendGrid API Key",
         },
-        grantedScopes: [],
         metadata: buildValidationProviderMetadata(baseUrl, "/v3/user/email", {
           email: email ?? undefined,
         }),
@@ -319,7 +318,6 @@ async function probeSendgridAccountInfo(
           accountId: "api_key",
           displayName: "SendGrid API Key",
         },
-        grantedScopes: [],
         metadata: buildValidationProviderMetadata(baseUrl, "/v3/user/account"),
       },
     };
@@ -354,7 +352,6 @@ async function probeSendgridTemplates(
           accountId: "api_key",
           displayName: "SendGrid API Key",
         },
-        grantedScopes: [],
         metadata: buildValidationProviderMetadata(baseUrl, sendgridTemplatesPath),
       },
     };
@@ -386,7 +383,6 @@ async function probeSendgridMailSend(
           accountId: "api_key",
           displayName: "SendGrid API Key",
         },
-        grantedScopes: [],
         metadata: buildValidationProviderMetadata(baseUrl, sendgridMailSendPath),
       },
     };

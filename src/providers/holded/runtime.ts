@@ -125,7 +125,6 @@ export async function validateHoldedCredential(
   options: { fetcher: typeof fetch; signal?: AbortSignal },
 ): Promise<{
   profile: { accountId: string; displayName: string };
-  grantedScopes: string[];
   metadata: Record<string, unknown>;
 }> {
   const payload = await requestHoldedJson({
@@ -145,7 +144,6 @@ export async function validateHoldedCredential(
       accountId: "api_token",
       displayName: "Holded API Token",
     },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: holdedApiBaseUrl,
       validationEndpoint: "/contacts",

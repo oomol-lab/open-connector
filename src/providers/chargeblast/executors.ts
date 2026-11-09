@@ -193,7 +193,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: "chargeblast",
         displayName: readOptionalTrimmedString(firstMerchant?.name) ?? "Chargeblast API Key",
       },
-      grantedScopes: [],
       metadata: compactObject({
         apiBaseUrl: chargeblastApiBaseUrl,
         validationEndpoint: "/api/v2/merchants",

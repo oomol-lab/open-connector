@@ -146,7 +146,6 @@ export async function validateWacheteCredential(
       accountId: `wachete:${userId}`,
       displayName: "Wachete Account",
     },
-    grantedScopes: [],
     metadata: { userId },
   };
 }

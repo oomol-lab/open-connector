@@ -194,7 +194,6 @@ export async function validateMailcoachCredential(
       accountId: `mailcoach:${baseUrl}:${userId ?? email}`,
       displayName: email ?? `Mailcoach ${new URL(baseUrl).hostname}`,
     },
-    grantedScopes: [],
     metadata: compactObject({
       baseUrl,
       validationEndpoint: "/api/user",

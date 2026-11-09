@@ -355,7 +355,6 @@ export const credentialValidators: CredentialValidators = {
         accountId,
         displayName,
       },
-      grantedScopes: [],
       metadata: {
         validationEndpoint: "/graphql",
         account,

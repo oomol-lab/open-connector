@@ -179,7 +179,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: accountIdentity ?? "api_key",
         displayName: accountIdentity ? `Float ${accountIdentity}` : "Float API Token",
       },
-      grantedScopes: [],
       metadata: compactObject({
         apiBaseUrl: floatApiBaseUrl,
         validationEndpoint: "/accounts",

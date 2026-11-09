@@ -68,7 +68,6 @@ export async function validateTemplatefoxCredential(
       accountId: account.email ?? "templatefox:api-key",
       displayName: accountLabel,
     },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl: templatefoxApiBaseUrl,
       validationEndpoint: "/v1/account",

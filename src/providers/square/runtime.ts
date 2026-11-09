@@ -118,7 +118,6 @@ export async function validateSquareCredential(
       accountId: merchantId ?? firstLocationId,
       displayName: businessName ?? firstLocationName ?? firstLocationId ?? "Square Access Token",
     },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl: squareApiBaseUrl,
       validationEndpoint: "/v2/locations",

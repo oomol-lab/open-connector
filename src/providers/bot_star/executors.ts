@@ -278,7 +278,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: firstBotId ?? "bot_star",
         displayName: firstTeamName ?? firstBotName ?? firstBotId ?? "BotStar API Token",
       },
-      grantedScopes: [],
       metadata: compactObject({
         apiBaseUrl: botStarApiBaseUrl,
         validationEndpoint: botStarValidationPath,

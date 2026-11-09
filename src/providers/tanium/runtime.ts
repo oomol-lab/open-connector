@@ -81,7 +81,6 @@ export async function validateTaniumCredential(
       accountId: `tanium:${url.host}:${buildTokenFingerprint(apiKey)}`,
       displayName: `Tanium Gateway (${url.hostname})`,
     },
-    grantedScopes: [],
     metadata: {
       gatewayUrl,
       gatewayOrigin: url.origin,

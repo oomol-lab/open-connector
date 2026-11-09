@@ -136,7 +136,6 @@ async function validateSalesmateCredential(
       accountId: linkName,
       displayName: readUserLabel(users[0]) ?? linkName,
     },
-    grantedScopes: [],
     metadata: {
       linkName,
       apiBaseUrl: salesmateApiBaseUrl(linkName),

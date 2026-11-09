@@ -117,7 +117,6 @@ export async function validateDatalustCredential(
       accountId: `datalust:${host}`,
       displayName: `Seq ${host}`,
     },
-    grantedScopes: [],
     metadata: {
       baseUrl: context.baseUrl,
       validationEndpoint,

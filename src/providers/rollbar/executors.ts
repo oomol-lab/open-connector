@@ -126,12 +126,10 @@ export const credentialValidators: CredentialValidators = {
         accountId: projectId ? `rollbar-project-${projectId}` : `rollbar-project-token-${tokenFingerprint}`,
         displayName: projectId ? `Rollbar project ${projectId}` : `Rollbar project token ${tokenFingerprint}`,
       },
-      grantedScopes: ["rollbar.project.read"],
       metadata: compactObject({
         apiBaseUrl: rollbarApiBaseUrl,
         validationEndpoint: "/environments",
         credentialKind: "project_access_token",
-        tokenScope: "read",
         environmentCount: environments.length,
         projectId,
         defaultEnvironment: firstEnvironment?.environment,

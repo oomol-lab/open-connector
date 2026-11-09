@@ -97,7 +97,6 @@ export const credentialValidators: CredentialValidators = {
     );
     return {
       profile: { accountId: instanceId, displayName: `Z-API ${instanceId}` },
-      grantedScopes: [],
       metadata: {
         apiBaseUrl: "https://api.z-api.io",
         instanceId,

@@ -58,7 +58,7 @@ export const credentialValidators: CredentialValidators = {
     const user = await requestSansanJson("/me", {}, { apiKey: input.apiKey, fetcher, signal, phase: "validate" });
     const accountId = optionalString(user.id);
     if (!accountId) throw providerResponseError("Sansan user response is missing id");
-    return { profile: { accountId, displayName: optionalString(user.name) ?? accountId }, grantedScopes: [] };
+    return { profile: { accountId, displayName: optionalString(user.name) ?? accountId } };
   },
 };
 export const proxy: ProviderProxyExecutor = defineProviderProxy({

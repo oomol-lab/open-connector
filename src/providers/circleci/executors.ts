@@ -172,7 +172,6 @@ async function validateCircleciCredential(input: {
       accountId,
       displayName: name ?? login ?? "CircleCI User",
     },
-    grantedScopes: [],
     metadata: compactObject({
       validationEndpoint: "/me",
       login,

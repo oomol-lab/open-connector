@@ -131,7 +131,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: teamId ?? "api_key",
         displayName: teamName ?? "Nozbe API Token",
       },
-      grantedScopes: [],
       metadata: compactObject({
         apiBaseUrl: nozbeTeamsApiBaseUrl,
         validationEndpoint: nozbeTeamsValidationPath,

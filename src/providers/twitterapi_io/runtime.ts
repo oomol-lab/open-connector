@@ -448,7 +448,6 @@ export async function validateTwitterApiIoCredential(
   profile: {
     accountId: string;
     displayName: string;
-    grantedScopes: string[];
   };
   metadata: Record<string, unknown>;
 }> {
@@ -464,7 +463,6 @@ export async function validateTwitterApiIoCredential(
     profile: {
       accountId: "twitterapi_io",
       displayName: "TwitterAPI.io API Key",
-      grantedScopes: [],
     },
     metadata: compactObject({
       apiBaseUrl: twitterapiIoApiBaseUrl,

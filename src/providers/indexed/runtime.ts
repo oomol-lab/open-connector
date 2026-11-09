@@ -89,7 +89,6 @@ export async function validateIndexedCredential(
     profile: {
       displayName: tier ? `Indexed API Key (${tier} plan)` : "Indexed API Key",
     },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl: indexedApiBaseUrl,
       validationEndpoint: "/usage",

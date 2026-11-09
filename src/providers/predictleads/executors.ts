@@ -84,7 +84,6 @@ export const credentialValidators: CredentialValidators = {
     );
     return {
       profile: { displayName: "PredictLeads API Key" },
-      grantedScopes: [],
       metadata: { apiBaseUrl: baseUrl, validationEndpoint: "/technologies" },
     };
   },

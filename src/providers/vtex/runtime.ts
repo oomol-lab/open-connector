@@ -59,7 +59,6 @@ export async function validateVtexCredential(input: {
       accountId: `vtex:${accountName}.${environment}`,
       displayName: `VTEX ${accountName}`,
     },
-    grantedScopes: [],
     metadata: {
       accountName,
       environment,

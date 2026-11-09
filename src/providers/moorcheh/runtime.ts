@@ -140,7 +140,6 @@ export async function validateMoorchehCredential(
       accountId: "moorcheh:api-key",
       displayName: "Moorcheh API Key",
     },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: moorchehApiBaseUrl,
       namespaceCount,

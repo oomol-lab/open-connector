@@ -113,7 +113,6 @@ async function validateKontentAiCredential(
       accountId: `kontent_ai:${environmentId}`,
       displayName: `Kontent.ai ${environmentId}`,
     },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: kontentAiApiBaseUrl,
       environmentId,

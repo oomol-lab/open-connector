@@ -79,7 +79,6 @@ export async function validatePartnerStackPartnerCredential(
     profile: {
       accountId: programKey ?? "partnerstack-partner-api-key",
       displayName: programName ?? programKey ?? "PartnerStack Partner Account",
-      grantedScopes: [],
     },
     metadata: compactObject({
       apiBaseUrl: partnerStackPartnerApiBaseUrl,

@@ -163,7 +163,6 @@ export async function validateSeaTableCredential(
       accountId: `seatable:${access.baseUuid}`,
       displayName: access.baseName ?? `SeaTable ${new URL(serverUrl).host}`,
     },
-    grantedScopes: [],
     metadata: {
       serverUrl,
       baseUuid: access.baseUuid,

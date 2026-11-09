@@ -73,7 +73,6 @@ export async function validateMailblusterCredential(
       accountId: "mailbluster:api-key",
       displayName: "MailBluster API Key",
     },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl: mailblusterApiBaseUrl,
       validationEndpoint: "/api/fields",

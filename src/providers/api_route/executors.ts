@@ -55,7 +55,6 @@ export const credentialValidators: CredentialValidators = {
     const payload = await requestApiRoute({ path: "/models" }, { apiKey: input.apiKey, fetcher, signal });
     return {
       profile: { displayName: "API Route API Key" },
-      grantedScopes: [],
       metadata: {
         validationEndpoint: "/models",
         availableModels: looseArray(payload.data)

@@ -93,9 +93,7 @@ export const credentialValidators: CredentialValidators = {
     return {
       profile: {
         displayName: "Crypto APIs API Key",
-        grantedScopes: [],
       },
-      grantedScopes: [],
       metadata: {
         apiBaseUrl: cryptoApisApiBaseUrl,
         validationEndpoint: "/market-data/metadata/assets",

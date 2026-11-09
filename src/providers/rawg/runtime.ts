@@ -49,7 +49,7 @@ export async function validateRawgCredential(
   const firstPlatform = asOptionalObject(results[0]);
 
   return {
-    profile: { accountId: "rawg", displayName: "RAWG API Key", grantedScopes: [] },
+    profile: { accountId: "rawg", displayName: "RAWG API Key" },
     metadata: compactObject({
       validationEndpoint: "/platforms",
       apiBaseUrl: rawgApiBaseUrl,

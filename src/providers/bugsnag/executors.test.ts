@@ -20,7 +20,6 @@ describe("Bugsnag credential validation", () => {
 
     expect(result).toEqual({
       profile: { accountId: "user-42", displayName: "Ada Lovelace" },
-      grantedScopes: [],
       metadata: {
         apiBaseUrl: "https://api.bugsnag.com",
         validationEndpoint: "/user",

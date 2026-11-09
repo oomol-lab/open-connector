@@ -103,7 +103,6 @@ export async function validateWebscrapingAiCredential(
       accountId: email ?? "webscraping_ai:api_key",
       displayName: email ?? "WebScraping.AI API Key",
     },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl: webscrapingAiApiBaseUrl,
       validationEndpoint: "/account",

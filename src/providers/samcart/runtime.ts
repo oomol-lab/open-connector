@@ -41,13 +41,11 @@ export const samcartActionHandlers: ProviderActionHandlers<
 
 export async function validateSamcartApiKey(context: ApiKeyProviderContext): Promise<{
   profile: { accountId: string; displayName: string };
-  grantedScopes: string[];
   metadata: Record<string, unknown>;
 }> {
   readList(await request("/products", { limit: 1 }, context, "validate"), "products");
   return {
     profile: { accountId: "api_key", displayName: "SamCart API Token" },
-    grantedScopes: [],
     metadata: { apiBaseUrl: samcartApiBaseUrl, validationEndpoint: "/products" },
   };
 }

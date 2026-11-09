@@ -183,7 +183,6 @@ export async function validateMakeCredential(
       accountId: userId === undefined ? "api_key" : `make:${zoneUrl}:${userId}`,
       displayName: email ?? name ?? "Make API Token",
     },
-    grantedScopes: [],
     metadata: compactObject({
       zoneUrl,
       apiBaseUrl: buildMakeApiBaseUrl(zoneUrl),

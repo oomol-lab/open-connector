@@ -267,7 +267,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: `mopinion:${credentials.publicKey}`,
         displayName: accountName,
       },
-      grantedScopes: [],
       metadata: {
         accountName: optionalString(account.name),
         package: optionalString(account.package),

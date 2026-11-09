@@ -100,7 +100,6 @@ export const credentialValidators: CredentialValidators = {
     );
     return {
       profile: { accountId: "api_key", displayName: "DACHSER API Key" },
-      grantedScopes: [],
       metadata: {
         apiBaseUrl,
         validationEndpoint: "/rest/v2/shipmentstatus",

@@ -76,7 +76,6 @@ async function validateMailboxlayerCredential(
       accountId: "api_key",
       displayName: "Mailboxlayer API Key",
     },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl: mailboxlayerApiBaseUrl,
       validationEndpoint: "/check",

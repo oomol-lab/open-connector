@@ -117,7 +117,6 @@ export async function validateWorkiomCredential(
       accountId: "workiom_api_key",
       displayName: "Workiom API Key",
     },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl: workiomApiBaseUrl,
       validationEndpoint: "/Apps/GetAll",

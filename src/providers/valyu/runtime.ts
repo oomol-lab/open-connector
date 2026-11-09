@@ -64,7 +64,6 @@ export async function validateValyuCredential(
     profile: {
       accountId: "valyu-api-key",
       displayName: "Valyu API Key",
-      grantedScopes: [],
     },
     metadata: {
       apiBaseUrl: valyuApiBaseUrl,

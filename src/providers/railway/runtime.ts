@@ -288,7 +288,6 @@ export async function validateRailwayCredential(
         accountId: workspace.id ?? context.workspaceId,
         displayName: workspace.name ?? context.workspaceId,
       },
-      grantedScopes: [],
       metadata: { tokenType: "workspace", workspaceId: context.workspaceId },
     };
   }
@@ -309,7 +308,6 @@ export async function validateRailwayCredential(
       accountId,
       displayName: user.name ?? user.email ?? accountId,
     },
-    grantedScopes: [],
     metadata: { tokenType: "account" },
   };
 }

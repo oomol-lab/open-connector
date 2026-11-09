@@ -43,7 +43,6 @@ export async function validateHyperbrowserCredential(
   options: { fetcher: typeof fetch; signal?: AbortSignal },
 ): Promise<{
   profile: { accountId: string; displayName: string };
-  grantedScopes: string[];
   metadata: Record<string, unknown>;
 }> {
   await requestHyperbrowserJson({
@@ -66,7 +65,6 @@ export async function validateHyperbrowserCredential(
       accountId: "hyperbrowser:api-key",
       displayName: "Hyperbrowser API Key",
     },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: hyperbrowserApiBaseUrl,
       validationEndpoint: "/api/web/fetch",

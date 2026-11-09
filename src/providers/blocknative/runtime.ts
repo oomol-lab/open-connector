@@ -40,7 +40,6 @@ export async function validateBlocknativeCredential(
       accountId: "blocknative",
       displayName: "Blocknative API Key",
     },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl: blocknativeApiBaseUrl,
       validationEndpoint: "/chains",

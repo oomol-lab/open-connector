@@ -84,7 +84,6 @@ export async function validateBotpressCredential(
       accountId: `botpress:${workspaceId}`,
       displayName: `Botpress workspace ${workspaceId}`,
     },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl: botpressApiBaseUrl,
       validationEndpoint: botpressValidationPath,

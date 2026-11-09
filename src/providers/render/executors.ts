@@ -77,9 +77,7 @@ export const credentialValidators = {
       profile: {
         accountId: email,
         displayName: name || email,
-        grantedScopes: [],
       },
-      grantedScopes: [],
       metadata: compactObject({
         validationEndpoint: "/users",
         email,

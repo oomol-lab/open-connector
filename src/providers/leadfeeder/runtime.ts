@@ -137,7 +137,6 @@ export async function validateLeadfeederCredential(
       accountId: optionalString(data.id),
       displayName: email ?? fullName ?? "Leadfeeder API Key",
     },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl: leadfeederApiBaseUrl,
       validationEndpoint: validationPath,

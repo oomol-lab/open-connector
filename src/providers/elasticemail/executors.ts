@@ -25,7 +25,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: "elasticemail",
         displayName: "Elastic Email API Key",
       },
-      grantedScopes: [],
       metadata: {
         apiBaseUrl: elasticemailApiBaseUrl,
         validationEndpoint: "/contacts",

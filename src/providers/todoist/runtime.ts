@@ -8,7 +8,6 @@ import {
   providerUserAgent,
   ProviderRequestError,
 } from "../provider-runtime.ts";
-import { todoistOAuthScopes } from "./scopes.ts";
 
 export const todoistApiBaseUrl = "https://api.todoist.com/api/v1";
 const todoistUserPath = "/user";
@@ -93,14 +92,9 @@ export async function validateTodoistCredential(
   signal?: AbortSignal,
 ): Promise<{
   profile: { accountId: string; displayName: string };
-  grantedScopes: string[];
   metadata: Record<string, unknown>;
 }> {
-  const validation = await fetchTodoistCurrentAccount(accessToken, fetcher, signal, "validate");
-  return {
-    ...validation,
-    grantedScopes: todoistOAuthScopes,
-  };
+  return fetchTodoistCurrentAccount(accessToken, fetcher, signal, "validate");
 }
 
 export async function fetchTodoistCurrentAccount(
@@ -110,7 +104,6 @@ export async function fetchTodoistCurrentAccount(
   phase: TodoistRequestPhase = "execute",
 ): Promise<{
   profile: { accountId: string; displayName: string };
-  grantedScopes: string[];
   metadata: Record<string, unknown>;
 }> {
   const payload = await requestTodoistJson<Record<string, unknown>>({
@@ -129,7 +122,6 @@ export async function fetchTodoistCurrentAccount(
       accountId: `todoist:user:${userId}`,
       displayName: email ?? fullName ?? userId,
     },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl: todoistApiBaseUrl,
       validationEndpoint: todoistUserPath,

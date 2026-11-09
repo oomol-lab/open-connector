@@ -154,7 +154,6 @@ export async function validateWorkastCredential(
 
   return {
     profile: { displayName: readAccountLabel(user) ?? "Workast API Token" },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: workastApiBaseUrl,
       validationEndpoint: "/user/me",

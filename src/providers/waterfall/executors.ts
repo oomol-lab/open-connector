@@ -114,7 +114,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: "waterfall:api_key",
         displayName: "Waterfall API Key",
       },
-      grantedScopes: [],
       metadata: {
         apiBaseUrl: waterfallApiBaseUrl,
         balanceRemainingUsd: optionalNumber(record.balance_remaining_usd),

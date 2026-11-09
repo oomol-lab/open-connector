@@ -67,7 +67,6 @@ export async function validateEncodianCredential(
       accountId: "encodian",
       displayName: "Encodian API Key",
     },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl,
       validationEndpoint: encodianCreateGuidPath,

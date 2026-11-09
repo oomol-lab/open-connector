@@ -259,7 +259,6 @@ export async function validateZerotierCredential(
       accountId: account.accountId,
       displayName: account.displayName,
     },
-    grantedScopes: [],
     metadata: {
       apiVersion: context.apiVersion,
       apiBaseUrl: context.apiVersion === "v1" ? zerotierV1BaseUrl : zerotierV2BaseUrl,

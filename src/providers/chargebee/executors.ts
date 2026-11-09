@@ -132,7 +132,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: `chargebee:${site}`,
         displayName: `Chargebee ${site}`,
       },
-      grantedScopes: [],
       metadata: compactObject({
         site,
         apiBaseUrl: buildChargebeeApiBaseUrl(site),

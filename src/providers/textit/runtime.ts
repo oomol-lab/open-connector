@@ -221,7 +221,6 @@ export async function validateTextitApiKey(input: {
   signal?: AbortSignal;
 }): Promise<{
   profile: { accountId: string; displayName: string };
-  grantedScopes: string[];
   metadata: Record<string, unknown>;
 }> {
   const workspace = await requestTextitJson({
@@ -238,7 +237,6 @@ export async function validateTextitApiKey(input: {
       accountId: typeof workspaceRecord.uuid === "string" && workspaceRecord.uuid ? workspaceRecord.uuid : "textit",
       displayName: workspaceName,
     },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: textitApiBaseUrl,
       validationEndpoint: "/workspace.json",

@@ -65,9 +65,7 @@ export async function validateLeonardoAiCredential(
   return {
     profile: {
       displayName: "Leonardo.Ai API Key",
-      grantedScopes: [],
     },
-    grantedScopes: [],
     metadata: {
       validationEndpoint: `${leonardoAiV2ApiBaseUrl}${leonardoAiValidationPath}`,
     },

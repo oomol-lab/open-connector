@@ -99,7 +99,6 @@ export async function validateBrevoCredential(
       accountId: organizationId !== undefined ? `brevo:account:${organizationId}` : "brevo:api_key",
       displayName: email ?? companyName ?? "Brevo API Key",
     },
-    grantedScopes: [],
     metadata: compactObject({
       validationEndpoint: brevoValidationPath,
       email,

@@ -89,9 +89,7 @@ export async function validateHttpsmsCredential(
     profile: {
       accountId: userId ? `httpsms:${userId}` : `httpsms:${apiKeyHash.slice(0, 16)}`,
       displayName: email ?? userId ?? "httpSMS Account",
-      grantedScopes: [],
     },
-    grantedScopes: [],
     metadata: compactObject({
       userId,
       email,

@@ -61,7 +61,6 @@ export async function validateMailjetCredential(
       accountId: "mailjet:api-key",
       displayName: "Mailjet API Key",
     },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: mailjetApiBaseUrl,
       validationEndpoint: mailjetValidationPath,

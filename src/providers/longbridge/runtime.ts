@@ -20,7 +20,6 @@ import {
   ProviderRequestError,
   runProviderRequest,
 } from "../provider-runtime.ts";
-import { longbridgeOAuthScopes } from "./actions.ts";
 import { indexSymbolToCounterId, symbolToCounterId } from "./counter-id.ts";
 import { longbridgeReadonlyActionSpecs, longbridgeScreenerDefaultReturns } from "./readonly-action-specs.ts";
 
@@ -364,9 +363,7 @@ export async function validateLongbridgeCredential(
     profile: {
       accountId: "longbridge:account",
       displayName: "Longbridge account",
-      grantedScopes: longbridgeOAuthScopes,
     },
-    grantedScopes: longbridgeOAuthScopes,
     metadata: compactObject({
       apiBaseUrl: longbridgeApiBaseUrl,
       validationEndpoint: "/v1/asset/account",

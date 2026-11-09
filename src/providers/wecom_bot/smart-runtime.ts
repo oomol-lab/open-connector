@@ -76,9 +76,7 @@ export async function validateWecomSmartBotCredential(
     profile: {
       accountId: `wecom_bot:smart:${accountHash.slice(0, 24)}`,
       displayName: `WeCom Smart Bot · ${maskIdentifier(credential.botId)}`,
-      grantedScopes: [],
     },
-    grantedScopes: [],
     metadata: {
       credentialKind: "api_mode_smart_bot",
       configuredCategories: [...config.endpoints.keys()].sort(),

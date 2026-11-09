@@ -143,7 +143,6 @@ export const credentialValidators: CredentialValidators = {
       profile: {
         displayName: optionalRawString(body.operatorName) || optionalRawString(body.userName) || "PortEden API Key",
       },
-      grantedScopes: [],
       metadata: { apiBaseUrl: baseUrl },
     };
   },

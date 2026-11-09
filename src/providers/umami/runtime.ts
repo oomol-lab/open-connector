@@ -190,7 +190,6 @@ export async function validateUmamiCredential(
       accountId: userId ?? username ?? "umami:api-key",
       displayName: username ?? userId ?? "Umami API Key",
     },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: umamiApiBaseUrl,
       validationEndpoint: umamiValidationPath,

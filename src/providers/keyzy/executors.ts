@@ -90,7 +90,6 @@ export const credentialValidators: CredentialValidators = {
     requiredInputString(input.values.appId, "appId");
     return {
       profile: { displayName: "KEYZY API Key" },
-      grantedScopes: [],
       metadata: {
         apiBaseUrl: baseUrl,
         validationMode: "local_non_empty_fields",

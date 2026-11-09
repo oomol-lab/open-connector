@@ -46,9 +46,9 @@ export const dumplingaiActionHandlers: ProviderActionHandlers<
 export async function validateDumplingaiCredential(
   apiKey: string,
   fetcher: typeof fetch,
-): Promise<{ profile: { displayName: string }; grantedScopes: string[] }> {
+): Promise<{ profile: { displayName: string } }> {
   await requestJson("GET", balancePath, {}, apiKey, fetcher, "validate");
-  return { profile: { displayName: "DumplingAI API Key" }, grantedScopes: [] };
+  return { profile: { displayName: "DumplingAI API Key" } };
 }
 
 async function requestJson(

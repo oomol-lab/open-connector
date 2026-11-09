@@ -102,7 +102,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: "predis_ai",
         displayName: "Predis.ai API Key",
       },
-      grantedScopes: [],
       metadata: {
         apiBaseUrl,
         validationEndpoint: getTemplatesPath,

@@ -200,7 +200,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: account.id ?? "api_key",
         displayName: account.id ? `Fluxguard ${account.id}` : "Fluxguard API Key",
       },
-      grantedScopes: [],
       metadata: compactObject({
         accountId: account.id ?? undefined,
         accountStatus: account.status ?? undefined,

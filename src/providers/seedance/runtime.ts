@@ -147,7 +147,6 @@ export async function validateSeedanceCredential(
       accountId: "seedance:api_key",
       displayName: "Seedance API Key",
     },
-    grantedScopes: [],
     metadata: { apiBaseUrl: seedanceApiBaseUrl },
   };
 }

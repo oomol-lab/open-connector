@@ -60,7 +60,6 @@ export async function validateDokployCredential(
   const host = new URL(context.apiBaseUrl).host;
   return {
     profile: { accountId: `dokploy:${host}`, displayName: `Dokploy ${host}` },
-    grantedScopes: [],
     metadata: { apiBaseUrl: context.apiBaseUrl, validationEndpoint },
   };
 }

@@ -146,7 +146,6 @@ export const credentialValidators: CredentialValidators = {
       profile: {
         displayName: "AssemblyAI API Key",
       },
-      grantedScopes: [],
       metadata: {
         validationEndpoint: "/transcript",
       },

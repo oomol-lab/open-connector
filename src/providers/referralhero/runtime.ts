@@ -114,7 +114,6 @@ export async function validateReferralheroCredential(
   await request({ method: "GET", path: "/lists", query: { page: 1 } }, { apiKey, fetcher, signal }, "validate");
   return {
     profile: { displayName: "ReferralHero API Token" },
-    grantedScopes: [],
     metadata: { apiBaseUrl: referralheroApiBaseUrl },
   };
 }

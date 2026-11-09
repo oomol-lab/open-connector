@@ -55,7 +55,6 @@ export async function validateHexCredential(
   options: { fetcher: typeof fetch; signal?: AbortSignal },
 ): Promise<{
   profile: { accountId: string; displayName: string };
-  grantedScopes: string[];
   metadata: Record<string, unknown>;
 }> {
   await requestHexJson({
@@ -74,7 +73,6 @@ export async function validateHexCredential(
       accountId: "api_token",
       displayName: "Hex API Token",
     },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: hexApiBaseUrl,
       validationEndpoint: "/projects",

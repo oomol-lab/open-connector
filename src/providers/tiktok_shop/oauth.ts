@@ -3,7 +3,6 @@ import type { ProviderOAuthRuntime } from "../../oauth/oauth-token.ts";
 import { optionalString } from "../../core/cast.ts";
 import { ProviderRequestError, requiredInputString } from "../provider-runtime.ts";
 import { requestToken, requireClient } from "./runtime.ts";
-const scopes = ["seller.authorization.info", "seller.product.basic", "seller.order.info"];
 export const oauth: ProviderOAuthRuntime = {
   buildAuthorizationUrl({ authorizationUrl, clientConfig }) {
     requireClient(clientConfig);
@@ -23,7 +22,6 @@ export const oauth: ProviderOAuthRuntime = {
     const token = await requestToken(
       input.clientConfig,
       { auth_code: input.code, grant_type: "authorized_code" },
-      input.clientConfig.requestedScopes ?? scopes,
       input.fetcher,
     );
     return { ...token, providerSecret: { ...requireClient(input.clientConfig) } };
@@ -32,7 +30,6 @@ export const oauth: ProviderOAuthRuntime = {
     const token = await requestToken(
       input.clientConfig,
       { refresh_token: input.refreshToken, grant_type: "refresh_token" },
-      input.clientConfig.requestedScopes ?? scopes,
       input.fetcher,
       input.refreshToken,
     );

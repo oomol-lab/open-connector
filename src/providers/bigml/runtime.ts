@@ -123,7 +123,6 @@ export async function validateBigmlCredential(
   await request("/model", "GET", { limit: 1 }, undefined, { apiKey, username, fetcher, signal }, "validate");
   return {
     profile: { accountId: `bigml:${username}`, displayName: `BigML ${username}` },
-    grantedScopes: [],
     metadata: { username, apiBaseUrl: bigmlApiBaseUrl, validationEndpoint: "/model" },
   };
 }

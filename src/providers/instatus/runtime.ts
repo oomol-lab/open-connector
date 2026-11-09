@@ -145,7 +145,6 @@ export async function validateInstatusCredential(
       accountId: optionalString(profile?.id) ?? email ?? "instatus:api_key",
       displayName: name ?? email ?? "Instatus API Key",
     },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl: instatusApiBaseUrl,
       userId: optionalString(profile?.id),

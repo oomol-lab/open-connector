@@ -76,7 +76,6 @@ export const credentialValidators: CredentialValidators = {
     const account = requireObjectField(payload, "user", "SurveyMethods account response");
     return {
       profile: { accountId: credentials.loginId, displayName: credentials.loginId },
-      grantedScopes: [],
       metadata: compactObject({
         apiBaseUrl: surveyMethodsApiBaseUrl,
         loginId: credentials.loginId,

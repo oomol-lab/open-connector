@@ -156,7 +156,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: payload.organizationId,
         displayName: `Formbricks organization ${payload.organizationId}`,
       },
-      grantedScopes: [],
       metadata: {
         apiBaseUrl: formbricksApiBaseUrl,
         validationEndpoint: formbricksValidationPath,

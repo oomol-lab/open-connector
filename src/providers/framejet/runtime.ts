@@ -64,7 +64,6 @@ export async function validateFramejetApiKey(
       accountId: "api_key",
       displayName: "Framejet API Key",
     },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: framejetApiBaseUrl,
       validationEndpoint: "/v1/me",

@@ -97,7 +97,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: "api_key",
         displayName: "MxToolbox API Key",
       },
-      grantedScopes: [],
       metadata: compactObject({
         apiBaseUrl: mxToolboxLookupApiBaseUrl,
         accountApiBaseUrl: mxToolboxAccountApiBaseUrl,

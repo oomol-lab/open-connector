@@ -149,7 +149,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: chatflow.id,
         displayName: chatflow.name || "FlowiseAI Chatflow API Key",
       },
-      grantedScopes: [],
       metadata: compactObject({
         baseUrl,
         chatflowId: chatflow.id,

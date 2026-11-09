@@ -56,7 +56,6 @@ export async function validateEnergyPerformanceCertificatesCredential(
       accountId: "energy_performance_certificates",
       displayName: "Energy Performance Certificates Bearer Token",
     },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: energyPerformanceCertificatesApiBaseUrl,
       validationEndpoint: "/api/codes",

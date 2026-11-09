@@ -76,7 +76,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: buildProviderAccountId(input.apiKey),
         displayName: "Control D API Token",
       },
-      grantedScopes: [],
       metadata: compactObject({
         apiBaseUrl,
         validationEndpoint: "/profiles",

@@ -82,7 +82,6 @@ export async function validateExcalidrawCredential(
       accountId: `excalidraw_mcp:mcp:${endpointHash}`,
       displayName: `Excalidraw MCP · ${context.endpoint.host}`,
     },
-    grantedScopes: [],
     metadata: {
       mcpEndpoint: endpointId,
       discoveredToolCount: discoveredTools.length,

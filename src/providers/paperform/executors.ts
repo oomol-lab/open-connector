@@ -69,7 +69,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: "paperform:api-key",
         displayName: "Paperform API Key",
       },
-      grantedScopes: [],
       metadata: {
         apiBaseUrl: paperformApiBaseUrl,
       },

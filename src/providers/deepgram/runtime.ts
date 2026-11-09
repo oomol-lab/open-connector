@@ -149,7 +149,6 @@ export async function validateDeepgramCredential(
       accountId: optionalString(firstProject?.project_id) ?? "api_key",
       displayName: optionalString(firstProject?.name) ?? "Deepgram API Key",
     },
-    grantedScopes: [],
     metadata: compactObject({
       validationEndpoint: "/projects",
       firstProjectId: optionalString(firstProject?.project_id),

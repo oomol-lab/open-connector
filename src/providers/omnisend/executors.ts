@@ -107,7 +107,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: "omnisend",
         displayName: "Omnisend API Key",
       },
-      grantedScopes: [],
       metadata: compactObject({
         apiBaseUrl: omnisendApiBaseUrl,
         apiVersion: omnisendApiVersion,

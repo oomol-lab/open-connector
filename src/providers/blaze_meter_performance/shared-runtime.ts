@@ -94,7 +94,6 @@ async function validateBlazeMeterCredentialWith(
       accountId: userId,
       displayName: email ?? displayName ?? name ?? "BlazeMeter API Key",
     },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl: blazeMeterApiBaseUrl,
       validationEndpoint: blazeMeterValidationPath,

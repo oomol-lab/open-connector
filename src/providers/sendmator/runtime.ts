@@ -101,7 +101,6 @@ export async function validateSendmatorCredential(
       accountId: teamId ? `team:${teamId}` : "sendmator",
       displayName: teamId ? `Sendmator ${teamId}` : "Sendmator API Key",
     },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl: sendmatorApiBaseUrl,
       validationEndpoint: "/contacts",

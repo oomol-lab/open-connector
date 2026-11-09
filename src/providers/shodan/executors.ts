@@ -126,7 +126,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: "shodan-api-key",
         displayName: "Shodan API Key",
       },
-      grantedScopes: [],
       metadata: {
         apiBaseUrl: shodanApiBaseUrl,
         validationEndpoint,

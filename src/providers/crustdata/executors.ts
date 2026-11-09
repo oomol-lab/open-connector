@@ -102,7 +102,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: matchedCompanyId === undefined ? "crustdata" : String(matchedCompanyId),
         displayName: optionalString(basicInfo?.name) ?? "Crustdata API Key",
       },
-      grantedScopes: [],
       metadata: compactObject({
         apiBaseUrl: crustdataApiBaseUrl,
         validationEndpoint: validatePath,

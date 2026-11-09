@@ -72,7 +72,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: "opencage",
         displayName: "OpenCage API Key",
       },
-      grantedScopes: [],
       metadata: compactObject({
         validationEndpoint: "/geocode/v1/json",
         apiBaseUrl: opencageApiBaseUrl,

@@ -130,7 +130,6 @@ export async function validateUnipileCredential(
       accountId: buildUnipileProviderAccountId(dsn, input.apiKey),
       displayName: buildUnipileAccountLabel(dsn),
     },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: buildUnipileBaseUrl(dsn),
       dsn,

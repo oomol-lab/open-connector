@@ -108,7 +108,6 @@ async function validateL2sCredential(
       accountId: "l2s",
       displayName: "L2S API Key",
     },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl: l2sApiBaseUrl,
       validationEndpoint: l2sValidationPath,

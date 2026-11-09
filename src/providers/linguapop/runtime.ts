@@ -39,9 +39,7 @@ export async function validateLinguapopCredential(
     profile: {
       accountId: "linguapop:integration-api-key",
       displayName: "Linguapop Integration API Key",
-      grantedScopes: [],
     },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: linguapopApiBaseUrl,
       validationEndpoint: getLanguagesPath,

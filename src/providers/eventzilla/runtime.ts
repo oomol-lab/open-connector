@@ -190,7 +190,6 @@ export async function validateEventzillaCredential(
       accountId: firstUserId ? String(firstUserId) : "api_key",
       displayName: firstUserName || firstUserEmail || "Eventzilla API Key",
     },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl: eventzillaApiBaseUrl,
       validationEndpoint: `${eventzillaValidationPath}?offset=0&limit=1`,

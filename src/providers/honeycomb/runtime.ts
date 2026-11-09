@@ -57,7 +57,6 @@ export async function validateHoneycombCredential(
   options: { fetcher: typeof fetch; signal?: AbortSignal },
 ): Promise<{
   profile: { accountId: string; displayName: string };
-  grantedScopes: string[];
   metadata: Record<string, unknown>;
 }> {
   const apiBaseUrl = resolveHoneycombApiBaseUrl({ values: input.values });
@@ -79,7 +78,6 @@ export async function validateHoneycombCredential(
       accountId: authorization.id || teamName || "honeycomb_api_key",
       displayName: [teamName, environmentName].filter(Boolean).join(" / ") || "Honeycomb API Key",
     },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl,
       keyId: authorization.id,

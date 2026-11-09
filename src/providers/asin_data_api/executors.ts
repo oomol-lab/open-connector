@@ -193,7 +193,6 @@ export const credentialValidators: CredentialValidators = {
       profile: {
         displayName: optionalString(accountInfo?.email) ?? optionalString(accountInfo?.name) ?? "ASIN Data API Key",
       },
-      grantedScopes: [],
       metadata: compactObject({
         apiBaseUrl: asinDataApiBaseUrl,
         validationEndpoint: "/account",

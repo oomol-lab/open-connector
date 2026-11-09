@@ -121,7 +121,6 @@ export async function validatePlainCredential(
   signal?: AbortSignal,
 ): Promise<{
   profile: { accountId: string; displayName: string };
-  grantedScopes: string[];
   metadata: Record<string, unknown>;
 }> {
   const payload = await executePlainOperation(
@@ -140,7 +139,6 @@ export async function validatePlainCredential(
   const fullName = readString(machineUser.fullName, "plain machine user fullName");
   return {
     profile: { accountId: machineUserId, displayName: fullName },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl: plainApiUrl,
       validationEndpoint: "myMachineUser",

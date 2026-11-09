@@ -57,7 +57,6 @@ export const credentialValidators: CredentialValidators = {
       profile: {
         displayName: "Anthropic API Key",
       },
-      grantedScopes: [],
       metadata: {
         validationEndpoint: "/v1/models",
         availableModels: (payload.data ?? [])

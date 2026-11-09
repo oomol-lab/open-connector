@@ -283,7 +283,6 @@ export async function validateFreeastroapiCredential(
   });
   return {
     profile: { displayName: "FreeAstroAPI API Key" },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: freeastroapiBaseUrl,
       validationEndpoint: "/api/v1/chinese/bazi/dictionary",

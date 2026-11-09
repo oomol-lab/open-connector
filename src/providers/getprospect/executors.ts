@@ -63,7 +63,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: "getprospect",
         displayName: "GetProspect API Key",
       },
-      grantedScopes: [],
       metadata: {
         apiBaseUrl: getprospectApiBaseUrl,
         validationEndpoint,

@@ -103,7 +103,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: firstTeammate?.id ?? "front-api-token",
         displayName: accountLabel || firstTeammate?.email || "Front API Token",
       },
-      grantedScopes: [],
       metadata: compactObject({
         apiBaseUrl: frontApiBaseUrl,
         validationEndpoint: "/teammates",

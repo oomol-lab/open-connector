@@ -227,7 +227,6 @@ export async function validateSupportbeeCredential(
       accountId: `supportbee:${company}`,
       displayName: `SupportBee ${company}`,
     },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: baseUrl,
       baseUrl,

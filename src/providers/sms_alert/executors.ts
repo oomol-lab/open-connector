@@ -111,7 +111,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: "sms_alert",
         displayName: "SMS Alert API Key",
       },
-      grantedScopes: [],
       metadata: {
         apiBaseUrl: `${smsAlertApiOrigin}${smsAlertApiBasePath}`,
         validationEndpoint: "/creditstatus.json",

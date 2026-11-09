@@ -63,7 +63,7 @@ export const credentialValidators: CredentialValidators = {
     const email = required(input.values.email, "email");
     if (!email.includes("@")) throw new ProviderRequestError(400, "email must be a valid email address");
     await request("/10.1038%2Fnature12373", {}, { email, fetcher, signal });
-    return { profile: { accountId: email, displayName: email }, grantedScopes: [], metadata: { apiBaseUrl: baseUrl } };
+    return { profile: { accountId: email, displayName: email }, metadata: { apiBaseUrl: baseUrl } };
   },
 };
 async function request(path: string, query: Record<string, string | undefined>, context: Context): Promise<unknown> {

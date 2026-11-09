@@ -136,7 +136,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: userId ? `lattice:${dataResidency}:${userId}` : `lattice:${dataResidency}:api_key`,
         displayName: name ?? email ?? `Lattice ${dataResidency.toUpperCase()} API Key`,
       },
-      grantedScopes: [],
       metadata: compactObject({
         apiBaseUrl,
         dataResidency,

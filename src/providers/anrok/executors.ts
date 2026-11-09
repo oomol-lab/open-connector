@@ -128,7 +128,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: "api_key",
         displayName: "Anrok API Key",
       },
-      grantedScopes: [],
       metadata: {
         apiBaseUrl: anrokApiBaseUrl,
         validationEndpoint: anrokValidationPath,

@@ -159,7 +159,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: "retell-ai-api-key",
         displayName: "Retell AI API Key",
       },
-      grantedScopes: [],
       metadata: {
         apiBaseUrl: retellAiApiBaseUrl,
         validationEndpoint: validationPath,

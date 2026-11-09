@@ -121,7 +121,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: "world-news-api-key",
         displayName: "World News API Key",
       },
-      grantedScopes: [],
       metadata: {
         validationEndpoint: "/geo-coordinates",
         apiBaseUrl: worldNewsApiBaseUrl,

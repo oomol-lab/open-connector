@@ -181,7 +181,6 @@ export async function validateTwittrapiCredential(
       accountId: accountId ?? "api_key",
       displayName: "TwittrAPI API Key",
     },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: twittrapiApiBaseUrl,
       validationEndpoint: twittrapiValidationPath,

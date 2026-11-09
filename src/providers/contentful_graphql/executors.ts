@@ -119,7 +119,6 @@ async function validateContentfulGraphqlCredential(
     profile: {
       accountId: `${target.region}:${target.spaceId}:${target.environmentId}`,
       displayName: formatContentfulGraphqlAccountLabel(target),
-      grantedScopes: [],
     },
     metadata: compactObject({
       apiBaseUrl: getContentfulGraphqlApiBaseUrl(target.region),

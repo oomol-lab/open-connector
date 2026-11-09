@@ -238,7 +238,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: context.clientId,
         displayName: `Foxit Cloud API - ${context.clientId}`,
       },
-      grantedScopes: [],
       metadata: {
         clientId: context.clientId,
         validationEndpoint: "/user/stock",

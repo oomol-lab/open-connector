@@ -88,7 +88,6 @@ export async function validateAnySearchApiKey(
       accountId: "anysearch",
       displayName: "AnySearch API Key",
     },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: anySearchApiBaseUrl,
       validationEndpoint: "/v1/search",

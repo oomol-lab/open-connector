@@ -61,7 +61,7 @@ export async function validatePlaterecognizerCredential(
   );
 
   return {
-    profile: { accountId: "platerecognizer-api-token", displayName: "Plate Recognizer API Token", grantedScopes: [] },
+    profile: { accountId: "platerecognizer-api-token", displayName: "Plate Recognizer API Token" },
     metadata: compactObject({
       apiBaseUrl: platerecognizerApiBaseUrl,
       validationEndpoint: statisticsPath,

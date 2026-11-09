@@ -117,7 +117,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: `kaggle:${username}`,
         displayName: `Kaggle (${username})`,
       },
-      grantedScopes: [],
       metadata: {
         apiBaseUrl: kaggleApiBaseUrl,
         username,

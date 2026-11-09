@@ -161,7 +161,6 @@ export async function validateAltTextAiCredential(
       accountId: accountName ?? "alt_text_ai_api_key",
       displayName: accountName ?? "AltText.ai API Key",
     },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl: altTextAiApiBaseUrl,
       validationEndpoint: "/account",

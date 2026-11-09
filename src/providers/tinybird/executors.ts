@@ -130,7 +130,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: `tinybird:${host}`,
         displayName: `Tinybird ${host}`,
       },
-      grantedScopes: [],
       metadata: {
         apiBaseUrl,
         validationEndpoint: tinybirdSqlPath,

@@ -213,7 +213,6 @@ export async function validatePaymoCredential(
       accountId:
         readNonEmptyString(user.id) ?? readNonEmptyString(user.email) ?? readNonEmptyString(user.name) ?? "paymo",
       displayName: readNonEmptyString(user.name) ?? readNonEmptyString(user.email) ?? "Paymo API Key",
-      grantedScopes: [],
     },
     metadata: compactObject({
       userId: readNonEmptyString(user.id),

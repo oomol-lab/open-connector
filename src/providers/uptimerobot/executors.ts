@@ -158,7 +158,6 @@ export const credentialValidators: CredentialValidators = {
         accountId,
         displayName: firstName ?? email ?? accountId,
       },
-      grantedScopes: [],
       metadata: compactObject({
         apiBaseUrl: uptimerobotApiBaseUrl,
         validationEndpoint: "/getAccountDetails",

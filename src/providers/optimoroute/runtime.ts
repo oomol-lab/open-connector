@@ -50,9 +50,7 @@ export async function validateOptimorouteCredential(
   return {
     profile: {
       displayName: "OptimoRoute API Key",
-      grantedScopes: [],
     },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: optimorouteApiBaseUrl,
       validationEndpoint: optimorouteValidationPath,

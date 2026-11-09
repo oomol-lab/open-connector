@@ -162,7 +162,6 @@ export const credentialValidators: CredentialValidators = {
         displayName:
           optionalString(organisation?.name) ?? optionalString(organisation?.legalName) ?? "ChaserHQ Organisation",
       },
-      grantedScopes: [],
       metadata: compactObject({
         apiBaseUrl: apiVersionBaseUrl,
         validationEndpoint: "/v1/organisation",

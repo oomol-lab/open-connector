@@ -63,7 +63,6 @@ export async function validateBenchmarkoneCredential(
   await requestBenchmarkone({ apiKey, path: "/user", fetcher, signal });
   return {
     profile: { displayName: "BenchmarkONE API Key" },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: benchmarkoneApiBaseUrl,
       validationEndpoint: "/user",

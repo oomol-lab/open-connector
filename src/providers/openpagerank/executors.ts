@@ -49,9 +49,7 @@ export const credentialValidators: CredentialValidators = {
     return {
       profile: {
         displayName: "OpenPageRank API Key",
-        grantedScopes: [],
       },
-      grantedScopes: [],
       metadata: {
         apiBaseUrl: openPageRankApiBaseUrl,
         validationEndpoint: openPageRankLookupPath,

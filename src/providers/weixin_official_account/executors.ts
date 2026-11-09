@@ -431,7 +431,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: credential.appId,
         displayName: `WeChat Official Account · ${credential.appId}`,
       },
-      grantedScopes: [],
       metadata: { appId: credential.appId },
     };
   },

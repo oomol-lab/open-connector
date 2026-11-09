@@ -158,7 +158,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: "radar:api_key",
         displayName: "Radar API Key",
       },
-      grantedScopes: [],
       metadata: compactObject({
         apiBaseUrl: radarApiBaseUrl,
         validationEndpoint: radarValidationPath,

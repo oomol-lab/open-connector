@@ -87,7 +87,6 @@ export async function validateOctaveCredential(
       accountId: workspaceOId,
       displayName: workspaceName ?? organizationName ?? "Octave API Key",
     },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl: octaveApiBaseUrl,
       validationEndpoint: octaveValidationPath,

@@ -108,7 +108,6 @@ export const credentialValidators: CredentialValidators = {
       profile: {
         displayName: "Appstle Subscriptions API Key",
       },
-      grantedScopes: [],
       metadata: {
         apiBaseUrl: appstleSubscriptionsApiBaseUrl,
         validationEndpoint: "/api/external/v2/subscription-contract-details/customers",

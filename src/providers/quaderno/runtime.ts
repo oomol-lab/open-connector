@@ -124,7 +124,6 @@ export async function validateQuadernoCredential(
     profile: {
       accountId: `quaderno:${account.accountSubdomain}`,
       displayName: account.email ?? account.name ?? account.accountSubdomain,
-      grantedScopes: [],
     },
     metadata: {
       accountUrl: account.accountUrl,

@@ -34,7 +34,6 @@ export const credentialValidators: CredentialValidators = {
     );
     return {
       profile: { displayName: optionalString(usage.email) ?? "RoxyAPI API Key" },
-      grantedScopes: [],
       metadata: { apiBaseUrl: roxyapiBaseUrl, validationEndpoint: "/usage", plan: optionalRawString(usage.plan) },
     };
   },

@@ -123,7 +123,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: "moosend",
         displayName: "Moosend API Key",
       },
-      grantedScopes: [],
       metadata: compactObject({
         apiBaseUrl: moosendApiBaseUrl,
         validationEndpoint: moosendValidationPath,

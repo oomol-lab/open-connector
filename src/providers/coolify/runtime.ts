@@ -92,7 +92,6 @@ export async function validateCoolifyCredential(
   const host = new URL(context.apiBaseUrl).host;
   return {
     profile: { accountId: id == null ? `coolify:${host}` : `coolify:${id}`, displayName: name ?? `Coolify ${host}` },
-    grantedScopes: [],
     metadata: { apiBaseUrl: context.apiBaseUrl, teamId: id, teamName: name },
   };
 }

@@ -195,7 +195,6 @@ export const credentialValidators: CredentialValidators = {
       profile: {
         displayName: "Healthchecks.io API Key",
       },
-      grantedScopes: [],
       metadata: compactObject({
         apiBaseUrl: healthchecksIoApiBaseUrl,
         validationEndpoint: "/checks/",

@@ -45,9 +45,9 @@ export const oauth: ProviderOAuthRuntime = {
 
     const dataAccessExpiresAt = optionalNumber(debug.data_access_expires_at);
     const expiresAt = resolveTokenExpiration(token, debug, dataAccessExpiresAt);
-    if (!Array.isArray(debug.scopes) || !debug.scopes.every((scope) => typeof scope === "string")) {
-      throw new ProviderRequestError(502, "Meta granted scopes are missing", undefined, "provider_error");
-    }
+    const scopes = Array.isArray(debug.scopes)
+      ? debug.scopes.filter((scope): scope is string => typeof scope === "string")
+      : undefined;
 
     return {
       accessToken,
@@ -56,7 +56,7 @@ export const oauth: ProviderOAuthRuntime = {
       expiresAt,
       providerSecret: { appSecret: clientConfig.clientSecret },
       metadata: {
-        scope: debug.scopes.join(" "),
+        scope: scopes?.join(" "),
         graphApiVersion: metaGraphApiVersion,
         tokenType: debug.type,
         dataAccessExpiresAt,

@@ -598,9 +598,7 @@ export async function validatePiHoleCredential(
     profile: {
       accountId: `pi_hole:${baseUrl}`,
       displayName: `Pi-hole (${baseUrl})`,
-      grantedScopes: [],
     },
-    grantedScopes: [],
     metadata: {
       baseUrl,
       apiPath,

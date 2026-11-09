@@ -89,7 +89,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: "quipteams:api-key",
         displayName: "Quipteams API Key",
       },
-      grantedScopes: [],
       metadata: {
         apiBaseUrl: quipteamsApiBaseUrl,
         validationEndpoint: "/api/v1/products",

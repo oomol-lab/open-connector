@@ -61,9 +61,7 @@ export async function validateSignalbaseCredential(
     profile: {
       accountId: "signalbase-api-key",
       displayName: "Signalbase API Key",
-      grantedScopes: [],
     },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: signalbaseApiBaseUrl,
       validationEndpoint: "/signals/funding",

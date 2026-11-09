@@ -19,7 +19,6 @@ import {
   ProviderRequestError,
   providerInputError,
 } from "../provider-runtime.ts";
-import { zeplinReadScope } from "./scopes.ts";
 
 export const zeplinApiBaseUrl = "https://api.zeplin.dev/v1";
 
@@ -69,7 +68,6 @@ export async function validateZeplinCredential(
       accountId,
       displayName: fullName ?? username ?? email ?? accountId,
     },
-    grantedScopes: [zeplinReadScope],
     metadata: {
       apiBaseUrl: zeplinApiBaseUrl,
       validationEndpoint: "/users/me",

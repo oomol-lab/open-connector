@@ -168,9 +168,7 @@ export async function validateRebrandlyCredential(
     profile: {
       accountId: accountId ?? "rebrandly-api-key",
       displayName: fullName ?? email ?? "Rebrandly API Key",
-      grantedScopes: [],
     },
-    grantedScopes: [],
     metadata: {
       validationEndpoint: validationPath,
       apiBaseUrl: rebrandlyApiBaseUrl,

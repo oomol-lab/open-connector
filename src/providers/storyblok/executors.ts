@@ -165,7 +165,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: spaceId === undefined ? `storyblok:${region}` : String(spaceId),
         displayName: spaceName ?? `Storyblok ${storyblokRegionLabels[region]} Space`,
       },
-      grantedScopes: [],
       metadata: compactObject({
         apiBaseUrl: baseUrl,
         region,

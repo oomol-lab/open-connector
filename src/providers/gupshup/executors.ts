@@ -136,7 +136,6 @@ export const credentialValidators: CredentialValidators = {
     });
     return {
       profile: { accountId: appId, displayName: "Gupshup WhatsApp App" },
-      grantedScopes: [],
       metadata: { apiBaseUrl: baseUrl, appId, validationEndpoint },
     };
   },

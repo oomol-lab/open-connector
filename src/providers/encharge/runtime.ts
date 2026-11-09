@@ -48,7 +48,6 @@ export async function validateEnchargeCredential(
       accountId: "encharge",
       displayName: "Encharge API Key",
     },
-    grantedScopes: [],
     metadata: {
       validationEndpoint: enchargeSendEmailPath,
       apiBaseUrl: enchargeApiBaseUrl,

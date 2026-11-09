@@ -180,7 +180,6 @@ export async function validateDocugenerateCredential(
       accountId: `docugenerate:${region}`,
       displayName: "DocuGenerate API Key",
     },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl,
       region,

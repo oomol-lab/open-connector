@@ -153,7 +153,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: optionalString(mainWorkspace?.id) ?? "api_key",
         displayName: optionalString(mainWorkspace?.versionCodeName) ?? "Document360 API Token",
       },
-      grantedScopes: [],
       metadata: compactObject({
         validationEndpoint: "/v2/ProjectVersions",
         workspaceCount: workspaces.length,

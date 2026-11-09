@@ -92,7 +92,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: firstUsername ? `motherduck:${firstUsername}` : `motherduck:${input.apiKey.slice(-6)}`,
         displayName: firstUsername ? `MotherDuck ${firstUsername}` : "MotherDuck Admin API Token",
       },
-      grantedScopes: [],
       metadata: jsonObject({
         apiBaseUrl: motherDuckApiBaseUrl,
         validationEndpoint: "/v1/active_accounts",

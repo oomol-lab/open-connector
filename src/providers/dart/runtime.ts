@@ -131,9 +131,7 @@ export async function validateDartCredential(
     profile: {
       accountId: userId,
       displayName: name,
-      grantedScopes: [],
     },
-    grantedScopes: [],
     metadata: {
       userId,
       email,

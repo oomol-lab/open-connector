@@ -56,7 +56,6 @@ export async function validateAmbientWeatherCredential(
       accountId: firstDevice?.macAddress ?? "ambient_weather",
       displayName: "Ambient Weather API Key",
     },
-    grantedScopes: [],
     metadata: compactObject({
       applicationKey: context.applicationKey,
       validationEndpoint: "/v1/devices",

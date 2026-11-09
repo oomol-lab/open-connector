@@ -85,7 +85,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: id,
         displayName: optionalString(account.email)?.trim() || (id ? `Omise ${id}` : "Omise Account"),
       },
-      grantedScopes: [],
       metadata: { apiBaseUrl: baseUrl, validationEndpoint: "/account" },
     };
   },

@@ -147,7 +147,6 @@ export async function validateCredential(
   const workspaces = objects(data.workspaces, "Retable workspaces");
   return {
     profile: { displayName: optionalString(workspaces[0]?.name) ?? "Retable API Key" },
-    grantedScopes: [],
     metadata: { apiBaseUrl: retableApiBaseUrl, workspaceCount: workspaces.length },
   };
 }

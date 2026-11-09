@@ -91,7 +91,6 @@ export const credentialValidators: CredentialValidators = {
     }
     return {
       profile: { accountId: "api_key", displayName: "Postiz API Key" },
-      grantedScopes: [],
       metadata: { apiBaseUrl },
     };
   },

@@ -209,7 +209,6 @@ export async function validateDatascopeCredential(
       accountId: "datascope",
       displayName: "DataScope API Key",
     },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: "https://www.mydatascope.com/api/external",
       validationEndpoint: "/locations",

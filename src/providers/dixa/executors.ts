@@ -76,7 +76,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: agentId ? `dixa:${agentId}` : "dixa:api-key",
         displayName,
       },
-      grantedScopes: [],
       metadata: {
         apiBaseUrl: dixaApiBaseUrl,
         validationEndpoint: "/v1/agents",

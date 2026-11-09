@@ -127,7 +127,6 @@ export const credentialValidators: CredentialValidators = {
       profile: {
         displayName: "TelTel API Key",
       },
-      grantedScopes: [],
       metadata: {
         validationEndpoint: "/account/balance",
         apiBaseUrl: teltelApiBaseUrl,

@@ -156,7 +156,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: `mixmax:user:${userId}`,
         displayName: "Mixmax API Token",
       },
-      grantedScopes: [],
       metadata: {
         validationEndpoint: mixmaxValidationPath,
         userId,

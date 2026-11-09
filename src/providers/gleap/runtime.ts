@@ -92,9 +92,7 @@ export async function validateGleapCredential(
     profile: {
       accountId: userId ?? projectId,
       displayName: readUserLabel(user) ?? "Gleap API Key",
-      grantedScopes: [],
     },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl: gleapApiBaseUrl,
       projectId,

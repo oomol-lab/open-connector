@@ -332,7 +332,6 @@ export async function validateSystemeIoCredential(
       accountId: "systeme_io",
       displayName: "Systeme.io API Key",
     },
-    grantedScopes: [],
     metadata: {
       validationEndpoint: "/api/tags",
       tagCount: items.length,

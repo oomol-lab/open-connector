@@ -33,7 +33,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: typeof person.id === "string" ? person.id : undefined,
         displayName: typeof person.displayName === "string" ? person.displayName : "Webex User",
       },
-      grantedScopes: input.profile.grantedScopes,
     };
   },
 };

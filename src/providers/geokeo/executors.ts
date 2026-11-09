@@ -71,7 +71,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: "geokeo-api-key",
         displayName: "Geokeo API Key",
       },
-      grantedScopes: [],
       metadata: compactObject({
         validationEndpoint: "/geocode/v1/search.php",
         apiBaseUrl: geokeoApiBaseUrl,

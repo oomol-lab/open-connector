@@ -44,7 +44,6 @@ type ClickupRequestOptions = {
 export const clickupApiOrigin: string = "https://api.clickup.com";
 const clickupApiV2BaseUrl = `${clickupApiOrigin}/api/v2`;
 const clickupApiV3BaseUrl = `${clickupApiOrigin}/api/v3`;
-export const clickupGrantedScopes: string[] = ["clickup.read", "clickup.write"];
 const maxAttachmentRedirects = 5;
 const maxAttachmentBytes = 20 * 1024 * 1024;
 const attachmentDownloadTimeoutMs = 15_000;
@@ -55,8 +54,7 @@ export async function validateClickupCredential(
   fetcher: typeof fetch,
   signal?: AbortSignal,
 ): Promise<{
-  profile: { accountId: string; displayName: string; grantedScopes: string[] };
-  grantedScopes: string[];
+  profile: { accountId: string; displayName: string };
   metadata: Record<string, unknown>;
 }> {
   const profile = await fetchClickupCurrentAccount(accessToken, authType, fetcher, "validate", signal);
@@ -65,9 +63,7 @@ export async function validateClickupCredential(
     profile: {
       accountId: profile.accountId,
       displayName: profile.displayName,
-      grantedScopes: [...clickupGrantedScopes],
     },
-    grantedScopes: [...clickupGrantedScopes],
     metadata: profile.metadata,
   };
 }

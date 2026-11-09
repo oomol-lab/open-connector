@@ -49,7 +49,6 @@ export async function validateTalenthrCredential(
       accountId: "talenthr-api-key",
       displayName: "TalentHR API Key",
     },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: talenthrApiBaseUrl,
       validationEndpoint,

@@ -49,7 +49,6 @@ export async function validateBeaconchainCredential(
     profile: {
       accountId: "beaconchain:mainnet",
       displayName: "Beaconcha.in API Key",
-      grantedScopes: [],
     },
     metadata: {
       apiBaseUrl: beaconchainApiBaseUrl,

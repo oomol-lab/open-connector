@@ -170,7 +170,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: "fraudlabspro-api-key",
         displayName: "FraudLabs Pro API Key",
       },
-      grantedScopes: [],
       metadata: {
         validationEndpoint: "/order/result",
         apiBaseUrl: fraudlabsproApiBaseUrl,

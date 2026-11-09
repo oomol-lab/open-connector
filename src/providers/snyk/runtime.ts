@@ -166,7 +166,6 @@ export async function validateSnykCredential(
     "Snyk API Key";
   return {
     profile: { accountId: optionalString(principal.id) ?? "snyk:api-key", displayName: label },
-    grantedScopes: [],
     metadata: { apiBaseUrl: snykApiBaseUrl, validationEndpoint: "/self", apiVersion },
   };
 }

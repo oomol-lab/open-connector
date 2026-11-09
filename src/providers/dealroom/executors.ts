@@ -41,7 +41,6 @@ export const credentialValidators: CredentialValidators = {
     await request("companies", { limit: 1 }, { apiKey: input.apiKey, fetcher, signal });
     return {
       profile: { accountId: "dealroom", displayName: "Dealroom API Key" },
-      grantedScopes: [],
       metadata: { apiBaseUrl: baseUrl, validationEndpoint: "/companies" },
     };
   },

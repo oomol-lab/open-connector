@@ -65,7 +65,6 @@ export const credentialValidators: CredentialValidators = {
       profile: {
         displayName: "DeepSeek API Key",
       },
-      grantedScopes: [],
       metadata: {
         validationEndpoint: "/models",
         availableModels: (payload.data ?? [])

@@ -100,7 +100,6 @@ export const credentialValidators: CredentialValidators = {
     );
     return {
       profile: { accountId: "ritekit", displayName: "RiteKit Client ID" },
-      grantedScopes: [],
       metadata: {
         validationEndpoint: "/v1/search/trending",
         sampleTagCount: normalizeTrending(payload.tags).length,

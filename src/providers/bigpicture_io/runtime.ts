@@ -79,7 +79,6 @@ export async function validateBigpictureIoCredential(
       accountId: "bigpicture_io-api-key",
       displayName: "BigPicture.io API Key",
     },
-    grantedScopes: [],
     metadata: compactObject({
       companyApiBaseUrl: bigpictureCompanyApiBaseUrl,
       ipApiBaseUrl: bigpictureIpApiBaseUrl,

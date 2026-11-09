@@ -90,7 +90,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: optionalString(firstCandidate?.slug) ?? optionalString(firstCandidate?.id),
         displayName: firstString(firstCandidate, ["name", "full_name", "email"]) ?? "Recruit CRM API Token",
       },
-      grantedScopes: [],
       metadata: {
         apiBaseUrl,
         validationEndpoint: "/candidates?limit=1",

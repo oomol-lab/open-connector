@@ -76,7 +76,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: `${credential.environment}:${credential.appId}${tokenSuffix}`,
         displayName: `Alipay ${credential.appId} (${credential.environment})`,
       },
-      grantedScopes: [],
       metadata: { environment: credential.environment, appId: credential.appId, validation: "local_key_format_only" },
     };
   },

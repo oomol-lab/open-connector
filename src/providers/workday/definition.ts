@@ -1,7 +1,6 @@
 import type { ProviderDefinition } from "../../core/types.ts";
 
 import { workdayActions } from "./actions.ts";
-import { workdayOAuthScopes } from "./scopes.ts";
 
 const service = "workday";
 
@@ -16,7 +15,7 @@ export const provider: ProviderDefinition = {
       authorizationUrl: "{+baseUrl}/ccx/oauth2/{tenant}/authorize",
       tokenUrl: "{+baseUrl}/ccx/oauth2/{tenant}/token",
       refreshTokenUrl: "{+baseUrl}/ccx/oauth2/{tenant}/token",
-      scopes: workdayOAuthScopes,
+      scopes: [],
       tokenEndpointAuthMethod: "client_secret_post",
       clientConfigFields: [
         {

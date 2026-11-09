@@ -162,7 +162,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: "planhat",
         displayName: "Planhat API Access Token",
       },
-      grantedScopes: [],
       metadata: compactObject({
         apiBaseUrl,
         validationEndpoint: "/companies",

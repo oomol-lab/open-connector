@@ -131,7 +131,6 @@ describe("Metabase REST compatibility", () => {
     expect(calls).toEqual(["https://metabase.example.com/bi/api/user/current"]);
     expect(output).toMatchObject({
       profile: { accountId: "9", displayName: "Test" },
-      grantedScopes: [],
       metadata: { apiBaseUrl: "https://metabase.example.com/bi/api", validationEndpoint: "/user/current" },
     });
   });

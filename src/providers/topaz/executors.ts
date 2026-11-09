@@ -300,7 +300,7 @@ export const credentialValidators: CredentialValidators = {
       fetcher,
       signal,
     });
-    return { profile: { displayName: "Topaz API Account" }, grantedScopes: [], metadata: {} };
+    return { profile: { displayName: "Topaz API Account" }, metadata: {} };
   },
 };
 

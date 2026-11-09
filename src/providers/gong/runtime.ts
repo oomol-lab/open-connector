@@ -141,7 +141,6 @@ export async function validateGongCredential(
       accountId: buildProviderAccountId(context.apiBaseUrl, context.accessKey),
       displayName: firstUserEmail ?? "Gong API",
     },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl: context.apiBaseUrl,
       validationEndpoint: "/v2/users",

@@ -290,8 +290,7 @@ export async function validateTimelinkCredential(
   const token = normalizeToken(readDataObject(payload));
 
   return {
-    profile: { accountId: String(token.id), displayName: token.name, grantedScopes: [] },
-    grantedScopes: [],
+    profile: { accountId: String(token.id), displayName: token.name },
     metadata: compactObject({
       validationEndpoint: "/token",
       tokenId: token.id,

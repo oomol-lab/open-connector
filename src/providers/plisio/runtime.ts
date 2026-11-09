@@ -56,9 +56,7 @@ export async function validatePlisioCredential(
     profile: {
       accountId: "plisio-api-key",
       displayName: "Plisio API Key",
-      grantedScopes: [],
     },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: plisioApiBaseUrl,
       validationEndpoint: "/api/v1/balances/BTC",

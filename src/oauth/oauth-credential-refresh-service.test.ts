@@ -46,6 +46,20 @@ describe("OAuthCredentialRefreshService", () => {
     vi.restoreAllMocks();
   });
 
+  it.each([
+    { scope: "read", expected: ["read"] },
+    { scope: "read write new", expected: ["read", "write", "new"] },
+    { scope: "", expected: [] },
+    { scope: undefined, expected: ["read", "write"] },
+  ])("updates displayed grants from refresh scope $scope", async ({ scope, expected }) => {
+    stubRefreshResponse(scope === undefined ? {} : { scope });
+    const previous = expiredCredential({ scope: "read write" });
+    previous.profile.grantedScopes = ["read", "write"];
+    const refreshed = await new OAuthCredentialRefreshService(clientConfigs).refresh("example", previous);
+    expect(refreshed.profile.grantedScopes).toEqual(expected);
+    expect(refreshed.metadata.scope).toBe(scope ?? "read write");
+  });
+
   it.each([200, 400, 401])("requires reconnect for GitHub bad_refresh_token on HTTP %i", async (status) => {
     vi.stubGlobal(
       "fetch",

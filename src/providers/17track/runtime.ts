@@ -50,7 +50,6 @@ export async function validateSeventeenTrackCredential(
 
   return {
     profile: { displayName: "17TRACK API Key" },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: seventeenTrackApiBaseUrl,
       validationEndpoint: "/getquota",

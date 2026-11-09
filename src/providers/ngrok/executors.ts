@@ -108,7 +108,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: buildNgrokAccountId(input.apiKey),
         displayName: "ngrok API Key",
       },
-      grantedScopes: [],
       metadata: compactObject({
         apiBaseUrl: ngrokApiBaseUrl,
         validationEndpoint: ngrokValidationPath,

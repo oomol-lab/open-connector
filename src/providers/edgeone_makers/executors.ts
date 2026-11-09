@@ -480,7 +480,6 @@ export const credentialValidators: CredentialValidators = {
     });
     return {
       profile: { displayName: region === "china" ? "EdgeOne Makers China" : "EdgeOne Makers Global" },
-      grantedScopes: [],
       metadata: { region, apiBaseUrl: edgeOneMakersApiBaseUrls[region] },
     };
   },

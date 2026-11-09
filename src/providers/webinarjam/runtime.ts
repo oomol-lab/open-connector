@@ -114,9 +114,7 @@ export async function validateWebinarjamCredential(
     profile: {
       accountId: "webinarjam-api-key",
       displayName: "WebinarJam API Key",
-      grantedScopes: [],
     },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl: webinarjamApiBaseUrl,
       validationEndpoint: "/webinars",

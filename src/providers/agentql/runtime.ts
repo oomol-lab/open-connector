@@ -61,7 +61,6 @@ export async function validateAgentqlCredential(
       accountId: "api_key",
       displayName: "AgentQL API Key",
     },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl: agentqlApiBaseUrl,
       validationEndpoint: usagePath,

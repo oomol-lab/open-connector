@@ -50,9 +50,7 @@ export const credentialValidators: CredentialValidators = {
       profile: {
         accountId: email ?? organizationDomain ?? "api_key",
         displayName: displayName || email || "Slite API Key",
-        grantedScopes: [],
       },
-      grantedScopes: [],
       metadata: compactObject({
         email,
         organizationName,

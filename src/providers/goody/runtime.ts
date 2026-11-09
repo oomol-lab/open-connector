@@ -69,7 +69,6 @@ export async function validateGoodyCredential(
       accountId: email ?? "goody",
       displayName: email ?? "Goody API Key",
     },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl: goodyApiBaseUrl,
       validationEndpoint: "/v1/me",

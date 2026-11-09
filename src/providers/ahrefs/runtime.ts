@@ -63,7 +63,6 @@ export async function validateAhrefsCredential(
     profile: {
       displayName: "Ahrefs API Key",
     },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl: ahrefsApiBaseUrl,
       validationEndpoint: limitsAndUsagePath,

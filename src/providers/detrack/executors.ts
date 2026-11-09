@@ -108,7 +108,6 @@ export const credentialValidators: CredentialValidators = {
       profile: {
         displayName: "Detrack API Key",
       },
-      grantedScopes: [],
       metadata: {
         apiBaseUrl: detrackApiBaseUrl,
         validationEndpoint: "/dn/jobs",

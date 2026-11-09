@@ -115,9 +115,7 @@ export const credentialValidators: CredentialValidators = {
       profile: {
         accountId,
         displayName: fullName || email || orgName || "Sling Account",
-        grantedScopes: [],
       },
-      grantedScopes: [],
       metadata: compactObject({
         apiBaseUrl: slingApiBaseUrl,
         orgId: typeof sessionRecord.orgId === "number" ? sessionRecord.orgId : undefined,

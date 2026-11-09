@@ -102,7 +102,6 @@ async function validateKrakenIoCredential(
       accountId: "kraken_io",
       displayName: status.planName || "Kraken.io API Key",
     },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl: krakenApiBaseUrl,
       validationEndpoint: "/user_status",

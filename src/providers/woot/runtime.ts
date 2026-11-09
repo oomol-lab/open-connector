@@ -96,7 +96,6 @@ export async function validateWootCredential(
 
   return {
     profile: { accountId: "woot-api-key", displayName: "Woot API Key" },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: wootApiBaseUrl,
       validationEndpoint: "/feed/Featured?page=1",

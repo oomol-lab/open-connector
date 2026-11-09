@@ -67,7 +67,6 @@ export async function validateBrightDataCredential(
       accountId: account.customer ? `bright_data:${account.customer}` : "bright_data:api_key",
       displayName: account.customer ? `Bright Data ${account.customer}` : "Bright Data API Key",
     },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl: brightDataApiBaseUrl,
       validationEndpoint: brightDataStatusPath,

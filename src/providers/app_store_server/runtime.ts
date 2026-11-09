@@ -55,7 +55,6 @@ export async function validateAppStoreServerCredential(
       accountId: `app_store_server:${environment}:${credential.bundleId}`,
       displayName: `App Store Server API ${credential.bundleId} (${environment})`,
     },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: appStoreServerApiOrigins[environment],
       environment,

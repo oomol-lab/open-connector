@@ -114,7 +114,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: `tongdaxin:mcp:${hash}`,
         displayName: `Tongdaxin · ${hash.slice(-6)}`,
       },
-      grantedScopes: [],
       metadata: { mcpEndpoint: endpoint.toString(), discoveredToolCount: tools.length },
     };
   },

@@ -88,7 +88,6 @@ export async function validateScraperapiCredential(
       accountId: "scraperapi",
       displayName: "ScraperAPI API Key",
     },
-    grantedScopes: [],
     metadata: compactObject({
       validationEndpoint: "/account",
       apiBaseUrl: "https://api.scraperapi.com",

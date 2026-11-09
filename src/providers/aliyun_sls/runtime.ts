@@ -129,7 +129,6 @@ export function validateAliyunSlsCredential(values: Record<string, string>): Cre
       accountId: credential.accessKeyId,
       displayName: `${credential.accessKeyId}@${credential.endpoint}`,
     },
-    grantedScopes: [],
   };
 }
 

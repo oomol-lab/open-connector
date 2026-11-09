@@ -133,7 +133,6 @@ export async function validateManusCredential(
       accountId: "api_key",
       displayName: "Manus API Key",
     },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: manusApiBaseUrl,
       validationEndpoint,

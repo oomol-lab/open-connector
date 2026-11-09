@@ -58,7 +58,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: "stormglass_io",
         displayName: "Stormglass API Key",
       },
-      grantedScopes: [],
       metadata: {
         validationEndpoint: "/v2/weather/point",
         apiBaseUrl: stormglassApiBaseUrl,

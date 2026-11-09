@@ -64,7 +64,6 @@ export async function validateMediastackCredential(
       accountId: "mediastack",
       displayName: "Mediastack API Key",
     },
-    grantedScopes: [],
     metadata: compactObject({
       validationEndpoint: "/news",
       apiBaseUrl: mediastackApiBaseUrl,

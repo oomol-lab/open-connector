@@ -56,7 +56,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: "docraptor:api-key",
         displayName: "DocRaptor API Key",
       },
-      grantedScopes: [],
       metadata: {
         apiBaseUrl: docraptorApiBaseUrl,
         validationEndpoint: docraptorHostedDocsPath,

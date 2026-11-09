@@ -70,7 +70,6 @@ export async function validateElevioCredential(
     profile: {
       displayName: "Elevio API Key",
     },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: elevioApiBaseUrl,
       validationEndpoint: "/categories",

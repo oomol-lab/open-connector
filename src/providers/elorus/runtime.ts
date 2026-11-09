@@ -225,7 +225,6 @@ export async function validateElorusCredential(
       accountId: buildElorusProviderAccountId(apiKey, organizationId),
       displayName: `Elorus organization ${organizationId}`,
     },
-    grantedScopes: [],
     metadata: {
       organizationId,
       validationEndpoint: elorusValidationPath,

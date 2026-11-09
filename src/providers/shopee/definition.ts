@@ -14,7 +14,7 @@ export const provider: ProviderDefinition = {
       authorizationUrl: "{+authorizationBaseUrl}/api/v2/shop/auth_partner",
       tokenUrl: "{+apiBaseUrl}/api/v2/auth/token/get",
       refreshTokenUrl: "{+apiBaseUrl}/api/v2/auth/access_token/get",
-      scopes: ["all"],
+      scopes: [],
       tokenEndpointAuthMethod: "none",
       authorizationParams: { auth_type: "seller" },
       authorizationRequestFields: { clientId: "partner_id", scope: false },

@@ -115,7 +115,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: user.email,
         displayName: user.fullName || user.email || "ConfigCat Public API",
       },
-      grantedScopes: [],
       metadata: compactObject({
         apiBaseUrl: configcatApiBaseUrl,
         validationEndpoint: configcatValidationPath,

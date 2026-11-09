@@ -67,7 +67,6 @@ describe("Webflow credentials", () => {
 
     expect(result).toMatchObject({
       profile: { accountId: "user-2", displayName: "API User" },
-      grantedScopes: [],
     });
   });
 });

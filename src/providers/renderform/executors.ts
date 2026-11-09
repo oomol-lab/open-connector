@@ -75,9 +75,7 @@ async function validateRenderformCredential(
     profile: {
       accountId: "renderform-api-key",
       displayName: "RenderForm API Key",
-      grantedScopes: [],
     },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl: renderformApiBaseUrl,
       validationEndpoint: usagePath,

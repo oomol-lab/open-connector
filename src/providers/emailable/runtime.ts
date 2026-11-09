@@ -74,7 +74,6 @@ export async function validateEmailableCredential(
       accountId: payload.owner_email,
       displayName: payload.owner_email,
     },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: emailableApiBaseUrl,
       validationEndpoint: "/v1/account",

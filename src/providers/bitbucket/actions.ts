@@ -5,25 +5,25 @@ import { defineProviderAction } from "../../core/provider-definition.ts";
 
 const service = "bitbucket";
 
-export const bitbucketScopes = {
-  accountRead: "bitbucket.account.read",
-  workspaceRead: "bitbucket.workspace.read",
-  projectRead: "bitbucket.project.read",
-  repositoryRead: "bitbucket.repository.read",
-  repositoryWrite: "bitbucket.repository.write",
-  repositoryDelete: "bitbucket.repository.delete",
-  pullRequestRead: "bitbucket.pull_request.read",
-  pullRequestWrite: "bitbucket.pull_request.write",
-  pullRequestCommentWrite: "bitbucket.pull_request.comment.write",
-  issueRead: "bitbucket.issue.read",
-  issueInteract: "bitbucket.issue.interact",
-  issueWrite: "bitbucket.issue.write",
-  snippetRead: "bitbucket.snippet.read",
-  pipelineRead: "bitbucket.pipeline.read",
-  pipelineRun: "bitbucket.pipeline.run",
-  pipelineWrite: "bitbucket.pipeline.write",
-  pipelineVariableWrite: "bitbucket.pipeline.variable.write",
-  runnerRead: "bitbucket.runner.read",
+const bitbucketScopes = {
+  accountRead: "account",
+  workspaceRead: "account",
+  projectRead: "project",
+  repositoryRead: "repository",
+  repositoryWrite: "repository:write",
+  repositoryDelete: "repository:delete",
+  pullRequestRead: "pullrequest",
+  pullRequestWrite: "pullrequest:write",
+  pullRequestCommentWrite: "pullrequest",
+  issueRead: "issue",
+  issueInteract: "issue",
+  issueWrite: "issue:write",
+  snippetRead: "snippet",
+  pipelineRead: "pipeline",
+  pipelineRun: "pipeline:write",
+  pipelineWrite: "pipeline:write",
+  pipelineVariableWrite: "pipeline:variable",
+  runnerRead: "runner",
 } as const;
 
 const paginationFields = {
@@ -461,7 +461,7 @@ export const bitbucketActions: ActionDefinition[] = [
     name: "approve_pull_request",
     operationType: "write",
     description: "Approve a Bitbucket pull request.",
-    requiredScopes: [bitbucketScopes.pullRequestWrite],
+    requiredScopes: [bitbucketScopes.pullRequestRead],
     inputSchema: s.object("Input parameters for approving a Bitbucket pull request.", {
       ...repositoryFields,
       pullRequestId: s.integer("The pull request ID.", { minimum: 1 }),

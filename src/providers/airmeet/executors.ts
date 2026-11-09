@@ -70,7 +70,6 @@ export const credentialValidators: CredentialValidators = {
     );
     return {
       profile: { displayName: auth.label ?? "Airmeet API Key" },
-      grantedScopes: [],
       metadata: { apiBaseUrl: baseUrls[region], region },
     };
   },

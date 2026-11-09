@@ -72,7 +72,6 @@ export async function validateQuantDataCredential(
   });
   return {
     profile: { accountId: "quant-data", displayName: "Quant Data API Key" },
-    grantedScopes: [],
     metadata: { apiBaseUrl: quantDataApiBaseUrl, validationEndpoint: endpointByAction.get_gainers_losers },
   };
 }

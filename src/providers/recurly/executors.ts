@@ -172,9 +172,7 @@ export async function validateRecurlyCredential(
     profile: {
       accountId: siteId ? `recurly:${siteId}` : "recurly",
       displayName: siteId ? `Recurly ${siteId}` : "Recurly API Key",
-      grantedScopes: [],
     },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: recurlyApiBaseUrl,
       validationEndpoint: "/accounts?limit=1",

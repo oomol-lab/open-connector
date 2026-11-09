@@ -83,7 +83,6 @@ export async function validateEcologiCredential(
       accountId: `ecologi:api_key:${fingerprint}`,
       displayName: "Ecologi API Key",
     },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: ecologiApiBaseUrl,
       validationEndpoint: "/impact/trees",

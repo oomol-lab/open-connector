@@ -37,7 +37,6 @@ export async function validateHeyyCredential(
   options: { fetcher: typeof fetch; signal?: AbortSignal },
 ): Promise<{
   profile: { accountId: string; displayName: string };
-  grantedScopes: string[];
   metadata: Record<string, unknown>;
 }> {
   const payload = await heyyGetJson("/business", input.apiKey, options.fetcher, "validate", options.signal);
@@ -50,7 +49,6 @@ export async function validateHeyyCredential(
       accountId: businessId ?? "api_key",
       displayName: businessName ?? businessId ?? "Heyy API Key",
     },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: heyyApiBaseUrl,
       businessId,

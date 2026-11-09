@@ -76,7 +76,6 @@ export async function validatePilvioCredential(
     profile: {
       accountId: user.id !== null ? `pilvio:${user.id}` : (user.email ?? user.name ?? "pilvio_api_token"),
       displayName: user.email ?? user.name ?? "Pilvio API Token",
-      grantedScopes: [],
     },
     metadata: compactObject({
       userId: user.id ?? undefined,

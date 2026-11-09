@@ -91,7 +91,6 @@ export async function validateKeywordCredential(input: {
       accountId: user.id,
       displayName: readAccountLabel(user),
     },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: keywordApiBaseUrl,
       validationEndpoint: `${keywordApiPathPrefix}/users/self`,

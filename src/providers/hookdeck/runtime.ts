@@ -130,7 +130,6 @@ export async function validateHookdeckCredential(
   options: { fetcher: typeof fetch; signal?: AbortSignal },
 ): Promise<{
   profile: { accountId: string; displayName: string };
-  grantedScopes: string[];
   metadata: Record<string, unknown>;
 }> {
   const payload = await hookdeckGetJson(
@@ -152,7 +151,6 @@ export async function validateHookdeckCredential(
       accountId: optionalString(firstSource?.id) ?? "api_key",
       displayName: firstSource ? `Hookdeck: ${String(firstSource.name)}` : "Hookdeck API Key",
     },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl: `${hookdeckApiBaseUrl}${hookdeckApiPrefix}`,
       apiVersion: hookdeckApiVersion,

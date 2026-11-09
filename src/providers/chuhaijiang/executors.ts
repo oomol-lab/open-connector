@@ -145,7 +145,6 @@ export const credentialValidators: CredentialValidators = {
     if (status !== "active") throw new ProviderRequestError(400, `Chuhaijiang API key account is ${status}`);
     return {
       profile: { accountId: String(appId), displayName: "Chuhaijiang API Key" },
-      grantedScopes: [],
       metadata: {
         apiBaseUrl: baseUrl,
         validationEndpoint: "/open/v1/auth/verify",

@@ -229,9 +229,7 @@ export async function validateScopusCredential(
     profile: {
       accountId: "scopus:api_key",
       displayName: "Scopus API Key",
-      grantedScopes: [],
     },
-    grantedScopes: [],
     metadata: compactObject({
       validationEndpoint: "/search/scopus",
       usesInstitutionToken: normalizedInstitutionToken ? true : undefined,

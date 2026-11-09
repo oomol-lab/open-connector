@@ -95,7 +95,6 @@ export async function validateZerobounceCredential(
       accountId: "zerobounce",
       displayName: "ZeroBounce API Key",
     },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: zerobounceApiBaseUrl,
       validationEndpoint: "/v2/getcredits",

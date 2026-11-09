@@ -146,7 +146,6 @@ export const credentialValidators: CredentialValidators = {
         displayName:
           optionalString(raw.team_name) ?? optionalString(raw.name) ?? `Ringover ${region.toUpperCase()} API Key`,
       },
-      grantedScopes: [],
       metadata: {
         apiBaseUrl: regions[region],
         region,

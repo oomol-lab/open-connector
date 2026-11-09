@@ -67,7 +67,6 @@ export async function validateCloudinaryCredential(
       accountId: `cloudinary:${credential.cloudName}`,
       displayName: `Cloudinary ${credential.cloudName}`,
     },
-    grantedScopes: [],
     metadata: {
       cloudName: credential.cloudName,
       apiBaseUrl: cloudinaryApiBaseUrl,

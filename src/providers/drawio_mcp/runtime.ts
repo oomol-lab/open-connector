@@ -108,7 +108,6 @@ export async function validateDrawioMcpCredential(
       accountId: `drawio_mcp:mcp:${sha256Hex(options.endpoint).slice(0, 16)}`,
       displayName: `draw.io MCP · ${new URL(options.endpoint).host}`,
     },
-    grantedScopes: [],
     metadata: { mcpEndpoint: options.endpoint },
   };
 }

@@ -160,7 +160,7 @@ export async function validateQuoCredential(
   const accountLabel = readOptionalString(firstPhoneNumber?.number) ?? "Quo API Key";
 
   return {
-    profile: { accountId: providerAccountId, displayName: accountLabel, grantedScopes: [] },
+    profile: { accountId: providerAccountId, displayName: accountLabel },
     metadata: {
       apiBaseUrl: quoApiBaseUrl,
       validationEndpoint: "/v1/phone-numbers",

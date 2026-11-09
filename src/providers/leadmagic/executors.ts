@@ -165,7 +165,6 @@ async function validateLeadmagicCredential(
       accountId: service,
       displayName: `LeadMagic (${formatCredits(account.credits)} credits)`,
     },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: leadmagicApiBaseUrl,
       validationEndpoint: "/credits",

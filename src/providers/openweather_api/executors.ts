@@ -143,9 +143,7 @@ export const credentialValidators: CredentialValidators = {
       profile: {
         accountId: service,
         displayName: "OpenWeather API Key",
-        grantedScopes: [],
       },
-      grantedScopes: [],
       metadata: {
         validationEndpoint: "/geo/1.0/direct",
         apiBaseUrl: openweatherApiBaseUrl,

@@ -120,7 +120,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: companyId,
         displayName: `Recruitee ${companyId}`,
       },
-      grantedScopes: [],
       metadata: {
         apiBaseUrl,
         companyId,

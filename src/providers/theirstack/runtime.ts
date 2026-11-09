@@ -55,7 +55,6 @@ export async function validateTheirStackCredential(
   const record = requiredResponseRecord(payload, "TheirStack credit balance response");
   return {
     profile: { accountId: "theirstack:api-key", displayName: "TheirStack API Key" },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl: theirstackApiBaseUrl,
       validationEndpoint: "/v0/billing/credit-balance",

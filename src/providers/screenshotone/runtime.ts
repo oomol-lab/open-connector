@@ -49,7 +49,6 @@ export async function validateScreenshotoneApiKey(
     profile: {
       displayName: "ScreenshotOne API Key",
     },
-    grantedScopes: [],
     metadata: compactObject({
       validationEndpoint: screenshotoneUsagePath,
       apiBaseUrl: screenshotoneApiBaseUrl,

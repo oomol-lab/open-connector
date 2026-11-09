@@ -259,7 +259,6 @@ export async function validateCartesCredential(
       accountId: username ?? "cartes-api-token",
       displayName: username ? `Cartes.io ${username}` : "Cartes.io API Token",
     },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl: cartesApiBaseUrl,
       username,

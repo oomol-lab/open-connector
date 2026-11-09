@@ -116,7 +116,6 @@ export async function validateMetatextaiCredential(
       accountId: context.applicationId,
       displayName: `MetatextAI · ${context.applicationId}`,
     },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: metatextaiApiBaseUrl,
       applicationId: context.applicationId,

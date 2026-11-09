@@ -122,7 +122,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: "api_key",
         displayName: "Semrush API Key",
       },
-      grantedScopes: [],
       metadata: {
         apiBaseUrl: semrushApiBaseUrl,
         validationReportType: "domain_ranks",

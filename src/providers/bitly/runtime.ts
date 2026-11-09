@@ -75,7 +75,6 @@ export async function validateBitlyCredential(
       accountId: login ?? defaultGroupGuid,
       displayName: name ?? login ?? "Bitly API Token",
     },
-    grantedScopes: [],
     metadata: compactObject({
       validationEndpoint: bitlyValidationPath,
       apiBaseUrl: bitlyApiBaseUrl,

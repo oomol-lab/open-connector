@@ -82,7 +82,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: workspace ?? "roboflow-api-key",
         displayName: workspace ? `Roboflow workspace ${workspace}` : "Roboflow API Key",
       },
-      grantedScopes: [],
       metadata: compactObject({
         apiBaseUrl: roboflowApiBaseUrl,
         validationEndpoint: validationPath,

@@ -56,7 +56,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: buildKickboxProviderAccountId(input.apiKey),
         displayName: email,
       },
-      grantedScopes: [],
       metadata: {
         apiBaseUrl: kickboxApiBaseUrl,
         validationEndpoint: "/v2/verify",

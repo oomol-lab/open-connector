@@ -209,7 +209,6 @@ export async function validateKommoCredential(
       accountId: accountId === undefined ? `kommo:${storedSubdomain}` : `kommo:${storedSubdomain}:account:${accountId}`,
       displayName: accountName || `Kommo ${storedSubdomain}`,
     },
-    grantedScopes: [],
     metadata: compactObject({
       subdomain: storedSubdomain,
       apiBaseUrl: buildKommoApiBaseUrl(storedSubdomain),

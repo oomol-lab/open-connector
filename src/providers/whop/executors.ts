@@ -187,7 +187,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: firstCompanyId ? `whop:${firstCompanyId}` : "whop-api-key",
         displayName: firstCompanyTitle ?? "Whop API Key",
       },
-      grantedScopes: [],
       metadata: compactObject({
         apiBaseUrl: whopApiBaseUrl,
         apiVersion: whopApiVersion,

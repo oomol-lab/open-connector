@@ -109,7 +109,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: "genderapi-io-api-key",
         displayName: "GenderAPI.io API Key",
       },
-      grantedScopes: [],
       metadata: compactObject({
         apiBaseUrl: genderapiIoApiBaseUrl,
         validationEndpoint: "/api",

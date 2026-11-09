@@ -81,7 +81,6 @@ export async function validateCredential(
       accountId: `${credential.baseUrl}:${credential.dataCenterId}:${credential.username}`,
       displayName: `${credential.username} · ${new URL(credential.baseUrl).host}`,
     },
-    grantedScopes: [],
     metadata: { baseUrl: credential.baseUrl },
   };
 }

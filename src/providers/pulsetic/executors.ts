@@ -80,7 +80,6 @@ export const credentialValidators: CredentialValidators = {
     );
     return {
       profile: { accountId: "pulsetic-api-key", displayName: "Pulsetic API Key" },
-      grantedScopes: [],
       metadata: { apiBaseUrl: baseUrl, validationEndpoint: "/monitors?per_page=1" },
     };
   },

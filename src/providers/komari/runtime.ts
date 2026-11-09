@@ -120,7 +120,6 @@ export async function validateKomariCredential(
       accountId: `komari:${host}`,
       displayName: `Komari ${host}`,
     },
-    grantedScopes: komariOperations.map((operation) => operation.rpcMethod),
     metadata: {
       baseUrl: context.baseUrl,
       version: version.version,

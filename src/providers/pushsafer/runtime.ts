@@ -45,7 +45,6 @@ export async function validatePushsaferCredential(
 
   return {
     profile: { accountId: username, displayName: username },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: pushsaferApiBaseUrl,
       username,

@@ -71,7 +71,6 @@ export async function validateWejamAiCredential(
       accountId: firstUserEmail ?? "wejam_ai:api_key",
       displayName: firstUserEmail ? `Jam (${firstUserEmail})` : "Jam API Key",
     },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl: wejamAiApiBaseUrl,
       validationEndpoint: wejamAiValidationPath,

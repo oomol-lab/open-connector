@@ -95,7 +95,6 @@ export const credentialValidators: CredentialValidators = {
       profile: {
         displayName: "OrcaRouter API Key",
       },
-      grantedScopes: [],
       metadata: {
         validationEndpoint: "/models",
         availableModels: (payload.data ?? [])

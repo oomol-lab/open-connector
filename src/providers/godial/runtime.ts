@@ -51,7 +51,6 @@ export async function validateGodialCredential(
       accountId: "godial",
       displayName: "GoDial API Access Token",
     },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: godialApiBaseUrl,
       validationEndpoint: godialValidationPath,

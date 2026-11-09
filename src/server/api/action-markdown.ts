@@ -47,7 +47,7 @@ export function renderActionMarkdown(action: ActionDefinition, context: ActionMa
       heading(2, "Input Parameters"),
       ...describeParameters(action.inputSchema),
       heading(2, "Required Scopes"),
-      ...describeStringList(action.requiredScopes, "No provider scopes are required."),
+      ...describeStringList(action.requiredScopes, "No provider scopes are declared."),
       heading(2, "Provider Permissions"),
       ...describeStringList(action.providerPermissions, "No provider permissions are declared."),
       heading(2, "Execution Policy"),

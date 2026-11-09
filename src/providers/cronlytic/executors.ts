@@ -148,7 +148,6 @@ export const credentialValidators: CredentialValidators = {
     });
     return {
       profile: { displayName: "Cronlytic API Key" },
-      grantedScopes: [],
       metadata: { apiBaseUrl },
     };
   },

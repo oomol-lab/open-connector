@@ -147,7 +147,6 @@ export async function validateTimelinesAiCredential(
   const displayName = requireProviderString(workspace.displayName, "workspace display name");
   return {
     profile: { displayName },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: timelinesAiApiBaseUrl,
       validationEndpoint: "/workspace",

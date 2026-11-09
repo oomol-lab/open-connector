@@ -72,7 +72,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: "api_key",
         displayName: "API2PDF API Key",
       },
-      grantedScopes: [],
       metadata: compactObject({
         apiBaseUrl: api2pdfApiBaseUrl,
         validationEndpoint: api2pdfBalancePath,

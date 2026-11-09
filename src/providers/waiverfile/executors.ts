@@ -80,7 +80,7 @@ export const credentialValidators: CredentialValidators = {
     );
     const record = optionalRecord(data);
     const displayName = optionalString(record?.SiteName) ?? optionalString(record?.siteName) ?? "WaiverFile Site";
-    return { profile: { accountId: siteId, displayName }, grantedScopes: [], metadata: { apiBaseUrl, siteId } };
+    return { profile: { accountId: siteId, displayName }, metadata: { apiBaseUrl, siteId } };
   },
 };
 

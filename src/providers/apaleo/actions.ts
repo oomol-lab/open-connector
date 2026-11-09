@@ -5,33 +5,8 @@ import { defineProviderAction } from "../../core/provider-definition.ts";
 
 const service = "apaleo";
 
-const apaleoPropertyCreateScope = "apaleo.properties.create";
-const apaleoPropertyManageScope = "apaleo.properties.manage";
-const apaleoUnitReadScope = "apaleo.units.read";
-const apaleoUnitCreateScope = "apaleo.units.create";
-const apaleoUnitDeleteScope = "apaleo.units.delete";
-const apaleoUnitGroupReadScope = "apaleo.unit_groups.read";
-const apaleoUnitGroupCreateScope = "apaleo.unit_groups.create";
-const apaleoUnitGroupManageScope = "apaleo.unit_groups.manage";
-const apaleoUnitGroupDeleteScope = "apaleo.unit_groups.delete";
-const apaleoUnitAttributeReadScope = "apaleo.unit_attributes.read";
-const apaleoUnitAttributeCreateScope = "apaleo.unit_attributes.create";
-const apaleoUnitAttributeDeleteScope = "apaleo.unit_attributes.delete";
-
 const setupReadPermissions = ["setup.read"] as const;
 const setupManagePermissions = ["setup.manage"] as const;
-const propertyCreatePermissions = setupManagePermissions;
-const propertyManagePermissions = setupManagePermissions;
-const unitReadPermissions = setupReadPermissions;
-const unitCreatePermissions = setupManagePermissions;
-const unitDeletePermissions = setupManagePermissions;
-const unitGroupReadPermissions = setupReadPermissions;
-const unitGroupCreatePermissions = setupManagePermissions;
-const unitGroupManagePermissions = setupManagePermissions;
-const unitGroupDeletePermissions = setupManagePermissions;
-const unitAttributeReadPermissions = setupReadPermissions;
-const unitAttributeCreatePermissions = setupManagePermissions;
-const unitAttributeDeletePermissions = setupManagePermissions;
 
 const positiveIntegerOptions = {
   minimum: 1,
@@ -593,8 +568,8 @@ const apaleoActionDefinitions: readonly ApaleoActionDefinition[] = [
     name: "create_property",
     operationType: "write",
     description: "Create a new property in apaleo.",
-    requiredScopes: [apaleoPropertyCreateScope],
-    providerPermissions: propertyCreatePermissions,
+    requiredScopes: setupManagePermissions,
+    providerPermissions: setupManagePermissions,
     inputSchema: s.object(
       "Input payload for creating a property.",
       { ...createPropertyProperties, idempotencyKey: idempotencyKeyField },
@@ -606,8 +581,8 @@ const apaleoActionDefinitions: readonly ApaleoActionDefinition[] = [
     name: "clone_property",
     operationType: "write",
     description: "Clone an existing property into a new property with inventory and rate plans.",
-    requiredScopes: [apaleoPropertyCreateScope],
-    providerPermissions: propertyCreatePermissions,
+    requiredScopes: setupManagePermissions,
+    providerPermissions: setupManagePermissions,
     inputSchema: s.object(
       "Input payload for cloning a property.",
       { ...createPropertyProperties, id: idField, idempotencyKey: idempotencyKeyField },
@@ -619,8 +594,8 @@ const apaleoActionDefinitions: readonly ApaleoActionDefinition[] = [
     name: "archive_property",
     operationType: "destructive",
     description: "Archive a live property by ID.",
-    requiredScopes: [apaleoPropertyManageScope],
-    providerPermissions: propertyManagePermissions,
+    requiredScopes: setupManagePermissions,
+    providerPermissions: setupManagePermissions,
     inputSchema: idInputSchemas.archiveProperty,
     outputSchema: successSchema,
   },
@@ -628,8 +603,8 @@ const apaleoActionDefinitions: readonly ApaleoActionDefinition[] = [
     name: "move_property_to_live",
     operationType: "write",
     description: "Move a test property to live status.",
-    requiredScopes: [apaleoPropertyManageScope],
-    providerPermissions: propertyManagePermissions,
+    requiredScopes: setupManagePermissions,
+    providerPermissions: setupManagePermissions,
     inputSchema: idInputSchemas.movePropertyToLive,
     outputSchema: successSchema,
   },
@@ -637,8 +612,8 @@ const apaleoActionDefinitions: readonly ApaleoActionDefinition[] = [
     name: "reset_property_data",
     operationType: "destructive",
     description: "Delete all transactional data for a test property.",
-    requiredScopes: [apaleoPropertyManageScope],
-    providerPermissions: propertyManagePermissions,
+    requiredScopes: setupManagePermissions,
+    providerPermissions: setupManagePermissions,
     inputSchema: idInputSchemas.resetPropertyData,
     outputSchema: successSchema,
   },
@@ -655,8 +630,8 @@ const apaleoActionDefinitions: readonly ApaleoActionDefinition[] = [
     operationType: "read",
     description:
       "List units with filters for property, unit group, attributes, occupancy, maintenance state, archive state, and expansions.",
-    requiredScopes: [apaleoUnitReadScope],
-    providerPermissions: unitReadPermissions,
+    requiredScopes: setupReadPermissions,
+    providerPermissions: setupReadPermissions,
     inputSchema: s.object(
       "Input payload for listing units.",
       {
@@ -688,8 +663,8 @@ const apaleoActionDefinitions: readonly ApaleoActionDefinition[] = [
     name: "count_units",
     operationType: "read",
     description: "Return the total number of units matching the provided filters.",
-    requiredScopes: [apaleoUnitReadScope],
-    providerPermissions: unitReadPermissions,
+    requiredScopes: setupReadPermissions,
+    providerPermissions: setupReadPermissions,
     inputSchema: listUnitsFilterSchema,
     outputSchema: countSchema,
   },
@@ -697,8 +672,8 @@ const apaleoActionDefinitions: readonly ApaleoActionDefinition[] = [
     name: "get_unit",
     operationType: "read",
     description: "Get one unit by ID, including optional localized fields and expansions.",
-    requiredScopes: [apaleoUnitReadScope],
-    providerPermissions: unitReadPermissions,
+    requiredScopes: setupReadPermissions,
+    providerPermissions: setupReadPermissions,
     inputSchema: s.object(
       "Input payload for retrieving one unit.",
       { id: idField, languages: languagesField, expand: unitListExpandField },
@@ -710,8 +685,8 @@ const apaleoActionDefinitions: readonly ApaleoActionDefinition[] = [
     name: "check_unit_exists",
     operationType: "read",
     description: "Check whether a unit exists by ID.",
-    requiredScopes: [apaleoUnitReadScope],
-    providerPermissions: unitReadPermissions,
+    requiredScopes: setupReadPermissions,
+    providerPermissions: setupReadPermissions,
     inputSchema: idInputSchemas.checkUnit,
     outputSchema: existsSchema,
   },
@@ -719,8 +694,8 @@ const apaleoActionDefinitions: readonly ApaleoActionDefinition[] = [
     name: "create_unit",
     operationType: "write",
     description: "Create a new unit.",
-    requiredScopes: [apaleoUnitCreateScope],
-    providerPermissions: unitCreatePermissions,
+    requiredScopes: setupManagePermissions,
+    providerPermissions: setupManagePermissions,
     inputSchema: s.object(
       "Input payload for creating a unit.",
       { ...createUnitProperties, idempotencyKey: idempotencyKeyField },
@@ -732,8 +707,8 @@ const apaleoActionDefinitions: readonly ApaleoActionDefinition[] = [
     name: "create_multiple_units",
     operationType: "write",
     description: "Create multiple units in a single bulk request.",
-    requiredScopes: [apaleoUnitCreateScope],
-    providerPermissions: unitCreatePermissions,
+    requiredScopes: setupManagePermissions,
+    providerPermissions: setupManagePermissions,
     inputSchema: s.object(
       "Input payload for creating multiple units.",
       {
@@ -754,8 +729,8 @@ const apaleoActionDefinitions: readonly ApaleoActionDefinition[] = [
     name: "delete_unit",
     operationType: "destructive",
     description: "Delete a unit by ID.",
-    requiredScopes: [apaleoUnitDeleteScope],
-    providerPermissions: unitDeletePermissions,
+    requiredScopes: setupManagePermissions,
+    providerPermissions: setupManagePermissions,
     inputSchema: idInputSchemas.deleteUnit,
     outputSchema: successSchema,
   },
@@ -763,8 +738,8 @@ const apaleoActionDefinitions: readonly ApaleoActionDefinition[] = [
     name: "list_unit_groups",
     operationType: "read",
     description: "List unit groups with filters for property, unit group type, pagination, and embedded resources.",
-    requiredScopes: [apaleoUnitGroupReadScope],
-    providerPermissions: unitGroupReadPermissions,
+    requiredScopes: setupReadPermissions,
+    providerPermissions: setupReadPermissions,
     inputSchema: s.object(
       "Input payload for listing unit groups.",
       {
@@ -782,8 +757,8 @@ const apaleoActionDefinitions: readonly ApaleoActionDefinition[] = [
     name: "count_unit_groups",
     operationType: "read",
     description: "Return the total number of unit groups matching the provided filters.",
-    requiredScopes: [apaleoUnitGroupReadScope],
-    providerPermissions: unitGroupReadPermissions,
+    requiredScopes: setupReadPermissions,
+    providerPermissions: setupReadPermissions,
     inputSchema: s.object(
       "Input payload for counting unit groups.",
       {
@@ -798,8 +773,8 @@ const apaleoActionDefinitions: readonly ApaleoActionDefinition[] = [
     name: "get_unit_group",
     operationType: "read",
     description: "Get one unit group by ID, including optional localized fields and expansions.",
-    requiredScopes: [apaleoUnitGroupReadScope],
-    providerPermissions: unitGroupReadPermissions,
+    requiredScopes: setupReadPermissions,
+    providerPermissions: setupReadPermissions,
     inputSchema: s.object(
       "Input payload for retrieving one unit group.",
       { id: idField, languages: languagesField, expand: unitGroupListExpandField },
@@ -811,8 +786,8 @@ const apaleoActionDefinitions: readonly ApaleoActionDefinition[] = [
     name: "check_unit_group_exists",
     operationType: "read",
     description: "Check whether a unit group exists by ID.",
-    requiredScopes: [apaleoUnitGroupReadScope],
-    providerPermissions: unitGroupReadPermissions,
+    requiredScopes: setupReadPermissions,
+    providerPermissions: setupReadPermissions,
     inputSchema: idInputSchemas.checkUnitGroup,
     outputSchema: existsSchema,
   },
@@ -820,8 +795,8 @@ const apaleoActionDefinitions: readonly ApaleoActionDefinition[] = [
     name: "create_unit_group",
     operationType: "write",
     description: "Create a new unit group.",
-    requiredScopes: [apaleoUnitGroupCreateScope],
-    providerPermissions: unitGroupCreatePermissions,
+    requiredScopes: setupManagePermissions,
+    providerPermissions: setupManagePermissions,
     inputSchema: s.object(
       "Input payload for creating a unit group.",
       { ...createUnitGroupProperties, idempotencyKey: idempotencyKeyField },
@@ -833,8 +808,8 @@ const apaleoActionDefinitions: readonly ApaleoActionDefinition[] = [
     name: "replace_unit_group",
     operationType: "destructive",
     description: "Completely replace the mutable fields of an existing unit group.",
-    requiredScopes: [apaleoUnitGroupManageScope],
-    providerPermissions: unitGroupManagePermissions,
+    requiredScopes: setupManagePermissions,
+    providerPermissions: setupManagePermissions,
     inputSchema: s.object(
       "Input payload for replacing a unit group.",
       { ...replaceUnitGroupBodyProperties, id: idField },
@@ -846,8 +821,8 @@ const apaleoActionDefinitions: readonly ApaleoActionDefinition[] = [
     name: "delete_unit_group",
     operationType: "destructive",
     description: "Delete a unit group by ID.",
-    requiredScopes: [apaleoUnitGroupDeleteScope],
-    providerPermissions: unitGroupDeletePermissions,
+    requiredScopes: setupManagePermissions,
+    providerPermissions: setupManagePermissions,
     inputSchema: idInputSchemas.deleteUnitGroup,
     outputSchema: successSchema,
   },
@@ -855,8 +830,8 @@ const apaleoActionDefinitions: readonly ApaleoActionDefinition[] = [
     name: "list_unit_attributes",
     operationType: "read",
     description: "List unit attribute definitions for the current account.",
-    requiredScopes: [apaleoUnitAttributeReadScope],
-    providerPermissions: unitAttributeReadPermissions,
+    requiredScopes: setupReadPermissions,
+    providerPermissions: setupReadPermissions,
     inputSchema: s.object(
       "Input payload for listing unit attributes.",
       { pageNumber: pageNumberField, pageSize: pageSizeField },
@@ -868,8 +843,8 @@ const apaleoActionDefinitions: readonly ApaleoActionDefinition[] = [
     name: "get_unit_attribute",
     operationType: "read",
     description: "Get one unit attribute definition by ID.",
-    requiredScopes: [apaleoUnitAttributeReadScope],
-    providerPermissions: unitAttributeReadPermissions,
+    requiredScopes: setupReadPermissions,
+    providerPermissions: setupReadPermissions,
     inputSchema: idInputSchemas.getUnitAttribute,
     outputSchema: unitAttributeDefinitionSchema,
   },
@@ -877,8 +852,8 @@ const apaleoActionDefinitions: readonly ApaleoActionDefinition[] = [
     name: "check_unit_attribute_exists",
     operationType: "read",
     description: "Check whether a unit attribute definition exists by ID.",
-    requiredScopes: [apaleoUnitAttributeReadScope],
-    providerPermissions: unitAttributeReadPermissions,
+    requiredScopes: setupReadPermissions,
+    providerPermissions: setupReadPermissions,
     inputSchema: idInputSchemas.checkUnitAttribute,
     outputSchema: existsSchema,
   },
@@ -886,8 +861,8 @@ const apaleoActionDefinitions: readonly ApaleoActionDefinition[] = [
     name: "create_unit_attribute",
     operationType: "write",
     description: "Create a new unit attribute definition.",
-    requiredScopes: [apaleoUnitAttributeCreateScope],
-    providerPermissions: unitAttributeCreatePermissions,
+    requiredScopes: setupManagePermissions,
+    providerPermissions: setupManagePermissions,
     inputSchema: s.object(
       "Input payload for creating a unit attribute.",
       { ...createUnitAttributeProperties, idempotencyKey: idempotencyKeyField },
@@ -899,8 +874,8 @@ const apaleoActionDefinitions: readonly ApaleoActionDefinition[] = [
     name: "delete_unit_attribute",
     operationType: "destructive",
     description: "Delete a unit attribute definition by ID.",
-    requiredScopes: [apaleoUnitAttributeDeleteScope],
-    providerPermissions: unitAttributeDeletePermissions,
+    requiredScopes: setupManagePermissions,
+    providerPermissions: setupManagePermissions,
     inputSchema: idInputSchemas.deleteUnitAttribute,
     outputSchema: successSchema,
   },
@@ -913,7 +888,7 @@ function defineApaleoAction(definition: ApaleoActionDefinition): ActionDefinitio
     name: definition.name,
     operationType: definition.operationType,
     description: definition.description,
-    requiredScopes: [...definition.requiredScopes],
+    requiredScopes: getProviderPermissions(definition),
     providerPermissions: getProviderPermissions(definition),
     inputSchema: definition.inputSchema,
     outputSchema: definition.outputSchema,

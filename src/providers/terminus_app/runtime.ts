@@ -107,7 +107,6 @@ export async function validateTerminusAppCredential(
   normalizeList(payload, "projects");
   return {
     profile: { accountId: "terminus-app", displayName: "Terminus App API Key" },
-    grantedScopes: [],
     metadata: { apiBaseUrl: terminusAppApiBaseUrl, validationEndpoint: "/v1/projects/" },
   };
 }

@@ -45,7 +45,6 @@ export async function validateTicketSourceCredential(
   await request("/events", { page: "1", per_page: "1" }, apiKey, fetcher, "validate");
   return {
     profile: { displayName: "TicketSource API Key" },
-    grantedScopes: [],
     metadata: { apiBaseUrl: ticketSourceApiBaseUrl },
   };
 }

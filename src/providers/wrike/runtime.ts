@@ -98,7 +98,6 @@ export async function validateWrikeCredential(
       accountId: contactId ? `wrike:${contactId}` : undefined,
       displayName: displayName || contactId || "Wrike Access Token",
     },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl: wrikeApiBaseUrl,
       contactId,

@@ -143,7 +143,6 @@ export async function validateAccuweatherCredential(
       accountId: "api_key",
       displayName: "AccuWeather API Key",
     },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: accuweatherApiBaseUrl,
       validationEndpoint: "/locations/v1/cities/autocomplete",

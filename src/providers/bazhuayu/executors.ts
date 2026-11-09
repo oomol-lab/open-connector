@@ -58,8 +58,7 @@ export const credentialValidators: CredentialValidators = {
   async customCredential(input, options) {
     const profile = await validateBazhuayuCredential(input.values, options.fetcher, options.signal);
     return {
-      profile: { ...profile, grantedScopes: [] },
-      grantedScopes: [],
+      profile: { ...profile },
       metadata: {
         apiBaseUrl: bazhuayuApiBaseUrl,
       },

@@ -132,7 +132,6 @@ export const credentialValidators: CredentialValidators = {
     const hash = createHash("sha256").update(input.apiKey.trim()).digest("hex").slice(0, 16);
     return {
       profile: { accountId: `pkulaw:mcp:${hash}`, displayName: `PKULaw MCP · ${hash.slice(-6)}` },
-      grantedScopes: [],
       metadata: {
         mcpGateway: pkulawMcpGateway,
         availableServers: available.map((item) => item.serverId),

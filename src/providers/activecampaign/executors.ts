@@ -116,7 +116,6 @@ export async function validateActivecampaignCredential(
       accountId: buildActivecampaignProviderAccountId(apiUrl, userId),
       displayName: buildUserLabel({ email, username, firstName, lastName }) ?? "ActiveCampaign API Token",
     },
-    grantedScopes: [],
     metadata: compactObject({
       apiUrl,
       validationEndpoint: buildValidationEndpoint(apiUrl, activecampaignValidationPath),

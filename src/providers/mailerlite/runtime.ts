@@ -196,7 +196,6 @@ export async function validateMailerliteCredential(
       accountId: "mailerlite",
       displayName: "MailerLite API Key",
     },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl: mailerliteApiBaseUrl,
       validationEndpoint: validationPath,

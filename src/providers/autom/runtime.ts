@@ -98,7 +98,6 @@ export async function validateAutomCredential(
       accountId: accountSlug ? `autom:account:${accountSlug}` : `autom:key:${hashAutomApiKey(apiKey)}`,
       displayName: accountName ?? apiKeyAlias ?? "Autom API Key",
     },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: automApiBaseUrl,
       validationEndpoint: automUsagePath,

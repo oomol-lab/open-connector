@@ -51,7 +51,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: "api_key",
         displayName: "Coresignal API Key",
       },
-      grantedScopes: [],
       metadata: {
         apiBaseUrl: coresignalApiBaseUrl,
         validationMode: "format_only",

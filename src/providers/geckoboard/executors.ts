@@ -112,7 +112,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: "geckoboard-api-key",
         displayName: "Geckoboard API Key",
       },
-      grantedScopes: [],
       metadata: {
         apiBaseUrl: geckoboardApiBaseUrl,
         validationEndpoint: "/",

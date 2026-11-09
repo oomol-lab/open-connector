@@ -35,7 +35,6 @@ export async function validateTrawlingwebCredential(
   );
   return {
     profile: { displayName: "TrawlingWeb API Key" },
-    grantedScopes: [],
     metadata: { apiBaseUrl: trawlingwebApiBaseUrl, validationEndpoint: "/" },
   };
 }

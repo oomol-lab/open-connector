@@ -159,7 +159,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: optionalString(team._id),
         displayName: optionalString(team.name) ?? optionalString(team._id) ?? "lemlist API Key",
       },
-      grantedScopes: [],
       metadata: compactObject({
         apiBaseUrl: lemlistApiBaseUrl,
         validationEndpoint: lemlistValidationPath,

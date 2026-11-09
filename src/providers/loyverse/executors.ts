@@ -146,9 +146,7 @@ async function validateLoyverseCredential(
         ? `loyverse:merchant:${merchantId}`
         : `loyverse:token:${createHash("sha256").update(apiKey).digest("hex").slice(0, 16)}`,
       displayName: merchantName ?? "Loyverse API Key",
-      grantedScopes: [],
     },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: loyverseApiBaseUrl,
       validationEndpoint: "/merchant/",

@@ -228,7 +228,7 @@ export const crossrefActionHandlers: ProviderActionHandlers<"crossref", Crossref
 export async function validateCrossrefCredential(
   input: Record<string, string>,
   fetcher: typeof fetch,
-): Promise<{ profile: { displayName: string }; grantedScopes: string[]; metadata: Record<string, unknown> }> {
+): Promise<{ profile: { displayName: string }; metadata: Record<string, unknown> }> {
   const apiKey = requiredString(input.apiKey, "apiKey", providerInputError);
   const { response } = await requestCrossrefJson({
     path: "/works",
@@ -244,7 +244,6 @@ export async function validateCrossrefCredential(
 
   return {
     profile: { displayName: "Crossref Metadata Plus" },
-    grantedScopes: [],
     metadata: compactObject({
       apiPool: apiPool ?? undefined,
       rateLimit: response.headers.get("x-rate-limit-limit") ?? undefined,

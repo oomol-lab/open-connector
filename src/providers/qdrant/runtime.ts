@@ -185,7 +185,6 @@ export async function validateQdrantCredential(
       accountId: `${service}:${context.clusterUrl.hostname}`,
       displayName: `Qdrant Cloud - ${context.clusterUrl.hostname}`,
     },
-    grantedScopes: [],
     metadata: {
       clusterUrl: context.clusterUrl.origin,
       validationEndpoint: "/collections",

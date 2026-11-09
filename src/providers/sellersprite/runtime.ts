@@ -131,7 +131,6 @@ export async function validateSellerSpriteCredential(
       accountId: "sellersprite",
       displayName: "SellerSprite API Key",
     },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: sellerSpriteApiBaseUrl,
       validationEndpoint: sellerSpriteValidationPath,

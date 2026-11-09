@@ -135,7 +135,6 @@ export const credentialValidators: CredentialValidators = {
     const first = optionalRecord(Array.isArray(value) ? value[0] : undefined);
     return {
       profile: { displayName: optionalString(first?.name)?.trim() || `Phonely ${context.userId}` },
-      grantedScopes: [],
       metadata: { apiBaseUrl: baseUrl, userId: context.userId, validationEndpoint: "/get-agents" },
     };
   },

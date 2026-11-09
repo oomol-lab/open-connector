@@ -77,7 +77,6 @@ export const credentialValidators: CredentialValidators = {
     >;
     return {
       profile: { accountId: "api_key", displayName: "Helcim API Token" },
-      grantedScopes: [],
       metadata: { apiBaseUrl: baseUrl, validationEndpoint: "/connection-test", connectionMessage: payload.message },
     };
   },

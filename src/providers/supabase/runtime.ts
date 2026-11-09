@@ -18,7 +18,6 @@ import {
 import { jsonObject, readBoundedResponseBytes, storeResponseInTransit } from "../../core/request.ts";
 import { readTransitFileInput } from "../provider-files.ts";
 import { providerInputError, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
-import { supabaseProviderScopes } from "./scopes.ts";
 
 export const supabaseApiBaseUrl: string = "https://api.supabase.com/v1";
 const supabaseProjectHostSuffix = ".supabase.co";
@@ -138,7 +137,6 @@ export async function validateSupabaseCredential(
   profile: {
     accountId: string;
     displayName: string;
-    grantedScopes: string[];
   };
   metadata: Record<string, unknown>;
 }> {
@@ -158,7 +156,6 @@ export async function validateSupabaseCredential(
     profile: {
       accountId: subject ?? buildSupabaseAccountFingerprint(organizations, accessToken),
       displayName: buildSupabaseAccountLabel(organizations),
-      grantedScopes: supabaseProviderScopes,
     },
     metadata: {
       validationEndpoint: "/organizations",

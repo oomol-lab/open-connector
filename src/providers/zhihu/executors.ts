@@ -526,7 +526,6 @@ export const credentialValidators: CredentialValidators = {
     const result = await validateZhihuCredential(input.apiKey, fetcher);
     return {
       profile: { accountId: "zhihu", displayName: result.accountLabel },
-      grantedScopes: [],
       metadata: result.providerMetadata,
     };
   },

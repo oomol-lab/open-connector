@@ -160,7 +160,6 @@ export async function validateSonarCloudCredential(
       accountId: `sonarcloud:${region.toLowerCase()}`,
       displayName: `SonarQube Cloud ${region}`,
     },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl,
       validationEndpoint: "/authentication/validate",

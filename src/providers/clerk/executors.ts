@@ -146,7 +146,6 @@ async function validateClerkCredential(input: {
       accountId: instanceId ?? "clerk-api-key",
       displayName: instanceName ? `Clerk: ${instanceName}` : "Clerk API Key",
     },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: clerkApiBaseUrl,
       validationEndpoint: "/instance",

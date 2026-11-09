@@ -80,7 +80,6 @@ export const credentialValidators: CredentialValidators = {
       profile: {
         displayName: "GPTZero API Key",
       },
-      grantedScopes: [],
       metadata: {
         apiBaseUrl: gptzeroApiBaseUrl,
         validationEndpoint: gptzeroPredictTextPath,

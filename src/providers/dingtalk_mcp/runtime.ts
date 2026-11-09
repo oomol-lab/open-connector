@@ -101,7 +101,6 @@ export async function validateDingTalkMcpCredential(
       accountId: `dingtalk_mcp:mcp:${credentialHash}`,
       displayName: `DingTalk MCP · ${credentialHash.slice(-6)}`,
     },
-    grantedScopes: [],
     metadata: {
       mcpHost: context.endpoint.hostname,
       discoveredToolCount: tools.length,

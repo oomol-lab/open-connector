@@ -103,7 +103,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: optionalString(user.id) ?? "upsales-api-key",
         displayName: firstString(user, ["name", "email"]) ?? "Upsales API Key",
       },
-      grantedScopes: [],
       metadata: {
         apiBaseUrl,
         userId: user.id,

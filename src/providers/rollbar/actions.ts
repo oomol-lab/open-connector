@@ -4,7 +4,7 @@ import { s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
 
 const service = "rollbar";
-const rollbarReadScope = "rollbar.project.read";
+const rollbarReadScope = "read";
 
 const positiveInteger = (description: string) => s.integer(description, { minimum: 1 });
 const pageSchema = positiveInteger("The 1-based page number to request from Rollbar.");

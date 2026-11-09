@@ -82,7 +82,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: `meituan:personal:${tokenHash}`,
         displayName: `Meituan Personal Developer · ${tokenHash.slice(-6)}`,
       },
-      grantedScopes: [],
     };
   },
 };

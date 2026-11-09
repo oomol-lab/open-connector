@@ -114,7 +114,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: `namely:${company}`,
         displayName: readProfileLabel(profile) ?? `Namely ${company}`,
       },
-      grantedScopes: [],
       metadata: {
         company,
         apiBaseUrl: buildNamelyApiBaseUrl(company),

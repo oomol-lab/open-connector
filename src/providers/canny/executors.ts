@@ -103,7 +103,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: "canny",
         displayName: "Canny API Key",
       },
-      grantedScopes: [],
       metadata: {
         apiBaseUrl: cannyApiBaseUrl,
         validationEndpoint: "/v1/boards/list",

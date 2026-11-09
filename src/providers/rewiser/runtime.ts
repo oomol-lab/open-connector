@@ -72,7 +72,6 @@ export const rewiserActionHandlers: ProviderActionHandlers<
 };
 export async function validateRewiser(context: ApiKeyProviderContext): Promise<{
   profile: { accountId: string; displayName: string };
-  grantedScopes: string[];
   metadata: Record<string, unknown>;
 }> {
   const record = requiredObject(
@@ -83,7 +82,6 @@ export async function validateRewiser(context: ApiKeyProviderContext): Promise<{
   const label = optionalString(user?.full_name) ?? optionalString(user?.email) ?? "Rewiser API Key";
   return {
     profile: { accountId: "api_key", displayName: label },
-    grantedScopes: [],
     metadata: { apiBaseUrl: rewiserApiBaseUrl, validationEndpoint: "/verify-auth" },
   };
 }

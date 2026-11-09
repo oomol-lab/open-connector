@@ -57,7 +57,6 @@ export async function validateQaseCredential(
   signal?: AbortSignal,
 ): Promise<{
   profile: { accountId: string; displayName: string };
-  grantedScopes: string[];
   metadata: Record<string, unknown>;
 }> {
   await requestQase({
@@ -70,7 +69,6 @@ export async function validateQaseCredential(
   });
   return {
     profile: { accountId: `qase:${apiKey.slice(-8)}`, displayName: "Qase API Token" },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: qaseApiBaseUrl,
       validationEndpoint: "/project?limit=1",

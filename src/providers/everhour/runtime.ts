@@ -215,7 +215,6 @@ export async function validateEverhourCredential(
       accountId: userId === undefined ? "api_key" : String(userId),
       displayName: userName ?? "Everhour API Key",
     },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl: everhourApiBaseUrl,
       validationEndpoint: everhourValidationPath,

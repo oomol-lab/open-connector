@@ -121,7 +121,7 @@ async function setup(adminToken: string | undefined = "admin") {
           status: "active",
           providerAccountId: "provider-user",
           accountLabel: "User",
-          scopes: [],
+          scopes: ["example.internal.read"],
         };
         return ok(behavior.secretSummary ? { ...account, accessToken: "secret" } : account);
       }
@@ -218,7 +218,10 @@ it("starts remotely without a local client config, keeps cookie GET read-only, a
   expect((await result.json()).data.status).toBe("connected");
   const connections = await env.database.connectionStore.list();
   expect(connections).toHaveLength(1);
-  expect(connections[0]).toMatchObject({ source: "saas", profile: { accountId: "provider-user" } });
+  expect(connections[0]).toMatchObject({
+    source: "saas",
+    profile: { accountId: "provider-user", grantedScopes: [] },
+  });
   expect(connections[0]).not.toHaveProperty("credential");
   const browser = await env.call(`/api/oauth/connection-requests/${data.connectionRequestId}/sync`, {
     method: "POST",

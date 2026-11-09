@@ -83,7 +83,7 @@ export const credentialValidators: CredentialValidators = {
       fetcher: fetcher,
       parentSignal: signal,
     });
-    return { profile: { displayName: "QiuXiaoCe API Key" }, grantedScopes: [], metadata: { apiBaseUrl: baseUrl } };
+    return { profile: { displayName: "QiuXiaoCe API Key" }, metadata: { apiBaseUrl: baseUrl } };
   },
 };
 export const proxy: ProviderProxyExecutor = defineProviderProxy({

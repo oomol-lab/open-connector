@@ -216,7 +216,6 @@ export const credentialValidators: CredentialValidators = {
       profile: {
         displayName: firstAccountName ?? firstAccountEmail ?? "Atlas.so API Key",
       },
-      grantedScopes: [],
       metadata: compactObject({
         apiBaseUrl: atlasSoApiBaseUrl,
         validationEndpoint: "/v1/accounts",

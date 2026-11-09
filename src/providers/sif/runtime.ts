@@ -56,7 +56,6 @@ export async function validateSifCredential(
   const hash = createHash("sha256").update(apiKey).digest("hex").slice(0, 16);
   return {
     profile: { accountId: `sif:mcp:${hash}`, displayName: `Sif MCP · ${hash.slice(-6)}` },
-    grantedScopes: [],
     metadata: { mcpEndpoint: sifMcpEndpoint, discoveredToolCount: tools.length },
   };
 }

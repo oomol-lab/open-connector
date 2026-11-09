@@ -117,7 +117,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: email,
         displayName: teamName ?? name ?? email,
       },
-      grantedScopes: [],
       metadata: jsonObject({
         validationEndpoint: "/account",
         account_uuid: uuid,

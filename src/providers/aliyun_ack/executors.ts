@@ -59,7 +59,6 @@ export const credentialValidators: CredentialValidators = {
     requireCredentialField(input.values.accessKeySecret, "accessKeySecret");
     return {
       profile: { accountId: accessKeyId, displayName: `Alibaba Cloud ACK - ${accessKeyId}` },
-      grantedScopes: [],
       metadata: { credentialKind: "ram_access_key" },
     };
   },

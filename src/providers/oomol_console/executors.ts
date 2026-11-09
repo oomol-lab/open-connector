@@ -118,7 +118,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: "oomol",
         displayName: "OOMOL Console",
       },
-      grantedScopes: [],
       metadata: {
         accessibleTeamCount: teams.length,
         defaultTeamId: context.teamId,

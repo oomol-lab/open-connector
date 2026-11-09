@@ -579,5 +579,3 @@ export const netlifyActions: ActionDefinition[] = actionSources.map((action) =>
     providerPermissions: action.requiredScopes,
   }),
 );
-
-export const netlifyConnectorScopes: readonly string[] = [];

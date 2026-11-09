@@ -233,7 +233,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: `freshservice:${domain}`,
         displayName: `Freshservice ${domain}`,
       },
-      grantedScopes: [],
       metadata: compactObject({
         domain,
         baseUrl,

@@ -69,7 +69,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: "api_key",
         displayName: "Eagle Doc API Key",
       },
-      grantedScopes: [],
       metadata: compactObject({
         apiBaseUrl: eagleDocApiBaseUrl,
         validationEndpoint: eagleDocCurrentUsagePath,

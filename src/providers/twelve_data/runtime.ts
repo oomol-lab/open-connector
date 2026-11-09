@@ -61,7 +61,6 @@ export async function validateTwelveDataCredential(
       accountId: "twelve-data-api-key",
       displayName: "Twelve Data API Key",
     },
-    grantedScopes: [],
     metadata: {
       validationEndpoint: "/price",
       apiBaseUrl: twelveDataApiBaseUrl,

@@ -77,7 +77,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: "satismeter-api-key",
         displayName: "SatisMeter API Key",
       },
-      grantedScopes: [],
       metadata: {
         apiBaseUrl: satismeterApiBaseUrl,
         validationEndpoint: satismeterValidationPath,

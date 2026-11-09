@@ -180,7 +180,6 @@ export async function validateGorgiasCredential(
       accountId: `gorgias:${domain}`,
       displayName: `Gorgias ${accountDomain || domain}`,
     },
-    grantedScopes: [],
     metadata: {
       domain,
       email,

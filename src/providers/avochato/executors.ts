@@ -242,7 +242,6 @@ export const credentialValidators: CredentialValidators = {
           optionalString(optionalRecord(payload.user)?.name) ||
           "Avochato Account",
       },
-      grantedScopes: [],
       metadata: { apiBaseUrl: baseUrl, validationEndpoint: "/v1/whoami" },
     };
   },

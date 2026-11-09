@@ -51,7 +51,6 @@ export async function validateHrPartnerCredential(
   return {
     profile: {
       displayName,
-      grantedScopes: [],
     },
     metadata: {
       apiBaseUrl: hrPartnerApiBaseUrl,

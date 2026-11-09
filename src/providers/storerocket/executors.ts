@@ -113,7 +113,6 @@ export const credentialValidators: CredentialValidators = {
     const user = requiredResponseRecord(body.data, "StoreRocket user");
     return {
       profile: { displayName: optionalString(user.name) || optionalString(user.email) || "StoreRocket Account" },
-      grantedScopes: [],
       metadata: { apiBaseUrl: baseUrl },
     };
   },

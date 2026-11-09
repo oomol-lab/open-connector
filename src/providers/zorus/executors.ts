@@ -94,7 +94,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: "zorus-api-token",
         displayName: "Zorus API Token",
       },
-      grantedScopes: [],
       metadata: {
         apiBaseUrl,
         apiVersion,

@@ -45,7 +45,6 @@ export async function validateWebshareCredential(
       accountId: userId == null ? (email ?? "webshare-api-key") : String(userId),
       displayName: email ?? firstName ?? (userId == null ? undefined : String(userId)) ?? "Webshare API Key",
     },
-    grantedScopes: [],
     metadata: {
       validationEndpoint: "/api/v2/profile/",
       userId,

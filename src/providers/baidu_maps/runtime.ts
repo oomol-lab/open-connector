@@ -112,7 +112,6 @@ export async function validateBaiduMapsCredential(input: {
 
   return {
     profile: { accountId: "baidu_ak", displayName: "Baidu Maps AK" },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: baiduMapsApiBaseUrl,
       validationEndpoint: baiduMapsValidationPath,

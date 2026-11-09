@@ -46,7 +46,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: `${session.credentials.baseUrl}:${session.credentials.account}`,
         displayName: optionalString(profile.user) ?? session.credentials.account,
       },
-      grantedScopes: [],
       metadata: {
         apiBaseUrl: session.credentials.baseUrl,
         serverVersion: optionalString(profile.serverVersion),

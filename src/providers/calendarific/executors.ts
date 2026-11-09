@@ -103,7 +103,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: "calendarific",
         displayName: "Calendarific API Key",
       },
-      grantedScopes: [],
       metadata: compactObject({
         validationEndpoint: "/countries",
         countryCount: countries.length,

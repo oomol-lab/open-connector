@@ -121,7 +121,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: optionalString(user.userId) ?? "api_key",
         displayName: "CompanyEnrich API Key",
       },
-      grantedScopes: [],
       metadata: compactObject({
         apiBaseUrl: companyenrichApiBaseUrl,
         validationEndpoint: "/me",

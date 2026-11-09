@@ -93,7 +93,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: optionalString(account.id) ?? optionalString(account.uuid),
         displayName: firstString(account, ["name", "email"]) ?? "Runscope Account",
       },
-      grantedScopes: [],
       metadata: {
         apiBaseUrl,
         validationEndpoint: validationPath,

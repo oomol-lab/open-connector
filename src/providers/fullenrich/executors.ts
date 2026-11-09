@@ -106,7 +106,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: workspaceId ?? "api_key",
         displayName: workspaceId ? `FullEnrich workspace ${workspaceId}` : "FullEnrich API Key",
       },
-      grantedScopes: [],
       metadata: compactObject({
         workspaceId,
         validationEndpoint: "/account/keys/verify",

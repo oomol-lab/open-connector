@@ -144,7 +144,6 @@ export const credentialValidators: CredentialValidators = {
         accountId,
         displayName: optionalString(account.name) ?? `Checkly ${accountId}`,
       },
-      grantedScopes: [],
       metadata: {
         accountId: context.accountId,
         apiBaseUrl,

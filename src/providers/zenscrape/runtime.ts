@@ -54,7 +54,6 @@ export async function validateZenscrapeCredential(
   );
   return {
     profile: { accountId: "zenscrape", displayName: "Zenscrape API Key" },
-    grantedScopes: [],
     metadata: {
       validationEndpoint: "/api/v1/get",
       apiBaseUrl: zenscrapeApiBaseUrl,

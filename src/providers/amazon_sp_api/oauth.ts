@@ -1,7 +1,7 @@
 import type { OAuthClientConfig } from "../../oauth/oauth-client-config-service.ts";
 import type { OAuthTokenResult, ProviderOAuthRuntime } from "../../oauth/oauth-token.ts";
 
-import { optionalNumber, optionalString, requiredString } from "../../core/cast.ts";
+import { optionalNumber, optionalString, optionalRawString, requiredString } from "../../core/cast.ts";
 import {
   ProviderRequestError,
   requiredInputString,
@@ -72,7 +72,6 @@ export const oauth: ProviderOAuthRuntime = {
     const token = await exchangeToken(
       input.clientConfig,
       { grant_type: "authorization_code", code: input.code, redirect_uri: input.redirectUri },
-      [],
       input.fetcher,
       input.signal,
     );
@@ -83,7 +82,6 @@ export const oauth: ProviderOAuthRuntime = {
     const token = await exchangeToken(
       input.clientConfig,
       { grant_type: "refresh_token", refresh_token: input.refreshToken },
-      [],
       input.fetcher,
     );
     return { ...token, refreshToken: token.refreshToken || input.refreshToken };
@@ -92,7 +90,6 @@ export const oauth: ProviderOAuthRuntime = {
 async function exchangeToken(
   clientConfig: OAuthClientConfig,
   parameters: Record<string, string>,
-  fallbackScopes: string[],
   fetcher: typeof fetch,
   callerSignal?: AbortSignal,
 ): Promise<OAuthTokenResult> {
@@ -117,13 +114,13 @@ async function exchangeToken(
         "provider_error",
       );
     }
-    const scope = optionalString(payload.scope);
+    const scope = optionalRawString(payload.scope);
     return {
       accessToken: requiredString(payload.access_token, "Amazon LWA access_token", providerResponseError),
       refreshToken: optionalString(payload.refresh_token) ?? "",
       tokenType: optionalString(payload.token_type) ?? "bearer",
       expiresAt: new Date(Date.now() + expiresIn * 1000).toISOString(),
-      metadata: { scope: scope ?? fallbackScopes.join(" ") },
+      metadata: { scope },
     };
   });
 }

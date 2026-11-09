@@ -116,7 +116,6 @@ export async function validateWhoisfreaksCredential(
       accountId: "whoisfreaks",
       displayName: "WhoisFreaks API Key",
     },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: whoisfreaksApiBaseUrl,
       validationFamily: "domain_availability",

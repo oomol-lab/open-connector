@@ -96,7 +96,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: "api_key",
         displayName: "Token Metrics API Key",
       },
-      grantedScopes: [],
       metadata: {
         apiBaseUrl: tokenMetricsApiBaseUrl,
         validationEndpoint: tokenMetricsValidationPath,

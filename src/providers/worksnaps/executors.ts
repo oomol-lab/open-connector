@@ -202,7 +202,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: user.id === undefined ? "worksnaps-api-token" : String(user.id),
         displayName: buildUserLabel(user) ?? "Worksnaps API Token",
       },
-      grantedScopes: [],
       metadata: compactObject({
         apiBaseUrl: worksnapsApiBaseUrl,
         validationEndpoint: worksnapsValidationPath,

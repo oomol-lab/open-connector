@@ -34,7 +34,6 @@ export const credentialValidators: CredentialValidators = {
     const tools = await listMcpTools(connection({ apiKey: input.apiKey, fetcher, signal }));
     return {
       profile: { accountId: `openseo-mcp:${sha256Hex(input.apiKey.trim())}`, displayName: "OpenSEO MCP API Key" },
-      grantedScopes: [],
       metadata: { mcpEndpoint: endpoint, discoveredToolCount: tools.length },
     };
   },

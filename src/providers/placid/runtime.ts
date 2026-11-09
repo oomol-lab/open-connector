@@ -36,7 +36,6 @@ export async function validatePlacidCredential(
   signal?: AbortSignal,
 ): Promise<{
   profile: { accountId: string; displayName: string };
-  grantedScopes: string[];
   metadata: Record<string, unknown>;
 }> {
   const payload = await requestJson({
@@ -53,7 +52,6 @@ export async function validatePlacidCredential(
   }
   return {
     profile: { accountId: "api_key", displayName: "Placid API Token" },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: placidApiBaseUrl,
       validationEndpoint: templatesPath,

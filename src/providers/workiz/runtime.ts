@@ -54,7 +54,6 @@ export async function validateWorkizCredential(
   await request("/team/all/", { apiKey, fetcher, signal }, "validate");
   return {
     profile: { displayName: "Workiz API Token" },
-    grantedScopes: [],
     metadata: { apiBaseUrl: workizApiBaseUrl },
   };
 }

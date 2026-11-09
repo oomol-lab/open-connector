@@ -46,7 +46,6 @@ export async function validateParsehubCredential(
     profile: {
       accountId: "parsehub-api-key",
       displayName: "ParseHub API Key",
-      grantedScopes: [],
     },
     metadata: compactObject({
       apiBaseUrl: parsehubApiBaseUrl,

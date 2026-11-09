@@ -108,7 +108,6 @@ export async function validateNeetodeskCredential(
   });
   return {
     profile: { accountId: `neetodesk:${subdomain}`, displayName: `${subdomain}.neetodesk.com` },
-    grantedScopes: Object.keys(neetodeskActionHandlers),
     metadata: { subdomain, baseUrl: neetodeskBaseUrl(subdomain) },
   };
 }

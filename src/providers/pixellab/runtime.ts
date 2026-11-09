@@ -132,7 +132,6 @@ export async function validatePixellabCredential(
 ): Promise<CredentialValidationResult> {
   await pixellabRequestJson("GET", pixellabValidationPath, undefined, { apiKey, fetcher, signal });
   return {
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: pixellabApiBaseUrl,
       validationEndpoint: pixellabValidationPath,

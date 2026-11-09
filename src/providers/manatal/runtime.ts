@@ -185,7 +185,6 @@ export async function validateManatalCredential(
       accountId,
       displayName: readAccountLabel(user),
     },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: manatalApiBaseUrl,
       validationEndpoint: manatalValidationPath,

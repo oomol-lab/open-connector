@@ -123,7 +123,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: "api_key",
         displayName: "Datagma API Key",
       },
-      grantedScopes: [],
       metadata: {
         apiBaseUrl: datagmaApiBaseUrl,
         validationEndpoint: "/api/ingress/v1/mine",

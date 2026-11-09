@@ -69,7 +69,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: "api_key",
         displayName: "AeroLeads API Key",
       },
-      grantedScopes: [],
       metadata: {
         apiBaseUrl: aeroleadsApiBaseUrl,
         validationMode: "format_only",

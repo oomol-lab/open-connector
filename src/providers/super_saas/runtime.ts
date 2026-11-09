@@ -59,7 +59,6 @@ export async function validateSuperSaasCredential(
       accountId: `super_saas:${accountName}`,
       displayName: `SuperSaaS ${accountName}`,
     },
-    grantedScopes: [],
     metadata: {
       accountName,
       apiBaseUrl: superSaasApiBaseUrl,

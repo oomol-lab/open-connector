@@ -47,7 +47,6 @@ export const theCatApiActionHandlers: ProviderActionHandlers<
 
 export async function validateTheCatApiCredential(context: TheCatApiContext): Promise<{
   profile: { accountId: string; displayName: string };
-  grantedScopes: string[];
   metadata: Record<string, unknown>;
 }> {
   const payload = await requestTheCatApiJson({
@@ -65,7 +64,6 @@ export async function validateTheCatApiCredential(context: TheCatApiContext): Pr
       accountId: "api_key",
       displayName: "The Cat API Key",
     },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl: theCatApiBaseUrl,
       validationEndpoint: theCatApiValidationPath,

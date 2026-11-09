@@ -70,7 +70,6 @@ export async function validateTpscheckCredential(
       accountId: "tpscheck-api-key",
       displayName: "TPSCheck API Key",
     },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl: tpscheckApiBaseUrl,
       validationEndpoint: "/credits",

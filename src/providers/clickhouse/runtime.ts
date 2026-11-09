@@ -96,7 +96,6 @@ export async function validateClickhouseCredential(
       accountId: `${baseUrl}:${context.username}`,
       displayName: `${context.username}@${new URL(baseUrl).host}`,
     },
-    grantedScopes: [],
     metadata: compactObject({
       baseUrl,
       username: context.username,

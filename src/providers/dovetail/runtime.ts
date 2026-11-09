@@ -47,7 +47,6 @@ export async function validateDovetailCredential(
 
   return {
     profile: { accountId: tokenId, displayName: subdomain },
-    grantedScopes: [],
     metadata: compactObject({
       tokenId,
       subdomain,

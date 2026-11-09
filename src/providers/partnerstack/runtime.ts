@@ -109,7 +109,6 @@ export async function validatePartnerstackCredential(
         optionalString(firstPartnership?.email) ??
         optionalString(firstPartnership?.partner_key) ??
         "PartnerStack Vendor API",
-      grantedScopes: [],
     },
     metadata: compactObject({
       apiBaseUrl: partnerstackApiBaseUrl,

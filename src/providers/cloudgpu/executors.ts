@@ -58,7 +58,6 @@ export const credentialValidators: CredentialValidators = {
     await requestCloudgpu({ path: "/gpu/account" }, { apiKey: input.apiKey, fetcher, signal });
     return {
       profile: { displayName: "CloudGPU API Key" },
-      grantedScopes: [],
       metadata: { validationEndpoint: "/gpu/account" },
     };
   },

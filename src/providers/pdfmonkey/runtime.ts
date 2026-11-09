@@ -234,7 +234,6 @@ export async function validatePdfmonkeyCredential(
     profile: {
       accountId: currentUser.id,
       displayName: currentUser.desiredName ?? currentUser.email ?? "PDFMonkey API Key",
-      grantedScopes: [],
     },
     metadata: compactObject({
       apiBaseUrl: pdfmonkeyApiBaseUrl,

@@ -133,7 +133,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: `moonclerk:${input.apiKey.slice(-6)}`,
         displayName: "MoonClerk API Key",
       },
-      grantedScopes: [],
       metadata: {
         apiBaseUrl: moonclerkApiBaseUrl,
         validationEndpoint: "/forms?count=1",

@@ -61,7 +61,6 @@ export async function validateMineruCredential(
       accountId: "mineru",
       displayName: "MinerU API Token",
     },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: mineruApiBaseUrl,
       validationEndpoint: `/api/v4/extract/task/${mineruValidationTaskId}`,

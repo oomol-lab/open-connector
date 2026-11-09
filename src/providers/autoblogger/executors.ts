@@ -138,7 +138,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: dashboardEmail,
         displayName: dashboardEmail,
       },
-      grantedScopes: [],
       metadata: {
         apiBaseUrl: autobloggerApiBaseUrl,
         validationEndpoint: articlesPath,

@@ -226,7 +226,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: "active_trail:api_token",
         displayName: "ActiveTrail API Token",
       },
-      grantedScopes: [],
       metadata: compactObject({
         apiBaseUrl: activeTrailApiBaseUrl,
         validationEndpoint: "/account/balance",

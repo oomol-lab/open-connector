@@ -90,10 +90,8 @@ export const heygenActionHandlers: ProviderActionHandlers<"heygen", ProviderRunt
 export async function validateHeygenCredential(
   auth: HeygenAuth,
   options: { fetcher: typeof fetch; signal?: AbortSignal },
-  credential: { grantedScopes?: string[] } = {},
 ): Promise<{
   profile: { accountId: string; displayName: string };
-  grantedScopes: string[];
   metadata: Record<string, unknown>;
 }> {
   const validationEndpoint = auth.headerName === "Authorization" ? "/v3/users/me" : "/v1/user/me";
@@ -116,7 +114,6 @@ export async function validateHeygenCredential(
         (auth.headerName === "Authorization" ? "oauth2" : "api_key"),
       displayName: label,
     },
-    grantedScopes: credential.grantedScopes ?? [],
     metadata: {
       apiBaseUrl: auth.apiBaseUrl,
       authHeaderName: auth.headerName,

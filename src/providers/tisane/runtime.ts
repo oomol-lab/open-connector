@@ -49,7 +49,6 @@ export async function validateTisaneCredential(
   signal?: AbortSignal,
 ): Promise<{
   profile: { accountId: string; displayName: string };
-  grantedScopes: string[];
   metadata: Record<string, unknown>;
 }> {
   const languages = await requestTisane({
@@ -70,7 +69,6 @@ export async function validateTisaneCredential(
       accountId: "tisane:api_subscription_key",
       displayName: "Tisane API Subscription Key",
     },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl: tisaneApiBaseUrl,
       validationEndpoint: "/languages",

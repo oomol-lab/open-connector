@@ -94,7 +94,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: `docsautomator:token:${createHash("sha256").update(input.apiKey).digest("hex").slice(0, 16)}`,
         displayName: "DocsAutomator API Key",
       },
-      grantedScopes: [],
       metadata: {
         apiBaseUrl,
         validationEndpoint: "/queue/stats",

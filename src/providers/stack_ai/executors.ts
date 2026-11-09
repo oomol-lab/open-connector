@@ -111,7 +111,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: `${context.organizationId}/${context.flowId}`,
         displayName: `StackAI Flow ${context.flowId}`,
       },
-      grantedScopes: [],
       metadata: {
         apiBaseUrl: stackAiInferenceBaseUrl,
         organizationId: context.organizationId,

@@ -98,7 +98,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: `the_swarm:api_key:${hashApiKey(input.apiKey)}`,
         displayName: "The Swarm API Key",
       },
-      grantedScopes: [],
       metadata: {
         apiBaseUrl: theSwarmApiBaseUrl,
         validationEndpoint: theSwarmValidationPath,

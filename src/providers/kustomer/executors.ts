@@ -127,7 +127,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: "api_key",
         displayName: "Kustomer API Key",
       },
-      grantedScopes: [],
       metadata: {
         apiBaseUrl: kustomerApiBaseUrl,
         validationMode: "format_only",

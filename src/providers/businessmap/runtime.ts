@@ -217,7 +217,6 @@ export async function validateBusinessmapCredential(
       accountId: `businessmap:${normalizedAccount.accountHost}`,
       displayName: `Businessmap ${normalizedAccount.accountHost}`,
     },
-    grantedScopes: [],
     metadata: {
       accountHost: normalizedAccount.accountHost,
       apiBaseUrl: normalizedAccount.apiBaseUrl,

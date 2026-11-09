@@ -112,7 +112,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: "neverbounce",
         displayName: "NeverBounce API Key",
       },
-      grantedScopes: [],
       metadata: compactObject({
         apiBaseUrl: neverbounceApiBaseUrl,
         validationEndpoint: "/account/info",

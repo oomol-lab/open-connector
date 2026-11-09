@@ -118,7 +118,6 @@ export async function validateData247Credential(
       accountId: "api_key",
       displayName: "Data247 API Key",
     },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl: data247ApiBaseUrl,
       validationApi: "B",

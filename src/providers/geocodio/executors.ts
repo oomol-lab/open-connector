@@ -67,7 +67,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: "geocodio-api-key",
         displayName: "Geocodio API Key",
       },
-      grantedScopes: [],
       metadata: {
         validationEndpoint: `/${geocodioApiVersion}/geocode`,
         apiBaseUrl: geocodioApiBaseUrl,

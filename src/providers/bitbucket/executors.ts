@@ -30,7 +30,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: typeof user.uuid === "string" ? user.uuid : undefined,
         displayName: typeof user.display_name === "string" ? user.display_name : "Bitbucket User",
       },
-      grantedScopes: input.profile.grantedScopes,
     };
   },
 };

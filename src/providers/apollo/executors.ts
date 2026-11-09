@@ -66,7 +66,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: usage.teamId,
         displayName: "Apollo Master API Key",
       },
-      grantedScopes: [],
       metadata: compactObject({
         apiBaseUrl: apolloApiBaseUrl,
         validationEndpoint: "/api/v1/usage_stats/api_usage_stats",

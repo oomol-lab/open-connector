@@ -134,7 +134,6 @@ export const credentialValidators: CredentialValidators = {
     await request("/all/sports", "all", requiredInputString(input.apiKey, "API Key"), fetcher);
     return {
       profile: { displayName: "TheSportsDB Premium API Key" },
-      grantedScopes: [],
       metadata: { apiBaseUrl: baseUrl, validationEndpoint: "/all/sports" },
     };
   },

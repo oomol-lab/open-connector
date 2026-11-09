@@ -84,7 +84,6 @@ export async function validateBirdCredential(
       accountId: workspaceId,
       displayName: workspaceName ?? "Bird Access Key",
     },
-    grantedScopes: [],
     metadata: compactObject({
       validationEndpoint: "/workspaces",
       workspaceCount: workspaces.length,

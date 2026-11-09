@@ -112,7 +112,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: "yelp-api-key",
         displayName: "Yelp API Key",
       },
-      grantedScopes: [],
       metadata: {
         apiBaseUrl: yelpApiBaseUrl,
         validationEndpoint: yelpValidationPath,

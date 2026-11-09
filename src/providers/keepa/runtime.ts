@@ -419,7 +419,6 @@ export async function validateKeepaCredential(
       accountId: "keepa-api-key",
       displayName: "Keepa API Key",
     },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: keepaApiBaseUrl,
       validationEndpoint: "/token",

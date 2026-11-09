@@ -95,7 +95,6 @@ export const credentialValidators: CredentialValidators = {
       profile: {
         displayName: "AppDrag API Key",
       },
-      grantedScopes: [],
       metadata: {
         homepageUrl: appdragHomepageUrl,
         routePattern: appdragResponseWrapperDescription,

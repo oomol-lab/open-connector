@@ -170,7 +170,6 @@ export async function validateTerraformCredential(
       accountId: userId,
       displayName: username ?? email ?? "Terraform API Token",
     },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl: terraformApiBaseUrl,
       validationEndpoint: terraformValidationPath,

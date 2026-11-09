@@ -2,12 +2,7 @@ import type { ProviderActionDefinition } from "../../core/provider-definition.ts
 
 import { s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
-import {
-  workdayProviderPermissions,
-  workdayRecruitingReadScopes,
-  workdayStaffingReadScopes,
-  workdayWorkerProfileReadScopes,
-} from "./scopes.ts";
+import { workdayProviderPermissions } from "./scopes.ts";
 
 const service = "workday";
 
@@ -97,7 +92,6 @@ export const workdayActions: ProviderActionDefinition[] = [
     name: "get_current_user",
     operationType: "read",
     description: "Retrieve the current authenticated worker profile from Workday.",
-    requiredScopes: workdayWorkerProfileReadScopes,
     providerPermissions: [workdayProviderPermissions.workerProfile],
     inputSchema: s.actionInput({}, [], "No input is required for this action."),
     outputSchema: s.actionOutput(
@@ -111,7 +105,6 @@ export const workdayActions: ProviderActionDefinition[] = [
     name: "list_workers",
     operationType: "read",
     description: "List workers from Workday Staffing with optional search and termination filters.",
-    requiredScopes: workdayStaffingReadScopes,
     providerPermissions: [workdayProviderPermissions.staffing],
     inputSchema: s.actionInput(
       {
@@ -129,7 +122,6 @@ export const workdayActions: ProviderActionDefinition[] = [
     name: "get_worker",
     operationType: "read",
     description: "Retrieve one worker by Workday worker identifier from the Staffing API.",
-    requiredScopes: workdayStaffingReadScopes,
     providerPermissions: [workdayProviderPermissions.staffing],
     inputSchema: s.actionInput(
       {
@@ -144,7 +136,6 @@ export const workdayActions: ProviderActionDefinition[] = [
     name: "list_jobs",
     operationType: "read",
     description: "List jobs from Workday Staffing.",
-    requiredScopes: workdayStaffingReadScopes,
     providerPermissions: [workdayProviderPermissions.staffing],
     inputSchema: s.actionInput(
       {
@@ -160,7 +151,6 @@ export const workdayActions: ProviderActionDefinition[] = [
     name: "get_job",
     operationType: "read",
     description: "Retrieve one job by Workday job identifier from the Staffing API.",
-    requiredScopes: workdayStaffingReadScopes,
     providerPermissions: [workdayProviderPermissions.staffing],
     inputSchema: s.actionInput(
       {
@@ -175,7 +165,6 @@ export const workdayActions: ProviderActionDefinition[] = [
     name: "list_job_postings",
     operationType: "read",
     description: "List job postings from Workday Recruiting with optional filters.",
-    requiredScopes: workdayRecruitingReadScopes,
     providerPermissions: [workdayProviderPermissions.recruiting],
     inputSchema: s.actionInput(
       {
@@ -195,7 +184,6 @@ export const workdayActions: ProviderActionDefinition[] = [
     name: "get_job_posting",
     operationType: "read",
     description: "Retrieve one job posting by Workday job posting identifier.",
-    requiredScopes: workdayRecruitingReadScopes,
     providerPermissions: [workdayProviderPermissions.recruiting],
     inputSchema: s.actionInput(
       {

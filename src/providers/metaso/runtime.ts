@@ -84,7 +84,6 @@ export async function validateMetasoCredential(
       accountId: "metaso",
       displayName: "Metaso API Key",
     },
-    grantedScopes: [],
     metadata: compactObject({
       validationEndpoint: "/search",
       apiBaseUrl: metasoApiBaseUrl,

@@ -153,7 +153,6 @@ export async function validateUnsplashCredential(
       accountId: "unsplash",
       displayName: "Unsplash Access Key",
     },
-    grantedScopes: [],
     metadata: compactObject({
       validationEndpoint: unsplashValidationPath,
       samplePhotoId: optionalString(samplePhoto?.id),

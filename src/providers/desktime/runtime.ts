@@ -124,7 +124,6 @@ export async function validateDeskTimeCredential(
       accountId: companyName ?? "api_key",
       displayName: companyName ?? "DeskTime API Key",
     },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl: desktimeApiBaseUrl,
       validationEndpoint: "/company",

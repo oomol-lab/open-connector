@@ -138,7 +138,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: hostname,
         displayName: `Gainsight NXT ${hostname}`,
       },
-      grantedScopes: [],
       metadata: {
         baseUrl,
         validationMode: "format_and_base_url_only",

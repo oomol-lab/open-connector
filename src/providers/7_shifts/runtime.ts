@@ -162,7 +162,6 @@ export async function validateSevenShiftsCredential(
     profile: {
       accountId: `7_shifts:identity:${identity.identityId}`,
       displayName: buildAccountLabel(firstUser),
-      grantedScopes: [],
     },
     metadata: compactObject({
       identityId: identity.identityId,

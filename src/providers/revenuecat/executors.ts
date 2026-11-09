@@ -153,7 +153,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: "revenuecat-api-key",
         displayName: "RevenueCat API Key",
       },
-      grantedScopes: [],
       metadata: compactObject({
         apiBaseUrl: revenueCatApiBaseUrl,
         apiVersion: "v2",

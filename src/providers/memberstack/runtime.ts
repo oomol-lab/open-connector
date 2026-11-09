@@ -148,7 +148,6 @@ export async function validateMemberstackCredential(
       accountId: "memberstack:secret-key",
       displayName: "Memberstack Secret Key",
     },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl: memberstackApiBaseUrl,
       validationEndpoint: "/members",

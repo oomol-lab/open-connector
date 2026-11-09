@@ -118,7 +118,6 @@ export async function validateDatabarAiCredential(
   const user = normalizeUser(recordOrEmpty(await requestDatabarAi({ path: "/v1/user/me", context })));
   return {
     profile: { accountId: user.email || "databar_ai:token", displayName: user.email || "Databar API Key" },
-    grantedScopes: [],
     metadata: compactObject({ apiBaseUrl: databarAiApiBaseUrl, workspace: user.workspace, plan: user.plan }),
   };
 }

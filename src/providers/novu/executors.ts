@@ -212,7 +212,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: firstSubscriberId ?? apiBaseUrl,
         displayName,
       },
-      grantedScopes: [],
       metadata: compactObject({
         apiBaseUrl,
         validationEndpoint: "/v2/subscribers",

@@ -13,7 +13,6 @@ type TextcortexActionHandler = (input: Record<string, unknown>, context: Textcor
 
 export async function validateTextcortexCredential(context: TextcortexContext): Promise<{
   profile: { accountId: string; displayName: string };
-  grantedScopes: string[];
   metadata: Record<string, unknown>;
 }> {
   const payload = await textcortexRequest({
@@ -31,7 +30,6 @@ export async function validateTextcortexCredential(context: TextcortexContext): 
       accountId: "api_key",
       displayName: "TextCortex API Key",
     },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl: textcortexApiBaseUrl,
       validationEndpoint: "/models",

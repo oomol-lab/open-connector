@@ -107,7 +107,7 @@ export const credentialValidators: CredentialValidators = {
       fetcher: fetcher,
       parentSignal: signal,
     });
-    return { profile: { displayName: "FTShare API Key" }, grantedScopes: [], metadata: { apiBaseUrl: baseUrl } };
+    return { profile: { displayName: "FTShare API Key" }, metadata: { apiBaseUrl: baseUrl } };
   },
 };
 export const proxy: ProviderProxyExecutor = defineProviderProxy({

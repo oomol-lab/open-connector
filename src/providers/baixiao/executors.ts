@@ -75,7 +75,6 @@ export const credentialValidators: CredentialValidators = {
     const hash = createHash("sha256").update(context.apiKey).digest("hex").slice(0, 16);
     return {
       profile: { accountId: `baixiao:${hash}`, displayName: `Baixiao · ${hash.slice(-6)}` },
-      grantedScopes: [],
       metadata: { mcpEndpoint: endpoint },
     };
   },

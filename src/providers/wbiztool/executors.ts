@@ -170,7 +170,6 @@ export const credentialValidators: CredentialValidators = {
     const result = await request("me/", {}, requiredInputString(input.apiKey, "API Key"), clientId, fetcher, true);
     return {
       profile: { displayName: optionalRawString(result.name) ?? "Wbiztool API Key" },
-      grantedScopes: [],
       metadata: { clientId },
     };
   },

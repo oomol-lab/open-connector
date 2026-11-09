@@ -90,7 +90,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: username,
         displayName: username,
       },
-      grantedScopes: [],
       metadata: {
         apiBaseUrl: browserstackApiBaseUrl,
         validationEndpoint: "/automate/builds.json",

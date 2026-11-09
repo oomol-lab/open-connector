@@ -53,7 +53,6 @@ export async function validateDeeplCredential(
       accountId: apiBaseUrl === deeplApiFreeBaseUrl ? "free_api_key" : "pro_api_key",
       displayName: "DeepL API Key",
     },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl,
       validationEndpoint: deeplUsagePath,

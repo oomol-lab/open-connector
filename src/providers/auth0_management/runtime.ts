@@ -99,7 +99,6 @@ export async function validateAuth0ManagementCredential(
   signal?: AbortSignal,
 ): Promise<{
   profile: { accountId: string; displayName: string };
-  grantedScopes: string[];
   metadata: Record<string, unknown>;
 }> {
   const domain = normalizeAuth0ManagementDomain(domainValue);
@@ -123,7 +122,6 @@ export async function validateAuth0ManagementCredential(
       accountId: `auth0_management:${domain}`,
       displayName: `Auth0 ${domain}`,
     },
-    grantedScopes: [],
     metadata: compactObject({
       domain,
       apiBaseUrl: buildAuth0ManagementBaseUrl(domain),

@@ -66,7 +66,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: "api_key",
         displayName: "ImgBB API Key",
       },
-      grantedScopes: [],
       metadata: {
         apiBaseUrl: imgbbApiBaseUrl,
         validationEndpoint: imgbbUploadPath,

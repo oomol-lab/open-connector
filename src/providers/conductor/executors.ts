@@ -142,7 +142,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: firstWebsiteId ?? "api_key",
         displayName: labelDetail ? `Conductor ${labelDetail}` : "Conductor API Token",
       },
-      grantedScopes: [],
       metadata: compactObject({
         apiBaseUrl: conductorApiBaseUrl,
         validationEndpoint: conductorWebsitesPath,

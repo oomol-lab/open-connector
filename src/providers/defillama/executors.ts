@@ -148,7 +148,7 @@ export const credentialValidators: CredentialValidators = {
     const output = await request(defillamaRoutes.get("get_usage")!, {}, input.apiKey, fetcher, signal);
     if (typeof optionalRecord(output)?.creditsLeft !== "number")
       throw providerResponseError("DeFiLlama usage response is missing creditsLeft");
-    return { profile: { displayName: "DeFiLlama API Key" }, grantedScopes: [], metadata: {} };
+    return { profile: { displayName: "DeFiLlama API Key" }, metadata: {} };
   },
 };
 interface DefillamaContext {

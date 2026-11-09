@@ -147,7 +147,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: "api_key",
         displayName: "PostGrid API Key",
       },
-      grantedScopes: [],
       metadata: compactObject({
         apiBaseUrl: postgridApiBaseUrl,
         validationEndpoint: "/templates",

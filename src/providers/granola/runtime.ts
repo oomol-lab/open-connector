@@ -159,7 +159,6 @@ export async function validateGranolaCredential(
       accountId: firstFolderId,
       displayName: firstFolderName ?? firstFolderId ?? "Granola API Key",
     },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl: granolaApiBaseUrl,
       validationEndpoint: "/v1/folders",

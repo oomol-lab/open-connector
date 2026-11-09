@@ -118,7 +118,6 @@ export async function validatePretixCredential(
     profile: {
       accountId: `pretix:${host}:${instanceHash.slice(0, 12)}:${tokenHash.slice(0, 16)}`,
       displayName: `pretix ${host}${instanceUrl.pathname.replace(/\/$/, "")}`,
-      grantedScopes: [],
     },
     metadata: { baseUrl: context.baseUrl },
   };

@@ -29,7 +29,6 @@ export const credentialValidators: CredentialValidators = {
     const payload = await requestSendcloud("userinfo/get", {}, { apiKey: input.apiKey, apiUser }, fetcher, "validate");
     return {
       profile: { accountId: apiUser, displayName: optionalString(optionalRecord(payload.info)?.userName) || apiUser },
-      grantedScopes: [],
       metadata: {},
     };
   },

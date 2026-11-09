@@ -189,7 +189,6 @@ export async function validateAgilityCredential(
         accountId: "agility_api_key",
         displayName: "Agility CMS API Key",
       },
-      grantedScopes: [],
       metadata: {
         apiBaseUrl: agilityApiBaseUrl,
         validationSkipped: true,
@@ -214,7 +213,6 @@ export async function validateAgilityCredential(
       accountId: guid,
       displayName: "Agility CMS API Key",
     },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl: agilityApiBaseUrl,
       validationEndpoint: `/${guid}/fetch/contentmodels`,

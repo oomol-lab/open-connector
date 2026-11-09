@@ -59,7 +59,6 @@ export async function validatePeecCredential(
   }
   return {
     profile: { accountId: "api_key", displayName: accountLabel ?? "Peec AI API Key" },
-    grantedScopes: [],
     metadata: { apiBaseUrl: peecApiBaseUrl, validationEndpoint },
   };
 }

@@ -63,7 +63,6 @@ export const credentialValidators: CredentialValidators = {
       profile: {
         accountId: "convertapi-api-token",
         displayName: "ConvertAPI API Token",
-        grantedScopes: [],
       },
       metadata: {
         apiBaseUrl: convertapiApiBaseUrl,

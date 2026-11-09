@@ -144,7 +144,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: `xiaohongshu_store:${credential.appId}`,
         displayName: `Xiaohongshu Store · ${credential.appId}`,
       },
-      grantedScopes: [],
       metadata: { apiBaseUrl: xiaohongshuStoreApiUrl, validationMethod: actionMethodByName.list_express_companies },
     };
   },

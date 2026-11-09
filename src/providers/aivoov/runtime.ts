@@ -38,7 +38,6 @@ export async function validateAivoovCredential(
     profile: {
       displayName: "AiVOOV API Key",
     },
-    grantedScopes: [],
     metadata: {
       validationEndpoint: "/voices",
       voicesCount: voices.length,

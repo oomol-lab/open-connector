@@ -141,7 +141,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: username,
         displayName: `Pinboard ${username}`,
       },
-      grantedScopes: [],
       metadata: {
         apiBaseUrl: pinboardApiBaseUrl,
         username,

@@ -91,7 +91,6 @@ export async function validateTicketmasterCredential(
 
   return {
     profile: { accountId: "ticketmaster:api-key", displayName: "Ticketmaster API Key" },
-    grantedScopes: [],
     metadata: {
       validationEndpoint: "/discovery/v2/events.json",
       apiBaseUrl: "https://app.ticketmaster.com",

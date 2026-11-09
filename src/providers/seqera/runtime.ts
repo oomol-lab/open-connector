@@ -113,7 +113,6 @@ export async function validateSeqeraCredential(
       accountId: String(userId),
       displayName: accountLabel,
     },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl,
       validationEndpoint: seqeraValidationEndpoint,

@@ -60,7 +60,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: "newsdata_io",
         displayName: "NewsData.io API Key",
       },
-      grantedScopes: [],
       metadata: compactObject({
         validationEndpoint: "/api/1/sources",
         apiBaseUrl: newsdataIoApiBaseUrl,

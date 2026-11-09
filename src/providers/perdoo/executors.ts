@@ -269,7 +269,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: `perdoo:${userId}`,
         displayName: fullName || email || companyName,
       },
-      grantedScopes: [],
       metadata: compactObject({
         apiBaseUrl: perdooGraphqlUrl,
         validationEndpoint: "me",

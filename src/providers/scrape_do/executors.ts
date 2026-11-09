@@ -70,7 +70,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: "scrape_do",
         displayName: "Scrape.do API Token",
       },
-      grantedScopes: [],
       metadata: compactObject({
         apiBaseUrl: scrapeDoApiBaseUrl,
         validationEndpoint: "/info",

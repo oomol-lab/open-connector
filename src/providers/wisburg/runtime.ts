@@ -64,7 +64,6 @@ export async function validateWisburgCredential(
       accountId: `wisburg:${sha256Hex(input.apiKey).slice(0, 32)}`,
       displayName: "Wisburg API Key",
     },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: wisburgApiBaseUrl,
       validationEndpoint: "/api/feed",

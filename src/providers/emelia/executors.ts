@@ -81,7 +81,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: providerId ?? "api_key",
         displayName: senderEmail ?? senderName ?? "Emelia API Key",
       },
-      grantedScopes: [],
       metadata: compactObject({
         apiBaseUrl: emeliaApiBaseUrl,
         validationEndpoint: "/email-providers",

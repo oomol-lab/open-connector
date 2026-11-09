@@ -80,7 +80,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: "api_key",
         displayName: "ipstack API Key",
       },
-      grantedScopes: [],
       metadata: compactObject({
         validationEndpoint: "/check",
         apiBaseUrl: ipstackApiBaseUrl,

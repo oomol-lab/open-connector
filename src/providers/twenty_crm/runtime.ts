@@ -62,7 +62,6 @@ export async function validateTwentyCrmCredential(
       accountId: "twenty_crm:workspace",
       displayName: firstObjectName ? `Twenty workspace with ${firstObjectName}` : "Twenty CRM Workspace",
     },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl: twentyCrmApiBaseUrl,
       authMethod: "bearer",

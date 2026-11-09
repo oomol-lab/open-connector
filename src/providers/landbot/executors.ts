@@ -114,7 +114,6 @@ async function validateLandbotCredential(
       accountId: "landbot",
       displayName: "Landbot",
     },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: landbotApiBaseUrl,
       validationEndpoint: "channels/",

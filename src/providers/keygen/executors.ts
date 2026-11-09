@@ -430,7 +430,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: profileId ? `${account}:${profileId}` : account,
         displayName: name ?? email ?? account,
       },
-      grantedScopes: [],
       metadata: compactObject({
         account,
         apiBaseUrl: `${keygenApiBaseUrl}/${encodeURIComponent(account)}`,

@@ -186,7 +186,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: buildProviderAccountId(accessToken),
         displayName: `DingTalk Bot ${accessToken.slice(-6) || "******"}`,
       },
-      grantedScopes: [],
       metadata: compactObject({
         webhookHost: new URL(buildWebhookUrl(accessToken)).host,
         validationMode: "invalid_msgtype_probe",

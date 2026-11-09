@@ -79,7 +79,6 @@ export const credentialValidators: CredentialValidators = {
     const name = [optionalString(user.firstname), optionalString(user.lastname)].filter(Boolean).join(" ").trim();
     return {
       profile: { accountId: String(id), displayName: name || "Navigatr Account" },
-      grantedScopes: [],
       metadata: { apiBaseUrl },
     };
   },

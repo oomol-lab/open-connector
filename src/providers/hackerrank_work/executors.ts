@@ -142,7 +142,6 @@ export const credentialValidators: CredentialValidators = {
       profile: {
         displayName: "HackerRank Work API Key",
       },
-      grantedScopes: [],
       metadata: {
         apiBaseUrl: hackerrankWorkApiBaseUrl,
         validationEndpoint: "/tests",

@@ -188,7 +188,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: `nocrm_io:${subdomain}`,
         displayName: `noCRM.io ${subdomain}`,
       },
-      grantedScopes: [],
       metadata: {
         subdomain,
         baseUrl,

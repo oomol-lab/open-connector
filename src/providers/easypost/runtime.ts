@@ -112,7 +112,6 @@ export async function validateEasypostCredential(
       accountId: "api_key",
       displayName: "EasyPost API Key",
     },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl: easypostApiBaseUrl,
       validationEndpoint: "/carrier_types",

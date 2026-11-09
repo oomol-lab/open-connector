@@ -100,7 +100,6 @@ async function validateKnackCredential(
       accountId: appId,
       displayName: `Knack ${appId}`,
     },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl: knackApiBaseUrl,
       appId,

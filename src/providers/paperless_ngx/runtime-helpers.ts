@@ -480,7 +480,6 @@ export async function validatePaperlessCredential(
       accountId: `${paperlessNgxService}:${instanceLabel}:${tokenHash}`,
       displayName: fullName || email || `Paperless-ngx ${instanceLabel}`,
     },
-    grantedScopes: [],
     metadata: compactObject({
       baseUrl,
       apiVersion: apiVersion || undefined,

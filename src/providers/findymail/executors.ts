@@ -54,7 +54,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: "api_key",
         displayName: "Findymail API Key",
       },
-      grantedScopes: [],
       metadata: {
         apiBaseUrl: findymailApiBaseUrl,
         validationEndpoint: "/api/credits",

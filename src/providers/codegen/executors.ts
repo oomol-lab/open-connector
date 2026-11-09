@@ -177,7 +177,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: String(organizationId),
         displayName: `Codegen (${organizationName})`,
       },
-      grantedScopes: [],
       metadata: {
         apiBaseUrl: codegenApiBaseUrl,
         organizationId: String(organizationId),

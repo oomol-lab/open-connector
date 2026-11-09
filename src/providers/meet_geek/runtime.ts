@@ -72,7 +72,6 @@ export async function validateMeetGeekCredential(
       accountId: "meet_geek",
       displayName: "MeetGeek API Key",
     },
-    grantedScopes: [],
     metadata: {
       validationEndpoint: "/v1/teams",
       apiBaseUrl: meetGeekApiBaseUrls.default,

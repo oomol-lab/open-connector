@@ -140,7 +140,6 @@ export async function validateYnabCredential(
     profile: {
       accountId: userId ?? "ynab-api-key",
       displayName: userId ? `YNAB User ${userId}` : "YNAB User",
-      grantedScopes: ["read-only"],
     },
     metadata: compactObject({
       apiBaseUrl: ynabApiBaseUrl,

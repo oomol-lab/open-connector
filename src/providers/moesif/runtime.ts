@@ -165,7 +165,6 @@ export async function validateMoesifCredential(
       accountId: firstApp?.id ?? "Moesif API Key",
       displayName: firstApp?.name ?? "Moesif API Key",
     },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl: moesifApiBaseUrl,
       validationEndpoint: "/~/apps",

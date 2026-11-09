@@ -1,7 +1,7 @@
 import type { OAuthClientConfig } from "../../oauth/oauth-client-config-service.ts";
 import type { OAuthTokenResult, ProviderOAuthRuntime } from "../../oauth/oauth-token.ts";
 
-import { optionalString, optionalInteger } from "../../core/cast.ts";
+import { optionalString, optionalRawString, optionalInteger } from "../../core/cast.ts";
 import {
   ProviderRequestError,
   basicAuthorizationHeader,
@@ -31,7 +31,6 @@ export const oauth: ProviderOAuthRuntime = {
         redirect_uri: requiredInputString(input.clientConfig.extra.ruName, "ruName"),
       },
       input.clientConfig,
-      input.clientConfig.requestedScopes ?? ebayScopes,
       input.fetcher,
     );
     if (!token.refreshToken) throw input.createError("eBay token response is missing refresh_token");
@@ -45,7 +44,6 @@ export const oauth: ProviderOAuthRuntime = {
         scope: (input.clientConfig.requestedScopes ?? ebayScopes).join(" "),
       },
       input.clientConfig,
-      input.clientConfig.requestedScopes ?? ebayScopes,
       input.fetcher,
       input.createError,
     );
@@ -55,7 +53,6 @@ export const oauth: ProviderOAuthRuntime = {
 async function exchangeToken(
   fields: Record<string, string>,
   clientConfig: OAuthClientConfig,
-  fallbackScopes: string[],
   fetcher: typeof fetch,
   invalidGrantError?: (message: string) => Error,
 ): Promise<OAuthTokenResult> {
@@ -86,7 +83,7 @@ async function exchangeToken(
       refreshToken: optionalString(payload.refresh_token) ?? "",
       tokenType: optionalString(payload.token_type) ?? "Bearer",
       expiresAt: new Date(Date.now() + expiresIn * 1000).toISOString(),
-      metadata: { scope: optionalString(payload.scope) ?? fallbackScopes.join(" ") },
+      metadata: { scope: optionalRawString(payload.scope) },
     };
   });
 }

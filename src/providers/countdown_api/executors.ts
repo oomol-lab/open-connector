@@ -69,7 +69,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: optionalString(accountInfo?.email) ?? "api_key",
         displayName: optionalString(accountInfo?.email) ?? optionalString(accountInfo?.name) ?? "Countdown API Key",
       },
-      grantedScopes: [],
       metadata: compactObject({
         apiBaseUrl: countdownApiBaseUrl,
         validationEndpoint: "/account",

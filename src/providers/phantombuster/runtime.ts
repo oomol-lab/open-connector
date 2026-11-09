@@ -86,7 +86,6 @@ export async function validatePhantombusterCredential(
     profile: {
       accountId: id ?? "phantombuster_api_key",
       displayName: name ?? "PhantomBuster API Key",
-      grantedScopes: [],
     },
     metadata: compactObject({
       apiBaseUrl: phantombusterApiBaseUrl,

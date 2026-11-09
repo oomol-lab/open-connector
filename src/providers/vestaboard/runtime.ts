@@ -104,7 +104,6 @@ export async function validateVestaboardCredential(
       accountId: currentMessage.id,
       displayName: "Vestaboard API Token",
     },
-    grantedScopes: [],
     metadata: {
       validationEndpoint: "/",
       apiBaseUrl: vestaboardCloudApiBaseUrl,

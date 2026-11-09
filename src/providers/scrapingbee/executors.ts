@@ -94,7 +94,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: "scrapingbee",
         displayName: "ScrapingBee API Key",
       },
-      grantedScopes: [],
       metadata: {
         validationEndpoint: "/usage",
         apiBaseUrl: scrapingbeeApiBaseUrl,

@@ -120,7 +120,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: "scrapegraphai-api-key",
         displayName: "ScrapeGraphAI API Key",
       },
-      grantedScopes: [],
       metadata: compactObject({
         apiBaseUrl: scrapeGraphAiApiBaseUrl,
         validationEndpoint: "/api/credits",

@@ -68,7 +68,6 @@ export async function validateFusionApiCredential(
       accountId: "oomol-api-key",
       displayName: "OOMOL API Key",
     },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: fusionApiDefaultBaseUrl,
       validationEndpoint: fusionApiValidationPath,

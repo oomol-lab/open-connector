@@ -107,7 +107,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: new URL(apiBaseUrl).hostname,
         displayName: `Sage HR ${new URL(apiBaseUrl).hostname}`,
       },
-      grantedScopes: [],
       metadata: {
         apiBaseUrl,
         validationEndpoint: "/employees",

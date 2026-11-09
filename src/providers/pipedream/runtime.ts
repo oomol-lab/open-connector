@@ -119,7 +119,6 @@ export async function validatePipedreamCredential(
     profile: {
       accountId: user.id,
       displayName: user.email ?? user.username ?? user.id,
-      grantedScopes: [],
     },
     metadata: compactObject({
       validationEndpoint: "/users/me",

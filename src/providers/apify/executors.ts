@@ -76,7 +76,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: userId,
         displayName: username ?? email ?? "Apify API Token",
       },
-      grantedScopes: [],
       metadata: compactObject({
         apiBaseUrl: apifyApiBaseUrl,
         validationEndpoint: apifyValidationPath,

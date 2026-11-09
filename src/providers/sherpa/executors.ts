@@ -43,7 +43,6 @@ export const credentialValidators: CredentialValidators = {
     );
     return {
       profile: { accountId: "sherpa", displayName: "Sherpa API Key" },
-      grantedScopes: [],
       metadata: { apiBaseUrl, validationEndpoint: "/v3/trips/llm" },
     };
   },

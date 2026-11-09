@@ -59,7 +59,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: "bookingmood",
         displayName: readLabel(firstProduct) ?? "Bookingmood API Key",
       },
-      grantedScopes: [],
       metadata: {
         apiBaseUrl: bookingmoodApiBaseUrl,
         validationEndpoint: "/products",

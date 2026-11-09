@@ -169,7 +169,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: typeof userId === "number" ? String(userId) : "workpath-api-token",
         displayName: name ?? email ?? "Workpath API Token",
       },
-      grantedScopes: [],
       metadata: compactObject({
         apiBaseUrl: workpathApiBaseUrl,
         validationEndpoint: workpathValidationPath,

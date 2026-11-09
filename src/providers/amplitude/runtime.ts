@@ -119,7 +119,6 @@ export async function validateAmplitudeCredential(
       accountId: apiKeyId,
       displayName: `Amplitude Project ${apiKeyId}`,
     },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl,
       dataResidency,

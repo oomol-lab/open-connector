@@ -42,7 +42,6 @@ export async function validateTurbotPipesCredential(
       accountId: `${userHandle}/${workspaceHandle}`,
       displayName: `${userHandle}/${workspaceHandle}`,
     },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl: turbotPipesApiBaseUrl,
       validationPath: queryPath,

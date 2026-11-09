@@ -236,7 +236,8 @@ export class SaasOAuthService {
           profile: {
             accountId: account.providerAccountId ?? account.connectedAccountId,
             displayName: account.accountLabel ?? account.service,
-            grantedScopes: account.scopes,
+            // Managed account scopes may be internal capabilities, not provider grants.
+            grantedScopes: [],
           },
           status: account.status,
           comment: pending.comment ?? null,

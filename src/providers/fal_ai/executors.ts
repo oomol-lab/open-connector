@@ -109,7 +109,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: "api_key",
         displayName: "fal.ai API Key",
       },
-      grantedScopes: [],
       metadata: {
         validationEndpoint: "/v1/models",
         availableModels: (payload.models ?? [])

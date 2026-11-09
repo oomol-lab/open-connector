@@ -104,7 +104,6 @@ export const credentialValidators: CredentialValidators = {
     requiredInputString(input.values.publicKey, "publicKey");
     return {
       profile: { displayName: "Chatra API Key" },
-      grantedScopes: [],
       metadata: { apiBaseUrl: baseUrl, validationMode: "local_non_empty_keys" },
     };
   },

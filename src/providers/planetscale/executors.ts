@@ -63,7 +63,6 @@ export const credentialValidators: CredentialValidators = {
     );
     return {
       profile: { accountId: result.providerAccountId ?? "planetscale", displayName: result.accountLabel },
-      grantedScopes: [],
       metadata: result.providerMetadata,
     };
   },

@@ -99,7 +99,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: "api_key",
         displayName: "Intelliprint API Key",
       },
-      grantedScopes: [],
       metadata: compactObject({
         apiBaseUrl: intelliprintApiBaseUrl,
         validationEndpoint: printsPath,

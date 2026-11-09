@@ -178,7 +178,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: firstWorkspace ? String(firstWorkspace.id) : undefined,
         displayName: firstWorkspace?.name || "Linkly API Key",
       },
-      grantedScopes: [],
       metadata: compactObject({
         apiBaseUrl: linklyApiBaseUrl,
         validationEndpoint: `${linklyApiPrefix}/workspaces`,

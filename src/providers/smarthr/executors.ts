@@ -41,7 +41,7 @@ export const credentialValidators: CredentialValidators = {
       fetcher,
       signal,
     );
-    return { profile: { accountId, displayName }, grantedScopes: [], metadata: tenant };
+    return { profile: { accountId, displayName }, metadata: tenant };
   },
 };
 export const proxy: ProviderProxyExecutor = defineProviderProxy({

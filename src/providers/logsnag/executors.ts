@@ -50,7 +50,6 @@ export const credentialValidators: CredentialValidators = {
       profile: {
         displayName: "LogSnag API Token",
       },
-      grantedScopes: [],
       metadata: {
         apiBaseUrl: logsnagApiBaseUrl,
         validationMode: "format_only",

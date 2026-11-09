@@ -138,7 +138,6 @@ export const credentialValidators: CredentialValidators = {
         accountId,
         displayName: optionalString(body.useremail) ?? optionalString(body.accemail) ?? "Cincopa API Token",
       },
-      grantedScopes: [],
       metadata: compactObject({
         apiBaseUrl,
         validationEndpoint: validationPath,

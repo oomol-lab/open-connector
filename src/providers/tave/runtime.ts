@@ -80,7 +80,6 @@ export async function validateTaveCredential(
       accountId: studioId ?? email ?? "tave-api-key",
       displayName: name ?? email ?? "VSCO Workspace API Key",
     },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl: taveApiBaseUrl,
       validationEndpoint: "/studio/me",

@@ -81,7 +81,6 @@ export async function validateFireberryApiKey(
   signal?: AbortSignal,
 ): Promise<{
   profile: { accountId: string; displayName: string };
-  grantedScopes: string[];
   metadata: Record<string, unknown>;
 }> {
   const payload = await requestFireberryJson({
@@ -104,7 +103,6 @@ export async function validateFireberryApiKey(
       accountId: `fireberry:${hashToken(apiKey)}`,
       displayName: "Fireberry API Token",
     },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl: fireberryApiBaseUrl,
       validationEndpoint: "/api/record/account",

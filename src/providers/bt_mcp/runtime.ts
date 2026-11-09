@@ -46,7 +46,6 @@ export async function validateBtMcpCredential(
       accountId: `bt_mcp:mcp:${endpointHash}`,
       displayName: `BT Panel MCP - ${context.endpoint.host}`,
     },
-    grantedScopes: [],
     metadata: {
       mcpEndpoint: context.endpoint.toString(),
       discoveredToolCount: tools.length,

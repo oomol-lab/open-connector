@@ -66,7 +66,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: "listbuilding_api_key",
         displayName: "KlickTipp Listbuilding API Key",
       },
-      grantedScopes: [],
       metadata: {
         apiBaseUrl: klicktippApiBaseUrl,
         credentialHelpUrl: klicktippDocsUrl,

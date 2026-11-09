@@ -197,7 +197,6 @@ export async function validateFreshteamCredential(
   signal?: AbortSignal,
 ): Promise<{
   profile: { accountId: string; displayName: string };
-  grantedScopes: string[];
   metadata: Record<string, unknown>;
 }> {
   const domain = normalizeFreshteamDomain(values.domain);
@@ -221,7 +220,6 @@ export async function validateFreshteamCredential(
       accountId: `freshteam:${domain}`,
       displayName: `Freshteam ${domain}`,
     },
-    grantedScopes: [],
     metadata: {
       domain,
       baseUrl,

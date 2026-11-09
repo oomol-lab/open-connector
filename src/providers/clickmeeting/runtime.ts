@@ -331,7 +331,6 @@ export async function validateClickMeetingCredential(
     profile: {
       accountId: "api_key",
       displayName: "ClickMeeting API Key",
-      grantedScopes: [],
     },
     metadata: {
       validationEndpoint: "/ping",

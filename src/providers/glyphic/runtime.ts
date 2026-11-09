@@ -141,7 +141,6 @@ export async function validateGlyphicCredential(
       accountId: "glyphic:organization",
       displayName: "Glyphic API Key",
     },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl: glyphicApiBaseUrl,
       validationEndpoint: "/v1/test/ping",

@@ -76,7 +76,6 @@ export async function validateE2bCredential(
       accountId: "api_key",
       displayName: "E2B API Key",
     },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl: e2bApiBaseUrl,
       validationEndpoint: e2bValidationPath,

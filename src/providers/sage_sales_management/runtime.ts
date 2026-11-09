@@ -131,7 +131,6 @@ export async function validateSageSalesManagementCredential(
       accountId: userId === undefined ? "sage-sales-management-account" : String(userId),
       displayName: accountLabel ?? "Sage Sales Management Account",
     },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl: sageSalesManagementApiBaseUrl,
       validationEndpoint: "/users",

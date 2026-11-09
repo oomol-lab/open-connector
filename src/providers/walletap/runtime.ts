@@ -128,7 +128,7 @@ export async function validateWalletapCredential(
   signal?: AbortSignal,
 ): Promise<CredentialValidationResult> {
   await requestWalletapData({ apiKey, path: "/api/templates", query: { limit: 1 }, fetcher, signal });
-  return { profile: { accountId: "walletap", displayName: "Walletap API Key" }, grantedScopes: [], metadata: {} };
+  return { profile: { accountId: "walletap", displayName: "Walletap API Key" }, metadata: {} };
 }
 
 function requirePassIdentifier(input: Record<string, unknown>): void {

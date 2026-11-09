@@ -77,7 +77,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: `bannerbear:${accountId}`,
         displayName: project,
       },
-      grantedScopes: [],
       metadata: compactObject({
         apiBaseUrl: bannerbearApiBaseUrl,
         project,

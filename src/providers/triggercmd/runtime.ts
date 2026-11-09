@@ -83,7 +83,6 @@ export async function validateTriggercmdCredential(
     profile: {
       displayName: "TRIGGERcmd API Token",
     },
-    grantedScopes: [],
     metadata: {
       validationEndpoint: listCommandsPath,
       commandCount: records.length,

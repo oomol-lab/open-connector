@@ -113,7 +113,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: "addressfinder",
         displayName: "Addressfinder API Key",
       },
-      grantedScopes: [],
       metadata: compactObject({
         apiBaseUrl: addressfinderApiBaseUrl,
         validationEndpoint: addressfinderValidationEndpoint,

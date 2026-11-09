@@ -265,7 +265,6 @@ export async function validateCentralStationCrmCredential(
         userId === undefined ? `central_station_crm:${subdomain}` : `central_station_crm:${subdomain}:user:${userId}`,
       displayName: buildAccountLabel(user, subdomain),
     },
-    grantedScopes: [],
     metadata: compactObject({
       subdomain,
       apiBaseUrl,

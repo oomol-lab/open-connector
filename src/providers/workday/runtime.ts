@@ -11,7 +11,6 @@ import {
   requiredInputString,
   providerInputError,
 } from "../provider-runtime.ts";
-import { workdayOAuthScopes } from "./scopes.ts";
 
 interface WorkdayContext {
   accessToken: string;
@@ -154,7 +153,6 @@ export async function validateWorkdayCredential(
         nonEmptyString(person.descriptor) ??
         accountId,
     },
-    grantedScopes: readGrantedScopes(credential.metadata),
     metadata: {
       baseUrl: resolveWorkdayBaseUrl(credential.metadata),
       tenant: resolveWorkdayTenant(credential.metadata),
@@ -417,11 +415,6 @@ function appendQueryParams(
       url.searchParams.set(key, String(value));
     }
   }
-}
-
-function readGrantedScopes(metadata: Record<string, unknown>): string[] {
-  const rawScope = optionalString(metadata.scope);
-  return rawScope ? rawScope.split(/\s+/).filter(Boolean) : [...workdayOAuthScopes];
 }
 
 function nonEmptyString(value: unknown): string | undefined {

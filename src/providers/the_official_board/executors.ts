@@ -33,6 +33,6 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
 export const credentialValidators: CredentialValidators = {
   async apiKey(input, { fetcher }) {
     const result = await validateTheOfficialBoardCredential({ apiKey: input.apiKey }, fetcher);
-    return { profile: { displayName: result.accountLabel }, grantedScopes: [], metadata: result.providerMetadata };
+    return { profile: { displayName: result.accountLabel }, metadata: result.providerMetadata };
   },
 };

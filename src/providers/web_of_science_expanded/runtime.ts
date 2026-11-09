@@ -174,9 +174,7 @@ export async function validateWebOfScienceExpandedCredential(
     profile: {
       accountId: "web_of_science_expanded:api_key",
       displayName: "Web of Science Expanded API Key",
-      grantedScopes: [],
     },
-    grantedScopes: [],
     metadata: compactObject({
       apiProduct: "Web of Science API Expanded",
       validationEndpoint: "/",

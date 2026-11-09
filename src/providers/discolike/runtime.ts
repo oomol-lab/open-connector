@@ -102,7 +102,6 @@ export async function validateDiscolikeCredential(
       accountId: "api_key",
       displayName: accountStatus ? `DiscoLike ${accountStatus}` : "DiscoLike API Key",
     },
-    grantedScopes: [],
     metadata: compactObject({
       validationEndpoint: "/usage",
       accountStatus,

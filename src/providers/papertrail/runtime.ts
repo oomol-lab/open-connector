@@ -149,7 +149,6 @@ export async function validatePapertrailCredential(
   );
   return {
     profile: { accountId: "papertrail", displayName: "Papertrail API Token" },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: papertrailApiBaseUrl,
       validationEndpoint: "/api/v1/systems.json",

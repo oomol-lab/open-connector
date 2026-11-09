@@ -52,7 +52,6 @@ export async function validateMicrosoftClarityCredential(
       accountId: "microsoft_clarity",
       displayName: "Microsoft Clarity API Token",
     },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: microsoftClarityApiBaseUrl,
       validationEndpoint: microsoftClarityExportPath,

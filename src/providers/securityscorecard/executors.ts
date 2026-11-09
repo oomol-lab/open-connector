@@ -176,7 +176,6 @@ export const credentialValidators: CredentialValidators = {
     await request(fetcher, input.apiKey, "/portfolios", undefined, undefined, signal);
     return {
       profile: { displayName: "SecurityScorecard API Token" },
-      grantedScopes: [],
       metadata: { validationEndpoint: "/portfolios" },
     };
   },

@@ -280,7 +280,6 @@ async function validateDiscourseCredential(
       accountId: `discourse:${hashValue(`${host}:${username}`).slice(0, 16)}`,
       displayName: `${labelName} @ ${host}`,
     },
-    grantedScopes: [],
     metadata: compactObject({
       baseUrl: credential.baseUrl,
       apiUsername: username,

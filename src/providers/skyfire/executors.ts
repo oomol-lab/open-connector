@@ -62,8 +62,7 @@ export const credentialValidators: CredentialValidators = {
     });
 
     return {
-      profile: { accountId: "api_key", displayName: "Skyfire API Key", grantedScopes: [] },
-      grantedScopes: [],
+      profile: { accountId: "api_key", displayName: "Skyfire API Key" },
       metadata: {
         apiBaseUrl: skyfireApiBaseUrl,
         validationEndpoint: skyfireValidationPath,

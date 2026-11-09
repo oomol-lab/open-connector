@@ -67,7 +67,6 @@ export async function validateBunnycdnCredential(
       accountId: "bunnycdn:api_key",
       displayName: "Bunny API Key",
     },
-    grantedScopes: [],
     metadata: compactObject({
       validationEndpoint: "/pullzone?page=1&perPage=1",
       firstPullZoneId: optionalInteger(firstPullZone?.Id),

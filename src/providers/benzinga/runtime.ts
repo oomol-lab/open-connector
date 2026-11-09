@@ -87,7 +87,6 @@ export async function validateBenzingaCredential(
       accountId: "benzinga-api-key",
       displayName: "Benzinga API Key",
     },
-    grantedScopes: [],
     metadata: {
       validationEndpoint: "/api/v2.1/news/channels",
       channelCount: channels.length,

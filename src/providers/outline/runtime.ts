@@ -95,7 +95,6 @@ export async function validateOutlineCredential(
       accountId: userId,
       displayName: userName ?? userEmail ?? "Outline API Key",
     },
-    grantedScopes: [],
     metadata: compactObject({
       baseUrl: apiBaseUrl,
       validationEndpoint: "/auth.info",

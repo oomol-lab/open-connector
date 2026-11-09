@@ -76,7 +76,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: "brandfetch-api-key",
         displayName: "Brandfetch API Key",
       },
-      grantedScopes: [],
       metadata: {
         validationEndpoint: brandfetchValidationPath,
         apiBaseUrl: brandfetchApiBaseUrl,

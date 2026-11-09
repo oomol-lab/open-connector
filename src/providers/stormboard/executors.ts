@@ -133,7 +133,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: userId ? `stormboard:${userId}` : undefined,
         displayName: fullName || email || username || "Stormboard API Key",
       },
-      grantedScopes: [],
       metadata: compactObject({
         apiBaseUrl: stormboardApiBaseUrl,
         validationEndpoint: "/users/profile",

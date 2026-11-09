@@ -87,7 +87,6 @@ export async function validateStackOverflowForTeamsCredential(
       accountId: typeof user.id === "number" ? String(user.id) : `stack-internal:${context.team}`,
       displayName: displayName ? `${displayName} (${context.team})` : `Stack Internal ${context.team}`,
     },
-    grantedScopes: [],
     metadata: {
       team: context.team,
       apiBaseUrl: stackOverflowForTeamsApiBaseUrl,

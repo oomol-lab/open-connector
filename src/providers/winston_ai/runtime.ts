@@ -71,7 +71,6 @@ export async function validateWinstonAiCredential(
       accountId: "winston-ai-api-key",
       displayName: "Winston AI API Key",
     },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: winstonAiApiBaseUrl,
       validationEndpoint: "/v2/ai-content-detection",

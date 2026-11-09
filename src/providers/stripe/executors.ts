@@ -147,7 +147,6 @@ async function validateStripeCredential(
     accountId?: string;
     displayName: string;
   };
-  grantedScopes: string[];
   metadata: Record<string, unknown>;
 }> {
   const payload = requiredResponseRecord(
@@ -168,7 +167,6 @@ async function validateStripeCredential(
       accountId,
       displayName: email ?? accountId ?? "Stripe API Key",
     },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl: stripeApiBaseUrl,
       apiVersion: stripeApiVersion,

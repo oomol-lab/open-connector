@@ -199,7 +199,6 @@ export async function validateHeyreachCredential(
       accountId: "heyreach_api_key",
       displayName: "HeyReach API Key",
     },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: heyreachApiBaseUrl,
       validationEndpoint: "/auth/CheckApiKey",

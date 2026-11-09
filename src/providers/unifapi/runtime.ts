@@ -71,7 +71,6 @@ export async function validateUnifapiCredential(
       accountId: "unifapi-api-key",
       displayName: "UnifAPI API Key",
     },
-    grantedScopes: [],
     metadata: {
       validationEndpoint,
       apiBaseUrl: unifapiApiBaseUrl,

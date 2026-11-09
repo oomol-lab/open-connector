@@ -142,7 +142,6 @@ export const credentialValidators: CredentialValidators = {
       | undefined;
     return {
       profile: { accountId, displayName: displayName ?? "Parma API Token" },
-      grantedScopes: [],
       metadata: { accountId: account?.id, validationEndpoint: "/api/v1/users/me" },
     };
   },

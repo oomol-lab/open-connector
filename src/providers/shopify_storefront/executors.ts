@@ -393,9 +393,7 @@ export const credentialValidators: CredentialValidators = {
       profile: {
         accountId: `shopify_storefront:${shopDomain}`,
         displayName: shop.name,
-        grantedScopes: [],
       },
-      grantedScopes: [],
       metadata: {
         shopDomain,
         apiBaseUrl: buildShopifyStorefrontApiBaseUrl(shopDomain),

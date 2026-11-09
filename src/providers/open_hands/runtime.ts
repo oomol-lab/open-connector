@@ -97,7 +97,6 @@ export async function validateOpenHandsCredential(
       accountId: "open_hands",
       displayName: "OpenHands API Key",
     },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: openHandsApiBaseUrl,
       validationEndpoint: openHandsValidationPath,

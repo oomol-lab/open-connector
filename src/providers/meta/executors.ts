@@ -68,15 +68,11 @@ export const credentialValidators: CredentialValidators = {
     return validate({ accessToken: input.apiKey, fetcher, signal });
   },
   async oauth2(input, { fetcher, signal }) {
-    const result = await validate({
+    return validate({
       accessToken: input.accessToken,
       fetcher,
       signal,
       appSecret: optionalString(input.providerSecret?.appSecret),
     });
-
-    const scopes = (optionalString(input.metadata.scope) ?? "").split(" ").filter(Boolean);
-    if (scopes.includes("ads_management") && !scopes.includes("ads_read")) scopes.push("ads_read");
-    return { ...result, grantedScopes: scopes };
   },
 };

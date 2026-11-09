@@ -90,9 +90,7 @@ export async function validateOpsgenieCredential(
     profile: {
       accountId: accountName || environment,
       displayName: accountName || `Opsgenie ${environment.toUpperCase()} Account`,
-      grantedScopes: [],
     },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl,
       environment,

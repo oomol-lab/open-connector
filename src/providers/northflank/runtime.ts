@@ -76,9 +76,7 @@ export async function validateNorthflankCredential(
     profile: {
       accountId: "northflank",
       displayName: "Northflank API Token",
-      grantedScopes: [],
     },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: northflankApiBaseUrl,
       validationEndpoint: "/v1/projects",

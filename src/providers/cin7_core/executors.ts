@@ -225,7 +225,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: context.accountId,
         displayName: company ?? "Cin7 Core Account",
       },
-      grantedScopes: [],
       metadata: compactObject({
         apiBaseUrl: cin7CoreApiBaseUrl,
         validationEndpoint: cin7CoreValidationPath,

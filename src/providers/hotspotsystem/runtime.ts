@@ -138,7 +138,6 @@ export async function validateHotspotsystemCredential(
   options: { fetcher: typeof fetch; signal?: AbortSignal },
 ): Promise<{
   profile: { accountId: string; displayName: string };
-  grantedScopes: string[];
   metadata: Record<string, unknown>;
 }> {
   const response = await hotspotsystemRequestJson(
@@ -159,7 +158,6 @@ export async function validateHotspotsystemCredential(
       accountId: String(owner.userId),
       displayName: owner.operator,
     },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: hotspotsystemApiBaseUrl,
       validationEndpoint: hotspotsystemValidationPath,

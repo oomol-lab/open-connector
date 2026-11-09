@@ -25,7 +25,7 @@ interface CochraneRequestInput {
 export async function validateCochraneCredential(
   values: Record<string, string>,
   fetcher: typeof fetch,
-): Promise<{ profile: { displayName: string }; grantedScopes: string[]; metadata: Record<string, unknown> }> {
+): Promise<{ profile: { displayName: string }; metadata: Record<string, unknown> }> {
   const credential = readCochraneCredential(values);
   await requestCochrane({
     credential,
@@ -39,7 +39,6 @@ export async function validateCochraneCredential(
       displayName:
         credential.authMethod == "basic" ? (credential.username ?? "Cochrane Account") : "Cochrane Bearer Account",
     },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: cochraneApiBaseUrl,
       authMethod: credential.authMethod,

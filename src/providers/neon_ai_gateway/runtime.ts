@@ -146,7 +146,6 @@ export async function validateNeonAiGatewayCredential(
   const branchId = host.split(".")[0]!.replace(/-api$/u, "");
   return {
     profile: { accountId: `neon_ai_gateway:${host}`, displayName: `Neon AI Gateway ${branchId}` },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: context.baseUrl,
       branchId,

@@ -178,7 +178,6 @@ async function validateLeigaCredential(context: ApiKeyProviderContext): Promise<
       accountId: firstProject ? String(firstProject.id) : undefined,
       displayName: optionalString(firstProject?.pname) ?? optionalString(firstProject?.pkey) ?? "Leiga API Key",
     },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl: leigaApiBaseUrl,
       validationEndpoint: "/project/list",

@@ -33,9 +33,7 @@ export async function validateTrentCredential(apiKey: string): Promise<Credentia
     profile: {
       accountId: "trent-api-key",
       displayName: "Trent API Key",
-      grantedScopes: [],
     },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: trentChatApiBaseUrl,
       validationMode: "local_non_empty_key",

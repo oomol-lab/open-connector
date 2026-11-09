@@ -55,7 +55,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: "carbone",
         displayName: "Carbone API Key",
       },
-      grantedScopes: [],
       metadata: compactObject({
         apiBaseUrl: carboneApiBaseUrl,
         validationEndpoint: carboneStatusPath,

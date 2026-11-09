@@ -114,7 +114,6 @@ export async function validatePersonalAiCredential(
     profile: {
       accountId: domainName,
       displayName: domainName,
-      grantedScopes: [],
     },
     metadata: {
       domainName,

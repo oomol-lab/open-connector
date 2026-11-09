@@ -140,7 +140,6 @@ export async function validateRiddleQuizMakerCredential(
       accountId: "api_key",
       displayName: optionalString(first?.name) ?? optionalString(first?.title) ?? "Riddle API Key",
     },
-    grantedScopes: [],
     metadata: { apiBaseUrl: riddleQuizMakerApiBaseUrl, validationEndpoint: "/project/list" },
   };
 }

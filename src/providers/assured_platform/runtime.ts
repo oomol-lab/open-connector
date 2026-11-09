@@ -95,7 +95,6 @@ export async function validateAssuredPlatformCredential(
       accountId: optionalString(user.id),
       displayName: accountLabel(user),
     },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: assuredPlatformApiBaseUrl,
       validationEndpoint: currentUserPath,

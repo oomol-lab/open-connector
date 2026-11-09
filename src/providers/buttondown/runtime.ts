@@ -79,7 +79,6 @@ export async function validateButtondownCredential(
       accountId: emailAddress ?? username ?? "buttondown:api_key",
       displayName: emailAddress ?? username ?? "Buttondown Account",
     },
-    grantedScopes: [],
     metadata: compactObject({
       username,
       email_address: emailAddress,

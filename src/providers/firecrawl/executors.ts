@@ -142,7 +142,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: "api_key",
         displayName: "Firecrawl API Key",
       },
-      grantedScopes: [],
       metadata: compactObject({
         apiBaseUrl,
         validationEndpoint: "/v2/team/credit-usage",

@@ -26,13 +26,11 @@ export const myOtpAppActionHandlers: ProviderActionHandlers<
 };
 export async function validateMyOtpApp(context: ApiKeyProviderContext): Promise<{
   profile: { accountId: string; displayName: string };
-  grantedScopes: string[];
   metadata: Record<string, unknown>;
 }> {
   const payload = await request("/check_otp_status", { message_id: validationMessageId }, context, "validate");
   return {
     profile: { accountId: "api_key", displayName: "MyOTP.App API Key" },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl: myOtpAppApiBaseUrl,
       validationEndpoint: "/check_otp_status",

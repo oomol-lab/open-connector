@@ -122,7 +122,6 @@ export const credentialValidators: CredentialValidators = {
       profile: {
         displayName: `Teamtailor ${stack.toUpperCase()} API Key`,
       },
-      grantedScopes: [],
       metadata: {
         apiBaseUrl: getTeamtailorBaseUrl(stack),
         apiVersion: teamtailorApiVersion,

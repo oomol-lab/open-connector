@@ -116,7 +116,6 @@ async function validateWaboxappCredential(
       accountId: account.uid,
       displayName: account.alias ?? account.uid,
     },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl: waboxappApiBaseUrl,
       validationEndpoint: waboxappValidationPath,

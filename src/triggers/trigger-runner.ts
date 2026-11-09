@@ -117,17 +117,6 @@ export class TriggerRunner {
       input.signal,
       input.policy,
     );
-    const permission = this.options.catalog.providers
-      .find((provider) => provider.service === input.service)
-      ?.triggerPermissions?.find((permission) => permission.id === input.triggerId);
-    const alternatives = permission?.providerScopeAlternatives;
-    const cleanup =
-      ((input.request.operation === "reconcile" || input.request.operation === "resource") && !input.request.active) ||
-      (input.request.operation === "sourceReference" &&
-        input.request.request.action === "resource" &&
-        !input.request.request.active);
-    if (!cleanup && alternatives && !alternatives.some((scope) => target.scopes.includes(scope)))
-      throw new ExecutionError("scope_missing", "The Trigger requires additional provider permissions.", "forbidden");
     const request = input.request;
     if (request.operation === "sourceReference") {
       const { executePersistentSource } = await import("./sources/persistent.ts");
@@ -377,7 +366,6 @@ export class TriggerRunner {
       };
       return {
         proxy,
-        scopes: credential.profile.grantedScopes,
         owner: {
           service,
           connectionId: stored.id,

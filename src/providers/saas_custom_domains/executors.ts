@@ -94,7 +94,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: firstAccountUuid ?? "saas_custom_domains",
         displayName: firstAccountName ?? "SaaS Custom Domains API Token",
       },
-      grantedScopes: [],
       metadata: compactObject({
         apiBaseUrl: saasCustomDomainsApiBaseUrl,
         authMethod: "bearer",
