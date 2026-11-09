@@ -12,7 +12,7 @@ import { AesGcmSecretCodec } from "../secrets/secret-codec.ts";
 import { RuntimeTokenService } from "../storage/runtime-token-service.ts";
 import { SqliteRuntimeDatabase } from "../storage/sqlite/runtime-store.ts";
 import { resolveOAuthServerConfig } from "./config.ts";
-import { hashToken } from "./jwks.ts";
+import { hashToken, verifyAccessToken } from "./jwks.ts";
 import {
   authenticateClient,
   handleRevokePost,
@@ -240,10 +240,54 @@ describe("client_secret_basic authentication", () => {
     expect(tokens.scope).toBe("mcp:access offline_access");
     expect(typeof tokens.access_token).toBe("string");
     expect(typeof tokens.refresh_token).toBe("string");
+    expect((await verifyAccessToken(tokens.access_token, deps.keys, ISSUER))?.claims.aud).toBe(`${ISSUER}/mcp`);
+    expect(await deps.tokens.findByAccessTokenHash(hashToken(tokens.access_token))).toMatchObject({
+      resource: `${ISSUER}/mcp`,
+    });
 
     // A wrong secret is rejected before the grant is even looked at.
     await expect(handleTokenPost(form, deps, basicHeader(clientId, "wrong-secret"))).rejects.toMatchObject({
       code: "invalid_client",
+    });
+  });
+
+  it("rejects a token request that adds a resource the authorization did not request", async () => {
+    const { app, deps } = await setup();
+    const { clientId, clientSecret } = await createManualClient(app, "client_secret_basic");
+    const { verifier } = pkcePair();
+    const location = await authorizeAndApprove(app, clientId);
+    const form = new URLSearchParams({
+      grant_type: "authorization_code",
+      code: location.searchParams.get("code") ?? "",
+      redirect_uri: REDIRECT,
+      code_verifier: verifier,
+      resource: "https://evil.example/mcp",
+    });
+
+    await expect(handleTokenPost(form, deps, basicHeader(clientId, clientSecret ?? ""))).rejects.toMatchObject({
+      code: "invalid_target",
+    });
+  });
+
+  it("accepts the served resource on a code that omitted it", async () => {
+    const { app, deps } = await setup();
+    const { clientId, clientSecret } = await createManualClient(app, "client_secret_basic");
+    const { verifier } = pkcePair();
+    const location = await authorizeAndApprove(app, clientId);
+    const form = new URLSearchParams({
+      grant_type: "authorization_code",
+      code: location.searchParams.get("code") ?? "",
+      redirect_uri: REDIRECT,
+      code_verifier: verifier,
+      resource: `${ISSUER}/mcp`,
+    });
+
+    const tokens = await handleTokenPost(form, deps, basicHeader(clientId, clientSecret ?? ""));
+    expect(tokens.access_token).toEqual(expect.any(String));
+    expect(tokens.token_type).toBe("Bearer");
+    expect((await verifyAccessToken(tokens.access_token, deps.keys, ISSUER))?.claims.aud).toBe(`${ISSUER}/mcp`);
+    expect(await deps.tokens.findByAccessTokenHash(hashToken(tokens.access_token))).toMatchObject({
+      resource: `${ISSUER}/mcp`,
     });
   });
 
