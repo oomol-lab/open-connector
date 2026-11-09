@@ -97,7 +97,7 @@ export const oauth: ProviderOAuthRuntime = {
         method: "POST",
         headers: { authorization: `Bearer ${accessToken}` },
         signal,
-        redirect: "error",
+        redirect: "manual",
       });
 
       if (!response.ok) throw createAttioError(response, await readAttioPayload(response), "validate");
