@@ -3,7 +3,7 @@ import type { ActionDefinition } from "../../core/types.ts";
 import { s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
 
-const service = "simplesat" as const;
+const service = "simplesat";
 
 const requiredIdSchema = (description: string) => s.string(description, { minLength: 1 });
 const pageSchema = s.integer("The one-based page number to request from Simplesat.", {

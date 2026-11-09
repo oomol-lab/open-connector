@@ -3,7 +3,7 @@ import type { ActionDefinition, JsonSchema } from "../../core/types.ts";
 import { jsonSchema as s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
 
-const service = "mktindex" as const;
+const service = "mktindex";
 
 const platformSchema = s.nonEmptyString(
   "The Moojing platform ID, such as all, tmall, jd, pdd, or meituan. Supported platforms vary by endpoint and subscription.",

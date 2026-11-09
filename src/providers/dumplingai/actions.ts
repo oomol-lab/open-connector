@@ -3,7 +3,7 @@ import type { ProviderActionDefinition } from "../../core/provider-definition.ts
 import { jsonSchema as s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
 
-const service = "dumplingai" as const;
+const service = "dumplingai";
 const catalogTypeSchema = s.stringEnum("The catalog object type to search or inspect.", [
   "capability",
   "provider",

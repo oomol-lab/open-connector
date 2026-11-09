@@ -3,7 +3,7 @@ import type { ProviderActionDefinition } from "../../core/provider-definition.ts
 import { jsonSchema as s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
 
-const service = "ringba" as const;
+const service = "ringba";
 
 const emptyInputSchema = s.object("The input payload for this Ringba action.", {});
 const resourceIdSchema = (description: string) => s.nonEmptyString(description);

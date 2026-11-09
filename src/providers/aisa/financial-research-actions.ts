@@ -1,9 +1,8 @@
-import type { ProviderActionDefinition } from "../../core/provider-definition.ts";
+import type { ActionDefinition } from "../../core/types.ts";
 
 import { s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
-
-export const financialResearchActions: ProviderActionDefinition[] = [
+export const financialResearchActions: ActionDefinition[] = [
   defineProviderAction("aisa", {
     name: "screen_stocks",
     operationType: "read",

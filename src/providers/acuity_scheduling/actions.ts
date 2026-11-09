@@ -3,7 +3,7 @@ import type { ActionDefinition, JsonSchema } from "../../core/types.ts";
 import { s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
 
-const service = "acuity_scheduling" as const;
+const service = "acuity_scheduling";
 
 const idSchema = s.positiveInteger("The numeric Acuity Scheduling resource ID.");
 const addonIdsSchema = s.array(

@@ -3,7 +3,7 @@ import type { ActionDefinition } from "../../core/types.ts";
 import { s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
 
-const service = "dialmycalls" as const;
+const service = "dialmycalls";
 
 const uuidSchema = (description: string) => s.string(description, { format: "uuid" });
 const timestampSchema = (description: string) => s.string(description);

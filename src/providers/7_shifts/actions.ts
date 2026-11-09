@@ -3,7 +3,7 @@ import type { ProviderActionDefinition } from "../../core/provider-definition.ts
 import { s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
 
-const service = "7_shifts" as const;
+const service = "7_shifts";
 
 const dateSchema = s.string("A date in YYYY-MM-DD format.", {
   pattern: "^\\d{4}-\\d{2}-\\d{2}$",

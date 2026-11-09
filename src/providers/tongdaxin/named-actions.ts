@@ -3,7 +3,7 @@ import type { ActionDefinition, JsonSchema } from "../../core/types.ts";
 import { jsonSchema as s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
 
-const service = "tongdaxin" as const;
+const service = "tongdaxin";
 
 const securityCodeSchema = s.nonWhitespaceString(
   "The exact Tongdaxin security, board, index, or contract code without a market suffix.",

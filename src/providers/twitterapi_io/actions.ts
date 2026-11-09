@@ -3,7 +3,7 @@ import type { ProviderActionDefinition } from "../../core/provider-definition.ts
 import { s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
 
-const service = "twitterapi_io" as const;
+const service = "twitterapi_io";
 
 const nonEmptyString = (description: string) => s.string(description, { minLength: 1 });
 const cursor = s.string("The pagination cursor. Use an empty string or omit it for the first page.");

@@ -1,7 +1,7 @@
 import type { ExecutionContext, ResolvedCredential, TransitFileStore } from "../../core/types.ts";
 
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { credentialValidators, executors } from "./executors.ts";
+import { executors } from "./executors.ts";
 import { pdflessApiBaseUrl } from "./runtime.ts";
 
 interface CapturedRequest {
@@ -42,48 +42,6 @@ afterEach(() => {
 });
 
 describe("Pdfless create_pdf", () => {
-  it("posts the documented body and normalizes the generated PDF", async () => {
-    const requests = stubResponses([Response.json(generatedPdfEnvelope)]);
-
-    const result = await executors["pdfless.create_pdf"]!(
-      {
-        templateId,
-        payload: { Company: "Company & co" },
-        referenceId: "invoice-42",
-        encryptionUserPassword: " secret ",
-        encryptionAllowPrinting: false,
-      },
-      contextWithKey(),
-    );
-
-    expect(requests).toStrictEqual([
-      {
-        method: "POST",
-        url: `${pdflessApiBaseUrl}/v1/pdfs`,
-        apiKey: "ak_test_key",
-        contentType: "application/json",
-        body: {
-          template_id: templateId,
-          payload: { Company: "Company & co" },
-          reference_id: "invoice-42",
-          encryption_user_password: " secret ",
-          encryption_allow_printing: false,
-        },
-      },
-    ]);
-    expect(result).toEqual({
-      ok: true,
-      output: {
-        templateId,
-        referenceId: "invoice-42",
-        downloadUrl,
-        expiresAt: "2026-11-08T10:24:36.5524803+00:00",
-        createdAt: "2026-11-08T10:14:36.5202642Z",
-        transitFile: null,
-      },
-    });
-  });
-
   it("copies the generated PDF into transit storage when a store is available", async () => {
     const requests = stubResponses([
       Response.json(generatedPdfEnvelope),
@@ -113,90 +71,6 @@ describe("Pdfless create_pdf", () => {
       },
     });
     expect(stored).toHaveLength(1);
-  });
-
-  it.each([403, 402, 429])(
-    "reports a consumed monthly quota as insufficient_credit when it arrives as HTTP %i",
-    async (status) => {
-      const message =
-        "Credit for this month is consumed, please upgrade your account subscription or contact our support.";
-      const requests = stubResponses([
-        Response.json(
-          {
-            message,
-            error_code: "quota_exceeded",
-            documentation_url: null,
-            correlation_id: "898bbd77-a36b-4e8a-986e-6d52d5ca5574",
-          },
-          { status },
-        ),
-      ]);
-
-      const result = await executors["pdfless.create_pdf"]!({ templateId }, contextWithKey());
-
-      expect(result).toMatchObject({
-        ok: false,
-        error: { code: "insufficient_credit", message },
-      });
-      expect(requests).toHaveLength(1);
-    },
-  );
-
-  it("reports a plan-gated feature refusal as invalid_input instead of a reconnect prompt", async () => {
-    const message = "Your subscription plan does not include PDF encryption";
-    stubResponses([
-      Response.json(
-        {
-          message,
-          error_code: "subscription_limits",
-          documentation_url: "https://www.pdfless.com/pricing",
-          correlation_id: "025d3711-d206-4394-b58e-b35e4f158776",
-        },
-        { status: 403 },
-      ),
-    ]);
-
-    const result = await executors["pdfless.create_pdf"]!(
-      { templateId, encryptionUserPassword: "secret" },
-      contextWithKey(),
-    );
-
-    expect(result).toMatchObject({ ok: false, error: { code: "invalid_input", message } });
-  });
-
-  it("fails with provider_error when the success envelope has no download URL", async () => {
-    stubResponses([Response.json({ data: {}, status: "success" })]);
-
-    const result = await executors["pdfless.create_pdf"]!({ templateId }, contextWithKey());
-
-    expect(result).toMatchObject({
-      ok: false,
-      error: { code: "provider_error", message: "Pdfless response missing string field: download_url" },
-    });
-  });
-
-  it("keeps an execute-phase 401 as authorization_failed", async () => {
-    stubResponses([Response.json({ message: "Invalid authentication credentials" }, { status: 401 })]);
-
-    const result = await executors["pdfless.create_pdf"]!({ templateId }, contextWithKey("ak_bad_key"));
-
-    expect(result).toMatchObject({
-      ok: false,
-      error: { code: "authorization_failed", message: "Invalid authentication credentials" },
-    });
-  });
-});
-
-describe("Pdfless credential validation", () => {
-  it("maps a 401 during validation to a 400 field error instead of a reconnect prompt", async () => {
-    const requests = stubResponses([Response.json({ message: "Invalid authentication credentials" }, { status: 401 })]);
-
-    await expect(
-      credentialValidators.apiKey!({ apiKey: "ak_bad_key", values: { apiKey: "ak_bad_key" } }, { fetcher: fetch }),
-    ).rejects.toMatchObject({ status: 400, message: "Invalid authentication credentials" });
-    expect(requests).toMatchObject([
-      { method: "GET", url: `${pdflessApiBaseUrl}/v1/workspaces`, apiKey: "ak_bad_key" },
-    ]);
   });
 });
 

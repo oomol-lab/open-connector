@@ -3,7 +3,7 @@ import type { ActionDefinition } from "../../core/types.ts";
 import { s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
 
-const service = "infolobby" as const;
+const service = "infolobby";
 
 const positiveIdSchema = (description: string) => s.integer(description, { minimum: 1 });
 const jsonValueSchema = s.unknown("A JSON-encodable InfoLobby field or filter value.");

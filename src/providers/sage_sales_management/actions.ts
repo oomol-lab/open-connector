@@ -3,7 +3,7 @@ import type { ActionDefinition } from "../../core/types.ts";
 import { s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
 
-const service = "sage_sales_management" as const;
+const service = "sage_sales_management";
 
 const nonEmptyString = (description: string) => s.string(description, { minLength: 1 });
 const idSchema = s.positiveInteger("The Sage Sales Management resource identifier.");

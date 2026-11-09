@@ -3,7 +3,7 @@ import type { ActionDefinition, JsonSchema } from "../../core/types.ts";
 import { s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
 
-const service = "mailgun" as const;
+const service = "mailgun";
 
 const domain = s.nonEmptyString("Mailgun sending domain name.");
 const templateName = s.nonEmptyString("Mailgun template name.");

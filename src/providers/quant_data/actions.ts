@@ -3,7 +3,7 @@ import type { ActionDefinition } from "../../core/types.ts";
 import { jsonSchema as s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
 
-const service = "quant_data" as const;
+const service = "quant_data";
 
 const tickerSchema = s.nonWhitespaceString(
   "The US equity or option-underlying ticker symbol, for example AAPL or SPY.",

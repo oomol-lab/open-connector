@@ -3,7 +3,7 @@ import type { ActionDefinition } from "../../core/types.ts";
 import { s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
 
-const service = "paypal" as const;
+const service = "paypal";
 
 const nonEmptyString = (description: string, maxLength?: number) =>
   s.nonEmptyString(description, {

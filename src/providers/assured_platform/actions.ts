@@ -3,7 +3,7 @@ import type { ActionDefinition } from "../../core/types.ts";
 import { jsonSchema as s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
 
-const service = "assured_platform" as const;
+const service = "assured_platform";
 
 const taskSchema = s.looseObject("One task returned by Assured Platform.");
 

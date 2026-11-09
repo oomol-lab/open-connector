@@ -3,7 +3,7 @@ import type { ActionDefinition } from "../../core/types.ts";
 import { jsonSchema as s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
 
-const service = "peec" as const;
+const service = "peec";
 
 const paginationProperties = {
   limit: s.integer("Maximum number of rows to return.", { minimum: 1, maximum: 10_000 }),

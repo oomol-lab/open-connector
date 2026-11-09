@@ -3,7 +3,7 @@ import type { ActionDefinition, JsonSchema } from "../../core/types.ts";
 import { s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
 
-const service = "tikhub" as const;
+const service = "tikhub";
 const tikhubUserScope = "/api/v1/tikhub/user/" as const;
 
 function defineTikHubUserAction<TName extends string>(input: {

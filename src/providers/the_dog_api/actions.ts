@@ -3,7 +3,7 @@ import type { ActionDefinition } from "../../core/types.ts";
 import { s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
 
-const service = "the_dog_api" as const;
+const service = "the_dog_api";
 
 const trimmedString = (description: string) => s.string(description, { minLength: 1 });
 

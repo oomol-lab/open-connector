@@ -3,7 +3,7 @@ import type { ActionDefinition, JsonSchema } from "../../core/types.ts";
 import { s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
 
-const service = "qingflow" as const;
+const service = "qingflow";
 
 const appKeySchema = s.nonEmptyString("The Qingflow application key shown in the application URL.");
 const applyIdInputSchema = s.anyOf("The Qingflow application-data record ID.", [

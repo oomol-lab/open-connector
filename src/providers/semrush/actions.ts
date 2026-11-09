@@ -3,7 +3,7 @@ import type { ActionDefinition } from "../../core/types.ts";
 import { s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
 
-const service = "semrush" as const;
+const service = "semrush";
 
 const semrushDatabaseSchema = s.string("The Semrush regional database code, such as us, uk, de, or mobile-us.", {
   minLength: 1,

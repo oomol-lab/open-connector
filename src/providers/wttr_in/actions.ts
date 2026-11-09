@@ -3,7 +3,7 @@ import type { ActionDefinition } from "../../core/types.ts";
 import { s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
 
-const service = "wttr_in" as const;
+const service = "wttr_in";
 
 const numericWeatherFieldSchema = s.nullable(
   s.number("The numeric weather value after parsing the wttr.in string field."),

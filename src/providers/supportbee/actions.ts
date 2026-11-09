@@ -3,7 +3,7 @@ import type { ActionDefinition } from "../../core/types.ts";
 import { s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
 
-const service = "supportbee" as const;
+const service = "supportbee";
 
 const positiveIdSchema = s.positiveInteger("A positive SupportBee numeric identifier.");
 const perPageSchema = s.integer("The number of records to retrieve. SupportBee requires this to be less than 100.", {

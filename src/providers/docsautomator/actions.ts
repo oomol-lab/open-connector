@@ -3,7 +3,7 @@ import type { ActionDefinition } from "../../core/types.ts";
 import { s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
 
-const service = "docsautomator" as const;
+const service = "docsautomator";
 
 const trimmedNonEmptyString = (description: string) =>
   s.string(description, {

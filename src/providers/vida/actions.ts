@@ -3,7 +3,7 @@ import type { ActionDefinition } from "../../core/types.ts";
 import { s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
 
-const service = "vida" as const;
+const service = "vida";
 
 const taskSchema = s.looseRequiredObject("One task returned by Vida.", {
   id: s.optional(s.string("The task identifier.")),

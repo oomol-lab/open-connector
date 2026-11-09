@@ -3,7 +3,7 @@ import type { ProviderActionDefinition } from "../../core/provider-definition.ts
 import { s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
 
-const service = "deepl" as const;
+const service = "deepl";
 
 const nonEmptyString = (description: string) => s.string({ minLength: 1, description });
 const nonBlankText = (description: string) => s.string({ minLength: 1, pattern: "\\S", description });

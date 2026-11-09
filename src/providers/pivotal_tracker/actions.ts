@@ -3,7 +3,7 @@ import type { ProviderActionDefinition } from "../../core/provider-definition.ts
 import { s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
 
-const service = "pivotal_tracker" as const;
+const service = "pivotal_tracker";
 
 const idSchema = s.positiveInteger("The numeric Pivotal Tracker ID.");
 const projectIdSchema = s.positiveInteger("The numeric Pivotal Tracker project ID.");

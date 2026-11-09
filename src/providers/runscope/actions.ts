@@ -3,7 +3,7 @@ import type { ProviderActionDefinition } from "../../core/provider-definition.ts
 import { s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
 
-const service = "runscope" as const;
+const service = "runscope";
 
 const nonEmptyString = (description: string) => s.string(description, { minLength: 1 });
 const bucketKeySchema = nonEmptyString("The Runscope bucket key from the API Monitoring project.");

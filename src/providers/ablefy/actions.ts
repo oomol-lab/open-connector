@@ -3,7 +3,7 @@ import type { ActionDefinition } from "../../core/types.ts";
 import { s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
 
-const service = "ablefy" as const;
+const service = "ablefy";
 const emptyInput = s.object("This action does not require any input.", {});
 const resourceIdInput = (resource: string) =>
   s.object(`The ${resource} lookup input.`, {

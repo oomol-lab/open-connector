@@ -3,7 +3,7 @@ import type { ActionDefinition } from "../../core/types.ts";
 import { s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
 
-const service = "reversecontact" as const;
+const service = "reversecontact";
 
 const trimmedNonEmptyString = (description: string) => s.nonEmptyString(description);
 const trimmedEmail = (description: string) => s.email(description);

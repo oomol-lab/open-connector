@@ -15,7 +15,7 @@ function extendObjectSchema(description: string, base: JsonSchema, properties: R
   };
 }
 
-const service = "oomol_console" as const;
+const service = "oomol_console";
 
 const teamRoleSchema = s.stringEnum("The role held by the principal in the team.", [
   "creator",

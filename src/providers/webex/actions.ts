@@ -4,7 +4,7 @@ import type { ActionOperationType, JsonSchema as ActionJsonSchema } from "../../
 import { s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
 
-const service = "webex" as const;
+const service = "webex";
 
 const id = (description: string) => s.nonEmptyString(description, { pattern: "\\S" });
 const optional = <T extends ActionJsonSchema>(schema: T) => s.optional(schema);

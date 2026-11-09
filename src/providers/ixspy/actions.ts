@@ -3,7 +3,7 @@ import type { ActionDefinition, JsonSchema } from "../../core/types.ts";
 import { s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
 
-const service = "ixspy" as const;
+const service = "ixspy";
 
 const positiveId = (description: string) => s.positiveInteger(description);
 const nonNegativeNumber = (description: string) => s.number(description, { minimum: 0 });

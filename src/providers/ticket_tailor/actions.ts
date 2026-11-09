@@ -1,7 +1,7 @@
 import { jsonSchema as s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
 
-const service = "ticket_tailor" as const;
+const service = "ticket_tailor";
 
 const resourceSchema = s.looseObject("A Ticket Tailor resource returned by the API.", {
   id: s.nonEmptyString("The Ticket Tailor resource identifier."),

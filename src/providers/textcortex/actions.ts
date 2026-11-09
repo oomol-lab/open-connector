@@ -3,7 +3,7 @@ import type { ActionDefinition } from "../../core/types.ts";
 import { s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
 
-const service = "textcortex" as const;
+const service = "textcortex";
 
 function defineAction(
   input: Omit<Parameters<typeof defineProviderAction>[1], "name"> & { service?: string; name: string },

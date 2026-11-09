@@ -3,7 +3,7 @@ import type { ActionDefinition } from "../../core/types.ts";
 import { jsonSchema as s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
 
-const service = "benchmarkone" as const;
+const service = "benchmarkone";
 
 const emailSchema = s.object(
   "A BenchmarkONE email address attached to a contact.",

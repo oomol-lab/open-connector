@@ -15,6 +15,8 @@ export const provider: ProviderDefinition = {
       authorizationUrl: "https://app.attio.com/authorize",
       tokenUrl: "https://app.attio.com/oauth/token",
       scopes: [],
+      pkce: { method: "S256" },
+      authorizationParams: { token_level: "workspace" },
       tokenEndpointAuthMethod: "client_secret_post",
       authorizationRequestFields: {
         scope: false,

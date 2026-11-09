@@ -1,6 +1,5 @@
 import type { CredentialValidationResult, ProviderExecutors } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-executors.ts";
-import type { ApiKeyProviderContext } from "../provider-executors.ts";
+import type { ApiKeyProviderContext, ProviderActionHandlers } from "../provider-executors.ts";
 import type { ProviderFetch } from "../provider-runtime.ts";
 
 import {
@@ -29,7 +28,6 @@ const pdflessWorkspacePath = "/v1/workspaces";
 const pdflessDocumentTemplatesPath = "/v1/document-templates";
 const pdflessPdfsPath = "/v1/pdfs";
 
-type PdflessRequestPhase = "validate" | "execute";
 type PdflessActionContext = ApiKeyProviderContext;
 type PdflessActionHandler = (input: Record<string, unknown>, context: PdflessActionContext) => Promise<unknown>;
 
@@ -40,7 +38,6 @@ interface PdflessRequest {
   body?: Record<string, unknown>;
   apiKey: string;
   fetcher: ProviderFetch;
-  phase: PdflessRequestPhase;
   signal?: AbortSignal;
 }
 
@@ -92,7 +89,6 @@ export async function validatePdflessCredential(
     path: pdflessWorkspacePath,
     apiKey: input.apiKey,
     fetcher,
-    phase: "validate",
   });
   const workspace = normalizeWorkspacePayload(payload);
 
@@ -120,7 +116,6 @@ async function pdflessGetWorkspace(context: PdflessActionContext): Promise<unkno
     path: pdflessWorkspacePath,
     apiKey: context.apiKey,
     fetcher: context.fetcher,
-    phase: "execute",
     signal: context.signal,
   });
   return {
@@ -140,7 +135,6 @@ async function pdflessListDocumentTemplates(
     }),
     apiKey: context.apiKey,
     fetcher: context.fetcher,
-    phase: "execute",
     signal: context.signal,
   });
 
@@ -168,7 +162,6 @@ async function pdflessCreatePdf(input: Record<string, unknown>, context: Pdfless
     }),
     apiKey: context.apiKey,
     fetcher: context.fetcher,
-    phase: "execute",
     signal: context.signal,
   });
   const pdf = normalizePdfPayload(payload);
@@ -202,7 +195,7 @@ async function pdflessRequest(request: PdflessRequest): Promise<unknown> {
       invalidJsonFallback: (text) => text,
     });
     if (!response.ok) {
-      throw mapPdflessError(response, payload, request.phase);
+      throw mapPdflessError(response, payload);
     }
 
     return payload;
@@ -221,7 +214,7 @@ function pdflessHeaders(apiKey: string, hasJsonBody: boolean): Record<string, st
   return headers;
 }
 
-function mapPdflessError(response: Response, payload: unknown, phase: PdflessRequestPhase): ProviderRequestError {
+function mapPdflessError(response: Response, payload: unknown): ProviderRequestError {
   const message = extractPdflessErrorMessage(payload) ?? (response.statusText || "Pdfless request failed");
 
   // Neither code is a bad credential, whatever status carries it: quota_exceeded is a consumed
@@ -236,17 +229,7 @@ function mapPdflessError(response: Response, payload: unknown, phase: PdflessReq
   if (response.status === 429) {
     return new ProviderRequestError(429, message, payload);
   }
-  if ((response.status === 401 || response.status === 403) && phase === "validate") {
-    return new ProviderRequestError(400, message, payload);
-  }
-  if (response.status === 401) {
-    return new ProviderRequestError(401, message, payload);
-  }
-  if (response.status === 403) {
-    return new ProviderRequestError(403, message, payload);
-  }
-
-  return new ProviderRequestError(response.status >= 500 ? 502 : response.status, message, payload);
+  return new ProviderRequestError(response.status, message, payload, "provider_error");
 }
 
 function extractPdflessErrorMessage(payload: unknown): string | undefined {

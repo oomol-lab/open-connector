@@ -3,7 +3,7 @@ import type { ActionDefinition } from "../../core/types.ts";
 import { jsonSchema as s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
 
-const service = "buzzsprout" as const;
+const service = "buzzsprout";
 
 const idSchema = (description: string) => s.positiveInteger(description);
 const nullableStringSchema = (description: string) => s.nullable(s.string(description));

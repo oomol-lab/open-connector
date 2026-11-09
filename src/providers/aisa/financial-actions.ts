@@ -64,17 +64,15 @@ const filingItem = s.stringEnum("The numbered filing item or section to return."
   "Item-8.01",
   "Item-9.01",
 ]);
-
-export const financialPriceSnapshotAction: ActionDefinition = defineProviderAction(service, {
+const financialPriceSnapshotAction = defineProviderAction(service, {
   name: "get_stock_price_snapshot",
   operationType: "read",
   description: "Get the latest available market-price snapshot for a ticker.",
   requiredScopes: [],
-  inputSchema: s.requiredObject("A ticker for a current market-price snapshot.", { ticker }),
+  inputSchema: s.object("A ticker for a current market-price snapshot.", { ticker }, { optional: [] }),
   outputSchema: financialOutput,
 });
-
-export const financialPricesAction: ActionDefinition = defineProviderAction(service, {
+const financialPricesAction = defineProviderAction(service, {
   name: "get_stock_prices",
   operationType: "read",
   description: "Get historical market prices for a ticker and date range.",
@@ -126,8 +124,7 @@ export const financialPricesAction: ActionDefinition = defineProviderAction(serv
   },
   outputSchema: financialOutput,
 });
-
-export const financialCompanyFactsAction: ActionDefinition = defineProviderAction(service, {
+const financialCompanyFactsAction = defineProviderAction(service, {
   name: "get_company_facts",
   operationType: "read",
   description: "Get standardized SEC company facts by ticker or CIK.",
@@ -142,8 +139,7 @@ export const financialCompanyFactsAction: ActionDefinition = defineProviderActio
   ),
   outputSchema: financialOutput,
 });
-
-export const incomeStatementsAction: ActionDefinition = defineProviderAction(service, {
+const incomeStatementsAction = defineProviderAction(service, {
   name: "get_income_statements",
   operationType: "read",
   description: "Get standardized income statements for a company.",
@@ -272,8 +268,7 @@ export const incomeStatementsAction: ActionDefinition = defineProviderAction(ser
   },
   outputSchema: financialOutput,
 });
-
-export const balanceSheetsAction: ActionDefinition = defineProviderAction(service, {
+const balanceSheetsAction = defineProviderAction(service, {
   name: "get_balance_sheets",
   operationType: "read",
   description: "Get standardized balance sheets for a company.",
@@ -402,8 +397,7 @@ export const balanceSheetsAction: ActionDefinition = defineProviderAction(servic
   },
   outputSchema: financialOutput,
 });
-
-export const cashFlowStatementsAction: ActionDefinition = defineProviderAction(service, {
+const cashFlowStatementsAction = defineProviderAction(service, {
   name: "get_cash_flow_statements",
   operationType: "read",
   description: "Get standardized cash-flow statements for a company.",
@@ -527,8 +521,7 @@ export const cashFlowStatementsAction: ActionDefinition = defineProviderAction(s
   },
   outputSchema: financialOutput,
 });
-
-export const financialMetricsAction: ActionDefinition = defineProviderAction(service, {
+const financialMetricsAction = defineProviderAction(service, {
   name: "get_financial_metrics",
   operationType: "read",
   description: "Get historical valuation, profitability, growth, and leverage metrics.",
@@ -652,8 +645,7 @@ export const financialMetricsAction: ActionDefinition = defineProviderAction(ser
   },
   outputSchema: financialOutput,
 });
-
-export const financialMetricsSnapshotAction: ActionDefinition = defineProviderAction(service, {
+const financialMetricsSnapshotAction = defineProviderAction(service, {
   name: "get_financial_metrics_snapshot",
   operationType: "read",
   description: "Get the latest available financial metrics for a company.",
@@ -703,8 +695,7 @@ export const financialMetricsSnapshotAction: ActionDefinition = defineProviderAc
   },
   outputSchema: financialOutput,
 });
-
-export const earningsAction: ActionDefinition = defineProviderAction(service, {
+const earningsAction = defineProviderAction(service, {
   name: "get_stock_earnings",
   operationType: "read",
   description: "Get the most recent earnings snapshot for a ticker.",
@@ -744,8 +735,7 @@ export const earningsAction: ActionDefinition = defineProviderAction(service, {
   },
   outputSchema: financialOutput,
 });
-
-export const analystEstimatesAction: ActionDefinition = defineProviderAction(service, {
+const analystEstimatesAction = defineProviderAction(service, {
   name: "get_analyst_estimates",
   operationType: "read",
   description: "Get analyst estimates for a ticker and reporting period.",
@@ -757,8 +747,7 @@ export const analystEstimatesAction: ActionDefinition = defineProviderAction(ser
   ),
   outputSchema: financialOutput,
 });
-
-export const insiderTradesAction: ActionDefinition = defineProviderAction(service, {
+const insiderTradesAction = defineProviderAction(service, {
   name: "get_insider_trades",
   operationType: "read",
   description: "List reported insider transactions for a ticker.",
@@ -834,8 +823,7 @@ export const insiderTradesAction: ActionDefinition = defineProviderAction(servic
   },
   outputSchema: financialOutput,
 });
-
-export const financialNewsAction: ActionDefinition = defineProviderAction(service, {
+const financialNewsAction = defineProviderAction(service, {
   name: "get_company_news",
   operationType: "read",
   description: "Get recent financial news, optionally filtered by ticker.",
@@ -865,8 +853,7 @@ export const financialNewsAction: ActionDefinition = defineProviderAction(servic
   },
   outputSchema: financialOutput,
 });
-
-export const filingsAction: ActionDefinition = defineProviderAction(service, {
+const filingsAction = defineProviderAction(service, {
   name: "list_company_filings",
   operationType: "read",
   description: "List SEC filings by ticker, CIK, and filing type.",
@@ -904,8 +891,7 @@ export const filingsAction: ActionDefinition = defineProviderAction(service, {
   },
   outputSchema: financialOutput,
 });
-
-export const filingItemsAction: ActionDefinition = defineProviderAction(service, {
+const filingItemsAction = defineProviderAction(service, {
   name: "get_filing_items",
   operationType: "read",
   description: "Get selected sections and exhibits from a company filing.",

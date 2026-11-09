@@ -3,7 +3,7 @@ import type { ProviderActionDefinition } from "../../core/provider-definition.ts
 import { jsonSchema as s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
 
-const service = "central_station_crm" as const;
+const service = "central_station_crm";
 
 function defineAction<TName extends string>(
   input: Omit<Parameters<typeof defineProviderAction<TName>>[1], "providerPermissions"> & {

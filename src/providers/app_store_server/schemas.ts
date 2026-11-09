@@ -2,7 +2,7 @@ import type { JsonSchema } from "../../core/types.ts";
 
 import { s } from "../../core/json-schema.ts";
 
-export const service = "app_store_server" as const;
+export const service = "app_store_server";
 
 export const nonEmptyString = (description: string): JsonSchema => s.nonWhitespaceString(description);
 export const uuidString = (description: string): JsonSchema => s.uuid(description);

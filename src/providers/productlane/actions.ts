@@ -3,7 +3,7 @@ import type { ActionDefinition } from "../../core/types.ts";
 import { s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
 
-const service = "productlane" as const;
+const service = "productlane";
 
 const identitySchema = s.looseRequiredObject("The authenticated Productlane API key identity.", {
   workspace_id: s.nonEmptyString("The Productlane workspace ID associated with the API key."),

@@ -36,8 +36,7 @@ const personIdentity = s.requireAnyProperty(
   ),
   ["firstName", "lastName", "name", "email", "hashedEmail", "organizationName", "domain", "personId", "linkedinUrl"],
 );
-
-export const enrichApolloPersonAction: ActionDefinition = defineProviderAction(service, {
+const enrichApolloPersonAction = defineProviderAction(service, {
   name: "enrich_apollo_person",
   operationType: "read",
   description: "Enrich one person from known identifiers using Apollo's global database.",
@@ -45,45 +44,53 @@ export const enrichApolloPersonAction: ActionDefinition = defineProviderAction(s
   inputSchema: personIdentity,
   outputSchema: apolloOutput,
 });
-
-export const enrichApolloPeopleAction: ActionDefinition = defineProviderAction(service, {
+const enrichApolloPeopleAction = defineProviderAction(service, {
   name: "enrich_apollo_people",
   operationType: "read",
   description: "Enrich up to ten people from known identifiers in one Apollo request.",
   requiredScopes: [],
-  inputSchema: s.requiredObject("People to enrich from Apollo's global database.", {
-    people: s.array("The people to enrich.", personIdentity, { minItems: 1, maxItems: 10 }),
-  }),
+  inputSchema: s.object(
+    "People to enrich from Apollo's global database.",
+    {
+      people: s.array("The people to enrich.", personIdentity, { minItems: 1, maxItems: 10 }),
+    },
+    { optional: [] },
+  ),
   outputSchema: apolloOutput,
 });
-
-export const enrichApolloOrganizationAction: ActionDefinition = defineProviderAction(service, {
+const enrichApolloOrganizationAction = defineProviderAction(service, {
   name: "enrich_apollo_organization",
   operationType: "read",
   description: "Enrich one organization from its domain using Apollo's global database.",
   requiredScopes: [],
-  inputSchema: s.requiredObject("A company domain for Apollo organization enrichment.", {
-    domain: s.string("The company domain without www."),
-  }),
+  inputSchema: s.object(
+    "A company domain for Apollo organization enrichment.",
+    {
+      domain: s.string("The company domain without www."),
+    },
+    { optional: [] },
+  ),
   outputSchema: apolloOutput,
 });
-
-export const enrichApolloOrganizationsAction: ActionDefinition = defineProviderAction(service, {
+const enrichApolloOrganizationsAction = defineProviderAction(service, {
   name: "enrich_apollo_organizations",
   operationType: "read",
   description: "Enrich multiple organizations from their domains in one Apollo request.",
   requiredScopes: [],
-  inputSchema: s.requiredObject("Company domains for bulk Apollo organization enrichment.", {
-    domains: s.array("The company domains to enrich.", s.string("A company domain without www."), {
-      minItems: 1,
-      maxItems: 10,
-      uniqueItems: true,
-    }),
-  }),
+  inputSchema: s.object(
+    "Company domains for bulk Apollo organization enrichment.",
+    {
+      domains: s.array("The company domains to enrich.", s.string("A company domain without www."), {
+        minItems: 1,
+        maxItems: 10,
+        uniqueItems: true,
+      }),
+    },
+    { optional: [] },
+  ),
   outputSchema: apolloOutput,
 });
-
-export const searchApolloPeopleAction: ActionDefinition = defineProviderAction(service, {
+const searchApolloPeopleAction = defineProviderAction(service, {
   name: "search_apollo_people",
   operationType: "read",
   description: "Search Apollo's global people database by role, location, employer, and seniority.",
@@ -263,8 +270,7 @@ export const searchApolloPeopleAction: ActionDefinition = defineProviderAction(s
   },
   outputSchema: apolloOutput,
 });
-
-export const searchApolloOrganizationsAction: ActionDefinition = defineProviderAction(service, {
+const searchApolloOrganizationsAction = defineProviderAction(service, {
   name: "search_apollo_organizations",
   operationType: "read",
   description: "Search Apollo's global organization database by domain, location, size, and name.",
@@ -433,19 +439,21 @@ export const searchApolloOrganizationsAction: ActionDefinition = defineProviderA
   },
   outputSchema: apolloOutput,
 });
-
-export const getApolloOrganizationAction: ActionDefinition = defineProviderAction(service, {
+const getApolloOrganizationAction = defineProviderAction(service, {
   name: "get_apollo_organization",
   operationType: "read",
   description: "Get one complete organization record from Apollo's global database.",
   requiredScopes: [],
-  inputSchema: s.requiredObject("An Apollo organization ID.", {
-    organizationId: s.string("The Apollo organization ID to retrieve."),
-  }),
+  inputSchema: s.object(
+    "An Apollo organization ID.",
+    {
+      organizationId: s.string("The Apollo organization ID to retrieve."),
+    },
+    { optional: [] },
+  ),
   outputSchema: apolloOutput,
 });
-
-export const getApolloJobPostingsAction: ActionDefinition = defineProviderAction(service, {
+const getApolloJobPostingsAction = defineProviderAction(service, {
   name: "get_apollo_job_postings",
   operationType: "read",
   description: "List live job postings for an Apollo organization.",
@@ -461,8 +469,7 @@ export const getApolloJobPostingsAction: ActionDefinition = defineProviderAction
   ),
   outputSchema: apolloOutput,
 });
-
-export const searchApolloCompanyNewsAction: ActionDefinition = defineProviderAction(service, {
+const searchApolloCompanyNewsAction = defineProviderAction(service, {
   name: "search_apollo_company_news",
   operationType: "read",
   description: "Search Apollo news articles for known organizations and event categories.",

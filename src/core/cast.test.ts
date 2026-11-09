@@ -14,6 +14,7 @@ import {
   positiveInteger,
   rawStringOrNull,
   recordOrEmpty,
+  requiredArray,
   requiredBoolean,
   requiredNumber,
   requiredRawString,
@@ -163,4 +164,12 @@ describe("cast helpers", () => {
     expect(nullableBoolean("true")).toBeUndefined();
     expect(nullableBoolean(undefined)).toBeUndefined();
   });
+});
+
+it("requires arrays without filtering provider-defined elements", () => {
+  const values = [null, 1, "value", { nested: true }];
+  expect(requiredArray(values, "data")).toBe(values);
+  expect(requiredArray([], "data")).toEqual([]);
+  for (const value of [null, undefined, {}, "[]"])
+    expect(() => requiredArray(value, "data", (message) => new Error(message))).toThrow("data must be an array");
 });

@@ -3,7 +3,7 @@ import type { ProviderActionDefinition } from "../../core/provider-definition.ts
 import { s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
 
-const service = "timelink" as const;
+const service = "timelink";
 
 const ulidSchema = s.string("A Timelink ULID identifier.", {
   minLength: 1,

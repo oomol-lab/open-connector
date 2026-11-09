@@ -1,7 +1,6 @@
-import type { ActionDefinition } from "../../core/types.ts";
-import type { JsonSchema } from "../../core/types.ts";
+import type { ActionDefinition, JsonSchema } from "../../core/types.ts";
 
-import { jsonSchema as s } from "../../core/json-schema.ts";
+import { s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
 import contracts from "./dataforseo-research-contracts.json" with { type: "json" };
 
@@ -30,6 +29,7 @@ const outputSchema = s.looseObject(
       ),
     ),
   },
+  { required: [] },
 );
 
 export const dataForSeoResearchActions: readonly ActionDefinition[] = dataForSeoResearchContracts.map((contract) =>

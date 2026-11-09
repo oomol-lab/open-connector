@@ -3,7 +3,7 @@ import type { ActionDefinition } from "../../core/types.ts";
 import { s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
 
-const service = "newscatcher" as const;
+const service = "newscatcher";
 
 const stringList = (description: string, itemDescription: string) =>
   s.array(description, s.nonEmptyString(itemDescription), { minItems: 1 });

@@ -3,7 +3,7 @@ import type { ActionDefinition } from "../../core/types.ts";
 import { jsonSchema as s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
 
-const service = "mumble" as const;
+const service = "mumble";
 
 const phoneSchema = s.nonEmptyString(
   "The customer's phone number in international digits without a leading plus sign.",

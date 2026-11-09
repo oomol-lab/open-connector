@@ -3,7 +3,7 @@ import type { ActionDefinition } from "../../core/types.ts";
 import { s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
 
-const service = "printify" as const;
+const service = "printify";
 
 const shopIdSchema = s.integer("The Printify shop ID.", { minimum: 1 });
 const resourceIdSchema = s.nonEmptyString("The Printify resource ID.");

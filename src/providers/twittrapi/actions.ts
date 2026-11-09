@@ -4,7 +4,7 @@ import type { JsonSchema } from "../../core/types.ts";
 import { s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
 
-const service = "twittrapi" as const;
+const service = "twittrapi";
 
 const numericId = (description: string) => s.string(description, { pattern: "^[0-9]{1,30}$" });
 

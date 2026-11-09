@@ -3,7 +3,7 @@ import type { ActionDefinition } from "../../core/types.ts";
 import { s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
 
-const service = "neetocal" as const;
+const service = "neetocal";
 
 const identifierSchema = s.nonEmptyString("The NeetoCal record identifier or SID.", {
   pattern: "\\S",

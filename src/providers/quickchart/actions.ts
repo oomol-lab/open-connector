@@ -3,7 +3,7 @@ import type { ProviderActionDefinition } from "../../core/provider-definition.ts
 import { s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
 
-const service = "quickchart" as const;
+const service = "quickchart";
 
 const chartConfigSchema = s.looseObject("The Chart.js configuration object to render with QuickChart.");
 

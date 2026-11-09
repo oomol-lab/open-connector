@@ -3,7 +3,7 @@ import type { ActionDefinition } from "../../core/types.ts";
 import { s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
 
-const service = "zylvie" as const;
+const service = "zylvie";
 
 const idSchema = s.nonEmptyString("The Zylvie object identifier.");
 const licenseKeySchema = s.nonEmptyString("The license key issued by Zylvie.");

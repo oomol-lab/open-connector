@@ -4,7 +4,7 @@ import type { JsonSchema } from "../../core/types.ts";
 import { s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
 
-const service = "aifinmarket" as const;
+const service = "aifinmarket";
 const maxQueryLength = 4_000;
 const maxToolArgumentsBytes = 1_000_000;
 

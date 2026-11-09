@@ -3,7 +3,7 @@ import type { ActionDefinition } from "../../core/types.ts";
 import { s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
 
-const service = "phonely" as const;
+const service = "phonely";
 
 const agentSchema = s.looseObject("A Phonely agent record.", {
   uid: s.string("The Phonely user ID that owns the agent."),

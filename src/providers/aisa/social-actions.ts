@@ -6,33 +6,38 @@ import { defineProviderAction } from "../../core/provider-definition.ts";
 const service = "aisa";
 const socialOutput = s.looseObject("The public Twitter data returned by AIsa.");
 const cursor = s.string("The cursor returned by the previous page.");
-
-const getTwitterUserAction: ActionDefinition = defineProviderAction(service, {
+const getTwitterUserAction = defineProviderAction(service, {
   name: "get_twitter_user",
   operationType: "read",
   description: "Get a public Twitter profile by username through AIsa.",
   requiredScopes: [],
-  inputSchema: s.requiredObject("A Twitter username for public profile lookup.", {
-    username: s.string("The Twitter username without the @ prefix."),
-  }),
+  inputSchema: s.object(
+    "A Twitter username for public profile lookup.",
+    {
+      username: s.string("The Twitter username without the @ prefix."),
+    },
+    { optional: [] },
+  ),
   outputSchema: socialOutput,
 });
-
-const getTwitterUsersAction: ActionDefinition = defineProviderAction(service, {
+const getTwitterUsersAction = defineProviderAction(service, {
   name: "get_twitter_users",
   operationType: "read",
   description: "Get public Twitter profiles for multiple user IDs.",
   requiredScopes: [],
-  inputSchema: s.requiredObject("Twitter user IDs for a batch profile lookup.", {
-    userIds: s.array("The Twitter user IDs to retrieve.", s.string("A Twitter user ID."), {
-      minItems: 1,
-      uniqueItems: true,
-    }),
-  }),
+  inputSchema: s.object(
+    "Twitter user IDs for a batch profile lookup.",
+    {
+      userIds: s.array("The Twitter user IDs to retrieve.", s.string("A Twitter user ID."), {
+        minItems: 1,
+        uniqueItems: true,
+      }),
+    },
+    { optional: [] },
+  ),
   outputSchema: socialOutput,
 });
-
-const searchTwitterPostsAction: ActionDefinition = defineProviderAction(service, {
+const searchTwitterPostsAction = defineProviderAction(service, {
   name: "search_twitter_posts",
   operationType: "read",
   description: "Search public Twitter posts using X query syntax and cursor pagination.",
@@ -48,22 +53,24 @@ const searchTwitterPostsAction: ActionDefinition = defineProviderAction(service,
   ),
   outputSchema: socialOutput,
 });
-
-const getTwitterPostsAction: ActionDefinition = defineProviderAction(service, {
+const getTwitterPostsAction = defineProviderAction(service, {
   name: "get_twitter_posts",
   operationType: "read",
   description: "Get public Twitter posts by their IDs.",
   requiredScopes: [],
-  inputSchema: s.requiredObject("Twitter post IDs for a batch lookup.", {
-    postIds: s.array("The Twitter post IDs to retrieve.", s.string("A Twitter post ID."), {
-      minItems: 1,
-      uniqueItems: true,
-    }),
-  }),
+  inputSchema: s.object(
+    "Twitter post IDs for a batch lookup.",
+    {
+      postIds: s.array("The Twitter post IDs to retrieve.", s.string("A Twitter post ID."), {
+        minItems: 1,
+        uniqueItems: true,
+      }),
+    },
+    { optional: [] },
+  ),
   outputSchema: socialOutput,
 });
-
-const getTwitterUserTimelineAction: ActionDefinition = defineProviderAction(service, {
+const getTwitterUserTimelineAction = defineProviderAction(service, {
   name: "get_twitter_user_timeline",
   operationType: "read",
   description: "Get a public Twitter user's post timeline.",
@@ -80,8 +87,7 @@ const getTwitterUserTimelineAction: ActionDefinition = defineProviderAction(serv
   ),
   outputSchema: socialOutput,
 });
-
-const getTwitterUserRecentPostsAction: ActionDefinition = defineProviderAction(service, {
+const getTwitterUserRecentPostsAction = defineProviderAction(service, {
   name: "get_twitter_user_recent_posts",
   operationType: "read",
   description: "Get a public Twitter user's most recent posts by ID or username.",
@@ -101,8 +107,7 @@ const getTwitterUserRecentPostsAction: ActionDefinition = defineProviderAction(s
   ),
   outputSchema: socialOutput,
 });
-
-const getTwitterMentionsAction: ActionDefinition = defineProviderAction(service, {
+const getTwitterMentionsAction = defineProviderAction(service, {
   name: "get_twitter_mentions",
   operationType: "read",
   description: "Get public posts mentioning a Twitter username in an optional time window.",
@@ -119,8 +124,7 @@ const getTwitterMentionsAction: ActionDefinition = defineProviderAction(service,
   ),
   outputSchema: socialOutput,
 });
-
-const getTwitterPostRepliesAction: ActionDefinition = defineProviderAction(service, {
+const getTwitterPostRepliesAction = defineProviderAction(service, {
   name: "get_twitter_post_replies",
   operationType: "read",
   description: "List public replies to a Twitter post.",
@@ -132,8 +136,7 @@ const getTwitterPostRepliesAction: ActionDefinition = defineProviderAction(servi
   ),
   outputSchema: socialOutput,
 });
-
-const getTwitterThreadAction: ActionDefinition = defineProviderAction(service, {
+const getTwitterThreadAction = defineProviderAction(service, {
   name: "get_twitter_thread",
   operationType: "read",
   description: "Get the public conversation context surrounding a Twitter post.",
@@ -145,8 +148,7 @@ const getTwitterThreadAction: ActionDefinition = defineProviderAction(service, {
   ),
   outputSchema: socialOutput,
 });
-
-const getTwitterTrendsAction: ActionDefinition = defineProviderAction(service, {
+const getTwitterTrendsAction = defineProviderAction(service, {
   name: "get_twitter_trends",
   operationType: "read",
   description: "Get public Twitter trends for a Where On Earth location.",
@@ -161,8 +163,7 @@ const getTwitterTrendsAction: ActionDefinition = defineProviderAction(service, {
   ),
   outputSchema: socialOutput,
 });
-
-export const socialActions: ActionDefinition[] = [
+export const socialActions: readonly ActionDefinition[] = [
   getTwitterUserAction,
   getTwitterUsersAction,
   searchTwitterPostsAction,

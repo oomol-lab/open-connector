@@ -3,7 +3,7 @@ import type { ActionDefinition } from "../../core/types.ts";
 import { s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
 
-const service = "carbone" as const;
+const service = "carbone";
 
 const nonEmptyString = (description: string) => s.string(description, { minLength: 1, pattern: "\\S" });
 

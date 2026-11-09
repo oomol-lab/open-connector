@@ -4,20 +4,37 @@ import { s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
 import { ahrefsActions } from "./ahrefs-actions.ts";
 import { aktaActions } from "./akta-actions.ts";
+import { answerActions } from "./answer-actions.ts";
 import { apolloActions } from "./apollo-actions.ts";
+import { braveRichActions } from "./brave-rich-actions.ts";
+import { commercialResearchActions } from "./commercial-research-actions.ts";
 import { creatorActions } from "./creator-actions.ts";
-import { cryptoActions } from "./crypto-actions.ts";
+import { cryptoActions, cryptoResearchActions } from "./crypto-actions.ts";
 import { dataForSeoActions } from "./dataforseo-actions.ts";
+import { dataForSeoInstantActions } from "./dataforseo-instant-actions.ts";
+import { dataForSeoOnPageActions } from "./dataforseo-onpage-actions.ts";
 import { dataForSeoReferenceAction } from "./dataforseo-reference-actions.ts";
 import { dataForSeoResearchActions } from "./dataforseo-research-actions.ts";
+import { dataForSeoTaskActions } from "./dataforseo-task-actions.ts";
+import { discoveryActions } from "./discovery-actions.ts";
 import { financialActions } from "./financial-actions.ts";
 import { financialResearchActions } from "./financial-research-actions.ts";
 import { aisaFirecrawlActions } from "./firecrawl-actions.ts";
 import { fredActions } from "./fred-actions.ts";
+import { macroResearchActions } from "./macro-research-actions.ts";
+import { pinterestResearchActions } from "./pinterest-research-actions.ts";
+import { polymarketResearchActions } from "./polymarket-research-actions.ts";
+import { publicUtilityActions } from "./public-utility-actions.ts";
 import { redditActions } from "./reddit-actions.ts";
+import { regionalResearchActions } from "./regional-research-actions.ts";
+import { researchTaskActions } from "./research-task-actions.ts";
+import { searchResearchActions } from "./search-research-actions.ts";
 import { seoActions } from "./seo-actions.ts";
 import { similarwebActions } from "./similarweb-actions.ts";
 import { socialActions } from "./social-actions.ts";
+import { nativeSocialActions } from "./social-research-actions.ts";
+import { twitterResearchActions } from "./twitter-research-actions.ts";
+import { weatherActions } from "./weather-actions.ts";
 import { webActions } from "./web-actions.ts";
 
 const service = "aisa";
@@ -75,13 +92,17 @@ const kalshiMarketsAction = defineProviderAction(service, {
       ],
     },
   ),
-  outputSchema: s.requiredObject("A page of Kalshi markets returned by AIsa.", {
-    cursor: s.optional(s.string("The cursor for the next page when more markets are available.")),
-    markets: s.array(
-      "The Kalshi markets matching the filters.",
-      s.looseObject("A Kalshi market with quotes, status, timing, volume, and settlement rules."),
-    ),
-  }),
+  outputSchema: s.object(
+    "A page of Kalshi markets returned by AIsa.",
+    {
+      cursor: s.optional(s.string("The cursor for the next page when more markets are available.")),
+      markets: s.array(
+        "The Kalshi markets matching the filters.",
+        s.looseObject("A Kalshi market with quotes, status, timing, volume, and settlement rules."),
+      ),
+    },
+    { optional: [] },
+  ),
 });
 
 const kalshiTradesAction = defineProviderAction(service, {
@@ -100,13 +121,17 @@ const kalshiTradesAction = defineProviderAction(service, {
     },
     { optional: ["limit", "cursor", "ticker", "minTimestamp", "maxTimestamp", "isBlockTrade"] },
   ),
-  outputSchema: s.requiredObject("A page of executed Kalshi trades returned by AIsa.", {
-    cursor: s.optional(s.string("The cursor for the next page when more trades are available.")),
-    trades: s.array(
-      "The executed Kalshi trades matching the filters.",
-      s.looseObject("An executed Kalshi trade with market, price, size, side, and timing data."),
-    ),
-  }),
+  outputSchema: s.object(
+    "A page of executed Kalshi trades returned by AIsa.",
+    {
+      cursor: s.optional(s.string("The cursor for the next page when more trades are available.")),
+      trades: s.array(
+        "The executed Kalshi trades matching the filters.",
+        s.looseObject("An executed Kalshi trade with market, price, size, side, and timing data."),
+      ),
+    },
+    { optional: [] },
+  ),
 });
 
 const polymarketCommonInput = {
@@ -244,7 +269,7 @@ const creditsBalanceAction = defineProviderAction(service, {
   operationType: "read",
   description: "Get the current AIsa account, key, and go-to-market credit balances.",
   requiredScopes: [],
-  inputSchema: s.requiredObject("The input payload for getting the current AIsa credit balance.", {}),
+  inputSchema: s.object("The input payload for getting the current AIsa credit balance.", {}, { optional: [] }),
   outputSchema: s.looseObject("The current AIsa balance snapshot in micro-USD."),
 });
 
@@ -269,6 +294,23 @@ const usageAction = defineProviderAction(service, {
 });
 
 export const aisaActions: readonly ActionDefinition[] = [
+  ...answerActions,
+  ...pinterestResearchActions,
+  ...researchTaskActions,
+  ...dataForSeoTaskActions,
+  ...dataForSeoOnPageActions,
+  ...dataForSeoInstantActions,
+  ...publicUtilityActions,
+  ...nativeSocialActions,
+  ...braveRichActions,
+  ...regionalResearchActions,
+  ...polymarketResearchActions,
+  ...twitterResearchActions,
+  ...macroResearchActions,
+  ...searchResearchActions,
+  ...weatherActions,
+  ...commercialResearchActions,
+  ...discoveryActions,
   ...redditActions,
   ...fredActions,
   ...financialResearchActions,
@@ -288,6 +330,7 @@ export const aisaActions: readonly ActionDefinition[] = [
   ...dataForSeoResearchActions,
   dataForSeoReferenceAction,
   ...cryptoActions,
+  ...cryptoResearchActions,
   ...socialActions,
   ...apolloActions,
   ...webActions,
