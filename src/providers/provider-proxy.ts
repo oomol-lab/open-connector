@@ -9,7 +9,7 @@ import type {
 
 import { Buffer } from "node:buffer";
 import { optionalRecord, optionalScalarString, optionalString, requiredString } from "../core/cast.ts";
-import { readBoundedResponseBytes } from "../core/request.ts";
+import { hasPathTraversalSegment, readBoundedResponseBytes } from "../core/request.ts";
 import {
   requireApiKeyCredential,
   requireOAuthCredential,
@@ -174,20 +174,6 @@ export function normalizeProviderProxyEndpoint(endpointInput: unknown, allowedOr
     throw new ProviderRequestError(400, "endpoint must not contain path traversal segments");
   }
   return endpoint;
-}
-
-function hasPathTraversalSegment(endpoint: string): boolean {
-  const path = endpoint.split(/[?#]/u)[0]!;
-  for (const segment of path.split("/")) {
-    try {
-      if (decodeURIComponent(segment) === "..") {
-        return true;
-      }
-    } catch {
-      return true;
-    }
-  }
-  return false;
 }
 
 export function normalizeProviderProxyQuery(queryInput: unknown): Record<string, string> {

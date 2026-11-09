@@ -13,6 +13,7 @@ import { downloadUploadSource, uploadProviderUrlToTransitFile } from "./provider
 import {
   createProviderProxyUrl,
   defineProviderProxy,
+  providerProxyEndpointPrefixes,
   readProviderProxyErrorMessage,
   readProviderProxyResponse,
 } from "./provider-proxy.ts";
@@ -646,6 +647,34 @@ describe("createProviderProxyUrl", () => {
     expect(createProviderProxyUrl("https://api.example.com/v1/", "/groups:batchDelete").toString()).toBe(
       "https://api.example.com/v1/groups:batchDelete",
     );
+  });
+
+  it("rejects encoded traversal that a path-prefixed base URL and an endpoint prefix check would both miss", () => {
+    const allowed = providerProxyEndpointPrefixes("/api");
+    for (const endpoint of ["/api/..%2F..%2F..%2Fv3/users", "/api/..%2f..%2fv3", "/api/%2e%2e%2Fv3", "/api/..%5Cv3"]) {
+      expect(allowed(endpoint)).toBe(true);
+      expect(() => createProviderProxyUrl("https://rancher.example.com/k8s/clusters/c-1/", endpoint)).toThrow(
+        "endpoint must not contain path traversal segments",
+      );
+    }
+  });
+
+  it("rejects encoded traversal and malformed encoding in allowed absolute endpoints", () => {
+    const origins = ["https://uploads.example.com"];
+    for (const endpoint of [
+      "https://uploads.example.com/files/..%2F..%2Fadmin",
+      "https://uploads.example.com/files/%zz",
+    ]) {
+      expect(() => createProviderProxyUrl("https://api.example.com/v1/", endpoint, undefined, origins)).toThrow(
+        "endpoint must not contain path traversal segments",
+      );
+    }
+  });
+
+  it("keeps an encoded slash inside a legitimate segment verbatim", () => {
+    expect(
+      createProviderProxyUrl("https://gitlab.example.com/api/v4/", "/projects/group%2Fproject/issues").toString(),
+    ).toBe("https://gitlab.example.com/api/v4/projects/group%2Fproject/issues");
   });
 
   it("keeps a scheme-like segment with an authority below the base instead of switching origin", () => {

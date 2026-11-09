@@ -3,6 +3,7 @@ import { withProviderNetworkPolicy } from "./provider-network-policy.ts";
 import {
   assertPublicHttpUrl,
   classifyIpAddress,
+  hasPathTraversalSegment,
   isBlockedIpAddress,
   isEgressTrustedHost,
   isIpAddress,
@@ -511,5 +512,46 @@ describe("storeResponseInTransit", () => {
     await expect(
       storeResponseInTransit(new Response(new Uint8Array([1, 2, 3])), writer, options),
     ).rejects.toMatchObject({ message: "Test download exceeds 2 bytes", status: 413 });
+  });
+});
+
+describe("hasPathTraversalSegment", () => {
+  it("rejects literal and percent-encoded dot segments", () => {
+    for (const path of ["/api/../v3", "/api/%2e%2e/v3", "/api/%2E%2e/v3", "/api/%2e./v3", "/api/./v1", "/api/%2e/v1"]) {
+      expect(hasPathTraversalSegment(path), path).toBe(true);
+    }
+  });
+
+  it("rejects dot segments hidden behind an encoded separator inside one segment", () => {
+    for (const path of [
+      "/api/..%2F..%2F..%2Fv3/users",
+      "/api/..%2f..%2fv3",
+      "/api/%2e%2e%2Fv3",
+      "/api/..%5C..%5Cv3",
+      "/api/v1%2F..%2F..%2Fv3",
+      "/api/%2e.%2Fv3",
+    ]) {
+      expect(hasPathTraversalSegment(path), path).toBe(true);
+    }
+  });
+
+  it("rejects malformed percent encoding", () => {
+    for (const path of ["/api/%zz/v1", "/api/v1%", "/api/%E0%A4%A"]) {
+      expect(hasPathTraversalSegment(path), path).toBe(true);
+    }
+  });
+
+  it("accepts encoded separators and dots that do not form a dot segment", () => {
+    for (const path of [
+      "/projects/group%2Fproject/repository/files/docs%2FREADME%2Emd",
+      "/10.1038%2Fnature12373",
+      "/@scope%2Fpackage",
+      "/files/a%2F%2Fb",
+      "/api/v1/...",
+      "/api/..hidden/x",
+      "/api/v1/items?path=../x#../y",
+    ]) {
+      expect(hasPathTraversalSegment(path), path).toBe(false);
+    }
   });
 });
