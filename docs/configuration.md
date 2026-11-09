@@ -221,7 +221,7 @@ Some self-hosted services are only reachable over a LAN or an overlay network
 such as Tailscale or NetBird. To allow those connections, set
 `OOMOL_CONNECT_ALLOW_PRIVATE_NETWORK=true`. When enabled, connections for the
 self-hosted providers that opt in (**Apache Doris**, **Dokploy**, **n8n**, **GitLab**,
-**Gitea**, **Home Assistant**, **IMAP Mailbox**, and others) may target:
+**Gitea**, **Home Assistant**, **IMAP Mailbox**, **Kubernetes**, and others) may target:
 
 - RFC 1918 ranges: `10.0.0.0/8`, `172.16.0.0/12`, `192.168.0.0/16`
 - Carrier-grade NAT / shared address space `100.64.0.0/10` (Tailscale, NetBird)
@@ -305,6 +305,23 @@ Docker or Fly deployment with network access to the FE instead.
 See the [Doris statement API](https://doris.apache.org/docs/3.x/admin-manual/open-api/fe-http/statement-execution-action/),
 the [HTTP request implementation](https://github.com/apache/doris/blob/branch-3.0/fe/fe-core/src/main/java/org/apache/doris/httpv2/rest/StmtExecutionAction.java),
 and the runnable [local HTTP example](../examples/local-http/doris.ts).
+
+### Kubernetes
+
+The `kubernetes` provider connects with a ServiceAccount bearer token, the API
+server URL, and, for a cluster-private certificate authority, the
+`certificate-authority-data` value from kubeconfig or the equivalent PEM. It
+trusts only that CA for the connection; there is no option to skip TLS
+verification. Client certificates, exec and OIDC credential plugins, and kubeconfig
+upload are not supported.
+
+Custom CA trust needs a Node, Docker, Fly or single-binary deployment. Cloudflare
+Workers cannot supply a custom trust store, so a connection with a CA fails there
+with a clear error instead of falling back to the default one; a cluster whose API
+server has a publicly trusted certificate works on Workers without it.
+
+For a private API server address, also enable
+`OOMOL_CONNECT_ALLOW_PRIVATE_NETWORK=true`.
 
 ### Corporate VPN host exceptions
 

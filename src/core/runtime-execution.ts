@@ -20,3 +20,8 @@ export function withRuntimeExecution<T>(
     withProviderHttpDispatch(context, work, options.providerHttpDispatch),
   );
 }
+
+/** Whether this process runs on Cloudflare Workers, which offers no raw TCP/TLS control such as a custom trust store. */
+export function isCloudflareWorkerRuntime(): boolean {
+  return typeof navigator === "object" && navigator.userAgent === "Cloudflare-Workers";
+}

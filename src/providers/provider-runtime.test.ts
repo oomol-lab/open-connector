@@ -680,6 +680,102 @@ function stubFetchSequence(responses: Response[]): Array<{ url: string; init: Re
   return calls;
 }
 
+describe("defineProviderProxy per-connection transport", () => {
+  function jsonTransport(...responses: Response[]): ReturnType<typeof vi.fn<typeof fetch>> {
+    return vi.fn<typeof fetch>(async () => responses.shift() ?? new Response("{}", { status: 200 }));
+  }
+
+  it("sends the request and auth through the transport the connection selects", async () => {
+    const platformCalls = stubFetchSequence([]);
+    const transport = jsonTransport();
+    const proxy = defineProviderProxy({
+      service: "test_service",
+      baseUrl: "https://api.example.com/v1/",
+      auth: { type: "bearer" },
+      transport: async () => transport,
+    });
+
+    const result = await proxy({ method: "GET", endpoint: "/items" }, executionContext);
+
+    expect(result.ok).toBe(true);
+    expect(platformCalls).toHaveLength(0);
+    expect(String(transport.mock.calls[0]![0])).toBe("https://api.example.com/v1/items");
+    expect(new Headers(transport.mock.calls[0]![1]!.headers).has("authorization")).toBe(true);
+  });
+
+  it("falls back to the shared egress fetch when the connection selects none", async () => {
+    const platformCalls = stubFetchSequence([new Response("{}", { status: 200 })]);
+    const proxy = defineProviderProxy({
+      service: "test_service",
+      baseUrl: "https://api.example.com/v1/",
+      auth: { type: "bearer" },
+      transport: async () => undefined,
+    });
+
+    await expect(proxy({ method: "GET", endpoint: "/items" }, executionContext)).resolves.toMatchObject({ ok: true });
+    expect(platformCalls).toHaveLength(1);
+  });
+
+  it("keeps the egress guard over the transport, including redirects", async () => {
+    const transport = jsonTransport(new Response(null, { status: 302, headers: { location: "http://10.0.0.5/" } }));
+    const proxy = defineProviderProxy({
+      service: "test_service",
+      baseUrl: "https://api.example.com/v1/",
+      auth: { type: "bearer" },
+      transport: async () => transport,
+    });
+    const privateProxy = defineProviderProxy({
+      service: "test_service",
+      baseUrl: "http://10.0.0.5/",
+      auth: { type: "bearer" },
+      transport: async () => transport,
+    });
+
+    const redirected = await proxy({ method: "GET", endpoint: "/items" }, executionContext);
+    const direct = await privateProxy({ method: "GET", endpoint: "/items" }, executionContext);
+
+    expect(redirected).toMatchObject({ ok: false, error: { message: expect.stringContaining("private or reserved") } });
+    expect(direct).toMatchObject({ ok: false, error: { message: expect.stringContaining("private or reserved") } });
+    expect(transport).toHaveBeenCalledTimes(1);
+  });
+
+  it("applies the private-network opt-in to the transport", async () => {
+    const transport = jsonTransport();
+    const proxy = defineProviderProxy({
+      service: "test_service",
+      baseUrl: "http://10.0.0.5/",
+      auth: { type: "bearer" },
+      allowPrivateNetwork: isPrivateNetworkAccessAllowed,
+      transport: async () => transport,
+    });
+
+    const blocked = await proxy({ method: "GET", endpoint: "/items" }, executionContext);
+    const allowed = await withProviderNetworkPolicy({ allowPrivateNetwork: true }, () =>
+      proxy({ method: "GET", endpoint: "/items" }, executionContext),
+    );
+
+    expect(blocked.ok).toBe(false);
+    expect(allowed.ok).toBe(true);
+    expect(transport).toHaveBeenCalledTimes(1);
+  });
+
+  it("reports a transport the connection cannot build as the proxy's error", async () => {
+    const proxy = defineProviderProxy({
+      service: "test_service",
+      baseUrl: "https://api.example.com/v1/",
+      auth: { type: "bearer" },
+      transport: async () => {
+        throw new ProviderRequestError(400, "bad certificate");
+      },
+    });
+
+    await expect(proxy({ method: "GET", endpoint: "/items" }, executionContext)).resolves.toMatchObject({
+      ok: false,
+      error: { code: "invalid_input", message: "bad certificate" },
+    });
+  });
+});
+
 describe("provider egress SSRF guard", () => {
   it("does not fetch when a proxy endpoint escapes its provider origin", async () => {
     const calls = stubFetchSequence([]);

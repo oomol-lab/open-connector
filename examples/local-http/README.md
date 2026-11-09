@@ -42,6 +42,19 @@ DORIS_DATABASE=analytics \
 node examples/local-http/doris.ts
 ```
 
+Run Kubernetes with a ServiceAccount token bound to a narrow Role. The example lists namespaces,
+pods and warning events, so the Role needs `list` on those. Set `KUBERNETES_CA_DATA` to the
+`certificate-authority-data` value from kubeconfig when the API server uses a private certificate
+authority. See the [Kubernetes setup and limits](../../docs/configuration.md#kubernetes). Missing
+credentials produce a skip message.
+
+```bash
+KUBERNETES_BASE_URL=https://kubernetes.example.com:6443 \
+KUBERNETES_TOKEN=... \
+KUBERNETES_CA_DATA=LS0tLS1CRUdJTi... \
+node examples/local-http/kubernetes.ts
+```
+
 Run App Store Connect with an API key created in App Store Connect. Pass the `.p8` file through
 `APP_STORE_CONNECT_PRIVATE_KEY_PATH`, or inline its PEM contents through
 `APP_STORE_CONNECT_PRIVATE_KEY`. Omit `APP_STORE_CONNECT_ISSUER_ID` when you use an Individual API

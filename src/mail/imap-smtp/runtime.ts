@@ -17,6 +17,7 @@ import { join } from "node:path";
 import { Readable, Transform } from "node:stream";
 import { pipeline } from "node:stream/promises";
 import { assertPublicHttpUrl } from "../../core/request.ts";
+import { isCloudflareWorkerRuntime } from "../../core/runtime-execution.ts";
 import { requireCustomCredential } from "../../providers/provider-credentials.ts";
 import { defineProviderExecutors } from "../../providers/provider-executors.ts";
 import { ProviderRequestError } from "../../providers/provider-runtime.ts";
@@ -180,10 +181,6 @@ async function validateMailCredential(
       smtpHost: credential.smtpHost,
     },
   };
-}
-
-function isCloudflareWorkerRuntime(): boolean {
-  return typeof navigator === "object" && navigator.userAgent === "Cloudflare-Workers";
 }
 
 async function validateMailPhase(
