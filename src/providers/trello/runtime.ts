@@ -1,8 +1,13 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
 import type { ProviderActionHandlers } from "../provider-executors.ts";
 
-import { compactObject, optionalBoolean, optionalRecord, optionalString } from "../../core/cast.ts";
-import { ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
+import { compactObject, objectArray, optionalBoolean, optionalRecord, optionalString } from "../../core/cast.ts";
+import {
+  ProviderRequestError,
+  providerResponseError,
+  providerUserAgent,
+  requiredResponseRecord,
+} from "../provider-runtime.ts";
 
 export const trelloApiBaseUrl: string = "https://api.trello.com/1";
 
@@ -441,7 +446,7 @@ export const trelloActionHandlers: ProviderActionHandlers<"trello", TrelloAction
     };
   },
   async search(input, context) {
-    const payload = await trelloRequest<unknown[]>({
+    const payload = await trelloRequest<unknown>({
       credential: context,
       fetcher: context.fetcher,
       path: "/search",
@@ -454,11 +459,12 @@ export const trelloActionHandlers: ProviderActionHandlers<"trello", TrelloAction
       ],
       phase: "execute",
     });
-    if (!Array.isArray(payload)) {
-      throw new ProviderRequestError(502, "Trello search response was not an array");
-    }
+    const response = requiredResponseRecord(payload, "Trello search response");
     return {
-      results: payload.map((result) => asObjectPayload(result)),
+      results: ["actions", "boards", "cards", "members", "organizations"].flatMap((modelType) => {
+        const items = response[modelType];
+        return items === undefined ? [] : objectArray(items, `Trello search ${modelType}`, providerResponseError);
+      }),
     };
   },
 };
