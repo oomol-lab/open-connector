@@ -222,7 +222,6 @@ export async function validateCalCredential(
     apiVersion: calMeApiVersion,
   });
   const id = optionalInteger(profile.id);
-  const providerScopes = readOAuthScopes(credential.metadata.scope);
 
   return {
     profile: {
@@ -233,7 +232,7 @@ export async function validateCalCredential(
         optionalString(profile.email) ??
         (id !== undefined ? String(id) : "Cal.com Account"),
     },
-    grantedScopes: providerScopes,
+    grantedScopes: readOAuthScopes(credential.metadata.scope),
     metadata: compactObject({
       ...credential.metadata,
       id,

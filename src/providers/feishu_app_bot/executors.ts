@@ -485,13 +485,17 @@ function readGrantedTenantScopes(payload: Record<string, unknown>): string[] {
   const data = optionalRecord(payload.data);
   const scopes = Array.isArray(data?.scopes) ? data.scopes : [];
   const granted: string[] = [];
+
   for (const value of scopes) {
     const item = optionalRecord(value);
     const name = optionalString(item?.scope_name);
-    if (name && item?.grant_status === 1 && (item.scope_type === undefined || item.scope_type === "tenant")) {
+    if (!name || item?.grant_status !== 1) continue;
+
+    if (item.scope_type === undefined || item.scope_type === "tenant") {
       granted.push(name);
     }
   }
+
   return granted;
 }
 

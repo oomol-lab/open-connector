@@ -138,8 +138,9 @@ export async function validateLoopReturnsCredential(
   signal?: AbortSignal,
 ): Promise<CredentialValidationResult> {
   const validationEndpoints: string[] = [];
-  const providerMetadata: Record<string, unknown> = {
+  const metadata: Record<string, unknown> = {
     apiBaseUrl: loopReturnsApiBaseUrl,
+    validationEndpoints,
   };
   const validationErrors: ProviderRequestError[] = [];
 
@@ -154,7 +155,7 @@ export async function validateLoopReturnsCredential(
     const destinationsPayload = requireObject(payload, "Loop Returns destinations response");
     const destinations = Array.isArray(destinationsPayload.destinations) ? destinationsPayload.destinations : [];
     validationEndpoints.push("/destinations");
-    providerMetadata.destinationCount = destinations.length;
+    metadata.destinationCount = destinations.length;
   } catch (error) {
     if (!isValidationAuthError(error)) {
       throw error;
@@ -176,7 +177,7 @@ export async function validateLoopReturnsCredential(
     });
     const returnsPayload = normalizeReturnsList(payload);
     validationEndpoints.push("/warehouse/return/list");
-    providerMetadata.sampleReturnCount = returnsPayload.returns.length;
+    metadata.sampleReturnCount = returnsPayload.returns.length;
   } catch (error) {
     if (!isValidationAuthError(error)) {
       throw error;
@@ -194,10 +195,7 @@ export async function validateLoopReturnsCredential(
       displayName: "Loop Returns API Key",
     },
     grantedScopes: [],
-    metadata: compactObject({
-      ...providerMetadata,
-      validationEndpoints,
-    }),
+    metadata,
   };
 }
 

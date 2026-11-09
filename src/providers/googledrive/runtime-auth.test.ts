@@ -133,6 +133,7 @@ describe("createGoogleServiceAccountToken", () => {
     const token = await tokenRequest(fetcher);
     expect(token.grantedScopes).toEqual(expected);
   });
+
   it("posts a signed RS256 assertion to the Google token endpoint", async () => {
     const email = uniqueEmail();
     const { fetcher, requests } = fetchRecorder(200, {
