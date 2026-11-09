@@ -17,7 +17,6 @@ import {
   providerResponseError,
   providerUserAgent,
   readProviderJsonBody,
-  requiredInputString,
   requiredResponseRecord,
   runProviderRequest,
 } from "../provider-runtime.ts";
@@ -25,7 +24,6 @@ import { defaultSeedreamModel } from "./actions.ts";
 
 export const doubaoSeedreamApiBaseUrl = "https://ark.cn-beijing.volces.com/api/v3";
 const imagesPath = "images/generations";
-const minimumCustomImagePixels = 3_686_400;
 
 export const doubaoSeedreamActionHandlers: ProviderActionHandlers<
   "doubao_seedream",
@@ -37,31 +35,50 @@ export const doubaoSeedreamActionHandlers: ProviderActionHandlers<
   },
 };
 
-export function buildSeedreamBody(input: Record<string, unknown>): Record<string, unknown> {
+function buildSeedreamBody(input: Record<string, unknown>): Record<string, unknown> {
   const images = optionalStringArray(input.images);
-  const maxImages = Math.min(optionalInteger(input.maxImages) ?? 1, 15 - (images?.length ?? 0));
   const model = optionalString(input.model) ?? defaultSeedreamModel;
-  const supportsSequentialGeneration = model !== "doubao-seedream-5-0-pro-260628";
-  if (!supportsSequentialGeneration && maxImages > 1)
-    throw new ProviderRequestError(400, "The selected model does not support multiple image generation");
+  const layerDecomposition = optionalBoolean(input.layerDecomposition) ?? false;
+  const prompt = optionalString(input.prompt);
+  const background = optionalString(input.background);
+  const outputFormat = optionalString(input.outputFormat);
+  const mode = optionalString(input.optimizePromptMode);
+  const size = readSize(input.size, layerDecomposition);
+  if (![defaultSeedreamModel, "doubao-seedream-5-0-pro-260628"].includes(model))
+    throw new ProviderRequestError(400, "Unsupported Seedream model");
+  if (!layerDecomposition && !prompt) throw new ProviderRequestError(400, "Image generation requires a prompt");
+  if (layerDecomposition && images?.length !== 1)
+    throw new ProviderRequestError(400, "Layer decomposition requires exactly one image");
+  if (mode === "fast" && model !== "doubao-seedream-5-0-pro-260628")
+    throw new ProviderRequestError(400, "Fast mode requires Seedream Pro");
+  if (background === "transparent") {
+    const hasJPEGReference = images?.some((image) => image.startsWith("data:image/jpeg;"));
+    const invalidReference = images?.length !== 1 || hasJPEGReference;
+    if (invalidReference || outputFormat === "jpeg")
+      throw new ProviderRequestError(400, "Transparent output requires one image with an alpha channel and PNG output");
+  }
   return compactObject({
     model,
-    prompt: requiredInputString(input.prompt, "prompt"),
+    prompt,
     image: images,
-    size: readSize(input.size),
-    sequential_image_generation: supportsSequentialGeneration ? (maxImages > 1 ? "auto" : "disabled") : undefined,
-    sequential_image_generation_options:
-      supportsSequentialGeneration && maxImages > 1 ? { max_images: maxImages } : undefined,
-    stream: supportsSequentialGeneration ? false : undefined,
+    size,
+    layer_decomposition: layerDecomposition,
+    background,
+    output_format: outputFormat,
+    optimize_prompt_options: mode === undefined ? undefined : { mode },
     response_format: "url",
     watermark: optionalBoolean(input.watermark) ?? true,
   });
 }
 
-function readSize(value: unknown): string {
-  if (value === undefined) return "2K";
+function readSize(value: unknown, layerDecomposition: boolean): string {
+  if (value === undefined) return layerDecomposition ? "auto" : "2K";
   const preset = optionalScalarString(value);
-  if (preset) return preset;
+  if (preset) {
+    if (["1K", "1.5K", "2K"].includes(preset) || (layerDecomposition && preset === "auto")) return preset;
+    throw new ProviderRequestError(400, "Unsupported Seedream resolution");
+  }
+  if (layerDecomposition) throw new ProviderRequestError(400, "Layer decomposition requires a resolution preset");
   const size = optionalRecord(value);
   if (!size) throw new ProviderRequestError(400, "size must be a preset or dimensions object");
   const width = optionalInteger(size.width);
@@ -69,16 +86,14 @@ function readSize(value: unknown): string {
   if (width === undefined || width <= 0 || height === undefined || height <= 0) {
     throw new ProviderRequestError(400, "size width and height must be positive integers");
   }
-  if (width * height < minimumCustomImagePixels) {
-    throw new ProviderRequestError(
-      400,
-      `Custom image dimensions must contain at least ${minimumCustomImagePixels} pixels.`,
-    );
-  }
+  const pixels = width * height;
+  const ratio = width / height;
+  if (pixels < 921_600 || pixels > 4_624_220 || ratio < 1 / 16 || ratio > 16)
+    throw new ProviderRequestError(400, "Unsupported Seedream dimensions");
   return `${width}x${height}`;
 }
 
-export function normalizeSeedreamResponse(payload: Record<string, unknown>): Record<string, unknown> {
+function normalizeSeedreamResponse(payload: Record<string, unknown>): Record<string, unknown> {
   const usage = requiredResponseRecord(payload.usage, "response usage");
   return {
     model: requiredString(payload.model, "model", providerResponseError),
@@ -86,11 +101,18 @@ export function normalizeSeedreamResponse(payload: Record<string, unknown>): Rec
     images: objectArray(payload.data, "data", providerResponseError).map((image) => ({
       url: requiredString(image.url, "data.url", providerResponseError),
       size: requiredString(image.size, "data.size", providerResponseError),
+      outputFormat: image.output_format,
+      background: image.background,
+      zIndex: image.z_index,
+      boundingBox: image.bounding_box,
+      name: image.name,
+      description: image.description,
     })),
     usage: {
       generatedImages: requireInteger(usage.generated_images, "usage.generated_images"),
-      outputTokens: requireInteger(usage.output_tokens, "usage.output_tokens"),
-      totalTokens: requireInteger(usage.total_tokens, "usage.total_tokens"),
+      inputImages: optionalInteger(usage.input_images),
+      outputTokens: optionalInteger(usage.output_tokens),
+      totalTokens: optionalInteger(usage.total_tokens),
     },
   };
 }
@@ -110,25 +132,28 @@ export async function validateDoubaoSeedreamCredential(
 
 async function requestArkJson(context: ApiKeyProviderContext, body: Record<string, unknown>): Promise<unknown> {
   context.signal?.throwIfAborted();
-  return runProviderRequest({ label: "Doubao Seedream", signal: context.signal }, async (signal) => {
-    const response = await context.fetcher(new URL(imagesPath, `${doubaoSeedreamApiBaseUrl}/`), {
-      method: "POST",
-      headers: {
-        accept: "application/json",
-        authorization: `Bearer ${context.apiKey}`,
-        "content-type": "application/json",
-        "user-agent": providerUserAgent,
-      },
-      body: JSON.stringify(body),
-      signal,
-    });
-    const payload = await readProviderJsonBody(response, {
-      emptyBody: {},
-      invalidJsonMessage: "Doubao Seedream returned an invalid JSON response",
-    });
-    if (!response.ok) handleArkError(response, payload);
-    return payload;
-  });
+  return runProviderRequest(
+    { label: "Doubao Seedream", timeoutMs: 125_000, signal: context.signal },
+    async (signal) => {
+      const response = await context.fetcher(new URL(imagesPath, `${doubaoSeedreamApiBaseUrl}/`), {
+        method: "POST",
+        headers: {
+          accept: "application/json",
+          authorization: `Bearer ${context.apiKey}`,
+          "content-type": "application/json",
+          "user-agent": providerUserAgent,
+        },
+        body: JSON.stringify(body),
+        signal,
+      });
+      const payload = await readProviderJsonBody(response, {
+        emptyBody: {},
+        invalidJsonMessage: "Doubao Seedream returned an invalid JSON response",
+      });
+      if (!response.ok) handleArkError(response, payload);
+      return payload;
+    },
+  );
 }
 
 function handleArkError(response: Response, payload: unknown): never {
