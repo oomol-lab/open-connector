@@ -4,6 +4,7 @@ import { s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
 import {
   aiModeMonitorRequest,
+  bingAiModeMonitorRequest,
   chatGPTMonitorRequest,
   geminiMonitorRequest,
   googleGotoRequest,
@@ -67,6 +68,12 @@ const engines = [
     label: "Google News",
   },
   { name: "aimode", taskType: "AIMODE", schema: aiModeMonitorRequest, label: "Google AI Mode" },
+  {
+    name: "bing/aimode",
+    taskType: "BING_AIMODE",
+    schema: bingAiModeMonitorRequest,
+    label: "Bing AI Mode",
+  },
   {
     name: "google/product",
     taskType: "GOOGLE_PRODUCT",
@@ -255,7 +262,7 @@ const endpoints: CloroEndpoint[] = [
     s.object(
       "Country lookup.",
       {
-        model: s.stringEnum("Engine filter.", ["aimode", "aioverview", "chatgpt", "gemini", "google"]),
+        model: s.stringEnum("Engine filter.", ["aimode", "aioverview", "bing_aimode", "chatgpt", "gemini", "google"]),
       },
       { optional: ["model"] },
     ),
