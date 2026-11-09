@@ -625,7 +625,7 @@ export const githubActions: ActionDefinition[] = [
     name: "list_my_repositories",
     operationType: "read",
     description:
-      "List repositories visible to the authenticated GitHub user, or accessible to the GitHub App installation. Installation credentials support pagination only; omit visibility, sort and direction.",
+      "List repositories visible to the authenticated GitHub user, or accessible to the GitHub App installation. Installation credentials support pagination only; visibility, sort and direction are ignored and repositories come back in GitHub's installation order.",
     requiredScopes: githubRepoScopes,
     inputSchema: s.object({
       visibility: s.stringEnum(["all", "public", "private"]),
