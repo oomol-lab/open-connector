@@ -184,7 +184,7 @@ describe("Zoom meeting summaries", () => {
       zoomActionHandlers.get_meeting_summary({ meetingUuid: "aDYlohsHRtCd4ii1uC2+hA==" }, { accessToken, fetcher }),
     ).resolves.toEqual({
       available: false,
-      unavailableReason: "shared_by_email_only",
+      unavailableReason: "not_accessible",
       unavailableMessage: "The meeting summary can only be shared by email.",
       summary: null,
     });

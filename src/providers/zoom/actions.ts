@@ -297,7 +297,7 @@ export const zoomActions: ActionDefinition[] = [
     name: "get_meeting_summary",
     operationType: "read",
     description:
-      "Fetch the AI Companion summary of one meeting instance by its UUID. When the account shares summaries by email only, or the summary is in Trash, the result is available false with a reason instead of an error.",
+      "Fetch the AI Companion summary of one meeting instance by its UUID. When Zoom answers 403 code 2305 (summary access restricted to IP ranges, summaries shared by email only, or the summary in Trash), the result is available false with a reason instead of an error.",
     requiredScopes: [zoomMeetingSummaryReadScope],
     inputSchema: s.object("The input payload for fetching one Zoom meeting summary.", {
       meetingUuid: s.nonEmptyString("The meeting instance UUID returned by list_user_meeting_summaries."),
@@ -306,8 +306,8 @@ export const zoomActions: ActionDefinition[] = [
       available: s.boolean("Whether Zoom returned the summary through the API."),
       unavailableReason: s.nullable(
         s.stringEnum(
-          "Why the summary is not available: shared_by_email_only means Zoom answered 403 code 2305, because the account shares summaries by email only or the summary is in Trash.",
-          ["shared_by_email_only"],
+          "Zoom answered 403 code 2305: the account restricts summary access to IP ranges or shares summaries by email only, or the summary is in Trash; unavailableMessage carries Zoom's own wording.",
+          ["not_accessible"],
         ),
       ),
       unavailableMessage: s.nullableString("Zoom's own message when the summary is not available."),

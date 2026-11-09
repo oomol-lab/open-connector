@@ -14,8 +14,11 @@ import {
 
 export const zoomApiBaseUrl = "https://api.zoom.us/v2";
 
-/** Zoom's error code for a summary the API will not return: shared by email only, or in Trash. */
-const zoomSummaryNotSharedCode = 2305;
+/**
+ * Zoom's error code for a summary the API will not return. Zoom uses it for three causes it does not tell
+ * apart by code: summary access restricted to IP ranges, summaries shared by email only, or the summary in Trash.
+ */
+const zoomSummaryNotAccessibleCode = 2305;
 
 type ZoomRequestPhase = "validate" | "execute";
 type ZoomActionHandler = ProviderRuntimeHandler<OAuthProviderContext>;
@@ -93,10 +96,13 @@ export const zoomActionHandlers: ProviderActionHandlers<"zoom", ZoomActionHandle
       });
       return { available: true, unavailableReason: null, unavailableMessage: null, summary: normalizeSummary(payload) };
     } catch (error) {
-      if (error instanceof ProviderRequestError && optionalRecord(error.details)?.code === zoomSummaryNotSharedCode) {
+      if (
+        error instanceof ProviderRequestError &&
+        optionalRecord(error.details)?.code === zoomSummaryNotAccessibleCode
+      ) {
         return {
           available: false,
-          unavailableReason: "shared_by_email_only",
+          unavailableReason: "not_accessible",
           unavailableMessage: error.message,
           summary: null,
         };
