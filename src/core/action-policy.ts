@@ -39,8 +39,15 @@ export interface TokenPolicy {
   allowedActions: string[];
   blockedActions: string[];
   allowedProxies: string[];
-  allowedConnections?: string[];
+  /**
+   * Current upstream tokens use opaque connection IDs. Jenny's fork also
+   * uses a service-to-connection-name map so a lease can pin each provider to
+   * the exact alias selected by the Gateway. Both forms are intentionally
+   * supported while the fork's existing D1 rows are retained.
+   */
+  allowedConnections?: string[] | Record<string, string | null>;
   allowedTriggers?: string[];
+  actionInputConstraints?: Record<string, Record<string, string | number | boolean | null>>;
 }
 
 export interface RuntimePolicyState {
@@ -90,7 +97,9 @@ export class ActionPolicySnapshot {
     this.state = Object.freeze({ deployment: deploymentRules, runtime: runtimeRules, updatedAt });
     this.proxyLayers = [compileLayer("deployment", deploymentRules), compileLayer("runtime", runtimeRules)];
     this.layers = [...this.proxyLayers];
-    this.allowedConnections = Object.freeze([...(token?.allowedConnections ?? [])]);
+    this.allowedConnections = Object.freeze(
+      Array.isArray(token?.allowedConnections) ? [...token.allowedConnections] : [],
+    );
     if (token) {
       const tokenRules = immutablePolicyRules({
         allowedActions: token.allowedActions,

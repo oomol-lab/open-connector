@@ -34,7 +34,11 @@ export function createPolicyRoutes({
       return jsonError(context, 400, "invalid_input", "name is required.");
     }
 
-    const created = await runtimeTokens.createToken(name, readTokenPolicy(body, true));
+    const expiresAt = optionalString(body.expiresAt);
+    if (expiresAt && (!Number.isFinite(Date.parse(expiresAt)) || Date.parse(expiresAt) <= Date.now())) {
+      return jsonError(context, 400, "invalid_input", "expiresAt must be a valid future timestamp.");
+    }
+    const created = await runtimeTokens.createToken(name, readTokenPolicy(body, true), expiresAt);
     return context.json({
       token: created.token,
       record: summarizeRuntimeToken(created.record),

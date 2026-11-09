@@ -10,9 +10,11 @@ export interface RuntimeTokenRecord {
   allowedActions: string[];
   blockedActions: string[];
   allowedProxies: string[];
-  allowedConnections: string[];
+  allowedConnections: string[] | Record<string, string | null>;
   allowedTriggers?: string[];
   createdAt: string;
+  expiresAt?: string;
+  actionInputConstraints?: Record<string, Record<string, string | number | boolean | null>>;
   lastUsedAt?: string;
 }
 
@@ -22,9 +24,11 @@ export interface RuntimeTokenSummary {
   allowedActions: string[];
   blockedActions: string[];
   allowedProxies: string[];
-  allowedConnections: string[];
+  allowedConnections: string[] | Record<string, string | null>;
   allowedTriggers?: string[];
   createdAt: string;
+  expiresAt?: string;
+  actionInputConstraints?: Record<string, Record<string, string | number | boolean | null>>;
   lastUsedAt?: string;
 }
 
@@ -66,7 +70,9 @@ export class RuntimeTokenService {
       blockedActions: [],
       allowedProxies: [],
       allowedConnections: [],
+      actionInputConstraints: {},
     },
+    expiresAt?: string,
   ): Promise<RuntimeTokenCreation> {
     const token = `${tokenPrefix}${randomBytes(32).toString("base64url")}`;
     const now = new Date().toISOString();
@@ -80,6 +86,8 @@ export class RuntimeTokenService {
       allowedConnections: policy.allowedConnections ?? [],
       allowedTriggers: policy.allowedTriggers ?? [],
       createdAt: now,
+      expiresAt: normalizeFutureExpiry(expiresAt, now),
+      actionInputConstraints: policy.actionInputConstraints ?? {},
     };
     await this.store.add(record);
     return { token, record };
@@ -107,9 +115,12 @@ export class RuntimeTokenService {
     if (!matched || !equalHashes(matched.tokenHash, tokenHash)) {
       return undefined;
     }
+    if (matched.expiresAt && Date.parse(matched.expiresAt) <= Date.now()) {
+      return undefined;
+    }
 
     await this.recordLastUsed(matched.id);
-    return {
+    const grant: RuntimeGrant = {
       tokenId: matched.id,
       allowedActions: matched.allowedActions,
       blockedActions: matched.blockedActions,
@@ -117,6 +128,10 @@ export class RuntimeTokenService {
       allowedConnections: matched.allowedConnections ?? [],
       allowedTriggers: matched.allowedTriggers ?? [],
     };
+    if (matched.actionInputConstraints && Object.keys(matched.actionInputConstraints).length > 0) {
+      grant.actionInputConstraints = matched.actionInputConstraints;
+    }
+    return grant;
   }
 
   async verifyToken(token: string): Promise<boolean> {
@@ -150,8 +165,19 @@ export function summarizeRuntimeToken(record: RuntimeTokenRecord): RuntimeTokenS
     allowedConnections: record.allowedConnections,
     allowedTriggers: record.allowedTriggers ?? [],
     createdAt: record.createdAt,
+    expiresAt: record.expiresAt,
+    actionInputConstraints: record.actionInputConstraints ?? {},
     lastUsedAt: record.lastUsedAt,
   };
+}
+
+function normalizeFutureExpiry(expiresAt: string | undefined, now: string): string | undefined {
+  if (expiresAt === undefined) return undefined;
+  const timestamp = Date.parse(expiresAt);
+  if (!Number.isFinite(timestamp) || timestamp <= Date.parse(now)) {
+    throw new Error("expiresAt must be a valid future timestamp.");
+  }
+  return new Date(timestamp).toISOString();
 }
 
 function equalHashes(left: string, right: string): boolean {

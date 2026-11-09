@@ -4,16 +4,25 @@ import type { Context } from "hono";
 
 import { Hono } from "hono";
 import { ConnectionError } from "../../connection-error.ts";
+import { readRuntimeGrant } from "./auth.ts";
 import {
   mapConnectionErrorStatus,
   serializeRuntimeConnectedApp,
   writeRuntimeFailure,
   writeRuntimeSuccess,
 } from "./runtime-api.ts";
+import { evaluateRuntimeConnection, runtimeGrantAllowsService } from "./runtime-connection-grant.ts";
 
-function filterAllowedConnections(policy: ActionPolicySnapshot, connections: ConnectionSummary[]): ConnectionSummary[] {
+function filterAllowedConnections(
+  policy: ActionPolicySnapshot,
+  connections: ConnectionSummary[],
+  grant: ReturnType<typeof readRuntimeGrant>,
+): ConnectionSummary[] {
   return connections.filter(
-    (connection) => connection.authType === "no_auth" || policy.evaluateConnection(connection.id).allowed,
+    (connection) =>
+      runtimeGrantAllowsService(grant, connection.service) &&
+      evaluateRuntimeConnection(grant, connection.service, connection.connectionName).allowed &&
+      (connection.authType === "no_auth" || policy.evaluateConnection(connection.id).allowed),
   );
 }
 
@@ -39,7 +48,9 @@ export function createRuntimeAppRoutes({ connections, getPolicySnapshot }: Runti
     }
     return writeRuntimeSuccess(
       context,
-      filterAllowedConnections(policy, await connections.listConnections()).map(serializeRuntimeConnectedApp),
+      filterAllowedConnections(policy, await connections.listConnections(), readRuntimeGrant(context)).map(
+        serializeRuntimeConnectedApp,
+      ),
     );
   });
 
@@ -56,7 +67,7 @@ export function createRuntimeAppRoutes({ connections, getPolicySnapshot }: Runti
       });
     }
     const authenticated = new Set(
-      filterAllowedConnections(policy, await connections.listConnections())
+      filterAllowedConnections(policy, await connections.listConnections(), readRuntimeGrant(context))
         .filter((connection) => connection.configured && connection.authType !== "no_auth")
         .map((connection) => connection.service),
     );
@@ -82,9 +93,11 @@ export function createRuntimeAppRoutes({ connections, getPolicySnapshot }: Runti
     try {
       return writeRuntimeSuccess(
         context,
-        filterAllowedConnections(policy, await connections.listConnectionsByService(service)).map(
-          serializeRuntimeConnectedApp,
-        ),
+        filterAllowedConnections(
+          policy,
+          await connections.listConnectionsByService(service),
+          readRuntimeGrant(context),
+        ).map(serializeRuntimeConnectedApp),
       );
     } catch (error) {
       if (error instanceof ConnectionError) {

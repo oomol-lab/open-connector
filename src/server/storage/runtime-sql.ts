@@ -12,7 +12,7 @@ export type RuntimeRow = Record<string, unknown>;
 
 /** The `runtime_tokens` columns every token query reads back, in the order `readRuntimeTokenRow` decodes. */
 export const runtimeTokenColumns =
-  "id, name, token_hash, allowed_actions, blocked_actions, allowed_proxies, allowed_connections, allowed_triggers, created_at, last_used_at";
+  "id, name, token_hash, allowed_actions, blocked_actions, allowed_proxies, allowed_connections, action_input_constraints, allowed_triggers, created_at, expires_at, last_used_at";
 
 /** Read a column the query selected as a string, rejecting anything the schema cannot produce. */
 export function readString(row: RuntimeRow, key: string): string {
@@ -42,6 +42,9 @@ export function readRunLogRow(row: RuntimeRow): RunLog {
 
 /** Decode a `runtime_tokens` row into the record the token service stores. */
 export function readRuntimeTokenRow(row: RuntimeRow): RuntimeTokenRecord {
+  const allowedConnections = parseJson<string[] | Record<string, string | null>>(
+    readOptionalString(row, "allowed_connections") ?? "[]",
+  );
   return {
     id: readString(row, "id"),
     name: readString(row, "name"),
@@ -49,9 +52,12 @@ export function readRuntimeTokenRow(row: RuntimeRow): RuntimeTokenRecord {
     allowedActions: parseJson(readString(row, "allowed_actions")),
     blockedActions: parseJson(readString(row, "blocked_actions")),
     allowedProxies: parseJson(readString(row, "allowed_proxies")),
-    allowedConnections: parseJson(readOptionalString(row, "allowed_connections") ?? "[]"),
+    allowedConnections:
+      !Array.isArray(allowedConnections) && Object.keys(allowedConnections).length === 0 ? [] : allowedConnections,
+    actionInputConstraints: parseJson(readOptionalString(row, "action_input_constraints") ?? "{}"),
     allowedTriggers: parseJson(readString(row, "allowed_triggers")),
     createdAt: readString(row, "created_at"),
+    expiresAt: readOptionalString(row, "expires_at"),
     lastUsedAt: readOptionalString(row, "last_used_at"),
   };
 }

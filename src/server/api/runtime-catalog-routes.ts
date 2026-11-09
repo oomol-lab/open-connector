@@ -3,11 +3,13 @@ import type { ConnectionService } from "../../connection-service.ts";
 import type { ActionSearchDocument, ActionSearchIndexProvider } from "../../core/action-search.ts";
 import type { OAuthClientConfigService } from "../../oauth/oauth-client-config-service.ts";
 import type { SaasProjectService } from "../../saas/saas-project-service.ts";
+import type { RuntimeGrant } from "../storage/runtime-token-service.ts";
 import type { Context } from "hono";
 
 import { Hono } from "hono";
 import { DEFAULT_ACTION_SEARCH_LIMIT, searchActions } from "../../core/action-search.ts";
 import { optionalString } from "../../core/cast.ts";
+import { readRuntimeGrant } from "./auth.ts";
 import { catalogLocale } from "./catalog-locale.ts";
 import {
   serializeRuntimeAction,
@@ -19,6 +21,7 @@ import {
   writeRuntimeFailure,
   writeRuntimeSuccess,
 } from "./runtime-api.ts";
+import { runtimeGrantAllowsService } from "./runtime-connection-grant.ts";
 
 export interface RuntimeActionSearchResult {
   id: string;
@@ -107,12 +110,16 @@ export function createRuntimeCatalogRoutes({
 }: RuntimeCatalogRoutesOptions): Hono {
   const app = new Hono();
 
-  const serializeSearchResults = async (results: ActionSearchDocument[]): Promise<RuntimeActionSearchResult[]> => {
+  const serializeSearchResults = async (
+    results: ActionSearchDocument[],
+    grant: RuntimeGrant | undefined = undefined,
+  ): Promise<RuntimeActionSearchResult[]> => {
     const authenticated = new Set(
       await connections.listAuthenticatedServices([...new Set(results.map((result) => result.service))]),
     );
     const items: RuntimeActionSearchResult[] = [];
     for (const result of results) {
+      if (!runtimeGrantAllowsService(grant, result.service)) continue;
       const action = await catalog.getAction(result.id);
       if (action) items.push(serializeActionSearchResult(result, action, authenticated.has(action.service)));
     }
@@ -149,7 +156,9 @@ export function createRuntimeCatalogRoutes({
   app.get("/providers", (context) => {
     const services = context.req.queries("service") ?? [];
     const query = optionalString(context.req.query("q"))?.toLowerCase();
+    const grant = readRuntimeGrant(context);
     const providers = catalog.getProviderDisplay(catalogLocale(context)).providers.filter((provider) => {
+      if (!runtimeGrantAllowsService(grant, provider.service)) return false;
       if (services.length > 0 && !services.includes(provider.service)) {
         return false;
       }
@@ -175,10 +184,18 @@ export function createRuntimeCatalogRoutes({
 
   app.get("/actions", async (context) => {
     const service = optionalString(context.req.query("service"));
+    const grant = readRuntimeGrant(context);
     if (!service) {
-      const services = [...new Set(catalog.actions.map((action) => action.service))];
+      const services = [
+        ...new Set(
+          catalog.actions
+            .filter((action) => runtimeGrantAllowsService(grant, action.service))
+            .map((action) => action.service),
+        ),
+      ];
       return writeRuntimeSuccess(context, services.map(serializeRuntimeActionService));
     }
+    if (!runtimeGrantAllowsService(grant, service)) return writeRuntimeSuccess(context, []);
 
     const actions = catalog.actions.filter((action) => action.service === service);
     const definitions = await Promise.all(actions.map((action) => catalog.getAction(action.id)));
@@ -205,13 +222,16 @@ export function createRuntimeCatalogRoutes({
       service: query.service,
       limit: query.limit,
     });
-    return writeRuntimeSuccess(context, await serializeSearchResults(results));
+    return writeRuntimeSuccess(context, await serializeSearchResults(results, readRuntimeGrant(context)));
   });
 
   app.get("/actions/:actionId", async (context) => {
     const actionId = context.req.param("actionId");
     const action = await catalog.getAction(actionId);
     if (!action) {
+      return writeRuntimeFailure(context, unknownActionFailure(actionId));
+    }
+    if (!runtimeGrantAllowsService(readRuntimeGrant(context), action.service)) {
       return writeRuntimeFailure(context, unknownActionFailure(actionId));
     }
 

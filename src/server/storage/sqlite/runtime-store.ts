@@ -385,7 +385,7 @@ export class SqliteRuntimeTokenStore implements IRuntimeTokenStore {
         insert into runtime_tokens (
           ${runtimeTokenColumns}
         )
-        values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `,
       )
       .run(
@@ -396,8 +396,10 @@ export class SqliteRuntimeTokenStore implements IRuntimeTokenStore {
         JSON.stringify(record.blockedActions),
         JSON.stringify(record.allowedProxies),
         JSON.stringify(record.allowedConnections ?? []),
+        JSON.stringify(record.actionInputConstraints ?? {}),
         JSON.stringify(record.allowedTriggers ?? []),
         record.createdAt,
+        record.expiresAt ?? null,
         record.lastUsedAt ?? null,
       );
   }
@@ -449,7 +451,7 @@ export class SqliteRuntimeTokenStore implements IRuntimeTokenStore {
       .prepare(
         `
         update runtime_tokens
-        set allowed_actions = ?, blocked_actions = ?, allowed_proxies = ?, allowed_connections = ?, allowed_triggers = ?
+        set allowed_actions = ?, blocked_actions = ?, allowed_proxies = ?, allowed_connections = ?, action_input_constraints = ?, allowed_triggers = ?
         where id = ?
         returning ${runtimeTokenColumns}
       `,
@@ -459,6 +461,7 @@ export class SqliteRuntimeTokenStore implements IRuntimeTokenStore {
         JSON.stringify(policy.blockedActions),
         JSON.stringify(policy.allowedProxies),
         JSON.stringify(policy.allowedConnections ?? []),
+        JSON.stringify(policy.actionInputConstraints ?? {}),
         JSON.stringify(policy.allowedTriggers ?? []),
         id,
       );

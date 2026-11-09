@@ -30,6 +30,7 @@ import {
   writeRuntimeFailure,
   writeRuntimeSuccess,
 } from "./runtime-api.ts";
+import { evaluateRuntimeConnection, runtimeGrantAllowsProxy } from "./runtime-connection-grant.ts";
 
 export interface RuntimeExecutionRoutesOptions {
   catalog: CatalogStore;
@@ -67,6 +68,7 @@ export function createRuntimeExecutionRoutes({
         connectionId,
         policy,
         runtimeTokenId: runtimeGrant?.tokenId,
+        actionInputConstraints: runtimeGrant?.actionInputConstraints,
         signal,
       });
       if (!run) {
@@ -105,9 +107,18 @@ export function createRuntimeExecutionRoutes({
 
     const body = await readJsonBody(context);
     const input = body.input ?? {};
-    const connectionName = readConnectionName(context, body);
     const connectionId = optionalString(context.req.header("x-oo-connector-app-id"));
     const runtimeGrant = readRuntimeGrant(context);
+    const connection = evaluateRuntimeConnection(runtimeGrant, action.service, readConnectionName(context, body));
+    if (!connection.allowed) {
+      return writeRuntimeFailure(context, {
+        status: 403,
+        errorCode: connection.code,
+        message: connection.message,
+        meta: { actionId },
+      });
+    }
+    const connectionName = connection.connectionName;
     let policy: ActionPolicySnapshot;
     try {
       policy = await getPolicySnapshot(context);
@@ -234,6 +245,15 @@ export function createRuntimeExecutionRoutes({
 
   app.post("/proxy/:service", async (context) => {
     const service = context.req.param("service");
+    const runtimeGrant = readRuntimeGrant(context);
+    if (!runtimeGrantAllowsProxy(runtimeGrant)) {
+      return writeRuntimeFailure(context, {
+        status: 403,
+        errorCode: "proxy_not_allowed",
+        message: "Raw provider proxy access is not available to connection-scoped runtime tokens.",
+        meta: { service },
+      });
+    }
     let body: Record<string, unknown>;
     try {
       body = await readJsonBody(context);
@@ -261,10 +281,19 @@ export function createRuntimeExecutionRoutes({
         meta: { service },
       });
     }
+    const connection = evaluateRuntimeConnection(runtimeGrant, service, readConnectionName(context, body));
+    if (!connection.allowed) {
+      return writeRuntimeFailure(context, {
+        status: 403,
+        errorCode: connection.code,
+        message: connection.message,
+        meta: { service },
+      });
+    }
     const result = await proxyRunner.run({
       service,
       input: body,
-      connectionName: readConnectionName(context, body),
+      connectionName: connection.connectionName,
       connectionId: optionalString(context.req.header("x-oo-connector-app-id")),
       policy,
       signal: context.req.raw.signal,

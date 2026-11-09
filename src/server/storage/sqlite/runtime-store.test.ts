@@ -77,9 +77,9 @@ describe("SqliteRuntimeDatabase", () => {
       "0006_connection_identity.sql",
       "0007_runtime_policy.sql",
       "0008_runtime_token_policy.sql",
-      "0009_runtime_token_proxy.sql",
-      "0010_connection_revision.sql",
-      "0011_runtime_token_connection_scope.sql",
+      "0009_runtime_token_connections.sql",
+      "0010_runtime_token_expiry.sql",
+      "0011_runtime_token_input_constraints.sql",
       "0012_marketplace.sql",
       "0013_connection_requests.sql",
       "0014_saas_project.sql",
@@ -90,6 +90,7 @@ describe("SqliteRuntimeDatabase", () => {
       "0019_trigger_sources.sql",
       "0020_oauth_tables.sql",
       "0021_oauth_refresh_replay.sql",
+      "0022_upstream_schema_bridge.sql",
     ];
     expect(entries.filter((entry) => entry.message === "sqlite migration started")).toEqual(
       migrations.map((migration) => ({ fields: { migration }, message: "sqlite migration started" })),
@@ -567,9 +568,10 @@ describe("SqliteRuntimeDatabase", () => {
       "0006_connection_identity.sql",
       "0007_runtime_policy.sql",
       "0008_runtime_token_policy.sql",
-      "0009_runtime_token_proxy.sql",
-      "0010_connection_revision.sql",
-      "0011_runtime_token_connection_scope.sql",
+      "0009_runtime_token_connections.sql",
+      "0010_runtime_token_expiry.sql",
+      "0011_runtime_token_input_constraints.sql",
+      "0022_upstream_schema_bridge.sql",
     ]) {
       raw.exec(readFileSync(new URL(`../../../../migrations/${migration}`, import.meta.url), "utf8"));
     }
@@ -678,15 +680,19 @@ describe("SqliteRuntimeDatabase", () => {
       inspected.prepare("select name from runtime_migrations where name = ?").get("0008_runtime_token_policy.sql"),
     ).toBeDefined();
     expect(
-      inspected.prepare("select name from runtime_migrations where name = ?").get("0009_runtime_token_proxy.sql"),
-    ).toBeDefined();
-    expect(
-      inspected.prepare("select name from runtime_migrations where name = ?").get("0010_connection_revision.sql"),
+      inspected
+        .prepare("select name from runtime_migrations where name = ?")
+        .get("0009_runtime_token_connections.sql"),
     ).toBeDefined();
     expect(
       inspected
         .prepare("select name from runtime_migrations where name = ?")
-        .get("0011_runtime_token_connection_scope.sql"),
+        .get("0010_runtime_token_expiry.sql"),
+    ).toBeDefined();
+    expect(
+      inspected
+        .prepare("select name from runtime_migrations where name = ?")
+        .get("0011_runtime_token_input_constraints.sql"),
     ).toBeDefined();
     expect(inspected.prepare("pragma table_info(connections)").all()).toContainEqual(
       expect.objectContaining({ name: "id", notnull: 1 }),
@@ -1280,7 +1286,9 @@ it("upgrades old connections as local and refuses unencrypted SaaS configuration
   const database = new SqliteRuntimeDatabase(path, {
     migrations: {
       readMigrations: (dialect) =>
-        defaultMigrationSource.readMigrations(dialect).filter((migration) => migration.name < "0014"),
+        defaultMigrationSource
+          .readMigrations(dialect)
+          .filter((migration) => migration.name < "0014" || migration.name === "0022_upstream_schema_bridge.sql"),
     },
   });
   database.close();

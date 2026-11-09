@@ -12,6 +12,7 @@ import * as z from "zod/v4";
 import { ConnectionError } from "./connection-error.ts";
 import { createActionSearchIndexProvider, searchActions as searchActionIndex } from "./core/action-search.ts";
 import { renderActionMarkdown } from "./server/api/action-markdown.ts";
+import { evaluateRuntimeConnection, runtimeGrantAllowsService } from "./server/api/runtime-connection-grant.ts";
 
 /**
  * Dependencies required by the local MCP server.
@@ -225,9 +226,13 @@ async function listConnections(options: IMcpServerOptions, input: McpConnections
     return errorPayload("internal_error", "Runtime policy is unavailable.");
   }
   try {
+    if (!runtimeGrantAllowsService(options.runtimeGrant, input.service)) return successPayload([]);
     const connections = await options.connections.listConnectionsByService(input.service);
     const visible = connections.filter(
-      (connection) => connection.authType !== "no_auth" && policy.evaluateConnection(connection.id).allowed,
+      (connection) =>
+        connection.authType !== "no_auth" &&
+        evaluateRuntimeConnection(options.runtimeGrant, connection.service, connection.connectionName).allowed &&
+        policy.evaluateConnection(connection.id).allowed,
     );
     const offset = Number(input.cursor ?? 0);
     return {
@@ -257,6 +262,7 @@ async function listApps(options: IMcpServerOptions, input: McpAppsInput): Promis
   const data: McpAppSummary[] = [];
   let matched = 0;
   for (const provider of options.catalog.providers) {
+    if (!runtimeGrantAllowsService(options.runtimeGrant, provider.service)) continue;
     if (
       query &&
       ![provider.service, provider.displayName, ...provider.categories].some((value) =>
@@ -279,6 +285,9 @@ async function searchActions(options: IMcpServerOptions, input: McpSearchInput):
   } catch {
     return errorPayload("internal_error", "Runtime policy is unavailable.");
   }
+  if (input.service && !runtimeGrantAllowsService(options.runtimeGrant, input.service)) {
+    return successPayload([]);
+  }
   const actionSearch = options.actionSearch ?? createActionSearchIndexProvider(options.catalog.actions);
   // Search metadata only; permission filtering must precede the result limit.
   const matches = searchActionIndex(await actionSearch.get(), input.query, {
@@ -300,7 +309,12 @@ async function searchActions(options: IMcpServerOptions, input: McpSearchInput):
     if (services.size > 0) {
       const connections = await options.connections.listConnections(services);
       for (const connection of connections) {
-        if (connection.status !== "reauth_required" && evaluateConnectionGrant(policy, connection).allowed) {
+        if (
+          connection.status !== "reauth_required" &&
+          runtimeGrantAllowsService(options.runtimeGrant, connection.service) &&
+          evaluateRuntimeConnection(options.runtimeGrant, connection.service, connection.connectionName).allowed &&
+          evaluateConnectionGrant(policy, connection).allowed
+        ) {
           availableServices.add(connection.service);
         }
       }
@@ -342,7 +356,9 @@ async function getActionGuide(
     return errorPayload("internal_error", "Runtime policy is unavailable.");
   }
   try {
-    const connection = await getSelectedConnectionSummary(options, action.service, connectionName);
+    const grant = evaluateRuntimeConnection(options.runtimeGrant, action.service, connectionName);
+    if (!grant.allowed) return errorPayload(grant.code, grant.message);
+    const connection = await getSelectedConnectionSummary(options, action.service, grant.connectionName);
     const connectionDecision = evaluateConnectionGrant(policy, connection);
     if (!connectionDecision.allowed) {
       return errorPayload(connectionDecision.code, connectionDecision.message);
@@ -378,9 +394,11 @@ async function executeAction(
   } catch {
     return errorPayload("internal_error", "Runtime policy is unavailable.");
   }
-  if (connectionName && policy.evaluate(action).allowed) {
+  const grant = evaluateRuntimeConnection(options.runtimeGrant, action.service, connectionName);
+  if (!grant.allowed) return errorPayload(grant.code, grant.message);
+  if (grant.connectionName && policy.evaluate(action).allowed) {
     try {
-      const connection = await getSelectedConnectionSummary(options, action.service, connectionName);
+      const connection = await getSelectedConnectionSummary(options, action.service, grant.connectionName);
       const connectionDecision = evaluateConnectionGrant(policy, connection);
       if (!connectionDecision.allowed) {
         return errorPayload(connectionDecision.code, connectionDecision.message);
@@ -393,9 +411,10 @@ async function executeAction(
     actionId,
     input,
     caller: "mcp",
-    connectionName,
+    connectionName: grant.connectionName,
     policy,
     runtimeTokenId: options.runtimeGrant?.tokenId,
+    actionInputConstraints: options.runtimeGrant?.actionInputConstraints,
     signal: options.signal,
   });
   if (!run) {

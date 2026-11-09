@@ -979,10 +979,12 @@ export function createOpenApiDocument(options: OpenApiDocumentOptions = {}): Ope
             allowedTriggers: policyRuleArraySchema(
               "Trigger IDs explicitly granted to this token. Omit or leave empty to deny all Trigger operations.",
             ),
-            allowedConnections: connectionIdArraySchema(
-              "Stable connection IDs granted to this stored runtime token. An empty list is unrestricted connection access. IDs are opaque values returned by the connection APIs. Virtual no_auth connections do not require grants.",
+            allowedConnections: runtimeTokenConnectionsSchema(
+              "Connection grants. Upstream tokens use exact opaque IDs; Jenny leases use a service-to-connection-name map.",
             ),
+            actionInputConstraints: runtimeTokenInputConstraintsSchema(),
             createdAt: jsonSchema.string({ description: "Creation timestamp." }),
+            expiresAt: jsonSchema.string({ description: "Optional server-enforced expiry timestamp." }),
             lastUsedAt: jsonSchema.string({ description: "Last successful use timestamp." }),
           },
           {
@@ -1010,9 +1012,13 @@ export function createOpenApiDocument(options: OpenApiDocumentOptions = {}): Ope
             allowedTriggers: policyRuleArraySchema(
               "Trigger IDs explicitly granted to this token. Omit or leave empty to deny all Trigger operations.",
             ),
-            allowedConnections: connectionIdArraySchema(
-              "Optional stable connection IDs granted to the new token. Omit or leave empty for unrestricted connection access. A non-empty list matches exact opaque IDs returned by the connection APIs. Virtual no_auth connections do not require grants.",
+            allowedConnections: runtimeTokenConnectionsSchema(
+              "Optional connection grants. Use exact opaque IDs or a service-to-connection-name map.",
             ),
+            actionInputConstraints: runtimeTokenInputConstraintsSchema(),
+            expiresAt: jsonSchema.string({
+              description: "Optional future timestamp after which the token is rejected.",
+            }),
           },
           {
             required: ["name"],
@@ -1029,9 +1035,10 @@ export function createOpenApiDocument(options: OpenApiDocumentOptions = {}): Ope
             allowedTriggers: policyRuleArraySchema(
               "Trigger IDs explicitly granted to this token. Omit or leave empty to deny all Trigger operations.",
             ),
-            allowedConnections: connectionIdArraySchema(
-              "Stable connection IDs granted to this stored token. An empty list is unrestricted connection access. A non-empty list matches exact opaque IDs returned by the connection APIs. Virtual no_auth connections do not require grants.",
+            allowedConnections: runtimeTokenConnectionsSchema(
+              "Connection grants. Use exact opaque IDs or a service-to-connection-name map.",
             ),
+            actionInputConstraints: runtimeTokenInputConstraintsSchema(),
           },
           {
             required: ["allowedActions", "blockedActions", "allowedProxies", "allowedConnections"],
@@ -1555,6 +1562,25 @@ function connectionIdArraySchema(description: string): JsonSchema {
     }),
     description,
   };
+}
+
+function runtimeTokenConnectionsSchema(description: string): JsonSchema {
+  return jsonSchema.anyOf(description, [
+    connectionIdArraySchema(
+      "Exact opaque connection IDs returned by the connection APIs. An empty list is unrestricted.",
+    ),
+    jsonSchema.record(
+      "Jenny service-to-connection-name grants. Null permits a no-auth service without a stored connection.",
+      jsonSchema.nullable(jsonSchema.string({ minLength: 1, maxLength: policyRuleMaxBytes })),
+    ),
+  ]);
+}
+
+function runtimeTokenInputConstraintsSchema(): JsonSchema {
+  return jsonSchema.record(
+    "Exact scalar input values required for matching action rules on this token.",
+    jsonSchema.record("Action input field constraints.", { type: ["string", "number", "boolean", "null"] }),
+  );
 }
 
 function createMcpPath(): unknown {
