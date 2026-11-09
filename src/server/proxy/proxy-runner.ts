@@ -11,6 +11,7 @@ import { ConnectionError } from "../../connection-error.ts";
 import { optionalRecord, requiredRecord, requiredString } from "../../core/cast.ts";
 import { connectionExecutionError, ExecutionError } from "../../core/execution-error.ts";
 import { measureExecutionPhase } from "../../core/execution-timing.ts";
+import { hasPathTraversalSegment } from "../../core/request.ts";
 import { withRuntimeExecution } from "../../core/runtime-execution.ts";
 import { resolveExecutionTarget } from "../../execution-target.ts";
 import {
@@ -322,23 +323,9 @@ export class ProxyRunner {
         throw error;
       }
     }
-    if (endpoint.includes("\\") || this.hasPathTraversalSegment(endpoint)) {
+    if (endpoint.includes("\\") || hasPathTraversalSegment(endpoint)) {
       throw new ProxyInputError("endpoint must not contain path traversal segments");
     }
-  }
-
-  private hasPathTraversalSegment(endpoint: string): boolean {
-    const path = endpoint.split(/[?#]/u)[0]!;
-    for (const segment of path.split("/")) {
-      try {
-        if (decodeURIComponent(segment) === "..") {
-          return true;
-        }
-      } catch {
-        return true;
-      }
-    }
-    return false;
   }
 }
 

@@ -432,6 +432,38 @@ describe("ProxyRunner", () => {
     expect(proxy).not.toHaveBeenCalled();
   });
 
+  it("rejects encoded traversal endpoints before loading executors", async () => {
+    const proxy: ProviderProxyExecutor = vi.fn(async (): Promise<ProxyExecutionResult> => ({
+      ok: true,
+      response: { status: 200, headers: {}, data: null },
+    }));
+    const runner = createRunner({
+      providerLoader: {
+        loadActionExecutor: async () => undefined,
+        loadCredentialValidators: async () => undefined,
+        loadProxyExecutor: async () => proxy,
+      },
+    });
+
+    for (const endpoint of [
+      "/api/..%2F..%2F..%2Fv3/users",
+      "/api/..%2f..%2fv3",
+      "/api/%2e%2e%2Fv3",
+      "/api/..%5Cv3",
+      "/api/%zz",
+    ]) {
+      await expect(
+        runProxyHttp(runner, { service: "example", input: { endpoint, method: "GET" }, policy: openPolicy }),
+      ).resolves.toMatchObject({
+        ok: false,
+        status: 400,
+        errorCode: "invalid_input",
+        message: "endpoint must not contain path traversal segments",
+      });
+    }
+    expect(proxy).not.toHaveBeenCalled();
+  });
+
   it("passes proxy input and named connection context to provider proxy executors", async () => {
     const proxy: ProviderProxyExecutor = vi.fn(async (_input, context): Promise<ProxyExecutionResult> => {
       await context.getCredential("example");

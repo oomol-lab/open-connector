@@ -39,6 +39,33 @@ export function encodePathSegment(value: unknown): string {
 }
 
 /**
+ * Report whether a URL path (query and fragment are ignored) contains a dot segment that an
+ * upstream could use to leave the path prefix a proxy endpoint was checked against.
+ *
+ * Each `/`-separated segment is percent-decoded once and then split again on `/` and `\`;
+ * any resulting `.` or `..` counts as traversal. WHATWG URL joining keeps `%2F` encoded, so
+ * `..%2F..%2Fv3` would otherwise reach upstreams that decode `%2F` before normalizing the
+ * path. An encoded separator inside an ordinary segment, such as GitLab's
+ * `projects/group%2Fproject`, still passes. Malformed percent encoding counts as traversal
+ * because how an upstream decodes it is undefined.
+ */
+export function hasPathTraversalSegment(path: string): boolean {
+  const pathname = path.split(/[?#]/u)[0]!;
+  for (const segment of pathname.split("/")) {
+    let decoded: string;
+    try {
+      decoded = decodeURIComponent(segment);
+    } catch {
+      return true;
+    }
+    if (decoded.split(/[/\\]/u).some((part) => part === "." || part === "..")) {
+      return true;
+    }
+  }
+  return false;
+}
+
+/**
  * Return a shallow JSON object without undefined values.
  */
 export function jsonObject(input: Record<string, unknown>): Record<string, unknown> {
