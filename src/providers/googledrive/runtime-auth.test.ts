@@ -124,6 +124,15 @@ describe("readGoogleServiceAccountCredential", () => {
 });
 
 describe("createGoogleServiceAccountToken", () => {
+  it.each([
+    { scope: undefined, expected: [] },
+    { scope: "", expected: [] },
+    { scope: "future:scope", expected: ["future:scope"] },
+  ])("only displays scopes returned by the token endpoint: $scope", async ({ scope, expected }) => {
+    const { fetcher } = fetchRecorder(200, { access_token: "ya29.scope", expires_in: 3600, scope });
+    const token = await tokenRequest(fetcher);
+    expect(token.grantedScopes).toEqual(expected);
+  });
   it("posts a signed RS256 assertion to the Google token endpoint", async () => {
     const email = uniqueEmail();
     const { fetcher, requests } = fetchRecorder(200, {

@@ -1667,3 +1667,22 @@ describe("Slack reactions list", () => {
     expect(slackbotExecutors["slackbot.list_reactions"]).toBeTypeOf("function");
   });
 });
+
+it.each([
+  { kind: "user", metadata: {}, expected: ["legacy.scope"] },
+  { kind: "user", metadata: { scope: "" }, expected: [] },
+  { kind: "user", metadata: { scope: "bot:scope", authed_user: { scope: "" } }, expected: [] },
+  { kind: "user", metadata: { scope: "bot:scope", authed_user: {} }, expected: ["legacy.scope"] },
+  { kind: "user", metadata: { authed_user: { scope: "future:scope" } }, expected: ["future:scope"] },
+  { kind: "bot", metadata: { scope: "", authed_user: { scope: "user:scope" } }, expected: [] },
+])(
+  "keeps absent Slack scopes distinct from explicit empty scopes: $kind $metadata",
+  async ({ kind, metadata, expected }) => {
+    const credential = oauthCredential(kind, metadata);
+    credential.profile.grantedScopes = ["legacy.scope"];
+    const result = await credentialValidators.oauth2!(credential, {
+      fetcher: async () => Response.json({ ok: true, team_id: "T123", user_id: "U123", team: "Example workspace" }),
+    });
+    expect(result?.grantedScopes).toEqual(expected);
+  },
+);

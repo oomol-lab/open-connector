@@ -220,7 +220,7 @@ it("starts remotely without a local client config, keeps cookie GET read-only, a
   expect(connections).toHaveLength(1);
   expect(connections[0]).toMatchObject({
     source: "saas",
-    profile: { accountId: "provider-user", grantedScopes: [] },
+    profile: { accountId: "provider-user", grantedScopes: ["example.internal.read"] },
   });
   expect(connections[0]).not.toHaveProperty("credential");
   const browser = await env.call(`/api/oauth/connection-requests/${data.connectionRequestId}/sync`, {

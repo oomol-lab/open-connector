@@ -54,7 +54,7 @@ import {
   requiredInputString,
   defaultProviderRequestTimeoutMs,
 } from "../provider-runtime.ts";
-import { feishuAppBotActions, feishuAppBotProviderScopes } from "./actions.ts";
+import { feishuAppBotActions } from "./actions.ts";
 import { feishuEvents } from "./trigger-on-event.ts";
 
 const service = "feishu_app_bot";
@@ -348,14 +348,22 @@ export const credentialValidators: CredentialValidators = {
   async customCredential(input, { fetcher, signal }) {
     const credential = readFeishuAppBotCredential(input.values);
     const accessToken = await fetchTenantAccessToken(credential, fetcher, "validate", signal);
-    const [appProbe, publishedVersionProbe] = await Promise.all([
+    const [app, publishedVersion, authorization] = await Promise.all([
       fetchOptionalAppMetadata(() => fetchFeishuAppInfo(credential.appId, accessToken, fetcher, "validate", signal)),
       fetchOptionalAppMetadata(() =>
         fetchFeishuPublishedAppVersion(credential.appId, accessToken, fetcher, "validate", signal),
       ),
+      fetchOptionalAppMetadata(() =>
+        feishuRequest({
+          method: "GET",
+          path: "/application/v6/scopes",
+          accessToken,
+          fetcher,
+          phase: "validate",
+          signal,
+        }),
+      ),
     ]);
-    const app = appProbe.value;
-    const publishedVersion = publishedVersionProbe.value;
     const accountLabel =
       optionalString(app.app_name) ?? optionalString(app.name) ?? optionalString(app.app_id) ?? credential.appId;
 
@@ -364,9 +372,7 @@ export const credentialValidators: CredentialValidators = {
         accountId: credential.appId,
         displayName: accountLabel,
       },
-      grantedScopes: publishedVersionProbe.available
-        ? readPublishedTenantScopes(publishedVersion)
-        : feishuAppBotProviderScopes,
+      grantedScopes: readGrantedTenantScopes(authorization),
       metadata: compactObject({
         appId: credential.appId,
         appName: accountLabel,
@@ -387,17 +393,11 @@ function readFeishuAppBotCredential(input: Record<string, string>): FeishuAppBot
 
 async function fetchOptionalAppMetadata(
   fetchMetadata: () => Promise<Record<string, unknown>>,
-): Promise<{ available: boolean; value: Record<string, unknown> }> {
+): Promise<Record<string, unknown>> {
   try {
-    return {
-      available: true,
-      value: await fetchMetadata(),
-    };
+    return await fetchMetadata();
   } catch {
-    return {
-      available: false,
-      value: {},
-    };
+    return {};
   }
 }
 
@@ -479,6 +479,20 @@ async function fetchFeishuPublishedAppVersion(
     pageToken = pagination.next(data?.has_more, data?.page_token);
     if (!pageToken) return {};
   }
+}
+
+function readGrantedTenantScopes(payload: Record<string, unknown>): string[] {
+  const data = optionalRecord(payload.data);
+  const scopes = Array.isArray(data?.scopes) ? data.scopes : [];
+  const granted: string[] = [];
+  for (const value of scopes) {
+    const item = optionalRecord(value);
+    const name = optionalString(item?.scope_name);
+    if (name && item?.grant_status === 1 && (item.scope_type === undefined || item.scope_type === "tenant")) {
+      granted.push(name);
+    }
+  }
+  return granted;
 }
 
 function readPublishedTenantScopes(version: Record<string, unknown>): string[] {

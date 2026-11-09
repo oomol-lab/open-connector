@@ -3,8 +3,8 @@ import type { ProviderActionHandlers } from "../provider-executors.ts";
 import type { OAuthProviderContext } from "../provider-executors.ts";
 
 import { compactObject, optionalRecord, optionalString } from "../../core/cast.ts";
+import { readOAuthScopes } from "../../oauth/oauth-scopes.ts";
 import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
-import { linkhutOAuthScopes } from "./actions.ts";
 
 export const linkhutApiBaseUrl = "https://api.ln.ht/v1";
 
@@ -45,7 +45,7 @@ export async function validateLinkhutCredential(
     },
   });
   const username = extractLinkhutPostsUser(response);
-  const grantedScopes = parseScopeString(credential.metadata.scope, linkhutOAuthScopes);
+  const grantedScopes = readOAuthScopes(credential.metadata.scope);
 
   return {
     profile: {
@@ -349,17 +349,6 @@ function toLinkhutFlag(value: unknown): string | undefined {
     return "no";
   }
   return undefined;
-}
-
-function parseScopeString(value: unknown, fallbackScopes: string[]): string[] {
-  const raw = optionalString(value);
-  if (!raw) {
-    return [...fallbackScopes];
-  }
-  return raw
-    .split(" ")
-    .map((scope) => scope.trim())
-    .filter((scope, index, scopes) => scope.length > 0 && scopes.indexOf(scope) === index);
 }
 
 function requireRecord(value: unknown, fieldName: string): Record<string, unknown> {

@@ -11,8 +11,8 @@ import {
   optionalString,
   recordOrEmpty,
 } from "../../core/cast.ts";
+import { readOAuthScopes } from "../../oauth/oauth-scopes.ts";
 import { ProviderRequestError } from "../provider-runtime.ts";
-import { calProviderScopes } from "./actions.ts";
 
 export const calApiBaseUrl = "https://api.cal.com";
 const calMeApiVersion = "2024-08-13";
@@ -222,7 +222,7 @@ export async function validateCalCredential(
     apiVersion: calMeApiVersion,
   });
   const id = optionalInteger(profile.id);
-  const providerScopes = parseProviderScopes(optionalString(credential.metadata.scope), calProviderScopes);
+  const providerScopes = readOAuthScopes(credential.metadata.scope);
 
   return {
     profile: {
@@ -914,15 +914,4 @@ function buildCalHeaders(context: CalActionContext, apiVersion?: string, hasJson
     headers["cal-api-version"] = apiVersion;
   }
   return headers;
-}
-
-function parseProviderScopes(input: string | undefined, fallback: string[]): string[] {
-  if (!input || input.trim().length === 0) {
-    return [...fallback];
-  }
-
-  return input
-    .split(/[,\s]+/u)
-    .map((scope) => scope.trim())
-    .filter((scope) => scope.length > 0);
 }

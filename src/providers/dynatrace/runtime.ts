@@ -6,6 +6,7 @@ import {
   optionalInteger,
   optionalRecord,
   optionalString,
+  optionalStringArray,
   rawStringOrNull,
   requiredString,
 } from "../../core/cast.ts";
@@ -24,12 +25,6 @@ export interface DynatraceContext {
   signal?: AbortSignal;
 }
 
-interface DynatraceValidationCheck {
-  path: string;
-  query: Record<string, string | number | undefined>;
-  scope: string;
-}
-
 interface DynatraceRequestOptions {
   apiKey: string;
   environmentUrl: string;
@@ -38,25 +33,12 @@ interface DynatraceRequestOptions {
   signal?: AbortSignal;
   phase: DynatraceRequestPhase;
   query?: Record<string, string | number | undefined>;
+  method?: "GET" | "POST";
+  body?: Record<string, unknown>;
 }
 
 const dynatraceCredentialHelpUrl =
   "https://docs.dynatrace.com/docs/manage/identity-access-management/access-tokens-and-oauth-clients/access-tokens";
-const validationChecks: DynatraceValidationCheck[] = [
-  {
-    path: "/api/v2/problems",
-    query: { pageSize: 1 },
-    scope: "problems.read",
-  },
-  {
-    path: "/api/v2/entities",
-    query: {
-      pageSize: 1,
-      entitySelector: 'type("HOST")',
-    },
-    scope: "entities.read",
-  },
-];
 
 type DynatraceRequestPhase = "validate" | "execute";
 type DynatraceActionHandler = (input: Record<string, unknown>, context: DynatraceContext) => Promise<unknown>;
@@ -119,42 +101,17 @@ export async function validateDynatraceCredential(
   signal?: AbortSignal,
 ): Promise<CredentialValidationResult> {
   const environmentUrl = normalizeDynatraceEnvironmentUrl(environmentUrlInput);
-  const grantedScopes: string[] = [];
-  const validationEndpoints: string[] = [];
-  const permissionErrors: ProviderRequestError[] = [];
-
-  for (const check of validationChecks) {
-    try {
-      await requestDynatraceJson({
-        apiKey,
-        environmentUrl,
-        path: check.path,
-        query: check.query,
-        fetcher,
-        signal,
-        phase: "validate",
-      });
-      grantedScopes.push(check.scope);
-      validationEndpoints.push(check.path);
-    } catch (error) {
-      if (error instanceof ProviderRequestError && (error.status === 401 || error.status === 403)) {
-        permissionErrors.push(error);
-        continue;
-      }
-      throw error;
-    }
-  }
-
-  if (grantedScopes.length === 0) {
-    const permissionError = permissionErrors[0];
-    throw (
-      permissionError ??
-      new ProviderRequestError(
-        400,
-        "Dynatrace API token must include at least one supported scope: problems.read or entities.read",
-      )
-    );
-  }
+  const payload = await requestDynatraceJson({
+    apiKey,
+    environmentUrl,
+    path: "/api/v2/apiTokens/lookup",
+    method: "POST",
+    body: { token: apiKey },
+    fetcher,
+    signal,
+    phase: "validate",
+  });
+  const token = readObjectPayload(payload);
 
   const accountLabel = readDynatraceAccountLabel(environmentUrl);
   return {
@@ -162,10 +119,10 @@ export async function validateDynatraceCredential(
       accountId: `dynatrace:${accountLabel}`,
       displayName: accountLabel,
     },
-    grantedScopes,
+    grantedScopes: optionalStringArray(token.scopes) ?? [],
     metadata: {
       environmentUrl,
-      validationEndpoints,
+      validationEndpoint: "/api/v2/apiTokens/lookup",
       credentialHelpUrl: dynatraceCredentialHelpUrl,
     },
   };
@@ -201,8 +158,9 @@ async function requestDynatraceJson(options: DynatraceRequestOptions): Promise<u
   const timeout = createProviderTimeout(options.signal);
   try {
     const response = await options.fetcher(url, {
-      method: "GET",
+      method: options.method ?? "GET",
       headers: dynatraceHeaders(options.apiKey),
+      body: options.body === undefined ? undefined : JSON.stringify(options.body),
       signal: timeout.signal,
     });
     const payload = await readResponsePayload(response);
@@ -230,6 +188,7 @@ async function requestDynatraceJson(options: DynatraceRequestOptions): Promise<u
 function dynatraceHeaders(apiKey: string): Record<string, string> {
   return {
     accept: "application/json",
+    "content-type": "application/json",
     authorization: `Api-Token ${apiKey}`,
     "user-agent": providerUserAgent,
   };

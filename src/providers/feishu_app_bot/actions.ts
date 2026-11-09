@@ -734,10 +734,6 @@ export const feishuAppBotActions: ActionDefinition[] = [
   ...tenantSupportedActions(createFeishuDomainMediaActions(service)),
 ];
 
-export const feishuAppBotProviderScopes: string[] = Array.from(
-  new Set(feishuAppBotActions.flatMap((action) => action.providerPermissions)),
-);
-
 function tenantSupportedActions(actions: readonly ActionDefinition[]): readonly ActionDefinition[] {
   return actions.filter((action) => !tenantUnsupportedSharedActions.has(action.name));
 }

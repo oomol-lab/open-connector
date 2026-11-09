@@ -3,8 +3,8 @@ import type { ProviderActionHandlers } from "../provider-executors.ts";
 import type { OAuthProviderContext } from "../provider-executors.ts";
 
 import { compactObject, optionalBoolean, optionalRecord, optionalString } from "../../core/cast.ts";
+import { readOAuthScopes } from "../../oauth/oauth-scopes.ts";
 import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
-import { linkedinOAuthScopes } from "./actions.ts";
 
 export const linkedinApiBaseUrl = "https://api.linkedin.com";
 const linkedinUserinfoUrl = `${linkedinApiBaseUrl}/v2/userinfo`;
@@ -40,7 +40,7 @@ export async function validateLinkedinCredential(
   const member = normalizeLinkedinMember(
     await requestLinkedinJson(linkedinUserinfoUrl, credential.accessToken, fetcher, signal),
   );
-  const grantedScopes = parseScopeString(credential.metadata.scope, linkedinOAuthScopes);
+  const grantedScopes = readOAuthScopes(credential.metadata.scope);
 
   return {
     profile: {
@@ -292,15 +292,4 @@ function requiredString(value: unknown, fieldName: string): string {
     throw new ProviderRequestError(400, `${fieldName} is required`);
   }
   return stringValue;
-}
-
-function parseScopeString(value: unknown, fallbackScopes: string[]): string[] {
-  const raw = optionalString(value);
-  if (!raw) {
-    return [...fallbackScopes];
-  }
-  return raw
-    .split(" ")
-    .map((scope) => scope.trim())
-    .filter((scope, index, scopes) => scope.length > 0 && scopes.indexOf(scope) === index);
 }

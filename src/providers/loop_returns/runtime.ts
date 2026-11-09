@@ -137,7 +137,7 @@ export async function validateLoopReturnsCredential(
   fetcher: ProviderFetch,
   signal?: AbortSignal,
 ): Promise<CredentialValidationResult> {
-  const providerScopes: string[] = [];
+  const validationEndpoints: string[] = [];
   const providerMetadata: Record<string, unknown> = {
     apiBaseUrl: loopReturnsApiBaseUrl,
   };
@@ -153,7 +153,7 @@ export async function validateLoopReturnsCredential(
     });
     const destinationsPayload = requireObject(payload, "Loop Returns destinations response");
     const destinations = Array.isArray(destinationsPayload.destinations) ? destinationsPayload.destinations : [];
-    providerScopes.push("destinations:read");
+    validationEndpoints.push("/destinations");
     providerMetadata.destinationCount = destinations.length;
   } catch (error) {
     if (!isValidationAuthError(error)) {
@@ -175,7 +175,7 @@ export async function validateLoopReturnsCredential(
       phase: "validate",
     });
     const returnsPayload = normalizeReturnsList(payload);
-    providerScopes.push("returns");
+    validationEndpoints.push("/warehouse/return/list");
     providerMetadata.sampleReturnCount = returnsPayload.returns.length;
   } catch (error) {
     if (!isValidationAuthError(error)) {
@@ -184,7 +184,7 @@ export async function validateLoopReturnsCredential(
     validationErrors.push(error);
   }
 
-  if (providerScopes.length === 0) {
+  if (validationEndpoints.length === 0) {
     throw validationErrors[0] ?? new ProviderRequestError(400, "Loop Returns API key could not be validated");
   }
 
@@ -193,10 +193,10 @@ export async function validateLoopReturnsCredential(
       accountId: "loop_returns:api_key",
       displayName: "Loop Returns API Key",
     },
-    grantedScopes: providerScopes,
+    grantedScopes: [],
     metadata: compactObject({
       ...providerMetadata,
-      validationScopes: providerScopes,
+      validationEndpoints,
     }),
   };
 }
