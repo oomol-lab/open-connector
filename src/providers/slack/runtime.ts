@@ -582,16 +582,15 @@ async function slackListUsers(input: Record<string, unknown>, context: SlackActi
     url.searchParams.set("include_locale", String(input.includeLocale));
   }
 
-  const payload = await slackGetJson<{
-    ok: boolean;
-    members?: Array<Record<string, unknown>>;
-    response_metadata?: { next_cursor?: string };
-    error?: string;
-  }>(url, context);
+  const payload = await slackGetJson<SlackPayloadError & { members?: unknown }>(url, context);
 
   return {
-    users: (payload.members ?? []).map((member) => normalizeUser(member)),
-    nextCursor: normalizeNextCursor(payload.response_metadata?.next_cursor),
+    users: requireSlackArray(payload.members, "users.list members").map((member) => {
+      const row = requiredResponseRecord(member, "users.list member");
+      requireSlackId(row.id, "users.list member id");
+      return normalizeUser(row);
+    }),
+    nextCursor: normalizeNextCursor(readSlackNextCursor(payload, "users.list")),
   };
 }
 

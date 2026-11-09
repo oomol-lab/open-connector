@@ -1254,7 +1254,7 @@ describe("Slack credential validators require an auth.test identity", () => {
   });
 });
 
-describe("Slack message and member page validation", () => {
+describe("Slack message, member and directory page validation", () => {
   afterEach(() => vi.unstubAllGlobals());
 
   const context: ExecutionContext = { getCredential: async () => apiKeyCredential("xoxb-bot-token") };
@@ -1262,6 +1262,12 @@ describe("Slack message and member page validation", () => {
     actionId: "slack.conversations_members",
     execute: slackExecutors["slack.conversations_members"]!,
     input: { channelId: "C024BE91L" },
+    list: "members",
+  };
+  const directoryPage = {
+    actionId: "slack.list_users",
+    execute: slackExecutors["slack.list_users"]!,
+    input: {},
     list: "members",
   };
   const messagePages = [
@@ -1278,7 +1284,7 @@ describe("Slack message and member page validation", () => {
       list: "messages",
     },
   ];
-  const pages = [...messagePages, membersPage];
+  const pages = [...messagePages, membersPage, directoryPage];
 
   async function expectInvalidPage(page: (typeof pages)[number], payload: unknown) {
     vi.stubGlobal(
@@ -1314,6 +1320,13 @@ describe("Slack message and member page validation", () => {
     await expectInvalidPage(membersPage, { ok: true, members: ["U023BECGF", member] });
   });
 
+  it.each([null, [], "user", 7, {}, { id: "" }, { id: " U1" }, { id: 7 }])(
+    "list_users rejects a malformed user row %j",
+    async (row) => {
+      await expectInvalidPage(directoryPage, { ok: true, members: [{ id: "U023BECGF" }, row] });
+    },
+  );
+
   it.each(pages)("$actionId treats an absent, null or empty next_cursor as the last page", async (page) => {
     for (const fields of [
       {},
@@ -1327,7 +1340,7 @@ describe("Slack message and member page validation", () => {
       );
       await expect(page.execute(page.input, context)).resolves.toMatchObject({
         ok: true,
-        output: { nextCursor: "" },
+        output: { nextCursor: page.actionId === "slack.list_users" ? null : "" },
       });
     }
   });
