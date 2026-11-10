@@ -132,7 +132,7 @@ async function takeCaptureKitScreenshot(
     });
     if (!response.ok) {
       const message = await readProviderErrorTextBody(response, "CaptureKit screenshot error", signal);
-      throw new ProviderRequestError(
+      throw capturekitRequestError(
         response.status >= 500 ? 502 : response.status,
         message || `CaptureKit screenshot failed with HTTP ${response.status}`,
       );
@@ -177,10 +177,17 @@ async function capturekitRequest(
       headers: { "x-api-key": context.apiKey },
     });
   } catch (error) {
-    // CaptureKit answers an exceeded rate limit with 401, which would otherwise read as a rejected key.
-    if (error instanceof ProviderRequestError && error.status === 401 && /rate limit/i.test(error.message)) {
-      throw new ProviderRequestError(429, error.message, error.details);
+    if (error instanceof ProviderRequestError) {
+      throw capturekitRequestError(error.status, error.message, error.details);
     }
     throw error;
   }
+}
+
+function capturekitRequestError(status: number, message: string, details?: unknown): ProviderRequestError {
+  // CaptureKit answers an exceeded rate limit with 401, which would otherwise read as a rejected key.
+  if (status === 401 && /rate limit/i.test(message)) {
+    return new ProviderRequestError(429, message, details);
+  }
+  return new ProviderRequestError(status, message, details);
 }
