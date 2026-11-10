@@ -25,6 +25,16 @@ afterEach(async () => {
 });
 
 describe("headless runtime", () => {
+  it("rejects an invalid MCP output mode from a JavaScript host", async () => {
+    const options = await fixture();
+    await expect(
+      createConnectorRuntime({
+        ...options,
+        mcpOutputMode: "Compact" as McpOutputMode,
+      }),
+    ).rejects.toThrow("OOMOL_CONNECT_MCP_OUTPUT_MODE");
+  });
+
   it.each<McpOutputMode>(["compatible", "compact"])(
     "serves MCP results with the configured %s output mode",
     async (mcpOutputMode) => {

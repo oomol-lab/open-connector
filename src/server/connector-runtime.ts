@@ -20,6 +20,7 @@ import { createConnectApp } from "./connect-app.ts";
 import { getConnectorAssetDirectory } from "./connector-assets.ts";
 import { cleanupStagedTransitFiles, createNodeTransitFileUpload } from "./files/node-transit-file-upload.ts";
 import { TransitFileService } from "./files/transit-files.ts";
+import { parseMcpOutputMode } from "./mcp-settings.ts";
 import { createSecretCodec } from "./secrets/secret-codec.ts";
 import { createDirectoryMigrationSource } from "./storage/migration-source.ts";
 import { createNodeRuntimeDatabase } from "./storage/node-runtime-database.ts";
@@ -139,6 +140,7 @@ export async function createConnectorRuntime(options: ConnectorRuntimeOptions): 
   const publicOrigin = `${publicUrl.origin}${mountPath}`;
   if (!options.dataDir.trim()) throw new Error("dataDir must not be empty.");
   const dataDir = resolve(options.dataDir);
+  const mcpOutputMode = parseMcpOutputMode(options.mcpOutputMode);
   const ttlSeconds = options.transitFiles?.ttlSeconds ?? 86400;
   const maxBytes = options.transitFiles?.maxBytes ?? 100 * 1024 * 1024;
   if (!Number.isFinite(ttlSeconds) || ttlSeconds <= 0)
@@ -228,7 +230,7 @@ export async function createConnectorRuntime(options: ConnectorRuntimeOptions): 
       oauth: options.oauth,
       trustProxyHeaders: options.trustProxyHeaders,
       eventVerifyToken: options.eventVerifyToken,
-      mcpOutputMode: options.mcpOutputMode,
+      mcpOutputMode,
       verifyRuntimeJwt,
       actionPolicy: new ActionPolicyService(options.actionPolicy),
       allowedCustomOAuth: options.allowedCustomOAuth,
