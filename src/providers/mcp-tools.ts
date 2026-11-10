@@ -1,5 +1,6 @@
+import type { McpHttpTransport } from "./mcp-client.ts";
 import type { ProviderFetch } from "./provider-runtime.ts";
-import type { ToolAnnotations } from "@modelcontextprotocol/client";
+import type { FetchLike, ToolAnnotations } from "@modelcontextprotocol/client";
 
 import {
   Client,
@@ -33,6 +34,7 @@ export interface McpToolSummary {
   metadata?: Record<string, unknown>;
 }
 export interface McpToolOptions {
+  transport?: McpHttpTransport;
   endpoint: string;
   service: string;
   fetcher?: ProviderFetch;
@@ -53,7 +55,7 @@ export async function withMcpToolClient<T>(input: McpToolOptions, run: (client: 
   return withMcpClient(
     {
       endpoint: new URL(input.endpoint),
-      transport: "streamable_http",
+      transport: input.transport ?? "streamable_http",
       signal: input.signal,
       headers: { "user-agent": providerUserAgent, ...input.headers },
       redirect: input.redirect,
@@ -69,7 +71,7 @@ function createLimitedMcpFetch(
   fetcher: ProviderFetch,
   service: string,
   maxResponseBytes: number | undefined,
-): ProviderFetch {
+): FetchLike {
   if (maxResponseBytes === undefined) return fetcher;
   return async (url, init) => limitMcpResponse(await fetcher(url, init), service, maxResponseBytes);
 }

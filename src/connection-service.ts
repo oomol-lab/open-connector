@@ -85,6 +85,8 @@ export interface ConnectionServiceOptions {
   store: IConnectionStore;
   logger?: RuntimeLogger;
   marketplace?: MarketplaceService;
+  /** Runs after local credentials have been saved. */
+  onConnected?: (summary: ConnectionSummary, credential: ResolvedCredential) => Promise<void>;
 }
 
 export interface DisconnectOptions {
@@ -162,6 +164,7 @@ export class ConnectionService {
   private readonly store: IConnectionStore;
   private readonly logger?: RuntimeLogger;
   private readonly marketplace?: MarketplaceService;
+  private readonly onConnected?: ConnectionServiceOptions["onConnected"];
 
   constructor(input: ConnectionServiceOptions) {
     this.providerHttpDispatch = input.providerHttpDispatch;
@@ -172,6 +175,7 @@ export class ConnectionService {
     this.credentials = new CredentialResolver(input);
     this.logger = input.logger;
     this.marketplace = input.marketplace;
+    this.onConnected = input.onConnected;
   }
 
   async listConnections(services?: ReadonlySet<string>): Promise<ConnectionSummary[]> {
@@ -427,6 +431,7 @@ export class ConnectionService {
     const stored = await this.store.setIfCurrentGeneration(service, connectionName, storedCredential, generation);
     if (!stored)
       throw new ConnectionError("connection_retired", "The connection was disconnected during authorization.");
+    await this.connectionSaved(stored.id);
     return this.createStoredConnectionSummary(
       this.getAvailableProvider(service),
       stored.id,
@@ -541,7 +546,22 @@ export class ConnectionService {
     const stored = expected
       ? await this.replaceCredential(expected, credential)
       : await this.store.set(provider.service, normalizeConnectionName(input.connectionName), credential);
+    await this.connectionSaved(stored.id);
     return this.createStoredConnectionSummary(provider, stored.id, stored.connectionName, credential);
+  }
+
+  /** Notify integrations only after a local connection has been durably saved. */
+  async connectionSaved(connectionId: string): Promise<void> {
+    if (!this.onConnected) return;
+    const stored = await this.getStoredConnection(connectionId);
+    if (stored.source === "saas" || stored.credential.authType === "no_auth") return;
+    const summary = this.createStoredConnectionSummary(
+      this.getProvider(stored.service),
+      stored.id,
+      stored.connectionName,
+      stored.credential,
+    );
+    await this.onConnected(summary, stored.credential);
   }
 
   private async replaceCredential(

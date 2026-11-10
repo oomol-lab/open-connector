@@ -205,6 +205,12 @@ export class SqlConnectionStore implements IConnectionStore {
         values: [service, connectionName, ...retirement.values],
       },
       {
+        sql: `update custom_mcp set sync_connection_id = null, revision = ? where service = ?
+          and sync_connection_id is not null and not exists (select 1 from connections where id = custom_mcp.sync_connection_id)
+          and ${retired}`,
+        values: [crypto.randomUUID(), service, service, connectionName, ...retirement.values],
+      },
+      {
         sql: `delete from oauth_states where service = ? and connection_name = ? and ${retired}`,
         values: [service, connectionName, service, connectionName, ...retirement.values],
       },

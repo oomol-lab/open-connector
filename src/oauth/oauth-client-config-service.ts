@@ -140,8 +140,11 @@ export class OAuthClientConfigService {
     return this.toSummary(input.service, this.getOAuthDefinition(input.service), config);
   }
 
-  normalizeConfig(service: string, input: OAuthClientConfigInput): OAuthClientConfig {
-    const auth = this.getOAuthDefinition(service);
+  normalizeConfig(
+    service: string,
+    input: OAuthClientConfigInput,
+    auth: OAuth2AuthDefinition = this.getOAuthDefinition(service),
+  ): OAuthClientConfig {
     const clientId = input.clientId.trim();
     const clientSecret = (input.clientSecret ?? "").trim();
     if (!clientId) {

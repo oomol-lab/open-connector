@@ -41,6 +41,7 @@ import { toast } from "sonner";
 import { defaultMarketplaceDiscoveryUrl, isDefaultMarketplace } from "../../src/marketplace/default-marketplace";
 import { apiDelete, apiPost, apiPut } from "./api";
 import { CredentialInput } from "./credential-input";
+import { AddCustomMcp, CustomMcpSettings } from "./custom-mcp";
 import { DefaultMarketplaceCatalog } from "./default-marketplace-catalog";
 import { loadDefaultMarketplaceCatalog } from "./default-marketplace-discovery";
 import { MarketplacePage } from "./marketplace-page";
@@ -454,14 +455,17 @@ function ProviderBrowser(props: ProviderBrowserProps): ReactNode {
       onValueChange={(value) => selectView(value as ProviderBrowserView)}
       className="provider-browser-tabs"
     >
-      <TabsList variant="line" className="provider-browser-tabs-list" aria-label={t("providers.viewLabel")}>
-        <TabsTrigger value="discover" className="flex-none px-4">
-          {t("providers.views.discover")} <span className="provider-view-count">{sortedProviders.length}</span>
-        </TabsTrigger>
-        <TabsTrigger value="manage" className="flex-none px-4">
-          {t("providers.views.manage")} <span className="provider-view-count">{managedProviders.length}</span>
-        </TabsTrigger>
-      </TabsList>
+      <div className="provider-browser-toolbar">
+        <TabsList variant="line" className="provider-browser-tabs-list" aria-label={t("providers.viewLabel")}>
+          <TabsTrigger value="discover" className="flex-none px-4">
+            {t("providers.views.discover")} <span className="provider-view-count">{sortedProviders.length}</span>
+          </TabsTrigger>
+          <TabsTrigger value="manage" className="flex-none px-4">
+            {t("providers.views.manage")} <span className="provider-view-count">{managedProviders.length}</span>
+          </TabsTrigger>
+        </TabsList>
+        <AddCustomMcp onRefresh={props.onRefresh} />
+      </div>
       {showHostedCard ? (
         <div className="provider-hosted-section">
           <HostedAccessCard
@@ -1235,6 +1239,7 @@ function ProviderDetail(props: ProviderDetailProps): ReactNode {
         </div>
       </div>
 
+      <CustomMcpSettings service={props.provider.service} connections={props.connections} onRefresh={props.onRefresh} />
       <OneKeyProviderOption
         marketplace={props.marketplace}
         provider={props.provider}

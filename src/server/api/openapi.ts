@@ -14,6 +14,7 @@ import {
   customConnectionInput,
   consoleOAuthConnectionInput,
 } from "./connection-input.ts";
+import { customMcpCreateInput, customMcpUpdateInput, customMcpSyncInput } from "./custom-mcp-input.ts";
 import { policyRequestMaxBytes, policyRuleListMaxItems, policyRuleMaxBytes } from "./policy-input.ts";
 
 /**
@@ -406,6 +407,78 @@ export function createOpenApiDocument(options: OpenApiDocumentOptions = {}): Ope
       type: "string",
       description: "Markdown guide for one action.",
     }),
+    "/api/custom-mcp": {
+      ...getOperation("Catalog", "List administrator-defined MCP services.", {
+        type: "array",
+        items: { $ref: "#/components/schemas/CustomMcpService" },
+      }),
+      post: {
+        tags: ["Catalog"],
+        summary: "Register a remote MCP service.",
+        description:
+          "Administrator access required. Service identifiers default to the name-derived value, may be supplied at creation, and cannot be changed later. Names and service identifiers must be unique across built-in and custom providers. The endpoint and authentication layout are fixed; connection secrets use the existing connection APIs. OAuth discovers and registers a client unless manual configuration is supplied. No-auth services discover tools immediately.",
+        requestBody: {
+          required: true,
+          content: { "application/json": { schema: z.toJSONSchema(customMcpCreateInput, { io: "input" }) } },
+        },
+        responses: {
+          201: jsonResponse({ $ref: "#/components/schemas/CustomMcpService" }),
+          400: jsonResponse(errorResponseSchema),
+          409: jsonResponse(errorResponseSchema),
+          502: jsonResponse(errorResponseSchema),
+        },
+      },
+    },
+    "/api/custom-mcp/{service}": {
+      parameters: [{ name: "service", in: "path", required: true, schema: jsonSchema.string() }],
+      ...getOperation("Catalog", "Get a custom MCP service and its saved tools.", {
+        $ref: "#/components/schemas/CustomMcpService",
+      }),
+      patch: {
+        tags: ["Catalog"],
+        summary: "Rename, enable or disable a custom MCP service.",
+        requestBody: {
+          required: true,
+          content: { "application/json": { schema: z.toJSONSchema(customMcpUpdateInput, { io: "input" }) } },
+        },
+        responses: {
+          200: jsonResponse({ $ref: "#/components/schemas/CustomMcpService" }),
+          400: jsonResponse(errorResponseSchema),
+          404: jsonResponse(errorResponseSchema),
+          409: jsonResponse(errorResponseSchema),
+        },
+      },
+      delete: {
+        tags: ["Catalog"],
+        summary: "Delete a custom MCP service after removing its connections.",
+        responses: {
+          200: jsonResponse(
+            jsonSchema.object({ deleted: { type: "boolean", const: true } }, { required: ["deleted"] }),
+          ),
+          404: jsonResponse(errorResponseSchema),
+          409: jsonResponse(errorResponseSchema),
+        },
+      },
+    },
+    "/api/custom-mcp/{service}/sync": {
+      parameters: [{ name: "service", in: "path", required: true, schema: jsonSchema.string() }],
+      post: {
+        tags: ["Catalog"],
+        summary: "Discover tools using a selected MCP connection.",
+        description:
+          "Replaces the tool snapshot atomically. A failed discovery returns the previous tools with syncError set. Omit connectionId to reuse the previous discovery connection, or the provider default before the first successful sync.",
+        requestBody: {
+          required: true,
+          content: { "application/json": { schema: z.toJSONSchema(customMcpSyncInput, { io: "input" }) } },
+        },
+        responses: {
+          200: jsonResponse({ $ref: "#/components/schemas/CustomMcpService" }),
+          400: jsonResponse(errorResponseSchema),
+          404: jsonResponse(errorResponseSchema),
+          409: jsonResponse(errorResponseSchema),
+        },
+      },
+    },
     "/api/connections": getOperation("Connections", "List local provider connections.", {
       type: "array",
       items: { $ref: "#/components/schemas/ConnectionSummary" },
@@ -719,6 +792,27 @@ export function createOpenApiDocument(options: OpenApiDocumentOptions = {}): Ope
         },
       },
       schemas: {
+        CustomMcpService: jsonSchema.object(
+          {
+            service: jsonSchema.string(),
+            displayName: jsonSchema.string(),
+            endpoint: jsonSchema.string(),
+            transport: { type: "string", enum: ["streamable_http", "sse"] },
+            enabled: jsonSchema.boolean(),
+            revision: jsonSchema.string(),
+            auth: {
+              type: "object",
+              description:
+                "Authentication layout without connection secrets. OAuth contains the resolved definition, not client credentials.",
+            },
+            actions: jsonSchema.array({ $ref: "#/components/schemas/ActionDefinition" }),
+            syncConnectionId: jsonSchema.string(),
+            syncedAt: jsonSchema.string(),
+            syncError: jsonSchema.string(),
+          },
+          { required: ["service", "displayName", "endpoint", "transport", "enabled", "revision", "auth", "actions"] },
+        ),
+
         ActionDefinition: jsonSchema.unknownObject("Public action catalog definition with runtime execution status."),
         LocalAuthSession: jsonSchema.object(
           {

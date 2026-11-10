@@ -39,6 +39,9 @@ import { createCatalogStore } from "../catalog-store.ts";
 import { ConnectionService } from "../connection-service.ts";
 import { ActionPolicyService as LocalActionPolicyService } from "../core/action-policy.ts";
 import { buildActionSearchIndex } from "../core/action-search.ts";
+import { CustomMcpCatalog } from "../custom-mcp/catalog.ts";
+import { CustomMcpLoader } from "../custom-mcp/loader.ts";
+import { CustomMcpService } from "../custom-mcp/service.ts";
 import { MarketplaceError, MarketplaceService } from "../marketplace/marketplace-service.ts";
 import { OAuthClientConfigService } from "../oauth/oauth-client-config-service.ts";
 import { OAuthFlowService } from "../oauth/oauth-flow-service.ts";
@@ -1176,7 +1179,7 @@ describe("ConnectServer", () => {
     expect(chinese.status).toBe(200);
     expect(chinese.headers.get("content-language")).toBe("zh-CN");
     expect(chinese.headers.get("cloudflare-cdn-cache-control")).toBe("no-store");
-    expect(chinese.headers.get("vary")).toContain("Accept-Language");
+    expect(chinese.headers.get("cache-control")).toBe("private, no-store");
     expect(english.headers.get("content-language")).toBe("en");
     expect(englishBody[0].displayName).toBe("Tencent Meeting MCP");
     await expect(chinese.json()).resolves.toMatchObject([
@@ -1263,11 +1266,8 @@ describe("ConnectServer", () => {
     const app = createTestServer([apiKeyProvider]).createApp();
 
     const catalogResponse = await app.request("/api/providers/example?locale=en");
-    expect(catalogResponse.headers.get("cache-control")).toBe("public, max-age=0, must-revalidate");
-    expect(catalogResponse.headers.get("cloudflare-cdn-cache-control")).toBe(
-      "public, max-age=31536000, stale-while-revalidate=86400",
-    );
-    expect(catalogResponse.headers.get("vary")).toBe("Authorization, Cookie, Accept-Encoding, Accept-Language");
+    expect(catalogResponse.headers.get("cache-control")).toBe("private, no-store");
+    expect(catalogResponse.headers.get("cloudflare-cdn-cache-control")).toBe("no-store");
     await expect(catalogResponse.json()).resolves.toMatchObject({
       service: "example",
       displayName: "Example",
@@ -3565,11 +3565,11 @@ describe("ConnectServer", () => {
 
     const apiActions = await app.request("/api/actions");
     expect(apiActions.status).toBe(200);
-    expect(apiActions.headers.get("cache-control")).toBe("public, max-age=0, must-revalidate");
+    expect(apiActions.headers.get("cache-control")).toBe("private, no-store");
 
     const apiAction = await app.request("/api/actions/example.echo");
     expect(apiAction.status).toBe(200);
-    expect(apiAction.headers.get("cache-control")).toBe("public, max-age=0, must-revalidate");
+    expect(apiAction.headers.get("cache-control")).toBe("private, no-store");
 
     const providers = await app.request("/v1/providers");
     expect(providers.status).toBe(200);
@@ -4760,12 +4760,14 @@ interface CreateTestServerOptions {
 function createTestServer(providers: ProviderDefinition[], options: CreateTestServerOptions = {}): ConnectServer {
   const requestDatabase = new SqliteRuntimeDatabase(":memory:");
   requestDatabases.push(requestDatabase);
-  const catalog =
-    options.catalog ??
-    createCatalogStore(providers, {
-      executableActionIds: ["example.echo"],
-    });
-  const providerLoader: IProviderLoader = options.providerLoader ?? new EmptyProviderLoader();
+  const catalog = new CustomMcpCatalog(
+    options.catalog ?? createCatalogStore(providers, { executableActionIds: ["example.echo"] }),
+    requestDatabase.customMcpStore,
+  );
+  const providerLoader: IProviderLoader = new CustomMcpLoader(
+    options.providerLoader ?? new EmptyProviderLoader(),
+    catalog,
+  );
   const idempotency = options.idempotency ?? new MemoryIdempotencyStore();
   const runtimeTokens = options.runtimeTokens ?? new RuntimeTokenService(new MemoryRuntimeTokenStore());
   const runs = options.runs ?? new MemoryRunLogStore();
@@ -4773,6 +4775,7 @@ function createTestServer(providers: ProviderDefinition[], options: CreateTestSe
     catalog,
     providerLoader,
     store: new MemoryConnectionStore(),
+    onConnected: (summary, credential) => customMcp.connectionSaved(summary, credential),
   });
   const allowedCustomOAuth = new Set(options.allowedCustomOAuth);
   const isCustomClientConfigAllowed = (service: string): boolean =>
@@ -4783,6 +4786,11 @@ function createTestServer(providers: ProviderDefinition[], options: CreateTestSe
     store: new MemoryOAuthClientConfigStore(),
     isCustomClientConfigAvailable: (service) =>
       (options.secretCodec?.encrypted ?? false) && isCustomClientConfigAllowed(service),
+  });
+  const customMcp = new CustomMcpService({
+    catalog,
+    store: requestDatabase.customMcpStore,
+    oauthClientConfigs: clientConfigs,
   });
   const transitFiles =
     options.transitFiles ??
@@ -4804,6 +4812,7 @@ function createTestServer(providers: ProviderDefinition[], options: CreateTestSe
   const staticRoot = typeof options.staticRoot === "string" ? options.staticRoot : undefined;
 
   return new ConnectServer({
+    customMcp,
     mcpOutputMode: options.mcpOutputMode,
     marketplace: options.marketplace,
     catalog,

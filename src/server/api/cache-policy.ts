@@ -12,8 +12,10 @@ export function getResponseCachePolicy(
   path: string,
   status: number,
   explicitLocale = false,
+  dynamicCatalog = false,
 ): ResponseCachePolicy | undefined {
   if (isCatalogResponse(method, path) && ((status >= 200 && status < 300) || status === 304)) {
+    if (dynamicCatalog) return { cacheControl: "private, no-store", cloudflareCdnCacheControl: "no-store" };
     return {
       cacheControl: catalogBrowserCacheControl,
       cloudflareCdnCacheControl: isProviderCatalog(path) && !explicitLocale ? "no-store" : catalogEdgeCacheControl,

@@ -37,6 +37,7 @@ import { parseRuntimeActionHttpResult } from "../../api/runtime-api.ts";
 import { PlainTextSecretCodec } from "../../secrets/secret-codec-core.ts";
 import { ConnectionRequestStore } from "../connection-request-store.ts";
 import { SqlConnectionStore } from "../connection-store.ts";
+import { CustomMcpStore } from "../custom-mcp-store.ts";
 import { defaultMigrationSource } from "../migration-source.ts";
 import { SqlOAuthStateStore } from "../oauth-state-store.ts";
 import {
@@ -97,6 +98,7 @@ interface RotatedStateSecret {
  * Shared SQLite connection for local runtime state.
  */
 export class SqliteRuntimeDatabase implements RuntimeDatabase {
+  readonly customMcpStore: CustomMcpStore;
   readonly saasProjectStore: SaasProjectStore;
   readonly connectionRequestStore: ConnectionRequestStore;
   readonly connectionStore: SqlConnectionStore;
@@ -124,6 +126,11 @@ export class SqliteRuntimeDatabase implements RuntimeDatabase {
       runInTransaction(this.database, () =>
         statements.map(({ sql, values }) => this.database.prepare(sql).all(...values)),
       );
+    this.customMcpStore = new CustomMcpStore({
+      secretCodec: this.secretCodec,
+      transaction,
+      read: async (sql) => this.database.prepare(sql).all(),
+    });
     this.connectionRequestStore = new ConnectionRequestStore(transaction, this.secretCodec);
     this.connectionStore = new SqlConnectionStore(transaction, this.secretCodec);
     this.triggerStore = new SqlTriggerStore(transaction, this.secretCodec);
@@ -271,6 +278,7 @@ export class SqliteRuntimeDatabase implements RuntimeDatabase {
       delete from runtime_policy;
       delete from runs;
       delete from idempotency_records;
+      delete from custom_mcp;
       delete from marketplace_config;
       delete from provider_preferences;
     `);

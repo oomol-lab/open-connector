@@ -3,8 +3,19 @@
   gap: 16px;
 }
 
+.provider-browser-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.provider-browser-toolbar > button {
+  margin-left: auto;
+}
+
 .provider-browser-tabs-list {
-  width: 100%;
   justify-content: flex-start;
 }
 

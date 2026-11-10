@@ -8,6 +8,7 @@ import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it, vi } 
 import { AesGcmSecretCodec } from "../../secrets/secret-codec.ts";
 import { connectionRequestStoreTests } from "../connection-request-store.cases.ts";
 import { connectionStoreTests } from "../connection-store.cases.ts";
+import { customMcpStoreTests } from "../custom-mcp-store.cases.ts";
 import { defaultMigrationSource } from "../migration-source.ts";
 import { createNodeRuntimeDatabase, migratePostgresRuntimeDatabase } from "../node-runtime-database.ts";
 import { RuntimeTokenService } from "../runtime-token-service.ts";
@@ -169,6 +170,7 @@ describe("PostgreSQL migrations with PGlite", () => {
           { name: "0019_trigger_sources.sql" },
           { name: "0020_oauth_tables.sql" },
           { name: "0021_oauth_refresh_replay.sql" },
+          { name: "0022_custom_mcp.sql" },
         ],
       });
 
@@ -235,6 +237,7 @@ describe("PostgreSQL migrations with a custom migration source", () => {
           { name: "0019_trigger_sources.sql" },
           { name: "0020_oauth_tables.sql" },
           { name: "0021_oauth_refresh_replay.sql" },
+          { name: "0022_custom_mcp.sql" },
           { name: "9998_custom.sql" },
         ],
       });
@@ -320,7 +323,21 @@ describe("PostgresRuntimeDatabase with PGlite", () => {
 
   connectionRequestStoreTests(() => database);
   connectionStoreTests(() => database);
+  customMcpStoreTests(() => database);
   triggerStoreTests(() => database);
+
+  it("reads custom MCP catalogs without acquiring the connection transaction lock", async () => {
+    const query = vi.spyOn(Client.prototype, "query");
+    try {
+      expect(await database.customMcpStore.version()).toBe("[]");
+      expect(await database.customMcpStore.list()).toEqual([]);
+      const statements = query.mock.calls.map(([sql]) => String(sql)).join("\n");
+      expect(statements).not.toContain("pg_advisory_xact_lock");
+      expect(statements.toLowerCase()).not.toContain("begin");
+    } finally {
+      query.mockRestore();
+    }
+  });
 
   it("persists connections and OAuth data across database instances", async () => {
     const connection = await database.connectionStore.set("github", "default", githubCredential("github-token"));

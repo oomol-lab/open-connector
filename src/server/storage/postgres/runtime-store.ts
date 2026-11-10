@@ -38,6 +38,7 @@ import { parseRuntimeActionHttpResult } from "../../api/runtime-api.ts";
 import { PlainTextSecretCodec } from "../../secrets/secret-codec-core.ts";
 import { ConnectionRequestStore } from "../connection-request-store.ts";
 import { SqlConnectionStore } from "../connection-store.ts";
+import { CustomMcpStore } from "../custom-mcp-store.ts";
 import { SqlOAuthStateStore } from "../oauth-state-store.ts";
 import {
   listRunLogs,
@@ -63,6 +64,7 @@ export interface PostgresRuntimeDatabaseOptions {
 }
 
 export class PostgresRuntimeDatabase implements RuntimeDatabase {
+  readonly customMcpStore: CustomMcpStore;
   readonly saasProjectStore: SaasProjectStore;
   readonly connectionRequestStore: ConnectionRequestStore;
   readonly connectionStore: IConnectionStore;
@@ -103,6 +105,11 @@ export class PostgresRuntimeDatabase implements RuntimeDatabase {
         }
         return results;
       });
+    this.customMcpStore = new CustomMcpStore({
+      secretCodec: this.secretCodec,
+      transaction,
+      read: async (sql) => (await pool.query(sql)).rows,
+    });
     this.connectionRequestStore = new ConnectionRequestStore(transaction, this.secretCodec);
     this.connectionStore = new SqlConnectionStore(transaction, this.secretCodec);
     this.triggerStore = new SqlTriggerStore(transaction, this.secretCodec);
@@ -165,7 +172,8 @@ export class PostgresRuntimeDatabase implements RuntimeDatabase {
         delete from runtime_policy;
         delete from runs;
         delete from idempotency_records;
-        delete from marketplace_config;
+        delete from custom_mcp;
+      delete from marketplace_config;
         delete from provider_preferences;
       `);
     });

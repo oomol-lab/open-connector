@@ -79,7 +79,7 @@ export class OAuthCredentialRefreshService implements IOAuthCredentialRefresher 
         clientSecret: config.clientSecret,
         responseEnvelope: auth.tokenResponseEnvelope,
         refreshToken,
-        extraFields: readOAuthRefreshParameters(credential.providerSecret),
+        extraFields: readOAuthRefreshParameters(credential.providerSecret, auth.resource),
         tokenRequestFields: auth.tokenRequestFields,
         tokenEndpointAuthMethod: auth.tokenEndpointAuthMethod,
         tokenRequestFormat: auth.tokenRequestFormat,
@@ -193,9 +193,10 @@ export class OAuthCredentialRefreshService implements IOAuthCredentialRefresher 
 
 function readOAuthRefreshParameters(
   providerSecret: Record<string, unknown> | undefined,
+  resource?: string,
 ): Record<string, string> | undefined {
   const value = optionalRecord(providerSecret?.oauthRefreshParameters);
-  if (!value) return undefined;
-  const fields = stringRecord(value);
+  const fields = value ? stringRecord(value) : {};
+  if (resource) fields.resource = resource;
   return Object.keys(fields).length > 0 ? fields : undefined;
 }
