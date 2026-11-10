@@ -2,7 +2,6 @@ import type { ConnectionService } from "../../connection-service.ts";
 import type { CustomMcpService } from "../../custom-mcp/service.ts";
 
 import { Hono } from "hono";
-import { customMcpCreateInput, customMcpUpdateInput, customMcpSyncInput } from "./custom-mcp-input.ts";
 import { HttpRequestError, readJsonBody } from "./http-utils.ts";
 
 export interface CustomMcpRoutesOptions {
@@ -17,18 +16,21 @@ export function createCustomMcpRoutes({ mcp, connections, publicOrigin }: Custom
   app.get("/", (context) => context.json(mcp.catalog.listRecords()));
   app.get("/:service", (context) => context.json(mcp.get(context.req.param("service"))));
   app.post("/", async (context) => {
+    const { customMcpCreateInput } = await import("./custom-mcp-input.ts");
     const parsed = customMcpCreateInput.safeParse(await readJsonBody(context, 32 * 1024));
     if (!parsed.success) throw new HttpRequestError("invalid_input", parsed.error.issues[0].message);
     const redirectUri = `${publicOrigin.replace(/\/$/, "")}/oauth/callback`;
     return context.json(await mcp.create(parsed.data, redirectUri, context.req.raw.signal), 201);
   });
   app.patch("/:service", async (context) => {
+    const { customMcpUpdateInput } = await import("./custom-mcp-input.ts");
     const parsed = customMcpUpdateInput.safeParse(await readJsonBody(context, 32 * 1024));
     if (!parsed.success) throw new HttpRequestError("invalid_input", parsed.error.issues[0].message);
     return context.json(await mcp.update(context.req.param("service"), parsed.data.displayName, parsed.data.enabled));
   });
   app.post("/:service/sync", async (context) => {
     const service = context.req.param("service");
+    const { customMcpSyncInput } = await import("./custom-mcp-input.ts");
     const parsed = customMcpSyncInput.safeParse(await readJsonBody(context, 32 * 1024));
     if (!parsed.success) throw new HttpRequestError("invalid_input", parsed.error.issues[0].message);
     const record = mcp.get(service);

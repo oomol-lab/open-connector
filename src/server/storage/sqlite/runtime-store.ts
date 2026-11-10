@@ -126,7 +126,7 @@ export class SqliteRuntimeDatabase implements RuntimeDatabase {
       runInTransaction(this.database, () =>
         statements.map(({ sql, values }) => this.database.prepare(sql).all(...values)),
       );
-    this.customMcpStore = new CustomMcpStore(transaction);
+    this.customMcpStore = new CustomMcpStore({ transaction, read: async (sql) => this.database.prepare(sql).all() });
     this.connectionRequestStore = new ConnectionRequestStore(transaction, this.secretCodec);
     this.connectionStore = new SqlConnectionStore(transaction, this.secretCodec);
     this.triggerStore = new SqlTriggerStore(transaction, this.secretCodec);

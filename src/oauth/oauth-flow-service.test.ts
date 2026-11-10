@@ -287,6 +287,38 @@ describe("OAuthFlowService", () => {
     });
   });
 
+  it.each([undefined, "https://other.example.com"])(
+    "fails a refused request with an invalid issuer (%s)",
+    async (issuer) => {
+      const provider: ProviderDefinition = {
+        ...oauthProvider,
+        auth: [
+          {
+            type: "oauth2",
+            authorizationUrl: "https://example.com/authorize",
+            tokenUrl: "https://example.com/token",
+            issuer: "https://example.com",
+            requireIssuer: true,
+            tokenEndpointAuthMethod: "none",
+            scopes: [],
+          },
+        ],
+      };
+      const { flow, clientConfigs } = createServices([provider]);
+      await clientConfigs.upsertConfig({ service: "example", clientId: "client" });
+      const started = await flow.startConnectionRequest({ service: "example", owner: "owner" });
+      const state = new URL(started.authorizationUrl).searchParams.get("state")!;
+      await expect(flow.rejectAuthorization(state, true, issuer)).rejects.toMatchObject({
+        code: "invalid_oauth_issuer",
+      });
+      expect(await flow.getConnectionRequest(started.connectionRequestId, "owner")).toMatchObject({
+        status: "failed",
+        errorCode: "invalid_oauth_issuer",
+      });
+      expect(await flow.rejectAuthorization(state, true, "https://example.com")).toBeUndefined();
+    },
+  );
+
   it.each(["authorization", "connection request"])("preserves Tencent Docs scope=all for %s", async (entry) => {
     const services = createServices([{ ...tencentDocsProvider, actions: [] }]);
     await services.clientConfigs.upsertConfig({

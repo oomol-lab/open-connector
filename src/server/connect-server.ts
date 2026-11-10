@@ -198,7 +198,7 @@ export class ConnectServer {
         context.req.path,
         context.res.status,
         context.req.query("locale") !== undefined,
-        Boolean(this.options.customMcp?.catalog.listRecords().length),
+        this.options.customMcp !== undefined,
       );
       if (cachePolicy) {
         context.header("Cache-Control", cachePolicy.cacheControl);

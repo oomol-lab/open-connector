@@ -326,6 +326,19 @@ describe("PostgresRuntimeDatabase with PGlite", () => {
   customMcpStoreTests(() => database);
   triggerStoreTests(() => database);
 
+  it("reads custom MCP catalogs without acquiring the connection transaction lock", async () => {
+    const query = vi.spyOn(Client.prototype, "query");
+    try {
+      expect(await database.customMcpStore.version()).toBe("[]");
+      expect(await database.customMcpStore.list()).toEqual([]);
+      const statements = query.mock.calls.map(([sql]) => String(sql)).join("\n");
+      expect(statements).not.toContain("pg_advisory_xact_lock");
+      expect(statements.toLowerCase()).not.toContain("begin");
+    } finally {
+      query.mockRestore();
+    }
+  });
+
   it("persists connections and OAuth data across database instances", async () => {
     const connection = await database.connectionStore.set("github", "default", githubCredential("github-token"));
     await database.oauthClientConfigStore.set({

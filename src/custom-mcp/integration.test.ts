@@ -123,6 +123,9 @@ async function add(app: ConnectApp, auth: unknown = { type: "none" }): Promise<C
 it("discovers tools, refreshes another instance, searches and executes ordinary actions", async () => {
   const app = await createApp();
   const other = await createApp();
+  for (const path of ["/api/actions", "/api/providers?locale=en"]) {
+    expect((await request(app, path)).headers.get("cloudflare-cdn-cache-control")).toBe("no-store");
+  }
   const record = await add(app);
   expect(record.syncError).toBeUndefined();
   expect(record.actions).toHaveLength(1);
@@ -155,6 +158,8 @@ it("discovers tools, refreshes another instance, searches and executes ordinary 
     (await request(other, `/v1/actions/${record.service}.find_items`, "POST", { input: { query: "books" } }, "runtime"))
       .status,
   ).toBe(404);
+  await request(app, `/api/custom-mcp/${record.service}`, "DELETE");
+  expect((await request(other, "/api/actions")).headers.get("cloudflare-cdn-cache-control")).toBe("no-store");
 });
 
 it("uses the selected connection and enforces connection grants without falling back to the sync credential", async () => {

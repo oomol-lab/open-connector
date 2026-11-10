@@ -283,13 +283,14 @@ export function CustomMcpSettings({ service, connections, onRefresh }: CustomMcp
   useEffect(() => {
     let active = true;
     setRecord(undefined);
+    setConnectionId("");
     setError("");
     void apiGet<CustomMcpRecord>(`/api/custom-mcp/${service}`).then(
       (record) => {
         if (active) {
           setRecord(record);
           setName(record.displayName);
-          setConnectionId(record.syncConnectionId ?? connections[0]?.id ?? "");
+          setConnectionId(record.syncConnectionId ?? "");
         }
       },
       (error: Error) => {
@@ -299,7 +300,12 @@ export function CustomMcpSettings({ service, connections, onRefresh }: CustomMcp
     return () => {
       active = false;
     };
-  }, [service, connections]);
+  }, [service]);
+  const availableConnections = connections.filter(
+    (connection) => connection.configured && !connection.virtual && connection.id,
+  );
+  const selectedConnectionId =
+    availableConnections.find((connection) => connection.id === connectionId)?.id ?? availableConnections[0]?.id ?? "";
 
   async function run(operation: "sync" | "save" | "toggle" | "delete"): Promise<void> {
     if (!record) return;
@@ -314,7 +320,7 @@ export function CustomMcpSettings({ service, connections, onRefresh }: CustomMcp
         case "sync":
           setRecord(
             await apiPost<CustomMcpRecord>(`/api/custom-mcp/${service}/sync`, {
-              connectionId: connectionId || undefined,
+              connectionId: selectedConnectionId || undefined,
             }),
           );
           break;
@@ -351,18 +357,16 @@ export function CustomMcpSettings({ service, connections, onRefresh }: CustomMcp
             </Button>
           </div>
           {record.auth.type !== "none" ? (
-            <Select value={connectionId} onValueChange={setConnectionId}>
+            <Select value={selectedConnectionId} onValueChange={setConnectionId}>
               <SelectTrigger aria-label={t("customMcp.syncConnection")}>
                 <SelectValue placeholder={t("customMcp.syncConnection")} />
               </SelectTrigger>
               <SelectContent>
-                {connections
-                  .filter((connection) => connection.configured && !connection.virtual && connection.id)
-                  .map((connection) => (
-                    <SelectItem key={connection.id} value={connection.id!}>
-                      {connection.connectionName}
-                    </SelectItem>
-                  ))}
+                {availableConnections.map((connection) => (
+                  <SelectItem key={connection.id} value={connection.id!}>
+                    {connection.connectionName}
+                  </SelectItem>
+                ))}
               </SelectContent>
             </Select>
           ) : null}
@@ -380,7 +384,10 @@ export function CustomMcpSettings({ service, connections, onRefresh }: CustomMcp
             </p>
           ) : null}
           <div className="flex flex-wrap gap-2">
-            <Button disabled={busy || (record.auth.type !== "none" && !connectionId)} onClick={() => void run("sync")}>
+            <Button
+              disabled={busy || (record.auth.type !== "none" && !selectedConnectionId)}
+              onClick={() => void run("sync")}
+            >
               {t(busy ? "customMcp.working" : "customMcp.sync")}
             </Button>
             <Button variant="outline" disabled={busy} onClick={() => void run("toggle")}>

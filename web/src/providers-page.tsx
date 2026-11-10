@@ -455,15 +455,15 @@ function ProviderBrowser(props: ProviderBrowserProps): ReactNode {
       onValueChange={(value) => selectView(value as ProviderBrowserView)}
       className="provider-browser-tabs"
     >
-      <TabsList variant="line" className="provider-browser-tabs-list" aria-label={t("providers.viewLabel")}>
-        <TabsTrigger value="discover" className="flex-none px-4">
-          {t("providers.views.discover")} <span className="provider-view-count">{sortedProviders.length}</span>
-        </TabsTrigger>
-        <TabsTrigger value="manage" className="flex-none px-4">
-          {t("providers.views.manage")} <span className="provider-view-count">{managedProviders.length}</span>
-        </TabsTrigger>
-      </TabsList>
-      <div className="flex justify-end">
+      <div className="provider-browser-toolbar">
+        <TabsList variant="line" className="provider-browser-tabs-list" aria-label={t("providers.viewLabel")}>
+          <TabsTrigger value="discover" className="flex-none px-4">
+            {t("providers.views.discover")} <span className="provider-view-count">{sortedProviders.length}</span>
+          </TabsTrigger>
+          <TabsTrigger value="manage" className="flex-none px-4">
+            {t("providers.views.manage")} <span className="provider-view-count">{managedProviders.length}</span>
+          </TabsTrigger>
+        </TabsList>
         <AddCustomMcp onRefresh={props.onRefresh} />
       </div>
       {showHostedCard ? (

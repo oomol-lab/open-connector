@@ -191,7 +191,14 @@ export class OAuthFlowService {
   async rejectAuthorization(state: string, denied: boolean, issuer?: string): Promise<string | undefined> {
     const pending = await this.requests.claim(state);
     if (!pending) return undefined;
-    assertOAuthIssuer(pending, issuer);
+    try {
+      assertOAuthIssuer(pending, issuer);
+    } catch (error) {
+      if (error instanceof OAuthFlowError) {
+        await this.requests.fail(pending.connectionRequestId, error.code, error.message);
+      }
+      throw error;
+    }
     await this.requests.fail(
       pending.connectionRequestId,
       denied ? "invalid_input" : "provider_error",

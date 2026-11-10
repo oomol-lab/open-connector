@@ -80,7 +80,10 @@ export class D1RuntimeDatabase implements RuntimeDatabase {
       const results = await database.batch(statements.map(({ sql, values }) => database.prepare(sql).bind(...values)));
       return results.map((result) => result.results ?? []);
     };
-    this.customMcpStore = new CustomMcpStore(transaction);
+    this.customMcpStore = new CustomMcpStore({
+      transaction,
+      read: async (sql) => (await database.prepare(sql).all()).results ?? [],
+    });
     this.connectionRequestStore = new ConnectionRequestStore(transaction, secretCodec);
     this.connectionStore = new SqlConnectionStore(transaction, secretCodec);
     this.triggerStore = new SqlTriggerStore(transaction, secretCodec);

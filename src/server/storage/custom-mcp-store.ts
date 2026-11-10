@@ -1,5 +1,6 @@
 import type { CustomMcpRecord } from "../../custom-mcp/definition.ts";
 import type { RequestStatement, RequestTransaction } from "./connection-request-store.ts";
+import type { RuntimeRow } from "./runtime-sql.ts";
 
 import { customMcpNameKey } from "../../custom-mcp/definition.ts";
 import { HttpRequestError } from "../api/http-utils.ts";
@@ -17,23 +18,28 @@ interface McpSyncFailure extends Pick<CustomMcpRecord, "service" | "revision"> {
   syncError: string;
 }
 
+interface CustomMcpStoreOptions {
+  transaction: RequestTransaction;
+  read(sql: string): Promise<RuntimeRow[]>;
+}
+
 /** Persist each service and its tool snapshot atomically using the shared runtime SQL dialect. */
 export class CustomMcpStore {
   private readonly transaction: RequestTransaction;
+  private readonly read: CustomMcpStoreOptions["read"];
 
-  constructor(transaction: RequestTransaction) {
-    this.transaction = transaction;
+  constructor(options: CustomMcpStoreOptions) {
+    this.transaction = options.transaction;
+    this.read = options.read;
   }
 
   async version(): Promise<string> {
-    const [rows] = await this.transaction([
-      { sql: "select service, revision from custom_mcp order by service", values: [] },
-    ]);
+    const rows = await this.read("select service, revision from custom_mcp order by service");
     return JSON.stringify(rows.map((row) => [row.service, row.revision]));
   }
 
   async list(): Promise<CustomMcpRecord[]> {
-    const [rows] = await this.transaction([{ sql: "select * from custom_mcp order by service", values: [] }]);
+    const rows = await this.read("select * from custom_mcp order by service");
     return rows.map((row) => ({
       service: readString(row, "service"),
       displayName: readString(row, "display_name"),
