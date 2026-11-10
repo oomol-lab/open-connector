@@ -1,3 +1,5 @@
+import type * as FsPromises from "node:fs/promises";
+
 import * as fs from "node:fs";
 import { mkdtemp, opendir, readdir, rm, stat, unlink, utimes, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
@@ -13,7 +15,7 @@ vi.mock("node:fs", async (importOriginal) => {
 });
 
 vi.mock("node:fs/promises", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("node:fs/promises")>();
+  const actual = await importOriginal<typeof FsPromises>();
   return { ...actual, opendir: vi.fn(actual.opendir) };
 });
 
@@ -264,7 +266,7 @@ describe("TransitFileService", () => {
     const { service } = await createService();
     const opened = Promise.withResolvers<void>();
     const releaseOpen = Promise.withResolvers<void>();
-    const { opendir: openDirectory } = await vi.importActual<typeof import("node:fs/promises")>("node:fs/promises");
+    const { opendir: openDirectory } = await vi.importActual<typeof FsPromises>("node:fs/promises");
     vi.mocked(opendir).mockImplementationOnce(async (path, options) => {
       const directory = await openDirectory(path, options);
       opened.resolve();

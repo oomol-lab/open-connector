@@ -1,3 +1,4 @@
+import type { CredentialValidationResult } from "../../core/types.ts";
 import type { ProviderRuntimeHandler } from "../provider-executors.ts";
 
 import { createHash } from "node:crypto";
@@ -45,7 +46,7 @@ export async function validateMoxieCredential(
   input: { apiKey: string; values?: Record<string, string> },
   fetcher: typeof fetch,
   signal?: AbortSignal,
-): Promise<import("../../core/types.ts").CredentialValidationResult> {
+): Promise<CredentialValidationResult> {
   const apiKey = requiredString(input.apiKey, "apiKey", providerInputError).trim();
   const baseUrl = normalizeMoxieBaseUrl(input.values?.baseUrl);
   const payload = await requestMoxieJson({ apiKey, baseUrl, path: validationPath, fetcher, signal, validation: true });

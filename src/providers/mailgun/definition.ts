@@ -15,7 +15,7 @@ export const provider: ProviderDefinition = {
       label: "Private API Key",
       placeholder: "key-...",
       description:
-        "Mailgun private API key used with HTTP Basic auth as api:YOUR_API_KEY. Create or view API keys in Mailgun security settings.",
+        "Mailgun private API key used with HTTP Basic auth as api:YOUR_API_KEY. Create or view API keys in Mailgun security settings: https://app.mailgun.com/settings/api_security.",
       extraFields: [
         {
           key: "apiBaseUrl",

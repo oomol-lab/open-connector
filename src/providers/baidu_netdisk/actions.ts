@@ -1,4 +1,5 @@
 import type { ProviderActionDefinition } from "../../core/provider-definition.ts";
+import type { JsonSchema } from "../../core/types.ts";
 
 import { s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
@@ -84,7 +85,7 @@ const fileSchema = s.object("A normalized Baidu Netdisk file or folder.", {
 });
 
 const semanticFileSchema = s.object("A normalized semantic search match.", {
-  ...(fileSchema.properties as Record<string, import("../../core/types.ts").JsonSchema>),
+  ...(fileSchema.properties as Record<string, JsonSchema>),
   matchSource: s.nullable(
     s.stringEnum("The official Baidu recall source, or null when unavailable.", [...baiduNetdiskSemanticMatchSources]),
   ),

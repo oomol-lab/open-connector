@@ -1,4 +1,4 @@
-import type { ActionDefinition } from "../../../core/types.ts";
+import type { JsonSchema, ActionDefinition } from "../../../core/types.ts";
 
 import { s } from "../../../core/json-schema.ts";
 import { defineProviderAction } from "../../../core/provider-definition.ts";
@@ -445,7 +445,7 @@ export function createFeishuCalendarActions(service: string): readonly ActionDef
       outputSchema: {
         ...pageOutput,
         properties: {
-          ...(pageOutput.properties as Record<string, import("../../../core/types.ts").JsonSchema>),
+          ...(pageOutput.properties as Record<string, JsonSchema>),
           failedInstances: s.array(
             "Event instances whose meeting relation lookup failed, including instance_id and fail_msg.",
             looseItem,

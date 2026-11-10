@@ -286,8 +286,15 @@ async function get(
 
 function success(result: ConnectorProxyResult, operation: string): void {
   if (result.status >= 200 && result.status < 300) return;
-  if (result.status == 401 || result.status == 403)
+  // Invalid configuration requires a user change rather than a retry.
+  if (result.status == 400) throw new PermanentPollError(`Gmail ${operation} rejected the configuration.`);
+  // Gmail also uses 403 for quota errors; those remain retryable.
+  if (result.status == 403 && reasons(result.data).some((reason) => rateLimitReasons.has(reason)))
+    throw new TransientPollError(`Gmail ${operation} was rate limited.`);
+  if (result.status == 401 && reasons(result.data).includes("authError"))
     throw new PollConnectionError(`Gmail ${operation} rejected the Connection.`);
+  if (result.status == 403 && reasons(result.data).includes("domainPolicy"))
+    throw new PermanentPollError("The domain administrator disabled Gmail access for this app.");
   throw new TransientPollError(`Gmail ${operation} failed with status ${result.status}.`);
 }
 
@@ -310,3 +317,14 @@ function record(value: unknown): Record<string, unknown> | undefined {
     ? (value as Record<string, unknown>)
     : undefined;
 }
+
+function reasons(data: unknown): readonly string[] {
+  const errors = record(record(data)?.error)?.errors;
+  if (!Array.isArray(errors)) return [];
+  return errors.flatMap((value) => {
+    const reason = record(value)?.reason;
+    return typeof reason == "string" ? [reason] : [];
+  });
+}
+
+const rateLimitReasons = new Set(["rateLimitExceeded", "userRateLimitExceeded", "dailyLimitExceeded"]);

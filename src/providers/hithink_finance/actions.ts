@@ -1,4 +1,4 @@
-import type { ActionDefinition } from "../../core/types.ts";
+import type { JsonSchema, ActionDefinition } from "../../core/types.ts";
 
 import { s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
@@ -862,7 +862,7 @@ const hithinkFinanceSpecialActions: ActionDefinition[] = [
   }),
 ];
 
-export const hithinkFinanceMarketDumpExpiresAtSchema: import("../../core/types.ts").JsonSchema = s.dateTime(
+export const hithinkFinanceMarketDumpExpiresAtSchema: JsonSchema = s.dateTime(
   "ISO 8601 expiration time of the temporary upstream URL used for the download.",
 );
 

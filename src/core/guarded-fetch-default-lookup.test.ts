@@ -1,3 +1,5 @@
+import type * as GuardedFetchModule from "./guarded-fetch.ts";
+
 import { afterEach, describe, expect, it, vi } from "vitest";
 
 /**
@@ -29,7 +31,7 @@ const workerdResults: Record<string, Array<{ address: string; family: number }>>
   "empty.attacker.com": [],
 };
 
-async function loadGuardedFetchWithNodeDns(): Promise<typeof import("./guarded-fetch.ts")> {
+async function loadGuardedFetchWithNodeDns(): Promise<typeof GuardedFetchModule> {
   vi.resetModules();
   vi.doMock("node:dns/promises", () => ({
     lookup: async (hostname: string) => workerdResults[hostname] ?? [],

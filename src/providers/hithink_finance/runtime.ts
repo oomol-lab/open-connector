@@ -1,4 +1,4 @@
-import type { TransitFileWriter } from "../../core/types.ts";
+import type { CredentialValidationResult, TransitFileWriter } from "../../core/types.ts";
 
 import {
   compactObject,
@@ -59,7 +59,7 @@ export const hithinkFinanceApiBaseUrl = "https://fuyao.aicubes.cn";
 export async function validateHithinkFinanceCredential(
   apiKey: string,
   fetcher: typeof fetch,
-): Promise<import("../../core/types.ts").CredentialValidationResult> {
+): Promise<CredentialValidationResult> {
   await hithinkFinanceGet("/api/meta/tickers/search", { q: "600519.SH", limit: 1 }, apiKey, fetcher, "validate");
 
   return {

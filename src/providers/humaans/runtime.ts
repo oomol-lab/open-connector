@@ -1,3 +1,5 @@
+import type { CredentialValidationResult } from "../../core/types.ts";
+
 import { compactObject, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
 import {
   ProviderRequestError,
@@ -79,7 +81,7 @@ export const humaansActionHandlers: Record<string, HumaansActionHandler> = {
 export async function validateHumaansCredential(
   apiKey: string,
   fetcher: typeof fetch,
-): Promise<import("../../core/types.ts").CredentialValidationResult> {
+): Promise<CredentialValidationResult> {
   const payload = await requestHumaansJson({
     path: humaansValidationPath,
     apiKey,

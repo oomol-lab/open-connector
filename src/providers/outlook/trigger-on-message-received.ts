@@ -8,6 +8,7 @@ import {
   PollConnectionError,
   TransientPollError,
 } from "../../triggers/common/poll.ts";
+import { microsoftGraphErrorCodes } from "./shared/trigger-errors.ts";
 import { snapshot } from "./trigger-on-message-received.definition.ts";
 
 interface Config {
@@ -23,6 +24,7 @@ interface Config {
 interface Checkpoint {
   readonly boundaryMessageIds: readonly string[];
   readonly lastReceivedDateTime: string;
+  readonly nextQuery?: Readonly<Record<string, string>>;
 }
 
 interface Recipient {
@@ -60,15 +62,32 @@ export const outlookMessageReceived: PollDefinition = {
     if (context.checkpoint === null)
       return { checkpoint: (await seed(context, config)) as unknown as JsonValue, events: [] };
     const checkpoint = readCheckpoint(context.checkpoint);
-    const result = await get(context, endpoint(config.folder), {
-      $filter: filter(config, checkpoint.lastReceivedDateTime),
-      $orderby: "receivedDateTime asc",
-      $select: select,
-      $top: config.maxMessagesPerPoll,
-    });
+    const result = await get(
+      context,
+      endpoint(config.folder),
+      checkpoint.nextQuery ?? {
+        $filter: filter(config, checkpoint.lastReceivedDateTime),
+        $orderby: "receivedDateTime asc",
+        $select: select,
+        $top: config.maxMessagesPerPoll,
+      },
+    );
     success(result, "message list");
     const rows = messages(result.data);
-    if (rows.length == 0) return { checkpoint: checkpoint as unknown as JsonValue, events: [] };
+    const nextLink = record(result.data)?.["@odata.nextLink"];
+    let nextQuery: Record<string, string> | undefined;
+    if (nextLink != null) {
+      if (typeof nextLink != "string" || !URL.canParse(nextLink))
+        throw new TransientPollError("Outlook returned an invalid continuation link.");
+      const next = new URL(nextLink);
+      if (
+        next.origin !== "https://graph.microsoft.com" ||
+        next.pathname !== `/v1.0${endpoint(config.folder)}` ||
+        next.search.length === 0
+      )
+        throw new TransientPollError("Outlook returned an unexpected continuation link.");
+      nextQuery = Object.fromEntries(next.searchParams);
+    }
 
     const previousMs = Date.parse(checkpoint.lastReceivedDateTime);
     let watermarkMs = previousMs;
@@ -82,13 +101,6 @@ export const outlookMessageReceived: PollDefinition = {
     }
     const moved = watermarkMs > previousMs;
     const processed = new Set(checkpoint.boundaryMessageIds);
-    const full = rows.length >= config.maxMessagesPerPoll;
-    if (full && !moved && rows.every((row) => typeof row.id == "string" && processed.has(row.id))) {
-      throw new PermanentPollError(
-        "Outlook cursor is stuck on a full timestamp boundary; increase maxMessagesPerPoll and resume the Trigger.",
-      );
-    }
-
     const boundary = new Set(moved ? [] : checkpoint.boundaryMessageIds);
     const events: PollEvent[] = [];
     let filtered = 0;
@@ -102,12 +114,15 @@ export const outlookMessageReceived: PollDefinition = {
       }
       events.push(event(row, row.id));
     }
-    const hasMore = full && (moved || events.length > 0);
     return {
-      checkpoint: { boundaryMessageIds: [...boundary], lastReceivedDateTime: watermark },
+      checkpoint: {
+        boundaryMessageIds: [...boundary],
+        lastReceivedDateTime: watermark,
+        ...(nextQuery ? { nextQuery } : {}),
+      },
       events,
       filtered,
-      ...(hasMore ? { hasMore: true } : {}),
+      ...(nextQuery ? { hasMore: true } : {}),
     };
   },
 };
@@ -159,11 +174,18 @@ function readCheckpoint(value: JsonValue): Checkpoint {
     throw new PermanentPollError("Outlook checkpoint is invalid; recreate the Trigger.");
   }
   const boundary = checkpoint?.boundaryMessageIds;
+  const nextQuery = checkpoint?.nextQuery;
+  if (
+    nextQuery != null &&
+    (record(nextQuery) == null || Object.values(nextQuery).some((value) => typeof value != "string"))
+  )
+    throw new PermanentPollError("Outlook continuation query is invalid; recreate the Trigger.");
   return {
     boundaryMessageIds: Array.isArray(boundary)
       ? boundary.filter((id): id is string => typeof id == "string" && id.length > 0)
       : [],
     lastReceivedDateTime: watermark,
+    ...(nextQuery == null ? {} : { nextQuery: nextQuery as Readonly<Record<string, string>> }),
   };
 }
 
@@ -232,13 +254,17 @@ async function get(
 
 function success(result: ConnectorProxyResult, operation: string): void {
   if (result.status >= 200 && result.status < 300) return;
-  const codes = errorCodes(result.data);
-  if (result.status == 401) throw new PollConnectionError(`Outlook ${operation} rejected the Connection.`);
+  const codes = microsoftGraphErrorCodes(result.data);
+  if (
+    (result.status == 401 && (codes.has("invalidauthenticationtoken") || codes.has("unauthenticated"))) ||
+    (result.status == 403 && codes.has("insufficient_claims"))
+  )
+    throw new PollConnectionError(`Outlook ${operation} rejected the Connection.`);
   if (result.status == 403 && codes.has("mailboxnotenabledforrestapi")) {
     throw new PermanentPollError("The Outlook mailbox is not reachable through the Graph mail APIs.");
   }
   if (result.status == 403 && (codes.has("accessdenied") || codes.has("erroraccessdenied"))) {
-    throw new PollConnectionError(`Outlook ${operation} rejected the Connection.`);
+    throw new PermanentPollError("Outlook denied access to the mailbox. Check mailbox permissions and licensing.");
   }
   if (result.status == 404 && (codes.has("erroritemnotfound") || codes.has("itemnotfound"))) {
     throw new PermanentPollError("The configured Outlook folder does not exist.");
@@ -247,18 +273,6 @@ function success(result: ConnectorProxyResult, operation: string): void {
     throw new PermanentPollError("Outlook rejected the configured folder or filters.");
   }
   throw new TransientPollError(`Outlook ${operation} failed with status ${result.status}.`);
-}
-
-function errorCodes(data: unknown): Set<string> {
-  const codes = new Set<string>();
-  let value = record(data)?.error;
-  for (let depth = 0; depth < 4; depth += 1) {
-    const error = record(value);
-    if (error == null) break;
-    if (typeof error.code == "string" && error.code.length > 0) codes.add(error.code.toLowerCase());
-    value = error.innerError ?? error.innererror;
-  }
-  return codes;
 }
 
 function messages(data: unknown): readonly Message[] {

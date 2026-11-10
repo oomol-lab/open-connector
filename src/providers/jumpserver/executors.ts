@@ -5,6 +5,7 @@ import type {
   ProviderExecutors,
   ProviderProxyExecutor,
 } from "../../core/types.ts";
+import type * as RuntimeModule from "./runtime.ts";
 import type { JumpServerMcpContext } from "./runtime.ts";
 
 import { isPrivateNetworkAccessAllowed } from "../../core/request.ts";
@@ -16,7 +17,7 @@ import { jumpServerMcpToolNames } from "./actions.ts";
 
 const service = "jumpserver";
 
-type JumpServerRuntime = typeof import("./runtime.ts");
+type JumpServerRuntime = typeof RuntimeModule;
 type JumpServerActionHandler = (input: Record<string, unknown>, context: JumpServerMcpContext) => Promise<unknown>;
 
 let runtimeModule: Promise<JumpServerRuntime> | undefined;

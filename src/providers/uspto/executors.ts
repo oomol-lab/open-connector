@@ -1,4 +1,4 @@
-import type { CredentialValidators, ProviderProxyExecutor } from "../../core/types.ts";
+import type { ProviderExecutors, CredentialValidators, ProviderProxyExecutor } from "../../core/types.ts";
 import type { ApiKeyProviderContext, ProviderActionHandlers, ProviderRuntimeHandler } from "../provider-executors.ts";
 
 import { defineApiKeyProviderExecutors } from "../provider-executors.ts";
@@ -69,11 +69,9 @@ const handlers: ProviderActionHandlers<"uspto", ProviderRuntimeHandler<ApiKeyPro
   },
 };
 
-export const executors: import("../../core/types.ts").ProviderExecutors = defineApiKeyProviderExecutors(
-  "uspto",
-  handlers,
-  { skipDnsValidation: true },
-);
+export const executors: ProviderExecutors = defineApiKeyProviderExecutors("uspto", handlers, {
+  skipDnsValidation: true,
+});
 export const proxy: ProviderProxyExecutor = defineProviderProxy({
   service: "uspto",
   baseUrl: "https://tsdrapi.uspto.gov",

@@ -18,7 +18,12 @@ import {
 } from "../../core/cast.ts";
 import { defineApiKeyProviderExecutors } from "../provider-executors.ts";
 import { defineProviderProxy } from "../provider-proxy.ts";
-import { ProviderRequestError, providerUserAgent, defaultProviderRequestTimeoutMs } from "../provider-runtime.ts";
+import {
+  ProviderRequestError,
+  providerUserAgent,
+  defaultProviderRequestTimeoutMs,
+  withRetryAfterSeconds,
+} from "../provider-runtime.ts";
 
 const service = "rocket_reach";
 const rocketReachApiBaseUrl = "https://api.rocketreach.co/api/v2";
@@ -449,6 +454,7 @@ async function readRocketReachJson(response: Response): Promise<unknown> {
     throw new ProviderRequestError(
       response.status || 502,
       `rocket_reach returned invalid JSON: ${error instanceof Error ? error.message : "invalid JSON"}`,
+      withRetryAfterSeconds(response),
     );
   }
 }
@@ -461,7 +467,7 @@ function normalizeRocketReachError(
 ): ProviderRequestError {
   const message = readRocketReachErrorMessage(payload, response.status);
   if (response.status === 429) {
-    return new ProviderRequestError(429, message, payload);
+    return new ProviderRequestError(429, message, withRetryAfterSeconds(response, payload));
   }
   if (response.status === 401 || response.status === 403) {
     return new ProviderRequestError(phase === "validate" ? 400 : 401, message, payload);

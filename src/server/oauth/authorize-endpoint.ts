@@ -9,11 +9,12 @@ import type { CimdClient } from "./cimd-client.ts";
 import type { OAuthServerConfig } from "./config.ts";
 import type { ConsentDescription } from "@cloudflare/workers-oauth-provider";
 import type { Context } from "hono";
+import type * as JoseModule from "jose";
 
 import { withClientLock } from "./client-lock.ts";
 
 // `jose` is a lazy-only package (see eager-imports.test.ts): dynamic import only.
-async function jose(): Promise<typeof import("jose")> {
+async function jose(): Promise<typeof JoseModule> {
   return import("jose");
 }
 import { constantTimeEqual } from "../api/auth-utils.ts";

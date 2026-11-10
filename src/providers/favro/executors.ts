@@ -1,4 +1,4 @@
-import type { CredentialValidators, ProviderProxyExecutor } from "../../core/types.ts";
+import type { ProviderExecutors, CredentialValidators, ProviderProxyExecutor } from "../../core/types.ts";
 import type { ProviderActionHandlers, ProviderRuntimeHandler } from "../provider-executors.ts";
 
 import { Buffer } from "node:buffer";
@@ -100,7 +100,7 @@ const handlers: ProviderActionHandlers<"favro", ProviderRuntimeHandler<Context>>
   },
 };
 
-export const executors: import("../../core/types.ts").ProviderExecutors = defineProviderExecutors<Context>({
+export const executors: ProviderExecutors = defineProviderExecutors<Context>({
   service: "favro",
   skipDnsValidation: true,
   async createContext(context, fetcher) {

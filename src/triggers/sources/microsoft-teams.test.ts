@@ -1,5 +1,7 @@
+import type * as TriggerOnActivityModule from "../../providers/microsoft_teams_bot/trigger-on-activity.ts";
 import type { IntegrationReceiveContext } from "../common/integration.ts";
 import type { JsonValue } from "../common/json.ts";
+import type * as PersistentModule from "./persistent.ts";
 import type { PersistentSourceRequest, SourceApplication, SourceApplicationStore } from "./persistent.ts";
 
 import { exportJWK, generateKeyPair, SignJWT } from "jose";
@@ -19,8 +21,8 @@ const proxy = {
 };
 
 let modules: {
-  persistent: typeof import("./persistent.ts");
-  trigger: typeof import("../../providers/microsoft_teams_bot/trigger-on-activity.ts");
+  persistent: typeof PersistentModule;
+  trigger: typeof TriggerOnActivityModule;
 };
 
 beforeAll(async () => {

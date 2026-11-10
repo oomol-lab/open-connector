@@ -1,4 +1,6 @@
-export const triggerPermissions: readonly import("../../triggers/metadata.ts").TriggerPermission[] = [
+import type { TriggerPermission } from "../../triggers/metadata.ts";
+
+export const triggerPermissions: readonly TriggerPermission[] = [
   {
     id: "one_drive.on_item_changed",
     name: "File or Folder Changed",

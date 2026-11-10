@@ -2,6 +2,7 @@ import type { PollContext, PollDefinition, PollEvent, PollResult } from "../../t
 import type { ConnectorProxyResult } from "../../triggers/common/proxy.ts";
 import type { JsonValue } from "../../triggers/common/types.ts";
 
+import { sha256Hex } from "../../core/aws-sigv4.ts";
 import {
   eventsPollOutputs,
   maximumPollEventsPerPage,
@@ -119,7 +120,7 @@ async function seed(
     });
     if (pageToken != null && stalePage(result))
       return { checkpoint: { calendarId: config.calendarId, seedTimeMin: timeMin }, events: [] };
-    success(context, result, "seed full sync");
+    success(result, "seed full sync");
     const parsed = (record(result.data) ?? {}) as Page;
     if (parsed.nextSyncToken)
       return {
@@ -161,7 +162,7 @@ async function incremental(
       filtered,
     };
   }
-  success(context, result, "incremental sync");
+  success(result, "incremental sync");
   const parsed = (record(result.data) ?? {}) as Page;
   for (const item of parsed.items ?? []) {
     if (item.id == null || item.id.length == 0) continue;
@@ -170,7 +171,7 @@ async function incremental(
       filtered += 1;
       continue;
     }
-    events.push(event(item, item.id, change, config.calendarId));
+    events.push(event(item, item.id, change, config.calendarId, checkpoint.syncToken));
   }
   if (parsed.nextSyncToken) {
     return {
@@ -207,9 +208,10 @@ function matches(value: Event, term: string): boolean {
   );
 }
 
-function event(item: Event, eventId: string, change: Change, calendarId: string): PollEvent {
+function event(item: Event, eventId: string, change: Change, calendarId: string, syncToken: string): PollEvent {
   return {
-    dedupeKey: `${eventId}:${item.updated ?? item.etag ?? ""}`,
+    // A deletion may have only an ID; the sync token distinguishes rounds while keeping retries stable.
+    dedupeKey: `${eventId}:${item.updated ?? item.etag ?? `sync:${sha256Hex(syncToken)}`}`,
     payload: {
       attendeeEmails: (item.attendees ?? []).flatMap(({ email }) =>
         email == null || email.length == 0 ? [] : [email],
@@ -257,20 +259,23 @@ async function list(
   }
 }
 
-function success(context: PollContext, result: ConnectorProxyResult, operation: string): void {
+function success(result: ConnectorProxyResult, operation: string): void {
   if (result.status >= 200 && result.status < 300) return;
   if (result.status == 410 || (result.status == 400 && fullSyncRequired(result.data))) {
     throw new PermanentPollError("Google Calendar sync token expired; recreate the Trigger.");
   }
-  if (result.status == 400 || (result.status == 404 && context.checkpoint === null)) {
+  // A missing or inaccessible calendar remains a configuration error after the initial baseline.
+  if (result.status == 400 || result.status == 404) {
     throw new PermanentPollError(`Google Calendar ${operation} rejected the configuration.`);
   }
-  if (result.status == 401) throw new PollConnectionError(`Google Calendar ${operation} rejected the Connection.`);
+  if (result.status == 401 && reasons(result.data).includes("authError"))
+    throw new PollConnectionError(`Google Calendar ${operation} rejected the Connection.`);
   if (result.status == 403) {
     if (reasons(result.data).some((reason) => quotaReasons.has(reason))) {
       throw new TransientPollError(`Google Calendar ${operation} was rate limited.`);
     }
-    throw new PollConnectionError(`Google Calendar ${operation} rejected the Connection.`);
+    if (reasons(result.data).includes("forbidden"))
+      throw new PermanentPollError("Google Calendar denied access to the calendar.");
   }
   throw new TransientPollError(`Google Calendar ${operation} failed with status ${result.status}.`);
 }

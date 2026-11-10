@@ -178,7 +178,7 @@ async function drain(context: PollContext, config: Config, checkpoint: Checkpoin
       consumed += 1;
       const timestamp = checkpoint.cursorField == "created_time" ? row.created_time : row.last_edited_time;
       if (timestamp != null && timestamp.length > 0) newest = later(newest, timestamp);
-      const kind = classify(row);
+      const kind = checkpoint.cursorField == "created_time" ? "page_added" : classify(row);
       if (!config.events.includes(kind)) filtered += 1;
       else events.push(event(row, kind, config, checkpoint));
     }
@@ -313,8 +313,13 @@ async function request(context: PollContext, value: ConnectorProxyRequest): Prom
 
 function success(result: ConnectorProxyResult, operation: string): void {
   if (result.status >= 200 && result.status < 300) return;
-  if (result.status == 401 || result.status == 403)
+  const code = record(result.data)?.code;
+  if (result.status == 401 && code == "unauthorized")
     throw new PollConnectionError(`Notion ${operation} rejected the Connection.`);
+  if (result.status == 403 && code == "restricted_resource")
+    throw new PermanentPollError(
+      "Notion refused access to the target. Check sharing, integration capabilities, and workspace limits.",
+    );
   if (result.status == 404)
     throw new PermanentPollError("The Notion target was not found or is not shared with the Connection.");
   if (result.status == 400) throw new PermanentPollError(`Notion ${operation} rejected the configuration.`);

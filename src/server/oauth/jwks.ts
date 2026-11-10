@@ -1,11 +1,11 @@
-import type { OAuthSigningKeyRecord } from "../storage/oauth-as-stores.ts";
-import type { IOAuthSigningKeyStore } from "../storage/oauth-as-stores.ts";
+import type { OAuthSigningKeyRecord, IOAuthSigningKeyStore } from "../storage/oauth-as-stores.ts";
+import type * as JoseModule from "jose";
 
 import { createHash } from "node:crypto";
 
 // `jose` is a lazy-only package (see eager-imports.test.ts): it must stay out
 // of the static import graph of index.ts, so every use is a dynamic import.
-async function jose(): Promise<typeof import("jose")> {
+async function jose(): Promise<typeof JoseModule> {
   return import("jose");
 }
 

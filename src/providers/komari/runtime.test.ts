@@ -1,7 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { ProviderRequestError } from "../provider-runtime.ts";
 import { komariActions } from "./actions.ts";
-import { komariOperations } from "./operations.ts";
 import { komariActionHandlers, normalizeKomariBaseUrl, validateKomariCredential } from "./runtime.ts";
 
 describe("normalizeKomariBaseUrl", () => {

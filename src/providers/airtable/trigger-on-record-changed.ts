@@ -262,8 +262,13 @@ async function list(
 
 function success(result: ConnectorProxyResult, operation: string): void {
   if (result.status >= 200 && result.status < 300) return;
-  if (result.status == 401 || result.status == 403)
+  const type = errorType(result.data).toUpperCase();
+  if (result.status == 401 && (type == "AUTHENTICATION_REQUIRED" || type == "UNAUTHORIZED"))
     throw new PollConnectionError(`Airtable ${operation} rejected the Connection.`);
+  if (result.status == 403 && (type == "INVALID_PERMISSIONS_OR_MODEL_NOT_FOUND" || type == "INVALID_PERMISSIONS"))
+    throw new PermanentPollError(
+      "The Airtable base or table was not found or is not accessible to the connected account.",
+    );
   if (result.status == 404) throw new PermanentPollError("The Airtable base or table was not found.");
   if (result.status == 422 && errorType(result.data) !== staleIterator) {
     throw new PermanentPollError("Airtable rejected the trigger field, formula, or view.");
