@@ -5,6 +5,7 @@ import type { RuntimeLogger } from "../core/types.ts";
 import type { RuntimeJwtConfig } from "./api/runtime-jwt.ts";
 import type { S3TransitClientOptions } from "./files/s3-transit-files.ts";
 import type { IStagedTransitFileService } from "./files/transit-file-store.ts";
+import type { McpOutputMode } from "./mcp-settings.ts";
 import type { OAuthServerSettings } from "./oauth/settings.ts";
 
 import { mkdir } from "node:fs/promises";
@@ -105,6 +106,8 @@ export interface ConnectorRuntimeOptions {
   logger?: RuntimeLogger;
   /** The standalone host opts into API-reference HTML. Authorization completion pages are always available. */
   apiReference?: boolean;
+  /** Defaults to compatible JSON text. Use compact only with clients that consume structuredContent. */
+  mcpOutputMode?: McpOutputMode;
   /** Seconds the OAuth completion page waits before closing its window. Defaults to 5; `0` closes it as soon as it loads. */
   oauthCloseDelaySeconds?: number;
   /** Exact origins a provider-refusal callback page may post its result to. Never `*`. */
@@ -225,6 +228,7 @@ export async function createConnectorRuntime(options: ConnectorRuntimeOptions): 
       oauth: options.oauth,
       trustProxyHeaders: options.trustProxyHeaders,
       eventVerifyToken: options.eventVerifyToken,
+      mcpOutputMode: options.mcpOutputMode,
       verifyRuntimeJwt,
       actionPolicy: new ActionPolicyService(options.actionPolicy),
       allowedCustomOAuth: options.allowedCustomOAuth,

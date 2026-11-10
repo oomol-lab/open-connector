@@ -4,6 +4,7 @@ import type { ActionPolicyDecision, ActionPolicySnapshot } from "./core/action-p
 import type { ActionSearchIndexProvider } from "./core/action-search.ts";
 import type { AuthType } from "./core/types.ts";
 import type { ActionRunner, ActionRunResult } from "./server/actions/action-runner.ts";
+import type { McpOutputMode } from "./server/mcp-settings.ts";
 import type { RuntimeGrant } from "./server/storage/runtime-token-service.ts";
 import type { CallToolResult } from "@modelcontextprotocol/server";
 
@@ -21,6 +22,7 @@ export interface IMcpServerOptions {
   connections: ConnectionService;
   actions: ActionRunner;
   actionSearch?: ActionSearchIndexProvider;
+  outputMode?: McpOutputMode;
   getPolicySnapshot(): Promise<ActionPolicySnapshot>;
   runtimeGrant?: RuntimeGrant;
   signal?: AbortSignal;
@@ -183,23 +185,23 @@ export function createMcpServer(options: IMcpServerOptions): McpServer {
   );
 
   server.registerTool("list_apps", mcpToolConfigs.list_apps, async (input) =>
-    toolResult(await listApps(options, input)),
+    toolResult(await listApps(options, input), options.outputMode),
   );
 
   server.registerTool("list_connections", mcpToolConfigs.list_connections, async (input) =>
-    toolResult(await listConnections(options, input)),
+    toolResult(await listConnections(options, input), options.outputMode),
   );
 
   server.registerTool("search_actions", mcpToolConfigs.search_actions, async ({ query, service, limit }) =>
-    toolResult(await searchActions(options, { query, service, limit })),
+    toolResult(await searchActions(options, { query, service, limit }), options.outputMode),
   );
 
   server.registerTool("get_action_guide", mcpToolConfigs.get_action_guide, async ({ actionId, connectionName }) =>
-    toolResult(await getActionGuide(options, actionId, connectionName)),
+    toolResult(await getActionGuide(options, actionId, connectionName), options.outputMode),
   );
 
   server.registerTool("execute_action", mcpToolConfigs.execute_action, async ({ actionId, input, connectionName }) =>
-    toolResult(await executeAction(options, actionId, input, connectionName)),
+    toolResult(await executeAction(options, actionId, input, connectionName), options.outputMode),
   );
 
   return server;
@@ -530,10 +532,16 @@ function createExecutionMeta(run: ActionRunResult): ToolExecutionMeta {
   return meta;
 }
 
-function toolResult(payload: ToolPayload): CallToolResult {
+function toolResult(payload: ToolPayload, outputMode?: McpOutputMode): CallToolResult {
+  const text =
+    outputMode === "compact"
+      ? payload.ok
+        ? "The complete result is available in structuredContent."
+        : `${payload.error.code}: ${payload.error.message}`
+      : JSON.stringify(payload);
   return {
-    content: [],
+    content: [{ type: "text", text }],
     structuredContent: payload,
-    ...(payload.ok ? {} : { isError: true }),
+    isError: payload.ok ? undefined : true,
   };
 }

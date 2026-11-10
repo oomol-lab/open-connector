@@ -3,6 +3,7 @@ import type { IConnectionStore, StoredConnection } from "./connection-store.ts";
 import type { ActionPolicySnapshot } from "./core/action-policy.ts";
 import type { ActionDefinition, ActionExecutor, ProviderDefinition, ResolvedCredential } from "./core/types.ts";
 import type { IProviderLoader } from "./providers/provider-loader.ts";
+import type { McpOutputMode } from "./server/mcp-settings.ts";
 import type { IRunLogStore, RunLog, RunLogPage } from "./server/storage/runtime-store.ts";
 import type { RuntimeGrant } from "./server/storage/runtime-token-service.ts";
 
@@ -93,6 +94,68 @@ const secondaryCredential: ResolvedCredential = {
 };
 
 describe("MCP server", () => {
+  it.each<McpOutputMode>(["compatible", "compact"])("returns all tool payloads in %s mode", async (outputMode) => {
+    await withMcpClient(
+      async (client) => {
+        const requests = [
+          { name: "list_apps", arguments: {} },
+          { name: "list_connections", arguments: { service: "example" } },
+          { name: "search_actions", arguments: { query: "echo" } },
+          { name: "get_action_guide", arguments: { actionId: "example.echo" } },
+          { name: "execute_action", arguments: { actionId: "example.echo", input: { message: "hello" } } },
+        ];
+        for (const request of requests) {
+          const result = await client.callTool(request);
+          expect(result.structuredContent).toMatchObject({ ok: true, data: expect.anything() });
+          expect(result.isError).not.toBe(true);
+          expect(result.content).toEqual([
+            {
+              type: "text",
+              text:
+                outputMode === "compatible"
+                  ? JSON.stringify(result.structuredContent)
+                  : "The complete result is available in structuredContent.",
+            },
+          ]);
+        }
+      },
+      { outputMode },
+    );
+  });
+
+  it.each([
+    {
+      name: "get_action_guide",
+      arguments: { actionId: "missing.action" },
+      code: "unknown_action",
+      message: "Unknown action: missing.action",
+    },
+    {
+      name: "execute_action",
+      arguments: { actionId: "missing.action" },
+      code: "unknown_action",
+      message: "Unknown action: missing.action",
+    },
+    {
+      name: "execute_action",
+      arguments: { actionId: "example.echo", input: {} },
+      code: "invalid_input",
+      message: "Action input does not match the action schema.",
+    },
+  ])("keeps actionable compact errors for $name ($code)", async ({ name, arguments: input, code, message }) => {
+    await withMcpClient(
+      async (client) => {
+        const result = await client.callTool({ name, arguments: input });
+        expect(result).toMatchObject({
+          isError: true,
+          content: [{ type: "text", text: `${code}: ${message}` }],
+          structuredContent: { ok: false, error: { code, message } },
+        });
+      },
+      { outputMode: "compact" },
+    );
+  });
+
   it("searches without loading schemas and filters denied hits before limiting", async () => {
     const other: ActionDefinition = { ...echoAction, id: "example.echo_other", name: "echo_other" };
     const catalog = createCatalogStore([{ ...exampleProvider, actions: [echoAction, other] }]);
@@ -168,7 +231,7 @@ describe("MCP server", () => {
           data: [{ service: "gamma", displayName: "gamma" }],
           nextCursor: null,
         });
-        expect(second.content).toEqual([]);
+        expect(second.content).toEqual([{ type: "text", text: JSON.stringify(second.structuredContent) }]);
         expect(getAction).not.toHaveBeenCalled();
       },
       { catalog, getPolicySnapshot: async () => policy },
@@ -800,6 +863,12 @@ interface McpPolicyOptions {
   runtimeGrant?: RuntimeGrant;
 }
 
+interface McpClientOptions extends McpPolicyOptions {
+  signal?: AbortSignal;
+  catalog?: CatalogStore;
+  outputMode?: McpOutputMode;
+}
+
 /** Default to an empty deployment policy scoped to the runtime grant, the way the server does without a store. */
 function policySnapshotFor(policy: McpPolicyOptions): () => Promise<ActionPolicySnapshot> {
   return (
@@ -808,10 +877,7 @@ function policySnapshotFor(policy: McpPolicyOptions): () => Promise<ActionPolicy
   );
 }
 
-async function withMcpClient(
-  run: (client: Client) => Promise<void>,
-  policy: McpPolicyOptions & { signal?: AbortSignal; catalog?: CatalogStore } = {},
-): Promise<void> {
+async function withMcpClient(run: (client: Client) => Promise<void>, policy: McpClientOptions = {}): Promise<void> {
   const catalog =
     policy.catalog ??
     createCatalogStore([exampleProvider], {

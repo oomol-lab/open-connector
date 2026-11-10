@@ -6,6 +6,7 @@ import type { RuntimeLogger, TransitFileUpload } from "../core/types.ts";
 import type { IProviderLoader } from "../providers/provider-loader.ts";
 import type { RuntimeJwtVerifier } from "./api/runtime-jwt.ts";
 import type { ITransitFileService } from "./files/transit-file-store.ts";
+import type { McpOutputMode } from "./mcp-settings.ts";
 import type { OAuthServerSettings } from "./oauth/settings.ts";
 import type { ISecretCodec } from "./secrets/secret-codec-core.ts";
 import type { RuntimeDatabase } from "./storage/runtime-database.ts";
@@ -65,6 +66,7 @@ export interface ConnectAppOptions {
   computeRuntimeAuthConfigured?: boolean;
   compressApiResponses?: boolean;
   serveDocumentation?: boolean;
+  mcpOutputMode?: McpOutputMode;
   oauthCloseDelaySeconds?: number;
   oauthResultOrigins?: string[];
 }
@@ -216,6 +218,7 @@ export async function createConnectApp(options: ConnectAppOptions): Promise<Conn
       runtimePolicyStore: options.runtimeDatabase.runtimePolicyStore,
       registerStaticRoutes: options.registerStaticRoutes,
       eventVerifyToken: options.eventVerifyToken,
+      mcpOutputMode: options.mcpOutputMode,
       auth: {
         adminToken: options.adminToken,
         runtimeToken: options.runtimeToken,

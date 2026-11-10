@@ -17,6 +17,7 @@ import type { IProviderLoader } from "../providers/provider-loader.ts";
 import type { RuntimeActionHttpResult } from "./api/runtime-api.ts";
 import type { RuntimeJwtVerifier } from "./api/runtime-jwt.ts";
 import type { Logger } from "./logger.ts";
+import type { McpOutputMode } from "./mcp-settings.ts";
 import type { ISecretCodec } from "./secrets/secret-codec-core.ts";
 import type {
   CompleteIdempotencyInput,
@@ -2201,7 +2202,7 @@ describe("ConnectServer", () => {
     }
   });
 
-  it.each(["success", "error"])("returns a large MCP %s payload once, in structuredContent", async (outcome) => {
+  it.each(["success", "error"])("returns a large MCP %s payload once in compact mode", async (outcome) => {
     const output = {
       messages: Array.from({ length: 28 }, (_, index) => ({ id: index, body: "x".repeat(270_000) })),
     };
@@ -2209,7 +2210,7 @@ describe("ConnectServer", () => {
     const execute = vi.fn(async () => (outcome === "success" ? { ok: true, output } : { ok: false, error }));
     const app = createTestServer(
       [{ ...apiKeyProvider, authTypes: ["no_auth"], auth: [{ type: "no_auth" }], actions: [echoAction] }],
-      { providerLoader: new ActionProviderLoader(execute) },
+      { providerLoader: new ActionProviderLoader(execute), mcpOutputMode: "compact" },
     ).createApp();
     const responseSizes: number[] = [];
     const fetcher: typeof fetch = async (input, init) => {
@@ -2225,7 +2226,15 @@ describe("ConnectServer", () => {
         arguments: { actionId: "example.echo", input: { message: "read" } },
       });
       expect(execute).toHaveBeenCalledTimes(1);
-      expect(result.content).toEqual([]);
+      expect(result.content).toEqual([
+        {
+          type: "text",
+          text:
+            outcome === "success"
+              ? "The complete result is available in structuredContent."
+              : "provider_error: Synthetic failure",
+        },
+      ]);
       expect(Boolean(result.isError)).toBe(outcome === "error");
       expect(result.structuredContent).toMatchObject({
         ...(outcome === "success" ? { ok: true, data: output } : { ok: false, error }),
@@ -4725,6 +4734,7 @@ interface TestAuthOptions {
 }
 
 interface CreateTestServerOptions {
+  mcpOutputMode?: McpOutputMode;
   catalog?: CatalogStore;
   marketplace?: MarketplaceService;
   auth?: TestAuthOptions;
@@ -4794,6 +4804,7 @@ function createTestServer(providers: ProviderDefinition[], options: CreateTestSe
   const staticRoot = typeof options.staticRoot === "string" ? options.staticRoot : undefined;
 
   return new ConnectServer({
+    mcpOutputMode: options.mcpOutputMode,
     marketplace: options.marketplace,
     catalog,
     publicOrigin: options.publicOrigin ?? "http://localhost:3000",

@@ -246,7 +246,27 @@ Virtual no-auth entries are omitted because they require no account selection.
 Both lists accept `limit` (default 20, maximum 50) and return a top-level
 `nextCursor` beside `ok` and `data`. Pass that cursor with the same filters to read
 the next page; `null` marks the end. Pages are not snapshots across catalog or
-connection changes. Text and structured MCP content contain the same page.
+connection changes. By default, text and structured MCP content contain the same page.
+
+The default `compatible` output mode returns complete JSON in both `content[0].text` and
+`structuredContent` so text-only clients can read every result. To reduce duplicate transmission
+for clients that consume `structuredContent`, explicitly set:
+
+```bash
+OOMOL_CONNECT_MCP_OUTPUT_MODE=compact npm start
+```
+
+Embedding hosts can pass `mcpOutputMode: "compact"` to `createConnectorRuntime` instead. Compact mode
+keeps the complete result in `structuredContent`, including execution metadata and error details.
+The text block contains a short notice on success or the error code and message on failure, with
+the usual `isError` flag. This setting applies to every MCP tool on the deployment. Client names and
+protocol versions do not automatically select it: MCP has no standard client capability confirming
+that the host exposes structured results to its model.
+
+Compact mode reduces duplicate payloads; it does not impose a response size limit or create
+temporary result downloads. A result that exceeds the client's limit as a single copy can still
+be rejected after its action has completed. Do not retry an action that changes external data just
+to retrieve its output.
 
 Use `list_connections` when choosing among accounts for a service. Both
 `get_action_guide` and `execute_action` accept an optional `connectionName`:
