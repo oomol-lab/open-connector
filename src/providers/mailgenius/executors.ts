@@ -113,9 +113,7 @@ export const credentialValidators: CredentialValidators = {
     return {
       profile: {
         displayName: "MailGenius API Token",
-        grantedScopes: [],
       },
-      grantedScopes: [],
       metadata: compactObject({
         apiBaseUrl: mailgeniusApiBaseUrl,
         validationEndpoint: "/external/api/daily_limit",

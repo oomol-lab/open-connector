@@ -99,7 +99,6 @@ export const credentialValidators: CredentialValidators = {
     const account = payload.data.length === 1 && links?.next === null ? optionalRecord(payload.data[0]) : undefined;
     return {
       profile: { displayName: optionalRawString(account?.name) ?? "Snappy Account" },
-      grantedScopes: [],
       metadata: { validationEndpoint: "/v3/accounts" },
     };
   },

@@ -163,7 +163,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: applicationId,
         displayName: `Sendbird ${applicationId}`,
       },
-      grantedScopes: [],
       metadata: compactObject({
         applicationId,
         apiBaseUrl: buildSendbirdApiBaseUrl(applicationId),

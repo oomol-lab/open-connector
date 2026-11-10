@@ -154,7 +154,6 @@ async function validateNinjapearCredential(
       accountId: "ninjapear-api-key",
       displayName: "NinjaPear API Key",
     },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl: ninjapearApiBaseUrl,
       validationEndpoint: "/api/v1/meta/credit-balance",

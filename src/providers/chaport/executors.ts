@@ -133,7 +133,6 @@ export const credentialValidators: CredentialValidators = {
     });
     return {
       profile: { displayName: "Chaport API Key" },
-      grantedScopes: [],
       metadata: { apiBaseUrl: baseUrl, validationEndpoint: "/me.json" },
     };
   },

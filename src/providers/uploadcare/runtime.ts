@@ -127,7 +127,6 @@ export async function validateUploadcareCredential(input: {
       accountId: projectPublicKey ?? input.publicKey,
       displayName: projectName || `Uploadcare ${projectPublicKey ?? input.publicKey}`,
     },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl: uploadcareApiBaseUrl,
       projectName,

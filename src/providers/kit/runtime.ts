@@ -205,7 +205,6 @@ export async function validateKitCredential(
       accountId,
       displayName,
     },
-    grantedScopes: [],
     metadata: compactObject({
       validationEndpoint: "/account",
       accountId: account.account.id,

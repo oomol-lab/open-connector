@@ -167,7 +167,6 @@ export const credentialValidators: CredentialValidators = {
       profile: {
         displayName: "FullContact API Key",
       },
-      grantedScopes: [],
       metadata: {
         apiBaseUrl: fullContactApiBaseUrl,
         validationMode: "format_only",

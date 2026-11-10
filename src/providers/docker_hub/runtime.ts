@@ -50,7 +50,6 @@ export async function validateDockerHubApiKey(
   signal?: AbortSignal,
 ): Promise<{
   profile: { accountId: string; displayName: string };
-  grantedScopes: string[];
   metadata: Record<string, unknown>;
 }> {
   const { credential } = await exchangeDockerHubAccessToken(apiKey, fetcher, "validate", signal);
@@ -59,7 +58,6 @@ export async function validateDockerHubApiKey(
       accountId: credential.identifier,
       displayName: credential.identifier,
     },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: dockerHubApiBaseUrl,
       credentialFormat: "identifier:secret",

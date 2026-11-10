@@ -121,7 +121,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: "api_key",
         displayName: "Kernel API Key",
       },
-      grantedScopes: [],
       metadata: {
         apiBaseUrl: kernelApiBaseUrl,
         validationEndpoint: "/browsers",

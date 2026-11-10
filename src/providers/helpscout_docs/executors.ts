@@ -102,7 +102,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: "api_key",
         displayName: "Help Scout Docs API Key",
       },
-      grantedScopes: [],
       metadata: {
         apiBaseUrl: helpscoutDocsApiBaseUrl,
         validationEndpoint: "/sites",

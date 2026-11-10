@@ -85,9 +85,7 @@ export async function validateJamieCredential(
     profile: {
       accountId: `jamie:${keyScope}`,
       displayName: keyScope === "workspace" ? "Jamie Workspace API Key" : "Jamie Personal API Key",
-      grantedScopes: [],
     },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: jamieApiBaseUrl,
       keyScope,

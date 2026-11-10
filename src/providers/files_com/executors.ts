@@ -159,7 +159,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: subdomain,
         displayName: pickAccountLabel(payload) ?? `${subdomain}.files.com`,
       },
-      grantedScopes: [],
       metadata: {
         subdomain,
         apiBaseUrl: buildFilesComApiBaseUrl(subdomain),

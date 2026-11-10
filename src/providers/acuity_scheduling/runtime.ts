@@ -237,7 +237,6 @@ export async function validateAcuitySchedulingCredential(
       accountId: `acuity_scheduling:${account.id}`,
       displayName: account.name ?? account.email ?? `Acuity Scheduling ${credential.userId}`,
     },
-    grantedScopes: [],
     metadata: {
       userId: credential.userId,
       accountId: account.id,

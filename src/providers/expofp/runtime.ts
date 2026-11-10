@@ -123,7 +123,6 @@ export async function validateExpofpCredential(
       accountId: "expofp:api-token",
       displayName: firstExpo ? `ExpoFP ${firstExpo.name}` : "ExpoFP API Token",
     },
-    grantedScopes: [],
     metadata: compactObject({
       validationEndpoint: "/list-events",
       apiBaseUrl: expofpApiBaseUrl,

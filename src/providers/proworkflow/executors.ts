@@ -77,7 +77,6 @@ export const credentialValidators: CredentialValidators = {
     const data = requiredResponseRecord(payload.data, "ProWorkflow account settings data");
     return {
       profile: { accountId: "api_key", displayName: optionalString(data.accounturl) ?? "ProWorkflow API Key" },
-      grantedScopes: [],
       metadata: { apiBaseUrl: baseUrl, validationEndpoint: "/settings/account" },
     };
   },

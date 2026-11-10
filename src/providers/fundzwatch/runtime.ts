@@ -149,7 +149,6 @@ export async function validateFundzwatchCredential(
   );
   return {
     profile: { accountId: "fundzwatch", displayName: "FundzWatch API Key" },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: baseUrl,
       validationEndpoint: "/v1/watch/usage",

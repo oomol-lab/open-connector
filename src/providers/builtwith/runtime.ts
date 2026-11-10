@@ -51,7 +51,6 @@ export async function validateBuiltwithCredential(input: {
       accountId: "builtwith_api_key",
       displayName: "BuiltWith API Key",
     },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: builtwithApiBaseUrl,
       validationEndpoint: builtwithValidationPath,

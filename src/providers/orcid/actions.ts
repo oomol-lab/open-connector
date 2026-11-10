@@ -4,7 +4,7 @@ import { s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
 
 const service = "orcid";
-const readScope = "orcid.records.read";
+const readScope = "/authenticate";
 
 const orcidIdSchema = s.nonEmptyString("The ORCID iD in the canonical 0000-0000-0000-0000 format.");
 const rawObjectSchema = s.looseObject("The raw ORCID API object.");
@@ -13,8 +13,8 @@ export const orcidActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_record",
     operationType: "read",
-    description: "Get the public ORCID record for a researcher by ORCID iD.",
     requiredScopes: [readScope],
+    description: "Get the public ORCID record for a researcher by ORCID iD.",
     inputSchema: s.object("Input parameters for reading an ORCID record.", {
       orcidId: orcidIdSchema,
     }),
@@ -27,8 +27,8 @@ export const orcidActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_works",
     operationType: "read",
-    description: "Get the public works summary for a researcher by ORCID iD.",
     requiredScopes: [readScope],
+    description: "Get the public works summary for a researcher by ORCID iD.",
     inputSchema: s.object("Input parameters for reading an ORCID works summary.", {
       orcidId: orcidIdSchema,
     }),
@@ -41,8 +41,8 @@ export const orcidActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "search_records",
     operationType: "read",
-    description: "Search public ORCID records with ORCID's Solr query syntax.",
     requiredScopes: [readScope],
+    description: "Search public ORCID records with ORCID's Solr query syntax.",
     inputSchema: s.object(
       "Input parameters for searching public ORCID records.",
       {
@@ -68,7 +68,3 @@ export const orcidActions: ActionDefinition[] = [
     }),
   }),
 ];
-
-export const orcidProviderScopes: Record<string, string> = {
-  openid: "openid",
-};

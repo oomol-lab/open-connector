@@ -46,7 +46,6 @@ export async function validateHoneybadgerCredential(
   options: { fetcher: typeof fetch; signal?: AbortSignal },
 ): Promise<{
   profile: { accountId: string; displayName: string };
-  grantedScopes: string[];
   metadata: Record<string, unknown>;
 }> {
   const apiBaseUrl = normalizeHoneybadgerApiBaseUrl(input.values.apiBaseUrl);
@@ -76,7 +75,6 @@ export async function validateHoneybadgerCredential(
       accountId: "project_api_key",
       displayName: "Honeybadger Project API Key",
     },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl,
       validationEndpoint: honeybadgerValidationPath,

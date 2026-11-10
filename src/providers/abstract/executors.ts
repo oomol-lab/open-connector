@@ -94,7 +94,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: "api_key",
         displayName: "Abstract Email Validation API Key",
       },
-      grantedScopes: [],
       metadata: {
         apiBaseUrl: abstractEmailValidationBaseUrl,
         validationEndpoint: abstractEmailValidationPath,

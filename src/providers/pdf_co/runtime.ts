@@ -90,7 +90,6 @@ export async function validatePdfCoCredential(
     profile: {
       accountId: buildPdfCoProviderAccountId(input.apiKey),
       displayName: "PDF.co API Key",
-      grantedScopes: [],
     },
     metadata: compactObject({
       apiBaseUrl: pdfCoApiBaseUrl,

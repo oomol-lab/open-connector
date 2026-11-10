@@ -43,7 +43,6 @@ export async function validateKuaidi100Credential(
   const hash = createHash("sha256").update(apiKey).digest("hex").slice(0, 16);
   return {
     profile: { accountId: `kuaidi100:mcp:${hash}`, displayName: `Kuaidi100 · ${hash.slice(-6)}` },
-    grantedScopes: [],
     metadata: { mcpEndpoint: kuaidi100McpEndpoint, discoveredToolCount: result.tools.length },
   };
 }

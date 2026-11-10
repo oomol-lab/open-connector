@@ -50,7 +50,6 @@ export async function validateByteformsCredential(
       accountId: "byteforms:api_key",
       displayName: "ByteForms API Key",
     },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: byteformsApiBaseUrl,
       validationEndpoint: validationPath,

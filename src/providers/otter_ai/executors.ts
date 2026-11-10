@@ -135,9 +135,7 @@ export async function validateOtterAiApiKey(
     profile: {
       accountId: workspaceId ?? ownerEmail ?? "api_key",
       displayName,
-      grantedScopes: [],
     },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl: otterAiApiBaseUrl,
       validationEndpoint: otterAiValidationPath,

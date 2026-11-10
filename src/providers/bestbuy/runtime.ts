@@ -61,7 +61,6 @@ export async function validateBestbuyCredential(
       accountId: "bestbuy-api-key",
       displayName: "Best Buy API Key",
     },
-    grantedScopes: [],
     metadata: {
       validationEndpoint: `/v1/categories(id=${bestbuyValidationCategoryId})`,
       apiBaseUrl: bestbuyApiOrigin,

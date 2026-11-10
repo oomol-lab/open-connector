@@ -63,9 +63,7 @@ export async function validateDocumensoCredential(
     profile: {
       accountId: "documenso-api-token",
       displayName: "Documenso API Token",
-      grantedScopes: [],
     },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: documensoApiBaseUrl,
       validationEndpoint: documensoValidationPath,

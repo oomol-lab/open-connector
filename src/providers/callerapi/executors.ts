@@ -65,7 +65,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: email ?? "callerapi",
         displayName: email ?? "CallerAPI Key",
       },
-      grantedScopes: [],
       metadata: compactObject({
         validationEndpoint: "/api/me",
         apiBaseUrl: callerapiApiBaseUrl,

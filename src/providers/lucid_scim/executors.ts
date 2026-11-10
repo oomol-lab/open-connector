@@ -108,7 +108,6 @@ export const credentialValidators: CredentialValidators = {
       profile: {
         displayName: "Lucid SCIM Bearer Token",
       },
-      grantedScopes: [],
       metadata: {
         apiBaseUrl: lucidScimApiBaseUrl,
         validationEndpoint: lucidScimConfigPath,

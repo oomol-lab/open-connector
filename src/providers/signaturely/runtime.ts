@@ -71,7 +71,6 @@ export async function validateSignaturelyCredential(
       accountId: id,
       displayName: optionalString(user.name)?.trim() || optionalString(user.email)?.trim() || "Signaturely API Key",
     },
-    grantedScopes: [],
     metadata: compactObject({
       validationEndpoint: "/user/by-api",
       userId: id,

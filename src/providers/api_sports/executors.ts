@@ -122,7 +122,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: "api_key",
         displayName: "API-SPORTS API Key",
       },
-      grantedScopes: [],
       metadata: {
         validationEndpoint: "/timezone",
         apiBaseUrl: apiSportsApiBaseUrl,

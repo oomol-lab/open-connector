@@ -70,7 +70,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: "api_key",
         displayName: "DocuSeal API Key",
       },
-      grantedScopes: [],
       metadata: {
         apiBaseUrl,
         region: apiBaseUrl === euBaseUrl ? "eu" : "com",

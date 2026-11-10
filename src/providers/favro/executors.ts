@@ -153,7 +153,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: organizationId,
         displayName: typeof organization.name === "string" ? organization.name : `Favro ${organizationId}`,
       },
-      grantedScopes: [],
       metadata: {
         apiBaseUrl: "https://favro.com/api/v1",
         organizationId,

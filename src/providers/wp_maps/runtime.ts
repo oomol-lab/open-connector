@@ -56,14 +56,14 @@ export async function validateWpMapsCredential(
   accessToken: string,
   values: Record<string, string>,
   fetcher: typeof fetch,
-): Promise<{ profile: { displayName: string }; grantedScopes: string[] }> {
+): Promise<{ profile: { displayName: string } }> {
   const credential = readWpMapsCredential(accessToken, values);
   const payload = optionalRecord(
     await requestJson("/products/all", "GET", credential, undefined, undefined, fetcher, "validate"),
   );
   if (!Array.isArray(payload?.data) || !Array.isArray(payload.header))
     throw new ProviderRequestError(502, "WP Maps returned an invalid product list");
-  return { profile: { displayName: "WP Maps Account" }, grantedScopes: [] };
+  return { profile: { displayName: "WP Maps Account" } };
 }
 
 function request(

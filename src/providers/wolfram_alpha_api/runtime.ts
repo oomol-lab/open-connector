@@ -106,7 +106,6 @@ export async function validateWolframAlphaApiCredential(
       accountId: "wolfram_alpha_appid",
       displayName: "Wolfram|Alpha AppID",
     },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl: wolframAlphaApiBaseUrl,
       validationEndpoint: wolframAlphaQueryRecognizerUrl,

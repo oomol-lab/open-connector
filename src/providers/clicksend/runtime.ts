@@ -182,7 +182,6 @@ export async function validateClicksendCredential(
       accountId,
       displayName: accountLabel,
     },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl: clicksendApiBaseUrl,
       validationEndpoint: clicksendValidationPath,

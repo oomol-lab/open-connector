@@ -86,7 +86,6 @@ export async function validateDelightedCredential(
     profile: {
       displayName: "Delighted API Key",
     },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl: delightedApiBaseUrl,
       validationEndpoint: delightedValidationPath,

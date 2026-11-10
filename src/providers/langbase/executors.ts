@@ -72,7 +72,6 @@ async function validateLangbaseCredential(
       accountId: "api_key",
       displayName: "Langbase API Key",
     },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl: langbaseApiBaseUrl,
       validationEndpoint: langbaseMemoryPath,

@@ -30,7 +30,6 @@ export const credentialValidators: CredentialValidators = {
         displayName:
           optionalString(account.merchant_nickname) ?? optionalString(account.merchant_email) ?? "Yuanfenju Account",
       },
-      grantedScopes: [],
       metadata: { apiBaseUrl: yuanfenjuApiBaseUrl, validationEndpoint: yuanfenjuAccountPath },
     };
   },

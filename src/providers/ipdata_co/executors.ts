@@ -118,7 +118,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: "api_key",
         displayName: "ipdata API Key",
       },
-      grantedScopes: [],
       metadata: compactObject({
         validationEndpoint: ipdataLookupPath,
         apiBaseUrl: ipdataMainApiBaseUrl,

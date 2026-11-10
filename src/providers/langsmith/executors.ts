@@ -153,7 +153,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: workspaceId ? `langsmith:workspace:${workspaceId}` : "langsmith:api_key",
         displayName: workspaceName ?? "LangSmith API Key",
       },
-      grantedScopes: [],
       metadata: compactObject({
         apiBaseUrl,
         region,

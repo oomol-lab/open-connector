@@ -126,7 +126,6 @@ export const credentialValidators: CredentialValidators = {
       {
         authorization: buildBamboohrApiKeyAuthorization(input.apiKey),
         companyDomain: normalizeBamboohrCompanyDomain(input.values.companyDomain),
-        grantedScopes: [],
       },
       fetcher,
       signal,
@@ -146,7 +145,7 @@ export const credentialValidators: CredentialValidators = {
 };
 
 async function validateBamboohrCredential(
-  auth: BamboohrAuthorization & { grantedScopes: string[] },
+  auth: BamboohrAuthorization & { grantedScopes?: string[] },
   fetcher: typeof fetch,
   signal?: AbortSignal,
 ): Promise<CredentialValidationResult> {

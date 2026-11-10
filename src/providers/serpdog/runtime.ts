@@ -159,7 +159,6 @@ export async function validateSerpdogCredential(
       accountId: accountInfo.email,
       displayName: accountInfo.email,
     },
-    grantedScopes: [],
     metadata: {
       validationEndpoint: "/account_info",
       apiBaseUrl: serpdogBaseUrl,

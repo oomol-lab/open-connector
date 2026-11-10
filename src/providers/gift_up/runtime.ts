@@ -96,7 +96,6 @@ export async function validateGiftUpCredential(
       accountId: company.id ?? "gift_up",
       displayName: company.name ?? "Gift Up API Key",
     },
-    grantedScopes: [],
     metadata: jsonObject({
       apiBaseUrl: giftUpApiBaseUrl,
       validationEndpoint: giftUpValidationEndpoint,

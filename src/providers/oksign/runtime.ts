@@ -72,7 +72,6 @@ export async function validateOksignCredential(
       accountId: buildOksignProviderAccountId(authorization),
       displayName: `OKSign ${readAccountNumber(authorization)}`,
     },
-    grantedScopes: [],
     metadata: {
       accountNumber: readAccountNumber(authorization),
       apiBaseUrl: oksignApiBaseUrl,

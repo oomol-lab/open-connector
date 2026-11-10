@@ -3,38 +3,6 @@ import type { ActionDefinition } from "../../core/types.ts";
 import { s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
 
-export const tencentDocsConnectorScopes = {
-  userRead: "tencent_docs.user.read",
-  driveRead: "tencent_docs.drive.read",
-  driveCreate: "tencent_docs.drive.create",
-  driveRename: "tencent_docs.drive.rename",
-  driveExport: "tencent_docs.drive.export",
-  docRead: "tencent_docs.doc.read",
-  docWrite: "tencent_docs.doc.write",
-  sheetRead: "tencent_docs.sheet.read",
-  sheetWrite: "tencent_docs.sheet.write",
-  smartsheetRead: "tencent_docs.smartsheet.read",
-  formWrite: "tencent_docs.form.write",
-} as const;
-
-export const tencentDocsProviderScopes = {
-  userInfoBase: "scope.user.info.base",
-  driveCreatable: "scope.drive.creatable",
-  driveEditable: "scope.drive.editable",
-  driveFileMetadata: "scope.drive.file.metadata",
-  driveFileMetadataReadonly: "scope.drive.file.metadata.readonly",
-  driveReadonly: "scope.drive.readonly",
-  driveExportable: "scope.drive.exportable",
-  doc: "scope.doc",
-  docReadonly: "scope.doc.readonly",
-  sheet: "scope.sheet",
-  sheetReadonly: "scope.sheet.readonly",
-  sheetEditable: "scope.sheet.editable",
-  smartsheet: "scope.smartsheet",
-  smartsheetReadonly: "scope.smartsheet.readonly",
-  form: "scope.form",
-} as const;
-
 const rawObjectSchema = s.looseObject("The raw object returned by Tencent Docs.");
 const nonEmptyString = (description: string) => s.string(description, { minLength: 1 });
 const nullableString = (description: string) => s.nullable(s.string(description));
@@ -301,8 +269,8 @@ export const tencentDocsActions: ActionDefinition[] = [
     name: "get_current_user",
     operationType: "read",
     description: "Get the current Tencent Docs user profile for the OAuth access token.",
-    requiredScopes: [tencentDocsConnectorScopes.userRead],
-    providerPermissions: [tencentDocsProviderScopes.userInfoBase],
+    requiredScopes: [],
+    providerPermissions: [],
     inputSchema: s.object("No input is required to get the current Tencent Docs user.", {}),
     outputSchema: s.object("The current Tencent Docs user profile response.", {
       ...apiResponseBaseSchema,
@@ -314,8 +282,8 @@ export const tencentDocsActions: ActionDefinition[] = [
     name: "create_file",
     operationType: "write",
     description: "Create a Tencent Docs online document, sheet, form, slide, or smart sheet.",
-    requiredScopes: [tencentDocsConnectorScopes.driveCreate],
-    providerPermissions: [tencentDocsProviderScopes.driveCreatable],
+    requiredScopes: [],
+    providerPermissions: [],
     inputSchema: createFileInputSchema,
     outputSchema: s.object("The Tencent Docs create-file response.", {
       ...apiResponseBaseSchema,
@@ -327,12 +295,8 @@ export const tencentDocsActions: ActionDefinition[] = [
     name: "get_file_metadata",
     operationType: "read",
     description: "Get Tencent Docs metadata for one file by file ID.",
-    requiredScopes: [tencentDocsConnectorScopes.driveRead],
-    providerPermissions: [
-      tencentDocsProviderScopes.driveReadonly,
-      tencentDocsProviderScopes.driveFileMetadata,
-      tencentDocsProviderScopes.driveFileMetadataReadonly,
-    ],
+    requiredScopes: [],
+    providerPermissions: [],
     inputSchema: fileIdInputSchema,
     outputSchema: s.object("The Tencent Docs file metadata response.", {
       ...apiResponseBaseSchema,
@@ -344,8 +308,8 @@ export const tencentDocsActions: ActionDefinition[] = [
     name: "rename_file",
     operationType: "write",
     description: "Rename a Tencent Docs file by file ID.",
-    requiredScopes: [tencentDocsConnectorScopes.driveRename],
-    providerPermissions: [tencentDocsProviderScopes.driveEditable, tencentDocsProviderScopes.driveFileMetadata],
+    requiredScopes: [],
+    providerPermissions: [],
     inputSchema: renameFileInputSchema,
     outputSchema: s.object("The Tencent Docs rename-file response.", {
       ...apiResponseBaseSchema,
@@ -356,8 +320,8 @@ export const tencentDocsActions: ActionDefinition[] = [
     name: "list_folder",
     operationType: "read",
     description: "List files and folders in a Tencent Docs folder.",
-    requiredScopes: [tencentDocsConnectorScopes.driveRead],
-    providerPermissions: [tencentDocsProviderScopes.driveReadonly],
+    requiredScopes: [],
+    providerPermissions: [],
     inputSchema: listFolderInputSchema,
     outputSchema: s.object("The Tencent Docs folder listing response.", {
       ...apiResponseBaseSchema,
@@ -371,8 +335,8 @@ export const tencentDocsActions: ActionDefinition[] = [
     name: "search_files",
     operationType: "read",
     description: "Search Tencent Docs files by title keyword or owner nickname.",
-    requiredScopes: [tencentDocsConnectorScopes.driveRead],
-    providerPermissions: [tencentDocsProviderScopes.driveReadonly],
+    requiredScopes: [],
+    providerPermissions: [],
     inputSchema: searchFilesInputSchema,
     outputSchema: s.object("The Tencent Docs search response.", {
       ...apiResponseBaseSchema,
@@ -388,8 +352,8 @@ export const tencentDocsActions: ActionDefinition[] = [
     name: "start_export",
     operationType: "write",
     description: "Start an asynchronous Tencent Docs file export and return the operation ID.",
-    requiredScopes: [tencentDocsConnectorScopes.driveExport],
-    providerPermissions: [tencentDocsProviderScopes.driveExportable],
+    requiredScopes: [],
+    providerPermissions: [],
     inputSchema: startExportInputSchema,
     outputSchema: s.object("The Tencent Docs export submission response.", {
       ...apiResponseBaseSchema,
@@ -403,8 +367,8 @@ export const tencentDocsActions: ActionDefinition[] = [
     name: "get_export_progress",
     operationType: "read",
     description: "Check a Tencent Docs asynchronous export operation and return the download URL when ready.",
-    requiredScopes: [tencentDocsConnectorScopes.driveExport],
-    providerPermissions: [tencentDocsProviderScopes.driveExportable],
+    requiredScopes: [],
+    providerPermissions: [],
     inputSchema: exportProgressInputSchema,
     outputSchema: s.object("The Tencent Docs export progress response.", {
       ...apiResponseBaseSchema,
@@ -419,12 +383,8 @@ export const tencentDocsActions: ActionDefinition[] = [
     name: "convert_file_id",
     operationType: "read",
     description: "Convert between Tencent Docs fileID and encodedID values.",
-    requiredScopes: [tencentDocsConnectorScopes.driveRead],
-    providerPermissions: [
-      tencentDocsProviderScopes.driveReadonly,
-      tencentDocsProviderScopes.driveFileMetadata,
-      tencentDocsProviderScopes.driveFileMetadataReadonly,
-    ],
+    requiredScopes: [],
+    providerPermissions: [],
     inputSchema: convertFileIdInputSchema,
     outputSchema: s.object("The Tencent Docs file ID conversion response.", {
       ...apiResponseBaseSchema,
@@ -438,8 +398,8 @@ export const tencentDocsActions: ActionDefinition[] = [
     name: "get_sheet_range",
     operationType: "read",
     description: "Read cell values and metadata from a Tencent Docs spreadsheet range.",
-    requiredScopes: [tencentDocsConnectorScopes.sheetRead],
-    providerPermissions: [tencentDocsProviderScopes.sheet],
+    requiredScopes: [],
+    providerPermissions: [],
     inputSchema: sheetRangeInputSchema,
     outputSchema: s.object("The Tencent Docs spreadsheet range response.", {
       ...apiResponseBaseSchema,
@@ -452,8 +412,8 @@ export const tencentDocsActions: ActionDefinition[] = [
     name: "batch_update_sheet",
     operationType: "write",
     description: "Apply up to five Tencent Docs spreadsheet V3 batch update operations.",
-    requiredScopes: [tencentDocsConnectorScopes.sheetWrite],
-    providerPermissions: [tencentDocsProviderScopes.sheet],
+    requiredScopes: [],
+    providerPermissions: [],
     inputSchema: batchUpdateSheetInputSchema,
     outputSchema: s.object("The Tencent Docs spreadsheet batch update response.", {
       ...apiResponseBaseSchema,
@@ -466,8 +426,8 @@ export const tencentDocsActions: ActionDefinition[] = [
     name: "get_doc_content",
     operationType: "read",
     description: "Get the structured content and version of a Tencent Docs document.",
-    requiredScopes: [tencentDocsConnectorScopes.docRead],
-    providerPermissions: [tencentDocsProviderScopes.doc],
+    requiredScopes: [],
+    providerPermissions: [],
     inputSchema: fileIdInputSchema,
     outputSchema: s.object("The Tencent Docs document content response.", {
       ...apiResponseBaseSchema,
@@ -481,8 +441,8 @@ export const tencentDocsActions: ActionDefinition[] = [
     name: "batch_update_doc",
     operationType: "write",
     description: "Apply up to thirty Tencent Docs document V3 batch update operations.",
-    requiredScopes: [tencentDocsConnectorScopes.docWrite],
-    providerPermissions: [tencentDocsProviderScopes.doc],
+    requiredScopes: [],
+    providerPermissions: [],
     inputSchema: batchUpdateDocInputSchema,
     outputSchema: s.object("The Tencent Docs document batch update response.", {
       ...apiResponseBaseSchema,
@@ -494,8 +454,8 @@ export const tencentDocsActions: ActionDefinition[] = [
     name: "list_smartsheet_sheets",
     operationType: "read",
     description: "List child sheets inside a Tencent Docs Smartsheet file.",
-    requiredScopes: [tencentDocsConnectorScopes.smartsheetRead],
-    providerPermissions: [tencentDocsProviderScopes.smartsheetReadonly],
+    requiredScopes: [],
+    providerPermissions: [],
     inputSchema: fileIdInputSchema,
     outputSchema: s.object("The Tencent Docs Smartsheet sheet listing response.", {
       ...apiResponseBaseSchema,
@@ -508,8 +468,8 @@ export const tencentDocsActions: ActionDefinition[] = [
     name: "update_form_collection_deadline",
     operationType: "write",
     description: "Publish, pause, or update the collection deadline for a Tencent Docs form.",
-    requiredScopes: [tencentDocsConnectorScopes.formWrite],
-    providerPermissions: [tencentDocsProviderScopes.form],
+    requiredScopes: [],
+    providerPermissions: [],
     inputSchema: updateFormCollectionDeadlineInputSchema,
     outputSchema: s.object("The Tencent Docs form deadline update response.", {
       ...apiResponseBaseSchema,
@@ -520,8 +480,8 @@ export const tencentDocsActions: ActionDefinition[] = [
     name: "generate_form_result",
     operationType: "write",
     description: "Generate the result spreadsheet for a Tencent Docs form.",
-    requiredScopes: [tencentDocsConnectorScopes.formWrite],
-    providerPermissions: [tencentDocsProviderScopes.form],
+    requiredScopes: [],
+    providerPermissions: [],
     inputSchema: formIdInputSchema,
     outputSchema: s.object("The Tencent Docs form result generation response.", {
       ...apiResponseBaseSchema,

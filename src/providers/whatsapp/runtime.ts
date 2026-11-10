@@ -130,7 +130,6 @@ export async function validateWhatsAppCredential(
       accountId,
       displayName,
     },
-    grantedScopes: [],
     metadata: compactObject({
       graphApiVersion: whatsappGraphApiVersion,
       validationEndpoint: "/me",

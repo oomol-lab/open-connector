@@ -97,9 +97,7 @@ export async function validatePushbulletCredential(
     profile: {
       accountId: iden ? `pushbullet:user:${iden}` : "pushbullet-access-token",
       displayName: name || email || "Pushbullet Access Token",
-      grantedScopes: [],
     },
-    grantedScopes: [],
     metadata: compactObject({
       validationEndpoint: pushbulletValidationPath,
       userIden: iden,

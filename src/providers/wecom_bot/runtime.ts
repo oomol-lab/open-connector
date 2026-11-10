@@ -115,7 +115,6 @@ export async function validateWecomBotCredential(
       accountId: buildWecomBotProviderAccountId(apiKey),
       displayName: buildWecomBotAccountLabel(apiKey),
     },
-    grantedScopes: [],
     metadata: {
       webhookHost: new URL(buildWecomBotWebhookUrl(apiKey)).host,
       validationMode: "empty_payload_probe",

@@ -257,7 +257,6 @@ export async function validateNpmCredential(
       accountId: `npm:${user.username}`,
       displayName: user.username,
     },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: npmRegistryBaseUrl,
       validationEndpoint: npmValidationPath,

@@ -25,7 +25,6 @@ export const credentialValidators: CredentialValidators = {
     await validateScreendeskCredential({ apiKey: input.apiKey, fetcher, signal });
     return {
       profile: { displayName: "Screendesk API Token" },
-      grantedScopes: [],
       metadata: { apiBaseUrl: screendeskApiBaseUrl, validationEndpoint: "/recordings" },
     };
   },

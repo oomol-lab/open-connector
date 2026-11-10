@@ -34,7 +34,6 @@ export async function validateWhatsableCredential(
   }
   return {
     profile: { displayName: "WhatsAble API Key" },
-    grantedScopes: [],
     metadata: { apiBaseUrl: whatsableApiBaseUrl, validationEndpoint: "/send" },
   };
 }

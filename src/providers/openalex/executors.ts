@@ -135,7 +135,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: "openalex",
         displayName: "OpenAlex API Key",
       },
-      grantedScopes: [],
       metadata: compactObject({
         validationEndpoint: "/works",
         apiBaseUrl: openalexApiBaseUrl,

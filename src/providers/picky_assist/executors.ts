@@ -92,7 +92,6 @@ export const credentialValidators: CredentialValidators = {
     await request("check-balance", {}, requiredInputString(input.apiKey, "apiKey"), fetcher);
     return {
       profile: { displayName: "Picky Assist API Token" },
-      grantedScopes: [],
       metadata: { apiBaseUrl: baseUrl },
     };
   },

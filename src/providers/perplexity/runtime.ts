@@ -54,7 +54,6 @@ export async function validatePerplexityCredential(
     profile: {
       accountId: "perplexity-api-key",
       displayName: "Perplexity API Key",
-      grantedScopes: [],
     },
     metadata: {
       validationEndpoint: "/v1/models",

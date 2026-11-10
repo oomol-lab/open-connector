@@ -169,7 +169,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: credential.userId,
         displayName: readAccountLabel(user, credential.userId),
       },
-      grantedScopes: [],
       metadata: {
         apiBaseUrl: onePageCrmApiBaseUrl,
         userId: credential.userId,

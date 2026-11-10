@@ -106,7 +106,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: "api_key",
         displayName: firstIncident ? `FireHydrant: ${String(firstIncident.name)}` : "FireHydrant API Key",
       },
-      grantedScopes: [],
       metadata: compactObject({
         apiBaseUrl: firehydrantApiBaseUrl,
         validationEndpoint: "/incidents",

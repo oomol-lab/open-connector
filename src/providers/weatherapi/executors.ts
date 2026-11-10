@@ -208,7 +208,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: matchedLocationId === undefined ? "weatherapi:api_key" : String(matchedLocationId),
         displayName: matchedLocationName ?? "WeatherAPI API Key",
       },
-      grantedScopes: [],
       metadata: compactObject({
         validationEndpoint: "/search.json",
         sampleQuery: weatherapiValidationQuery,

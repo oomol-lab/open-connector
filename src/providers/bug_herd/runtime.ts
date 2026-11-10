@@ -264,7 +264,6 @@ export async function validateBugHerdCredential(
       accountId: organizationId,
       displayName: organizationName ?? "BugHerd Organization",
     },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl: bugHerdApiBaseUrl,
       validationEndpoint: "/api_v2/organization.json",

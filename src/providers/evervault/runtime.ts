@@ -52,7 +52,6 @@ export async function validateEvervault(
   signal?: AbortSignal,
 ): Promise<{
   profile: { accountId: string; displayName: string };
-  grantedScopes: string[];
   metadata: Record<string, unknown>;
 }> {
   const context = {
@@ -65,7 +64,6 @@ export async function validateEvervault(
   const fingerprint = createHash("sha256").update(context.apiKey).digest("hex").slice(0, 16);
   return {
     profile: { accountId: `evervault:${context.appId}:key:${fingerprint}`, displayName: `Evervault ${context.appId}` },
-    grantedScopes: [],
     metadata: { appId: context.appId, apiBaseUrl: evervaultApiBaseUrl, validationEndpoint: "/encrypt" },
   };
 }

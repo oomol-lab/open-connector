@@ -101,7 +101,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: "api_key",
         displayName: "Mocean API Token",
       },
-      grantedScopes: [],
       metadata: compactObject({
         apiBaseUrl: moceanApiBaseUrl,
         validationEndpoint: "/account/balance",

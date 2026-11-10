@@ -299,7 +299,6 @@ export async function validateTushareCredential(
       accountId: "tushare-token",
       displayName: "Tushare Token",
     },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: tushareApiBaseUrl,
       validationApiName: "daily",

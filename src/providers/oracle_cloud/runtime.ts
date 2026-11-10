@@ -254,7 +254,6 @@ export async function validateOracleCloudCredential(
   }
   return {
     profile: { accountId: context.userId, displayName: `OCI ${context.region}` },
-    grantedScopes: [],
     metadata: {
       tenancyId: context.tenancyId,
       region: context.region,

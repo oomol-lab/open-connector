@@ -169,7 +169,6 @@ export async function validateDatabricksCredential(
       accountId: profile.accountId,
       displayName: profile.displayName,
     },
-    grantedScopes: [],
     metadata: compactObject({
       host,
       validationEndpoint: currentUserPath,

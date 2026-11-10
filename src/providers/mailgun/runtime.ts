@@ -210,7 +210,6 @@ export async function validateMailgunCredential(
       accountId: firstDomain ? `mailgun:domain:${firstDomain}` : "mailgun-api-key",
       displayName: firstDomain ? `Mailgun: ${firstDomain}` : "Mailgun API Key",
     },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl,
       validationEndpoint: validationPath,

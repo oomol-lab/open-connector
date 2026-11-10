@@ -154,7 +154,6 @@ export async function validateAmaraCredential(
       accountId: "amara_api_key",
       displayName: "Amara API Key",
     },
-    grantedScopes: [],
     metadata: {
       validationEndpoint: "/languages/",
       languageCount: Object.keys(payload.languages ?? {}).length,

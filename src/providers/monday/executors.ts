@@ -26,7 +26,6 @@ import { mondayEnterpriseActionHandlers } from "./runtime-enterprise.ts";
 import { mondayFormsActionHandlers } from "./runtime-forms.ts";
 import { mondayItemActionHandlers } from "./runtime-items.ts";
 import { mondayStructureActionHandlers } from "./runtime-structure.ts";
-import { getMondayAuthorizationScopes, parseMondayScopeString } from "./scopes.ts";
 
 const service = "monday";
 const mondayFetch = createProviderFetch({ skipDnsValidation: true });
@@ -115,9 +114,6 @@ export const credentialValidators: CredentialValidators = {
     return validateMondayCredential({ apiKey: input.apiKey }, fetcher);
   },
   async oauth2(input, { fetcher }) {
-    const grantedScopes = parseMondayScopeString(input.metadata.scope);
-    return validateMondayCredential({ apiKey: input.accessToken }, fetcher, {
-      grantedScopes: grantedScopes.length > 0 ? grantedScopes : getMondayAuthorizationScopes(),
-    });
+    return validateMondayCredential({ apiKey: input.accessToken }, fetcher);
   },
 };

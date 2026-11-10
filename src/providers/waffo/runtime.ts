@@ -306,7 +306,6 @@ export async function validateWaffoCredential(
       accountId: credential.merchantId,
       displayName: `Waffo ${credential.merchantId}`,
     },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: waffoApiBaseUrl,
       merchantId: credential.merchantId,

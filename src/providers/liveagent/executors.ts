@@ -283,7 +283,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: `liveagent:${host}:${hashApiKey(apiKey)}`,
         displayName: accountLink ?? host,
       },
-      grantedScopes: [],
       metadata: compactObject({
         baseUrl,
         apiBaseUrl,

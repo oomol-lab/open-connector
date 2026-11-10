@@ -80,7 +80,6 @@ export async function validateGivebutterCredential(
       accountId: "givebutter",
       displayName: "Givebutter API Key",
     },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: givebutterApiBaseUrl,
       validationEndpoint: givebutterValidationPath,

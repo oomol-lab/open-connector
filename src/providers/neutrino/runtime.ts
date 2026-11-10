@@ -92,9 +92,7 @@ export async function validateNeutrinoCredential(
     profile: {
       accountId: userId,
       displayName: `Neutrino API User ${userId}`,
-      grantedScopes: [],
     },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl: neutrinoApiBaseUrl,
       userId,

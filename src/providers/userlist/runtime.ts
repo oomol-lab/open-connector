@@ -36,7 +36,6 @@ export function validateUserlistCredential(): CredentialValidationResult {
       accountId: "userlist",
       displayName: "Userlist Push API Key",
     },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: userlistPushApiBaseUrl,
       validation: "No non-mutating Push API validation endpoint is documented by Userlist.",

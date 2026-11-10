@@ -51,7 +51,6 @@ export async function validateCertSpotterCredential(
       accountId: "api_key",
       displayName: "SSLMate API Key",
     },
-    grantedScopes: [],
     metadata: {
       monitoringApiBaseUrl: certSpotterMonitoringApiBaseUrl,
       ctSearchApiBaseUrl: certSpotterCtSearchApiBaseUrl,

@@ -148,7 +148,6 @@ export async function validateMetabaseCredential(
       accountId: profileId,
       displayName: buildAccountLabel(user, urls.instanceUrl),
     },
-    grantedScopes: [],
     metadata: {
       instanceUrl: urls.instanceUrl,
       apiBaseUrl: urls.apiBaseUrl,

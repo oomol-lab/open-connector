@@ -145,9 +145,7 @@ async function validateConfluenceOAuthCredential(
       profile: {
         accountId: "confluence",
         displayName: "Confluence Cloud",
-        grantedScopes: [],
       },
-      grantedScopes: [],
       metadata: {
         resourceCount: resources.length,
         validationEndpoint: "/oauth/token/accessible-resources",

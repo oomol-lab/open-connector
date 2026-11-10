@@ -98,7 +98,6 @@ export async function validateOnfleetCredential(
 
   return {
     profile: { accountId: "onfleet", displayName: "Onfleet Account" },
-    grantedScopes: [],
     metadata: { validationEndpoint: "/auth/test" },
   };
 }

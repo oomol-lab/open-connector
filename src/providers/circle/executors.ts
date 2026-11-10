@@ -144,7 +144,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: String(community.id),
         displayName: optionalString(community.name) ?? optionalString(community.slug) ?? "Circle Community",
       },
-      grantedScopes: [],
       metadata: compactObject({
         apiBaseUrl,
         validationEndpoint: "/community",

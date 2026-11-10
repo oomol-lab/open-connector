@@ -179,7 +179,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: workspaceId && userId ? `fellow:${workspaceId}:user:${userId}` : `fellow:${storedSubdomain}`,
         displayName: buildAccountLabel(userFullName, userEmail, workspaceName, storedSubdomain),
       },
-      grantedScopes: [],
       metadata: compactObject({
         subdomain: storedSubdomain,
         baseUrl: buildFellowBaseUrl(storedSubdomain),

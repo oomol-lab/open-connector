@@ -134,7 +134,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: accessKeyId,
         displayName: defaultRoleArn ? `Alibaba Cloud STS - ${defaultRoleArn}` : `Alibaba Cloud STS - ${accessKeyId}`,
       },
-      grantedScopes: [],
       metadata: compactObject({
         credentialKind: "ram_access_key",
         defaultRoleArn,

@@ -137,7 +137,6 @@ export async function validateDocsbotAiCredential(
       accountId: firstTeam ? `team:${firstTeam.id}` : "api_key",
       displayName: firstTeam ? `DocsBot AI ${firstTeam.name}` : "DocsBot AI API Key",
     },
-    grantedScopes: [],
     metadata: compactObject({
       adminBaseUrl: docsbotAiAdminBaseUrl,
       apiBaseUrl: docsbotAiApiBaseUrl,

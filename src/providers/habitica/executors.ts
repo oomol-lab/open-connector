@@ -187,7 +187,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: providerAccountId,
         displayName: profileName ?? `Habitica ${providerAccountId}`,
       },
-      grantedScopes: [],
       metadata: compactObject({
         userId: providerAccountId,
         xClient: credential.xClient,

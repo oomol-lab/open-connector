@@ -66,7 +66,6 @@ export async function validateSignwellCredential(
       accountId: `${accountId}:${userId}`,
       displayName: accountLabel,
     },
-    grantedScopes: [],
     metadata: compactObject({
       validationEndpoint: signwellValidationPath,
       role: optionalString(payload.role),

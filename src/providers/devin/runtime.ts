@@ -140,7 +140,6 @@ export async function validateDevinCredential(
       accountId: `devin:${normalized.id}`,
       displayName: normalized.name ?? "Devin API Key",
     },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl: devinApiBaseUrl,
       validationEndpoint: "/v3/self",

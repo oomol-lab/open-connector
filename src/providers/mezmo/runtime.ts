@@ -76,7 +76,6 @@ export async function validateMezmoCredential(
       accountId: "mezmo",
       displayName: "Mezmo Access Token",
     },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: mezmoApiBaseUrl,
       validationEndpoint: "/v1/config/ingestion/status",

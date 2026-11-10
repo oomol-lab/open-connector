@@ -173,7 +173,6 @@ export async function validateCertnCredential(
       accountId: `certn:${region.id}`,
       displayName: `Certn ${region.label} API Key`,
     },
-    grantedScopes: [],
     metadata: {
       region: region.id,
       regionLabel: region.label,

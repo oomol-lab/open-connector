@@ -120,7 +120,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: `membervault:${credential.account}`,
         displayName: `MemberVault ${credential.account}`,
       },
-      grantedScopes: [],
       metadata: compactObject({
         account: credential.account,
         apiBaseUrl: credential.apiBaseUrl,

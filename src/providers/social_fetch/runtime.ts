@@ -51,7 +51,6 @@ export const socialFetchActionHandlers: ProviderActionHandlers<
 
 export async function validateSocialFetchCredential(context: Omit<SocialFetchContext, "mode">): Promise<{
   profile: { accountId: string; displayName: string };
-  grantedScopes: string[];
   metadata: Record<string, unknown>;
 }> {
   const envelope = requireObject(await requestSocialFetch("/v1/whoami", { ...context, mode: "validate" }), "response");
@@ -63,7 +62,6 @@ export async function validateSocialFetchCredential(context: Omit<SocialFetchCon
       accountId: id,
       displayName: optionalString(user.name) ?? optionalString(user.email) ?? `Social Fetch ${id}`,
     },
-    grantedScopes: [],
     metadata: { apiBaseUrl: socialFetchApiBaseUrl, validationEndpoint: "/v1/whoami" },
   };
 }

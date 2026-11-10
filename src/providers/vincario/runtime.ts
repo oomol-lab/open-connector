@@ -76,7 +76,6 @@ export async function validateCredential(
   const balance = await request({ id: "balance", path: "balance.json" }, context, "validate");
   return {
     profile: { displayName: "Vincario API Credential" },
-    grantedScopes: [],
     metadata: { apiBaseUrl: vincarioApiBaseUrl, balance },
   };
 }

@@ -164,7 +164,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: optionalString(account.id) ?? optionalString(account.email) ?? "templated-account",
         displayName: optionalString(account.name) ?? optionalString(account.email) ?? "Templated",
       },
-      grantedScopes: [],
       metadata: compactObject({
         apiBaseUrl: templatedApiBaseUrl,
         validationEndpoint: "/account",

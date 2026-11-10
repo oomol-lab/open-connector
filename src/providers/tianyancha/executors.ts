@@ -26,7 +26,6 @@ export const credentialValidators: CredentialValidators = {
     if (!input.apiKey.trim()) throw new ProviderRequestError(400, "Tianyancha API token is required");
     return {
       profile: { accountId: "api-token", displayName: "Tianyancha API Token" },
-      grantedScopes: [],
       metadata: { apiBaseUrl: tianyanchaApiBaseUrl, validationMode: "format_only" },
     };
   },

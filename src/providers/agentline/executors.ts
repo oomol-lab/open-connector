@@ -106,7 +106,6 @@ export const credentialValidators: CredentialValidators = {
     const accountId = optionalString(account.account_id);
     return {
       profile: { displayName: accountId ? `AgentLine ${accountId}` : "AgentLine API Key" },
-      grantedScopes: [],
       metadata: { apiBaseUrl: baseUrl, accountId },
     };
   },

@@ -145,7 +145,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: "api_key",
         displayName: "Ambivo API Token",
       },
-      grantedScopes: [],
       metadata: {
         apiBaseUrl: ambivoApiBaseUrl,
         validationEndpoint: ambivoValidationPath,

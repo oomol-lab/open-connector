@@ -110,7 +110,6 @@ export async function validateStreamtimeCredential(
       accountId: organisationDomain ?? "api_key",
       displayName: organisationName ?? "Streamtime API Token",
     },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl: streamtimeApiBaseUrl,
       validationEndpoint: streamtimeValidationPath,

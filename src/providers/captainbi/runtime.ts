@@ -45,7 +45,6 @@ export async function validateCaptainBiCredential(
   await exchangeCaptainBiAccessToken(readCaptainBiCredential(input), fetcher, "validate");
   return {
     profile: { displayName: "CaptainBI API" },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: captainBiApiBaseUrl,
       tokenEndpoint: captainBiTokenUrl,

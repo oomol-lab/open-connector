@@ -748,10 +748,10 @@ describe("Trigger runtime HTTP boundary", () => {
 });
 
 it.each([
-  [[], 403],
+  [[], 200],
   [["cloud_recording:read:recording"], 200],
   [["cloud_recording:read:recording:admin"], 200],
-])("checks Zoom recording scopes before executing a source operation: %j", async (scopes, status) => {
+])("runs Zoom source operations without relying on a scope snapshot: %j", async (scopes, status) => {
   const connection = await database.connectionStore.set("zoom", "work", {
     authType: "oauth2",
     accessToken: "zoom-token",
@@ -900,7 +900,7 @@ it("rejects case-insensitive duplicate headers in shared source requests", async
   ).toThrow();
 });
 
-it.each([true, false])("checks scopes for Source activation but permits release lookup: active=%s", async (active) => {
+it.each([true, false])("resolves Source resources regardless of missing scope snapshots: active=%s", async (active) => {
   const connection = await database.connectionStore.set("zoom", "work", {
     authType: "oauth2",
     accessToken: "zoom-token",
@@ -924,6 +924,6 @@ it.each([true, false])("checks scopes for Source activation but permits release 
     "zoom",
     "zoom.on_recording_ready",
   );
-  expect(response.status, await response.clone().text()).toBe(active ? 403 : 404);
+  expect(response.status, await response.clone().text()).toBe(404);
   expect(calls).toHaveLength(0);
 });

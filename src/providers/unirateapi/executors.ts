@@ -97,7 +97,6 @@ export const credentialValidators: CredentialValidators = {
     await request("/currencies", {}, requiredInputString(input.apiKey, "API Key"), fetcher);
     return {
       profile: { displayName: "UniRateAPI API Key" },
-      grantedScopes: [],
       metadata: { validationEndpoint: "/api/currencies" },
     };
   },

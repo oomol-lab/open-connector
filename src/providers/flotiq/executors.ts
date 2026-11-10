@@ -177,7 +177,6 @@ export const credentialValidators: CredentialValidators = {
     await requestFlotiq(requiredInputString(input.apiKey, "API Key"), fetcher, "/api/auth-context");
     return {
       profile: { displayName: "Flotiq API Key" },
-      grantedScopes: [],
       metadata: { apiBaseUrl: baseUrl, validationEndpoint: "/api/auth-context" },
     };
   },

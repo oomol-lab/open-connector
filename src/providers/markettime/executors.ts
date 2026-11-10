@@ -103,7 +103,6 @@ export const credentialValidators: CredentialValidators = {
     });
     return {
       profile: { accountId, displayName: `MarketTime ${accountId}` },
-      grantedScopes: [],
       metadata: {
         apiBaseUrl: markettimeApiBaseUrl,
         accountId,

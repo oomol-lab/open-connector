@@ -163,7 +163,6 @@ export async function validateAppleNotaryCredential(
   }
   return {
     profile: { accountId: issuerId ?? keyId, displayName: `Apple notary key ${keyId}` },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: appleNotaryApiOrigin,
       validationEndpoint: submissionsPath,

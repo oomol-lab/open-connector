@@ -74,7 +74,6 @@ export async function validateCredential(
       accountId: "api_key",
       displayName: "Torii Image Translator API Key",
     },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl,
       validationEndpoint: creditsPath,

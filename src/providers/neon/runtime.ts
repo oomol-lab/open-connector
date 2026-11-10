@@ -113,7 +113,6 @@ export async function validateNeonCredential(
       accountId: profileId ?? email ?? "neon",
       displayName: displayName ?? "Neon API Key",
     },
-    grantedScopes: [],
     metadata: compactObject({
       validationEndpoint: "/users/me",
       apiBaseUrl: neonApiBaseUrl,

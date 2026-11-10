@@ -13,7 +13,7 @@ interface DataciteRequestInput {
 export async function validateDataciteCredential(
   input: Record<string, string>,
   fetcher: typeof fetch,
-): Promise<{ profile: { displayName: string }; grantedScopes: string[]; metadata: Record<string, unknown> }> {
+): Promise<{ profile: { displayName: string }; metadata: Record<string, unknown> }> {
   await requestDataciteJson({
     path: "/dois",
     params: { "page[size]": "0" },
@@ -24,7 +24,6 @@ export async function validateDataciteCredential(
 
   return {
     profile: { displayName: "DataCite API Key" },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: dataciteApiBaseUrl,
       validationEndpoint: "/dois?page[size]=0",

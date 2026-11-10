@@ -102,7 +102,6 @@ export async function validateFomoCredential(
   signal?: AbortSignal,
 ): Promise<{
   profile: { accountId: string; displayName: string };
-  grantedScopes: string[];
   metadata: Record<string, unknown>;
 }> {
   const payload = await requestFomoJson(
@@ -127,7 +126,6 @@ export async function validateFomoCredential(
       accountId: "fomo:site-token",
       displayName: "Fomo site token",
     },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: fomoApiBaseUrl,
       validationEndpoint: fomoEventsPath,

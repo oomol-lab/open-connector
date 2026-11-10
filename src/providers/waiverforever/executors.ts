@@ -32,7 +32,6 @@ export const credentialValidators: CredentialValidators = {
     const userInfo = await getWaiverForeverUserInfo(input.apiKey, fetcher, signal, "validate");
     return {
       profile: { displayName: userInfo.username ?? "WaiverForever API Key" },
-      grantedScopes: [],
       metadata: {
         username: userInfo.username,
         apiBaseUrl: waiverforeverApiBaseUrl,

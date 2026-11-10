@@ -126,7 +126,6 @@ export const credentialValidators: CredentialValidators = {
           optionalRawString(account.key_name)?.trim() ||
           "AgentEarth API Key",
       },
-      grantedScopes: [],
       metadata: {},
     };
   },

@@ -137,9 +137,7 @@ async function validateShortenRestCredential(
     profile: {
       accountId: "shorten_rest",
       displayName: "Shorten.REST API Key",
-      grantedScopes: [],
     },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: shortenRestApiBaseUrl,
       validationEndpoint: `${shortenRestValidationPath}?limit=1`,

@@ -97,7 +97,6 @@ export const credentialValidators: CredentialValidators = {
     const hash = createHash("sha256").update(context.clientId).digest("hex");
     return {
       profile: { accountId: `panjiva:${hash}`, displayName: "Panjiva Account" },
-      grantedScopes: [],
       metadata: {},
     };
   },

@@ -78,9 +78,9 @@ export const sendlaneActionHandlers: ProviderActionHandlers<
 export async function validateSendlaneCredential(
   apiKey: string,
   fetcher: typeof fetch,
-): Promise<{ profile: { displayName: string }; grantedScopes: string[] }> {
+): Promise<{ profile: { displayName: string } }> {
   await sendlaneRequest({ path: "/lists", query: { limit: "1", page: "1" } }, apiKey, fetcher, "validate");
-  return { profile: { displayName: "Sendlane API Token" }, grantedScopes: [] };
+  return { profile: { displayName: "Sendlane API Token" } };
 }
 
 function buildRequest(

@@ -133,7 +133,6 @@ export async function validateKnockCredential(
       accountId: "knock",
       displayName: "Knock API Key",
     },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: knockApiBaseUrl,
       validationEndpoint: "/users",

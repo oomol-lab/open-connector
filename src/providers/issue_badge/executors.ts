@@ -117,7 +117,6 @@ export const credentialValidators: CredentialValidators = {
     }
     return {
       profile: { displayName: "IssueBadge API Key" },
-      grantedScopes: [],
       metadata: { apiBaseUrl },
     };
   },

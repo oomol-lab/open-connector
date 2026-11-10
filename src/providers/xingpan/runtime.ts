@@ -72,7 +72,6 @@ export async function validateXingpanCredential(
   );
   return {
     profile: { displayName: "Xingpan API Token" },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: xingpanApiBaseUrl,
       validationEndpoint: configPath,

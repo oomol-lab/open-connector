@@ -76,7 +76,6 @@ export async function validateLushaCredential(
       accountId: "lusha:api-key",
       displayName: "Lusha API Key",
     },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl: lushaApiBaseUrl,
       validationEndpoint: "/v3/account/usage",

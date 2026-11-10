@@ -137,7 +137,6 @@ export async function validateDoubaoSpeechCredential(
   });
   return {
     profile: { accountId: "doubao_speech:app_key", displayName: "Doubao Speech APP Key" },
-    grantedScopes: [],
     metadata: { apiBaseUrl: doubaoSpeechApiBaseUrl },
   };
 }

@@ -52,7 +52,6 @@ export async function validateFirstbaseCredential(
   signal?: AbortSignal,
 ): Promise<{
   profile: { accountId: string; displayName: string };
-  grantedScopes: string[];
   metadata: Record<string, unknown>;
 }> {
   await firstbaseRequestJson("GET", firstbaseValidationPath, { apiKey, fetcher, signal }, "validate");
@@ -62,7 +61,6 @@ export async function validateFirstbaseCredential(
       accountId: "firstbase:api-key",
       displayName: "Firstbase API Key",
     },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: firstbaseApiBaseUrl,
       validationEndpoint: firstbaseValidationPath,

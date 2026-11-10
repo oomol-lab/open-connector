@@ -276,7 +276,6 @@ export async function validatePrintavoCredential(
       accountId: userId,
       displayName: accountName ?? userName ?? userEmail ?? "Printavo API Token",
     },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl: printavoApiBaseUrl,
       validationQuery: "user",

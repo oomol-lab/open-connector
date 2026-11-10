@@ -93,7 +93,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: `groqcloud:api_key:${createHash("sha256").update(input.apiKey).digest("hex").slice(0, 16)}`,
         displayName: "GroqCloud API Key",
       },
-      grantedScopes: [],
       metadata: {
         apiBaseUrl: groqcloudApiBaseUrl,
         validationEndpoint: "/openai/v1/models",

@@ -479,9 +479,7 @@ export async function validateHomeBoxCredential(
     profile: {
       accountId: `homebox:${baseUrl}`,
       displayName: `HomeBox (${displayName})`,
-      grantedScopes: [],
     },
-    grantedScopes: [],
     metadata: {
       baseUrl,
       credentialHelpUrl: homeBoxCredentialHelpUrl,

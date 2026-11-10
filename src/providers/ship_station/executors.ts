@@ -58,7 +58,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: "api_key",
         displayName: "ShipStation API Key",
       },
-      grantedScopes: [],
       metadata: {
         validationEndpoint: "/v2/inventory_warehouses",
       },

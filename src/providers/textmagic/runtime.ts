@@ -146,7 +146,6 @@ export async function validateTextmagicCredential(
       accountId: userId === undefined ? `textmagic:${accountUsername}` : `textmagic:${userId}`,
       displayName: fullName || email || `Textmagic (${accountUsername})`,
     },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl: textmagicApiBaseUrl,
       validationEndpoint: textmagicValidationPath,

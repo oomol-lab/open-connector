@@ -126,7 +126,6 @@ export async function validateNetsuiteCredential(
       accountId: context.accountId,
       displayName: `NetSuite ${context.accountId}`,
     },
-    grantedScopes: [],
     metadata: {
       accountId: context.accountId,
       restBaseUrl: context.restBaseUrl,

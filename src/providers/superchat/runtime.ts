@@ -261,7 +261,6 @@ export async function validateSuperchatCredential(
       accountId: optionalString(user?.id),
       displayName: optionalString(user?.email) ?? "Superchat API Key",
     },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: superchatApiBaseUrl,
       validationEndpoint: "/me",

@@ -37,13 +37,11 @@ export async function validatePingbellCredential(
   signal?: AbortSignal,
 ): Promise<{
   profile: { accountId: string; displayName: string };
-  grantedScopes: string[];
   metadata: Record<string, unknown>;
 }> {
   const sources = await listSources(apiKey, fetcher, signal, true);
   return {
     profile: { accountId: `pingbell:${apiKey.slice(-8)}`, displayName: "PingBell API Key" },
-    grantedScopes: [],
     metadata: { apiBaseUrl: pingbellApiBaseUrl, sourceCount: sources.length },
   };
 }

@@ -171,7 +171,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: firstCompetitionCode,
         displayName: "football-data.org API Token",
       },
-      grantedScopes: [],
       metadata: compactObject({
         apiBaseUrl: footballDataBaseUrl,
         validationEndpoint: "/competitions",

@@ -72,7 +72,6 @@ export async function validateGetyoutubetranscriptCredential(
     profile: {
       displayName: plan ? `GetYouTubeTranscript (${plan} plan)` : "GetYouTubeTranscript API Key",
     },
-    grantedScopes: [],
     metadata: compactObject({
       validationEndpoint: "/credits",
       apiBaseUrl: getyoutubetranscriptApiBaseUrl,

@@ -72,7 +72,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: username,
         displayName: username ? `${username} (ntfy)` : "ntfy Access Token",
       },
-      grantedScopes: [],
       metadata: compactObject({
         apiBaseUrl: ntfyApiBaseUrl,
         validationEndpoint: ntfyAccountPath,

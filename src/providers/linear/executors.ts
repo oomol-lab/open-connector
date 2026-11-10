@@ -1394,7 +1394,6 @@ export const credentialValidators: CredentialValidators = {
     const viewer = await fetchLinearViewer(input.apiKey, fetcher);
     return {
       profile: mapLinearCredentialProfile(viewer),
-      grantedScopes: ["read", "write", "issues:create", "comments:create"],
       metadata: {
         viewer,
       },

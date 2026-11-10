@@ -58,7 +58,6 @@ export const credentialValidators: CredentialValidators = {
       profile: {
         displayName: "Cheaper Inference API Key",
       },
-      grantedScopes: [],
       metadata: {
         validationEndpoint: "/models",
         availableModels: looseArray(payload?.data)

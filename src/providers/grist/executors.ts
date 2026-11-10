@@ -156,7 +156,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: email ?? ref ?? `grist:user:${id ?? "api-key"}`,
         displayName: name ?? email ?? "Grist API Key",
       },
-      grantedScopes: [],
       metadata: compactObject({
         apiBaseUrl: gristApiBaseUrl,
         validationEndpoint: gristValidationPath,

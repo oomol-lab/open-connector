@@ -271,7 +271,6 @@ export async function validateTapfiliateCredential(
       accountId: "tapfiliate",
       displayName: "Tapfiliate API Key",
     },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl: tapfiliateApiBaseUrl,
       validationEndpoint: "/programs/",

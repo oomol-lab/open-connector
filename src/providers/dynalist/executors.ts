@@ -31,7 +31,7 @@ export const executors: ProviderExecutors = defineApiKeyProviderExecutors(
 export const credentialValidators: CredentialValidators = {
   async apiKey(input, { fetcher, signal }) {
     await requestDynalist("/pref/get", { key: "inbox_move_position" }, input.apiKey, fetcher, true, signal);
-    return { profile: { displayName: "Dynalist Account" }, grantedScopes: [], metadata: {} };
+    return { profile: { displayName: "Dynalist Account" }, metadata: {} };
   },
 };
 export const proxy: ProviderProxyExecutor = defineProviderProxy({

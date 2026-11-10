@@ -91,7 +91,7 @@ export function createClinicalKeyActionContext(
 export async function validateClinicalKeyCredential(
   input: Record<string, string>,
   fetcher: typeof fetch,
-): Promise<{ profile: { displayName: string }; grantedScopes: string[]; metadata: Record<string, unknown> }> {
+): Promise<{ profile: { displayName: string }; metadata: Record<string, unknown> }> {
   const credentials = readValidationCredentials(input);
   const reports = requireObjectArray(
     await requestClinicalKeyJson({
@@ -105,7 +105,6 @@ export async function validateClinicalKeyCredential(
 
   return {
     profile: { displayName: `ClinicalKey ${credentials.customerId}` },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: clinicalKeyApiBaseUrl,
       platform: clinicalKeyPlatformCode,

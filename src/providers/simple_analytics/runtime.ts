@@ -79,7 +79,6 @@ export async function validateSimpleAnalyticsCredential(
       accountId: userId,
       displayName: hostnames[0] ?? userId,
     },
-    grantedScopes: [],
     metadata: compactObject({
       userId,
       validationEndpoint: "/api/websites",

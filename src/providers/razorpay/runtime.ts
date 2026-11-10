@@ -95,7 +95,7 @@ export async function validateRazorpayCredential(
   const firstPayment = asOptionalObject(readFirstCollectionItem(record));
 
   return {
-    profile: { accountId: keyId, displayName: "Razorpay API Key", grantedScopes: [] },
+    profile: { accountId: keyId, displayName: "Razorpay API Key" },
     metadata: compactObject({
       apiBaseUrl: razorpayApiBaseUrl,
       validationEndpoint: `${razorpayValidationPath}?count=1`,

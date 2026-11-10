@@ -70,7 +70,6 @@ export async function validateViggleCredential(
       accountId: "viggle",
       displayName: `Viggle ${balance.credit_balance.balance} credits`,
     },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl: viggleApiBaseUrl,
       authMethod: "bearer",

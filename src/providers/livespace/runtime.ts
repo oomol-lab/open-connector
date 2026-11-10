@@ -224,7 +224,6 @@ export async function validateLivespaceCredential(
       accountId: `livespace:${credentials.subdomain}:api_key:${hashSecret(credentials.apiKey)}`,
       displayName: buildAccountLabel(credentials.subdomain, payload.data),
     },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: buildLivespaceApiBaseUrl(credentials.subdomain),
       subdomain: credentials.subdomain,

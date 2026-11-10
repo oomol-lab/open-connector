@@ -86,9 +86,7 @@ export async function validateShortpixelCredential(
     profile: {
       accountId: "shortpixel-api-key",
       displayName: "ShortPixel API Key",
-      grantedScopes: [],
     },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl: shortpixelAccountApiBaseUrl,
       validationEndpoint: "/api-status.php",

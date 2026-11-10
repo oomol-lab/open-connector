@@ -103,7 +103,6 @@ export const credentialValidators: CredentialValidators = {
           ? `Statamic: ${optionalString(firstSite?.name)}`
           : "Statamic API Token",
       },
-      grantedScopes: [],
       metadata: compactObject({
         apiBaseUrl: statamicApiBaseUrl,
         validationEndpoint: "/sites",

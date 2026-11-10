@@ -70,7 +70,6 @@ export async function validateTeableCredential(
   );
   return {
     profile: { displayName: `Teable ${user.name}` },
-    grantedScopes: [],
     metadata: { apiBaseUrl: teableApiBaseUrl, validationEndpoint: teableCurrentUserPath },
   };
 }

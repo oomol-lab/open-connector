@@ -162,7 +162,6 @@ export async function validateSwaggerhubCredential(
       accountId: "swaggerhub",
       displayName: "SwaggerHub API Key",
     },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: swaggerhubApiOrigin,
       validationEndpoint: "/apis?limit=1",

@@ -110,7 +110,6 @@ async function validateTalenoxCredential(
       accountId: "talenox:api_token",
       displayName: "Talenox API Token",
     },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: talenoxApiBaseUrl,
       validationEndpoint: talenoxValidationPath,

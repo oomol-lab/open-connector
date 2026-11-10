@@ -70,7 +70,6 @@ export const credentialValidators: CredentialValidators = {
     await requestSearch1api(input.apiKey, "usage", {}, fetcher, signal);
     return {
       profile: { displayName: "Search1API API Key" },
-      grantedScopes: [],
       metadata: { apiBaseUrl: search1apiBaseUrl },
     };
   },

@@ -128,7 +128,6 @@ export async function validateAdyntelCredential(
       accountId: `adyntel:${email}`,
       displayName: `Adyntel ${email}`,
     },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: adyntelApiBaseUrl,
       email,

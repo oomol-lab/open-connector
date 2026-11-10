@@ -199,7 +199,6 @@ export async function validateTheColonyCredential(
       accountId: userId,
       displayName: accountLabel ?? "The Colony API key",
     },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl: theColonyApiBaseUrl,
       username,

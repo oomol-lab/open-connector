@@ -297,7 +297,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: `quentn:${credential.systemId}.${credential.serverId}`,
         displayName: accountLabel,
       },
-      grantedScopes: [],
       metadata: {
         systemId: credential.systemId,
         serverId: credential.serverId,

@@ -152,7 +152,6 @@ export const credentialValidators: CredentialValidators = {
     });
     return {
       profile: { displayName: "TAPD API Account" },
-      grantedScopes: [],
       metadata: { apiBaseUrl: baseUrl, validationEndpoint: "/quickstart/testauth" },
     };
   },

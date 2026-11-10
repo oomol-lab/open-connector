@@ -68,7 +68,6 @@ export async function validateElevenreaderCredential(
       accountId: normalizedUser.userId,
       displayName: normalizedUser.firstName ? normalizedUser.firstName : `ElevenReader ${normalizedUser.userId}`,
     },
-    grantedScopes: [],
     metadata: compactObject({
       validationEndpoint: "/user",
       userId: normalizedUser.userId,

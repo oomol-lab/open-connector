@@ -133,9 +133,7 @@ export async function validateOrdinalCredential(
     profile: {
       accountId: workspaceId ?? buildOrdinalProviderAccountId(apiKey),
       displayName: workspaceName ?? workspaceSlug ?? "Ordinal API Key",
-      grantedScopes: [],
     },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl: ordinalApiBaseUrl,
       validationEndpoint: ordinalValidationPath,

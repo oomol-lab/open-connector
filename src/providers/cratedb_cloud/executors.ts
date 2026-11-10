@@ -175,7 +175,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: user.uid ?? user.email ?? key,
         displayName: user.name ?? user.email ?? user.username ?? "CrateDB Cloud API Key",
       },
-      grantedScopes: [],
       metadata: compactObject({
         apiBaseUrl: cratedbCloudApiBaseUrl,
         validationEndpoint: cratedbCloudValidationPath,

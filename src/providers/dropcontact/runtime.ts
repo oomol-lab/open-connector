@@ -76,7 +76,6 @@ export async function validateDropcontactCredential(
       accountId: "dropcontact:api-key",
       displayName: "Dropcontact API Key",
     },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: dropcontactApiBaseUrl,
       validationEndpoint: "/v1/enrich/webhook",

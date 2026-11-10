@@ -85,7 +85,6 @@ export async function validateCloudflareDnsToken(
         accountId: tokenId,
         displayName: "Cloudflare DNS",
       },
-      grantedScopes: [],
       metadata: compactObject({
         validationEndpoint: "/user/tokens/verify",
         tokenId,
@@ -101,7 +100,6 @@ export async function validateCloudflareDnsToken(
         profile: {
           displayName: probe.accountLabel,
         },
-        grantedScopes: [],
         metadata: {
           validationEndpoint: probe.validationEndpoint,
           validationFallback: "zone_probe",

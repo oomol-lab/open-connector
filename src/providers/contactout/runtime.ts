@@ -93,9 +93,7 @@ export async function validateContactoutCredential(
     profile: {
       accountId: "contactout:api-token",
       displayName: "ContactOut API Token",
-      grantedScopes: [],
     },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl: contactoutApiBaseUrl,
       validationEndpoint: "/v1/stats",

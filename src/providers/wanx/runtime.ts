@@ -149,7 +149,6 @@ export async function validateWanxCredential(
   }
   return {
     profile: { accountId: "wanx:api_key", displayName: "Wanx Model Studio API Key" },
-    grantedScopes: [],
     metadata: { apiBaseUrl: wanxApiBaseUrl },
   };
 }

@@ -81,7 +81,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: "api_key",
         displayName: "incident.io API Key",
       },
-      grantedScopes: [],
       metadata: compactObject({
         apiBaseUrl: incidentIoApiBaseUrl,
         validationEndpoint: "/v2/incidents",

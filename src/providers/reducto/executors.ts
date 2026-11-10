@@ -58,9 +58,7 @@ export const credentialValidators = {
       profile: {
         accountId: "reducto-api-key",
         displayName: "Reducto API Key",
-        grantedScopes: [],
       },
-      grantedScopes: [],
       metadata: {
         apiBaseUrl: reductoApiBaseUrl,
         validationEndpoint: "/jobs",

@@ -129,7 +129,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: "api_key",
         displayName: "APIVoid API Key",
       },
-      grantedScopes: [],
       metadata: compactObject({
         apiBaseUrl: apiVoidApiBaseUrl,
         validationEndpoint: "/v2/account-info",

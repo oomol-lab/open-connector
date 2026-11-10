@@ -117,7 +117,6 @@ export async function validateKlingCredential(
   requiredResponseRecord(requiredResponseRecord(payload, "account costs response").data, "account costs response data");
   return {
     profile: { accountId: "kling:api_key", displayName: "Kling AI API Key" },
-    grantedScopes: [],
     metadata: { apiBaseUrl: klingApiBaseUrl },
   };
 }

@@ -33,7 +33,6 @@ export async function validateScrapeCreatorsCredential(
       accountId: "scrape-creators",
       displayName: "Scrape Creators API Key",
     },
-    grantedScopes: [],
     metadata: {
       validationEndpoint: "/v1/account/credit-balance",
       creditBalance: readBalance(result.payload),

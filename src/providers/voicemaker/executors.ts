@@ -66,7 +66,6 @@ export const credentialValidators: CredentialValidators = {
       throw new ProviderRequestError(502, "Voicemaker validation response omitted voices");
     return {
       profile: { accountId: "api_key", displayName: "Voicemaker API Key" },
-      grantedScopes: [],
       metadata: {
         apiBaseUrl: "https://developer.voicemaker.in",
         validationEndpoint: "/api/v1/voice/list",

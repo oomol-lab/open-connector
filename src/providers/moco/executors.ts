@@ -139,7 +139,6 @@ async function validateMocoCredential(
       accountId: `moco:${account}:user:${userId}`,
       displayName: `MOCO ${account}`,
     },
-    grantedScopes: [],
     metadata: compactObject({
       account,
       apiBaseUrl,

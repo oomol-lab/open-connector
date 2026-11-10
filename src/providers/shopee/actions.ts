@@ -105,7 +105,6 @@ export const shopeeActions: ActionDefinition[] = [
     name: "get_merchant_info",
     operationType: "read",
     description: "Get the identity, region, currency, and authorization status of a Shopee merchant.",
-    requiredScopes: ["shopee.read"],
     inputSchema: merchantInputSchema,
     outputSchema: responseSchema,
   }),
@@ -113,7 +112,6 @@ export const shopeeActions: ActionDefinition[] = [
     name: "list_global_categories",
     operationType: "read",
     description: "List the Shopee global product category tree for a cross-border merchant.",
-    requiredScopes: ["shopee.read"],
     inputSchema: s.object(
       "The merchant and display language for the global category tree.",
       {
@@ -128,7 +126,6 @@ export const shopeeActions: ActionDefinition[] = [
     name: "get_global_attribute_tree",
     operationType: "read",
     description: "Get Shopee global product attributes for up to 20 category IDs.",
-    requiredScopes: ["shopee.read"],
     inputSchema: s.object(
       "The merchant, categories, and display language for global product attributes.",
       {
@@ -148,7 +145,6 @@ export const shopeeActions: ActionDefinition[] = [
     name: "list_global_brands",
     operationType: "read",
     description: "List Shopee brands available for a global product category.",
-    requiredScopes: ["shopee.read"],
     inputSchema: s.object(
       "The category and pagination parameters for Shopee global brands.",
       {
@@ -172,7 +168,6 @@ export const shopeeActions: ActionDefinition[] = [
     name: "upload_product_image",
     operationType: "write",
     description: "Download a public image URL and upload it to Shopee Media Space for products.",
-    requiredScopes: ["shopee.write"],
     inputSchema: s.object(
       "A public image URL and Shopee image processing options.",
       {
@@ -191,7 +186,6 @@ export const shopeeActions: ActionDefinition[] = [
     name: "create_global_item",
     operationType: "write",
     description: "Create a Shopee global product draft for a mainland China CNSC merchant.",
-    requiredScopes: ["shopee.write"],
     inputSchema: s.object(
       "The product information used to create a Shopee global product draft.",
       {
@@ -243,7 +237,6 @@ export const shopeeActions: ActionDefinition[] = [
     name: "list_merchant_shops",
     operationType: "read",
     description: "List shops authorized and bound to a Shopee merchant.",
-    requiredScopes: ["shopee.read"],
     inputSchema: s.object(
       "Pagination parameters for shops bound to a Shopee merchant.",
       {
@@ -262,7 +255,6 @@ export const shopeeActions: ActionDefinition[] = [
     name: "get_shop_info",
     operationType: "read",
     description: "Get the profile, region, authorization, and cross-border status of a Shopee shop.",
-    requiredScopes: ["shopee.read"],
     inputSchema: shopInputSchema,
     outputSchema: responseSchema,
   }),
@@ -270,7 +262,6 @@ export const shopeeActions: ActionDefinition[] = [
     name: "list_global_items",
     operationType: "read",
     description: "List global products owned by a Shopee cross-border merchant.",
-    requiredScopes: ["shopee.read"],
     inputSchema: s.object(
       "Cursor and update-time filters for Shopee global products.",
       {
@@ -291,7 +282,6 @@ export const shopeeActions: ActionDefinition[] = [
     name: "get_global_items",
     operationType: "read",
     description: "Get details for up to 20 Shopee global products.",
-    requiredScopes: ["shopee.read"],
     inputSchema: s.object(
       "Shopee global product identifiers.",
       {
@@ -310,7 +300,6 @@ export const shopeeActions: ActionDefinition[] = [
     name: "list_shop_items",
     operationType: "read",
     description: "List Shopee shop items by listing status and update time.",
-    requiredScopes: ["shopee.read"],
     inputSchema: s.object(
       "Filters and offset pagination for Shopee shop items.",
       {
@@ -335,7 +324,6 @@ export const shopeeActions: ActionDefinition[] = [
     name: "get_shop_items",
     operationType: "read",
     description: "Get base information for up to 50 Shopee shop items.",
-    requiredScopes: ["shopee.read"],
     inputSchema: s.object(
       "Shopee shop item identifiers and optional detail sections.",
       {
@@ -356,7 +344,6 @@ export const shopeeActions: ActionDefinition[] = [
     name: "get_item_models",
     operationType: "read",
     description: "Get variation tiers, model prices, and model stock for a Shopee shop item.",
-    requiredScopes: ["shopee.read"],
     inputSchema: s.object(
       "A Shopee shop item whose variation models should be returned.",
       {
@@ -371,7 +358,6 @@ export const shopeeActions: ActionDefinition[] = [
     name: "update_item_prices",
     operationType: "destructive",
     description: "Replace prices for up to 50 models of one Shopee shop item.",
-    requiredScopes: ["shopee.write"],
     inputSchema: s.object(
       "A Shopee shop item and its replacement prices.",
       {
@@ -390,7 +376,6 @@ export const shopeeActions: ActionDefinition[] = [
     name: "update_item_stocks",
     operationType: "destructive",
     description: "Replace seller stock for up to 50 models of one Shopee shop item.",
-    requiredScopes: ["shopee.write"],
     inputSchema: s.object(
       "A Shopee shop item and its replacement seller stock.",
       {
@@ -409,7 +394,6 @@ export const shopeeActions: ActionDefinition[] = [
     name: "list_orders",
     operationType: "read",
     description: "List Shopee shop orders created or updated in a time range of at most 15 days.",
-    requiredScopes: ["shopee.read"],
     inputSchema: s.object(
       "Filters and cursor pagination for Shopee shop orders.",
       {
@@ -441,7 +425,6 @@ export const shopeeActions: ActionDefinition[] = [
     name: "get_orders",
     operationType: "read",
     description: "Get detailed information for up to 50 Shopee orders from one shop.",
-    requiredScopes: ["shopee.read"],
     inputSchema: s.object(
       "Shopee order identifiers and optional response fields.",
       {
@@ -466,7 +449,6 @@ export const shopeeActions: ActionDefinition[] = [
     name: "get_shipping_parameters",
     operationType: "read",
     description: "Get the pickup, drop-off, or non-integrated shipping options for an order package.",
-    requiredScopes: ["shopee.read"],
     inputSchema: s.object("A Shopee order package ready for shipment.", packageInputProperties, {
       optional: ["shopId", "packageNumber"],
     }),
@@ -476,7 +458,6 @@ export const shopeeActions: ActionDefinition[] = [
     name: "ship_order",
     operationType: "write",
     description: "Arrange pickup, drop-off, or non-integrated shipment for a Shopee order package.",
-    requiredScopes: ["shopee.write"],
     inputSchema: s.object(
       "A Shopee order package and one shipping method returned by get_shipping_parameters.",
       {
@@ -514,7 +495,6 @@ export const shopeeActions: ActionDefinition[] = [
     name: "get_tracking_number",
     operationType: "read",
     description: "Get carrier tracking numbers for a shipped Shopee order package.",
-    requiredScopes: ["shopee.read"],
     inputSchema: s.object(
       "A shipped Shopee order package and optional tracking fields.",
       {
@@ -537,7 +517,6 @@ export const shopeeActions: ActionDefinition[] = [
     name: "get_tracking_info",
     operationType: "read",
     description: "Get logistics tracking events for a Shopee order package.",
-    requiredScopes: ["shopee.read"],
     inputSchema: s.object("A shipped Shopee order package.", packageInputProperties, {
       optional: ["shopId", "packageNumber"],
     }),
@@ -547,7 +526,6 @@ export const shopeeActions: ActionDefinition[] = [
     name: "list_returns",
     operationType: "read",
     description: "List Shopee returns by creation time, update time, and workflow status.",
-    requiredScopes: ["shopee.read"],
     inputSchema: s.object(
       "Filters and page pagination for Shopee returns.",
       {
@@ -588,7 +566,6 @@ export const shopeeActions: ActionDefinition[] = [
     name: "get_return",
     operationType: "read",
     description: "Get the details and current workflow state of a Shopee return.",
-    requiredScopes: ["shopee.read"],
     inputSchema: s.object(
       "A Shopee return selected from one shop.",
       {
@@ -603,7 +580,6 @@ export const shopeeActions: ActionDefinition[] = [
     name: "get_order_escrow",
     operationType: "read",
     description: "Get Shopee accounting and fee details for one order.",
-    requiredScopes: ["shopee.read"],
     inputSchema: s.object(
       "A Shopee order whose escrow accounting should be returned.",
       {

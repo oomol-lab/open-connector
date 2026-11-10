@@ -130,7 +130,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: "api_key",
         displayName: deviceName ? `Govee: ${deviceName}` : "Govee API Key",
       },
-      grantedScopes: [],
       metadata: compactObject({
         apiBaseUrl: goveeApiBaseUrl,
         validationEndpoint: "/router/api/v1/user/devices",

@@ -26,7 +26,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: optionalString(user.id) ?? optionalString(user.company_id),
         displayName: optionalString(user.name) ?? optionalString(user.email) ?? "Nimble API Key",
       },
-      grantedScopes: [],
       metadata: { apiBaseUrl: nimbleApiBaseUrl, companyId: optionalString(user.company_id) },
     };
   },

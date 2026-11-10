@@ -105,7 +105,6 @@ export async function validateNorthbeamCredential(
       accountId: context.clientId,
       displayName: `Northbeam ${context.clientId}`,
     },
-    grantedScopes: [],
     metadata: compactObject({
       clientId: context.clientId,
       metricCount: metrics.length,

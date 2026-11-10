@@ -3,12 +3,6 @@ import type { ProviderActionDefinition } from "../../core/provider-definition.ts
 import { s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
 
-export const baiduNetdiskConnectorScopes = {
-  accountRead: "baidu_netdisk.account.read",
-  rootFilesRead: "baidu_netdisk.files.root.read",
-  rootFilesWrite: "baidu_netdisk.files.root.write",
-};
-
 export const baiduNetdiskProviderScopes = {
   basic: "basic",
   netdisk: "netdisk",
@@ -137,7 +131,7 @@ export const baiduNetdiskActions: ProviderActionDefinition[] = [
     name: "get_current_account",
     operationType: "read",
     description: "Get the current Baidu Netdisk account and membership summary.",
-    requiredScopes: [baiduNetdiskConnectorScopes.accountRead],
+    requiredScopes: [baiduNetdiskProviderScopes.basic, baiduNetdiskProviderScopes.netdisk],
     providerPermissions: [baiduNetdiskProviderScopes.basic, baiduNetdiskProviderScopes.netdisk],
     inputSchema: emptyInputSchema,
     outputSchema: s.object("The current Baidu Netdisk account.", {
@@ -151,7 +145,7 @@ export const baiduNetdiskActions: ProviderActionDefinition[] = [
     name: "get_quota",
     operationType: "read",
     description: "Get total, used, remaining, free, and expiring Baidu Netdisk capacity.",
-    requiredScopes: [baiduNetdiskConnectorScopes.accountRead],
+    requiredScopes: [baiduNetdiskProviderScopes.basic, baiduNetdiskProviderScopes.netdisk],
     providerPermissions: [baiduNetdiskProviderScopes.basic, baiduNetdiskProviderScopes.netdisk],
     inputSchema: emptyInputSchema,
     outputSchema: s.object("The current Baidu Netdisk capacity summary.", {
@@ -167,7 +161,7 @@ export const baiduNetdiskActions: ProviderActionDefinition[] = [
     operationType: "read",
     description:
       "List all files and folders, or only documents, images, or videos, from the user's Baidu Netdisk root.",
-    requiredScopes: [baiduNetdiskConnectorScopes.rootFilesRead],
+    requiredScopes: [baiduNetdiskProviderScopes.netdisk],
     providerPermissions: [baiduNetdiskProviderScopes.netdisk],
     inputSchema: s.object(
       "Input for listing one Baidu Netdisk directory page.",
@@ -192,7 +186,7 @@ export const baiduNetdiskActions: ProviderActionDefinition[] = [
     name: "search_files",
     operationType: "read",
     description: "Search files and folders below an absolute Baidu Netdisk directory.",
-    requiredScopes: [baiduNetdiskConnectorScopes.rootFilesRead],
+    requiredScopes: [baiduNetdiskProviderScopes.netdisk],
     providerPermissions: [baiduNetdiskProviderScopes.netdisk],
     inputSchema: s.object(
       "Input for one Baidu Netdisk keyword-search page.",
@@ -223,7 +217,7 @@ export const baiduNetdiskActions: ProviderActionDefinition[] = [
     name: "semantic_search_files",
     operationType: "read",
     description: "Search Baidu Netdisk using a natural-language description.",
-    requiredScopes: [baiduNetdiskConnectorScopes.rootFilesRead],
+    requiredScopes: [baiduNetdiskProviderScopes.netdisk],
     providerPermissions: [baiduNetdiskProviderScopes.netdisk],
     inputSchema: s.object(
       "Input for one bounded Baidu Netdisk semantic search.",
@@ -245,7 +239,7 @@ export const baiduNetdiskActions: ProviderActionDefinition[] = [
     name: "download_file",
     operationType: "read",
     description: "Download one Baidu Netdisk file by fs_id into local transit file storage.",
-    requiredScopes: [baiduNetdiskConnectorScopes.rootFilesRead],
+    requiredScopes: [baiduNetdiskProviderScopes.netdisk],
     providerPermissions: [baiduNetdiskProviderScopes.netdisk],
     inputSchema: s.requiredObject("Input for downloading one Baidu Netdisk file.", {
       fsId: s.string({
@@ -260,7 +254,7 @@ export const baiduNetdiskActions: ProviderActionDefinition[] = [
     name: "upload_file_from_url",
     operationType: "write",
     description: "Ask Baidu Netdisk to fetch one public URL into an absolute destination path.",
-    requiredScopes: [baiduNetdiskConnectorScopes.rootFilesWrite],
+    requiredScopes: [baiduNetdiskProviderScopes.netdisk],
     providerPermissions: [baiduNetdiskProviderScopes.netdisk],
     inputSchema: s.object("Input for uploading one public URL through Baidu MCP.", {
       fileUrl: publicFileUrlSchema,
@@ -272,7 +266,7 @@ export const baiduNetdiskActions: ProviderActionDefinition[] = [
     name: "create_text_file",
     operationType: "write",
     description: "Create one UTF-8 text file through Baidu MCP.",
-    requiredScopes: [baiduNetdiskConnectorScopes.rootFilesWrite],
+    requiredScopes: [baiduNetdiskProviderScopes.netdisk],
     providerPermissions: [baiduNetdiskProviderScopes.netdisk],
     inputSchema: s.object("Input for creating one UTF-8 Baidu Netdisk text file.", {
       path: absolutePath("The absolute destination file path.", false),
@@ -284,7 +278,7 @@ export const baiduNetdiskActions: ProviderActionDefinition[] = [
     name: "create_folder",
     operationType: "write",
     description: "Create one folder at an absolute path below the user's Baidu Netdisk root.",
-    requiredScopes: [baiduNetdiskConnectorScopes.rootFilesWrite],
+    requiredScopes: [baiduNetdiskProviderScopes.netdisk],
     providerPermissions: [baiduNetdiskProviderScopes.netdisk],
     inputSchema: s.object(
       "Input for creating one Baidu Netdisk folder.",
@@ -300,7 +294,7 @@ export const baiduNetdiskActions: ProviderActionDefinition[] = [
     name: "create_share_link",
     operationType: "write",
     description: "Create one Baidu Netdisk share link for one or more files or folders.",
-    requiredScopes: [baiduNetdiskConnectorScopes.rootFilesWrite],
+    requiredScopes: [baiduNetdiskProviderScopes.netdisk],
     providerPermissions: [baiduNetdiskProviderScopes.netdisk],
     inputSchema: s.object(
       "Input for creating one Baidu Netdisk share link.",
@@ -326,7 +320,7 @@ export const baiduNetdiskActions: ProviderActionDefinition[] = [
     name: "copy",
     operationType: "write",
     description: "Synchronously copy one Baidu Netdisk file or folder.",
-    requiredScopes: [baiduNetdiskConnectorScopes.rootFilesWrite],
+    requiredScopes: [baiduNetdiskProviderScopes.netdisk],
     providerPermissions: [baiduNetdiskProviderScopes.netdisk],
     inputSchema: relocateInputSchema("copy"),
     outputSchema: managementOutputSchema,
@@ -335,7 +329,7 @@ export const baiduNetdiskActions: ProviderActionDefinition[] = [
     name: "move",
     operationType: "destructive",
     description: "Synchronously move one Baidu Netdisk file or folder.",
-    requiredScopes: [baiduNetdiskConnectorScopes.rootFilesWrite],
+    requiredScopes: [baiduNetdiskProviderScopes.netdisk],
     providerPermissions: [baiduNetdiskProviderScopes.netdisk],
     inputSchema: relocateInputSchema("mov"),
     outputSchema: managementOutputSchema,
@@ -344,7 +338,7 @@ export const baiduNetdiskActions: ProviderActionDefinition[] = [
     name: "rename",
     operationType: "write",
     description: "Synchronously rename one Baidu Netdisk file or folder.",
-    requiredScopes: [baiduNetdiskConnectorScopes.rootFilesWrite],
+    requiredScopes: [baiduNetdiskProviderScopes.netdisk],
     providerPermissions: [baiduNetdiskProviderScopes.netdisk],
     inputSchema: s.object(
       "Input for renaming one Baidu Netdisk file or folder.",

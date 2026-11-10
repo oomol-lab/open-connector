@@ -81,7 +81,6 @@ export const credentialValidators: CredentialValidators = {
       profile: {
         displayName: "Harmonic.ai API Key",
       },
-      grantedScopes: [],
       metadata: {
         apiBaseUrl: harmonicAiApiBaseUrl,
         validationEndpoint: "/enrichment_status",

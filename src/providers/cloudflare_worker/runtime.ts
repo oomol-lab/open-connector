@@ -165,7 +165,6 @@ export async function validateCloudflareWorkerCredential(
       accountId,
       displayName: "Cloudflare Worker",
     },
-    grantedScopes: [],
     metadata: compactObject({
       validationEndpoint: verificationResult.validationEndpoint,
       tokenId,

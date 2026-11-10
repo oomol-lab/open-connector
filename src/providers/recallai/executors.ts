@@ -144,9 +144,7 @@ export async function validateRecallAiCredential(
     profile: {
       accountId: buildRecallAiAccountId(apiKey, region),
       displayName: `Recall.ai API Key (${region})`,
-      grantedScopes: [],
     },
-    grantedScopes: [],
     metadata: {
       region,
       apiBaseUrl,

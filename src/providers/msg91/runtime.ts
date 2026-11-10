@@ -51,7 +51,6 @@ export async function validateMsg91Credential(apiKey: string): Promise<Credentia
       accountId: "msg91",
       displayName: "MSG91 Authkey",
     },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: msg91ApiBaseUrl,
       validationMode: "local_only",

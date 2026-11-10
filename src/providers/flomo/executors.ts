@@ -184,7 +184,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: `flomo:${hashFlomoWebhookUrl(webhookUrl)}`,
         displayName: `flomo · ${suffix}`,
       },
-      grantedScopes: [],
       metadata: {
         webhookHost: webhookUrl.host,
         webhookPathSuffix: suffix,
@@ -205,7 +204,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: `flomo:mcp:${tokenHash}`,
         displayName: `flomo MCP · ${tokenHash.slice(-6)}`,
       },
-      grantedScopes: [],
       metadata: {
         mcpEndpoint: flomoMcpEndpoint,
         mcpTools: tools.map((tool) => tool.name).sort(),

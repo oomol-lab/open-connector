@@ -93,7 +93,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: optionalString(firstProfile?.id) ?? "next_dns:api_key",
         displayName: "NextDNS API Key",
       },
-      grantedScopes: [],
       metadata: compactObject({
         apiBaseUrl: nextDnsApiBaseUrl,
         validationEndpoint: nextDnsValidationPath,

@@ -243,7 +243,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: user,
         displayName: user,
       },
-      grantedScopes: [],
       metadata: {
         baseUrl,
         validationEndpoint: buildMethodPath(erpnextLoggedUserMethod),

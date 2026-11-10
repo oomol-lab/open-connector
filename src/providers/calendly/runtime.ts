@@ -151,7 +151,7 @@ export async function validateCalendlyCredential(
   fetcher: typeof fetch,
   signal?: AbortSignal,
 ): Promise<{
-  profile: { accountId: string; displayName: string; grantedScopes: string[] };
+  profile: { accountId: string; displayName: string };
   metadata: Record<string, unknown>;
 }> {
   const payload = await requestCalendlyJson({
@@ -168,7 +168,6 @@ export async function validateCalendlyCredential(
     profile: {
       accountId: extractCalendlyIdFromUri(userUri, "users"),
       displayName: optionalString(user.name) ?? optionalString(user.email) ?? "Calendly User",
-      grantedScopes: [],
     },
     metadata: compactObject({
       apiBaseUrl: calendlyApiOrigin,

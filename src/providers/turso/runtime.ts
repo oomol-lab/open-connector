@@ -153,7 +153,6 @@ export async function validateTursoCredential(
       accountId: "turso-api-token",
       displayName: "Turso API Token",
     },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl: tursoApiBaseUrl,
       validationEndpoint: "/v1/auth/validate",

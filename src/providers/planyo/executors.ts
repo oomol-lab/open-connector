@@ -113,7 +113,7 @@ export const credentialValidators: CredentialValidators = {
       input.values.hashKey,
       fetcher,
     );
-    return { profile: { displayName: optionalString(data.name) ?? "Planyo API Key" }, grantedScopes: [], metadata: {} };
+    return { profile: { displayName: optionalString(data.name) ?? "Planyo API Key" }, metadata: {} };
   },
 };
 export const proxy: ProviderProxyExecutor = defineProviderProxy({

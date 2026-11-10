@@ -119,7 +119,6 @@ export async function validateBuildiumCredential(input: BuildiumActionContext): 
       accountId: input.clientId,
       displayName: "Buildium API Key",
     },
-    grantedScopes: [],
     metadata: {
       clientId: input.clientId,
       apiBaseUrl: buildiumApiBaseUrl,

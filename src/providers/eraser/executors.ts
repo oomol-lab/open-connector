@@ -74,7 +74,6 @@ export const credentialValidators: CredentialValidators = {
     });
     return {
       profile: { accountId: "eraser", displayName: "Eraser Team API Token" },
-      grantedScopes: [],
       metadata: { apiBaseUrl: eraserApiBaseUrl, validationEndpoint: "/files?limit=1" },
     };
   },

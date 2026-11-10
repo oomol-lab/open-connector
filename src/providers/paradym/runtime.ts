@@ -67,7 +67,6 @@ export async function validateParadymCredential(
     profile: {
       accountId: firstProject?.id ?? "paradym-api-key",
       displayName: firstProject?.name ? `Paradym ${firstProject.name}` : "Paradym API Key",
-      grantedScopes: [],
     },
     metadata: compactObject({
       apiBaseUrl: paradymApiBaseUrl,

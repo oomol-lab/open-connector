@@ -61,7 +61,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: "route4me-api-key",
         displayName: "Route4Me API Key",
       },
-      grantedScopes: [],
       metadata: {
         apiBaseUrl: route4meApiBaseUrl,
         validationEndpoint: route4meValidationPath,

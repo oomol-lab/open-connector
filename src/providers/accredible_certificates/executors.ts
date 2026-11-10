@@ -99,7 +99,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: issuer.id === undefined ? "accredible_certificates:api_key" : String(issuer.id),
         displayName: issuer.name ?? issuer.email ?? "Accredible API Key",
       },
-      grantedScopes: [],
       metadata: compactObject({
         apiBaseUrl: accredibleCertificatesApiBaseUrl,
         validationEndpoint: "/v1/issuer/details",

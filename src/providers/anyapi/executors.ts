@@ -24,7 +24,6 @@ export const credentialValidators: CredentialValidators = {
       throw providerResponseError("AnyAPI balance response is missing usd");
     return {
       profile: { displayName: "AnyAPI API Key" },
-      grantedScopes: [],
       metadata: { apiBaseUrl: anyapiBaseUrl },
     };
   },

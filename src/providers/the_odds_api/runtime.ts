@@ -127,7 +127,6 @@ export async function validateTheOddsApiCredential(
   const firstSportTitle = optionalString(firstSport?.title);
   return {
     profile: { accountId: firstSportKey ?? "the_odds_api:api-key", displayName: "The Odds API Key" },
-    grantedScopes: [],
     metadata: compactObject({
       validationEndpoint: "/v4/sports",
       firstSportKey,

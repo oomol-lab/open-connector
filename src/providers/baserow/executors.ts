@@ -193,7 +193,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: firstTableId !== undefined ? `baserow:table:${firstTableId}` : undefined,
         displayName: optionalString(firstTable?.name) ?? "Baserow Database Token",
       },
-      grantedScopes: [],
       metadata: compactObject({
         apiBaseUrl: baserowApiBaseUrl,
         validationEndpoint: baserowValidationPath,

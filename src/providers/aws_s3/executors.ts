@@ -228,7 +228,6 @@ async function validateAwsCredential(
             accountId: accessKeyId,
             displayName: `AWS S3 - ${bucket}`,
           },
-          grantedScopes: [],
           metadata: compactObject({
             region,
             bucket,
@@ -253,7 +252,6 @@ async function validateAwsCredential(
         accountId: accessKeyId,
         displayName: firstBucket?.name ? `AWS S3 - ${firstBucket.name}` : `AWS S3 - ${region}`,
       },
-      grantedScopes: [],
       metadata: compactObject({
         region,
         bucket,

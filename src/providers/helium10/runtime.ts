@@ -107,7 +107,6 @@ export async function validateHelium10Credential(
   const tokenHash = createHash("sha256").update(accessToken).digest("hex").slice(0, 16);
   return {
     profile: { accountId: `helium10:mcp:${tokenHash}`, displayName: `Helium 10 MCP · ${tokenHash.slice(-6)}` },
-    grantedScopes: ["mcp:tools"],
     metadata: { mcpEndpoint: helium10McpEndpoint },
   };
 }

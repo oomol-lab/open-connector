@@ -66,7 +66,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: "api_key",
         displayName: "JSONBin.io Master Key",
       },
-      grantedScopes: [],
       metadata: {
         apiBaseUrl: jsonbinApiBaseUrl,
         validationEndpoint: jsonbinValidationPath,

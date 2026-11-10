@@ -184,7 +184,6 @@ export async function validateRetentlyCredential(
       accountId: accountId ?? "api_key",
       displayName: accountName ? `Retently ${accountName}` : accountId ? `Retently ${accountId}` : "Retently API Key",
     },
-    grantedScopes: [],
     metadata: compactObject({
       accountId,
       accountName,

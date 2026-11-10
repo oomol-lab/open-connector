@@ -153,7 +153,6 @@ export const credentialValidators: CredentialValidators = {
       profile: {
         displayName: "Axiom API Token",
       },
-      grantedScopes: [],
       metadata: compactObject({
         apiBaseUrl: axiomApiBaseUrl,
         validationEndpoint: "/v2/datasets",

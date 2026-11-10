@@ -99,7 +99,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: account.username,
         displayName: account.username,
       },
-      grantedScopes: [],
       metadata: {
         apiBaseUrl,
         validationEndpoint: "/get-account-info",

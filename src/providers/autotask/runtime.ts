@@ -85,7 +85,6 @@ export async function validateAutotaskCredential(
       accountId: credentials.username,
       displayName: `Autotask ${credentials.username}`,
     },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl: zone.apiBaseUrl,
       zoneName: zone.zoneName,

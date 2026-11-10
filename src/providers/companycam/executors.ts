@@ -225,7 +225,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: companyId ?? "api_key",
         displayName: companyName ?? "CompanyCam Access Token",
       },
-      grantedScopes: [],
       metadata: compactObject({
         apiBaseUrl: companycamApiBaseUrl,
         validationEndpoint: "/company",

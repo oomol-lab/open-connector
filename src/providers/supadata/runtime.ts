@@ -86,7 +86,6 @@ export async function validateSupadataCredential(
       accountId: organizationId ?? "api_key",
       displayName: organizationId ?? plan ?? "Supadata API Key",
     },
-    grantedScopes: [],
     metadata: compactObject({
       validationEndpoint: supadataActionPaths.get_account,
       apiBaseUrl: supadataApiBaseUrl,

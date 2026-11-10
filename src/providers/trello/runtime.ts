@@ -491,7 +491,6 @@ export async function validateTrelloCredential(
       accountId: memberId ?? username ?? "trello:member",
       displayName: fullName ?? fallbackLabel,
     },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl: trelloApiBaseUrl,
       memberId,

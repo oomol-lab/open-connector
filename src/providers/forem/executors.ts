@@ -242,7 +242,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: userId === undefined ? "api_key" : `forem:${baseUrl}:${userId}`,
         displayName: email ?? username ?? name ?? "Forem API Key",
       },
-      grantedScopes: [],
       metadata: compactObject({
         baseUrl,
         apiBaseUrl: buildForemApiBaseUrl(baseUrl),

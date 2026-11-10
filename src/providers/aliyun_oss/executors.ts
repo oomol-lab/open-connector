@@ -319,7 +319,6 @@ async function validateAliyunOssCredential(input: Record<string, string>): Promi
           ? `Alibaba Cloud OSS - ${firstBucket.name}`
           : `Alibaba Cloud OSS - ${stripProtocol(endpoint)}`,
       },
-      grantedScopes: [],
       metadata: compactObject({
         endpoint,
         bucket,

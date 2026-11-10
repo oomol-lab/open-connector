@@ -151,7 +151,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: accessKeyId,
         displayName: defaultRoleArn ? `AWS STS - ${defaultRoleArn}` : `AWS STS - ${accessKeyId}`,
       },
-      grantedScopes: [],
       metadata: compactObject({
         credentialKind: sessionToken ? "sts" : "access_key",
         defaultRoleArn,

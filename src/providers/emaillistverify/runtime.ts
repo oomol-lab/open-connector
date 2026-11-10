@@ -119,7 +119,6 @@ export async function validateEmailListVerifyCredential(
       accountId: buildEmailListVerifyProviderAccountId(apiKey),
       displayName: "EmailListVerify API Key",
     },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: emailListVerifyApiBaseUrl,
       validationEndpoint: "/api/credits",

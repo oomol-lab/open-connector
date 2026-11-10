@@ -322,15 +322,26 @@ it("applies declared authorization options and always includes required scopes",
   expect((await invalid.json()).errorCode).toBe("invalid_input");
 });
 
-it("fails a request when the provider does not grant its required authorization scope", async () => {
-  const { call } = await setup(undefined, {}, { ...githubProvider, service: "example", actions: [] });
-  const request = (await (await call("/v1/connections/example/connect", { authorizationOptionIds: [] })).json()).data;
-  await call(`/oauth/callback?state=${request.stateHandle}&code=code`);
-  expect((await (await call(`/v1/connection-requests/${request.connectionRequestId}`)).json()).data).toMatchObject({
-    status: "failed",
-    errorCode: "scope_missing",
-  });
-});
+it.each([undefined, "", "read", "read:user repo extra"])(
+  "connects when the provider reports a different scope set: %s",
+  async (scope) => {
+    const { call, database } = await setup(
+      async () => ({ accessToken: "access-secret", tokenType: "Bearer", metadata: { scope } }),
+      {},
+      { ...githubProvider, service: "example", actions: [] },
+    );
+    const request = (await (await call("/v1/connections/example/connect", { authorizationOptionIds: [] })).json()).data;
+    expect(new URL(request.authorizationUrl).searchParams.get("scope")).toBe("read:user");
+    await call(`/oauth/callback?state=${request.stateHandle}&code=code`);
+    expect((await (await call(`/v1/connection-requests/${request.connectionRequestId}`)).json()).data).toMatchObject({
+      status: "connected",
+    });
+    const [connection] = await database.connectionStore.list();
+    expect(connection).toMatchObject({
+      credential: { profile: { grantedScopes: scope ? scope.split(" ") : [] } },
+    });
+  },
+);
 
 it("returns to the caller with success and safe failure parameters", async () => {
   const { call } = await setup();

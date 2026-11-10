@@ -111,7 +111,6 @@ export async function validateSmugmugCredential(context: ApiKeyProviderContext):
       accountId: "api_key",
       displayName: "SmugMug API Key",
     },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl: smugmugApiBaseUrl,
       validationEndpoint: `${smugmugApiBasePath}/user/${smugmugDemoUserNickname}`,

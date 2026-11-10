@@ -128,7 +128,6 @@ export async function validatePlaneCredential(
   signal?: AbortSignal,
 ): Promise<{
   profile: { accountId: string; displayName: string };
-  grantedScopes: string[];
   metadata: Record<string, unknown>;
 }> {
   const baseUrl = normalizePlaneApiBaseUrl(apiBaseUrl);
@@ -146,7 +145,6 @@ export async function validatePlaneCredential(
   const displayName = optionalString(user.display_name) ?? optionalString(user.email) ?? fullName;
   return {
     profile: { accountId, displayName: displayName || "Plane API Key" },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl: baseUrl,
       userId: optionalString(user.id),

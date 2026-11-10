@@ -96,7 +96,6 @@ export async function validatePdflessCredential(
     profile: {
       accountId: workspace.name ?? "pdfless-api-key",
       displayName: workspace.name ?? "Pdfless API Key",
-      grantedScopes: [],
     },
     metadata: compactObject({
       apiBaseUrl: pdflessApiBaseUrl,

@@ -148,7 +148,6 @@ export async function validateCloudflareR2Credential(
       accountId,
       displayName: optionalString(firstBucket?.name) ? `Cloudflare R2 - ${String(firstBucket?.name)}` : "Cloudflare R2",
     },
-    grantedScopes: [],
     metadata: compactObject({
       validationEndpoint: `/accounts/${accountId}/r2/buckets?per_page=1`,
       accountId,

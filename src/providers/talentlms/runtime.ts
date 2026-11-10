@@ -106,7 +106,6 @@ export async function validateTalentlmsCredential(
       accountId: new URL(apiBaseUrl).hostname,
       displayName: `TalentLMS: ${new URL(apiBaseUrl).hostname}`,
     },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl,
       validationEndpoint: talentlmsValidationPath,

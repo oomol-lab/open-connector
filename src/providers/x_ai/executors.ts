@@ -62,7 +62,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: "xai-api-key",
         displayName: "xAI API Key",
       },
-      grantedScopes: [],
       metadata: {
         validationEndpoint: "/v1/models",
         availableModels: data

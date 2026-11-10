@@ -70,7 +70,6 @@ export async function validateAmbeeCredential(
       accountId: "ambee",
       displayName: "Ambee API Key",
     },
-    grantedScopes: [],
     metadata: compactObject({
       validationEndpoint: "/geocode/by-place",
       apiBaseUrl: ambeeApiBaseUrl,

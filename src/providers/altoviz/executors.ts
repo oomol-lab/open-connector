@@ -50,7 +50,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: email ?? "altoviz-api-key",
         displayName: displayName ?? email ?? "Altoviz API Key",
       },
-      grantedScopes: [],
       metadata: { apiBaseUrl: altovizApiBaseUrl },
     };
   },

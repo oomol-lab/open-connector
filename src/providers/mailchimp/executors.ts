@@ -262,7 +262,6 @@ async function validateMailchimpApiKeyCredential(
       accountId: accountId ?? loginId ?? `mailchimp:${dataCenter}`,
       displayName: accountName ?? email ?? `Mailchimp ${dataCenter}`,
     },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl,
       dataCenter,
@@ -292,7 +291,6 @@ async function validateMailchimpOAuthCredential(
       accountId: accountId ?? `mailchimp:${dataCenter}`,
       displayName: accountName ?? email ?? `Mailchimp ${dataCenter}`,
     },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl,
       dataCenter,

@@ -202,7 +202,6 @@ export async function validateVercelCredential(
     accountId: string;
     displayName: string;
   };
-  grantedScopes: string[];
   metadata: Record<string, unknown>;
 }> {
   const teamScope = readVercelTeamScope(input.values);
@@ -221,7 +220,6 @@ export async function validateVercelCredential(
       accountId: team?.id ?? user.id,
       displayName: team ? (team.name ?? team.slug ?? userLabel(user)) : userLabel(user),
     },
-    grantedScopes: [],
     metadata: compactObject({
       validationEndpoint: team ? `/v2/teams/${team.id}` : "/v2/user",
       userId: user.id,

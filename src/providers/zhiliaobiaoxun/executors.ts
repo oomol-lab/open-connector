@@ -84,7 +84,6 @@ export const credentialValidators: CredentialValidators = {
     const userId = optionalNumber(data.user_id);
     return {
       profile: { displayName: userId == null ? "Zhiliao Biaoxun API Key" : `Zhiliao Biaoxun ${userId}` },
-      grantedScopes: [],
       metadata: {},
     };
   },

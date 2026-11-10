@@ -218,7 +218,6 @@ export async function validateWordpressCredential(
         userSlug ||
         `${connection.auth.type === "basic" ? connection.auth.username : "WordPress user"} (${new URL(connection.siteUrl).host})`,
     },
-    grantedScopes: [],
     metadata: compactObject({
       siteUrl: connection.siteUrl,
       apiBaseUrl: connection.apiBaseUrl,

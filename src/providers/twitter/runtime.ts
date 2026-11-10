@@ -32,7 +32,6 @@ export async function fetchTwitterCurrentAccount(
   profile: {
     accountId: string;
     displayName: string;
-    grantedScopes: string[];
   };
   metadata: Record<string, unknown>;
 }> {
@@ -54,7 +53,6 @@ export async function fetchTwitterCurrentAccount(
     profile: {
       accountId: id,
       displayName: normalizeOptionalString(account.name) || username,
-      grantedScopes: [],
     },
     metadata: {
       id,

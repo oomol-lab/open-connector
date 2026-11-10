@@ -177,7 +177,6 @@ export async function validateCodacyApiKey(
       accountId,
       displayName,
     },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl: `${codacyApiBaseUrl}${codacyApiPathPrefix}`,
       validationEndpoint: "/user",

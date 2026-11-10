@@ -163,7 +163,6 @@ export async function validateBlueskyCredential(
     profile: {
       accountId: session.did,
       displayName: session.handle,
-      grantedScopes: [],
     },
     metadata: compactObject({
       apiBaseUrl: blueskyApiBaseUrl,

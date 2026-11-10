@@ -54,7 +54,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: store.storeCode ?? login,
         displayName: store.storeName ?? store.storeUrl ?? "Jumpseller Store",
       },
-      grantedScopes: [],
       metadata: compactObject({
         apiBaseUrl: jumpsellerApiBaseUrl,
         validationEndpoint: "/store/info.json",

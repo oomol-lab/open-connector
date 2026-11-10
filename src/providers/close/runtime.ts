@@ -89,7 +89,6 @@ export async function validateCloseCredential(
       accountId: meId.startsWith("close:") ? meId : `close:${meId}`,
       displayName: optionalString(payload.full_name) ?? readRequiredString(payload.email, "me.email"),
     },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl: closeApiBaseUrl,
       validationEndpoint: "/me/",

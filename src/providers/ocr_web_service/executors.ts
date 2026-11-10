@@ -105,7 +105,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: `ocr_web_service:${credential.username}`,
         displayName: `OCR Web Service (${credential.username})`,
       },
-      grantedScopes: [],
       metadata: {
         apiBaseUrl: ocrWebServiceApiBaseUrl,
         validationEndpoint: "/getAccountInformation",

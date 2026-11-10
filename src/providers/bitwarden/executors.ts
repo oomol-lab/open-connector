@@ -97,7 +97,6 @@ export const credentialValidators: CredentialValidators = {
     await token(value, fetcher, signal, true);
     return {
       profile: { accountId: value.clientId, displayName: `Bitwarden Organization (${value.region.toUpperCase()})` },
-      grantedScopes: ["api.organization"],
       metadata: { region: value.region, apiBaseUrl: regions[value.region].api },
     };
   },

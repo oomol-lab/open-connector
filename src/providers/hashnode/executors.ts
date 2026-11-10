@@ -31,7 +31,6 @@ export const credentialValidators: CredentialValidators = {
       profile: {
         accountId: id,
         displayName: `${name} (@${username})`,
-        grantedScopes: [],
       },
       metadata: {
         apiBaseUrl: hashnodeApiUrl,

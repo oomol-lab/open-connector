@@ -71,7 +71,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: "coinranking",
         displayName: "Coinranking API Key",
       },
-      grantedScopes: [],
       metadata: {
         validationEndpoint: "/stats",
         apiBaseUrl: coinrankingApiBaseUrl,

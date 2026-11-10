@@ -149,7 +149,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: "nango",
         displayName: "Nango API Key",
       },
-      grantedScopes: [],
       metadata: compactObject({
         apiBaseUrl: nangoApiBaseUrl,
         validationEndpoint: "/providers",

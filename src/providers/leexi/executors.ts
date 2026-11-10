@@ -156,7 +156,6 @@ async function validateLeexiCredential(context: LeexiActionContext): Promise<Cre
       accountId: firstUserUuid,
       displayName: firstUserName ?? "Leexi API Key",
     },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl: leexiApiBaseUrl,
       validationEndpoint: leexiValidationPath,

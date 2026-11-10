@@ -16,7 +16,6 @@ describe("Ringba credential validation", () => {
 
     expect(result).toEqual({
       profile: { accountId: "ringba", displayName: "Ringba API Token" },
-      grantedScopes: [],
       metadata: {
         accountId: undefined,
         accessibleAccountIds: [],
@@ -68,7 +67,6 @@ describe("Ringba credential validation", () => {
 
     expect(result).toEqual({
       profile: { accountId: "RA-1", displayName: "Primary" },
-      grantedScopes: [],
       metadata: {
         accountId: "RA-1",
         accessibleAccountIds: ["RA-1", "RA-2"],

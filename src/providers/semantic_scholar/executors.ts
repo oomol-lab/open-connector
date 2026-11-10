@@ -332,7 +332,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: "api_key",
         displayName: "Semantic Scholar API Key",
       },
-      grantedScopes: [],
       metadata: compactObject({
         validationEndpoint: "/paper/search",
         firstPaperId: optionalRawString(firstPaperRecord?.paperId),

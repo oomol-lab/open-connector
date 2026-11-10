@@ -122,7 +122,6 @@ export const credentialValidators: CredentialValidators = {
       .trim();
     return {
       profile: { displayName: name || optionalString(profile.email) || "Ploid API Key" },
-      grantedScopes: [],
       metadata: { apiBaseUrl: baseUrl },
     };
   },

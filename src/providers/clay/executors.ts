@@ -63,7 +63,6 @@ export const credentialValidators: CredentialValidators = {
     const user = requiredResponseRecord(payload.user, "Clay user");
     return {
       profile: { displayName: optionalRawString(workspace.name) ?? optionalRawString(user.name) ?? "Clay API Key" },
-      grantedScopes: [],
       metadata: { workspaceId: optionalRawString(workspace.id), apiBaseUrl: baseUrl },
     };
   },

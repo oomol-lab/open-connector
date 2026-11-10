@@ -155,7 +155,6 @@ export async function validateTickCredential(
   await requestTickJson({ credential, path: "/users.json", fetcher, signal, phase: "validate" });
   return {
     profile: { accountId: `tick:${credential.subscriptionId}`, displayName: `Tick ${credential.subscriptionId}` },
-    grantedScopes: [],
     metadata: {
       subscriptionId: credential.subscriptionId,
       email: credential.email,

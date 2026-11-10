@@ -180,7 +180,6 @@ export async function validateVecteraCredential(
       accountId: id ? `vectera:${id}` : "vectera",
       displayName: fullName ?? email ?? shortName ?? "Vectera Account",
     },
-    grantedScopes: [],
     metadata: compactObject({
       userId: id,
       fullName,

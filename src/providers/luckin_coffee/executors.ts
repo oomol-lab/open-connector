@@ -69,7 +69,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: `luckin-coffee:mcp:${tokenHash}`,
         displayName: `Luckin Coffee MCP - ${tokenHash.slice(-6)}`,
       },
-      grantedScopes: [],
       metadata: {
         mcpEndpoint: luckinMcpEndpoint,
         mcpTools: tools.sort(),

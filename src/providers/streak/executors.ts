@@ -89,7 +89,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: userKey ?? email ?? "streak:api-key",
         displayName: optionalString(user.displayName) ?? email ?? "Streak API Key",
       },
-      grantedScopes: [],
       metadata: compactObject({
         apiBaseUrl: streakApiBaseUrl,
         email,

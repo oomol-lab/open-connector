@@ -244,7 +244,6 @@ export async function validatePosthogCredential(
     profile: {
       accountId: providerAccountId,
       displayName: accountLabel,
-      grantedScopes: [],
     },
     metadata: compactObject({
       baseUrl,

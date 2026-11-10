@@ -111,7 +111,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: companyLogin,
         displayName: readCompanyLabel(companyRecord, companyLogin),
       },
-      grantedScopes: [],
       metadata: {
         companyLogin,
         apiBaseUrl: simplybookMeApiBaseUrl,

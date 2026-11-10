@@ -51,7 +51,6 @@ export const credentialValidators: CredentialValidators = {
     );
     return {
       profile: { accountId: "daytona", displayName: optionalString(key?.name) ?? "Daytona API Key" },
-      grantedScopes: [],
       metadata: { apiBaseUrl: daytonaApiBaseUrl },
     };
   },

@@ -242,7 +242,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: userId ?? userEmail ?? `motion:${input.apiKey.slice(-6)}`,
         displayName,
       },
-      grantedScopes: [],
       metadata: jsonObject({
         apiBaseUrl: motionApiBaseUrl,
         validationEndpoint: "/users/me",

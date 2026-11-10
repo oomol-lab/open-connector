@@ -92,7 +92,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: "api_key",
         displayName: "Formcarry API Key",
       },
-      grantedScopes: [],
       metadata: compactObject({
         apiBaseUrl: formcarryApiBaseUrl,
         validationEndpoint: "/api/auth",

@@ -52,7 +52,6 @@ export async function validateMarketstackCredential(
       accountId: "marketstack",
       displayName: "Marketstack API Key",
     },
-    grantedScopes: [],
     metadata: compactObject({
       validationEndpoint: "/currencies",
       apiBaseUrl: marketstackApiBaseUrl,

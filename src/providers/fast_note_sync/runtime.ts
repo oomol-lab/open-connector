@@ -270,7 +270,6 @@ export async function validateFastNoteSyncCredential(
       accountId: `fast_note_sync:${host}:${identity}`,
       displayName: `${username ?? email ?? "FNS user"} @ ${host}`,
     },
-    grantedScopes: [],
     metadata: compactObject({
       baseUrl: context.baseUrl,
       uid,

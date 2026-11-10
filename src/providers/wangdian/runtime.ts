@@ -105,7 +105,6 @@ export async function validateWangdianCredential(
       accountId: `wangdian:${credential.sid}`,
       displayName: `Wangdian ERP · ${credential.sid}`,
     },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: wangdianApiBaseUrl,
       product: "enterprise",

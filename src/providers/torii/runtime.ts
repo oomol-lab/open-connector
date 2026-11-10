@@ -193,7 +193,6 @@ export async function validateToriiCredential(
       accountId: organizationId !== undefined ? `torii:organization:${organizationId}` : "torii:api_key",
       displayName: companyName ?? domain ?? "Torii API Key",
     },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: toriiApiBaseUrl,
       validationEndpoint: toriiValidationPath,

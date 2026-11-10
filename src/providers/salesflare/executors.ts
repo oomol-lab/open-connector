@@ -188,7 +188,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: userId == null ? "salesflare-api-key" : String(userId),
         displayName: userName ?? userEmail ?? "Salesflare API Key",
       },
-      grantedScopes: [],
       metadata: compactObject({
         apiBaseUrl: salesflareApiBaseUrl,
         validationEndpoint: "/me",

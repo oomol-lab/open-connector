@@ -137,7 +137,6 @@ export const credentialValidators: CredentialValidators = {
     }
     return {
       profile: { displayName: optionalRawString(optionalRecord(payload.data)?.organization) || "Pointagram API Key" },
-      grantedScopes: [],
       metadata: { apiBaseUrl: baseUrl },
     };
   },

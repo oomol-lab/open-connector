@@ -40,7 +40,6 @@ export async function validateSimilarwebDigitalRankApiCredential(
       accountId: "similarweb",
       displayName: "Similarweb API Key",
     },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: similarwebApiBaseUrl,
       validationEndpoint: "/user-capabilities",

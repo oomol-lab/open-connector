@@ -73,7 +73,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: "api_key",
         displayName: "Gem API Key",
       },
-      grantedScopes: [],
       metadata: compactObject({
         apiBaseUrl: gemApiBaseUrl,
         validationEndpoint: gemValidationPath,

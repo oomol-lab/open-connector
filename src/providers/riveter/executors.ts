@@ -82,7 +82,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: optionalString(account?.uuid) ?? "riveter-api-key",
         displayName: accountName ?? apiKeyName ?? "Riveter API Key",
       },
-      grantedScopes: [],
       metadata: compactObject({
         validationEndpoint: validationPath,
         accountUuid: optionalString(account?.uuid),

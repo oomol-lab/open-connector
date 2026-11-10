@@ -149,7 +149,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: userId ? `missive:user:${userId}` : "missive:token",
         displayName: optionalString(currentUser?.display_name) ?? userEmail ?? "Missive API Token",
       },
-      grantedScopes: [],
       metadata: compactObject({
         apiBaseUrl: missiveApiBaseUrl,
         validationEndpoint: missiveValidationPath,

@@ -395,7 +395,6 @@ export async function validateReadMeCredential(
     profile: {
       accountId: subdomain ?? "readme",
       displayName: name ?? subdomain ?? "ReadMe API Key",
-      grantedScopes: [],
     },
     metadata: compactObject({
       apiBaseUrl: readmeApiBaseUrl,

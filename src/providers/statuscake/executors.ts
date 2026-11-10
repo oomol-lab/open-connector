@@ -84,7 +84,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: "statuscake-api-token",
         displayName: "StatusCake API Token",
       },
-      grantedScopes: [],
       metadata: {
         apiBaseUrl: statuscakeApiBaseUrl,
         validationEndpoint: "/uptime?limit=1",

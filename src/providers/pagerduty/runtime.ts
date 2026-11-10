@@ -61,7 +61,6 @@ export async function validatePagerDutyCredential(
     profile: {
       accountId: providerAccountId,
       displayName: accountLabel,
-      grantedScopes: [],
     },
     metadata: compactObject({
       apiBaseUrl: pagerDutyApiBaseUrl,

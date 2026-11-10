@@ -104,9 +104,7 @@ export async function validateJigsawstackCredential(
     profile: {
       accountId: "jigsawstack",
       displayName: "JigsawStack API Key",
-      grantedScopes: [],
     },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: jigsawstackApiBaseUrl,
       validationEndpoint: jigsawstackValidationPath,

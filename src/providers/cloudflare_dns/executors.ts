@@ -21,7 +21,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: user.userId,
         displayName,
       },
-      grantedScopes: input.profile.grantedScopes,
       metadata: compactObject({
         userId: user.userId,
         email: user.email,

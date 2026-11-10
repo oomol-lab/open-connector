@@ -64,7 +64,6 @@ export async function validateJumpServerCredential(
       accountId: `jumpserver:mcp:${endpointHash}`,
       displayName: `JumpServer MCP · ${context.endpoint.host}`,
     },
-    grantedScopes: [],
     metadata: {
       mcpEndpoint: context.endpoint.toString(),
       discoveredToolCount: discoveredTools.length,

@@ -75,7 +75,6 @@ export const credentialValidators: CredentialValidators = {
     if (!Array.isArray(campaigns)) throw providerResponseError("KickoffLabs campaigns must be an array");
     return {
       profile: { displayName: "KickoffLabs API Key" },
-      grantedScopes: [],
       metadata: { apiBaseUrl: baseUrl, validationEndpoint: "/campaigns" },
     };
   },

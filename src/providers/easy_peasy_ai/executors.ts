@@ -123,7 +123,6 @@ export const credentialValidators: CredentialValidators = {
     if (!Array.isArray(payload.presets)) throw providerResponseError("Easy-Peasy.AI presets must be an array");
     return {
       profile: { displayName: "Easy-Peasy.AI API Key" },
-      grantedScopes: [],
       metadata: { apiBaseUrl: baseUrl },
     };
   },

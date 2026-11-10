@@ -119,7 +119,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: id,
         displayName: firstString(user, ["name", "username", "email"]) ?? "Pivotal Tracker API Token",
       },
-      grantedScopes: [],
       metadata: {
         apiBaseUrl,
         validationEndpoint: "/me",

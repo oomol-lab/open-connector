@@ -177,9 +177,7 @@ export async function validateChatApiForWhatsappCredential(
     profile: {
       accountId: `chat_api_for_whatsapp:instance:${instanceId}`,
       displayName: `Chat API instance ${instanceId}`,
-      grantedScopes: [],
     },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl: resolveChatApiForWhatsappBaseUrl(instanceId),
       validationEndpoint: "/status",

@@ -104,7 +104,6 @@ export async function validateBetterProposalsCredential(
       accountId: "better-proposals-api-key",
       displayName: "Better Proposals API Key",
     },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl: betterProposalsApiBaseUrl,
       validationEndpoint: validationPath,

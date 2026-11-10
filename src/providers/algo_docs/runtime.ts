@@ -144,7 +144,6 @@ export async function validateAlgoDocsCredential(
       accountId: email,
       displayName: buildAccountLabel(fullName, email),
     },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl: algoDocsApiBaseUrl,
       validationEndpoint: validationPath,

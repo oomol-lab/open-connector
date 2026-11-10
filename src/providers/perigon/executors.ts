@@ -345,7 +345,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: "api_key",
         displayName: "Perigon API Key",
       },
-      grantedScopes: [],
       metadata: {
         validationEndpoint: "/v1/topics/all",
         apiBaseUrl: perigonBaseUrl,

@@ -394,7 +394,6 @@ export async function validateTriliumCredential(
       accountId: `trilium:${host}:${tokenId}`,
       displayName: `Trilium ${host}`,
     },
-    grantedScopes: [],
     metadata: compactObject({
       baseUrl: context.baseUrl,
       apiBaseUrl: context.baseUrl,

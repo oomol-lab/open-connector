@@ -118,7 +118,6 @@ export const credentialValidators: CredentialValidators = {
 
     return {
       profile: { accountId: credentials.userEmail, displayName: credentials.userEmail },
-      grantedScopes: [],
       metadata: {
         apiBaseUrl,
         validationEndpoint: "/integrations/ext/listteams",

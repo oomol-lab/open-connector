@@ -90,7 +90,6 @@ export async function validateSendsparkCredential(
       accountId: "api_key",
       displayName: "Sendspark API Key",
     },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl: sendsparkApiBaseUrl,
       validationEndpoint: sendsparkHealthPath,

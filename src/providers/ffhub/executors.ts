@@ -117,7 +117,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: "api_key",
         displayName: "FFHub API Key",
       },
-      grantedScopes: [],
       metadata: {
         apiBaseUrl: "https://api.ffhub.io/v1",
         validationEndpoint: ffhubValidationPath,

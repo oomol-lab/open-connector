@@ -87,9 +87,7 @@ export async function validateContentstackContentDeliveryCredential(
         optionalString(firstContentType?.title) ??
         optionalString(firstContentType?.uid) ??
         "Contentstack Delivery Token",
-      grantedScopes: [],
     },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl: contentstackContentDeliveryApiBaseUrl,
       validationEndpoint: "/content_types",

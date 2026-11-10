@@ -58,7 +58,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: "api_key",
         displayName: "Fillout API Key",
       },
-      grantedScopes: [],
       metadata: {
         apiBaseUrl: filloutApiBaseUrl,
         validationEndpoint: "/v1/api/forms",

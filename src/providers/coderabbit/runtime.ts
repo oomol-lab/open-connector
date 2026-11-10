@@ -243,7 +243,6 @@ export async function validateCoderabbitApiKey(
       accountId: "coderabbit:organization",
       displayName: "CodeRabbit Organization",
     },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl: coderabbitApiBaseUrl,
       validationEndpoint: "/v1/users",

@@ -97,7 +97,6 @@ export async function validatePostgridVerifyCredential(
     profile: {
       accountId: "postgrid-verify-api-key",
       displayName: "PostGrid Verify API Key",
-      grantedScopes: [],
     },
     metadata: compactObject({
       apiBaseUrl: postgridVerifyApiBaseUrl,

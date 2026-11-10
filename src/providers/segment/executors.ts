@@ -97,7 +97,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: "write_key",
         displayName: "Segment Write Key",
       },
-      grantedScopes: [],
       metadata: {
         apiBaseUrl: segmentApiBaseUrl,
         validationMode: "format_only",

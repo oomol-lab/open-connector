@@ -24,7 +24,6 @@ import {
   requiredResponseRecord,
   defaultProviderRequestTimeoutMs,
 } from "../provider-runtime.ts";
-import { harvestOAuthScopes } from "./scopes.ts";
 
 const service = "harvest";
 const harvestApiBaseUrl = "https://api.harvestapp.com";
@@ -201,7 +200,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: accountProfile.userId,
         displayName: accountProfile.accountLabel,
       },
-      grantedScopes: mapHarvestGrantedScopes(normalizeHarvestProviderScopes(input.metadata.scope, harvestOAuthScopes)),
       metadata: accountProfile.metadata,
     };
   },
@@ -656,7 +654,6 @@ function harvestCredentialValidation(
       accountId: String(userId),
       displayName: accountLabel,
     },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl: harvestApiBaseUrl,
       accountId,
@@ -706,33 +703,6 @@ function selectDefaultHarvestAccount(accounts: Array<Record<string, unknown>>): 
     throw new ProviderRequestError(502, "harvest oauth account list is empty");
   }
   return selected;
-}
-
-function normalizeHarvestProviderScopes(value: unknown, fallback: string[]): string[] {
-  if (value == null || value === "") {
-    return [...fallback];
-  }
-  if (typeof value !== "string") {
-    throw new ProviderRequestError(502, "scope must be a non-empty string");
-  }
-
-  return [
-    ...new Set(
-      value
-        .replaceAll(",", " ")
-        .split(" ")
-        .map((scope) => scope.trim())
-        .filter(Boolean),
-    ),
-  ];
-}
-
-function mapHarvestGrantedScopes(providerScopes: string[]): string[] {
-  const hasHarvestAccess = providerScopes.some(
-    (scope) => scope === "all" || scope === "harvest:all" || scope.startsWith("harvest:"),
-  );
-
-  return hasHarvestAccess ? ["harvest.read", "harvest.write"] : [];
 }
 
 function parseHarvestPayload(text: string): unknown {

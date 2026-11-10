@@ -96,7 +96,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: optionalString(user.id) ?? email ?? "concord-api-key",
         displayName: optionalString(user.fullName) ?? email ?? "Concord API Key",
       },
-      grantedScopes: [],
       metadata: {
         apiBaseUrl: concordApiBaseUrl,
         validationEndpoint: "/user/me",

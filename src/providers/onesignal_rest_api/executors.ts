@@ -150,7 +150,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: appId,
         displayName: "OneSignal App API Key",
       },
-      grantedScopes: [],
       metadata: {
         apiBaseUrl: onesignalRestApiBaseUrl,
         appId,

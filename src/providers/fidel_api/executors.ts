@@ -148,7 +148,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: optionalString(brandList.brands[0]?.accountId) ?? "api_key",
         displayName: optionalString(brandList.brands[0]?.name) ?? "Fidel API Secret Key",
       },
-      grantedScopes: [],
       metadata: compactObject({
         apiBaseUrl: fidelApiBaseUrl,
         validationEndpoint: "/brands",

@@ -79,14 +79,12 @@ export const tencentMapsActionHandlers: ProviderActionHandlers<"tencent_maps", T
 
 export async function validateTencentMapsCredential(context: RuntimeContext): Promise<{
   profile: { accountId: string; displayName: string };
-  grantedScopes: string[];
   metadata: Record<string, unknown>;
 }> {
   await tencentMapsGet(tencentMapsValidationPath, { key: context.apiKey }, context.fetcher, "validate", context.signal);
 
   return {
     profile: { accountId: "api_key", displayName: "Tencent Maps API Key" },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: tencentMapsApiBaseUrl,
       validationEndpoint: tencentMapsValidationPath,

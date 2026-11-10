@@ -119,7 +119,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: "serply",
         displayName: "Serply API Key",
       },
-      grantedScopes: [],
       metadata: compactDefined({
         validationEndpoint: "/v1/search/{query}",
         validationQuery: "q=serply",

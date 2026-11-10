@@ -81,7 +81,6 @@ export const credentialValidators: CredentialValidators = {
     const criteria = await handlers.list_criteria({}, { apiKey: input.apiKey, fetcher, signal });
     return {
       profile: { displayName: "Veremark API Token" },
-      grantedScopes: [],
       metadata: {
         apiBaseUrl: baseUrl,
         validationEndpoint: "/criteria/",

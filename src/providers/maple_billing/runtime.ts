@@ -114,7 +114,6 @@ export async function validateMapleBillingCredential(
       accountId: `maple_billing:${companyId}`,
       displayName: `Measure ${companyId}`,
     },
-    grantedScopes: [],
     metadata: compactObject({
       companyId,
       apiBaseUrl: buildMapleBillingApiBaseUrl(companyId),

@@ -57,7 +57,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: "api_key",
         displayName: "Fairing API Key",
       },
-      grantedScopes: [],
       metadata: compactObject({
         apiBaseUrl: fairingApiBaseUrl,
         validationEndpoint: "/responses",

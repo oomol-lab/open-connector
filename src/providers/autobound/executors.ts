@@ -191,7 +191,6 @@ export const credentialValidators: CredentialValidators = {
         displayName:
           optionalString(account.customerName) ?? optionalString(account.customerId) ?? "Autobound Signal API Key",
       },
-      grantedScopes: [],
       metadata: compactObject({
         apiBaseUrl: autoboundApiBaseUrl,
         validationEndpoint: "/v1/account",

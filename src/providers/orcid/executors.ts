@@ -86,7 +86,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: orcidId,
         displayName,
       },
-      grantedScopes: readGrantedScopes(input.metadata.scope),
       metadata: compactObject({
         validationEndpoint: orcidUserInfoUrl,
         orcidId,
@@ -159,7 +158,4 @@ function objectOrEmpty(value: unknown): Record<string, unknown> {
 }
 function normalize(value: string): string {
   return value.toUpperCase().replace(/^HTTPS?:\/\/ORCID\.ORG\//, "");
-}
-function readGrantedScopes(scope: unknown): string[] {
-  return optionalString(scope)?.split(/\s+/u).filter(Boolean) ?? ["openid"];
 }

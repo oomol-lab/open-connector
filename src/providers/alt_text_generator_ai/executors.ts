@@ -53,7 +53,6 @@ export const credentialValidators: CredentialValidators = {
     if (!input.apiKey.trim()) throw new ProviderRequestError(400, "Alt Text Generator AI API key is required");
     return {
       profile: { displayName: "Alt Text Generator AI API Key" },
-      grantedScopes: [],
       metadata: { apiBaseUrl: baseUrl, validationMode: "local_non_empty_key" },
     };
   },

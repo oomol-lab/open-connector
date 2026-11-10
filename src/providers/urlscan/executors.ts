@@ -70,7 +70,6 @@ export const credentialValidators: CredentialValidators = {
     });
     return {
       profile: { displayName: "urlscan.io API Key" },
-      grantedScopes: [],
       metadata: {
         apiBaseUrl: urlscanApiBaseUrl,
         validationEndpoint: "/user/quotas/",

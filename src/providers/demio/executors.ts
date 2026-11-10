@@ -124,7 +124,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: "api_key",
         displayName: sandbox ? "Demio Sandbox API Key" : "Demio API Key",
       },
-      grantedScopes: [],
       metadata: compactObject({
         apiBaseUrl: demioApiBaseUrl,
         validationEndpoint: "/ping",

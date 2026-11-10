@@ -135,7 +135,7 @@ async function execute(
 export const credentialValidators: CredentialValidators = {
   async apiKey(input, { fetcher, signal }) {
     await request(contextdevEndpointByName.get("get_usage")!, {}, input.apiKey, fetcher, true, undefined, signal);
-    return { profile: { displayName: "Context.dev API Key" }, grantedScopes: [], metadata: {} };
+    return { profile: { displayName: "Context.dev API Key" }, metadata: {} };
   },
 };
 export const executors: ProviderExecutors = defineApiKeyProviderExecutors(

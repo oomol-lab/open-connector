@@ -88,7 +88,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: `dynapictures:${hashApiKey(input.apiKey)}`,
         displayName: "DynaPictures API Key",
       },
-      grantedScopes: [],
       metadata: {
         apiBaseUrl: dynapicturesApiBaseUrl,
         validationEndpoint: "/templates",

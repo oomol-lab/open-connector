@@ -121,7 +121,6 @@ export async function validateCloudlayerCredential(
       accountId: `cloudlayer:${String(account.uid)}`,
       displayName: String(account.uid),
     },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: cloudlayerApiBaseUrl,
       validationEndpoint: cloudlayerAccountPath,

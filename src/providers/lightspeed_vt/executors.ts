@@ -112,7 +112,6 @@ export const credentialValidators: CredentialValidators = {
     await request("/users/count", {}, context);
     return {
       profile: { displayName: "LightSpeed VT API Account" },
-      grantedScopes: [],
       metadata: { apiBaseUrl: baseUrl, validationEndpoint: "/users/count" },
     };
   },

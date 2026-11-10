@@ -66,7 +66,6 @@ export async function validateGetnoteCredential(
       accountId: `getnote:${clientId}`,
       displayName: `Getnote · ${clientId}`,
     },
-    grantedScopes: [],
     metadata: {
       clientId,
       validationEndpoint: "/open/api/v1/resource/knowledge/list",

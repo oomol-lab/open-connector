@@ -1,7 +1,7 @@
 import type { OAuthClientConfig } from "../../oauth/oauth-client-config-service.ts";
 import type { OAuthTokenErrorFactory, OAuthTokenResult, ProviderOAuthRuntime } from "../../oauth/oauth-token.ts";
 
-import { optionalNumber, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
+import { optionalNumber, optionalRecord, optionalString, optionalRawString, requiredString } from "../../core/cast.ts";
 import { ProviderRequestError, providerResponseError, requiredResponseRecord } from "../provider-runtime.ts";
 import { salesforceOrigin, salesforceRequest } from "./transport.ts";
 
@@ -13,7 +13,6 @@ interface TokenRequest {
   parameters: Record<string, string>;
   fetcher: typeof fetch;
   signal?: AbortSignal;
-  fallbackScopes: string;
   createError: OAuthTokenErrorFactory;
 }
 async function requestToken(input: TokenRequest): Promise<OAuthTokenResult> {
@@ -60,8 +59,7 @@ async function requestToken(input: TokenRequest): Promise<OAuthTokenResult> {
     identityUrl.password
   )
     throw providerResponseError("Salesforce returned an invalid identity URL");
-  const scope = optionalString(body.scope) ?? input.fallbackScopes;
-  if (!scope.split(" ").includes("api")) throw providerResponseError("Salesforce did not grant the required api scope");
+  const scope = optionalRawString(body.scope);
   const expiresIn = optionalNumber(body.expires_in);
   // Salesforce normally omits expires_in; ten minutes is a local refresh budget, not its session lifetime.
   const refreshAfterSeconds = expiresIn !== undefined && expiresIn > 0 ? Math.min(expiresIn, 600) : 600;
@@ -100,7 +98,6 @@ export const oauth: ProviderOAuthRuntime = {
       parameters,
       fetcher: input.fetcher,
       signal: input.signal,
-      fallbackScopes: "api refresh_token",
       createError: input.createError,
     });
   },
@@ -109,7 +106,6 @@ export const oauth: ProviderOAuthRuntime = {
       config: input.clientConfig,
       parameters: { grant_type: "refresh_token", refresh_token: input.refreshToken },
       fetcher: input.fetcher,
-      fallbackScopes: optionalString(input.metadata.scope) ?? "api refresh_token",
       createError: input.createError,
     });
   },

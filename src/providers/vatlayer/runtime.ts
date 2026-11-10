@@ -55,7 +55,6 @@ export async function validateVatlayerCredential(
     profile: {
       accountId: "vatlayer-api-key",
       displayName: "VATlayer API Access Key",
-      grantedScopes: [],
     },
     metadata: {
       validationEndpoint: "/types",

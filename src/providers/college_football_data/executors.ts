@@ -111,7 +111,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: "api_key",
         displayName: "CollegeFootballData API Key",
       },
-      grantedScopes: [],
       metadata: compactObject({
         validationEndpoint: "/info",
         apiBaseUrl: collegeFootballDataApiBaseUrl,

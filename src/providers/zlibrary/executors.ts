@@ -48,7 +48,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: email,
         displayName: email,
       },
-      grantedScopes: [],
       metadata: {
         remixUserid: session.remixUserid,
         eapiDomain: session.domain,

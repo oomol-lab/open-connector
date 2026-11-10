@@ -51,7 +51,7 @@ export const executors: ProviderExecutors = defineProviderExecutors<KaonaviConte
 export const credentialValidators: CredentialValidators = {
   async customCredential(input, { fetcher, signal }) {
     await getKaonaviToken(input.values, fetcher, signal, true);
-    return { profile: { displayName: "Kaonavi Account" }, grantedScopes: [] };
+    return { profile: { displayName: "Kaonavi Account" } };
   },
 };
 export const proxy: ProviderProxyExecutor = defineProviderProxy({

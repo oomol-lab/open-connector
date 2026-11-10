@@ -222,7 +222,6 @@ export async function validateKrispCallCredential(
       accountId: workspace.id ? `krispcall:${workspace.id}` : `krispcall:${credential.clientId}`,
       displayName: accountLabel,
     },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: krispcallApiBaseUrl,
       tokenEndpoint: krispcallTokenUrl,

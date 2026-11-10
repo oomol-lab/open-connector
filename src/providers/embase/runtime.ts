@@ -82,7 +82,7 @@ export function createEmbaseActionContext(values: Record<string, string>, fetche
 export async function validateEmbaseCredential(
   input: Record<string, string>,
   fetcher: typeof fetch,
-): Promise<{ profile: { displayName: string }; grantedScopes: string[]; metadata: Record<string, unknown> }> {
+): Promise<{ profile: { displayName: string }; metadata: Record<string, unknown> }> {
   const credentials = readValidationCredentials(input);
   const response = await requestEmbaseJson({
     path: "/article",
@@ -94,7 +94,6 @@ export async function validateEmbaseCredential(
 
   return {
     profile: { displayName: "Embase API Key" },
-    grantedScopes: [],
     metadata: compactObject({
       validationEndpoint: "/article",
       usesInstitutionToken: credentials.institutionToken ? true : undefined,

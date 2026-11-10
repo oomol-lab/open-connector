@@ -175,7 +175,6 @@ export const credentialValidators: CredentialValidators = {
       profile: {
         displayName: label,
       },
-      grantedScopes: [],
       metadata: {
         apiBaseUrl: gumroadApiBaseUrl,
         validationEndpoint: gumroadValidationPath,

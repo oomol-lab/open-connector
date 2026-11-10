@@ -122,7 +122,6 @@ export async function validateStatsigCredential(
       accountId: projectId ? `statsig:${projectId}` : "statsig:project",
       displayName: projectId ? `Statsig ${projectId}` : "Statsig Project",
     },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl: statsigApiBaseUrl,
       apiVersion: statsigApiVersion,

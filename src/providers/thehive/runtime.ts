@@ -93,7 +93,6 @@ export async function validateTheHiveCredential(
       accountId: `${config.service}:${host}:${userId}`,
       displayName: `${accountName} (${host})`,
     },
-    grantedScopes: [],
     metadata: {
       baseUrl,
       apiBaseUrl: `${baseUrl}/api${config.version == 5 ? "/v1" : ""}`,

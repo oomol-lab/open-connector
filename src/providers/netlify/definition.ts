@@ -1,6 +1,6 @@
 import type { ProviderDefinition } from "../../core/types.ts";
 
-import { netlifyActions, netlifyConnectorScopes } from "./actions.ts";
+import { netlifyActions } from "./actions.ts";
 
 const service = "netlify";
 
@@ -17,7 +17,7 @@ export const provider: ProviderDefinition = {
       type: "oauth2",
       authorizationUrl: "https://app.netlify.com/authorize",
       tokenUrl: "https://api.netlify.com/oauth/token",
-      scopes: [...netlifyConnectorScopes],
+      scopes: [],
       tokenEndpointAuthMethod: "client_secret_post",
     },
     {

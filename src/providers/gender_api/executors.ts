@@ -118,7 +118,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: "gender-api-token",
         displayName: "Gender-API.com API Token",
       },
-      grantedScopes: [],
       metadata: jsonObject({
         apiBaseUrl: genderApiApiBaseUrl,
         validationEndpoint: genderApiStatisticsPath,

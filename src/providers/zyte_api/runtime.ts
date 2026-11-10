@@ -62,7 +62,6 @@ export async function validateZyteApiCredential(
       accountId: "zyte_api:api_key",
       displayName: "Zyte API Key",
     },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: zyteApiBaseUrl,
       validationEndpoint: zyteApiExtractPath,

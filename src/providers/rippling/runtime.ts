@@ -84,7 +84,6 @@ export async function validateRipplingCredential(
       accountId: companyId ?? "api_key",
       displayName: companyName ?? companyId ?? "Rippling API Token",
     },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl: ripplingApiBaseUrl,
       validationEndpoint: "/companies/",

@@ -105,7 +105,6 @@ export async function validatePasscreatorCredential(
       accountId: "passcreator_api_key",
       displayName: "Passcreator API Key",
     },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl: passcreatorApiBaseUrl,
       validationEndpoint: passcreatorValidationPath,

@@ -475,7 +475,6 @@ export async function validateN8nCredential(
       accountId: `n8n:${instanceUrl}`,
       displayName: `n8n ${host}`,
     },
-    grantedScopes: [],
     metadata: compactObject({
       instanceUrl,
       apiBaseUrl,

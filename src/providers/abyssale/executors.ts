@@ -97,7 +97,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: "api_key",
         displayName: "Abyssale API Key",
       },
-      grantedScopes: [],
       metadata: compactObject({
         apiBaseUrl: abyssaleApiBaseUrl,
         validationEndpoint: "/projects",

@@ -71,7 +71,6 @@ export async function validateGigasheetCredential(
       accountId: username ? `gigasheet:${username}` : "gigasheet",
       displayName: username ?? "Gigasheet API Key",
     },
-    grantedScopes: [],
     metadata: compactObject({
       validationEndpoint: gigasheetValidationPath,
       username,

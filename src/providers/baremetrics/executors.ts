@@ -106,7 +106,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: sourceId,
         displayName: provider ? `Baremetrics ${provider}` : "Baremetrics API Key",
       },
-      grantedScopes: [],
       metadata: compactObject({
         apiBaseUrl: baremetricsApiBaseUrl,
         validationEndpoint: "/v1/sources",

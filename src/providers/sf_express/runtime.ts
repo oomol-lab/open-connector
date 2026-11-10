@@ -189,7 +189,6 @@ export async function validateSfExpressCredential(
       accountId: `sf_express:${context.partnerId}`,
       displayName: `SF Express (${context.partnerId})`,
     },
-    grantedScopes: [],
     metadata: {
       environment: context.sandbox ? "sandbox" : "production",
       // The default gateway for that environment; a few services document their own host.

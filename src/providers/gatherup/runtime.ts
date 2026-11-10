@@ -92,7 +92,7 @@ export const gatherupActionHandlers: ProviderActionHandlers<"gatherup", Provider
 export async function validateGatherupCredential(
   input: Record<string, string>,
   fetcher: typeof fetch,
-): Promise<{ profile: { displayName: string }; grantedScopes: string[] }> {
+): Promise<{ profile: { displayName: string } }> {
   const apiKey = requiredString(input.apiKey, "apiKey", providerInputError);
   const clientId = requiredString(input.clientId, "clientId", providerInputError);
   await requestGatherupJson({
@@ -105,7 +105,6 @@ export async function validateGatherupCredential(
 
   return {
     profile: { displayName: "GatherUp API Key" },
-    grantedScopes: [],
   };
 }
 

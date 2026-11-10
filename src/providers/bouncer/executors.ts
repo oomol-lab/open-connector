@@ -166,7 +166,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: service,
         displayName: "Bouncer API Key",
       },
-      grantedScopes: [],
       metadata: {
         apiBaseUrl: bouncerApiBaseUrl,
         validationEndpoint: "/v1.1/credits",

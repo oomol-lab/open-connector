@@ -44,7 +44,6 @@ export const credentialValidators: CredentialValidators = {
     );
     return {
       profile: { accountId: teamId, displayName: provider.displayName },
-      grantedScopes: [],
       metadata: { teamId },
     };
   },

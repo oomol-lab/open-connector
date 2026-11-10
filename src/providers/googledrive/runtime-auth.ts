@@ -6,6 +6,7 @@ import type { ProviderFetch } from "../provider-runtime.ts";
 import { importPKCS8, SignJWT } from "jose";
 import { sha256Hex } from "../../core/aws-sigv4.ts";
 import { optionalNumberLike, optionalRecord, optionalString } from "../../core/cast.ts";
+import { readOAuthScopes } from "../../oauth/oauth-scopes.ts";
 import { defineProviderExecutors } from "../provider-executors.ts";
 import {
   providerInputError,
@@ -138,7 +139,7 @@ async function mintGoogleServiceAccountToken(
       return {
         accessToken,
         expiresAtMs: Date.now() + tokenLifetimeSeconds(payload) * 1000,
-        grantedScopes: optionalString(payload.scope)?.split(" ") ?? [...input.scopes],
+        grantedScopes: readOAuthScopes(payload.scope) ?? [],
       };
     },
   );

@@ -29,7 +29,6 @@ export async function validateRedfoxCredential(
   });
   return {
     profile: { displayName: "RedFoxHub API Key" },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: redfoxApiBaseUrl,
       validationEndpoint,

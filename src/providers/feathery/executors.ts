@@ -302,7 +302,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: team ? `team:${team}` : "api_key",
         displayName: team ? `Feathery ${team}` : "Feathery API Key",
       },
-      grantedScopes: [],
       metadata: compactObject({
         apiBaseUrl: featheryApiBaseUrl,
         validationEndpoint: featheryValidationPath,

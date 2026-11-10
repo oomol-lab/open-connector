@@ -125,7 +125,6 @@ export async function validateVimeoCredential(
       accountId: user.accountId,
       displayName: user.displayName,
     },
-    grantedScopes: [],
     metadata: user.metadata,
   };
 }

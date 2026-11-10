@@ -17,7 +17,6 @@ describe("Xodo Sign credential validation", () => {
 
     expect(result).toEqual({
       profile: { accountId: "eversign", displayName: "Xodo Sign API Key" },
-      grantedScopes: [],
       metadata: {
         apiBaseUrl: "https://api.eversign.com",
         validationEndpoint: "/business",

@@ -88,7 +88,6 @@ export async function validatePayhipCredential(
     profile: {
       accountId: "payhip-api-key",
       displayName: "Payhip API Key",
-      grantedScopes: [],
     },
     metadata: {
       apiBaseUrl: payhipApiBaseUrl,

@@ -109,9 +109,7 @@ export async function validateAerisWeatherCredential(
   return {
     profile: {
       displayName: "Xweather API Key",
-      grantedScopes: [],
     },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl: aerisweatherApiBaseUrl,
       validationEndpoint: "/places/98109",

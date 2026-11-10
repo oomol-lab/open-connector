@@ -75,7 +75,6 @@ export async function validateNasdaqCredential(
       accountId: "api_key",
       displayName: "Nasdaq Data Link API Key",
     },
-    grantedScopes: [],
     metadata: {
       validationEndpoint: "/datatables/SHARADAR/TICKERS.json",
       apiBaseUrl: nasdaqApiBaseUrl,

@@ -385,7 +385,6 @@ function createTokenMetadata(payload: Record<string, unknown>): Record<string, u
     }
   }
   metadata.rawTokenType = payload.token_type;
-  metadata.scope = payload.scope;
   return metadata;
 }
 

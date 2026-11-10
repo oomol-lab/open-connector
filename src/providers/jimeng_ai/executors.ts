@@ -228,7 +228,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: `jimeng_ai:${hashCredentialId(credentials.accessKeyId)}`,
         displayName: `Jimeng AI - ${credentials.accessKeyId}`,
       },
-      grantedScopes: [],
       metadata: {
         apiBaseUrl: jimengApiOrigin,
         validationAction: getResultAction,

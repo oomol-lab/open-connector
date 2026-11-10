@@ -72,7 +72,6 @@ export const credentialValidators: CredentialValidators = {
     );
     return {
       profile: { accountId: "cufinder-api-key", displayName: "CUFinder API Key" },
-      grantedScopes: [],
       metadata: { apiBaseUrl: baseUrl, validationEndpoint: "/normalize/url" },
     };
   },

@@ -125,7 +125,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: "starton-api-key",
         displayName: "Starton API Key",
       },
-      grantedScopes: [],
       metadata: {
         apiBaseUrl: startonApiBaseUrl,
         validationEndpoint: "/v3/ipfs/pin",

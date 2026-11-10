@@ -129,7 +129,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: `kuaimai:${accountHash}`,
         displayName: `Kuaimai ERP · ${credential.appKey.slice(-6)}`,
       },
-      grantedScopes: [],
       metadata: { apiBaseUrl: kuaimaiApiUrl, validationMethod: actionMethodByName.list_warehouses },
     };
   },

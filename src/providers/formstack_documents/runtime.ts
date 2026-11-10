@@ -120,7 +120,7 @@ export const formstackDocumentsActionHandlers: ProviderActionHandlers<
 export async function validateFormstackDocumentsCredential(
   input: Record<string, string>,
   fetcher: typeof fetch,
-): Promise<{ profile: { displayName: string }; grantedScopes: string[] }> {
+): Promise<{ profile: { displayName: string } }> {
   const payload = await request({
     credentials: readCredentials(input),
     path: "/documents",
@@ -133,7 +133,6 @@ export async function validateFormstackDocumentsCredential(
   requireArray(payload, "credential validation");
   return {
     profile: { displayName: "Formstack Documents API Key" },
-    grantedScopes: [],
   };
 }
 async function requestDocument(input: Record<string, unknown>, context: FormstackDocumentsContext, operation: string) {

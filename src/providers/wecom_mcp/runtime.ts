@@ -178,7 +178,6 @@ export async function validateWeComCredential(
       accountId: `wecom_mcp:mcp:${credentialHash}`,
       displayName: `WeCom MCP · ${credentialHash.slice(-6)}`,
     },
-    grantedScopes: [],
     metadata: {
       mcpHost: context.endpoint.hostname,
       discoveredToolCount: tools.length,

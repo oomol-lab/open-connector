@@ -130,7 +130,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: "api_key",
         displayName: "Ipregistry API Key",
       },
-      grantedScopes: [],
       metadata: {
         apiBaseUrl: ipregistryBaseUrl,
         validationEndpoint: `/${validationIp}`,

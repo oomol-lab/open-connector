@@ -161,7 +161,6 @@ export async function validateSubvisoryCredential(
       accountId: "api_key",
       displayName: "Subvisory API Key",
     },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl: subvisoryApiBaseUrl,
       validationEndpoint: validationPath,

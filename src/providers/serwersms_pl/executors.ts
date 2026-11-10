@@ -98,7 +98,6 @@ export const credentialValidators: CredentialValidators = {
     await request("account/limits", { show_type: true }, requiredInputString(input.apiKey, "API Key"), fetcher);
     return {
       profile: { displayName: "SerwerSMS.pl API Token" },
-      grantedScopes: [],
       metadata: { apiBaseUrl },
     };
   },

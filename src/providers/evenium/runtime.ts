@@ -147,7 +147,6 @@ export async function validateEveniumCredential(
       accountId: `api_key:${createHash("sha256").update(apiKey).digest("hex").slice(0, 16)}`,
       displayName: "Evenium API Key",
     },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl: eveniumApiBaseUrl,
       validationEndpoint: eveniumValidationPath,

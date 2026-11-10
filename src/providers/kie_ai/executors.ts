@@ -67,7 +67,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: "api_key",
         displayName: "KIE.AI API Key",
       },
-      grantedScopes: [],
       metadata: {
         validationEndpoint: "/api/v1/chat/credit",
         credits,

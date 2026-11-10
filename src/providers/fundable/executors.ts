@@ -88,7 +88,7 @@ async function execute(
 export const credentialValidators: CredentialValidators = {
   async apiKey(input, { fetcher, signal }) {
     await requestFundable("/industry/search", "GET", { name: "software" }, input.apiKey, fetcher, true, signal);
-    return { profile: { displayName: "Fundable API Key" }, grantedScopes: [], metadata: {} };
+    return { profile: { displayName: "Fundable API Key" }, metadata: {} };
   },
 };
 export const executors: ProviderExecutors = defineApiKeyProviderExecutors(

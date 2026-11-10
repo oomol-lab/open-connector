@@ -82,7 +82,6 @@ export const credentialValidators: CredentialValidators = {
     const hash = sha256Hex(key);
     return {
       profile: { accountId: `kolsprite-mcp:${hash}`, displayName: `KOLSprite MCP · ${hash.slice(-6)}` },
-      grantedScopes: [],
       metadata: { mcpEndpoint: endpoint, discoveredToolCount: tools.length },
     };
   },

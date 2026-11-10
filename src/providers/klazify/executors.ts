@@ -218,7 +218,6 @@ async function validateKlazifyCredential(
       accountId: "api_key",
       displayName: "Klazify API Key",
     },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: klazifyApiBaseUrl,
       validationPath: "/categorize",

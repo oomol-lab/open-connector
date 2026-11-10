@@ -121,7 +121,6 @@ export const credentialValidators: CredentialValidators = {
           ? `Store Leads (${optionalString(firstApp?.name)})`
           : "Store Leads API Key",
       },
-      grantedScopes: [],
       metadata: {
         apiBaseUrl: storeLeadsApiBaseUrl,
         validationEndpoint: `${storeLeadsValidationPath}?page_size=1`,

@@ -15,7 +15,7 @@ interface OpenfdaRequestInput {
 export async function validateOpenfdaCredential(
   input: Record<string, string>,
   fetcher: typeof fetch,
-): Promise<{ profile: { displayName: string }; grantedScopes: string[]; metadata: Record<string, unknown> }> {
+): Promise<{ profile: { displayName: string }; metadata: Record<string, unknown> }> {
   await requestOpenfdaJson({
     apiKey: requiredString(input.apiKey, "apiKey", (message) => new ProviderRequestError(400, message)),
     usesApiKey: true,
@@ -27,7 +27,6 @@ export async function validateOpenfdaCredential(
 
   return {
     profile: { displayName: "openFDA API Key" },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: openfdaApiBaseUrl,
       validationEndpoint: "/drug/label.json",

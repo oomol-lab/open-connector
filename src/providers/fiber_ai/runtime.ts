@@ -103,7 +103,6 @@ export async function validateFiberAiCredential(
     profile: {
       displayName: organizationId ? `Fiber AI ${organizationId}` : "Fiber AI API Key",
     },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: fiberAiApiBaseUrl,
       validationEndpoint: getOrgCreditsPath,

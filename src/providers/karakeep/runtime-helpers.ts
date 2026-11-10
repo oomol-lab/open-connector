@@ -113,7 +113,6 @@ export async function validateKarakeepCredential(
   signal?: AbortSignal,
 ): Promise<{
   profile: { accountId: string; displayName: string };
-  grantedScopes: string[];
   metadata: Record<string, unknown>;
 }> {
   const context = createKarakeepContext(values, apiKey, fetcher, signal);
@@ -131,7 +130,6 @@ export async function validateKarakeepCredential(
     optionalString(user.name) ?? optionalString(user.email) ?? `Karakeep ${new URL(context.apiBaseUrl).host}`;
   return {
     profile: { accountId, displayName },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: context.apiBaseUrl,
       validationEndpoint: "/users/me",

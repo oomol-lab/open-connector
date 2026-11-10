@@ -143,7 +143,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: environment,
         displayName: environment === "production" ? "Check Production API Key" : "Check Sandbox API Key",
       },
-      grantedScopes: [],
       metadata: compactObject({
         environment,
         apiBaseUrl,

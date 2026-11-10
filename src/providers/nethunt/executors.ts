@@ -222,7 +222,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: `nethunt:${userEmail}`,
         displayName: userName ? `${userName} <${userEmail}>` : userEmail,
       },
-      grantedScopes: [],
       metadata: compactObject({
         apiBaseUrl: nethuntApiBaseUrl,
         validationEndpoint: nethuntAuthTestPath,

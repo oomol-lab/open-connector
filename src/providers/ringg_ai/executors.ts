@@ -80,7 +80,6 @@ export const credentialValidators: CredentialValidators = {
       throw new ProviderRequestError(502, "Ringg AI workspace response did not include a valid id and name");
     return {
       profile: { accountId: id, displayName: name },
-      grantedScopes: [],
       metadata: { apiBaseUrl: baseUrl, workspaceId: id },
     };
   },

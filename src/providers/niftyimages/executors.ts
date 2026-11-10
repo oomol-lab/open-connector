@@ -140,7 +140,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: `niftyimages:${createHash("sha256").update(input.apiKey).digest("hex").slice(0, 16)}`,
         displayName: "NiftyImages API Key",
       },
-      grantedScopes: [],
       metadata: {
         apiBaseUrl: niftyimagesApiBaseUrl,
         validationEndpoint: "/Widgets",

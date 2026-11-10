@@ -146,7 +146,6 @@ export async function validateSerphouseCredential(
       accountId: email ?? "serphouse-api-key",
       displayName: email ?? name ?? "SERPHouse API Key",
     },
-    grantedScopes: [],
     metadata: compactObject({
       validationEndpoint: "/account/info",
       email,

@@ -141,7 +141,6 @@ export async function validateBettercontactCredential(
       accountId: email,
       displayName: email,
     },
-    grantedScopes: [],
     metadata: compactObject({
       accountEmail: email,
       validationEndpoint: "/account",

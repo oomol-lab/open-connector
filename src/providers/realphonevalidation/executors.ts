@@ -81,9 +81,7 @@ export async function validateRealPhoneValidationCredential(
     profile: {
       accountId: createHash("sha256").update(apiKey).digest("hex"),
       displayName: "RealPhoneValidation API Token",
-      grantedScopes: [],
     },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: realPhoneValidationApiBaseUrl,
       validationEndpoint: turboStandardPath,

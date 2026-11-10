@@ -107,7 +107,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: "statuspal:api-key",
         displayName: "StatusPal API Key",
       },
-      grantedScopes: [],
       metadata: {
         apiBaseUrl: `${statuspalApiOrigin}${statuspalApiPrefix}`,
         validationEndpoint: statuspalValidationPath,

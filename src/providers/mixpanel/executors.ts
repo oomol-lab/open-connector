@@ -222,7 +222,6 @@ async function validateMixpanelCredential(
         optionalString(matchedServiceAccount.username) ??
         serviceAccountUsername,
     },
-    grantedScopes: [],
     metadata: compactObject({
       baseUrl,
       exportBaseUrl,

@@ -126,7 +126,6 @@ export async function validateGrafanaCredential(
       accountId: optionalNumber(org?.id)?.toString(),
       displayName: optionalString(org?.name) ?? "Grafana",
     },
-    grantedScopes: [],
     metadata: {
       baseUrl,
       validationPath: "/api/org",

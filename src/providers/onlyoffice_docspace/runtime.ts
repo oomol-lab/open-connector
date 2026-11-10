@@ -114,7 +114,6 @@ export async function validateOnlyofficeCredential(
       accountId: createHash("sha256").update(`${context.portalUrl}:${id}`).digest("hex").slice(0, 24),
       displayName: label,
     },
-    grantedScopes: [],
     metadata: { portalUrl: context.portalUrl, apiBaseUrl: context.apiBaseUrl, userId: id },
   };
 }

@@ -76,7 +76,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: organizationId ?? "anthropic_admin_api_key",
         displayName: organizationName ?? "Anthropic Admin",
       },
-      grantedScopes: [],
       metadata: {
         apiBaseUrl: anthropicAdminApiBaseUrl,
         organizationId: organizationId ?? null,

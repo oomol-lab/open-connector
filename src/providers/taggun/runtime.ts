@@ -49,7 +49,6 @@ export const taggunActionHandlers: ProviderActionHandlers<"taggun", TaggunAction
 
 export async function validateTaggunCredential(): Promise<{
   profile: { accountId: string; displayName: string };
-  grantedScopes: string[];
   metadata: Record<string, unknown>;
 }> {
   return {
@@ -57,7 +56,6 @@ export async function validateTaggunCredential(): Promise<{
       accountId: "taggun",
       displayName: "Taggun API Key",
     },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: taggunApiBaseUrl,
       validationMode: "format_only",

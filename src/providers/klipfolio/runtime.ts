@@ -68,7 +68,6 @@ export async function validateKlipfolioCredential(
       accountId: "klipfolio",
       displayName: "Klipfolio API Key",
     },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: klipfolioApiBaseUrl,
       validationEndpoint: "/clients?limit=1",

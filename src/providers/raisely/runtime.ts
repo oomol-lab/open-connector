@@ -200,7 +200,6 @@ export async function validateRaiselyCredential(
       accountId: userUuid,
       displayName: fullName ?? email ?? preferredName ?? "Raisely API Key",
     },
-    grantedScopes: [],
     metadata: {
       validationEndpoint: "/authenticate",
       userUuid,

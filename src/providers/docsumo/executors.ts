@@ -90,7 +90,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: optionalString(data.user_id) ?? "api_key",
         displayName: optionalString(data.email) ?? "Docsumo API Key",
       },
-      grantedScopes: [],
       metadata: compactObject({
         apiBaseUrl,
         validationEndpoint: "/api/v1/eevee/apikey/limit/",

@@ -80,9 +80,7 @@ export async function validateReplicateCredential(
     profile: {
       accountId: username ?? "replicate-api-token",
       displayName: name || username || "Replicate API Token",
-      grantedScopes: [],
     },
-    grantedScopes: [],
     metadata: compactObject({
       validationEndpoint: replicateValidationPath,
       username,

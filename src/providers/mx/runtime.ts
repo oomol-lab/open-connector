@@ -69,7 +69,6 @@ export async function validateMxCredential(
       accountId: clientId,
       displayName: `MX ${clientId}`,
     },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: mxApiBaseUrl,
       apiVersion: mxVersion,

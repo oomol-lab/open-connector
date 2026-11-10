@@ -71,7 +71,6 @@ export async function validateBetterStackCredential(
       accountId: sampleTeamName ?? "better_stack",
       displayName: sampleTeamName ? `Better Stack (${sampleTeamName})` : "Better Stack API Token",
     },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl: betterStackApiBaseUrl,
       validationEndpoint: "/api/v3/incidents?per_page=1",

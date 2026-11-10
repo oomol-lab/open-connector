@@ -95,7 +95,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: "news_api",
         displayName: "News API Key",
       },
-      grantedScopes: [],
       metadata: {
         validationEndpoint: "/v2/top-headlines/sources",
         apiBaseUrl: newsApiBaseUrl,

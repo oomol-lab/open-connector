@@ -10,7 +10,6 @@ import {
   ProviderRequestError,
   providerUserAgent,
 } from "../provider-runtime.ts";
-import { getMondayProviderScopeSurface } from "./scopes.ts";
 
 export const mondayApiUrl: string = "https://api.monday.com/v2";
 export const mondayApiVersion: string = "2026-04";
@@ -66,10 +65,6 @@ interface MondayDocBlocksFromMarkdownResult {
   blockIds: string[];
 }
 
-interface MondayCredentialValidationOptions {
-  grantedScopes?: string[];
-}
-
 export type MondayActionHandler = (input: MondayProviderActionInput, fetcher: typeof fetch) => Promise<unknown>;
 
 export interface MondayProviderActionInput {
@@ -81,7 +76,6 @@ export interface MondayProviderActionInput {
 export async function validateMondayCredential(
   input: Record<string, string>,
   fetcher: typeof fetch = providerFetch,
-  options: MondayCredentialValidationOptions = {},
 ): Promise<CredentialValidationResult> {
   const apiKey = optionalString(input.apiKey);
   if (!apiKey) {
@@ -97,7 +91,6 @@ export async function validateMondayCredential(
       accountId: profile.providerAccountId,
       displayName: profile.accountLabel,
     },
-    grantedScopes: options.grantedScopes ?? getMondayProviderScopeSurface(),
     metadata: profile.providerMetadata,
   };
 }

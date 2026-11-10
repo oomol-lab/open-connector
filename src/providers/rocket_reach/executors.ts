@@ -87,7 +87,6 @@ export const credentialValidators: CredentialValidators = {
           firstNonEmptyString(optionalString(accountObject.name), optionalString(accountObject.email), accountId) ??
           "RocketReach API Key",
       },
-      grantedScopes: [],
       metadata: compactObject({
         validationEndpoint: "/account",
         apiBaseUrl: rocketReachApiBaseUrl,

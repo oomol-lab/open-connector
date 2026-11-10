@@ -113,7 +113,6 @@ export async function validateSunoApiCredential(
       accountId: "api_key",
       displayName: "SunoAPI API Key",
     },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: sunoApiBaseUrl,
       validationEndpoint: "/api/v1/generate/credit",

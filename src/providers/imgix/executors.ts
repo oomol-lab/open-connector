@@ -73,7 +73,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: "api_key",
         displayName: "Imgix API Key",
       },
-      grantedScopes: [],
       metadata: compactObject({
         apiBaseUrl: imgixApiBaseUrl,
         validationEndpoint: `/${sourcesPath}`,

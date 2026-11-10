@@ -34,7 +34,6 @@ describe("Dropbox Sign authentication", () => {
         accountId: "dropbox_sign:account-1",
         displayName: "owner@example.com",
       },
-      grantedScopes: ["signature_request_access"],
       metadata: {
         apiBaseUrl: "https://api.hellosign.com/v3",
         accountId: "account-1",

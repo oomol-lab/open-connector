@@ -8,6 +8,7 @@ const twitterOAuthScopes = [
   "tweet.read",
   "users.read",
   "tweet.write",
+  "tweet.moderate.write",
   "media.write",
   "offline.access",
   "follows.read",

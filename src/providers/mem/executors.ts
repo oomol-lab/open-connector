@@ -96,7 +96,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: `mem:${createHash("sha256").update(input.apiKey).digest("hex").slice(0, 16)}`,
         displayName: "Mem API Key",
       },
-      grantedScopes: [],
       metadata: {
         apiBaseUrl: memApiBaseUrl,
         validationEndpoint: "/notes?limit=1",

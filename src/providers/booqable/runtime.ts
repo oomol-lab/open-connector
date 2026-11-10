@@ -155,7 +155,6 @@ export async function validateBooqableCredential(
       accountId: `booqable:${companyId ?? storedCompanySlug}`,
       displayName: companyName ?? `Booqable ${storedCompanySlug}`,
     },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: buildBooqableApiBaseUrl(storedCompanySlug),
       validationEndpoint: "/api/4/companies/current",

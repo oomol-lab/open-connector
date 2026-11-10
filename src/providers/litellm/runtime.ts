@@ -176,7 +176,6 @@ export async function validateLitellmCredential(
   const host = new URL(context.baseUrl).host;
   return {
     profile: { accountId: `litellm:${host}`, displayName: `LiteLLM ${host}` },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: context.baseUrl,
       validationEndpoint,

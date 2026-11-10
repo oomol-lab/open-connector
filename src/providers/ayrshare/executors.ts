@@ -113,7 +113,6 @@ export const credentialValidators: CredentialValidators = {
       profile: {
         displayName: profileKey ? "Ayrshare User Profile" : "Ayrshare Primary Profile",
       },
-      grantedScopes: [],
       metadata: {
         apiBaseUrl: ayrshareBaseUrl,
         validationEndpoint: "/user",

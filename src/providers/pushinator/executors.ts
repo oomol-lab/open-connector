@@ -68,7 +68,6 @@ export const credentialValidators: CredentialValidators = {
     requiredInputString(input.apiKey, "API Key");
     return {
       profile: { displayName: "Pushinator API Key" },
-      grantedScopes: [],
       metadata: {
         apiBaseUrl,
         validationMode: "local_non_empty_key",

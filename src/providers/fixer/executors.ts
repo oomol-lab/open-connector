@@ -73,7 +73,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: "api_key",
         displayName: "Fixer API Key",
       },
-      grantedScopes: [],
       metadata: {
         validationEndpoint: "/symbols",
         apiBaseUrl: fixerApiBaseUrl,

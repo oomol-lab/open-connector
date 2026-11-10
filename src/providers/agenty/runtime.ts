@@ -147,7 +147,6 @@ export async function validateAgentyApiKey(
       accountId: "agenty",
       displayName: "Agenty API Key",
     },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl: agentyApiBaseUrl,
       validationEndpoint: agentyValidationPath,

@@ -235,7 +235,6 @@ export async function validateCodemagicApiKey(
       accountId,
       displayName,
     },
-    grantedScopes: [],
     metadata: compactObject({
       validationEndpoint: "/api/v3/user",
       avatar_url: optionalString(user.avatar_url),

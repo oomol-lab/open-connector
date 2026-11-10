@@ -61,7 +61,6 @@ export async function validateNeedleCredential(
       accountId: "api_key",
       displayName: "Needle API Key",
     },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: needleApiBaseUrl,
       searchBaseUrl: needleSearchBaseUrl,

@@ -129,7 +129,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: optionalString(account.id),
         displayName: name || optionalString(account.email) || "Enormail Account",
       },
-      grantedScopes: [],
       metadata: { accountId: optionalString(account.id), apiBaseUrl: baseUrl },
     };
   },

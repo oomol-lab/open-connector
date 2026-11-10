@@ -95,7 +95,6 @@ export const credentialValidators: CredentialValidators = {
     requiredInputString(input.apiKey, "apiKey");
     return {
       profile: { displayName: "Pingback API Key" },
-      grantedScopes: [],
       metadata: { apiBaseUrl, validationMode: "local_only" },
     };
   },

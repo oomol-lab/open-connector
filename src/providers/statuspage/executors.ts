@@ -155,7 +155,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: firstPage ? (optionalString(firstPage.id) ?? "statuspage-api-token") : "statuspage-api-token",
         displayName: firstPage ? `Statuspage: ${String(firstPage.name)}` : "Statuspage API Token",
       },
-      grantedScopes: [],
       metadata: compactObject({
         apiBaseUrl: statuspageApiBaseUrl,
         validationEndpoint: statuspageValidationPath,

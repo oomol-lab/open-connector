@@ -120,7 +120,6 @@ export const credentialValidators: CredentialValidators = {
     await request("/libraries", "GET", requiredInputString(input.apiKey, "API Key"), fetcher);
     return {
       profile: { displayName: "Memento Database Account" },
-      grantedScopes: [],
       metadata: { apiBaseUrl: baseUrl },
     };
   },

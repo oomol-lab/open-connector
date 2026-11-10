@@ -68,7 +68,6 @@ export const credentialValidators: CredentialValidators = {
       profile: {
         displayName: readFirstUserLabel(payload) ?? "Userflow API Key",
       },
-      grantedScopes: [],
       metadata: {
         apiBaseUrl: userflowApiBaseUrl,
         apiVersion: userflowApiVersion,

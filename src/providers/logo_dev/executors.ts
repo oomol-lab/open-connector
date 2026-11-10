@@ -68,7 +68,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: "logo_dev-api-key",
         displayName: "Logo.dev API Key",
       },
-      grantedScopes: [],
       metadata: {
         apiBaseUrl: logoDevApiBaseUrl,
         validationEndpoint: "/search",

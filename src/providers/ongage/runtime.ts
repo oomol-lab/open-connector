@@ -78,7 +78,6 @@ export async function validateOngageCredential(
     profile: {
       accountId: accountId === undefined ? "ongage" : String(accountId),
       displayName: accountId === undefined ? "Ongage API Key" : `Ongage Account ${accountId}`,
-      grantedScopes: [],
     },
     metadata: compactObject({
       apiBaseUrl: ongageApiBaseUrl,

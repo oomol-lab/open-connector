@@ -107,7 +107,6 @@ export const credentialValidators: CredentialValidators = {
       "VBOUT API Key";
     return {
       profile: { accountId: optionalString(business?.vboutName) ?? "api_key", displayName: accountName },
-      grantedScopes: [],
       metadata: {
         apiBaseUrl: baseUrl,
         validationEndpoint: "/App/Me",

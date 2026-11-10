@@ -168,7 +168,6 @@ export async function validateHunterCredential(
   options: { fetcher: typeof fetch; signal?: AbortSignal },
 ): Promise<{
   profile: { accountId: string; displayName: string };
-  grantedScopes: string[];
   metadata: Record<string, unknown>;
 }> {
   const payload = await requestHunter({
@@ -186,7 +185,6 @@ export async function validateHunterCredential(
       accountId: email ?? "hunter:api-key",
       displayName: email ?? "Hunter API Key",
     },
-    grantedScopes: [],
     metadata: compactObject({
       validationEndpoint: "/account",
       apiBaseUrl: hunterApiBaseUrl,

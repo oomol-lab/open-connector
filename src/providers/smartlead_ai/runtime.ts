@@ -25,8 +25,7 @@ export async function validateSmartleadAiCredential(
   await smartleadAiRequest({ path: "/campaigns/", phase: "validate" }, { apiKey, fetcher, signal });
 
   return {
-    profile: { accountId: "api_key", displayName: "Smartlead API Key", grantedScopes: [] },
-    grantedScopes: [],
+    profile: { accountId: "api_key", displayName: "Smartlead API Key" },
     metadata: {
       apiBaseUrl: smartleadAiApiBaseUrl,
       validationEndpoint: "/campaigns/",

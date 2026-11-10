@@ -121,7 +121,6 @@ export async function validateSkioCredential(
     profile: {
       displayName: "Skio API Key",
     },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: skioApiBaseUrl,
       validationEndpoint: `${validationPath}?first=1`,

@@ -95,7 +95,6 @@ export async function validateJuniperMistCredential(
       accountId: self.id ?? self.email ?? "juniper_mist",
       displayName: self.name ?? self.email ?? "Juniper Mist API Token",
     },
-    grantedScopes: [],
     metadata: {
       validationEndpoint: "/self",
       apiBaseUrl,

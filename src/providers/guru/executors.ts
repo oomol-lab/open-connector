@@ -172,7 +172,6 @@ async function validateGuruCredential(
       accountId: teamId ?? collectionId ?? userId ?? "guru-api-token",
       displayName: teamName ?? collectionName ?? userEmail ?? "Guru API Token",
     },
-    grantedScopes: [],
     metadata: jsonObject({
       apiBaseUrl: guruApiBaseUrl,
       validationEndpoint: guruValidationPath,

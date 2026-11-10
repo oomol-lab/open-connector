@@ -60,7 +60,6 @@ export const credentialValidators: CredentialValidators = {
     );
     return {
       profile: { accountId: result.providerAccountId ?? "kobotoolbox", displayName: result.accountLabel },
-      grantedScopes: [],
       metadata: result.providerMetadata,
     };
   },

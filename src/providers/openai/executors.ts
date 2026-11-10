@@ -113,7 +113,6 @@ export const credentialValidators: CredentialValidators = {
       profile: {
         displayName: "OpenAI API Key",
       },
-      grantedScopes: [],
       metadata: {
         validationEndpoint: "/models",
         availableModels: (payload.data ?? [])

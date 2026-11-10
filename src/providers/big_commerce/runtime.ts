@@ -84,7 +84,6 @@ export async function validateBigCommerceCredential(
       accountId: `big_commerce:${storeHash}`,
       displayName: `BigCommerce ${storeHash}`,
     },
-    grantedScopes: [],
     metadata: compactObject({
       storeHash,
       apiBaseUrl,

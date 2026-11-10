@@ -129,7 +129,6 @@ export const credentialValidators: CredentialValidators = {
     requiredInputString(input.apiKey, "apiKey");
     return {
       profile: { displayName: "Just One API Token" },
-      grantedScopes: [],
       metadata: { apiBaseUrl, validationMode: "format_only" },
     };
   },

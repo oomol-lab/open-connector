@@ -54,7 +54,6 @@ export const credentialValidators: CredentialValidators = {
         profile: {
           accountId: `merchant:${merchantId}`,
           displayName: optionalString(merchant.merchant_name) ?? `Shopee merchant ${merchantId}`,
-          grantedScopes: ["all"],
         },
       };
     }
@@ -70,7 +69,6 @@ export const credentialValidators: CredentialValidators = {
         profile: {
           accountId: `shop:${shopId}`,
           displayName: optionalString(shop.shop_name) ?? `Shopee shop ${shopId}`,
-          grantedScopes: ["all"],
         },
       };
     }

@@ -132,7 +132,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: "cronitor",
         displayName: "Cronitor API Key",
       },
-      grantedScopes: [],
       metadata: compactObject({
         apiBaseUrl: cronitorApiBaseUrl,
         apiVersion: cronitorApiVersion,

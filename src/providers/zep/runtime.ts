@@ -153,7 +153,6 @@ export async function validateZepCredential(
       accountId: projectId ? `zep:${projectId}` : "zep",
       displayName: projectName ?? "Zep API Key",
     },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl: zepApiBaseUrl,
       validationEndpoint,

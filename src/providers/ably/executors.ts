@@ -245,7 +245,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: "api_key",
         displayName: "Ably API Key",
       },
-      grantedScopes: [],
       metadata: {
         apiBaseUrl: ablyApiBaseUrl,
         validationEndpoint: `${ablyValidationPath}?limit=1`,

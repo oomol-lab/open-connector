@@ -27,7 +27,6 @@ export const credentialValidators: CredentialValidators = {
     const project = await validateHamsaCredential(input.apiKey, fetcher);
     return {
       profile: { displayName: typeof project.name === "string" ? project.name : "Hamsa API Key" },
-      grantedScopes: [],
       metadata: { projectId: project.id },
     };
   },

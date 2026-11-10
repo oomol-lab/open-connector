@@ -101,7 +101,6 @@ export async function validateHiggsfieldAiCredential(
       accountId: `higgsfield_ai:api_key:${createHash("sha256").update(apiKey).digest("hex").slice(0, 16)}`,
       displayName: "Higgsfield AI API Key",
     },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: higgsfieldAiApiBaseUrl,
       validationEndpoint: higgsfieldAiValidationPath,

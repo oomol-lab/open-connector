@@ -179,7 +179,6 @@ export const credentialValidators: CredentialValidators = {
           optionalString(user.email) ??
           "Countly API Key",
       },
-      grantedScopes: [],
       metadata: compactObject({ baseUrl, apiBaseUrl: baseUrl, validationEndpoint: validationPath, userId }),
     };
   },

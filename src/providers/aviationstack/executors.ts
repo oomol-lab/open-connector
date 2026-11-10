@@ -118,7 +118,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: "aviationstack",
         displayName: "Aviationstack API Key",
       },
-      grantedScopes: [],
       metadata: compactObject({
         validationEndpoint: "/airports",
         apiBaseUrl: aviationstackApiBaseUrl,

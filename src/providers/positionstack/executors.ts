@@ -72,7 +72,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: "api_key",
         displayName: "Positionstack API Key",
       },
-      grantedScopes: [],
       metadata: compactObject({
         validationEndpoint: "/forward",
         apiBaseUrl: positionstackApiBaseUrl,

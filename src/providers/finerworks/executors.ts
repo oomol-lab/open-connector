@@ -70,7 +70,6 @@ export const credentialValidators: CredentialValidators = {
     await request("/v3/list_product_types", {}, { webApiKey: input.apiKey, appKey, fetcher, signal });
     return {
       profile: { accountId: "api_key", displayName: "FinerWorks API Account" },
-      grantedScopes: [],
       metadata: {
         apiBaseUrl: "https://v2.api.finerworks.com",
         validationEndpoint: "/v3/list_product_types",

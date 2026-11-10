@@ -82,7 +82,6 @@ export const credentialValidators: CredentialValidators = {
     const hash = sha256Hex(requiredInputString(input.apiKey, "MCP Key"));
     return {
       profile: { accountId: `didi:${hash}`, displayName: `DiDi · ${hash.slice(-6)}` },
-      grantedScopes: [],
       metadata: { mcpEndpoint: endpoint, discoveredToolCount: tools.length },
     };
   },

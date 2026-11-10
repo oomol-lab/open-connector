@@ -8,7 +8,6 @@ import {
   providerUserAgent,
   ProviderRequestError,
 } from "../provider-runtime.ts";
-import { intercomGrantedPermissions } from "./scopes.ts";
 
 const intercomDefaultApiBaseUrl = "https://api.intercom.io";
 export const intercomApiVersion = "2.13";
@@ -530,7 +529,6 @@ export async function validateIntercomOAuthCredential(
       accountId: providerAccountId,
       displayName: accountLabel,
     },
-    grantedScopes: intercomGrantedPermissions,
     metadata: compactObject({
       adminId,
       adminEmail: email,

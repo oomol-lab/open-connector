@@ -89,7 +89,6 @@ export const credentialValidators: CredentialValidators = {
     });
     return {
       profile: { accountId: resolved.accountId, displayName: `Appcues Account ${resolved.accountId}` },
-      grantedScopes: [],
       metadata: {
         accountId: resolved.accountId,
         region: resolved.region,

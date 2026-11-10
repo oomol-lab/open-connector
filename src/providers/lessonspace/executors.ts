@@ -108,7 +108,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: `lessonspace:${organisationId}`,
         displayName: `Lessonspace ${organisationId}`,
       },
-      grantedScopes: [],
       metadata: {
         organisationId,
         apiBaseUrl: lessonspaceApiBaseUrl,

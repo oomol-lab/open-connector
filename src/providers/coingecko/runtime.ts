@@ -118,7 +118,6 @@ export async function validateCoingeckoCredential(
       accountId: `coingecko:${plan}`,
       displayName: `CoinGecko ${plan === "pro" ? "Pro" : "Demo"} API Key`,
     },
-    grantedScopes: [],
     metadata: { plan, apiBaseUrl: coingeckoBaseUrl(plan), validationEndpoint: "/ping" },
   };
 }

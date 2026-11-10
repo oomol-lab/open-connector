@@ -155,7 +155,6 @@ export async function validateNylasCredential(
       accountId: firstGrantId ? `nylas:grant:${firstGrantId}` : "nylas-api-key",
       displayName: firstGrantEmail ?? firstGrantName ?? "Nylas API Key",
     },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl: nylasApiBaseUrl,
       validationEndpoint: "/grants",

@@ -71,7 +71,6 @@ export async function validateBugsnagCredential(input: {
       accountId: userId,
       displayName: name ?? email ?? "Bugsnag Personal Auth Token",
     },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: bugsnagApiBaseUrl,
       validationEndpoint: "/user",

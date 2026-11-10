@@ -40,7 +40,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: "builder_io_api_key",
         displayName: "Builder.io API Key",
       },
-      grantedScopes: [],
       metadata: {
         apiBaseUrl: builderIoWriteApiBaseUrl,
         validationStrategy: "local_required_key_check",

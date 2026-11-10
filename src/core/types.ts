@@ -413,7 +413,7 @@ export type CredentialValidationResult = {
    * users and agents so they can see which account an action will use.
    */
   profile?: CredentialProfileInput;
-  /** Provider-native scopes granted to this credential, when known. */
+  /** Provider-reported scopes for display only. Upstream APIs enforce credential permissions. */
   grantedScopes?: string[];
   /**
    * Provider-specific non-secret metadata kept for executors.
@@ -438,7 +438,7 @@ export type CredentialProfile = {
   accountId: string;
   /** Human-readable label for local users and agents. */
   displayName: string;
-  /** Provider-native scopes granted to this credential, when known. */
+  /** Provider-reported scopes for display only. Upstream APIs enforce credential permissions. */
   grantedScopes: string[];
 };
 
@@ -450,7 +450,7 @@ export type CredentialProfileInput = {
   accountId?: string;
   /** Human-readable label for local users and agents. */
   displayName?: string;
-  /** Provider-native scopes granted to this credential, when known. */
+  /** Provider-reported scopes for display only. Upstream APIs enforce credential permissions. */
   grantedScopes?: string[];
 };
 

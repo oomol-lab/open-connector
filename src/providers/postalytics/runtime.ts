@@ -150,7 +150,6 @@ export async function validatePostalyticsCredential(
           : `postalytics:account:${accountId}`,
       displayName: company ?? emailAddress ?? username ?? "Postalytics API Key",
     },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl: postalyticsApiBaseUrl,
       validationEndpoint: postalyticsValidationPath,

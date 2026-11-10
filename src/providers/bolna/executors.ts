@@ -84,7 +84,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: user.id,
         displayName: user.email ?? user.name ?? "Bolna API Key",
       },
-      grantedScopes: [],
       metadata: compactObject({
         apiBaseUrl: bolnaApiBaseUrl,
         validationEndpoint: "/user/me",

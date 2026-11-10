@@ -70,7 +70,6 @@ export async function validatePeopledatalabsCredential(
     profile: {
       accountId: "peopledatalabs-api-key",
       displayName: "People Data Labs API Key",
-      grantedScopes: [],
     },
     metadata: compactObject({
       apiBaseUrl: peopledatalabsApiBaseUrl,

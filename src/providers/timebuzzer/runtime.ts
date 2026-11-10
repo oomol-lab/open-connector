@@ -92,7 +92,6 @@ export async function validateTimebuzzerCredential(
   const email = optionalString(payload.email);
   return {
     profile: { displayName: [firstName, lastName].filter(Boolean).join(" ") || email || "timeBuzzer API Key" },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl: timebuzzerApiBaseUrl,
       validationEndpoint: `${apiPath}/account/me`,

@@ -152,7 +152,6 @@ export async function validateBeamerCredential(
     profile: {
       displayName: productName,
     },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl: beamerApiBaseUrl,
       validationEndpoint: "/ping",

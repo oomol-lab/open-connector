@@ -116,7 +116,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: organizationId === undefined ? "api_key" : `organization:${organizationId}`,
         displayName: organizationName ? `ServerAvatar ${organizationName}` : "ServerAvatar API Token",
       },
-      grantedScopes: [],
       metadata: compactObject({
         apiBaseUrl: serverAvatarApiBaseUrl,
         validationEndpoint: "/organizations",

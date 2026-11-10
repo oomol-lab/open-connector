@@ -84,7 +84,6 @@ export async function validateCensysCredential(
       accountId: "censys",
       displayName: "Censys Personal Access Token",
     },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: censysApiBaseUrl,
       validationEndpoint: "/global/asset/host/8.8.8.8",

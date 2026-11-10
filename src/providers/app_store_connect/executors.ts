@@ -55,7 +55,6 @@ export const credentialValidators: CredentialValidators = {
       },
       // App Store Connect exposes no endpoint that reports the roles a key
       // holds, so there is nothing to derive granted scopes from.
-      grantedScopes: [],
       metadata: {
         apiBaseUrl: appStoreConnectApiOrigin,
         validationEndpoint: "/v1/apps",

@@ -128,7 +128,6 @@ async function validateClassmarkerCredential(
       accountId: "classmarker-api-key",
       displayName: "ClassMarker API Key",
     },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: classmarkerApiBaseUrl,
       validationPath: classmarkerValidationPath,

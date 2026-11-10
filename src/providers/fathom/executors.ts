@@ -230,7 +230,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: accountId ? `fathom:account:${accountId}` : "fathom",
         displayName: name ?? email ?? "Fathom API Token",
       },
-      grantedScopes: [],
       metadata: compactObject({
         validationEndpoint: fathomValidationPath,
         accountId,

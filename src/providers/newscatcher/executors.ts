@@ -80,7 +80,6 @@ export const credentialValidators: CredentialValidators = {
     const plan = optionalString(subscription.plan);
     return {
       profile: { accountId: "api_key", displayName: plan ? `NewsCatcher ${plan}` : "NewsCatcher API Key" },
-      grantedScopes: [],
       metadata: { apiBaseUrl: baseUrl, validationEndpoint: paths.get_subscription, plan: plan ?? null },
     };
   },

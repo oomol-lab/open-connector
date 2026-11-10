@@ -78,7 +78,6 @@ export async function validateProcessplanCredential(
   );
   return {
     profile: { displayName: pickString(user, "u_full_name", "u_name", "u_email", "email") ?? "ProcessPlan API Token" },
-    grantedScopes: [],
     metadata: { apiBaseUrl: processplanApiBaseUrl, validationEndpoint: "/user/me" },
   };
 }

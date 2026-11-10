@@ -95,7 +95,6 @@ async function validateMailcheckCredential(
       accountId: userEmail,
       displayName: userEmail,
     },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl: mailcheckApiBaseUrl,
       validationEndpoint: "/status",

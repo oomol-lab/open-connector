@@ -44,7 +44,6 @@ export async function validateCensusBureauCredential(
       accountId: "census_bureau",
       displayName: "Census Bureau API Key",
     },
-    grantedScopes: [],
     metadata: {
       validationEndpoint: "/data/2022/acs/acs5",
       apiBaseUrl: censusBureauApiBaseUrl,

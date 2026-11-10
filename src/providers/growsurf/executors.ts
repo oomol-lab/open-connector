@@ -135,7 +135,6 @@ export const credentialValidators: CredentialValidators = {
     }
     return {
       profile: { displayName: name },
-      grantedScopes: [],
       metadata: { apiBaseUrl: baseUrl, validationEndpoint: "/team" },
     };
   },

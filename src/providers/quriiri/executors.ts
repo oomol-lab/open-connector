@@ -140,7 +140,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: accountKey,
         displayName: `Quriiri ${accountKey}`,
       },
-      grantedScopes: [],
       metadata: {
         apiBaseUrl,
         validationEndpoint: "/v2/senderlist/",

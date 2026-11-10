@@ -182,9 +182,7 @@ export async function validateItGlueCredential(
     profile: {
       accountId: firstUserId ?? `it_glue:${region}`,
       displayName: firstUserLabel ? `IT Glue ${firstUserLabel}` : "IT Glue API Key",
-      grantedScopes: [],
     },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl,
       region,

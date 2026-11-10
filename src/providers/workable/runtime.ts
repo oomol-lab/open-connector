@@ -115,7 +115,6 @@ export async function validateWorkableCredential(
       accountId: `${subdomain}.workable.com`,
       displayName: `${subdomain}.workable.com`,
     },
-    grantedScopes: [],
     metadata: {
       subdomain,
       apiBaseUrl: buildWorkableApiBaseUrl(subdomain),

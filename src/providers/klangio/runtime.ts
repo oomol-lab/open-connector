@@ -150,7 +150,6 @@ export async function validateKlangioCredential(
       accountId: "api_key",
       displayName: "Klangio API Key",
     },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: klangioApiBaseUrl,
       validationEndpoint,

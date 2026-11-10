@@ -74,7 +74,6 @@ export async function validateLuno(
   signal?: AbortSignal,
 ): Promise<{
   profile: { accountId: string; displayName: string };
-  grantedScopes: string[];
   metadata: Record<string, unknown>;
 }> {
   const keyId = requiredString(input.values.keyId, "keyId", providerInputError);
@@ -95,7 +94,6 @@ export async function validateLuno(
   const name = optionalString(first?.name);
   return {
     profile: { accountId, displayName: name ? `Luno ${name}` : `Luno ${keyId}` },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl: lunoApiBaseUrl,
       validationEndpoint: "/api/1/balance",

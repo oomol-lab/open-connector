@@ -80,7 +80,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: "genderize-api-key",
         displayName: "Genderize API Key",
       },
-      grantedScopes: [],
       metadata: compactObject({
         apiBaseUrl: genderizeApiBaseUrl,
         validationName: genderizeValidationName,

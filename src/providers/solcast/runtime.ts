@@ -61,7 +61,6 @@ export async function validateSolcastCredential(context: ApiKeyProviderContext):
       accountId: "solcast",
       displayName: "Solcast API Key",
     },
-    grantedScopes: [],
     metadata: {
       validationEndpoint: "/data/forecast/radiation_and_weather",
       apiBaseUrl: solcastApiBaseUrl,

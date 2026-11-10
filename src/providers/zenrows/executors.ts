@@ -109,7 +109,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: service,
         displayName: "ZenRows API Key",
       },
-      grantedScopes: [],
       metadata: compactObject({
         validationEndpoint: "/v1/subscriptions/self/details/",
         apiBaseUrl: "https://api.zenrows.com/v1",

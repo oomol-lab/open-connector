@@ -128,7 +128,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: optionalString(firstUser?.email) ?? optionalString(firstUser?.id),
         displayName: firstString(firstUser, ["name", "email"]) ?? "Recruiterflow API Key",
       },
-      grantedScopes: [],
       metadata: {
         apiBaseUrl,
         validationEndpoint: validationPath,

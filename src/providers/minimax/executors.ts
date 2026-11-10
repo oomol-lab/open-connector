@@ -130,7 +130,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: `minimax:key:${createHash("sha256").update(input.apiKey).digest("hex").slice(0, 16)}`,
         displayName: "MiniMax API Key",
       },
-      grantedScopes: [],
       metadata: {
         apiBaseUrl,
         validationEndpoint: "/v1/models",

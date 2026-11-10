@@ -226,7 +226,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: user.email ?? user.username,
         displayName: user.name ?? user.email ?? user.username,
       },
-      grantedScopes: [],
       metadata: compactObject({
         apiBaseUrl: jotformApiBaseUrl,
         validationEndpoint: "/user",

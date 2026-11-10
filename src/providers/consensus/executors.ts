@@ -31,7 +31,6 @@ export const credentialValidators: CredentialValidators = {
     );
     return {
       profile: { accountId: "consensus", displayName: "Consensus API Key" },
-      grantedScopes: [],
       metadata: { apiBaseUrl, validationEndpoint: "/v1/search", pageSize: response.page_size },
     };
   },

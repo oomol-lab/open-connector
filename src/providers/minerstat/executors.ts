@@ -61,7 +61,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: "api_key",
         displayName: "Minerstat API Key",
       },
-      grantedScopes: [],
       metadata: compactObject({
         apiBaseUrl: minerstatApiBaseUrl,
         validationEndpoint: "/coins",

@@ -17,14 +17,13 @@ describe("HeyGen authentication", () => {
       });
     });
 
-    const result = await validateHeygenCredential(auth, { fetcher }, { grantedScopes: [] });
+    const result = await validateHeygenCredential(auth, { fetcher });
 
     expect(result).toMatchObject({
       profile: {
         accountId: "owner@example.com",
         displayName: "owner@example.com",
       },
-      grantedScopes: [],
       metadata: {
         apiBaseUrl: "https://api.heygen.com",
         authHeaderName: "Authorization",

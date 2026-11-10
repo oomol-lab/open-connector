@@ -45,7 +45,6 @@ export const credentialValidators: CredentialValidators = {
     const hash = createHash("sha256").update(input.apiKey).digest("hex").slice(0, 16);
     return {
       profile: { accountId: `sellersprite-mcp:${hash}`, displayName: `SellerSprite MCP - ${hash.slice(-6)}` },
-      grantedScopes: [],
       metadata: { mcpEndpoint: endpoint, discoveredToolCount: tools.length },
     };
   },

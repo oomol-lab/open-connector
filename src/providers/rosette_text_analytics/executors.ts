@@ -75,7 +75,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: "api_key",
         displayName: "Rosette Text Analytics API Key",
       },
-      grantedScopes: [],
       metadata: compactObject({
         apiBaseUrl: rosetteTextAnalyticsApiBaseUrl,
         validationEndpoint: "/ping",

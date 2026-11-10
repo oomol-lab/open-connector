@@ -147,7 +147,6 @@ export const credentialValidators: CredentialValidators = {
       profile: {
         accountId: credential.websiteId,
         displayName: optionalString(website.name) ?? optionalString(website.domain) ?? credential.websiteId,
-        grantedScopes: [],
       },
       metadata: compactObject({
         apiBaseUrl: crispApiBaseUrl,

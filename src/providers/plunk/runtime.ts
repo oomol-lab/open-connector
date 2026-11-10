@@ -67,9 +67,7 @@ export async function validatePlunkCredential(
     profile: {
       accountId: "plunk-api-key",
       displayName: "Plunk API Key",
-      grantedScopes: [],
     },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl: plunkApiBaseUrl,
       validationEndpoint: "/contacts",

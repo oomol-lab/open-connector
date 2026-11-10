@@ -56,7 +56,6 @@ export const credentialValidators: CredentialValidators = {
     requiredInputString(input.apiKey?.trim(), "API Key");
     return {
       profile: { displayName: "Nightfall AI API Key" },
-      grantedScopes: [],
       metadata: { apiBaseUrl: baseUrl, validationMode: "local_non_empty_key" },
     };
   },

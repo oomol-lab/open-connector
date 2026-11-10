@@ -80,7 +80,6 @@ export const credentialValidators: CredentialValidators = {
       profile: {
         accountId: "dadata-api-key",
         displayName: "DaData.ru API Key",
-        grantedScopes: [],
       },
       metadata: {
         apiBaseUrl: dadataRuApiBaseUrl,

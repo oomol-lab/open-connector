@@ -74,7 +74,6 @@ export async function validateCurrentsApiCredential(
   signal?: AbortSignal,
 ): Promise<{
   profile: { accountId: string; displayName: string };
-  grantedScopes: string[];
   metadata: Record<string, unknown>;
 }> {
   const { response } = await currentsApiRawRequest(
@@ -92,7 +91,6 @@ export async function validateCurrentsApiCredential(
       accountId: "api_key",
       displayName: "Currents API Key",
     },
-    grantedScopes: [],
     metadata: compactObject({
       validationEndpoint: "/v1/auth",
       apiBaseUrl: currentsApiBaseUrl,

@@ -106,7 +106,6 @@ export async function validateWandbMcpCredential(
       accountId: `wandb:mcp:${credentialHash}`,
       displayName: `W&B MCP · ${context.endpoint.host}`,
     },
-    grantedScopes: [],
     metadata: {
       mcpEndpoint: endpointId,
       discoveredToolCount: discoveredTools.length,

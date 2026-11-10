@@ -171,7 +171,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: accountId === undefined ? `freshdesk:${domain}` : String(accountId),
         displayName: accountName ?? `Freshdesk ${domain}`,
       },
-      grantedScopes: [],
       metadata: compactObject({
         domain,
         baseUrl,

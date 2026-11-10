@@ -129,7 +129,6 @@ export const credentialValidators: CredentialValidators = {
           optionalString(account.uuid) ??
           "Breathe Account",
       },
-      grantedScopes: [],
       metadata: compactObject({
         accountId: formatMetadataValue(account.id),
         accountDomain: optionalString(account.domain),

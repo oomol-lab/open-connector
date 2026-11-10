@@ -18,7 +18,6 @@ export const credentialValidators: CredentialValidators = {
   apiKey() {
     return Promise.resolve({
       profile: { displayName: "HARPA AI API Key" },
-      grantedScopes: [],
       metadata: { apiBaseUrl: harpaAiApiBaseUrl, validationMode: "format_only" },
     });
   },

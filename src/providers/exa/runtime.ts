@@ -61,7 +61,6 @@ export async function validateExaApiKey(
       accountId: "api_key",
       displayName: "Exa API Key",
     },
-    grantedScopes: [],
     metadata: compactObject({
       validationEndpoint: "/search",
       validationQuery: "exa",

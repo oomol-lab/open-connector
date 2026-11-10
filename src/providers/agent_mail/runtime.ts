@@ -55,7 +55,6 @@ export async function validateAgentMailCredential(
       accountId: "api_key",
       displayName: "AgentMail API Key",
     },
-    grantedScopes: [],
     metadata: compactObject({
       validationEndpoint: "/v0/inboxes?limit=1",
       inboxCount: optionalInteger(payload.count),

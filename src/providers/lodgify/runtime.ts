@@ -72,9 +72,7 @@ export async function validateLodgifyCredential(
     profile: {
       accountId: "lodgify-api-key",
       displayName: "Lodgify API Key",
-      grantedScopes: [],
     },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl: lodgifyApiBaseUrl,
       validationEndpoint: lodgifyValidationPath,

@@ -57,7 +57,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: firstCarrierId ?? "shipengine-api-key",
         displayName: "ShipEngine API Key",
       },
-      grantedScopes: [],
       metadata: compactObject({
         apiBaseUrl: shipengineBaseUrl,
         validationEndpoint,

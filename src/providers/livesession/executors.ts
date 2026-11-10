@@ -55,7 +55,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: `livesession:api_token:${hashApiKey(input.apiKey)}`,
         displayName: "LiveSession API Token",
       },
-      grantedScopes: [],
       metadata: {
         apiBaseUrl: livesessionApiBaseUrl,
         validationEndpoint: `${livesessionValidationPath}?size=1`,

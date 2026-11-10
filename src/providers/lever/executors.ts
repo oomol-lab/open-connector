@@ -161,7 +161,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: "lever",
         displayName: "Lever API Key",
       },
-      grantedScopes: [],
       metadata: compactObject({
         apiBaseUrl: leverApiBaseUrl,
         validationEndpoint: "/postings",

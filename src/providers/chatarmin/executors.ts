@@ -220,7 +220,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: "chatarmin:api_key",
         displayName: "Chatarmin API Key",
       },
-      grantedScopes: [],
       metadata: compactObject({
         apiBaseUrl: chatarminApiBaseUrl,
         validationEndpoint: "/contacts",

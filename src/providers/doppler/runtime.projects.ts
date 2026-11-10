@@ -90,7 +90,6 @@ export async function validateDopplerCredential(
       accountId: providerAccountId,
       displayName: buildTokenLabel(token),
     },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: dopplerApiBaseUrl,
       validationEndpoint: "/v3/me",

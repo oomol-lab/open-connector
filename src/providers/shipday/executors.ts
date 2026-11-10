@@ -74,7 +74,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: "api_key",
         displayName: "Shipday API Key",
       },
-      grantedScopes: [],
       metadata: compactDefined({
         validationEndpoint: "/carriers",
         firstCarrierName: readFirstCarrierName(payload),

@@ -177,7 +177,6 @@ async function validateLaravelCloudCredential(
       accountId: `laravel_cloud:organization:${organization.id}`,
       displayName: label,
     },
-    grantedScopes: [],
     metadata: {
       validationEndpoint: "/meta/organization",
       organizationId: organization.id,

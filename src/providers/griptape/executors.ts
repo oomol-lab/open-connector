@@ -217,7 +217,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: organizationId ? `griptape:organization:${organizationId}` : "griptape-cloud-api-key",
         displayName: organizationName ?? "Griptape Cloud API Key",
       },
-      grantedScopes: [],
       metadata: compactObject({
         apiBaseUrl: griptapeApiBaseUrl,
         organizationId,

@@ -224,7 +224,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: `elasticsearch:${buildInstanceKey(baseUrl)}:${accountId}`,
         displayName: `Elasticsearch - ${accountName}`,
       },
-      grantedScopes: [],
       metadata: {
         baseUrl,
         ...(apiKeyId ? { apiKeyId } : {}),
@@ -255,7 +254,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: `elasticsearch:${buildInstanceKey(baseUrl)}:${authenticatedUsername}`,
         displayName: fullName || `Elasticsearch - ${authenticatedUsername}`,
       },
-      grantedScopes: [],
       metadata: {
         baseUrl,
         username: authenticatedUsername,

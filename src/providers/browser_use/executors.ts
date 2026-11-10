@@ -170,7 +170,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: projectId ?? "api_key",
         displayName: accountName || projectId || "Browser Use API Key",
       },
-      grantedScopes: [],
       metadata: {
         apiBaseUrl: browserUseV3ApiBaseUrl,
         projectId,

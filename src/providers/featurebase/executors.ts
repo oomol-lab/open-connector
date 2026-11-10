@@ -84,7 +84,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: "api_key",
         displayName: "Featurebase API Key",
       },
-      grantedScopes: [],
       metadata: {
         apiBaseUrl: featurebaseApiBaseUrl,
         apiVersion: featurebaseApiVersion,

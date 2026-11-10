@@ -169,7 +169,6 @@ export async function validateBeeminderCredential(
       accountId: user.username || "beeminder-api-token",
       displayName: user.username ? `Beeminder ${user.username}` : "Beeminder API Token",
     },
-    grantedScopes: [],
     metadata: compactObject({
       username: user.username || undefined,
       timezone: user.timezone ?? undefined,

@@ -138,7 +138,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: accountId ?? displayName,
         displayName,
       },
-      grantedScopes: [],
       metadata: { apiBaseUrl: raindropApiBaseUrl, validationEndpoint: "/user" },
     };
   },

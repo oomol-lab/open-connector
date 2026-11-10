@@ -157,7 +157,6 @@ export async function validatePolygonIoCredential(
     profile: {
       accountId: "polygon-io-api-key",
       displayName: "Polygon.io API Key",
-      grantedScopes: [],
     },
     metadata: compactObject({
       apiBaseUrl: polygonIoApiBaseUrl,

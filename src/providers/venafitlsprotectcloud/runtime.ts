@@ -49,7 +49,6 @@ export async function validateVenafiCloudCredential(
       displayName:
         optionalString(data.username) ?? optionalString(data.email) ?? `Venafi Cloud (${region.toUpperCase()})`,
     },
-    grantedScopes: [],
     metadata: { region, apiBaseUrl: venafiCloudBaseUrls[region] },
   };
 }

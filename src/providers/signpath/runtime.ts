@@ -102,9 +102,7 @@ export async function validateSignpathCredential(
     profile: {
       accountId: organizationId,
       displayName: "SignPath API Token",
-      grantedScopes: [],
     },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: signpathApiBaseUrl,
       organizationId,

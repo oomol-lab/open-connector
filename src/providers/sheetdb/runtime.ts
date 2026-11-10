@@ -76,7 +76,6 @@ export async function validateSheetDbCredential(
       accountId: `sheetdb:${apiId}`,
       displayName: documentName,
     },
-    grantedScopes: [],
     metadata: {
       apiId,
       documentName,

@@ -161,7 +161,6 @@ export const credentialValidators: CredentialValidators = {
     );
     return {
       profile: { displayName: optionalString(result.email) ?? "Magic Hour Account" },
-      grantedScopes: [],
       metadata: {
         accountId: optionalString(result.id),
         validationEndpoint: "/v1/account",

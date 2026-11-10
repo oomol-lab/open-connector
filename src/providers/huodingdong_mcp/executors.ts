@@ -47,7 +47,6 @@ export const credentialValidators: CredentialValidators = {
     const hash = sha256Hex(key);
     return {
       profile: { accountId: `huodingdong-mcp:${hash}`, displayName: `Huodingdong ERP MCP · ${hash.slice(-6)}` },
-      grantedScopes: [],
       metadata: { mcpEndpoint: endpoint, discoveredToolCount: tools.length },
     };
   },

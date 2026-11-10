@@ -60,7 +60,6 @@ export async function validateLingvanexTranslationApiCredential(
       accountId: "lingvanex_translation_api:api-key",
       displayName: "Lingvanex Translation API Key",
     },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: lingvanexTranslationApiBaseUrl,
       validationEndpoint: `${translationPath}/languages`,

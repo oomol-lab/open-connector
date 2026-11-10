@@ -82,7 +82,6 @@ export const credentialValidators: CredentialValidators = {
       profile: {
         displayName: "Beebole API Key",
       },
-      grantedScopes: [],
       metadata: {
         graphqlEndpoint: beeboleGraphqlEndpoint,
         validationEndpoint: beeboleGraphqlPath,

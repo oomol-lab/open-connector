@@ -5,8 +5,8 @@ import { defineProviderAction } from "../../core/provider-definition.ts";
 
 const service = "ticktick";
 
-const readScope = ["ticktick.read"];
-const writeScope = ["ticktick.write"];
+const readScope = ["tasks:read"];
+const writeScope = ["tasks:write"];
 
 const projectId = s.nonEmptyString("The TickTick project ID.");
 const taskId = s.nonEmptyString("The TickTick task ID.");

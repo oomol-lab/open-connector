@@ -32,7 +32,6 @@ export const credentialValidators: CredentialValidators = {
     return {
       profile: { accountId: home.team, displayName: home.team },
       metadata: { team: home.team },
-      grantedScopes: [],
     };
   },
 };

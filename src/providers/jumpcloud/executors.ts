@@ -140,7 +140,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: "api_key",
         displayName: "JumpCloud API Key",
       },
-      grantedScopes: [],
       metadata: compactObject({
         apiBaseUrl: jumpcloudRegionBaseUrls[region],
         region,

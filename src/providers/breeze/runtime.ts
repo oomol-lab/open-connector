@@ -64,7 +64,6 @@ export async function validateBreezeCredential(
       accountId: `breeze:${subdomain}`,
       displayName: `Breeze ${subdomain}`,
     },
-    grantedScopes: [],
     metadata: {
       subdomain,
       baseUrl,

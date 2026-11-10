@@ -154,7 +154,7 @@ async function execute(
 export const credentialValidators: CredentialValidators = {
   async apiKey(input, { fetcher, signal }) {
     await request(input.apiKey, "get_key_status", {}, fetcher, true, signal);
-    return { profile: { displayName: "Litescrape API Key" }, grantedScopes: [], metadata: {} };
+    return { profile: { displayName: "Litescrape API Key" }, metadata: {} };
   },
 };
 export const executors: ProviderExecutors = defineApiKeyProviderExecutors(

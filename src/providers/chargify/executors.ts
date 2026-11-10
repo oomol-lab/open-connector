@@ -194,7 +194,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: `chargify:${siteId ?? subdomain}`,
         displayName: typeof record.name === "string" ? record.name : `Maxio ${subdomain}`,
       },
-      grantedScopes: [],
       metadata: {
         siteUrl: resolvedSiteUrl,
         validationEndpoint: "/site.json",

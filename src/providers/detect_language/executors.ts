@@ -111,7 +111,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: "detect-language-api-key",
         displayName: status.plan ? `Detect Language ${status.plan}` : "Detect Language API Key",
       },
-      grantedScopes: [],
       metadata: {
         apiBaseUrl: detectLanguageApiBaseUrl,
         validationEndpoint: validationPath,

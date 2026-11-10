@@ -139,7 +139,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: `gumloop:user:${userId}`,
         displayName: `Gumloop ${userId}`,
       },
-      grantedScopes: [],
       metadata: compactObject({
         apiBaseUrl: gumloopApiBaseUrl,
         validationEndpoint: gumloopValidationPath,

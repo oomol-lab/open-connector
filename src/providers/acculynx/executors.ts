@@ -265,7 +265,6 @@ async function validateAcculynxCredential(
       accountId: company.id,
       displayName: company.name,
     },
-    grantedScopes: [],
     metadata: compactObject({
       companyId: company.id,
       companyName: company.name,

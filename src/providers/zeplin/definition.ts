@@ -1,7 +1,6 @@
 import type { ProviderDefinition } from "../../core/types.ts";
 
 import { zeplinActions } from "./actions.ts";
-import { zeplinProviderScopes } from "./scopes.ts";
 
 const service = "zeplin";
 
@@ -15,7 +14,7 @@ export const provider: ProviderDefinition = {
       type: "oauth2",
       authorizationUrl: "https://api.zeplin.dev/v1/oauth/authorize",
       tokenUrl: "https://api.zeplin.dev/v1/oauth/token",
-      scopes: zeplinProviderScopes,
+      scopes: [],
       tokenEndpointAuthMethod: "client_secret_post",
     },
   ],

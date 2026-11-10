@@ -46,7 +46,6 @@ export async function validateWhat3wordsCredential(
       accountId: "what3words-api-key",
       displayName: "what3words API Key",
     },
-    grantedScopes: [],
     metadata: {
       validationEndpoint: "/convert-to-coordinates",
       apiBaseUrl: what3wordsApiBaseUrl,

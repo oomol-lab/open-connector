@@ -50,7 +50,6 @@ describe("Komari RPC runtime", () => {
     ]);
     expect(validation).toEqual({
       profile: { accountId: "komari:monitor.example.com", displayName: "Komari monitor.example.com" },
-      grantedScopes: komariOperations.map((operation) => operation.rpcMethod),
       metadata: {
         baseUrl: "https://monitor.example.com/komari",
         version: "1.3.2",

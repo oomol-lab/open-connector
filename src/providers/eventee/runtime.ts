@@ -62,7 +62,6 @@ export async function validateEventeeCredential(
       accountId: "api_token",
       displayName: "Eventee API Token",
     },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl: eventeeApiBaseUrl,
       validationEndpoint: eventeeValidationPath,

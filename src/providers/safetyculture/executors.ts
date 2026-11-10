@@ -80,7 +80,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: `safetyculture:${hashToken(apiKey)}`,
         displayName: "SafetyCulture API Token",
       },
-      grantedScopes: [],
       metadata: compactObject({
         apiBaseUrl: safetycultureApiBaseUrl,
         validationEndpoint: validationPath,

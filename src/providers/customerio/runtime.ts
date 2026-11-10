@@ -150,7 +150,6 @@ export async function validateCustomerioCredential(
           ? `Customer.io Track API (${region})`
           : `Customer.io environment ${environmentId} (${region})`,
     },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl,
       region,

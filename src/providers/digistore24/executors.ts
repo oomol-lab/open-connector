@@ -111,7 +111,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: userInfo.userId == null ? undefined : String(userInfo.userId),
         displayName: userInfo.userName ?? "Digistore24 API Key",
       },
-      grantedScopes: [],
       metadata: {
         apiBaseUrl: digistore24ApiBaseUrl,
         validationFunction: "getUserInfo",

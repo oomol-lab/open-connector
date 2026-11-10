@@ -163,7 +163,7 @@ export const credentialValidators: CredentialValidators = {
     if (!Array.isArray(body.data)) {
       throw providerResponseError("G2 category response is missing data");
     }
-    return { profile: { displayName: "G2 API Token" }, grantedScopes: [], metadata: {} };
+    return { profile: { displayName: "G2 API Token" }, metadata: {} };
   },
 };
 

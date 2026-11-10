@@ -59,7 +59,6 @@ export const credentialValidators: CredentialValidators = {
       profile: {
         displayName: "Together AI API Key",
       },
-      grantedScopes: [],
       metadata: {
         validationEndpoint: "/v1/models",
         availableModels: payload.map((model) => model.id).filter((model): model is string => typeof model === "string"),

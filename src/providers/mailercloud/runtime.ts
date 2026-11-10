@@ -136,7 +136,6 @@ export async function validateMailercloudCredential(
       accountId: "mailercloud",
       displayName: "Mailercloud API Key",
     },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: mailercloudApiBaseUrl,
       validationEndpoint: mailercloudValidationPath,

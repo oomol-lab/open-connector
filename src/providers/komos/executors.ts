@@ -123,7 +123,7 @@ export const executors: ProviderExecutors = defineApiKeyProviderExecutors(
 export const credentialValidators: CredentialValidators = {
   async apiKey(input, { fetcher }) {
     await requestKomos(input.apiKey, "/tasks", "GET", { limit: 1 }, undefined, fetcher);
-    return { profile: { displayName: "Komos API Key" }, grantedScopes: [], metadata: {} };
+    return { profile: { displayName: "Komos API Key" }, metadata: {} };
   },
 };
 export const proxy: ProviderProxyExecutor = defineProviderProxy({

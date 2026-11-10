@@ -54,7 +54,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: organizationUri ?? organizationName,
         displayName: organizationName ?? organizationUri ?? "OneDesk API Key",
       },
-      grantedScopes: [],
       metadata: compactObject({
         apiBaseUrl: onedeskApiBaseUrl,
         validationEndpoint: organizationProfilePath,

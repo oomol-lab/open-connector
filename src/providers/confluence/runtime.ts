@@ -182,9 +182,7 @@ export async function validateConfluenceCredential(
     profile: {
       accountId: `confluence:${host}:${email}`,
       displayName: `${email} (${host})`,
-      grantedScopes: [],
     },
-    grantedScopes: [],
     metadata: compactObject({
       siteUrl,
       baseUrl,

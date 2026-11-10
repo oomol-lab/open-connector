@@ -227,7 +227,6 @@ function readHistoryEntityIds(value: unknown): string {
 
 export function validateHomeAssistantCredential(input: { values: Record<string, string> }): {
   profile: { accountId: string; displayName: string };
-  grantedScopes: string[];
   metadata: Record<string, unknown>;
 } {
   const baseUrl = normalizeBaseUrl(input.values.baseUrl);
@@ -237,7 +236,6 @@ export function validateHomeAssistantCredential(input: { values: Record<string, 
       accountId: `home_assistant:${host}`,
       displayName: `Home Assistant (${host})`,
     },
-    grantedScopes: [],
     metadata: {
       baseUrl,
     },

@@ -138,7 +138,6 @@ export const credentialValidators: CredentialValidators = {
           : `capsule_crm:token:${createHash("sha256").update(input.apiKey).digest("hex").slice(0, 16)}`,
         displayName: name ?? username ?? "Capsule CRM API Key",
       },
-      grantedScopes: [],
       metadata: compactObject({
         apiBaseUrl: capsuleCrmApiBaseUrl,
         validationEndpoint: "/users/current",

@@ -88,9 +88,7 @@ export async function validatePinataCredential(
     profile: {
       accountId: "pinata-api-key",
       displayName: "Pinata API Key",
-      grantedScopes: [],
     },
-    grantedScopes: [],
     metadata: compactObject({
       validationEndpoint: pinataValidationPath,
       validationMessage: optionalString(optionalRecord(payload)?.message),

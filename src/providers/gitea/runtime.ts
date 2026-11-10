@@ -335,7 +335,6 @@ export async function validateGiteaCredential(
       accountId: buildGiteaProviderAccountId(baseUrl, payload),
       displayName: buildGiteaAccountLabel(payload),
     },
-    grantedScopes: [],
     metadata: compactObject({
       baseUrl,
       validationEndpoint: buildValidationEndpoint(baseUrl, giteaValidationPath),

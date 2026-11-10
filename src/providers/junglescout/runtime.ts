@@ -45,12 +45,11 @@ export const jungleScoutActionHandlers: ProviderActionHandlers<
 export function validateJungleScoutCredential(
   apiKey: string,
   keyName: string,
-): { profile: { accountId: string; displayName: string }; grantedScopes: string[]; metadata: Record<string, unknown> } {
+): { profile: { accountId: string; displayName: string }; metadata: Record<string, unknown> } {
   if (!apiKey.trim()) throw new ProviderRequestError(400, "apiKey is required");
   if (!keyName.trim()) throw new ProviderRequestError(400, "keyName is required");
   return {
     profile: { accountId: `junglescout:${keyName.trim()}`, displayName: "Jungle Scout API Key" },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: jungleScoutApiBaseUrl,
       apiType: "junglescout",

@@ -97,7 +97,6 @@ export const credentialValidators: CredentialValidators = {
       profile: {
         displayName: subscription.SubscriptionName,
       },
-      grantedScopes: [],
       metadata: compactObject({
         apiBaseUrl: haveibeenpwnedApiBaseUrl,
         validationEndpoint: "/subscription/status",

@@ -137,7 +137,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: readOptionalIntegerString(user?.id) ?? "api_key",
         displayName: pickAccountLabel(user),
       },
-      grantedScopes: [],
       metadata: compactObject({
         apiBaseUrl: sendfoxApiBaseUrl,
         validationEndpoint: "/me",

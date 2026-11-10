@@ -58,7 +58,6 @@ export const credentialValidators: CredentialValidators = {
     await request({ path: "/spaces", phase: "validate", apiKey: input.apiKey, fetcher, signal });
     return {
       profile: { displayName: "AITable API Token" },
-      grantedScopes: [],
       metadata: { apiBaseUrl: baseUrl, validationEndpoint: "/spaces" },
     };
   },

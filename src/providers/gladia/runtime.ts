@@ -73,7 +73,6 @@ export async function validateGladiaCredential(
       accountId: "gladia",
       displayName: "Gladia API Key",
     },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: gladiaApiBaseUrl,
       validationEndpoint: gladiaPreRecordedPath,

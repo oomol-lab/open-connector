@@ -195,7 +195,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: "api_key",
         displayName: "API Ninjas API Key",
       },
-      grantedScopes: [],
       metadata: {
         validationEndpoint: "/v1/timezone",
         apiBaseUrl: apiNinjasApiBaseUrl,

@@ -18,9 +18,3 @@ export const figmaPublicOAuthScopes: string[] = [
   "file_dev_resources:read",
   "file_dev_resources:write",
 ];
-
-export const figmaPersonalAccessTokenScopes: string[] = [
-  ...figmaPublicOAuthScopes,
-  "projects:read",
-  "project_metadata:read",
-];

@@ -66,7 +66,6 @@ export const credentialValidators: CredentialValidators = {
     await requestIntrinio("/account/current_usage", context);
     const result: CredentialValidationResult = {
       profile: { accountId: "api_key", displayName: "Intrinio API Key" },
-      grantedScopes: [],
       metadata: { apiBaseUrl, validationEndpoint: "/account/current_usage" },
     };
     return result;

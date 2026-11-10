@@ -162,7 +162,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: resolvedAccountName,
         displayName: resolvedAccountName ? `AppVeyor ${resolvedAccountName}` : "AppVeyor API Key",
       },
-      grantedScopes: [],
       metadata: compactObject({
         apiBaseUrl: appveyorApiBaseUrl,
         validationEndpoint: buildAppveyorApiPath(appveyorValidationPath, accountName),

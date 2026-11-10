@@ -69,7 +69,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: "telnyx",
         displayName: "Telnyx API Key",
       },
-      grantedScopes: [],
       metadata: {
         apiBaseUrl: telnyxApiBaseUrl,
         validationEndpoint: validationPath,

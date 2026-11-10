@@ -116,7 +116,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: "api_key",
         displayName: "IPGeolocation.io API Key",
       },
-      grantedScopes: [],
       metadata: compactObject({
         apiBaseUrl: ipgeolocationIoApiBaseUrl,
         validationEndpoint: "/v3/ipgeo",

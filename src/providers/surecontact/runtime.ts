@@ -271,7 +271,6 @@ export async function validateSureContactCredential(
       accountId: "api_key",
       displayName: "SureContact API Key",
     },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: surecontactApiBaseUrl,
       validationEndpoint: "/contacts",

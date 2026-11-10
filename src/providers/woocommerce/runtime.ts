@@ -119,7 +119,6 @@ export async function validateWooCommerceCredential(
       accountId: context.storeUrl,
       displayName: new URL(context.storeUrl).host,
     },
-    grantedScopes: [],
     metadata: {
       storeUrl: context.storeUrl,
       apiBaseUrl: context.apiBaseUrl,

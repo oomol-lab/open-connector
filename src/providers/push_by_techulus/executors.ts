@@ -75,7 +75,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: "api_key",
         displayName: "Push by Techulus API Key",
       },
-      grantedScopes: [],
       metadata: {
         apiBaseUrl: pushByTechulusApiBaseUrl,
         validationMode: "local_non_empty_key",

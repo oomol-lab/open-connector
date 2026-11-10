@@ -260,7 +260,6 @@ export async function validateVapiCredential(
     profile: {
       accountId: orgId ?? "vapi-api-key",
       displayName: "Vapi API Key",
-      grantedScopes: [],
     },
     metadata: compactObject({
       validationEndpoint: "/assistant?limit=1",

@@ -176,7 +176,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: "scrapingdog",
         displayName: "Scrapingdog API Key",
       },
-      grantedScopes: [],
       metadata: {
         validationEndpoint: "/account",
         apiBaseUrl: scrapingdogBaseUrl,

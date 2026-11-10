@@ -55,7 +55,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: createEchoTikProviderAccountId(username),
         displayName: "EchoTik API Credential",
       },
-      grantedScopes: [],
       metadata: {
         apiBaseUrl: echotikApiBaseUrl,
         validationEndpoint: "/echotik/category/l1?language=en-US",

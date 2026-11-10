@@ -149,9 +149,7 @@ export async function validateProspeoCredential(
     profile: {
       accountId: account.email ?? "prospeo",
       displayName: account.email ?? "Prospeo API Key",
-      grantedScopes: [],
     },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl: prospeoApiBaseUrl,
       validationEndpoint: "/account-information",

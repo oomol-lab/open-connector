@@ -113,7 +113,6 @@ export const credentialValidators: CredentialValidators = {
           ? `Nutrient DWS ${account.subscriptionType} account`
           : "Nutrient DWS API Key",
       },
-      grantedScopes: [],
       metadata: compactObject({
         apiBaseUrl: nutrientApiBaseUrl,
         validationEndpoint: "/account/info",

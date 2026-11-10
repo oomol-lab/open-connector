@@ -103,7 +103,6 @@ export const credentialValidators: CredentialValidators = {
           optionalString(account.username) ??
           "ablefy API Key",
       },
-      grantedScopes: [],
       metadata: { apiBaseUrl: baseUrl, validationEndpoint: "/api/me" },
     };
   },

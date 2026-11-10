@@ -92,7 +92,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: "api_key",
         displayName: "Deck.co API Key",
       },
-      grantedScopes: [],
       metadata: compactObject({
         apiBaseUrl: deckCoApiBaseUrl,
         validationEndpoint: "/test",

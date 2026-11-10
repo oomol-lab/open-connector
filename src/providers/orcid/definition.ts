@@ -1,6 +1,6 @@
 import type { ProviderDefinition } from "../../core/types.ts";
 
-import { orcidActions, orcidProviderScopes } from "./actions.ts";
+import { orcidActions } from "./actions.ts";
 export const provider: ProviderDefinition = {
   service: "orcid",
   displayName: "ORCID",
@@ -11,7 +11,7 @@ export const provider: ProviderDefinition = {
       type: "oauth2",
       authorizationUrl: "https://orcid.org/oauth/authorize",
       tokenUrl: "https://orcid.org/oauth/token",
-      scopes: [orcidProviderScopes.openid],
+      scopes: ["openid", "/authenticate"],
       tokenEndpointAuthMethod: "client_secret_post",
     },
   ],

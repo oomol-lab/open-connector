@@ -24,6 +24,7 @@ import {
   ProviderDispatchRequestError,
   withProviderHttpDispatchResult,
 } from "../providers/provider-runtime.ts";
+import { readOAuthScopes } from "./oauth-scopes.ts";
 import { requestAuthorizationCodeToken } from "./oauth-token.ts";
 
 /**
@@ -59,7 +60,6 @@ export interface OAuthAuthorizationState {
   state: string;
   createdAt: string;
   pkceCodeVerifier?: string;
-  authorizationScopes?: string[];
   /**
    * `redirect_uri` the authorization request carried. The code exchange must
    * repeat it (RFC 6749 §4.1.3) even when the client config changes while the
@@ -246,7 +246,6 @@ export class OAuthFlowService {
       state,
       createdAt: now.toISOString(),
       pkceCodeVerifier,
-      authorizationScopes: auth.authorizationOptions ? authorizationScopes : undefined,
       redirectUri,
       clientConfig: input.clientConfig ? config : undefined,
     };
@@ -363,7 +362,7 @@ export class OAuthFlowService {
         profile: {
           accountId: "oauth2",
           displayName: "OAuth Credential",
-          grantedScopes: request ? [] : (pending.authorizationScopes ?? []),
+          grantedScopes: readOAuthScopes(tokenResponse.metadata.scope) ?? [],
         },
         providerSecret,
         metadata: {
@@ -383,10 +382,6 @@ export class OAuthFlowService {
           oauthCredential,
           input.signal,
         );
-        const granted = new Set(credential.profile.grantedScopes);
-        const missing = auth.authorizationOptions?.filter((option) => option.required && !granted.has(option.id)) ?? [];
-        if (missing.length)
-          throw new OAuthFlowError("scope_missing", "The provider did not grant required OAuth scopes.");
         input.signal?.throwIfAborted();
         const appId = await this.requests.complete(request, credential, input.signal);
         if (!appId) {
@@ -428,8 +423,7 @@ export class OAuthFlowService {
       }
       if (request) {
         const code =
-          error instanceof OAuthFlowError &&
-          ["app_not_found", "request_key_conflict", "scope_missing"].includes(error.code)
+          error instanceof OAuthFlowError && ["app_not_found", "request_key_conflict"].includes(error.code)
             ? error.code
             : "provider_error";
         const message = "OAuth connection failed.";

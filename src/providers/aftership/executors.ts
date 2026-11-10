@@ -181,7 +181,6 @@ export const credentialValidators: CredentialValidators = {
       profile: {
         displayName: "AfterShip API Key",
       },
-      grantedScopes: [],
       metadata: {
         apiBaseUrl: aftershipApiBaseUrl,
         validationEndpoint: "/couriers?active=true",

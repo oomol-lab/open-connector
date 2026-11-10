@@ -53,7 +53,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: String(accountId),
         displayName: "currencyapi API Key",
       },
-      grantedScopes: [],
       metadata: {
         apiBaseUrl: currencyapiApiBaseUrl,
         validationEndpoint: "/v3/status",

@@ -52,7 +52,6 @@ export async function validateCuttlyCredential(
       accountId: "api_key",
       displayName: "Cuttly API Key",
     },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl: cuttlyApiBaseUrl,
       validationEndpoint: cuttlyApiPath,

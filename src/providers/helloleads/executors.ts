@@ -149,7 +149,6 @@ export const credentialValidators: CredentialValidators = {
       profile: {
         displayName: "HelloLeads Web Form Key",
       },
-      grantedScopes: [],
       metadata: compactObject({
         apiBaseUrl: helloleadsApiBaseUrl,
         validationEndpoint: formDefinitionPath,

@@ -64,7 +64,6 @@ export async function validateVeriphoneCredential(
       accountId: email ?? "veriphone-api-key",
       displayName: email ?? "Veriphone API Key",
     },
-    grantedScopes: [],
     metadata: compactObject({
       validationEndpoint: "/v2/credits",
       apiBaseUrl: veriphoneApiBaseUrl,

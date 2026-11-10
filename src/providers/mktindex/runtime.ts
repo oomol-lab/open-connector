@@ -455,7 +455,6 @@ export async function validateMktindexCredential(
 
   return {
     profile: { displayName: "Moojing Insights API Key" },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: mktindexApiBaseUrl,
       validationEndpoint: "/marked",

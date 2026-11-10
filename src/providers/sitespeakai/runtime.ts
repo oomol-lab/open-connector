@@ -142,7 +142,6 @@ export async function validateSitespeakaiCredential(
       accountId: userId ?? email ?? "sitespeakai",
       displayName: email ?? name ?? "SiteSpeakAI API Token",
     },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl: `${sitespeakaiApiBaseUrl}/${sitespeakaiApiVersion}`,
       validationEndpoint: "/me",

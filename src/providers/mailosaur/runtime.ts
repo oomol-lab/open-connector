@@ -76,7 +76,6 @@ export async function validateMailosaurCredential(
       accountId: firstServer?.id ? `mailosaur:server:${firstServer.id}` : "mailosaur-api-key",
       displayName: firstServer?.name ? `Mailosaur: ${firstServer.name}` : "Mailosaur API Key",
     },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl: mailosaurApiBaseUrl,
       validationEndpoint: "/api/servers",

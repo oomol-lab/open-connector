@@ -93,7 +93,6 @@ export async function validateSearchApiCredential(
       accountId: "search_api",
       displayName: "SearchApi API Key",
     },
-    grantedScopes: [],
     metadata: compactObject({
       validationEndpoint: "/me",
       apiBaseUrl: searchApiBaseUrl,

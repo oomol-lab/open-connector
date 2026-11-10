@@ -117,7 +117,6 @@ async function validateLumosCredential(
       accountId: "api_key",
       displayName: "Lumos API Token",
     },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl: lumosApiBaseUrl,
       validationEndpoint: "/appstore/apps?page=1&size=1",

@@ -74,7 +74,6 @@ export async function validateOrttoCredential(
       accountId: `ortto:${region}`,
       displayName: "Ortto API Key",
     },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl: orttoRegionBaseUrls[region],
       region,

@@ -102,7 +102,6 @@ export async function validateTriggerDevCredential(
       accountId: "trigger_dev",
       displayName: "Trigger.dev API Key",
     },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: triggerDevApiBaseUrl,
       validationEndpoint: triggerDevValidationPath,

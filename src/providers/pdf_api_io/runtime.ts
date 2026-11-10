@@ -91,7 +91,6 @@ export async function validatePdfApiIoCredential(
     profile: {
       accountId: buildPdfApiIoProviderAccountId(apiKey),
       displayName: "PDF-API.io API Token",
-      grantedScopes: [],
     },
     metadata: compactObject({
       apiBaseUrl: pdfApiIoApiBaseUrl,

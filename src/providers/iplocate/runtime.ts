@@ -98,7 +98,6 @@ export async function validateIplocateCredential(
       accountId: "iplocate:api-key",
       displayName: "IPLocate API Key",
     },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: iplocateApiBaseUrl,
       validationEndpoint: "/lookup",

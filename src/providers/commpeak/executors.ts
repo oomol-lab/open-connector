@@ -90,7 +90,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: firstStream?.id == null ? "api_key" : String(firstStream.id),
         displayName: firstStream?.name ? `CommPeak: ${firstStream.name}` : "CommPeak TextPeak API Key",
       },
-      grantedScopes: [],
       metadata: compactObject({
         apiBaseUrl: commpeakTextPeakBaseUrl,
         validationEndpoint: "/streams",

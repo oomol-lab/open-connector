@@ -97,7 +97,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: "scrapfly",
         displayName: "Scrapfly API Key",
       },
-      grantedScopes: [],
       metadata: compactObject({
         validationEndpoint: "/scrape/monitoring/metrics",
         apiBaseUrl: scrapflyApiBaseUrl,

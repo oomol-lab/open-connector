@@ -117,7 +117,6 @@ export const credentialValidators: CredentialValidators = {
     const user = optionalRecord(data.user);
     return {
       profile: { displayName: optionalString(user?.name) || "MrScraper API Token" },
-      grantedScopes: [],
       metadata: { apiBaseUrl: baseUrl },
     };
   },

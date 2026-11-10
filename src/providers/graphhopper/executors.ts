@@ -66,7 +66,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: `graphhopper:api_key:${createHash("sha256").update(input.apiKey).digest("hex").slice(0, 16)}`,
         displayName: "GraphHopper API Key",
       },
-      grantedScopes: [],
       metadata: {
         apiBaseUrl: graphhopperApiBaseUrl,
         validationEndpoint: "/profiles",

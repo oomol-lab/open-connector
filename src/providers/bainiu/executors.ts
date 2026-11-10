@@ -109,7 +109,6 @@ export const credentialValidators: CredentialValidators = {
     requiredInputString(input.values.clientId, "clientId");
     return {
       profile: { displayName: "Bainiu API Key" },
-      grantedScopes: [],
       metadata: { apiBaseUrl: baseUrl, validationMode: "format_only" },
     };
   },

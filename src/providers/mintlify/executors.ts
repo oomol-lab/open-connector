@@ -27,7 +27,7 @@ export const credentialValidators: CredentialValidators = {
   async apiKey(input, { fetcher }) {
     const projectId = input.values.projectId ?? "";
     await validateMintlifyCredential(input.apiKey, projectId, fetcher);
-    return { profile: { displayName: `Mintlify ${projectId}` }, grantedScopes: [], metadata: { projectId } };
+    return { profile: { displayName: `Mintlify ${projectId}` }, metadata: { projectId } };
   },
 };
 

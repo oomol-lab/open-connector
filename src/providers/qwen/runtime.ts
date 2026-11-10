@@ -643,7 +643,6 @@ export async function validateQwenCredential(
   }
   return {
     profile: { accountId: "qwen:api_key", displayName: "Qwen Model Studio API Key" },
-    grantedScopes: [],
     metadata: { apiBaseUrl: qwenApiBaseUrl },
   };
 }

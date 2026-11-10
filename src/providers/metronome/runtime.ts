@@ -54,7 +54,6 @@ export async function validateMetronomeCredential(
       accountId: "metronome:api-key",
       displayName: "Metronome API Key",
     },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: metronomeApiBaseUrl,
       validationEndpoint: "/v1/customers",

@@ -105,7 +105,6 @@ export async function validateBotsonicCredential(
       accountId: "botsonic-api-token",
       displayName: "Botsonic Bot API Token",
     },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: botsonicApiBaseUrl,
       authHeader: botsonicAuthHeader,

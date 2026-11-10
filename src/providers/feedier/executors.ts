@@ -137,7 +137,6 @@ export const credentialValidators: CredentialValidators = {
     });
     return {
       profile: { accountId: "feedier-api-key", displayName: "Feedier API Key" },
-      grantedScopes: [],
       metadata: { apiBaseUrl: feedierApiBaseUrl, validationEndpoint: "/v3/reports" },
     };
   },

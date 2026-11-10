@@ -122,7 +122,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: "flagsmith-environment-key",
         displayName: "Flagsmith Environment Key",
       },
-      grantedScopes: [],
       metadata: {
         apiBaseUrl: flagsmithApiBaseUrl,
         validationEndpoint: flagsmithValidationPath,

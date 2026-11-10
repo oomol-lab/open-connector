@@ -132,7 +132,6 @@ export async function validateMobileTextAlertsCredential(
   const name = requireStringProperty(data, "name", "API key verification response");
   return {
     profile: { accountId: name, displayName: name },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: mobileTextAlertsApiBaseUrl,
       validationEndpoint: "/auth/verify-api-key",

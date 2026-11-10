@@ -94,7 +94,6 @@ export async function validateKaleidoCredential(
       displayName:
         optionalString(firstMembership?.org_name) ?? optionalString(firstMembership?.name) ?? "Kaleido Account",
     },
-    grantedScopes: [],
     metadata: compactObject({
       baseUrl,
       validationEndpoint: membershipsValidationPath,

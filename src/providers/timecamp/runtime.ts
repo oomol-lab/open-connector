@@ -204,7 +204,6 @@ export async function validateTimecampCredential(
       accountId: providerAccountId,
       displayName: accountLabel,
     },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl: timecampApiBaseUrl,
       validationEndpoint: "/me",

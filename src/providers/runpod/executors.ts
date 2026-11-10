@@ -92,7 +92,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: "runpod-api-key",
         displayName: "Runpod API Key",
       },
-      grantedScopes: [],
       metadata: compactObject({
         validationEndpoint: runpodValidationPath,
         podCount: pods.length,

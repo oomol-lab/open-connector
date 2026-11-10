@@ -87,7 +87,6 @@ export const credentialValidators: CredentialValidators = {
       profile: {
         displayName: "Intuiface Web Triggers",
       },
-      grantedScopes: [],
       metadata: {
         apiBaseUrl: intuifaceWebTriggersBaseUrl,
         validationEndpoint: "/availableExperiences",

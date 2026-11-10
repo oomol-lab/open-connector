@@ -93,7 +93,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: "api_key",
         displayName: "AddressZen API Key",
       },
-      grantedScopes: [],
       metadata: compactObject({
         apiBaseUrl: `${addresszenApiBaseUrl}/${addresszenApiVersion}`,
         validationEndpoint: "/keys/{key}",

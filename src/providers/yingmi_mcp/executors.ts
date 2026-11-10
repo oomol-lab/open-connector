@@ -91,7 +91,6 @@ export const credentialValidators: CredentialValidators = {
       .join("");
     return {
       profile: { accountId: `yingmi-mcp:${keyHash}`, displayName: `Yingmi MCP · ${keyHash.slice(-6)}` },
-      grantedScopes: [],
       metadata: { mcpEndpoint: endpoint, discoveredToolCount: tools.tools.length },
     };
   },

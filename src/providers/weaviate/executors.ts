@@ -180,7 +180,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: optionalString(payload.hostname) ?? baseUrl,
         displayName: optionalString(payload.hostname) ?? "Weaviate API Key",
       },
-      grantedScopes: [],
       metadata: compactObject({
         baseUrl,
         apiBaseUrl: baseUrl,

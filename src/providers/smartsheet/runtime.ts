@@ -144,9 +144,7 @@ export async function validateSmartsheetCredential(
     profile: {
       accountId: firstSheet.id == null ? "api_key" : String(firstSheet.id),
       displayName: firstSheetName ? `Smartsheet: ${firstSheetName}` : "Smartsheet Access Token",
-      grantedScopes: [],
     },
-    grantedScopes: [],
     metadata: compactObject({
       validationEndpoint: "/sheets",
       apiBaseUrl: smartsheetApiBaseUrl,

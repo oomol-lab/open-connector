@@ -48,7 +48,6 @@ export async function validateKeenIoCredential(
       accountId: projectId,
       displayName: `Keen IO project ${projectId}`,
     },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: keenIoApiBaseUrl,
       projectId,

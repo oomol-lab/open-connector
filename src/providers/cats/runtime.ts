@@ -65,7 +65,6 @@ export async function validateCatsCredential(
       accountId: siteId ?? siteSubdomain ?? "cats",
       displayName: siteName ?? "CATS API Key",
     },
-    grantedScopes: [],
     metadata: compactObject({
       siteId,
       siteSubdomain,

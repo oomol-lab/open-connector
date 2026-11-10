@@ -60,7 +60,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: "api_key",
         displayName: "Jina AI API Key",
       },
-      grantedScopes: [],
       metadata: {
         validationEndpoint: paths.rerank_documents,
       },

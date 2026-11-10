@@ -133,7 +133,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: `bark:${deviceKeyHash.slice(0, 16)}`,
         displayName: "Bark Device",
       },
-      grantedScopes: [],
       metadata: {
         baseUrl: credential.baseUrl,
         deviceKeyHash,

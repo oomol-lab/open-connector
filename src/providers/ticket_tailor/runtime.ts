@@ -121,7 +121,6 @@ export async function validateTicketTailorCredential(
   await requestTicketTailorJson({ apiKey, path: "/v1/ping", fetcher, signal });
   return {
     profile: { accountId: "ticket-tailor", displayName: "Ticket Tailor Box Office" },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: ticketTailorApiBaseUrl,
       validationEndpoint: "/v1/ping",

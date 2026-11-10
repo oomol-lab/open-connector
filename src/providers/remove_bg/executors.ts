@@ -52,9 +52,7 @@ export const credentialValidators = {
       profile: {
         accountId: "remove-bg-api-key",
         displayName: "remove.bg API Key",
-        grantedScopes: [],
       },
-      grantedScopes: [],
       metadata: {
         validationEndpoint: removeBgAccountPath,
         apiBaseUrl: removeBgApiBaseUrl,

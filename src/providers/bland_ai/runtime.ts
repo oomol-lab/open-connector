@@ -123,7 +123,6 @@ export async function validateBlandAiCredential(
     profile: {
       accountId: "api_key",
       displayName: `Bland AI ${account.status}`,
-      grantedScopes: [],
     },
     metadata: {
       apiBaseUrl: blandAiApiBaseUrl,

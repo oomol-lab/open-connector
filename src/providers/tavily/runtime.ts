@@ -63,7 +63,6 @@ export async function validateTavilyCredential(
       accountId: "tavily-api-key",
       displayName: plan ? `Tavily ${plan}` : "Tavily API Key",
     },
-    grantedScopes: [],
     metadata: compactObject({
       validationEndpoint: "/usage",
       apiBaseUrl: tavilyApiBaseUrl,

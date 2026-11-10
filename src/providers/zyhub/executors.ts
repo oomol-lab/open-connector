@@ -173,7 +173,6 @@ export const credentialValidators: CredentialValidators = {
     await request("cnMarketUpdownDistribution", {}, input.apiKey, context.fetcher, context.signal, true);
     return {
       profile: { accountId: "zyhub-api-key", displayName: "Sina Finance ZYHub API Key" },
-      grantedScopes: [],
       metadata: { apiBaseUrl: baseUrl, validationEndpoint: "cnMarketUpdownDistribution" },
     };
   },

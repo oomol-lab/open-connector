@@ -223,7 +223,6 @@ export async function validateMqttCredential(
       accountId: `mqtt:${url.host}${url.pathname}`,
       displayName: url.host,
     },
-    grantedScopes: [],
     metadata: {
       websocketEndpoint: `${url.origin}${url.pathname}`,
       protocolVersion: context.protocolVersion,

@@ -68,7 +68,6 @@ export function validateChatpdfCredential(_apiKey: string): CredentialValidation
       accountId: "api_key",
       displayName: "ChatPDF API Key",
     },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: chatpdfApiBaseUrl,
       validationMode: "format_only",

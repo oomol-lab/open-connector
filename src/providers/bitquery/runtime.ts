@@ -64,7 +64,6 @@ export async function validateBitqueryCredential(
       accountId: "bitquery",
       displayName: "Bitquery API Token",
     },
-    grantedScopes: [],
     metadata: {
       graphqlEndpoint: bitqueryGraphqlEndpoint,
       validationEndpoint: bitqueryGraphqlEndpoint,

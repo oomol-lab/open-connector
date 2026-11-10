@@ -82,7 +82,6 @@ export const credentialValidators: CredentialValidators = {
       profile: {
         displayName: "updown.io API Key",
       },
-      grantedScopes: [],
       metadata: {
         apiBaseUrl: updownIoApiBaseUrl,
         validationEndpoint: "/api/checks",

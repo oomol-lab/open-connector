@@ -64,7 +64,6 @@ export const credentialValidators: CredentialValidators = {
     const payload = await requestAtmoRouter({ path: "/models" }, { apiKey: input.apiKey, fetcher, signal });
     return {
       profile: { displayName: "AtmoRouter API Key" },
-      grantedScopes: [],
       metadata: {
         validationEndpoint: "/models",
         availableModels: looseArray(payload.data)

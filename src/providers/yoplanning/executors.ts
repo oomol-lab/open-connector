@@ -146,7 +146,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: firstTeamId ? `yoplanning:team:${firstTeamId}` : "yoplanning-api-token",
         displayName: firstTeamName ?? "YoPlanning API Token",
       },
-      grantedScopes: [],
       metadata: compactObject({
         apiBaseUrl: yoplanningApiBaseUrl,
         accessibleTeamCount: payload.count,

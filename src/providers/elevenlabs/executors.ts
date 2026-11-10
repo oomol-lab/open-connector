@@ -120,7 +120,6 @@ export async function validateElevenlabsApiKey(
           ? normalizedUser.firstName
           : `ElevenLabs ${normalizedUser.userId}`,
     },
-    grantedScopes: [],
     metadata: compactObject({
       validationEndpoint: "/user",
       userId: normalizedUser.userId,

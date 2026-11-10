@@ -70,7 +70,6 @@ export const credentialValidators: CredentialValidators = {
     const account = requiredResponseRecord(payload.result, "StreamWish account");
     return {
       profile: { displayName: optionalString(account.login) ?? "StreamWish API Key" },
-      grantedScopes: [],
       metadata: {},
     };
   },

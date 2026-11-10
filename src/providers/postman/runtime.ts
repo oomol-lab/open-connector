@@ -28,7 +28,6 @@ export interface PostmanCredentialValidationResult {
     accountId: string;
     displayName: string;
   };
-  grantedScopes: string[];
   metadata: Record<string, unknown>;
 }
 
@@ -64,7 +63,6 @@ export async function validatePostmanCredential(
       accountId: id,
       displayName: fullName ?? username ?? email ?? id,
     },
-    grantedScopes: [],
     metadata: compactObject({
       validationEndpoint: "/me",
       userId: id,

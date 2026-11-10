@@ -100,7 +100,7 @@ async function execute(
 export const credentialValidators: CredentialValidators = {
   async apiKey(input, { fetcher, signal }) {
     await request(input.apiKey, { path: "/v1/credits", method: "GET" }, {}, fetcher, true, signal);
-    return { profile: { displayName: "Cloro API Key" }, grantedScopes: [], metadata: {} };
+    return { profile: { displayName: "Cloro API Key" }, metadata: {} };
   },
 };
 export const executors: ProviderExecutors = defineApiKeyProviderExecutors(

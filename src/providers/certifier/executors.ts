@@ -89,7 +89,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: "api_key",
         displayName: "Certifier Access Token",
       },
-      grantedScopes: [],
       metadata: compactObject({
         apiBaseUrl,
         validationEndpoint: "/groups",

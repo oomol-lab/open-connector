@@ -71,7 +71,6 @@ export const credentialValidators: CredentialValidators = {
     await handlers.list_sites({}, { apiKey: input.apiKey, fetcher, signal });
     return {
       profile: { displayName: "Bing Webmaster API Key" },
-      grantedScopes: [],
       metadata: { validationEndpoint: "GetUserSites" },
     };
   },

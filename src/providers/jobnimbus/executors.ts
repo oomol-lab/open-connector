@@ -197,7 +197,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: accountId ?? buildTokenFingerprint(input.apiKey),
         displayName: accountName ?? "JobNimbus API Key",
       },
-      grantedScopes: [],
       metadata: compactObject({
         apiBaseUrl: jobnimbusApiBaseUrl,
         validationEndpoint: jobnimbusValidationPath,

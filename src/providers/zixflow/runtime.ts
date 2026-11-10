@@ -157,7 +157,6 @@ export async function validateZixflowCredential(
       accountId: memberId ? `zixflow:member:${memberId}` : "zixflow",
       displayName: memberName ?? memberEmail ?? "Zixflow API Key",
     },
-    grantedScopes: [],
     metadata: compactObject({
       validationEndpoint: zixflowValidationPath,
       memberId,

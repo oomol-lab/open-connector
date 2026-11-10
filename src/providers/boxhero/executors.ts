@@ -91,7 +91,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: String(teamId),
         displayName: teamName,
       },
-      grantedScopes: [],
       metadata: compactObject({
         apiBaseUrl: boxheroApiBaseUrl,
         validationEndpoint: boxheroValidationPath,

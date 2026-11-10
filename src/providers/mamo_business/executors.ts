@@ -52,7 +52,6 @@ export const credentialValidators: CredentialValidators = {
     const profile = await request("/me", {}, input.apiKey, fetcher);
     return {
       profile: { accountId: "api_key", displayName: optionalString(profile.business_name) ?? "Mamo Business" },
-      grantedScopes: [],
       metadata: {},
     };
   },

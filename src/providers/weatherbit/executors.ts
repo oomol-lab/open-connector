@@ -59,7 +59,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: "weatherbit",
         displayName: "Weatherbit API Key",
       },
-      grantedScopes: [],
       metadata: {
         validationEndpoint: "/v2.0/current",
         apiBaseUrl: weatherbitApiBaseUrl,

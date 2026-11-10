@@ -99,7 +99,6 @@ async function validateWebflowApiKeyCredential(
       accountId: userId ?? "webflow:credential",
       displayName: (userEmail ?? userName) || "Webflow credential",
     },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl: webflowApiBaseUrl,
       validationEndpoint: "/token/authorized_by",

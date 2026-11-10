@@ -155,7 +155,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: "api_key",
         displayName: "sevdesk API Token",
       },
-      grantedScopes: [],
       metadata: {
         apiBaseUrl: sevdeskApiBaseUrl,
         validationEndpoint: sevdeskValidationPath,

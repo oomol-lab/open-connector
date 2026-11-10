@@ -172,7 +172,6 @@ export const credentialValidators: CredentialValidators = {
     const username = optionalRawString(identity.username);
     return {
       profile: { accountId: String(userId), displayName: username ?? `Zotero user ${userId}` },
-      grantedScopes: [],
       metadata: { apiBaseUrl: baseUrl, apiVersion, userId, username, access: identity.access },
     };
   },

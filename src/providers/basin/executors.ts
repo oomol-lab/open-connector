@@ -237,7 +237,6 @@ export const credentialValidators: CredentialValidators = {
       profile: {
         displayName: "Basin API Key",
       },
-      grantedScopes: [],
       metadata: compactObject({
         apiBaseUrl: basinApiBaseUrl,
         validationEndpoint: basinValidationPath,

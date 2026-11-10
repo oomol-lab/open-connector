@@ -75,7 +75,6 @@ export async function validateBaseLinkerCredential(
       accountId: "baselinker",
       displayName: "BaseLinker API Token",
     },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: baseLinkerApiBaseUrl,
       validationMethod: "getOrderStatusList",

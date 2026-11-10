@@ -92,7 +92,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: optionalString(user.id) ?? "dns_filter:api-key",
         displayName: optionalString(attributes?.email) ?? optionalString(attributes?.name) ?? "DNSFilter API Key",
       },
-      grantedScopes: [],
       metadata: {
         apiBaseUrl: dnsFilterApiBaseUrl,
         validationEndpoint: "/v1/current_user",

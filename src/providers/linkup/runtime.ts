@@ -120,9 +120,7 @@ export async function validateLinkupCredential(
     profile: {
       accountId: "linkup",
       displayName: "Linkup API Key",
-      grantedScopes: [],
     },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl: linkupApiBaseUrl,
       validationEndpoint: linkupValidationPath,

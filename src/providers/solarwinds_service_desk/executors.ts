@@ -172,7 +172,6 @@ export const credentialValidators: CredentialValidators = {
     if (!Array.isArray(payload)) throw providerResponseError("SolarWinds returned an invalid API directory");
     return {
       profile: { displayName: "SolarWinds Service Desk API Token" },
-      grantedScopes: [],
       metadata: { region, validationEndpoint: "/api.json" },
     };
   },

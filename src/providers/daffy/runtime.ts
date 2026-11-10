@@ -100,7 +100,6 @@ export async function validateDaffyCredential(
       accountId,
       displayName: readStringField(user, "name") ?? email ?? slug ?? userId ?? "Daffy API Key",
     },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl: daffyApiBaseUrl,
       userId,

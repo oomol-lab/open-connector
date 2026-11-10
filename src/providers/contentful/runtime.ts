@@ -99,9 +99,7 @@ export async function validateContentfulCredential(
     profile: {
       accountId: userId,
       displayName: accountLabel || userId,
-      grantedScopes: [],
     },
-    grantedScopes: [],
     metadata: compactObject({
       userId,
       email,

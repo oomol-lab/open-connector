@@ -218,7 +218,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: "listennotes-api-key",
         displayName: "Listen Notes API Key",
       },
-      grantedScopes: [],
       metadata: {
         apiBaseUrl: listennotesApiBaseUrl,
         validationEndpoint: listennotesValidationPath,

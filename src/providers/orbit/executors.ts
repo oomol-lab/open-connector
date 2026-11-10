@@ -126,7 +126,7 @@ export const credentialValidators: CredentialValidators = {
       fetcher,
       signal,
     );
-    return { profile: { displayName: "Orbit API Key" }, grantedScopes: [], metadata: { apiBaseUrl: baseUrl } };
+    return { profile: { displayName: "Orbit API Key" }, metadata: { apiBaseUrl: baseUrl } };
   },
 };
 export const executors: ProviderExecutors = defineApiKeyProviderExecutors(

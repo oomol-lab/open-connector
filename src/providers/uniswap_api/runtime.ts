@@ -58,7 +58,6 @@ export async function validateUniswapApiCredential(
       accountId: "uniswap_api:api-key",
       displayName: "Uniswap API Key",
     },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl: uniswapApiBaseUrl,
       validationEndpoint: "/quote",

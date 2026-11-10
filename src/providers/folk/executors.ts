@@ -260,7 +260,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: user.id,
         displayName: user.email || user.fullName || "Folk API Key",
       },
-      grantedScopes: [],
       metadata: compactObject({
         apiBaseUrl: folkApiBaseUrl,
         validationEndpoint: folkCurrentUserPath,

@@ -90,7 +90,6 @@ export async function validateTogglCredential(
   signal?: AbortSignal,
 ): Promise<{
   profile: { accountId: string; displayName: string };
-  grantedScopes: string[];
   metadata: Record<string, unknown>;
 }> {
   const payload = await requestTogglJson<Record<string, unknown>>({
@@ -107,7 +106,6 @@ export async function validateTogglCredential(
       accountId: String(userId),
       displayName: optionalString(user.fullname) ?? optionalString(user.email) ?? "Toggl Track User",
     },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl: togglApiBaseUrl,
       validationEndpoint: "/me",

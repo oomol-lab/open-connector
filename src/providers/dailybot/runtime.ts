@@ -163,7 +163,6 @@ export async function validateDailybotCredential(
       accountId,
       displayName: buildDisplayName(profile.first_name, profile.last_name) ?? accountId,
     },
-    grantedScopes: [],
     metadata: compactObject({
       validationEndpoint: "/v1/me/",
       userId: optionalString(profile.id),

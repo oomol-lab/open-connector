@@ -60,9 +60,7 @@ export async function validateProjectmanagerCredential(input: {
     profile: {
       accountId: "projectmanager-api-key",
       displayName: "ProjectManager API Key",
-      grantedScopes: [],
     },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: projectmanagerApiBaseUrl,
       validationEndpoint: "/api/data/projects",

@@ -63,7 +63,6 @@ export const credentialValidators: CredentialValidators = {
       profile: {
         displayName: "CoinMarketCal API Key",
       },
-      grantedScopes: [],
       metadata: {
         validationEndpoint: "/categories",
         apiBaseUrl: coinmarketcalApiBaseUrl,

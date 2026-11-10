@@ -121,7 +121,6 @@ export async function validateNasaCredential(
       accountId: "api_key",
       displayName: "NASA API Key",
     },
-    grantedScopes: [],
     metadata: {
       validationEndpoint: "/neo/rest/v1/neo/browse",
       apiBaseUrl: nasaApiBaseUrl,

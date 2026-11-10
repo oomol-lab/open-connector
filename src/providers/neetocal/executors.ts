@@ -189,7 +189,6 @@ export const credentialValidators: CredentialValidators = {
     });
     return {
       profile: { accountId: `neetocal:${workspace}`, displayName: `${workspace}.neetocal.com` },
-      grantedScopes: [],
       metadata: { subdomain: workspace, apiBaseUrl: baseUrl(workspace), validationEndpoint: "/meetings" },
     };
   },

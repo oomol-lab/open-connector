@@ -106,7 +106,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: "storecensus:api-key",
         displayName: firstCategoryName ? `StoreCensus (${firstCategoryName})` : "StoreCensus API Key",
       },
-      grantedScopes: [],
       metadata: {
         apiBaseUrl: storecensusApiBaseUrl,
         validationEndpoint: storecensusValidationPath,

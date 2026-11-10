@@ -82,7 +82,6 @@ export const convexActions: ActionDefinition[] = [
     name: "get_token_details",
     operationType: "read",
     description: "Return the current Convex token details so you can discover the authorized team or project context.",
-    requiredScopes: ["convex.token.read"],
     inputSchema: s.object({}),
     outputSchema: s.object({ token: tokenDetailsSchema }, { required: ["token"] }),
   }),
@@ -90,7 +89,6 @@ export const convexActions: ActionDefinition[] = [
     name: "list_projects",
     operationType: "read",
     description: "List all Convex projects for a team.",
-    requiredScopes: ["convex.projects.read"],
     inputSchema: s.object({ team_id: positiveId("The Convex team ID.") }, { required: ["team_id"] }),
     outputSchema: s.object({ projects: s.array("The Convex projects.", projectSchema) }, { required: ["projects"] }),
   }),
@@ -98,7 +96,6 @@ export const convexActions: ActionDefinition[] = [
     name: "create_project",
     operationType: "write",
     description: "Create a Convex project on a team, optionally provisioning an initial dev or prod deployment.",
-    requiredScopes: ["convex.projects.write"],
     inputSchema: s.object(
       {
         team_id: positiveId("The Convex team ID."),
@@ -122,7 +119,6 @@ export const convexActions: ActionDefinition[] = [
     name: "get_project_by_id",
     operationType: "read",
     description: "Get a Convex project by numeric project ID.",
-    requiredScopes: ["convex.projects.read"],
     inputSchema: s.object({ project_id: positiveId("The Convex project ID.") }, { required: ["project_id"] }),
     outputSchema: s.object({ project: projectSchema }, { required: ["project"] }),
   }),
@@ -130,7 +126,6 @@ export const convexActions: ActionDefinition[] = [
     name: "get_project_by_slug",
     operationType: "read",
     description: "Get a Convex project by team identifier or slug plus project slug.",
-    requiredScopes: ["convex.projects.read"],
     inputSchema: s.object(
       {
         team_id_or_slug: nonEmpty("The Convex team ID or slug."),
@@ -144,7 +139,6 @@ export const convexActions: ActionDefinition[] = [
     name: "delete_project",
     operationType: "destructive",
     description: "Delete a Convex project and all of its deployments.",
-    requiredScopes: ["convex.projects.write"],
     inputSchema: s.object({ project_id: positiveId("The Convex project ID.") }, { required: ["project_id"] }),
     outputSchema: s.object({ success: s.boolean("Whether the delete request succeeded.") }, { required: ["success"] }),
   }),
@@ -152,7 +146,6 @@ export const convexActions: ActionDefinition[] = [
     name: "list_deployments",
     operationType: "read",
     description: "List deployments for a Convex project.",
-    requiredScopes: ["convex.deployments.read"],
     inputSchema: s.object(
       {
         project_id: positiveId("The Convex project ID."),
@@ -171,7 +164,6 @@ export const convexActions: ActionDefinition[] = [
     name: "get_deployment",
     operationType: "read",
     description: "Get a cloud deployment by deployment name.",
-    requiredScopes: ["convex.deployments.read"],
     inputSchema: s.object({ deployment_name: nonEmpty("The deployment name.") }, { required: ["deployment_name"] }),
     outputSchema: s.object({ deployment: deploymentSchema }, { required: ["deployment"] }),
   }),
@@ -179,7 +171,6 @@ export const convexActions: ActionDefinition[] = [
     name: "create_deployment",
     operationType: "write",
     description: "Create a new deployment in a Convex project.",
-    requiredScopes: ["convex.deployments.write"],
     inputSchema: s.object(
       {
         project_id: positiveId("The Convex project ID."),
@@ -198,7 +189,6 @@ export const convexActions: ActionDefinition[] = [
     name: "update_deployment",
     operationType: "write",
     description: "Update mutable Convex deployment properties.",
-    requiredScopes: ["convex.deployments.write"],
     inputSchema: s.object(
       {
         deployment_name: nonEmpty("The deployment name."),
@@ -217,7 +207,6 @@ export const convexActions: ActionDefinition[] = [
     name: "delete_deployment",
     operationType: "destructive",
     description: "Delete a Convex deployment and all of its data.",
-    requiredScopes: ["convex.deployments.write"],
     inputSchema: s.object({ deployment_name: nonEmpty("The deployment name.") }, { required: ["deployment_name"] }),
     outputSchema: s.object({ success: s.boolean("Whether the delete request succeeded.") }, { required: ["success"] }),
   }),
@@ -225,7 +214,6 @@ export const convexActions: ActionDefinition[] = [
     name: "list_deployment_classes",
     operationType: "read",
     description: "List available deployment classes for a Convex team.",
-    requiredScopes: ["convex.projects.read"],
     inputSchema: s.object({ team_id: positiveId("The Convex team ID.") }, { required: ["team_id"] }),
     outputSchema: s.object(
       { items: s.array("Available deployment classes.", s.looseObject({ type: s.string(), available: s.boolean() })) },
@@ -236,7 +224,6 @@ export const convexActions: ActionDefinition[] = [
     name: "list_deployment_regions",
     operationType: "read",
     description: "List available deployment regions for a Convex team.",
-    requiredScopes: ["convex.projects.read"],
     inputSchema: s.object({ team_id: positiveId("The Convex team ID.") }, { required: ["team_id"] }),
     outputSchema: s.object(
       {
@@ -252,7 +239,6 @@ export const convexActions: ActionDefinition[] = [
     name: "create_deploy_key",
     operationType: "write",
     description: "Create a deploy key for a Convex deployment.",
-    requiredScopes: ["convex.deploy_keys.write"],
     inputSchema: s.object(
       { deployment_name: nonEmpty("The deployment name."), name: nonEmpty("The deploy key name.") },
       { required: ["deployment_name", "name"] },
@@ -263,7 +249,6 @@ export const convexActions: ActionDefinition[] = [
     name: "list_deploy_keys",
     operationType: "read",
     description: "List deploy keys for a Convex deployment.",
-    requiredScopes: ["convex.deploy_keys.read"],
     inputSchema: s.object({ deployment_name: nonEmpty("The deployment name.") }, { required: ["deployment_name"] }),
     outputSchema: s.object({ deployKeys: s.array("Deploy keys.", deployKeySchema) }, { required: ["deployKeys"] }),
   }),
@@ -271,7 +256,6 @@ export const convexActions: ActionDefinition[] = [
     name: "delete_deploy_key",
     operationType: "destructive",
     description: "Delete a deploy key for a Convex deployment.",
-    requiredScopes: ["convex.deploy_keys.write"],
     inputSchema: s.object(
       { deployment_name: nonEmpty("The deployment name."), id: nonEmpty("The deploy key ID.") },
       { required: ["deployment_name", "id"] },
@@ -282,7 +266,6 @@ export const convexActions: ActionDefinition[] = [
     name: "list_custom_domains",
     operationType: "read",
     description: "List custom domains configured for a Convex deployment.",
-    requiredScopes: ["convex.custom_domains.read"],
     inputSchema: s.object({ deployment_name: nonEmpty("The deployment name.") }, { required: ["deployment_name"] }),
     outputSchema: s.object(
       {
@@ -302,7 +285,6 @@ export const convexActions: ActionDefinition[] = [
     name: "delete_custom_domain",
     operationType: "destructive",
     description: "Remove a custom domain from a Convex deployment.",
-    requiredScopes: ["convex.custom_domains.write"],
     inputSchema: s.object(
       { deployment_name: nonEmpty("The deployment name."), domain: nonEmpty("The custom domain.") },
       { required: ["deployment_name", "domain"] },
@@ -318,7 +300,6 @@ function functionActions(): ActionDefinition[] {
       name: "run_query",
       operationType: "read",
       description: "Execute a Convex query through the deployment HTTP API.",
-      requiredScopes: ["convex.http.query"],
       inputSchema: functionInput("query"),
       outputSchema: s.object({ result: functionResultSchema }, { required: ["result"] }),
     }),
@@ -326,7 +307,6 @@ function functionActions(): ActionDefinition[] {
       name: "run_mutation",
       operationType: "destructive",
       description: "Execute a Convex mutation through the deployment HTTP API.",
-      requiredScopes: ["convex.http.mutation"],
       inputSchema: functionInput("mutation"),
       outputSchema: s.object({ result: functionResultSchema }, { required: ["result"] }),
     }),
@@ -334,7 +314,6 @@ function functionActions(): ActionDefinition[] {
       name: "run_action",
       operationType: "destructive",
       description: "Execute a Convex action through the deployment HTTP API.",
-      requiredScopes: ["convex.http.action"],
       inputSchema: functionInput("action"),
       outputSchema: s.object({ result: functionResultSchema }, { required: ["result"] }),
     }),
@@ -342,7 +321,6 @@ function functionActions(): ActionDefinition[] {
       name: "run_function",
       operationType: "destructive",
       description: "Execute an arbitrary Convex function through `/api/run/{functionIdentifier}`.",
-      requiredScopes: ["convex.http.run"],
       inputSchema: s.object(
         {
           functionIdentifier: nonEmpty("The slash or colon separated function identifier."),
@@ -358,7 +336,6 @@ function functionActions(): ActionDefinition[] {
       name: "execute_query_batch",
       operationType: "read",
       description: "Execute multiple Convex queries against a deployment and return results in the same order.",
-      requiredScopes: ["convex.http.query"],
       inputSchema: s.object(
         {
           queries: s.array(

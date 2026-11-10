@@ -113,7 +113,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: optionalString(data.projectToken) ?? "project",
         displayName: optionalString(data.name) ?? "SimpleLocalize Project",
       },
-      grantedScopes: [],
       metadata: {
         apiBaseUrl: baseUrl,
         validationEndpoint: "/api/v2/project",

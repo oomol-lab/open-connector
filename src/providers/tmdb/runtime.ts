@@ -94,7 +94,6 @@ export async function validateTmdbCredential(
       accountId: "api_key",
       displayName: "TMDB API Read Access Token",
     },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: tmdbApiBaseUrl,
       validationEndpoint: tmdbValidationPath,

@@ -181,7 +181,6 @@ export async function validateLingxingCredential(
       accountId: `lingxing:mcp:${credentialHash}`,
       displayName: `Lingxing MCP · ${credentialHash.slice(-6)}`,
     },
-    grantedScopes: [],
     metadata: {
       mcpHost: context.endpoint.hostname,
       discoveredToolCount: tools.length,

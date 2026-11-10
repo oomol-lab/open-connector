@@ -19,7 +19,6 @@ describe("Jira OAuth credential validation", () => {
 
     expect(result).toEqual({
       profile: { accountId: "jira", displayName: "Jira Cloud" },
-      grantedScopes: [],
       metadata: {
         resourceCount: 0,
         validationEndpoint: "/oauth/token/accessible-resources",
@@ -36,6 +35,20 @@ describe("Jira OAuth credential validation", () => {
       profile: { accountId: "jira", displayName: "Jira Cloud" },
       metadata: { resourceCount: 1 },
     });
+  });
+
+  it("keeps resource scopes without inferring extra permissions", async () => {
+    const result = await credentialValidators.oauth2!(credential, {
+      fetcher: async () =>
+        Response.json([
+          {
+            id: "cloud-123",
+            url: "https://jira.atlassian.net",
+            scopes: ["write:jira-work", "read:unknown-new-scope"],
+          },
+        ]),
+    });
+    expect(result?.grantedScopes).toEqual(["write:jira-work", "read:unknown-new-scope"]);
   });
 
   it("rejects malformed accessible-resource responses", async () => {

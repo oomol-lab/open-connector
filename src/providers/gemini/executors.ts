@@ -70,7 +70,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: "gemini-api-key",
         displayName: "Gemini API Key",
       },
-      grantedScopes: [],
       metadata: compactObject({
         apiBaseUrl: geminiApiBaseUrl,
         validationEndpoint: "/models",

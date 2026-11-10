@@ -11,17 +11,3 @@ export const intercomPermissionLabels = {
   jobsRead: "Read status of jobs",
   articlesRead: "Read and List articles",
 };
-
-export const intercomGrantedPermissions: string[] = [
-  intercomPermissionLabels.adminsRead,
-  intercomPermissionLabels.contactsRead,
-  intercomPermissionLabels.contactsWrite,
-  intercomPermissionLabels.conversationsRead,
-  intercomPermissionLabels.conversationsWrite,
-  intercomPermissionLabels.eventsRead,
-  intercomPermissionLabels.tagsRead,
-  intercomPermissionLabels.countsRead,
-  intercomPermissionLabels.ticketsRead,
-  intercomPermissionLabels.jobsRead,
-  intercomPermissionLabels.articlesRead,
-];

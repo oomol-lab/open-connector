@@ -79,7 +79,6 @@ export async function validatePaystackCredential(
     profile: {
       accountId: buildPaystackProviderAccountId(input.apiKey),
       displayName: buildPaystackAccountLabel(input.apiKey),
-      grantedScopes: [],
     },
     metadata: compactObject({
       apiBaseUrl: paystackApiBaseUrl,

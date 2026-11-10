@@ -48,7 +48,6 @@ export async function validateTendataCredential(
   await pending;
   return {
     profile: { displayName: "Tendata API Key" },
-    grantedScopes: [],
     metadata: { apiBaseUrl: tendataApiBaseUrl, validationEndpoint: "/access-token" },
   };
 }

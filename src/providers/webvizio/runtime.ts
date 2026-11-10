@@ -65,7 +65,6 @@ export async function validateWebvizioCredential(
       accountId: "webvizio-personal-access-token",
       displayName: "Webvizio Personal Access Token",
     },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: webvizioApiBaseUrl,
     },

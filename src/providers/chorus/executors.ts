@@ -145,7 +145,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: `chorus:user:${userId}`,
         displayName: buildChorusAccountLabel({ name, email, id: userId }),
       },
-      grantedScopes: [],
       metadata: {
         apiBaseUrl: chorusApiBaseUrl,
         validationEndpoint: chorusValidationPath,

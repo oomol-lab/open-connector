@@ -57,7 +57,6 @@ export const credentialValidators: CredentialValidators = {
       throw new ProviderRequestError(502, "PDF Vector credential validation response did not include a server version");
     return {
       profile: { accountId: "pdf-vector-api-key", displayName: "PDF Vector API Key" },
-      grantedScopes: [],
       metadata: {
         apiBaseUrl: pdfVectorApiBaseUrl,
         validationEndpoint: "/rpc/authenticate/validateCredential",

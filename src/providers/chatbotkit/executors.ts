@@ -181,7 +181,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: optionalString(firstTeam?.id) ?? "chatbotkit-api-key",
         displayName: optionalString(firstTeam?.name) ?? "ChatBotKit API Key",
       },
-      grantedScopes: [],
       metadata: compactObject({
         validationEndpoint: "/team/list",
         apiBaseUrl,

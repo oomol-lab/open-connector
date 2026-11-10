@@ -139,7 +139,6 @@ export const credentialValidators: CredentialValidators = {
     }
     return {
       profile: { displayName: "Sendblue API Key" },
-      grantedScopes: [],
       metadata: { validationEndpoint: `${contactsPath}/count` },
     };
   },

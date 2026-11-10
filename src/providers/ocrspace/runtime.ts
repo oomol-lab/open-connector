@@ -50,7 +50,6 @@ export async function validateOcrspaceCredential(
       accountId: "ocrspace-api-key",
       displayName: "OCR.space API Key",
     },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: ocrspaceApiBaseUrl,
       validationEndpoint: ocrspaceParsePath,

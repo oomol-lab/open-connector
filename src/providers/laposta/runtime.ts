@@ -71,9 +71,7 @@ export async function validateLapostaCredential(
   return {
     profile: {
       displayName: "Laposta API Key",
-      grantedScopes: [],
     },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: lapostaApiBaseUrl,
       validationEndpoint: "/v2/list",

@@ -82,9 +82,7 @@ async function validateLoopsCredential(
     profile: {
       accountId: "loops-api-key",
       displayName: teamName ?? "Loops API Key",
-      grantedScopes: [],
     },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: loopsApiBaseUrl,
       apiVersion: loopsApiVersion,

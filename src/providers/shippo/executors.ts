@@ -178,7 +178,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: "shippo",
         displayName: "Shippo API Token",
       },
-      grantedScopes: [],
       metadata: {
         apiBaseUrl: shippoApiBaseUrl,
         apiVersion: shippoApiVersion,

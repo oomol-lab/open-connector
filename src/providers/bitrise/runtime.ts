@@ -69,7 +69,6 @@ export async function validateBitriseCredential(
       accountId: slug ?? dataId ?? email ?? "bitrise:api_key",
       displayName: username ?? email ?? slug ?? "Bitrise API Key",
     },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: bitriseApiBaseUrl,
       validationEndpoint: "/me",

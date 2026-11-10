@@ -231,7 +231,6 @@ export async function validateNusiiProposalsCredential(
       accountId: readStringLike(data.id) ?? "api_key",
       displayName: name ?? email ?? subdomain ?? "Nusii API Key",
     },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl: nusiiProposalsApiBaseUrl,
       validationEndpoint: "/account/me",

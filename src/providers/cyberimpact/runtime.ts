@@ -101,7 +101,6 @@ export async function validateCyberimpactCredential(
       accountId: email ?? username ?? "cyberimpact:token",
       displayName: accountName ?? email ?? username ?? "Cyberimpact API Token",
     },
-    grantedScopes: [],
     metadata: compactObject({ email, username, account: accountName, validationEndpoint: "/ping" }),
   };
 }

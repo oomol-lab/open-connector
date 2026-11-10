@@ -225,7 +225,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: firstProject?.id == null ? "airbrake-api-key" : String(firstProject.id),
         displayName: firstProject?.name ? `Airbrake: ${firstProject.name}` : "Airbrake API Key",
       },
-      grantedScopes: [],
       metadata: compactObject({
         apiBaseUrl: airbrakeApiBaseUrl,
         validationEndpoint: "/api/v4/projects",

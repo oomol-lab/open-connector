@@ -119,7 +119,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: "stay_ai:api_key",
         displayName: emailSenderName ?? emailSenderAddress ?? "Stay AI API Key",
       },
-      grantedScopes: [],
       metadata: compactObject({
         apiBaseUrl: stayAiApiBaseUrl,
         validationEndpoint: "/settings",

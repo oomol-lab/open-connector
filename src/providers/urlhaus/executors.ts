@@ -45,7 +45,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: "urlhaus-auth-key",
         displayName: "URLhaus Auth-Key",
       },
-      grantedScopes: [],
       metadata: {
         apiBaseUrl: urlhausApiBaseUrl,
         validationEndpoint: urlhausValidationPath,

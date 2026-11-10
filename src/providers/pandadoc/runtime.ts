@@ -301,7 +301,7 @@ export async function validatePandadocCredential(
     ),
   );
   return {
-    profile: { accountId: "pandadoc-api-key", displayName: "PandaDoc API Key", grantedScopes: [] },
+    profile: { accountId: "pandadoc-api-key", displayName: "PandaDoc API Key" },
     metadata: compactObject({
       apiBaseUrl: pandadocApiBaseUrl,
       validationEndpoint: validationPath,

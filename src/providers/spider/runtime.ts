@@ -69,7 +69,6 @@ export async function validateSpiderCredential(
       accountId: "spider:api-key",
       displayName: "Spider Cloud API Key",
     },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: spiderApiBaseUrl,
       credits: payload,

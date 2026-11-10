@@ -87,7 +87,6 @@ export async function requestApi(
 export async function requestToken(
   config: OAuthClientConfig,
   params: Record<string, string>,
-  fallbackScopes: string[],
   fetcher: typeof fetch,
   previousRefreshToken = "",
 ): Promise<OAuthTokenResult> {
@@ -126,17 +125,16 @@ export async function requestToken(
         "provider_error",
       );
     }
-    const scopes = data.granted_scopes;
-    if (scopes !== undefined && (!Array.isArray(scopes) || scopes.some((value) => typeof value !== "string"))) {
-      throw new ProviderRequestError(502, "TikTok Shop returned invalid granted scopes", undefined, "provider_error");
-    }
+    const scopes = Array.isArray(data.granted_scopes)
+      ? data.granted_scopes.filter((scope): scope is string => typeof scope === "string")
+      : undefined;
     return {
       accessToken,
       refreshToken,
       tokenType: "Bearer",
       expiresAt: new Date(expires * 1000).toISOString(),
       metadata: {
-        scope: (scopes === undefined ? fallbackScopes : (scopes as string[])).join(" "),
+        scope: scopes?.join(" "),
         openId,
         sellerName: optionalString(data.seller_name),
         sellerBaseRegion: optionalString(data.seller_base_region),

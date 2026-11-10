@@ -61,7 +61,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: "api_key",
         displayName: "IP2Proxy API Key",
       },
-      grantedScopes: [],
       metadata: compactObject({
         apiBaseUrl: ip2proxyApiBaseUrl,
         validationEndpoint: "/",

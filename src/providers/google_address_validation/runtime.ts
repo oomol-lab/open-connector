@@ -52,7 +52,6 @@ export async function validateGoogleAddressValidationCredential(
       accountId: "google_address_validation",
       displayName: "Google Address Validation API Key",
     },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl: googleAddressValidationApiBaseUrl,
       validationEndpoint: "/v1:validateAddress",

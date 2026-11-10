@@ -40,7 +40,6 @@ export const credentialValidators: CredentialValidators = {
     requireQichachaCredentials(input.values);
     return Promise.resolve({
       profile: { accountId: input.values.appKey!, displayName: "Qichacha AppKey" },
-      grantedScopes: [],
       metadata: { validationMode: "format_only" },
     });
   },

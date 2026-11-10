@@ -65,7 +65,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: `lob:${suffix}`,
         displayName: "Lob API Key",
       },
-      grantedScopes: [],
       metadata: {
         apiBaseUrl: lobApiBaseUrl,
         validationEndpoint: "/addresses?limit=1",

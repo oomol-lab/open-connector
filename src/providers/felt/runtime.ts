@@ -72,7 +72,6 @@ export async function validateFeltCredential(
       accountId: userId ?? "felt",
       displayName: userName ?? userEmail ?? "Felt API Token",
     },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl: feltApiBaseUrl,
       validationEndpoint: "/user",

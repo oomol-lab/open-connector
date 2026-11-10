@@ -89,7 +89,6 @@ export async function validateBigDataCloudCredential(
       accountId: "big_data_cloud-api-key",
       displayName: "BigDataCloud API Key",
     },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl: bigDataCloudApiBaseUrl,
       validationEndpoint: countryByIpPath,

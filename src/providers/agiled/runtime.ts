@@ -96,7 +96,6 @@ export async function validateAgiledCredential(
       accountId: readOptionalId(firstUser?.id) ?? new URL(brand).hostname,
       displayName: accountLabel,
     },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl: agiledApiBaseUrl,
       brand,

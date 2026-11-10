@@ -55,7 +55,6 @@ export async function validateCardlyCredential(
       accountId: "cardly",
       displayName: "Cardly API Key",
     },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl: cardlyApiBaseUrl,
       validationEndpoint: cardlyBalancePath,

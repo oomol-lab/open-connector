@@ -49,7 +49,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: "diffbot:api_token",
         displayName: "Diffbot API Token",
       },
-      grantedScopes: [],
       metadata: compactObject({
         validationEndpoint: diffbotArticleRequestPath,
         validationProbeUrl,

@@ -93,7 +93,6 @@ export async function validatePlacekeyCredential(
     profile: {
       accountId: "placekey-api-key",
       displayName: "Placekey API key",
-      grantedScopes: [],
     },
     metadata: {
       apiBaseUrl: placekeyApiBaseUrl,

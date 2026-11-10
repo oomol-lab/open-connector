@@ -32,7 +32,6 @@ export async function validateCredential(
   requirePage(payload);
   return {
     profile: { displayName: "Waitwhile API Key" },
-    grantedScopes: [],
     metadata: { apiBaseUrl: waitwhileApiBaseUrl },
   };
 }

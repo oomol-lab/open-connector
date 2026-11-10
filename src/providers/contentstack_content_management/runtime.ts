@@ -90,9 +90,7 @@ export async function validateContentstackContentManagementCredential(
         optionalString(firstContentType?.title) ??
         optionalString(firstContentType?.uid) ??
         "Contentstack Management Token",
-      grantedScopes: [],
     },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl: contentstackContentManagementApiBaseUrl,
       validationEndpoint: "/content_types",

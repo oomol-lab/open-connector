@@ -41,7 +41,6 @@ export async function validatePodAiCredential(apiKey: string): Promise<Credentia
     profile: {
       displayName: "Pod AI API Key",
     },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: podAiApiBaseUrl,
       validationMode: "format_only",

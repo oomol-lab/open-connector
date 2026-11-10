@@ -102,7 +102,6 @@ export async function validatePipedriveCredential(
         optionalString(user.email) ??
         optionalString(user.company_name) ??
         "Pipedrive API Token",
-      grantedScopes: [],
     },
     metadata: compactObject({
       apiBaseUrl: apiOrigin,

@@ -55,7 +55,6 @@ export const credentialValidators: CredentialValidators = {
     await validateMicrosoftTextTranslateCredential({ apiKey: input.apiKey, region, fetcher, signal });
     return {
       profile: { displayName: region ? `Azure Translator (${region})` : "Azure Translator" },
-      grantedScopes: [],
       metadata: {
         apiBaseUrl: microsoftTextTranslateApiBaseUrl,
         apiVersion: microsoftTextTranslateApiVersion,

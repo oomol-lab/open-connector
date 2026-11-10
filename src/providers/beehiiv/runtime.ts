@@ -50,7 +50,6 @@ export async function validateBeehiivCredential(
       accountId: publicationId ?? "beehiiv-api-key",
       displayName: publicationName ?? publicationId ?? "Beehiiv API Key",
     },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl: beehiivApiBaseUrl,
       validationEndpoint: "/publications",

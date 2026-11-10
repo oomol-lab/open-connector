@@ -69,7 +69,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: account.id ?? account.email ?? "stabilityai-api-key",
         displayName: account.email ?? "Stability AI API Key",
       },
-      grantedScopes: [],
       metadata: compactObject({
         validationEndpoint: stabilityAiValidationPath,
         apiBaseUrl: stabilityAiApiBaseUrl,

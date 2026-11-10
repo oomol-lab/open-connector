@@ -23,7 +23,6 @@ describe("Harvest OAuth credential validation", () => {
 
     expect(result).toEqual({
       profile: { accountId: "42", displayName: "Ada Lovelace" },
-      grantedScopes: ["harvest.read", "harvest.write"],
       metadata: {
         apiBaseUrl: "https://api.harvestapp.com",
         validationEndpoint: "https://id.getharvest.com/api/v2/accounts",

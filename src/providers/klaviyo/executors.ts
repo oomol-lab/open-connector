@@ -120,7 +120,6 @@ async function validateKlaviyoCredential(
       accountId: accountId ?? "api_key",
       displayName: accountId ? `Klaviyo ${accountId}` : "Klaviyo Account",
     },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl: klaviyoApiBaseUrl,
       apiRevision: klaviyoApiRevision,

@@ -118,9 +118,7 @@ export async function validateCiscoMerakiCredential(
     profile: {
       accountId: firstOrganizationId,
       displayName: firstOrganizationName ? `Cisco Meraki: ${firstOrganizationName}` : "Cisco Meraki API Key",
-      grantedScopes: [],
     },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: ciscoMerakiApiBaseUrl,
       validationEndpoint: "/organizations?perPage=3",

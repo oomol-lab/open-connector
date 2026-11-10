@@ -138,7 +138,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: optionalRawString(firstTeam?.id),
         displayName: "BALLDONTLIE World Cup API Key",
       },
-      grantedScopes: [],
       metadata: compactObject({
         apiBaseUrl: balldontlieWorldcupBaseUrl,
         validationEndpoint: "/teams",

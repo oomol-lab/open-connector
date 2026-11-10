@@ -87,7 +87,7 @@ export async function validateSportsdataCredential(
 ): Promise<CredentialValidationResult> {
   const sports = await requestSportsdata(apiKey, "/sports", fetcher, signal, "validate");
   return {
-    profile: { accountId: "api_key", displayName: "SportsDataIO API Key", grantedScopes: [] },
+    profile: { accountId: "api_key", displayName: "SportsDataIO API Key" },
     metadata: {
       apiBaseUrl: sportsdataApiBaseUrl,
       validationEndpoint: "/sports",

@@ -154,7 +154,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: `gotify:${host}:${tokenHash.slice(0, 16)}`,
         displayName: `Gotify ${host}`,
       },
-      grantedScopes: [],
       metadata: compactObject({
         baseUrl,
         tokenHash,

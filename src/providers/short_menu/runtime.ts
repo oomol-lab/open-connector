@@ -63,9 +63,7 @@ export async function validateShortMenuCredential(
     profile: {
       accountId: "short-menu-api-key",
       displayName: "Short Menu API Key",
-      grantedScopes: [],
     },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl: shortMenuApiBaseUrl,
       validationEndpoint: shortMenuValidationPath,

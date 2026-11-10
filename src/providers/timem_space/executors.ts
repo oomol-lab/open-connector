@@ -58,7 +58,6 @@ export const credentialValidators: CredentialValidators = {
     const hash = sha256Hex(key).slice(0, 16);
     return {
       profile: { accountId: `timem-space:${hash}`, displayName: `TiMEM Space · ${hash.slice(-6)}` },
-      grantedScopes: [],
       metadata: { mcpEndpoint: endpoint, discoveredToolCount: tools.length },
     };
   },

@@ -165,7 +165,6 @@ async function validateLaGrowthMachineCredential(
       accountId: memberId ? `la_growth_machine:${memberId}` : "la_growth_machine:api_key",
       displayName: accountLabel,
     },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: laGrowthMachineApiBaseUrl,
       validationEndpoint: "/members",

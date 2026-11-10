@@ -87,7 +87,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: accountId ?? "rocketlane-api-key",
         displayName: buildAccountLabel(firstUser),
       },
-      grantedScopes: [],
       metadata: compactObject({
         apiBaseUrl: rocketlaneApiBaseUrl,
         validationEndpoint: rocketlaneValidationPath,

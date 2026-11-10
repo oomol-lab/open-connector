@@ -111,7 +111,6 @@ export async function validateBidsketchCredential(
       accountId: "bidsketch-api-token",
       displayName: "BidSketch API Token",
     },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl: bidsketchApiBaseUrl,
       validationEndpoint: bidsketchValidationPath,

@@ -75,7 +75,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: "tldv-api-key",
         displayName: "tl;dv API Key",
       },
-      grantedScopes: [],
       metadata: {
         apiBaseUrl,
         apiVersion,

@@ -146,7 +146,7 @@ export async function validateQianfanCredential(
     .map((model) => model.id)
     .filter((model): model is string => typeof model === "string" && model.length > 0);
   return {
-    profile: { accountId: "qianfan-api-key", displayName: "Baidu Qianfan API Key", grantedScopes: [] },
+    profile: { accountId: "qianfan-api-key", displayName: "Baidu Qianfan API Key" },
     metadata: { validationEndpoint: "/v2/models", availableModels },
   };
 }

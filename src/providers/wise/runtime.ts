@@ -90,7 +90,6 @@ export async function validateWiseCredential(
       accountId: profileId ? `wise:profile:${profileId}` : "wise:api_token",
       displayName: buildAccountLabel(firstProfile),
     },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl: wiseApiBaseUrl,
       validationEndpoint: wiseValidationPath,

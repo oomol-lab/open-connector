@@ -42,7 +42,6 @@ export const credentialValidators: CredentialValidators = {
       profile: {
         displayName: "Cohere API Key",
       },
-      grantedScopes: [],
       metadata: {
         apiBaseUrl: cohereApiBaseUrl,
         validationEndpoint: "/v1/models",

@@ -101,7 +101,6 @@ export const credentialValidators: CredentialValidators = {
     await request("/lookup/ip", { ip: "1.1.1.1" }, requiredInputString(input.apiKey, "API Key"), fetcher, true);
     return {
       profile: { displayName: "Greip API Key" },
-      grantedScopes: [],
       metadata: { validationEndpoint: "/lookup/ip" },
     };
   },

@@ -76,7 +76,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: "scrapingant",
         displayName: "ScrapingAnt API Key",
       },
-      grantedScopes: [],
       metadata: compactObject({
         apiBaseUrl: scrapingantApiBaseUrl,
         validationEndpoint: "/usage",

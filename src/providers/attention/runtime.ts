@@ -64,7 +64,6 @@ export async function validateAttentionCredential(
     profile: {
       displayName: "Attention API Key",
     },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: attentionApiBaseUrl,
       validationEndpoint: attentionValidationPath,

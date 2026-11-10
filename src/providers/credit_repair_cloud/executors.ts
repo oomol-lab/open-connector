@@ -167,7 +167,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: "credit_repair_cloud",
         displayName: "Credit Repair Cloud API Key",
       },
-      grantedScopes: [],
       metadata: {
         apiBaseUrl: creditRepairCloudApiBaseUrl,
         validationEndpoint: "/lead/viewRecord",

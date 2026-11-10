@@ -80,7 +80,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: "api_key",
         displayName: "IP2WHOIS API Key",
       },
-      grantedScopes: [],
       metadata: {
         apiBaseUrl: ip2whoisWhoisApiBaseUrl,
         hostedDomainsApiBaseUrl: ip2whoisHostedDomainsApiBaseUrl,

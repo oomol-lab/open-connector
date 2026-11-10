@@ -217,9 +217,7 @@ export async function validatePushoverCredential(
     profile: {
       accountId: buildPushoverProviderAccountId(apiKey),
       displayName: "Pushover Application",
-      grantedScopes: [],
     },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl: pushoverVersionedApiBaseUrl,
       validationEndpoint: "/apps/limits.json",

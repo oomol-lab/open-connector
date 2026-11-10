@@ -64,7 +64,6 @@ export const credentialValidators: CredentialValidators = {
     const payload = await requestRuncrate({ path: "/models" }, { apiKey: input.apiKey, fetcher, signal });
     return {
       profile: { displayName: "Runcrate API Key" },
-      grantedScopes: [],
       metadata: {
         validationEndpoint: "/models",
         availableModels: looseArray(payload.data)

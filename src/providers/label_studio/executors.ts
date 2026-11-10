@@ -215,7 +215,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: userId !== undefined ? `label_studio:user:${userId}` : `label_studio:${new URL(baseUrl).host}`,
         displayName,
       },
-      grantedScopes: [],
       metadata: compactObject({
         baseUrl,
         apiBaseUrl: baseUrl,

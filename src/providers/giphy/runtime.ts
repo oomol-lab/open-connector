@@ -186,7 +186,6 @@ export async function validateGiphyCredential(
       accountId: "giphy",
       displayName: "GIPHY API Key",
     },
-    grantedScopes: [],
     metadata: compactObject({
       validationEndpoint: "/v1/gifs/trending",
       sampleGifId: typeof sampleGifId === "string" ? sampleGifId : undefined,

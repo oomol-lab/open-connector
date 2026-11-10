@@ -195,7 +195,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: firstUser?.id == null ? "woodpecker-api-key" : `woodpecker:${firstUser.id}`,
         displayName: firstUser?.email ?? "Woodpecker.co API Key",
       },
-      grantedScopes: [],
       metadata: compactObject({
         apiBaseUrl: woodpeckerCoApiBaseUrl,
         validationEndpoint: "/v2/users",

@@ -5,75 +5,9 @@ import { s } from "../../core/json-schema.ts";
 
 export const tailscaleDeviceReadScope = "devices:core:read";
 
-/**
- * Narrows an operation's scopes to the minimum one call needs.
- *
- * Tailscale mints every access token by downscoping the credential, and asking for a scope the
- * OAuth client was never granted fails the whole request — the token endpoint answers
- * `{"message":"OAuth client cannot grant scopes \"auth_keys\""}`, verified against the live API.
- * Narrowing to a subset of the grant is what succeeds. So a token request must name only what this
- * call actually needs: asking for the union of an endpoint's documented scopes locks out every
- * correctly least-privileged credential, and the key scopes are separately grantable, so an
- * auth-keys-only client is routine rather than hypothetical.
- *
- * `granted` is the scope set recorded when the connection was created. Prefer deciding from `input`
- * alone; read `granted` only where the input cannot identify the scope (`delete_key` knows a key id
- * but not its type) or where a scope is optional for the endpoint rather than required.
- */
-export type TailscaleScopeResolver = (
-  input: Record<string, unknown>,
-  granted: ReadonlySet<string>,
-) => readonly string[];
+/** Resolve request scopes from action input; an empty list lets Tailscale use the current grant. */
+export type TailscaleScopeResolver = (input: Record<string, unknown>) => readonly string[];
 
-/** Tailscale's catch-all scopes: complete tailnet access, and read-only tailnet access. */
-const tailscaleAllScope = "all";
-const tailscaleAllReadScope = "all:read";
-
-const readScopeSuffix = ":read";
-
-/**
- * The scope string to request so `scope` is authorized, or undefined when the credential lacks it.
- *
- * Three Tailscale grants cover a scope without naming it. `all` stands in for every scope,
- * `all:read` for every `:read` scope, and a write scope carries its own read form — the docs list a
- * write scope's endpoints as "Endpoints from `<scope>:read`" plus the mutations, and a grant records
- * only the write form. Where just the write form is held it is the write form that gets requested:
- * Tailscale documents narrowing from `all` but not from a write scope to its read form, and guessing
- * wrong fails the token request and the whole action with it.
- */
-const grantableScope = (granted: ReadonlySet<string>, scope: string): string | undefined => {
-  if (granted.has(scope) || granted.has(tailscaleAllScope)) {
-    return scope;
-  }
-  if (!scope.endsWith(readScopeSuffix)) {
-    return undefined;
-  }
-  if (granted.has(tailscaleAllReadScope)) {
-    return scope;
-  }
-  const writeForm = scope.slice(0, -readScopeSuffix.length);
-  return granted.has(writeForm) ? writeForm : undefined;
-};
-
-/**
- * Requests only the alternatives the credential holds, for endpoints whose scopes each unlock a
- * different slice of one resource rather than combining into a single requirement.
- *
- * Returning nothing is deliberate: the executor then omits `scope` entirely, which mints a token
- * carrying every scope the client holds. That is the same fallback credential validation uses, and
- * it keeps the action working when the recorded grant is unknown instead of failing closed.
- */
-const heldAlternatives =
-  (...alternatives: readonly string[]): TailscaleScopeResolver =>
-  (_input, granted) =>
-    alternatives.map((scope) => grantableScope(granted, scope)).filter((scope) => scope !== undefined);
-
-/**
- * The scope authorizing each `keyType` accepted by `POST /tailnet/{tailnet}/keys`.
- *
- * A Map rather than an object literal so a `keyType` naming an inherited property — `constructor`,
- * `toString` — misses instead of resolving to something that is not a scope at all.
- */
 const keyTypeScopes = new Map<string, string>([
   ["auth", "auth_keys"],
   ["client", "oauth_keys"],
@@ -370,13 +304,8 @@ export const tailscaleOperations: readonly TailscaleOperationDefinition[] = [
     method: "GET",
     path: "/tailnet/-/settings",
     requiredScopes: ["feature_settings:read", "logs:network:read", "networking_settings:read", "policy_file:read"],
-    // Each scope reveals a different subset of settings, so read whichever ones the credential holds.
-    resolveScopes: heldAlternatives(
-      "feature_settings:read",
-      "logs:network:read",
-      "networking_settings:read",
-      "policy_file:read",
-    ),
+    // Request the current grant because each scope reveals a different subset of settings.
+    resolveScopes: () => [],
     inputSchema: emptyInput("Tailscale get tailnet settings input."),
     outputSchema: objectOutput("The visible tailnet settings."),
   },
@@ -812,12 +741,8 @@ export const tailscaleOperations: readonly TailscaleOperationDefinition[] = [
     pathParameters: ["logType"],
     bodyInputName: "configuration",
     requiredScopes: ["log_streaming", "device_invites", "policy_file"],
-    // `device_invites` and `policy_file` are required only for private endpoints, which the request
-    // body does not distinguish, so add them when held and let Tailscale reject a genuine shortfall.
-    resolveScopes: (input, granted) => [
-      "log_streaming",
-      ...heldAlternatives("device_invites", "policy_file")(input, granted),
-    ],
+    // The request does not reveal whether the endpoint needs additional permissions; use the current grant.
+    resolveScopes: () => [],
     inputSchema: s.actionInput(
       {
         logType: s.stringEnum(["configuration", "network"], { description: "The Tailscale log type." }),
@@ -885,13 +810,8 @@ export const tailscaleOperations: readonly TailscaleOperationDefinition[] = [
     path: "/tailnet/-/keys",
     queryParameters: [{ inputName: "all", parameterName: "all" }],
     requiredScopes: ["api_access_tokens:read", "auth_keys:read", "oauth_keys:read", "federated_keys:read"],
-    // Each scope reveals one key family, so list whichever families the credential can see.
-    resolveScopes: heldAlternatives(
-      "api_access_tokens:read",
-      "auth_keys:read",
-      "oauth_keys:read",
-      "federated_keys:read",
-    ),
+    // Let Tailscale expose the key families the client can currently access.
+    resolveScopes: () => [],
     inputSchema: s.actionInput(
       { all: s.boolean("Whether to include expired and revoked keys.") },
       [],
@@ -908,11 +828,11 @@ export const tailscaleOperations: readonly TailscaleOperationDefinition[] = [
     bodyInputName: "key",
     requiredScopes: ["auth_keys", "oauth_keys", "federated_keys"],
     // Each scope creates one `keyType`; requesting all three locks out the common auth-keys-only client.
-    resolveScopes: (input, granted) => {
+    resolveScopes: (input) => {
       // Tailscale defaults an omitted keyType to "auth".
       const keyType = optionalString(optionalRecord(input.key)?.keyType) ?? "auth";
       const scope = keyTypeScopes.get(keyType);
-      return scope ? [scope] : heldAlternatives(...keyTypeScopes.values())(input, granted);
+      return scope ? [scope] : [];
     },
     inputSchema: s.actionInput(
       { key: objectOutput("The key type, capabilities, expiry, scopes, tags, and identity configuration.") },
@@ -929,13 +849,8 @@ export const tailscaleOperations: readonly TailscaleOperationDefinition[] = [
     path: "/tailnet/-/keys/{keyId}",
     pathParameters: ["keyId"],
     requiredScopes: ["api_access_tokens:read", "auth_keys:read", "oauth_keys:read", "federated_keys:read"],
-    // A key id does not reveal its family, so read with whichever families the credential can see.
-    resolveScopes: heldAlternatives(
-      "api_access_tokens:read",
-      "auth_keys:read",
-      "oauth_keys:read",
-      "federated_keys:read",
-    ),
+    // A key id does not reveal its family; request the current grant.
+    resolveScopes: () => [],
     inputSchema: idInput("keyId", "The Tailscale key ID."),
     outputSchema: objectOutput("The requested key metadata."),
   },
@@ -947,8 +862,8 @@ export const tailscaleOperations: readonly TailscaleOperationDefinition[] = [
     path: "/tailnet/-/keys/{keyId}",
     pathParameters: ["keyId"],
     requiredScopes: ["api_access_tokens", "auth_keys", "oauth_keys", "federated_keys"],
-    // A key id does not reveal its type, so request whichever key families the credential holds.
-    resolveScopes: heldAlternatives("api_access_tokens", "auth_keys", "oauth_keys", "federated_keys"),
+    // A key id does not reveal its type; request the current grant.
+    resolveScopes: () => [],
     inputSchema: idInput("keyId", "The Tailscale key ID to revoke and delete."),
     outputSchema: s.nullable(s.unknown("Tailscale delete key response.")),
   },
@@ -962,7 +877,7 @@ export const tailscaleOperations: readonly TailscaleOperationDefinition[] = [
     bodyInputName: "key",
     requiredScopes: ["oauth_keys", "federated_keys"],
     // Each scope updates a different credential kind, and a key id does not say which.
-    resolveScopes: heldAlternatives("oauth_keys", "federated_keys"),
+    resolveScopes: () => [],
     inputSchema: s.actionInput(
       {
         keyId: s.nonEmptyString("The Tailscale key ID."),
@@ -1270,13 +1185,8 @@ export const tailscaleOperations: readonly TailscaleOperationDefinition[] = [
     pathParameters: ["appId"],
     bodyInputName: "app",
     requiredScopes: ["oauth_apps", "devices:posture_attributes"],
-    // Tailscale documents only `oauth_apps` here, unlike the create endpoint. Send the posture scope
-    // when the app declares node attributes and the credential holds it, so a documented-only
-    // `oauth_apps` client still works either way.
-    resolveScopes: (input, granted) =>
-      "allowedNodeAttributes" in (optionalRecord(input.app) ?? {})
-        ? ["oauth_apps", ...heldAlternatives("devices:posture_attributes")(input, granted)]
-        : ["oauth_apps"],
+    // Node attributes may need additional permissions; let Tailscale use the current grant in that case.
+    resolveScopes: (input) => ("allowedNodeAttributes" in (optionalRecord(input.app) ?? {}) ? [] : ["oauth_apps"]),
     inputSchema: s.actionInput(
       {
         appId: s.nonEmptyString("The Tailscale OAuth app ID."),

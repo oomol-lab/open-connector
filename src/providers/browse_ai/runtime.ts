@@ -244,7 +244,6 @@ export async function validateBrowseAiCredential(
       accountId: firstRobot?.id ? `browse_ai:first_robot:${firstRobot.id}` : "browse_ai:api_key",
       displayName: "Browse AI API Key",
     },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl: browseAiApiBaseUrl.slice(0, -1),
       validationEndpoint: "/robots",

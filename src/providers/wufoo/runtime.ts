@@ -62,7 +62,6 @@ export async function validateWufooCredential(
   });
   return {
     profile: { accountId: `wufoo:${context.subdomain}`, displayName: `Wufoo ${context.subdomain}` },
-    grantedScopes: [],
     metadata: {
       subdomain: context.subdomain,
       apiBaseUrl: buildWufooApiBaseUrl(context.subdomain),

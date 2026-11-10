@@ -56,7 +56,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: "api_key",
         displayName: "Getform API Key",
       },
-      grantedScopes: [],
       metadata: {
         apiBaseUrl: `${getformApiOrigin}${getformApiBasePath}`,
         validationMode: "format_only",

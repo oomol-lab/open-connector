@@ -180,7 +180,6 @@ export async function validateRaygunCredential(
     profile: {
       accountId: "raygun",
       displayName: firstApplicationName ? `Raygun PAT ()` : "Raygun Personal Access Token",
-      grantedScopes: [],
     },
     metadata: {
       apiBaseUrl: raygunApiBaseUrl,

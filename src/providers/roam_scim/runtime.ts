@@ -236,7 +236,6 @@ export async function validateRoamScimCredential(
     profile: {
       displayName: "Roam SCIM Bearer Token",
     },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl: roamScimApiBaseUrl,
       validationEndpoint: "/Users",

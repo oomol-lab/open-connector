@@ -122,9 +122,7 @@ export async function validateKeeperScimCredential(
     profile: {
       accountId: `keeper_scim:${config.region}:${config.nodeId}`,
       displayName: `Keeper SCIM node ${config.nodeId}`,
-      grantedScopes: [],
     },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: config.apiBaseUrl,
       nodeBaseUrl: config.nodeBaseUrl,

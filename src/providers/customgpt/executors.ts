@@ -82,7 +82,6 @@ export const credentialValidators: CredentialValidators = {
       profile: {
         accountId: String(optionalInteger(user.id) ?? optionalString(user.id) ?? "customgpt-api-key"),
         displayName: optionalString(user.email) ?? optionalString(user.name) ?? "CustomGPT API Key",
-        grantedScopes: [],
       },
       metadata: compactObject({
         apiBaseUrl: customgptApiBaseUrl,

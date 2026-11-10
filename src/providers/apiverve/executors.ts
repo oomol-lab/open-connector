@@ -211,7 +211,6 @@ export const credentialValidators: CredentialValidators = {
       profile: {
         displayName: "APIVerve API Key",
       },
-      grantedScopes: [],
       metadata: {
         validationEndpoint: "/v1/advice",
         apiBaseUrl: apiverveApiBaseUrl,

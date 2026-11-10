@@ -63,7 +63,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: "zenserp-api-key",
         displayName: "Zenserp API Key",
       },
-      grantedScopes: [],
       metadata: {
         apiBaseUrl: zenserpApiBaseUrl,
         validationEndpoint: "/search",

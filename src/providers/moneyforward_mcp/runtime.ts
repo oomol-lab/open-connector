@@ -102,7 +102,6 @@ export async function validateMoneyforwardMcpCredential(
       accountId: `${moneyforwardService}:${keyHash}`,
       displayName: `Money Forward MCP · ${keyHash.slice(-6)}`,
     },
-    grantedScopes: [],
     metadata: { mcpEndpoint: moneyforwardMcpEndpoint, schemaDrift },
   };
 }

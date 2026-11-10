@@ -162,7 +162,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: `braze:${endpointHost}`,
         displayName: `Braze ${endpointHost}`,
       },
-      grantedScopes: [],
       metadata: compactObject({
         restEndpoint,
         validationEndpoint: validation.path,

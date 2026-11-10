@@ -69,7 +69,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: "api_key",
         displayName: "Instantly.ai API Key",
       },
-      grantedScopes: [],
       metadata: {
         apiBaseUrl: instantlyAiApiBaseUrl,
         validationEndpoint: instantlyAiValidationPath,

@@ -46,7 +46,6 @@ export async function validateFernCredential(
     profile: {
       displayName: "Fern API Key",
     },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: fernApiBaseUrl,
       validationEndpoint: fernValidationPath,

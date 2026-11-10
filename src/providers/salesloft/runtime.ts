@@ -147,7 +147,6 @@ export async function validateSalesloftCredential(
       accountId,
       displayName,
     },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl: salesloftApiBaseUrl,
       validationEndpoint: "/v2/me",

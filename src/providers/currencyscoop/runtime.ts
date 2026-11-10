@@ -33,7 +33,6 @@ export async function validateCurrencyscoopCredential(
   signal?: AbortSignal,
 ): Promise<{
   profile: { accountId: string; displayName: string };
-  grantedScopes: string[];
   metadata: Record<string, unknown>;
 }> {
   await currencyscoopRequest(
@@ -52,7 +51,6 @@ export async function validateCurrencyscoopCredential(
       accountId: "api_key",
       displayName: "CurrencyBeacon API Key",
     },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: currencyscoopApiBaseUrl,
       validationEndpoint: "/latest",

@@ -59,7 +59,6 @@ export async function validateReferralRockCredential(context: Context): Promise<
   await request("/api/programs", { offset: "0", count: "0" }, context, "validate");
   return {
     profile: { displayName: "Referral Rock API Key" },
-    grantedScopes: [],
     metadata: { apiBaseUrl: referralRockApiBaseUrl },
   };
 }

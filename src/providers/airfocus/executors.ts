@@ -129,7 +129,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: email ?? fullName ?? "airfocus-api-key",
         displayName: fullName ?? email ?? "airfocus Personal Access Token",
       },
-      grantedScopes: [],
       metadata: compactObject({
         apiBaseUrl: airfocusApiBaseUrl,
         validationEndpoint: profilePath,

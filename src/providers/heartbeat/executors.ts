@@ -134,7 +134,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: "heartbeat:api-key",
         displayName: "Heartbeat API Key",
       },
-      grantedScopes: [],
       metadata: {
         apiBaseUrl,
         validationEndpoint: "/channels",

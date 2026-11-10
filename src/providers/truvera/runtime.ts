@@ -193,7 +193,6 @@ export async function validateTruveraCredential(
       accountId: profile.name || "truvera-api-key",
       displayName: profile.name || "Truvera API Key",
     },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl,
       validationEndpoint: truveraProfilePath,

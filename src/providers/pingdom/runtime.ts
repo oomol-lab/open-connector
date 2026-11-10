@@ -57,7 +57,6 @@ export async function validatePingdomCredential(
     profile: {
       accountId: "pingdom-api-token",
       displayName: "Pingdom API token",
-      grantedScopes: [],
     },
     metadata: {
       apiBaseUrl: pingdomApiBaseUrl,

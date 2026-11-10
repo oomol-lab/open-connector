@@ -169,7 +169,6 @@ export async function validateCockroachLabsApiKey(
       accountId: organizationId,
       displayName: accountLabel,
     },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl: cockroachLabsApiBaseUrl,
       validationEndpoint: "/api/v1/organization",

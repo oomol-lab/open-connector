@@ -5,14 +5,6 @@ import { defineProviderAction } from "../../core/provider-definition.ts";
 
 const service = "helpscout";
 
-export const helpscoutConnectorScopes = {
-  inboxRead: "helpscout.inbox.read",
-  inboxWrite: "helpscout.inbox.write",
-} as const;
-
-const readScope = helpscoutConnectorScopes.inboxRead;
-const writeScope = helpscoutConnectorScopes.inboxWrite;
-
 const positiveId = (description: string) => s.positiveInteger(description);
 const assignableUserId = (description: string) => s.integer(description, { exclusiveMinimum: 1 });
 const rawProviderObject = (description: string) => s.looseObject(description);
@@ -72,7 +64,6 @@ export const helpscoutActions: ActionDefinition[] = [
     name: "list_inboxes",
     operationType: "read",
     description: "List the Help Scout inboxes available to the connected user.",
-    requiredScopes: [readScope],
     inputSchema: s.object(
       "Input parameters for listing Help Scout inboxes.",
       { page: s.positiveInteger("The 1-based result page to request.") },
@@ -84,7 +75,6 @@ export const helpscoutActions: ActionDefinition[] = [
     name: "list_inbox_folders",
     operationType: "read",
     description: "List the folders and conversation counts in a Help Scout inbox.",
-    requiredScopes: [readScope],
     inputSchema: s.object("Input parameters for listing Help Scout inbox folders.", {
       inboxId: positiveId("The Help Scout inbox ID."),
     }),
@@ -94,7 +84,6 @@ export const helpscoutActions: ActionDefinition[] = [
     name: "list_inbox_custom_fields",
     operationType: "read",
     description: "List the custom field definitions and dropdown options for a Help Scout inbox.",
-    requiredScopes: [readScope],
     inputSchema: s.object("Input parameters for listing Help Scout inbox custom fields.", {
       inboxId: positiveId("The Help Scout inbox ID."),
     }),
@@ -104,7 +93,6 @@ export const helpscoutActions: ActionDefinition[] = [
     name: "list_saved_replies",
     operationType: "read",
     description: "List the approved saved reply templates available in a Help Scout inbox.",
-    requiredScopes: [readScope],
     inputSchema: s.object(
       "Input parameters for listing Help Scout saved replies.",
       {
@@ -124,7 +112,6 @@ export const helpscoutActions: ActionDefinition[] = [
     name: "get_saved_reply",
     operationType: "read",
     description: "Get the complete email and chat content of a Help Scout saved reply.",
-    requiredScopes: [readScope],
     inputSchema: s.object("Input parameters for getting a Help Scout saved reply.", {
       inboxId: positiveId("The Help Scout inbox ID containing the saved reply."),
       savedReplyId: positiveId("The Help Scout saved reply ID."),
@@ -137,7 +124,6 @@ export const helpscoutActions: ActionDefinition[] = [
     name: "list_users",
     operationType: "read",
     description: "List Help Scout users, optionally filtered by email or inbox.",
-    requiredScopes: [readScope],
     inputSchema: s.object(
       "Input parameters for listing Help Scout users.",
       {
@@ -153,7 +139,6 @@ export const helpscoutActions: ActionDefinition[] = [
     name: "list_tags",
     operationType: "read",
     description: "List tags used across the connected Help Scout account.",
-    requiredScopes: [readScope],
     inputSchema: s.object(
       "Input parameters for listing Help Scout tags.",
       { page: s.positiveInteger("The 1-based result page to request.") },
@@ -165,7 +150,6 @@ export const helpscoutActions: ActionDefinition[] = [
     name: "list_workflows",
     operationType: "read",
     description: "List Help Scout workflows, including the manual automations that can be run.",
-    requiredScopes: [readScope],
     inputSchema: s.object(
       "Input parameters for listing Help Scout workflows.",
       {
@@ -181,7 +165,6 @@ export const helpscoutActions: ActionDefinition[] = [
     name: "list_conversations",
     operationType: "read",
     description: "List and filter conversations in the connected Help Scout account.",
-    requiredScopes: [readScope],
     inputSchema: s.object(
       "Input parameters for listing Help Scout conversations.",
       {
@@ -239,7 +222,6 @@ export const helpscoutActions: ActionDefinition[] = [
     name: "get_conversation",
     operationType: "read",
     description: "Get one Help Scout conversation by ID.",
-    requiredScopes: [readScope],
     inputSchema: s.object(
       "Input parameters for getting a Help Scout conversation.",
       {
@@ -256,7 +238,6 @@ export const helpscoutActions: ActionDefinition[] = [
     name: "list_threads",
     operationType: "read",
     description: "List the complete threads belonging to a Help Scout conversation.",
-    requiredScopes: [readScope],
     inputSchema: s.object(
       "Input parameters for listing conversation threads.",
       {
@@ -271,7 +252,6 @@ export const helpscoutActions: ActionDefinition[] = [
     name: "list_customers",
     operationType: "read",
     description: "List and filter customers in the connected Help Scout account.",
-    requiredScopes: [readScope],
     inputSchema: s.object(
       "Input parameters for listing Help Scout customers.",
       {
@@ -299,7 +279,6 @@ export const helpscoutActions: ActionDefinition[] = [
     name: "get_customer",
     operationType: "read",
     description: "Get one Help Scout customer by ID.",
-    requiredScopes: [readScope],
     inputSchema: s.object("Input parameters for getting a Help Scout customer.", {
       customerId: positiveId("The Help Scout customer ID."),
     }),
@@ -311,7 +290,6 @@ export const helpscoutActions: ActionDefinition[] = [
     name: "create_customer",
     operationType: "write",
     description: "Create a Help Scout customer with a primary email address.",
-    requiredScopes: [writeScope],
     inputSchema: s.object(
       "Input parameters for creating a Help Scout customer.",
       {
@@ -355,7 +333,6 @@ export const helpscoutActions: ActionDefinition[] = [
     name: "create_conversation",
     operationType: "write",
     description: "Create a Help Scout conversation with one initial text thread.",
-    requiredScopes: [writeScope],
     inputSchema: s.object(
       "Input parameters for creating a Help Scout conversation.",
       {
@@ -411,7 +388,6 @@ export const helpscoutActions: ActionDefinition[] = [
     name: "create_reply",
     operationType: "write",
     description: "Add a published reply or draft reply to a Help Scout conversation.",
-    requiredScopes: [writeScope],
     inputSchema: s.object(
       "Input parameters for replying to a Help Scout conversation.",
       {
@@ -434,7 +410,6 @@ export const helpscoutActions: ActionDefinition[] = [
     name: "create_note",
     operationType: "write",
     description: "Add an internal note to a Help Scout conversation.",
-    requiredScopes: [writeScope],
     inputSchema: s.object(
       "Input parameters for adding a Help Scout conversation note.",
       {
@@ -453,7 +428,6 @@ export const helpscoutActions: ActionDefinition[] = [
     name: "run_manual_workflow",
     operationType: "destructive",
     description: "Run a configured Help Scout manual workflow on up to 50 conversations.",
-    requiredScopes: [writeScope],
     inputSchema: s.object("Input parameters for running a Help Scout manual workflow.", {
       workflowId: positiveId("The Help Scout manual workflow ID."),
       conversationIds: s.array(
@@ -475,7 +449,6 @@ export const helpscoutActions: ActionDefinition[] = [
     name: "replace_conversation_custom_fields",
     operationType: "destructive",
     description: "Replace the complete custom field state of a Help Scout conversation.",
-    requiredScopes: [writeScope],
     inputSchema: s.object("Input parameters for replacing conversation custom fields.", {
       conversationId: positiveId("The Help Scout conversation ID."),
       customFields: customFieldValuesSchema,
@@ -490,7 +463,6 @@ export const helpscoutActions: ActionDefinition[] = [
     name: "snooze_conversation",
     operationType: "destructive",
     description: "Snooze a Help Scout conversation until a specific future time.",
-    requiredScopes: [writeScope],
     inputSchema: s.object("Input parameters for snoozing a Help Scout conversation.", {
       conversationId: positiveId("The Help Scout conversation ID."),
       snoozedUntil: s.dateTime("The future ISO 8601 time when the conversation should return."),
@@ -507,7 +479,6 @@ export const helpscoutActions: ActionDefinition[] = [
     name: "unsnooze_conversation",
     operationType: "destructive",
     description: "Remove the snooze from a Help Scout conversation and return it to its queue.",
-    requiredScopes: [writeScope],
     inputSchema: s.object("Input parameters for unsnoozing a Help Scout conversation.", {
       conversationId: positiveId("The Help Scout conversation ID."),
     }),
@@ -520,7 +491,6 @@ export const helpscoutActions: ActionDefinition[] = [
     name: "set_conversation_status",
     operationType: "destructive",
     description: "Replace the status of a Help Scout conversation.",
-    requiredScopes: [writeScope],
     inputSchema: s.object("Input parameters for replacing a conversation status.", {
       conversationId: positiveId("The Help Scout conversation ID."),
       status: updateConversationStatusSchema,
@@ -535,7 +505,6 @@ export const helpscoutActions: ActionDefinition[] = [
     name: "assign_conversation",
     operationType: "destructive",
     description: "Assign a Help Scout conversation to a user or leave it unassigned.",
-    requiredScopes: [writeScope],
     inputSchema: s.object("Input parameters for assigning a Help Scout conversation.", {
       conversationId: positiveId("The Help Scout conversation ID."),
       assignedUserId: s.nullable(positiveId("The Help Scout user ID, or null to leave the conversation unassigned.")),
@@ -550,7 +519,6 @@ export const helpscoutActions: ActionDefinition[] = [
     name: "replace_conversation_tags",
     operationType: "destructive",
     description: "Replace the complete tag list on a Help Scout conversation.",
-    requiredScopes: [writeScope],
     inputSchema: s.object("Input parameters for replacing conversation tags.", {
       conversationId: positiveId("The Help Scout conversation ID."),
       tagNames: s.stringArray(

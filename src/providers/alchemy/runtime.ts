@@ -52,7 +52,6 @@ export async function validateAlchemyCredential(
     profile: {
       displayName: "Alchemy API Key",
     },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: alchemyRpcBaseUrl,
       nftApiBaseUrl: alchemyNftBaseUrl,

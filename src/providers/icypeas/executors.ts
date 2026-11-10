@@ -167,7 +167,6 @@ async function validateIcypeasCredential(
       accountId: upstreamUserId ? `icypeas:${upstreamUserId}` : "icypeas-api-key",
       displayName: "Icypeas API Key",
     },
-    grantedScopes: [],
     metadata: jsonObject({
       apiBaseUrl: icypeasApiBaseUrl,
       validationEndpoint: icypeasValidationPath,

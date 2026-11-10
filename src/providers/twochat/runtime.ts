@@ -104,7 +104,6 @@ export async function validateTwochatCredential(
   profile: {
     accountId: string;
     displayName: string;
-    grantedScopes: string[];
   };
   metadata: Record<string, unknown>;
 }> {
@@ -114,7 +113,6 @@ export async function validateTwochatCredential(
     profile: {
       accountId: `twochat:account:${info.account.uuid}`,
       displayName: info.account.name,
-      grantedScopes: [],
     },
     metadata: compactObject({
       apiBaseUrl: twochatApiBaseUrl,

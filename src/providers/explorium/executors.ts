@@ -104,7 +104,6 @@ export const credentialValidators: CredentialValidators = {
     requireAutocompleteItems(payload);
     return {
       profile: { displayName: "Explorium API Key" },
-      grantedScopes: [],
       metadata: { apiBaseUrl: baseUrl, validationEndpoint: "/businesses/autocomplete" },
     };
   },

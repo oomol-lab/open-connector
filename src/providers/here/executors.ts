@@ -133,7 +133,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: "here-api-key",
         displayName: "HERE API Key",
       },
-      grantedScopes: [],
       metadata: jsonObject({
         apiBaseUrl: hereGeocodeBaseUrl,
         validationEndpoint: "/geocode",

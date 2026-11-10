@@ -129,7 +129,6 @@ export async function validateUpstashRedisCredential(
       accountId: `${service}:${context.restUrl.hostname}`,
       displayName: `Upstash Redis - ${context.restUrl.hostname}`,
     },
-    grantedScopes: [],
     metadata: {
       restUrl: context.restUrl.origin,
       validationCommand: "PING",

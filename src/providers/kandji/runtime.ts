@@ -131,7 +131,6 @@ export async function validateKandjiCredential(
       accountId: `kandji:${hashValue(host).slice(0, 16)}`,
       displayName: `Kandji ${host}`,
     },
-    grantedScopes: [],
     metadata: compactObject({
       apiUrl,
       validationEndpoint: "/api/v1/blueprints",

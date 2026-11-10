@@ -121,7 +121,6 @@ export async function validateZigpollCredential(
       accountId: userId ?? email ?? "zigpoll",
       displayName: name ?? email ?? "Zigpoll API Key",
     },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl: zigpollApiBaseUrl,
       validationEndpoint: "/me",

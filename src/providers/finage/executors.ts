@@ -81,7 +81,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: "finage",
         displayName: "Finage API Key",
       },
-      grantedScopes: [],
       metadata: compactObject({
         validationEndpoint: "/last/stock/AAPL",
         apiBaseUrl: finageApiBaseUrl,

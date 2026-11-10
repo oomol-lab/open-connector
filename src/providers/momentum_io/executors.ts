@@ -69,7 +69,6 @@ export const credentialValidators: CredentialValidators = {
       profile: {
         displayName: "Momentum API Key",
       },
-      grantedScopes: [],
       metadata: {
         apiBaseUrl: momentumIoApiBaseUrl,
         validationEndpoint: momentumIoValidationPath,

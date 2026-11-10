@@ -161,9 +161,7 @@ export const credentialValidators: CredentialValidators = {
       profile: {
         accountId,
         displayName: label,
-        grantedScopes: [],
       },
-      grantedScopes: [],
       metadata: {
         validationEndpoint: "/key",
         currentKey: dataRecord ?? {},

@@ -73,7 +73,6 @@ export const credentialValidators: CredentialValidators = {
     });
     return {
       profile: { accountId: "cronfree-license-key", displayName: "Cronfree License Key" },
-      grantedScopes: [],
       metadata: { apiBaseUrl: cronfreeApiBaseUrl, validationEndpoint: "/unschedule" },
     };
   },

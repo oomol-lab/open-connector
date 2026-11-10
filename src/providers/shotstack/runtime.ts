@@ -49,7 +49,6 @@ export async function validateShotstackCredential(
       accountId: "shotstack:api-key",
       displayName: "Shotstack API Key",
     },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: shotstackApiBaseUrl,
       validationEndpoint: "/templates",

@@ -193,7 +193,6 @@ async function validateKnowbe4Credential(
       accountId: domain ?? displayName,
       displayName,
     },
-    grantedScopes: [],
     metadata: compactObject({
       region,
       apiBaseUrl: baseUrl,

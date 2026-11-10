@@ -65,7 +65,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: service,
         displayName: "BoloForms API Key",
       },
-      grantedScopes: [],
       metadata: {
         apiBaseUrl: boloformsApiBaseUrl,
         validationEndpoint: boloformsValidationPath,

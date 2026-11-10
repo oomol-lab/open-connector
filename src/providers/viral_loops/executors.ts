@@ -101,7 +101,6 @@ export const credentialValidators: CredentialValidators = {
     );
     return {
       profile: { displayName: optionalRawString(campaign.campaignName) ?? "Viral Loops Campaign" },
-      grantedScopes: [],
       metadata: { validationEndpoint: "/campaign/stats" },
     };
   },

@@ -164,7 +164,6 @@ export async function validateSoftrCredential(
       accountId: workspaceIds.length === 1 ? `softr:workspace:${workspaceIds[0]}` : undefined,
       displayName: "Softr Database API",
     },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl: softrApiBaseUrl,
       validationEndpoint: softrValidationPath,

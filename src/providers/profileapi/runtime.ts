@@ -37,7 +37,6 @@ export async function validateProfileapiCredential(
   const hash = createHash("sha256").update(apiKey).digest("hex").slice(0, 16);
   return {
     profile: { accountId: `profileapi:${hash}`, displayName: "profileAPI API Key" },
-    grantedScopes: [],
     metadata: { apiBaseUrl: profileapiApiBaseUrl, apiVersion, validationEndpoint: validationPath },
   };
 }

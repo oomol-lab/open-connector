@@ -80,7 +80,6 @@ export async function validateBugbugCredential(
       accountId: "api_token",
       displayName: "BugBug API Token",
     },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: bugbugApiBaseUrl,
       validationEndpoint: bugbugValidationPath,

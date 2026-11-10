@@ -119,9 +119,7 @@ async function validateLumaCredential(
     profile: {
       accountId: id ?? email ?? "luma-api-key",
       displayName: email ?? name ?? id ?? "Luma API Key",
-      grantedScopes: [],
     },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl: lumaApiBaseUrl,
       validationEndpoint: "/v1/users/get-self",

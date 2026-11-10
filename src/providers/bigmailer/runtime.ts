@@ -63,7 +63,6 @@ export async function validateBigmailerCredential(
       accountId: optionalString(firstBrand?.id) ?? "bigmailer",
       displayName: optionalString(firstBrand?.name) ?? "BigMailer API Key",
     },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl: bigmailerApiBaseUrl,
       validationEndpoint: bigmailerValidationEndpoint,

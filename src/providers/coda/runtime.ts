@@ -248,7 +248,6 @@ export async function validateCodaApiKey(
       accountId,
       displayName,
     },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl: codaApiBaseUrl,
       validationEndpoint: codaWhoamiPath,

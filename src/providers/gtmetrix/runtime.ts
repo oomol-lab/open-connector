@@ -312,7 +312,6 @@ export async function validateGtmetrixCredential(
       accountId: `gtmetrix:api_key:${createHash("sha256").update(apiKey).digest("hex").slice(0, 16)}`,
       displayName: "GTmetrix API Key",
     },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl: gtmetrixApiBaseUrl,
       validationEndpoint: "/status",

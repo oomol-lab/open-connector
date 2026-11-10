@@ -126,9 +126,7 @@ export async function validateOwlProtocolCredential(
     profile: {
       accountId: project.slug,
       displayName: project.name,
-      grantedScopes: [],
     },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl: owlProtocolApiBaseUrl,
       authProbeEndpoint: authProbePath,

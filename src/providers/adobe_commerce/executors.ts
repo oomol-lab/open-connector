@@ -182,7 +182,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: `adobe_commerce:${host}${storeCode ? `:${storeCode}` : ""}`,
         displayName: `Adobe Commerce (${host})`,
       },
-      grantedScopes: [],
       metadata: compactObject({
         baseUrl,
         storeCode,

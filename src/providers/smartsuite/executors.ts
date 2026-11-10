@@ -44,7 +44,7 @@ export const credentialValidators: CredentialValidators = {
       { apiKey: input.apiKey, workspaceId: input.values.workspaceId ?? "" },
       fetcher,
     );
-    return { profile: { displayName: result.accountLabel }, grantedScopes: [], metadata: result.providerMetadata };
+    return { profile: { displayName: result.accountLabel }, metadata: result.providerMetadata };
   },
 };
 

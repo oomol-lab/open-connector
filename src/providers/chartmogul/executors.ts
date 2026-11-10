@@ -84,7 +84,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: normalized.uuid ? `chartmogul:${normalized.uuid}` : "chartmogul-api-key",
         displayName: normalized.name ?? "ChartMogul Account",
       },
-      grantedScopes: [],
       metadata: {
         accountUuid: normalized.uuid,
         accountName: normalized.name,

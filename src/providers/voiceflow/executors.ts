@@ -145,7 +145,6 @@ async function validateVoiceflowCredential(
       accountId: projectId,
       displayName: mainEnvironment ? `Voiceflow ${mainEnvironment.name}` : "Voiceflow Project",
     },
-    grantedScopes: [],
     metadata: compactObject({
       projectId,
       defaultEnvironmentAlias: readEnvironmentAlias(values),

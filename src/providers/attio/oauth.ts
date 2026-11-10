@@ -9,14 +9,6 @@ import {
 } from "../provider-runtime.ts";
 import { attioRequest, createAttioError, readAttioPayload } from "./runtime.ts";
 
-function expandAttioScopes(scopes: string[]) {
-  return [
-    ...new Set(
-      scopes.flatMap((scope) => (scope.endsWith(":read-write") ? [scope, `${scope.slice(0, -11)}:read`] : [scope])),
-    ),
-  ];
-}
-
 async function identifyToken(
   accessToken: string,
   fetcher: typeof fetch,
@@ -47,8 +39,8 @@ async function identifyToken(
   return meta;
 }
 
-function tokenScopes(meta: Record<string, unknown>) {
-  return expandAttioScopes((optionalRawString(meta.scope) ?? "").split(" ").filter(Boolean));
+function tokenScopes(meta: Record<string, unknown>): string[] | undefined {
+  return optionalRawString(meta.scope)?.split(" ").filter(Boolean);
 }
 
 export const oauth: ProviderOAuthRuntime = {
@@ -88,7 +80,7 @@ export const oauth: ProviderOAuthRuntime = {
       refreshToken: "",
       tokenType: "Bearer",
       expiresAt: "9999-12-31T23:59:59.000Z",
-      metadata: { scope: tokenScopes(meta).join(" ") },
+      metadata: { scope: optionalRawString(meta.scope) },
     };
   },
   async revokeAccessToken({ accessToken, fetcher }) {
@@ -112,7 +104,7 @@ export async function validateAttioCredential(
   signal?: AbortSignal,
 ): Promise<{
   profile: { accountId: string; displayName: string };
-  grantedScopes: string[];
+  grantedScopes: string[] | undefined;
   metadata: { workspaceId: string; workspaceSlug: string | undefined };
 }> {
   const meta = await identifyToken(accessToken, fetcher, "validate", signal);

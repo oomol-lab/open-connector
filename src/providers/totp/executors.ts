@@ -52,7 +52,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: `${credential.websiteUrl.origin}#${credential.username}`,
         displayName: `${credential.username} at ${credential.websiteUrl.host}`,
       },
-      grantedScopes: [],
       metadata: {
         websiteOrigin: credential.websiteUrl.origin,
         algorithm: "SHA-1",

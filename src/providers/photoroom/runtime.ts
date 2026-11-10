@@ -53,7 +53,6 @@ export async function validatePhotoroomCredential(
       accountId: "photoroom",
       displayName: account.plan ? `Photoroom ${account.plan}` : "Photoroom API Key",
     },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl: photoroomApiBaseUrl,
       validationEndpoint: "/v2/account",

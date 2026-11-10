@@ -108,7 +108,7 @@ async function execute(
 export const credentialValidators: CredentialValidators = {
   async apiKey(input, { fetcher, signal }) {
     await request(input.apiKey, "search_companies", { query: "canva" }, fetcher, signal);
-    return { profile: { displayName: "Akta API Key" }, grantedScopes: [], metadata: { apiBaseUrl: baseUrl } };
+    return { profile: { displayName: "Akta API Key" }, metadata: { apiBaseUrl: baseUrl } };
   },
 };
 export const executors: ProviderExecutors = defineApiKeyProviderExecutors(

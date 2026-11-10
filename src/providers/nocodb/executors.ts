@@ -382,7 +382,6 @@ export const credentialValidators: CredentialValidators = {
         accountId,
         displayName,
       },
-      grantedScopes: [],
       metadata: {
         baseUrl,
         apiBaseUrl: baseUrl,

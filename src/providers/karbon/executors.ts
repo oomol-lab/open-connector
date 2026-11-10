@@ -124,7 +124,6 @@ export const credentialValidators: CredentialValidators = {
     );
     return {
       profile: { accountId: optionalString(settings.TenantKey) ?? "api_key", displayName: "Karbon API Key" },
-      grantedScopes: [],
       metadata: {},
     };
   },

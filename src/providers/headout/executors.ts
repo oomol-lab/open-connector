@@ -237,7 +237,6 @@ export const credentialValidators: CredentialValidators = {
       profile: {
         displayName: "Headout API Key",
       },
-      grantedScopes: [],
       metadata: {
         apiBaseUrl,
         environment: apiBaseUrl === headoutSandboxApiBaseUrl ? "sandbox" : "production",

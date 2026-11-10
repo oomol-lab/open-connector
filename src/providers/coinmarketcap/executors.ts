@@ -144,7 +144,6 @@ export const credentialValidators: CredentialValidators = {
       profile: {
         displayName: "CoinMarketCap API Key",
       },
-      grantedScopes: [],
       metadata: {
         validationEndpoint: "/v1/key/info",
         apiBaseUrl: coinmarketcapApiBaseUrl,

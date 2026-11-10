@@ -120,7 +120,6 @@ export async function validateSerpapiCredential(
       accountId: "api_key",
       displayName: "SerpApi API Key",
     },
-    grantedScopes: [],
     metadata: {
       validationEndpoint: "/search.json",
       validationEngine: "google",

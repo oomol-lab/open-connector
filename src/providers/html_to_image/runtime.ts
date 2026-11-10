@@ -34,7 +34,6 @@ export async function validateHtmlToImageCredential(
   options: { fetcher: typeof fetch; signal?: AbortSignal },
 ): Promise<{
   profile: { accountId: string; displayName: string };
-  grantedScopes: string[];
   metadata: Record<string, unknown>;
 }> {
   const payload = await postHtmlToImageJson({
@@ -52,7 +51,6 @@ export async function validateHtmlToImageCredential(
       accountId: "api_key",
       displayName: "HTML to Image API Key",
     },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl: htmlToImageApiBaseUrl,
       validationEndpoint: htmlToImageHtmlPath,

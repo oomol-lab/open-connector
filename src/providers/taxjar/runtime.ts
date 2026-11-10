@@ -145,7 +145,6 @@ export async function validateTaxjarCredential(
       accountId: "taxjar-api-key",
       displayName: "TaxJar API Key",
     },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: taxjarApiBaseUrl,
       validationEndpoint,

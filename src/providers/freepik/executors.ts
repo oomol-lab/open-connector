@@ -78,7 +78,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: "api_key",
         displayName: "Magnific API Key",
       },
-      grantedScopes: [],
       metadata: {
         apiBaseUrl: freepikApiBaseUrl,
         validationEndpoint: freepikResourcesPath,

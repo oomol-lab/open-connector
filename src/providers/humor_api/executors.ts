@@ -73,7 +73,6 @@ export const credentialValidators: CredentialValidators = {
     requiredInputString(input.apiKey, "API Key");
     return {
       profile: { displayName: "Humor API Key" },
-      grantedScopes: [],
       metadata: { apiBaseUrl: baseUrl, validationMode: "local_non_empty_key" },
     };
   },

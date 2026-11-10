@@ -180,7 +180,6 @@ export async function validateKubernetesCredential(
   const host = new URL(context.apiBaseUrl).host;
   return {
     profile: { accountId: `kubernetes:${host}:${username}`, displayName: `${username} on ${host}` },
-    grantedScopes: [],
     metadata: { apiBaseUrl: context.apiBaseUrl },
   };
 }

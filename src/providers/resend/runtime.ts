@@ -90,20 +90,18 @@ export async function validateResendCredential(
     signal,
   });
   if (scopesResponse.ok) {
-    metadata.accessLevel = "full_access";
     return {
       profile: {
         accountId: "resend-api-key",
         displayName: "Resend API Key",
-        grantedScopes: ["full_access"],
       },
-      grantedScopes: ["full_access"],
+      grantedScopes: [],
       metadata,
     };
   }
 
   const scopesError = await readResendError(scopesResponse);
-  if (scopesError.name === "restricted_api_key") {
+  if (scopesResponse.status === 401 && scopesError.name === "restricted_api_key") {
     metadata.accessLevel = "sending_access";
     return {
       profile: {

@@ -148,7 +148,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: optionalString(first?.key) ?? "api_key",
         displayName: optionalString(first?.name) ?? "Chattermill API Key",
       },
-      grantedScopes: [],
       metadata: compactObject({
         apiBaseUrl,
         validationEndpoint: "/projects",

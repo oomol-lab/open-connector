@@ -133,7 +133,6 @@ export async function validateTypeformCredential(
   profile: {
     accountId: string;
     displayName: string;
-    grantedScopes: string[];
   };
   metadata: Record<string, unknown>;
 }> {
@@ -148,7 +147,6 @@ export async function fetchTypeformCurrentAccount(
   profile: {
     accountId: string;
     displayName: string;
-    grantedScopes: string[];
   };
   metadata: Record<string, unknown>;
 }> {
@@ -337,7 +335,6 @@ function buildTypeformAccountProfile(user: Record<string, unknown>): {
   profile: {
     accountId: string;
     displayName: string;
-    grantedScopes: string[];
   };
   metadata: Record<string, unknown>;
 } {
@@ -350,7 +347,6 @@ function buildTypeformAccountProfile(user: Record<string, unknown>): {
     profile: {
       accountId,
       displayName,
-      grantedScopes: [],
     },
     metadata: compactObject({
       apiBaseUrl: typeformApiBaseUrl,

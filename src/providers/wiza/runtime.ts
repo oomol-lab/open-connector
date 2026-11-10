@@ -59,7 +59,6 @@ export async function validateWizaCredential(
       accountId: "wiza-api-key",
       displayName: "Wiza API Key",
     },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: wizaApiBaseUrl,
       validationEndpoint: wizaValidationPath,

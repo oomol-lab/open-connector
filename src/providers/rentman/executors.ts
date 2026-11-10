@@ -97,9 +97,7 @@ async function validateRentmanCredential(
     profile: {
       accountId: "rentman-jwt",
       displayName: "Rentman JWT",
-      grantedScopes: [],
     },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: rentmanApiBaseUrl,
       validationEndpoint: "/contacts",

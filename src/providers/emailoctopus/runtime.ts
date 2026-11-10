@@ -79,7 +79,6 @@ export async function validateEmailoctopusCredential(
       accountId: "emailoctopus",
       displayName: "EmailOctopus API Key",
     },
-    grantedScopes: [],
     metadata: compactObject({
       apiBaseUrl: emailoctopusApiBaseUrl,
       validationEndpoint: emailoctopusValidationPath,

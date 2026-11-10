@@ -65,9 +65,7 @@ async function validateLoomioCredential(
     profile: {
       accountId: "loomio-api-key",
       displayName: "Loomio API Key",
-      grantedScopes: [],
     },
-    grantedScopes: [],
     metadata: {
       apiBaseUrl: loomioApiBaseUrl,
       validationEndpoint: loomioGroupsPath,

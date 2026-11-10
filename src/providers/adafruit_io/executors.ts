@@ -212,7 +212,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: user.username,
         displayName: user.name || user.username,
       },
-      grantedScopes: [],
       metadata: compactObject({
         validationEndpoint: "/user",
         username: user.username,

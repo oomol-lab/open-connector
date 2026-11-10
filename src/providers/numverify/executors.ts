@@ -102,7 +102,6 @@ export const credentialValidators: CredentialValidators = {
     await requestNumverify("/countries", {}, input.apiKey, fetcher, signal);
     return {
       profile: { displayName: "Numverify API Key" },
-      grantedScopes: [],
       metadata: { apiBaseUrl: baseUrl, validationEndpoint: "/countries" },
     };
   },

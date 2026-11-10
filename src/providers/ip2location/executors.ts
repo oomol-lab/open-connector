@@ -94,7 +94,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: "api_key",
         displayName: "IP2Location.io API Key",
       },
-      grantedScopes: [],
       metadata: compactObject({
         apiBaseUrl: ip2locationApiBaseUrl,
         domainWhoisApiBaseUrl: ip2locationDomainWhoisApiBaseUrl,

@@ -135,7 +135,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: "workos-api-key",
         displayName: "WorkOS API Key",
       },
-      grantedScopes: [],
       metadata: {
         apiBaseUrl: workosApiBaseUrl,
         validationEndpoint: "/organizations?limit=1",

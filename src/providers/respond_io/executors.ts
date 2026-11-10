@@ -189,7 +189,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: `respond_io:${createHash("sha256").update(apiKey).digest("hex").slice(0, 16)}`,
         displayName: "Respond.io Workspace",
       },
-      grantedScopes: [],
       metadata: {
         apiBaseUrl,
         validationEndpoint: "/space/user",

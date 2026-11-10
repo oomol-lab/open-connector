@@ -8,6 +8,7 @@ import { optionalRecord, optionalString, stringRecord } from "../core/cast.ts";
 import { isOAuthCredentialExpired } from "../credential-resolver.ts";
 import { providerFetch } from "../providers/provider-runtime.ts";
 import { readOAuthClientConfigMetadata } from "./oauth-client-config-service.ts";
+import { readOAuthScopes } from "./oauth-scopes.ts";
 import { expiresAtFromLifetime, requestRefreshToken, requestTokenRevocation } from "./oauth-token.ts";
 
 type OAuthCredential = Extract<ResolvedCredential, { authType: "oauth2" }>;
@@ -115,7 +116,10 @@ export class OAuthCredentialRefreshService implements IOAuthCredentialRefresher 
       // the stored token would look expired immediately and refresh on every call.
       expiresAt: refreshed.expiresAt ?? expiresAtFromLifetime(expiresIn),
       providerSecret: refreshed.providerSecret ?? credential.providerSecret,
-      profile: credential.profile,
+      profile: {
+        ...credential.profile,
+        grantedScopes: readOAuthScopes(refreshed.metadata.scope) ?? credential.profile.grantedScopes,
+      },
       metadata: {
         ...metadata,
         // Refresh rotates tokens within the existing authorization, including legacy absence.

@@ -114,7 +114,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: id,
         displayName: name,
       },
-      grantedScopes: [],
       metadata: jsonObject({
         application_id: id,
         application_name: name,

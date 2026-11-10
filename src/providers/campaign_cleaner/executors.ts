@@ -56,7 +56,6 @@ export const credentialValidators: CredentialValidators = {
         accountId: service,
         displayName: "Campaign Cleaner API Key",
       },
-      grantedScopes: [],
       metadata: compactObject({
         apiBaseUrl: campaignCleanerApiBaseUrl,
         validationEndpoint: campaignCleanerCreditsPath,
