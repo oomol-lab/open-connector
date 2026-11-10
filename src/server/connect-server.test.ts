@@ -39,6 +39,9 @@ import { createCatalogStore } from "../catalog-store.ts";
 import { ConnectionService } from "../connection-service.ts";
 import { ActionPolicyService as LocalActionPolicyService } from "../core/action-policy.ts";
 import { buildActionSearchIndex } from "../core/action-search.ts";
+import { CustomMcpCatalog } from "../custom-mcp/catalog.ts";
+import { CustomMcpLoader } from "../custom-mcp/loader.ts";
+import { CustomMcpService } from "../custom-mcp/service.ts";
 import { MarketplaceError, MarketplaceService } from "../marketplace/marketplace-service.ts";
 import { OAuthClientConfigService } from "../oauth/oauth-client-config-service.ts";
 import { OAuthFlowService } from "../oauth/oauth-flow-service.ts";
@@ -4760,12 +4763,14 @@ interface CreateTestServerOptions {
 function createTestServer(providers: ProviderDefinition[], options: CreateTestServerOptions = {}): ConnectServer {
   const requestDatabase = new SqliteRuntimeDatabase(":memory:");
   requestDatabases.push(requestDatabase);
-  const catalog =
-    options.catalog ??
-    createCatalogStore(providers, {
-      executableActionIds: ["example.echo"],
-    });
-  const providerLoader: IProviderLoader = options.providerLoader ?? new EmptyProviderLoader();
+  const catalog = new CustomMcpCatalog(
+    options.catalog ?? createCatalogStore(providers, { executableActionIds: ["example.echo"] }),
+    requestDatabase.customMcpStore,
+  );
+  const providerLoader: IProviderLoader = new CustomMcpLoader(
+    options.providerLoader ?? new EmptyProviderLoader(),
+    catalog,
+  );
   const idempotency = options.idempotency ?? new MemoryIdempotencyStore();
   const runtimeTokens = options.runtimeTokens ?? new RuntimeTokenService(new MemoryRuntimeTokenStore());
   const runs = options.runs ?? new MemoryRunLogStore();
@@ -4773,6 +4778,7 @@ function createTestServer(providers: ProviderDefinition[], options: CreateTestSe
     catalog,
     providerLoader,
     store: new MemoryConnectionStore(),
+    onConnected: (summary, credential) => customMcp.connectionSaved(summary, credential),
   });
   const allowedCustomOAuth = new Set(options.allowedCustomOAuth);
   const isCustomClientConfigAllowed = (service: string): boolean =>
@@ -4783,6 +4789,11 @@ function createTestServer(providers: ProviderDefinition[], options: CreateTestSe
     store: new MemoryOAuthClientConfigStore(),
     isCustomClientConfigAvailable: (service) =>
       (options.secretCodec?.encrypted ?? false) && isCustomClientConfigAllowed(service),
+  });
+  const customMcp = new CustomMcpService({
+    catalog,
+    store: requestDatabase.customMcpStore,
+    oauthClientConfigs: clientConfigs,
   });
   const transitFiles =
     options.transitFiles ??
@@ -4804,6 +4815,7 @@ function createTestServer(providers: ProviderDefinition[], options: CreateTestSe
   const staticRoot = typeof options.staticRoot === "string" ? options.staticRoot : undefined;
 
   return new ConnectServer({
+    customMcp,
     mcpOutputMode: options.mcpOutputMode,
     marketplace: options.marketplace,
     catalog,

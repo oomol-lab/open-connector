@@ -34,6 +34,7 @@ import { parseRuntimeActionHttpResult } from "../../api/runtime-api.ts";
 import { PlainTextSecretCodec } from "../../secrets/secret-codec-core.ts";
 import { ConnectionRequestStore } from "../connection-request-store.ts";
 import { SqlConnectionStore } from "../connection-store.ts";
+import { CustomMcpStore } from "../custom-mcp-store.ts";
 import { SqlOAuthStateStore } from "../oauth-state-store.ts";
 import {
   listRunLogs,
@@ -56,6 +57,7 @@ export interface D1RuntimeDatabaseOptions {
 }
 
 export class D1RuntimeDatabase implements RuntimeDatabase {
+  readonly customMcpStore: CustomMcpStore;
   readonly saasProjectStore: SaasProjectStore;
   readonly connectionRequestStore: ConnectionRequestStore;
   readonly connectionStore: SqlConnectionStore;
@@ -78,6 +80,7 @@ export class D1RuntimeDatabase implements RuntimeDatabase {
       const results = await database.batch(statements.map(({ sql, values }) => database.prepare(sql).bind(...values)));
       return results.map((result) => result.results ?? []);
     };
+    this.customMcpStore = new CustomMcpStore(transaction);
     this.connectionRequestStore = new ConnectionRequestStore(transaction, secretCodec);
     this.connectionStore = new SqlConnectionStore(transaction, secretCodec);
     this.triggerStore = new SqlTriggerStore(transaction, secretCodec);

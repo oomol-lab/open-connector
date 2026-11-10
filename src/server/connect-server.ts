@@ -4,6 +4,7 @@ import type { ActionSearchIndexProvider } from "../core/action-search.ts";
 import type { ProviderHttpDispatchOptions } from "../core/provider-http-dispatch.ts";
 import type { ProviderNetworkPolicy } from "../core/provider-network-policy.ts";
 import type { RuntimeLogger, TransitFileUpload } from "../core/types.ts";
+import type { CustomMcpService } from "../custom-mcp/service.ts";
 import type { MarketplaceService } from "../marketplace/marketplace-service.ts";
 import type { OAuthClientConfigService } from "../oauth/oauth-client-config-service.ts";
 import type { OAuthFlowService } from "../oauth/oauth-flow-service.ts";
@@ -44,6 +45,7 @@ import { getResponseCachePolicy } from "./api/cache-policy.ts";
 import { createConnectionRoutes } from "./api/connection-routes.ts";
 import { createConsoleCatalogRoutes } from "./api/console-catalog-routes.ts";
 import { createConsoleOAuthRoutes } from "./api/console-oauth-routes.ts";
+import { createCustomMcpRoutes } from "./api/custom-mcp-routes.ts";
 import { createDocsRoutes, loadDocsHandler } from "./api/docs-routes.ts";
 import { createEventVerificationRoutes } from "./api/event-verification-routes.ts";
 import { HttpRequestError, internalError, jsonError, notFound } from "./api/http-utils.ts";
@@ -80,6 +82,7 @@ export async function preloadOptionalServerModules(): Promise<void> {
  * Dependencies required to construct the local connector server.
  */
 export interface IConnectServerOptions {
+  customMcp?: CustomMcpService;
   network?: ProviderNetworkPolicy;
   providerHttpDispatch?: ProviderHttpDispatchOptions;
   catalog: CatalogStore;
@@ -195,6 +198,7 @@ export class ConnectServer {
         context.req.path,
         context.res.status,
         context.req.query("locale") !== undefined,
+        Boolean(this.options.customMcp?.catalog.listRecords().length),
       );
       if (cachePolicy) {
         context.header("Cache-Control", cachePolicy.cacheControl);
@@ -216,6 +220,18 @@ export class ConnectServer {
       app.use("/api/*", compress());
     }
     app.use("*", createLocalAuthMiddleware(auth));
+    const customMcp = this.options.customMcp;
+    if (customMcp) {
+      app.use("*", async (_context, next) => customMcp.catalog.withSnapshot(next));
+      app.route(
+        "/api/custom-mcp",
+        createCustomMcpRoutes({
+          mcp: customMcp,
+          connections: this.options.connections,
+          publicOrigin: this.options.publicOrigin,
+        }),
+      );
+    }
 
     app.route(
       "/v1",

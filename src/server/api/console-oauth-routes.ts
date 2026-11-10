@@ -363,10 +363,18 @@ export function createConsoleOAuthRoutes({
     logger?.info(logContext, "oauth callback received");
     const providerError = context.req.query("error");
     if (providerError) {
-      const returnUri = state
-        ? await oauthFlow.rejectAuthorization(state, providerError === "access_denied")
-        : undefined;
-      if (returnUri) return context.redirect(returnUri);
+      let discarded = false;
+      try {
+        const issuer = context.req.query("iss");
+        const returnUri = state
+          ? await oauthFlow.rejectAuthorization(state, providerError === "access_denied", issuer)
+          : undefined;
+        if (returnUri) return context.redirect(returnUri);
+        discarded = state ? await oauthFlow.discardAuthorization(state, issuer) : false;
+      } catch (error) {
+        if (error instanceof OAuthFlowError) return jsonError(context, 400, error.code, error.message);
+        throw error;
+      }
       // A runtime authorization (`POST /api/oauth/authorizations`) has no
       // return address: it was opened in a popup. End the authorization so it
       // cannot complete later, and give the popup a page that tells the person
@@ -375,7 +383,6 @@ export function createConsoleOAuthRoutes({
       // Only a refusal that ended a pending authorization names its state, so
       // a late duplicate callback for a state another callback already
       // completed cannot tell the opener that the authorization failed.
-      const discarded = state ? await oauthFlow.discardAuthorization(state) : false;
       logger?.warn(
         {
           ...logContext,
@@ -395,7 +402,14 @@ export function createConsoleOAuthRoutes({
       );
     }
     if (!state || !code) {
-      if (state) await oauthFlow.rejectAuthorization(state, false);
+      if (state) {
+        try {
+          await oauthFlow.rejectAuthorization(state, false, context.req.query("iss"));
+        } catch (error) {
+          if (error instanceof OAuthFlowError) return jsonError(context, 400, error.code, error.message);
+          throw error;
+        }
+      }
       logger?.warn(
         {
           ...logContext,

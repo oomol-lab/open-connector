@@ -5,6 +5,7 @@ import { beforeEach, describe, expect, it } from "vitest";
 import { AesGcmSecretCodec } from "../../secrets/secret-codec.ts";
 import { connectionRequestStoreTests } from "../connection-request-store.cases.ts";
 import { connectionStoreTests } from "../connection-store.cases.ts";
+import { customMcpStoreTests } from "../custom-mcp-store.cases.ts";
 import { RuntimeTokenService } from "../runtime-token-service.ts";
 import { saasProjectStoreTests } from "../saas-project-store.cases.ts";
 import { triggerStoreTests } from "../trigger-store.cases.ts";
@@ -735,6 +736,7 @@ describe("D1 connection requests", () => {
   });
   connectionRequestStoreTests(() => database);
   connectionStoreTests(() => database);
+  customMcpStoreTests(() => database);
   triggerStoreTests(() => database);
   saasProjectStoreTests(() => database);
 });

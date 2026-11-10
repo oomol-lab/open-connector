@@ -130,6 +130,12 @@ export type OAuth2AuthDefinition = {
   type: "oauth2";
   /** Provider authorization endpoint used to build the browser consent URL. */
   authorizationUrl: string;
+  /** Validated authorization server identity for discovered OAuth providers. */
+  issuer?: string;
+  /** Whether authorization responses must include the discovered issuer. */
+  requireIssuer?: boolean;
+  /** MCP resource binding sent in authorization and token requests. */
+  resource?: string;
   /** Provider token endpoint used to exchange an authorization code. */
   tokenUrl: string;
   /** Provider token endpoint used to refresh an access token. Defaults to tokenUrl. */

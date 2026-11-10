@@ -41,6 +41,7 @@ import { toast } from "sonner";
 import { defaultMarketplaceDiscoveryUrl, isDefaultMarketplace } from "../../src/marketplace/default-marketplace";
 import { apiDelete, apiPost, apiPut } from "./api";
 import { CredentialInput } from "./credential-input";
+import { AddCustomMcp, CustomMcpSettings } from "./custom-mcp";
 import { DefaultMarketplaceCatalog } from "./default-marketplace-catalog";
 import { loadDefaultMarketplaceCatalog } from "./default-marketplace-discovery";
 import { MarketplacePage } from "./marketplace-page";
@@ -462,6 +463,9 @@ function ProviderBrowser(props: ProviderBrowserProps): ReactNode {
           {t("providers.views.manage")} <span className="provider-view-count">{managedProviders.length}</span>
         </TabsTrigger>
       </TabsList>
+      <div className="flex justify-end">
+        <AddCustomMcp onRefresh={props.onRefresh} />
+      </div>
       {showHostedCard ? (
         <div className="provider-hosted-section">
           <HostedAccessCard
@@ -1235,6 +1239,7 @@ function ProviderDetail(props: ProviderDetailProps): ReactNode {
         </div>
       </div>
 
+      <CustomMcpSettings service={props.provider.service} connections={props.connections} onRefresh={props.onRefresh} />
       <OneKeyProviderOption
         marketplace={props.marketplace}
         provider={props.provider}

@@ -1,4 +1,4 @@
-import type { VersionNegotiationMode } from "@modelcontextprotocol/client";
+import type { FetchLike, VersionNegotiationMode } from "@modelcontextprotocol/client";
 
 import { Client, SdkHttpError } from "@modelcontextprotocol/client";
 import { SSEClientTransport } from "@modelcontextprotocol/client";
@@ -15,7 +15,7 @@ export type McpProtocolVersion = "legacy" | "modern";
 export interface McpClientOptions {
   endpoint: URL;
   transport: McpHttpTransport;
-  fetcher?: typeof fetch;
+  fetcher?: FetchLike;
   headers?: HeadersInit;
   redirect?: RequestRedirect;
   signal?: AbortSignal;

@@ -340,11 +340,17 @@ function memoryAssets(files: Record<string, unknown>): AssetsBinding {
 }
 
 class EmptyMarketplaceD1Database implements D1DatabaseBinding {
-  async batch(): Promise<{ results: Record<string, unknown>[] }[]> {
-    throw new Error("Unexpected D1 batch");
+  async batch(statements: D1PreparedStatementBinding[]): Promise<{ results: Record<string, unknown>[] }[]> {
+    return Promise.all(statements.map((statement) => statement.all<Record<string, unknown>>()));
   }
   prepare(query: string): D1PreparedStatementBinding {
-    if (query === "select value from marketplace_config where id = 1") {
+    if (
+      [
+        "select value from marketplace_config where id = 1",
+        "select service, revision from custom_mcp order by service",
+        "select * from custom_mcp order by service",
+      ].includes(query)
+    ) {
       return new EmptyMarketplaceConfigStatement();
     }
     throw new Error(`Unexpected D1 query: ${query}`);
@@ -353,7 +359,7 @@ class EmptyMarketplaceD1Database implements D1DatabaseBinding {
 
 class EmptyMarketplaceConfigStatement implements D1PreparedStatementBinding {
   bind(): D1PreparedStatementBinding {
-    throw new Error("Unexpected D1 bind");
+    return this;
   }
 
   async first<T = Record<string, unknown>>(): Promise<T | null> {
@@ -361,7 +367,7 @@ class EmptyMarketplaceConfigStatement implements D1PreparedStatementBinding {
   }
 
   async all<T = Record<string, unknown>>(): Promise<{ results: T[] }> {
-    throw new Error("Unexpected D1 all");
+    return { results: [] };
   }
 
   async run(): Promise<{ success: boolean; meta: { changes?: number } }> {

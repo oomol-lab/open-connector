@@ -386,6 +386,8 @@ function readBearerCredential(context: Context): string {
 
 function isConnectionManagementPath(path: string): boolean {
   return (
+    path === "/api/custom-mcp" ||
+    path.startsWith("/api/custom-mcp/") ||
     /^\/v1\/providers\/[^/]+\/setup$/.test(path) ||
     path === "/v1/connections" ||
     path.startsWith("/v1/connections/") ||

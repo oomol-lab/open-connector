@@ -130,10 +130,11 @@ export function createCatalogStore(
     ...provider,
     actions: provider.actions.map(({ inputSchema: _input, outputSchema: _output, ...action }) => action),
   }));
-  return createCatalog(metadata, async (id) => definitions.get(id)!, options);
+  return createCatalogFromMetadata(metadata, async (id) => definitions.get(id)!, options);
 }
 
-function createCatalog(
+/** Build runtime metadata without reading action schemas; callers supply the explicit detail reader. */
+export function createCatalogFromMetadata(
   providers: CatalogProviderMetadata[],
   readAction: (id: string) => Promise<ActionDefinition>,
   options: CreateCatalogStoreOptions,
@@ -246,7 +247,7 @@ export async function loadCatalog(catalogDir: string, options: LoadCatalogOption
       ? await readCatalogIndex({ indexFile: options.lazySchemaIndexFile, catalogDir, fileNames })
       : undefined;
     const source = await loadFileCatalog(filePaths, indexed, options.lazySchemaCacheFiles);
-    return createCatalog(source.providers, source.readAction, {
+    return createCatalogFromMetadata(source.providers, source.readAction, {
       executableActionIds: resolveExecutableActionIds(source.providers, options),
     });
   }

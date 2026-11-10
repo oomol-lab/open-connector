@@ -2,6 +2,8 @@
 
 Managed provider actions can be configured through the [Connector Marketplace](marketplace.md). Marketplace API keys use the same optional `OOMOL_CONNECT_ENCRYPTION_KEY` protection as other stored credentials.
 
+[Custom MCP services](custom-mcp.md) are managed in the Console and stored in the runtime database.
+
 OpenConnector is configured with environment variables.
 
 Embedding hosts can also configure opt-in [provider HTTP dispatch hooks](provider-http-dispatch.md)

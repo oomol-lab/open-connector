@@ -9,6 +9,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { AesGcmSecretCodec } from "../../secrets/secret-codec.ts";
 import { connectionRequestStoreTests } from "../connection-request-store.cases.ts";
 import { connectionStoreTests } from "../connection-store.cases.ts";
+import { customMcpStoreTests } from "../custom-mcp-store.cases.ts";
 import { createDirectoryMigrationSource, defaultMigrationSource } from "../migration-source.ts";
 import { RuntimeTokenService } from "../runtime-token-service.ts";
 import { saasProjectStoreTests, saasMaintenanceTests } from "../saas-project-store.cases.ts";
@@ -90,6 +91,7 @@ describe("SqliteRuntimeDatabase", () => {
       "0019_trigger_sources.sql",
       "0020_oauth_tables.sql",
       "0021_oauth_refresh_replay.sql",
+      "0022_custom_mcp.sql",
     ];
     expect(entries.filter((entry) => entry.message === "sqlite migration started")).toEqual(
       migrations.map((migration) => ({ fields: { migration }, message: "sqlite migration started" })),
@@ -1175,6 +1177,7 @@ describe("SQLite connection requests", () => {
   });
   connectionRequestStoreTests(() => database);
   connectionStoreTests(() => database);
+  customMcpStoreTests(() => database);
   triggerStoreTests(() => database);
   saasProjectStoreTests(() => database);
 });
