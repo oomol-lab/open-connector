@@ -20,6 +20,7 @@ import { createConnectApp } from "./connect-app.ts";
 import { preloadOptionalServerModules } from "./connect-server.ts";
 import { KVTransitFileService } from "./files/kv-transit-files.ts";
 import { R2TransitFileService } from "./files/r2-transit-files.ts";
+import { parseMcpOutputMode } from "./mcp-settings.ts";
 import { createWorkerSecretCodec } from "./secrets/worker-secret-codec.ts";
 import { D1RuntimeDatabase } from "./storage/d1/runtime-store.ts";
 import { DEFAULT_RUN_LIMIT } from "./storage/runtime-store.ts";
@@ -134,6 +135,7 @@ async function createCloudflareApp(env: CloudflareEnv, publicOrigin: string): Pr
     adminToken: env.OOMOL_CONNECT_ADMIN_TOKEN,
     runtimeToken: env.OOMOL_CONNECT_RUNTIME_TOKEN,
     eventVerifyToken: env.OOMOL_CONNECT_EVENT_VERIFY_TOKEN,
+    mcpOutputMode: parseMcpOutputMode(env.OOMOL_CONNECT_MCP_OUTPUT_MODE),
     requireRuntimeAuth: Boolean(env.OAUTH_KV),
     actionPolicy: new ActionPolicyService({
       allowedActions: parseActionPolicyList(env.OOMOL_CONNECT_ALLOWED_ACTIONS),
@@ -204,6 +206,7 @@ function createCacheKey(env: CloudflareEnv, publicOrigin: string): string {
     adminToken: env.OOMOL_CONNECT_ADMIN_TOKEN ?? "",
     runtimeToken: env.OOMOL_CONNECT_RUNTIME_TOKEN ?? "",
     eventVerifyToken: env.OOMOL_CONNECT_EVENT_VERIFY_TOKEN ?? "",
+    mcpOutputMode: env.OOMOL_CONNECT_MCP_OUTPUT_MODE ?? "",
     requireRuntimeAuth: Boolean(env.OAUTH_KV),
     encryptionKey: env.OOMOL_CONNECT_ENCRYPTION_KEY ?? "",
     allowedActions: env.OOMOL_CONNECT_ALLOWED_ACTIONS ?? "",

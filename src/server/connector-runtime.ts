@@ -5,6 +5,7 @@ import type { RuntimeLogger } from "../core/types.ts";
 import type { RuntimeJwtConfig } from "./api/runtime-jwt.ts";
 import type { S3TransitClientOptions } from "./files/s3-transit-files.ts";
 import type { IStagedTransitFileService } from "./files/transit-file-store.ts";
+import type { McpOutputMode } from "./mcp-settings.ts";
 import type { OAuthServerSettings } from "./oauth/settings.ts";
 
 import { mkdir } from "node:fs/promises";
@@ -19,6 +20,7 @@ import { createConnectApp } from "./connect-app.ts";
 import { getConnectorAssetDirectory } from "./connector-assets.ts";
 import { cleanupStagedTransitFiles, createNodeTransitFileUpload } from "./files/node-transit-file-upload.ts";
 import { TransitFileService } from "./files/transit-files.ts";
+import { parseMcpOutputMode } from "./mcp-settings.ts";
 import { createSecretCodec } from "./secrets/secret-codec.ts";
 import { createDirectoryMigrationSource } from "./storage/migration-source.ts";
 import { createNodeRuntimeDatabase } from "./storage/node-runtime-database.ts";
@@ -105,6 +107,8 @@ export interface ConnectorRuntimeOptions {
   logger?: RuntimeLogger;
   /** The standalone host opts into API-reference HTML. Authorization completion pages are always available. */
   apiReference?: boolean;
+  /** Defaults to compatible JSON text. Use compact only with clients that consume structuredContent. */
+  mcpOutputMode?: McpOutputMode;
   /** Seconds the OAuth completion page waits before closing its window. Defaults to 5; `0` closes it as soon as it loads. */
   oauthCloseDelaySeconds?: number;
   /** Exact origins a provider-refusal callback page may post its result to. Never `*`. */
@@ -136,6 +140,7 @@ export async function createConnectorRuntime(options: ConnectorRuntimeOptions): 
   const publicOrigin = `${publicUrl.origin}${mountPath}`;
   if (!options.dataDir.trim()) throw new Error("dataDir must not be empty.");
   const dataDir = resolve(options.dataDir);
+  const mcpOutputMode = parseMcpOutputMode(options.mcpOutputMode);
   const ttlSeconds = options.transitFiles?.ttlSeconds ?? 86400;
   const maxBytes = options.transitFiles?.maxBytes ?? 100 * 1024 * 1024;
   if (!Number.isFinite(ttlSeconds) || ttlSeconds <= 0)
@@ -225,6 +230,7 @@ export async function createConnectorRuntime(options: ConnectorRuntimeOptions): 
       oauth: options.oauth,
       trustProxyHeaders: options.trustProxyHeaders,
       eventVerifyToken: options.eventVerifyToken,
+      mcpOutputMode,
       verifyRuntimeJwt,
       actionPolicy: new ActionPolicyService(options.actionPolicy),
       allowedCustomOAuth: options.allowedCustomOAuth,

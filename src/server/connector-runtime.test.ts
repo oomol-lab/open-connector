@@ -1,6 +1,8 @@
 import type { ProviderHttpAttempt } from "../core/provider-http-dispatch.ts";
 import type { ConnectorRuntime, ConnectorRuntimeOptions } from "./connector-runtime.ts";
+import type { McpOutputMode } from "./mcp-settings.ts";
 
+import { Client, StreamableHTTPClientTransport } from "@modelcontextprotocol/client";
 import { cp, mkdtemp, mkdir, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
@@ -23,6 +25,46 @@ afterEach(async () => {
 });
 
 describe("headless runtime", () => {
+  it("rejects an invalid MCP output mode from a JavaScript host", async () => {
+    const options = await fixture();
+    await expect(
+      createConnectorRuntime({
+        ...options,
+        mcpOutputMode: "Compact" as McpOutputMode,
+      }),
+    ).rejects.toThrow("OOMOL_CONNECT_MCP_OUTPUT_MODE");
+  });
+
+  it.each<McpOutputMode>(["compatible", "compact"])(
+    "serves MCP results with the configured %s output mode",
+    async (mcpOutputMode) => {
+      const connector = await createConnectorRuntime({ ...(await fixture()), mcpOutputMode });
+      runtime = connector;
+      const client = new Client({ name: "headless-mcp-test", version: "0.0.0" });
+      try {
+        await client.connect(
+          new StreamableHTTPClientTransport(new URL(`${publicOrigin}/mcp`), {
+            fetch: (input, init) => connector.fetch(new Request(input, init)),
+            requestInit: { headers: { authorization: "Bearer runtime-token" } },
+          }),
+        );
+        const result = await client.callTool({ name: "list_apps", arguments: {} });
+        expect(result.structuredContent).toMatchObject({ ok: true, data: expect.any(Array) });
+        expect(result.content).toEqual([
+          {
+            type: "text",
+            text:
+              mcpOutputMode === "compact"
+                ? "The complete result is available in structuredContent."
+                : JSON.stringify(result.structuredContent),
+          },
+        ]);
+      } finally {
+        await client.close();
+      }
+    },
+  );
+
   it("authenticates stored tokens without listing them and observes revocation immediately", async () => {
     const options = await fixture();
     await mkdir(options.dataDir, { recursive: true });

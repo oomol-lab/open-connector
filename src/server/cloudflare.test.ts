@@ -8,6 +8,7 @@ import type {
 } from "./cloudflare/cloudflare-bindings.ts";
 import type { CloudflareEnv } from "./cloudflare/cloudflare-env.ts";
 
+import { Client, StreamableHTTPClientTransport } from "@modelcontextprotocol/client";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { getProviderNetworkPolicy } from "../core/provider-network-policy.ts";
 import { MarketplaceService } from "../marketplace/marketplace-service.ts";
@@ -26,6 +27,45 @@ const provider = {
 };
 
 describe("cloudflare worker", () => {
+  it("keeps MCP output modes separate in the application cache", async () => {
+    vi.spyOn(console, "info").mockImplementation(() => {});
+    const binding = new SqliteD1Database();
+    const env = { ...createEnv(), DB: binding, OOMOL_CONNECT_RUNTIME_TOKEN: "test-mcp-token" };
+    try {
+      for (const outputMode of [undefined, "compact", "compatible"]) {
+        const client = new Client({ name: "worker-mcp-test", version: "0.0.0" });
+        try {
+          await client.connect(
+            new StreamableHTTPClientTransport(new URL("https://mcp-output.example.com/mcp"), {
+              fetch: (input, init) =>
+                worker.fetch(
+                  new Request(input, init),
+                  { ...env, OOMOL_CONNECT_MCP_OUTPUT_MODE: outputMode },
+                  createExecutionContext(),
+                ),
+              requestInit: { headers: { authorization: "Bearer test-mcp-token" } },
+            }),
+          );
+          const result = await client.callTool({ name: "list_apps", arguments: {} });
+          expect(result.structuredContent).toMatchObject({ ok: true, data: [] });
+          expect(result.content).toEqual([
+            {
+              type: "text",
+              text:
+                outputMode === "compact"
+                  ? "The complete result is available in structuredContent."
+                  : JSON.stringify(result.structuredContent),
+            },
+          ]);
+        } finally {
+          await client.close();
+        }
+      }
+    } finally {
+      binding.close();
+    }
+  });
+
   it("does not reuse an application with a different network policy", async () => {
     const policies: unknown[] = [];
     vi.spyOn(MarketplaceService.prototype, "initialize").mockImplementation(async () => {

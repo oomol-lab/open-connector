@@ -17,6 +17,7 @@ import type { IProviderLoader } from "../providers/provider-loader.ts";
 import type { RuntimeActionHttpResult } from "./api/runtime-api.ts";
 import type { RuntimeJwtVerifier } from "./api/runtime-jwt.ts";
 import type { Logger } from "./logger.ts";
+import type { McpOutputMode } from "./mcp-settings.ts";
 import type { ISecretCodec } from "./secrets/secret-codec-core.ts";
 import type {
   CompleteIdempotencyInput,
@@ -2196,6 +2197,52 @@ describe("ConnectServer", () => {
       await expect(client.listTools()).resolves.toMatchObject({
         tools: expect.arrayContaining([expect.objectContaining({ name: "execute_action" })]),
       });
+    } finally {
+      await client.close();
+    }
+  });
+
+  it.each(["success", "error"])("returns a large MCP %s payload once in compact mode", async (outcome) => {
+    const output = {
+      messages: Array.from({ length: 28 }, (_, index) => ({ id: index, body: "x".repeat(270_000) })),
+    };
+    const error = { code: "provider_error", message: "Synthetic failure", details: output };
+    const execute = vi.fn(async () => (outcome === "success" ? { ok: true, output } : { ok: false, error }));
+    const app = createTestServer(
+      [{ ...apiKeyProvider, authTypes: ["no_auth"], auth: [{ type: "no_auth" }], actions: [echoAction] }],
+      { providerLoader: new ActionProviderLoader(execute), mcpOutputMode: "compact" },
+    ).createApp();
+    const responseSizes: number[] = [];
+    const fetcher: typeof fetch = async (input, init) => {
+      const response = await app.fetch(new Request(input, init));
+      responseSizes.push((await response.clone().arrayBuffer()).byteLength);
+      return response;
+    };
+    const client = new Client({ name: "single-result-test", version: "0.0.0" });
+    try {
+      await client.connect(new StreamableHTTPClientTransport(new URL("http://localhost:3000/mcp"), { fetch: fetcher }));
+      const result = await client.callTool({
+        name: "execute_action",
+        arguments: { actionId: "example.echo", input: { message: "read" } },
+      });
+      expect(execute).toHaveBeenCalledTimes(1);
+      expect(result.content).toEqual([
+        {
+          type: "text",
+          text:
+            outcome === "success"
+              ? "The complete result is available in structuredContent."
+              : "provider_error: Synthetic failure",
+        },
+      ]);
+      expect(Boolean(result.isError)).toBe(outcome === "error");
+      expect(result.structuredContent).toMatchObject({
+        ...(outcome === "success" ? { ok: true, data: output } : { ok: false, error }),
+        executionId: expect.any(String),
+      });
+      // Allow for protocol framing while rejecting a second serialized copy of the payload.
+      const payloadBytes = Buffer.byteLength(JSON.stringify(result.structuredContent));
+      expect(Math.max(...responseSizes)).toBeLessThan(payloadBytes + 4_096);
     } finally {
       await client.close();
     }
@@ -4687,6 +4734,7 @@ interface TestAuthOptions {
 }
 
 interface CreateTestServerOptions {
+  mcpOutputMode?: McpOutputMode;
   catalog?: CatalogStore;
   marketplace?: MarketplaceService;
   auth?: TestAuthOptions;
@@ -4756,6 +4804,7 @@ function createTestServer(providers: ProviderDefinition[], options: CreateTestSe
   const staticRoot = typeof options.staticRoot === "string" ? options.staticRoot : undefined;
 
   return new ConnectServer({
+    mcpOutputMode: options.mcpOutputMode,
     marketplace: options.marketplace,
     catalog,
     publicOrigin: options.publicOrigin ?? "http://localhost:3000",

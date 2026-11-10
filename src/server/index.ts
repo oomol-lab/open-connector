@@ -14,6 +14,7 @@ import { DEFAULT_OAUTH_CLOSE_DELAY_SECONDS, parseOAuthResultOrigins } from "./ap
 import { registerStaticRoutes } from "./api/static-routes.ts";
 import { createConnectorRuntime } from "./connector-runtime.ts";
 import { logger } from "./logger.ts";
+import { parseMcpOutputMode } from "./mcp-settings.ts";
 import { resolveServerAssets } from "./server-assets.ts";
 import { createDirectoryMigrationSource } from "./storage/migration-source.ts";
 import { migratePostgresRuntimeDatabase, sqliteMigrationsNotice } from "./storage/node-runtime-database.ts";
@@ -81,6 +82,7 @@ async function main(): Promise<void> {
     oauth: parseOAuthServerEnv(),
     trustProxyHeaders: parseOptionalBooleanFlag(process.env.OOMOL_CONNECT_OAUTH_TRUST_PROXY_HEADERS),
     eventVerifyToken: optionalEnv("OOMOL_CONNECT_EVENT_VERIFY_TOKEN"),
+    mcpOutputMode: parseMcpOutputMode(process.env.OOMOL_CONNECT_MCP_OUTPUT_MODE),
     jwt: {
       jwksUri: process.env.OOMOL_CONNECT_JWKS_URI,
       issuer: process.env.OOMOL_CONNECT_JWT_ISSUER,

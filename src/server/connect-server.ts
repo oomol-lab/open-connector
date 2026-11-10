@@ -16,6 +16,7 @@ import type { TriggerRunner } from "../triggers/trigger-runner.ts";
 import type { LocalAuthOptions } from "./api/auth.ts";
 import type { PolicySnapshotProvider } from "./api/policy-snapshot.ts";
 import type { ITransitFileService } from "./files/transit-file-store.ts";
+import type { McpOutputMode } from "./mcp-settings.ts";
 import type { OAuthServerSettings } from "./oauth/settings.ts";
 import type { IIdempotencyStore } from "./storage/idempotency-store.ts";
 import type {
@@ -119,6 +120,7 @@ export interface IConnectServerOptions {
   logger?: RuntimeLogger;
   compressApiResponses?: boolean;
   serveDocumentation?: boolean;
+  mcpOutputMode?: McpOutputMode;
   /** Seconds the OAuth completion page waits before closing its window. `0` closes it as soon as it loads. */
   oauthCloseDelaySeconds?: number;
   /** Origins a provider-refusal page may post its result to (`OOMOL_CONNECT_OAUTH_RESULT_ORIGINS`). */
@@ -273,6 +275,7 @@ export class ConnectServer {
         connections: this.options.connections,
         actions: this.options.actions,
         actionSearch: this.actionSearch,
+        outputMode: this.options.mcpOutputMode,
         getPolicySnapshot: this.getPolicySnapshot,
       }),
     );

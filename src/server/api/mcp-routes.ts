@@ -3,6 +3,7 @@ import type { ConnectionService } from "../../connection-service.ts";
 import type { ActionPolicySnapshot } from "../../core/action-policy.ts";
 import type { ActionSearchIndexProvider } from "../../core/action-search.ts";
 import type { ActionRunner } from "../actions/action-runner.ts";
+import type { McpOutputMode } from "../mcp-settings.ts";
 import type { Context } from "hono";
 
 import { Hono } from "hono";
@@ -36,6 +37,7 @@ export interface McpRoutesOptions {
   connections: ConnectionService;
   actions: ActionRunner;
   actionSearch: ActionSearchIndexProvider;
+  outputMode?: McpOutputMode;
   getPolicySnapshot: (context: Context) => Promise<ActionPolicySnapshot>;
 }
 
@@ -45,6 +47,7 @@ export function createMcpRoutes({
   connections,
   actions,
   actionSearch,
+  outputMode,
   getPolicySnapshot,
 }: McpRoutesOptions): Hono {
   const app = new Hono();
@@ -56,6 +59,7 @@ export function createMcpRoutes({
       connections,
       actions,
       actionSearch,
+      outputMode,
       getPolicySnapshot: () => getPolicySnapshot(context),
       runtimeGrant: readRuntimeGrant(context),
       signal: context.req.raw.signal,
