@@ -82,7 +82,7 @@ export const outlookMessageReceived: PollDefinition = {
       const next = new URL(nextLink);
       if (
         next.origin !== "https://graph.microsoft.com" ||
-        next.pathname !== `/v1.0${endpoint(config.folder)}` ||
+        !matchesMessagePath(next.pathname, config.folder) ||
         next.search.length === 0
       )
         throw new TransientPollError("Outlook returned an unexpected continuation link.");
@@ -187,6 +187,26 @@ function readCheckpoint(value: JsonValue): Checkpoint {
     lastReceivedDateTime: watermark,
     ...(nextQuery == null ? {} : { nextQuery: nextQuery as Readonly<Record<string, string>> }),
   };
+}
+
+function matchesMessagePath(pathname: string, folder: string): boolean {
+  if (folder.length === 0) return pathname === "/v1.0/me/messages";
+  const parts = pathname.split("/");
+  if (parts[1] !== "v1.0" || parts[2] !== "me" || parts.at(-1) !== "messages") return false;
+  try {
+    if (parts.length === 6 && parts[3]?.toLowerCase() === "mailfolders")
+      return decodeURIComponent(parts[4]!) === folder;
+    if (parts.length === 5) {
+      const collection = decodeURIComponent(parts[3]!);
+      return (
+        collection.slice(0, 11).toLowerCase() === "mailfolders" &&
+        collection.slice(11) === `('${folder.replaceAll("'", "''")}')`
+      );
+    }
+  } catch {
+    return false;
+  }
+  return false;
 }
 
 function endpoint(folder: string): string {

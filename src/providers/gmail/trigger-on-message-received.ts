@@ -295,6 +295,12 @@ function success(result: ConnectorProxyResult, operation: string): void {
     throw new PollConnectionError(`Gmail ${operation} rejected the Connection.`);
   if (result.status == 403 && reasons(result.data).includes("domainPolicy"))
     throw new PermanentPollError("The domain administrator disabled Gmail access for this app.");
+  if (result.status == 403 && reasons(result.data).includes("insufficientPermissions"))
+    throw new PermanentPollError("Gmail access is missing required permissions. Check the app authorization scopes.");
+  if (result.status == 403 && reasons(result.data).includes("accessNotConfigured"))
+    throw new PermanentPollError(
+      "Gmail API access is not configured for this project. Check its API configuration and status.",
+    );
   throw new TransientPollError(`Gmail ${operation} failed with status ${result.status}.`);
 }
 
