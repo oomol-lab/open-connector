@@ -1,4 +1,4 @@
-import type { CredentialValidators, ProviderProxyExecutor } from "../../core/types.ts";
+import type { ProviderExecutors, CredentialValidators, ProviderProxyExecutor } from "../../core/types.ts";
 import type { ProviderActionHandlers, ProviderRuntimeHandler } from "../provider-executors.ts";
 
 import { requireApiKeyCredential } from "../provider-credentials.ts";
@@ -42,7 +42,7 @@ const handlers: ProviderActionHandlers<"z_api", ProviderRuntimeHandler<Context>>
   send_location: (input, context) => request("send-location", input, context),
 };
 
-export const executors: import("../../core/types.ts").ProviderExecutors = defineProviderExecutors<Context>({
+export const executors: ProviderExecutors = defineProviderExecutors<Context>({
   service: "z_api",
   skipDnsValidation: true,
   async createContext(context, fetcher) {

@@ -1,4 +1,5 @@
 import type { IntegrationDefinition } from "../../triggers/common/integration.ts";
+import type { JsonValue } from "../../triggers/common/types.ts";
 import type { ManagedWebhook } from "../../triggers/managed-webhook.ts";
 
 import { PermanentIntegrationError, TransientIntegrationError } from "../../triggers/common/integration.ts";
@@ -26,7 +27,7 @@ export const vercelDeploymentEvent: IntegrationDefinition = {
           throw new TransientIntegrationError("Vercel returned an invalid webhook list.");
         const matches = result.data.filter((item) => isJsonObject(item) && item.url == context.endpointUrl) as Record<
           string,
-          import("../../triggers/common/types.ts").JsonValue
+          JsonValue
         >[];
         if (matches.length > 1)
           throw new PermanentIntegrationError(

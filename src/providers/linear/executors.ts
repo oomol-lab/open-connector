@@ -24,6 +24,7 @@ import {
   withRetryAfterSeconds,
 } from "../provider-runtime.ts";
 import { linearIssueChanged } from "./trigger-on-issue-changed.ts";
+import { linearIssueEvent } from "./trigger-on-issue-event.ts";
 
 const linearApiBaseUrl = "https://api.linear.app";
 const linearGraphqlUrl = "https://api.linear.app/graphql";
@@ -2491,4 +2492,4 @@ function asOptionalObject(value: unknown) {
   return value as Record<string, unknown>;
 }
 
-export const triggers: readonly (IntegrationDefinition | PollDefinition)[] = [linearIssueChanged];
+export const triggers: readonly (IntegrationDefinition | PollDefinition)[] = [linearIssueChanged, linearIssueEvent];

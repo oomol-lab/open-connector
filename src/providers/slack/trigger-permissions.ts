@@ -1,4 +1,6 @@
-export const triggerPermissions: readonly import("../../triggers/metadata.ts").TriggerPermission[] = [
+import type { TriggerPermission } from "../../triggers/metadata.ts";
+
+export const triggerPermissions: readonly TriggerPermission[] = [
   {
     id: "slack.on_message_posted",
     name: "New Channel Message",

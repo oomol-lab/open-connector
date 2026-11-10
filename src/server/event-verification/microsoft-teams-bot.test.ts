@@ -1,4 +1,6 @@
+import type * as TeamsBotTokenModule from "../../triggers/sources/teams-bot-token.ts";
 import type { BotFrameworkSigningKey } from "../../triggers/sources/teams-bot-token.ts";
+import type * as MicrosoftTeamsBotModule from "./microsoft-teams-bot.ts";
 
 import { exportJWK, generateKeyPair, SignJWT } from "jose";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
@@ -151,8 +153,8 @@ describe("Teams bot inbound activity verification", () => {
 });
 
 describe("Bot Framework published signing keys", () => {
-  let verifier: typeof import("./microsoft-teams-bot.ts");
-  let protocol: typeof import("../../triggers/sources/teams-bot-token.ts");
+  let verifier: typeof MicrosoftTeamsBotModule;
+  let protocol: typeof TeamsBotTokenModule;
   let keysDocument: unknown;
   const fetcher = vi.fn(async (url: string) =>
     Response.json(url.endsWith("openidconfiguration") ? { jwks_uri: "https://keys.example/jwks" } : keysDocument),

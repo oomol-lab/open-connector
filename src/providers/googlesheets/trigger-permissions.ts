@@ -1,4 +1,6 @@
-export const triggerPermissions: readonly import("../../triggers/metadata.ts").TriggerPermission[] = [
+import type { TriggerPermission } from "../../triggers/metadata.ts";
+
+export const triggerPermissions: readonly TriggerPermission[] = [
   {
     id: "googlesheets.on_row_added",
     name: "New Row Added",

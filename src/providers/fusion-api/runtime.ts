@@ -11,6 +11,7 @@ import {
   defaultProviderRequestTimeoutMs,
   isAbortLikeError,
   providerUserAgent,
+  withRetryAfterSeconds,
 } from "../provider-runtime.ts";
 import { fusionApiOperations } from "./operations.ts";
 
@@ -115,9 +116,12 @@ async function fusionApiRequest(context: FusionApiRequestContext, request: Fusio
     }
   }
 
-  const requestTimeoutMs = fusionApiLongRunningPaths.has(request.path)
-    ? fusionApiLongRunningRequestTimeoutMs
-    : defaultProviderRequestTimeoutMs;
+  const requestTimeoutMs =
+    request.path === "/v1/jina-reader/action/search"
+      ? 60_000
+      : fusionApiLongRunningPaths.has(request.path)
+        ? fusionApiLongRunningRequestTimeoutMs
+        : defaultProviderRequestTimeoutMs;
   const timeout = createProviderTimeout(context.signal, requestTimeoutMs);
   let response: Response;
   try {
@@ -156,7 +160,12 @@ async function fusionApiRequest(context: FusionApiRequestContext, request: Fusio
     return { state: "failed", error: error.message };
   }
 
-  throw new ProviderRequestError(response.status, error.message, undefined, "provider_error");
+  throw new ProviderRequestError(
+    response.status,
+    error.message,
+    withRetryAfterSeconds(response),
+    response.status === 429 ? "rate_limited" : "provider_error",
+  );
 }
 
 function buildFusionApiPath(operation: FusionApiOperation, input: Record<string, unknown>): string {

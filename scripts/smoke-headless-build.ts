@@ -1,3 +1,5 @@
+import type * as ConnectorBuildModule from "../src/server/connector-build.ts";
+
 // Run with Bun after installing the packed headless package into the supplied consumer directory.
 import assert from "node:assert/strict";
 import { cp, mkdtemp, readFile, readdir, rm } from "node:fs/promises";
@@ -7,7 +9,7 @@ import { join, resolve } from "node:path";
 const consumer = resolve(process.argv[2]);
 const { getConnectorBuildOptions } = (await import(
   import.meta.resolve("@oomol-lab/open-connector/build", join(consumer, "package.json"))
-)) as typeof import("../src/server/connector-build.ts");
+)) as typeof ConnectorBuildModule;
 const execution = await mkdtemp(join(tmpdir(), "connector-build-smoke-"));
 const entrypoint = join(consumer, "headless-host.mjs");
 

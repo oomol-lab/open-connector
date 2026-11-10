@@ -1,5 +1,7 @@
 import type { RunLog, RunLogPage } from "./model";
+import type * as ReactModule from "react";
 import type { ReactElement, ReactNode } from "react";
+import type * as ReactRouterModule from "react-router";
 import type { Mock } from "vitest";
 
 import { isValidElement } from "react";
@@ -25,7 +27,7 @@ const apiMock = vi.hoisted(() => ({
 }));
 
 vi.mock("react", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("react")>();
+  const actual = await importOriginal<typeof ReactModule>();
   return {
     ...actual,
     useEffect(effect: () => void | (() => void)) {
@@ -57,7 +59,7 @@ vi.mock("react", async (importOriginal) => {
 });
 
 vi.mock("react-router", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("react-router")>();
+  const actual = await importOriginal<typeof ReactRouterModule>();
   return {
     ...actual,
     useSearchParams() {

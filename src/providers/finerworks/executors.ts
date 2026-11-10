@@ -1,4 +1,4 @@
-import type { CredentialValidators, ProviderProxyExecutor } from "../../core/types.ts";
+import type { ProviderExecutors, CredentialValidators, ProviderProxyExecutor } from "../../core/types.ts";
 import type { ProviderActionHandlers, ProviderRuntimeHandler } from "../provider-executors.ts";
 
 import { requireApiKeyCredential } from "../provider-credentials.ts";
@@ -37,7 +37,7 @@ const handlers: ProviderActionHandlers<"finerworks", ProviderRuntimeHandler<Cont
   get_prices: (input, context) => request("/v3/get_prices", input, context),
 };
 
-export const executors: import("../../core/types.ts").ProviderExecutors = defineProviderExecutors<Context>({
+export const executors: ProviderExecutors = defineProviderExecutors<Context>({
   service: "finerworks",
   skipDnsValidation: true,
   async createContext(context, fetcher) {

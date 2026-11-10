@@ -1,4 +1,4 @@
-import type { CryptoKey as JoseCryptoKey, JWK } from "jose";
+import type { errors as JoseErrors, CryptoKey as JoseCryptoKey, JWK } from "jose";
 
 import { optionalRecord, optionalString, optionalStringOrNull } from "../../core/cast.ts";
 import { createGuardedFetch } from "../../core/guarded-fetch.ts";
@@ -160,7 +160,7 @@ export async function verifyBotFrameworkActivity(
   };
 }
 
-function rejectionReason(error: unknown, joseErrors: typeof import("jose").errors): "token" | "timestamp" | "app" {
+function rejectionReason(error: unknown, joseErrors: typeof JoseErrors): "token" | "timestamp" | "app" {
   if (error instanceof joseErrors.JWTExpired) return "timestamp";
   if (error instanceof joseErrors.JWTClaimValidationFailed) {
     if (error.claim === "aud") return "app";

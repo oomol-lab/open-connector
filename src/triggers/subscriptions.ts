@@ -5,6 +5,7 @@ import type {
   IntegrationReconcileResult,
 } from "./common/integration.ts";
 import type { ConnectorProxy } from "./common/proxy.ts";
+import type { JsonValue } from "./common/types.ts";
 import type { TriggerRequest } from "./request.ts";
 import type { TriggerSubscription, TriggerStore } from "./store.ts";
 
@@ -52,8 +53,8 @@ export async function withSubscription<T>(
   }
 }
 interface SubscriptionState {
-  checkpoint: import("./common/types.ts").JsonValue;
-  subscription: Readonly<Record<string, import("./common/types.ts").JsonValue>>;
+  checkpoint: JsonValue;
+  subscription: Readonly<Record<string, JsonValue>>;
   reconcileAt: number;
 }
 export type SubscriptionResult = SubscriptionState &
@@ -269,7 +270,7 @@ export async function executeSubscriptionOperation(
     admit: input.admit,
     method: input.method,
     now: new Date(),
-    payload: payload as import("./common/types.ts").JsonValue,
+    payload: payload as JsonValue,
     rawBody,
     header: (name) => input.headers[name.toLowerCase()],
     query: (name) => input.query[name],

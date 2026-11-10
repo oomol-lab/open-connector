@@ -1,4 +1,6 @@
+import type { ISecretCodec } from "../secrets/secret-codec-core.ts";
 import type { PendingSaasRequest, SaasCandidate, SaasRequestLease } from "./connection-request-store.ts";
+import type { NodeRuntimeDatabase } from "./node-runtime-database.ts";
 import type { RuntimeDatabase } from "./runtime-database.ts";
 
 import { beforeEach, describe, expect, it } from "vitest";
@@ -370,8 +372,8 @@ export function saasProjectStoreTests(getDatabase: () => RuntimeDatabase): void 
 }
 
 export function saasMaintenanceTests(
-  getDatabase: () => import("./node-runtime-database.ts").NodeRuntimeDatabase,
-  reopen: (codec: import("../secrets/secret-codec-core.ts").ISecretCodec) => Promise<void>,
+  getDatabase: () => NodeRuntimeDatabase,
+  reopen: (codec: ISecretCodec) => Promise<void>,
 ): void {
   it("rotates project and candidate secrets atomically, refuses plaintext, and preserves identity on reset", async () => {
     const { AesGcmSecretCodec, PlainTextSecretCodec } = await import("../secrets/secret-codec.ts");

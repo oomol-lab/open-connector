@@ -1,5 +1,5 @@
-import type { ProviderActionHandlers } from "../provider-executors.ts";
-import type { ApiKeyProviderContext } from "../provider-executors.ts";
+import type { CredentialValidationResult } from "../../core/types.ts";
+import type { ProviderActionHandlers, ApiKeyProviderContext } from "../provider-executors.ts";
 
 import {
   compactObject,
@@ -278,7 +278,7 @@ export const timelinkActionHandlers: ProviderActionHandlers<"timelink", Timelink
 export async function validateTimelinkCredential(
   input: Record<string, string>,
   fetcher: typeof fetch,
-): Promise<import("../../core/types.ts").CredentialValidationResult> {
+): Promise<CredentialValidationResult> {
   const payload = await requestTimelinkJson({
     path: "/token",
     token: requiredString(input.apiKey, "apiKey", (message) => new ProviderRequestError(401, message)),

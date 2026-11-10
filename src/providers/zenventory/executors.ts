@@ -1,4 +1,4 @@
-import type { CredentialValidators, ProviderProxyExecutor } from "../../core/types.ts";
+import type { ProviderExecutors, CredentialValidators, ProviderProxyExecutor } from "../../core/types.ts";
 import type { ProviderActionHandlers, ProviderRuntimeHandler } from "../provider-executors.ts";
 
 import { Buffer } from "node:buffer";
@@ -56,7 +56,7 @@ const handlers: ProviderActionHandlers<"zenventory", ProviderRuntimeHandler<Cont
   },
 };
 
-export const executors: import("../../core/types.ts").ProviderExecutors = defineProviderExecutors<Context>({
+export const executors: ProviderExecutors = defineProviderExecutors<Context>({
   service: "zenventory",
   skipDnsValidation: true,
   async createContext(context, fetcher) {

@@ -1,5 +1,7 @@
 import type { AppLang } from "./i18n";
 import type {
+  MarketplaceState,
+  ProviderPreference,
   AppData,
   ConnectionRecord,
   OAuthConfig,
@@ -182,8 +184,8 @@ export async function loadRuntimeData(
     apiGet<RuntimeTokenSummary[]>("/api/runtime-tokens"),
     apiGet<RuntimePolicyState>("/api/runtime-policy"),
     apiGet<RunLogPage>("/api/runs"),
-    apiGet<import("./model").MarketplaceState>("/api/marketplace"),
-    apiGet<import("./model").ProviderPreference[]>("/api/provider-preferences"),
+    apiGet<MarketplaceState>("/api/marketplace"),
+    apiGet<ProviderPreference[]>("/api/provider-preferences"),
   ]);
 
   return {

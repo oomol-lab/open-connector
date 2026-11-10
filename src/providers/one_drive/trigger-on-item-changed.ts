@@ -10,6 +10,7 @@ import {
   PollConnectionError,
   TransientPollError,
 } from "../../triggers/common/poll.ts";
+import { microsoftGraphErrorCodes } from "../outlook/shared/trigger-errors.ts";
 import { snapshot } from "./trigger-on-item-changed.definition.ts";
 
 type Change = "created" | "deleted" | "updated";
@@ -249,8 +250,14 @@ function deltaSuccess(result: ConnectorProxyResult): void {
 
 function success(result: ConnectorProxyResult, operation: string): void {
   if (result.status >= 200 && result.status < 300) return;
-  if (result.status == 401 || result.status == 403)
+  const codes = microsoftGraphErrorCodes(result.data);
+  if (
+    (result.status == 401 && (codes.has("invalidauthenticationtoken") || codes.has("unauthenticated"))) ||
+    (result.status == 403 && codes.has("insufficient_claims"))
+  )
     throw new PollConnectionError(`OneDrive ${operation} rejected the Connection.`);
+  if (result.status == 403 && codes.has("accessdenied"))
+    throw new PermanentPollError("OneDrive denied access to the drive. Check drive permissions and licensing.");
   throw new TransientPollError(`OneDrive ${operation} failed with status ${result.status}.`);
 }
 

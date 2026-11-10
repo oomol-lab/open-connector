@@ -1,4 +1,6 @@
-export const triggerPermissions: readonly import("../../triggers/metadata.ts").TriggerPermission[] = [
+import type { TriggerPermission } from "../../triggers/metadata.ts";
+
+export const triggerPermissions: readonly TriggerPermission[] = [
   {
     id: "notion.on_database_page_event",
     name: "Database Page Added or Updated",

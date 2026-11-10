@@ -15,7 +15,7 @@ import { createOpenApiDocument } from "./server/api/openapi.ts";
 import { serializeRuntimeAction } from "./server/api/runtime-api.ts";
 
 vi.mock("@cfworker/json-schema", async (importOriginal) => {
-  const actual = await importOriginal<typeof import("@cfworker/json-schema")>();
+  const actual = await importOriginal<typeof jsonSchema>();
   return { ...actual, Validator: vi.fn(class extends actual.Validator {}) };
 });
 
