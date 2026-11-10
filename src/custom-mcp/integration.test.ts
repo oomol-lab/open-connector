@@ -11,6 +11,7 @@ import { RuntimeTokenService } from "../server/storage/runtime-token-service.ts"
 import { SqliteRuntimeDatabase } from "../server/storage/sqlite/runtime-store.ts";
 
 let database: SqliteRuntimeDatabase;
+let secretCodec: PlainTextSecretCodec;
 let apps: ConnectApp[];
 let tools: { name: string; description: string; inputSchema: Record<string, unknown> }[];
 let unavailable: boolean;
@@ -40,7 +41,7 @@ async function createApp(builtinName?: string): Promise<ConnectApp> {
       ttlSeconds: 60,
       maxBytes: 1024,
     }),
-    secretCodec: new PlainTextSecretCodec(),
+    secretCodec,
     publicOrigin: "https://connector.example",
     adminToken: "admin",
     runtimeToken: "runtime",
@@ -51,7 +52,8 @@ async function createApp(builtinName?: string): Promise<ConnectApp> {
 }
 
 beforeEach(() => {
-  database = new SqliteRuntimeDatabase(":memory:");
+  secretCodec = new PlainTextSecretCodec();
+  database = new SqliteRuntimeDatabase(":memory:", { secretCodec });
   apps = [];
   unavailable = false;
   toolCalls = [];
@@ -452,4 +454,55 @@ it("validates authentication setup before publishing a provider", async () => {
   });
   const response = await request(app, `/api/custom-mcp/${record.service}`);
   expect(await response.text()).not.toContain('"secret"');
+});
+
+it("does not reserve a service when OAuth validation or encryption fails", async () => {
+  const app = await createApp();
+  const input = {
+    service: "atomic_oauth",
+    displayName: "Atomic OAuth",
+    endpoint: "https://mcp.example.com/mcp",
+    auth: {
+      type: "oauth2",
+      client: { clientId: "client", clientSecret: "   " },
+      manual: {
+        issuer: "https://auth.example.com",
+        authorizationUrl: "https://auth.example.com/authorize",
+        tokenUrl: "https://auth.example.com/token",
+        tokenEndpointAuthMethod: "client_secret_post",
+      },
+    },
+  };
+  expect((await request(app, "/api/custom-mcp", "POST", input)).status).toBe(400);
+  expect(await database.customMcpStore.list()).toEqual([]);
+  input.auth.client.clientSecret = "valid-secret";
+  const encode = vi.spyOn(secretCodec, "encode").mockRejectedValueOnce(new Error("Encryption unavailable"));
+  expect((await request(app, "/api/custom-mcp", "POST", input)).status).toBe(500);
+  expect(await database.customMcpStore.list()).toEqual([]);
+  expect(await database.oauthClientConfigStore.get(input.service)).toBeUndefined();
+  encode.mockRestore();
+  expect((await request(app, "/api/custom-mcp", "POST", input)).status).toBe(201);
+  expect(await database.oauthClientConfigStore.get(input.service)).toMatchObject({
+    clientId: "client",
+    clientSecret: "valid-secret",
+  });
+});
+
+it("keeps a saved connection successful when publishing its first tools fails", async () => {
+  const app = await createApp();
+  const record = await add(app, { type: "headers", headers: [{ name: "Authorization", prefix: "Bearer " }] });
+  const publish = vi
+    .spyOn(database.customMcpStore, "publishTools")
+    .mockRejectedValueOnce(new Error("Storage unavailable"));
+  const response = await request(app, `/api/connections/${record.service}`, "PUT", {
+    authType: "custom_credential",
+    connectionName: "first",
+    values: { Authorization: "saved-secret" },
+  });
+  expect(response.status).toBe(200);
+  const connection = await response.json();
+  expect(await database.connectionStore.getById(connection.id)).toBeDefined();
+  publish.mockRestore();
+  const sync = await request(app, `/api/custom-mcp/${record.service}/sync`, "POST", { connectionId: connection.id });
+  expect((await sync.json()).actions).toHaveLength(1);
 });

@@ -105,7 +105,11 @@ export class PostgresRuntimeDatabase implements RuntimeDatabase {
         }
         return results;
       });
-    this.customMcpStore = new CustomMcpStore({ transaction, read: async (sql) => (await pool.query(sql)).rows });
+    this.customMcpStore = new CustomMcpStore({
+      secretCodec: this.secretCodec,
+      transaction,
+      read: async (sql) => (await pool.query(sql)).rows,
+    });
     this.connectionRequestStore = new ConnectionRequestStore(transaction, this.secretCodec);
     this.connectionStore = new SqlConnectionStore(transaction, this.secretCodec);
     this.triggerStore = new SqlTriggerStore(transaction, this.secretCodec);

@@ -149,6 +149,7 @@ export async function createConnectApp(options: ConnectAppOptions): Promise<Conn
     catalog,
     store: options.runtimeDatabase.customMcpStore,
     oauthClientConfigs,
+    logger: options.logger,
   });
   const connections = new ConnectionService({
     onConnected: (summary, credential) => customMcp.connectionSaved(summary, credential),

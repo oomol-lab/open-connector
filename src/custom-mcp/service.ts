@@ -1,11 +1,12 @@
 import type { ConnectionSummary } from "../connection-service.ts";
-import type { ResolvedCredential } from "../core/types.ts";
-import type { OAuthClientConfigService } from "../oauth/oauth-client-config-service.ts";
+import type { ResolvedCredential, RuntimeLogger } from "../core/types.ts";
+import type { OAuthClientConfig, OAuthClientConfigService } from "../oauth/oauth-client-config-service.ts";
 import type { CustomMcpStore } from "../server/storage/custom-mcp-store.ts";
 import type { CustomMcpCatalog } from "./catalog.ts";
 import type { CustomMcpRecord, CustomMcpRegistration } from "./definition.ts";
 
 import { isProviderId } from "../core/provider-id.ts";
+import { OAuthClientConfigError } from "../oauth/oauth-client-config-service.ts";
 import { HttpRequestError } from "../server/api/http-utils.ts";
 import { customMcpNameKey, suggestMcpService } from "./definition.ts";
 import { prepareMcpRegistration } from "./registration.ts";
@@ -14,6 +15,7 @@ export interface CustomMcpServiceOptions {
   catalog: CustomMcpCatalog;
   store: CustomMcpStore;
   oauthClientConfigs: OAuthClientConfigService;
+  logger?: RuntimeLogger;
 }
 
 /** Owns registration and publication of complete MCP tool snapshots. */
@@ -21,11 +23,13 @@ export class CustomMcpService {
   readonly catalog: CustomMcpCatalog;
   private readonly store: CustomMcpStore;
   private readonly oauthClientConfigs: OAuthClientConfigService;
+  private readonly logger?: RuntimeLogger;
 
   constructor(options: CustomMcpServiceOptions) {
     this.catalog = options.catalog;
     this.store = options.store;
     this.oauthClientConfigs = options.oauthClientConfigs;
+    this.logger = options.logger;
   }
 
   get(service: string): CustomMcpRecord {
@@ -40,9 +44,17 @@ export class CustomMcpService {
     this.assertNameAvailable(input.displayName);
     const { config, oauthClient } = await prepareMcpRegistration(input, service, redirectUri, signal);
     const record: CustomMcpRecord = { ...config, revision: crypto.randomUUID(), actions: [] };
-    await this.store.create(record);
+    let client: OAuthClientConfig | undefined;
+    try {
+      if (oauthClient && config.auth.type === "oauth2") {
+        client = this.oauthClientConfigs.normalizeConfig(service, oauthClient, config.auth.definition);
+      }
+    } catch (error) {
+      if (error instanceof OAuthClientConfigError) throw new HttpRequestError(error.code, error.message);
+      throw error;
+    }
+    await this.store.create(record, client);
     return this.catalog.withSnapshot(async () => {
-      if (oauthClient) await this.oauthClientConfigs.upsertConfig({ service, ...oauthClient });
       if (record.auth.type === "none") return this.sync(service, undefined, undefined, signal);
       return record;
     });
@@ -131,8 +143,11 @@ export class CustomMcpService {
     // Consent and credentials have already been saved; synchronization failures must not undo them.
     try {
       await this.sync(record.service, credential, summary.id);
-    } catch (error) {
-      if (!(error instanceof HttpRequestError && error.status === 409)) throw error;
+    } catch {
+      this.logger?.warn(
+        { service: record.service, connectionId: summary.id },
+        "MCP tool synchronization failed after saving the connection; retry from the service settings.",
+      );
     }
   }
 }

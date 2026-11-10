@@ -33,6 +33,17 @@ export function customMcpStoreTests(getDatabase: () => RuntimeDatabase): void {
       });
       expect((await store.list()).find((row) => row.service === first.service)).toEqual(updated);
     });
+    it("publishes OAuth configuration with its provider without overwriting a conflicting registration", async () => {
+      const database = getDatabase();
+      const first = record();
+      const client = { service: first.service, clientId: "client", clientSecret: "secret", extra: {}, secretExtra: {} };
+      await database.customMcpStore.create(first, client);
+      expect(await database.oauthClientConfigStore.get(first.service)).toEqual(client);
+      await expect(
+        database.customMcpStore.create({ ...first, revision: crypto.randomUUID() }, { ...client, clientId: "other" }),
+      ).rejects.toMatchObject({ status: 409 });
+      expect(await database.oauthClientConfigStore.get(first.service)).toEqual(client);
+    });
     it("preserves published tools across settings changes and sync failures", async () => {
       const store = getDatabase().customMcpStore;
       const first = record();

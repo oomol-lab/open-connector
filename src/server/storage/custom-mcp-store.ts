@@ -1,4 +1,6 @@
 import type { CustomMcpRecord } from "../../custom-mcp/definition.ts";
+import type { OAuthClientConfig } from "../../oauth/oauth-client-config-service.ts";
+import type { ISecretCodec } from "../secrets/secret-codec-core.ts";
 import type { RequestStatement, RequestTransaction } from "./connection-request-store.ts";
 import type { RuntimeRow } from "./runtime-sql.ts";
 
@@ -19,6 +21,7 @@ interface McpSyncFailure extends Pick<CustomMcpRecord, "service" | "revision"> {
 }
 
 interface CustomMcpStoreOptions {
+  secretCodec: ISecretCodec;
   transaction: RequestTransaction;
   read(sql: string): Promise<RuntimeRow[]>;
 }
@@ -26,10 +29,12 @@ interface CustomMcpStoreOptions {
 /** Persist each service and its tool snapshot atomically using the shared runtime SQL dialect. */
 export class CustomMcpStore {
   private readonly transaction: RequestTransaction;
+  private readonly secretCodec: ISecretCodec;
   private readonly read: CustomMcpStoreOptions["read"];
 
   constructor(options: CustomMcpStoreOptions) {
     this.transaction = options.transaction;
+    this.secretCodec = options.secretCodec;
     this.read = options.read;
   }
 
@@ -55,8 +60,8 @@ export class CustomMcpStore {
     }));
   }
 
-  async create(record: McpCreate): Promise<void> {
-    await this.write([
+  async create(record: McpCreate, oauthClient?: OAuthClientConfig): Promise<void> {
+    const statements: RequestStatement[] = [
       {
         sql: `insert into custom_mcp (service, name_key, display_name, endpoint, transport, auth_json, enabled, actions_json, revision)
         values (?, ?, ?, ?, ?, ?, ?, '[]', ?) on conflict do nothing returning service`,
@@ -71,7 +76,17 @@ export class CustomMcpStore {
           record.revision,
         ],
       },
-    ]);
+    ];
+    if (oauthClient) {
+      const value = await this.secretCodec.encode(JSON.stringify(oauthClient));
+      statements.push({
+        sql: `insert into oauth_client_configs (service, value, updated_at)
+          select service, ?, ? from custom_mcp where service = ? and revision = ?
+          on conflict(service) do update set value = excluded.value, updated_at = excluded.updated_at returning service`,
+        values: [value, new Date().toISOString(), record.service, record.revision],
+      });
+    }
+    await this.write(statements);
   }
 
   async updateSettings(record: McpSettingsUpdate, expectedRevision: string): Promise<void> {

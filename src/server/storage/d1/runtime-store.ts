@@ -81,6 +81,7 @@ export class D1RuntimeDatabase implements RuntimeDatabase {
       return results.map((result) => result.results ?? []);
     };
     this.customMcpStore = new CustomMcpStore({
+      secretCodec: secretCodec,
       transaction,
       read: async (sql) => (await database.prepare(sql).all()).results ?? [],
     });
