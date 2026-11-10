@@ -195,7 +195,7 @@ async function takePiloterrScreenshot(
     });
     if (!response.ok) {
       const message = await readProviderErrorTextBody(response, "Piloterr screenshot error", signal);
-      throw new ProviderRequestError(
+      throw piloterrRequestError(
         response.status >= 500 ? 502 : response.status,
         message || `Piloterr screenshot failed with HTTP ${response.status}`,
       );
@@ -240,10 +240,17 @@ async function piloterrRequest(
       headers: { "x-api-key": context.apiKey },
     });
   } catch (error) {
-    // Piloterr answers an exceeded rate limit with 401, which would otherwise read as a rejected key.
-    if (error instanceof ProviderRequestError && error.status === 401 && /rate limit/i.test(error.message)) {
-      throw new ProviderRequestError(429, error.message, error.details);
+    if (error instanceof ProviderRequestError) {
+      throw piloterrRequestError(error.status, error.message, error.details);
     }
     throw error;
   }
+}
+
+function piloterrRequestError(status: number, message: string, details?: unknown): ProviderRequestError {
+  // Piloterr answers an exceeded rate limit with 401, which would otherwise read as a rejected key.
+  if (status === 401 && /rate limit/i.test(message)) {
+    return new ProviderRequestError(429, message, details);
+  }
+  return new ProviderRequestError(status, message, details);
 }
