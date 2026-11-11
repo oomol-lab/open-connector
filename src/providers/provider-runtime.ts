@@ -388,6 +388,20 @@ export async function readProviderJson<T>(response: Response, source: string): P
   throw new ProviderRequestError(response.status, text || `${source} request failed`);
 }
 
+/** Read a bounded error payload, preserving plain text and cancellation. */
+export async function readProviderErrorBody(
+  response: Response,
+  source: string,
+  signal?: AbortSignal,
+): Promise<unknown> {
+  const text = await readProviderErrorTextBody(response, `${source} error response`, signal);
+  return parseProviderJsonBodyText(text, {
+    emptyBody: {},
+    invalidJsonMessage: `${source} returned invalid JSON`,
+    invalidJsonFallback: (text) => text,
+  });
+}
+
 export interface ReadProviderJsonBodyOptions {
   emptyBody: unknown;
   invalidJsonMessage: string;

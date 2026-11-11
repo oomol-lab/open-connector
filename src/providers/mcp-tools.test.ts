@@ -1,4 +1,5 @@
 import { beforeEach, expect, it, vi } from "vitest";
+import { withMcpClient } from "./mcp-client.ts";
 import { callMcpTool, listMcpTools } from "./mcp-tools.ts";
 
 const client = vi.hoisted(() => ({
@@ -7,7 +8,7 @@ const client = vi.hoisted(() => ({
 }));
 
 vi.mock("./mcp-client.ts", () => ({
-  withMcpClient: async (_options: unknown, run: (value: typeof client) => Promise<unknown>) => run(client),
+  withMcpClient: vi.fn(async (_options: unknown, run: (value: typeof client) => Promise<unknown>) => run(client)),
 }));
 
 beforeEach(() => {
@@ -119,4 +120,13 @@ it("preserves tool metadata only when requested", async () => {
   const options = { endpoint: "https://example.com/mcp", service: "Example" };
   expect((await listMcpTools(options))[0]?.metadata).toBeUndefined();
   expect((await listMcpTools(options, { includeMetadata: true }))[0]?.metadata).toEqual({ visibility: "user" });
+});
+
+it("forwards modern protocol negotiation for stateless MCP tools", async () => {
+  client.request.mockResolvedValue({ tools: [] });
+  await listMcpTools({ endpoint: "https://example.com/mcp", service: "Example", protocolVersion: "modern" });
+  expect(withMcpClient).toHaveBeenLastCalledWith(
+    expect.objectContaining({ protocolVersion: "modern", terminateSession: undefined }),
+    expect.any(Function),
+  );
 });

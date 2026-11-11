@@ -15,9 +15,11 @@ import {
 } from "../../core/cast.ts";
 import {
   ProviderRequestError,
+  withRetryAfterSeconds,
   providerResponseError,
   providerUserAgent,
   readProviderJsonBody,
+  readProviderErrorBody,
   requiredInputString,
   requiredResponseRecord,
   runProviderRequest,
@@ -174,10 +176,12 @@ async function requestJson(
       body: body ? JSON.stringify(body) : undefined,
       signal,
     });
-    const payload = await readProviderJsonBody(response, {
-      emptyBody: {},
-      invalidJsonMessage: "Wanx returned an invalid JSON response",
-    });
+    const payload = response.ok
+      ? await readProviderJsonBody(response, {
+          emptyBody: {},
+          invalidJsonMessage: "Wanx returned an invalid JSON response",
+        })
+      : await readProviderErrorBody(response, "Wanx", signal);
     if (!response.ok) handleError(response, payload);
     return payload;
   });
@@ -190,8 +194,10 @@ function handleError(response: Response, payload: unknown): never {
   const message =
     optionalString(record?.message) ??
     optionalString(output?.message) ??
+    optionalString(optionalRecord(record?.error)?.message) ??
+    optionalString(payload) ??
     `Wanx request failed with HTTP ${response.status}`;
-  const details = compactObject({ code, status: response.status });
+  const details = withRetryAfterSeconds(response, compactObject({ code, status: response.status }));
   if (response.status === 400 || response.status === 404 || response.status === 422)
     throw new ProviderRequestError(response.status === 404 ? 404 : 400, message, details, "invalid_input");
   if (response.status === 429) throw new ProviderRequestError(429, message, details);

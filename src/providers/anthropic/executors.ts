@@ -5,7 +5,12 @@ import type { ApiKeyProviderContext } from "../provider-executors.ts";
 import { compactObject, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import { defineApiKeyProviderExecutors } from "../provider-executors.ts";
 import { defineProviderProxy } from "../provider-proxy.ts";
-import { providerInputError, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
+import {
+  withRetryAfterSeconds,
+  providerInputError,
+  ProviderRequestError,
+  providerUserAgent,
+} from "../provider-runtime.ts";
 
 const service = "anthropic";
 const anthropicApiBaseUrl = "https://api.anthropic.com";
@@ -174,7 +179,7 @@ async function assertAnthropicResponse(response: Response, mode: "validate" | "e
   const error = await readAnthropicError(response);
 
   if (response.status === 429) {
-    throw new ProviderRequestError(429, error.message);
+    throw new ProviderRequestError(429, error.message, withRetryAfterSeconds(response));
   }
   if (mode === "validate" && (response.status === 401 || response.status === 403)) {
     throw new ProviderRequestError(400, error.message);

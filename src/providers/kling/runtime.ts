@@ -16,9 +16,11 @@ import { assertPublicHttpUrl } from "../../core/request.ts";
 import {
   providerInputError,
   ProviderRequestError,
+  withRetryAfterSeconds,
   providerResponseError,
   providerUserAgent,
   readProviderJsonBody,
+  readProviderErrorBody,
   requiredInputString,
   requiredResponseRecord,
   runProviderRequest,
@@ -406,14 +408,16 @@ async function requestKlingJson(options: KlingRequestOptions): Promise<unknown> 
       body: options.body ? JSON.stringify(options.body) : undefined,
       signal,
     });
-    const payload = await readProviderJsonBody(response, {
-      emptyBody: {},
-      invalidJsonMessage: "Kling AI returned an invalid JSON response",
-    });
+    const payload = response.ok
+      ? await readProviderJsonBody(response, {
+          emptyBody: {},
+          invalidJsonMessage: "Kling AI returned an invalid JSON response",
+        })
+      : await readProviderErrorBody(response, "Kling AI", signal);
     const record = optionalRecord(payload);
     const businessCode = readBusinessCode(record?.code);
     if (!response.ok || (businessCode !== undefined && businessCode !== 0)) {
-      handleKlingError(response.status, record, options.phase);
+      handleKlingError(response, record, options.phase);
     }
     if (!record) throw providerResponseError("Kling AI response must be an object");
     if (businessCode === undefined) {
@@ -424,12 +428,13 @@ async function requestKlingJson(options: KlingRequestOptions): Promise<unknown> 
 }
 
 function handleKlingError(
-  httpStatus: number,
+  response: Response,
   payload: Record<string, unknown> | undefined,
   phase: KlingRequestPhase,
 ): never {
+  const httpStatus = response.status;
   const businessCode = readBusinessCode(payload?.code);
-  const details = compactObject({ businessCode, status: httpStatus });
+  const details = withRetryAfterSeconds(response, compactObject({ businessCode, status: httpStatus }));
   if (businessCode !== undefined && businessCode >= 1000 && businessCode <= 1004) {
     if (phase === "validate") {
       throw new ProviderRequestError(400, "Kling AI API key is invalid or expired", details, "invalid_input");

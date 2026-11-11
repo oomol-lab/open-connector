@@ -14,9 +14,11 @@ import {
 } from "../../core/cast.ts";
 import {
   ProviderRequestError,
+  withRetryAfterSeconds,
   providerResponseError,
   providerUserAgent,
   readProviderJsonBody,
+  readProviderErrorBody,
   requiredResponseRecord,
   runProviderRequest,
 } from "../provider-runtime.ts";
@@ -145,10 +147,12 @@ async function requestArkJson(context: ApiKeyProviderContext, body: Record<strin
         body: JSON.stringify(body),
         signal,
       });
-      const payload = await readProviderJsonBody(response, {
-        emptyBody: {},
-        invalidJsonMessage: "Doubao Seedream returned an invalid JSON response",
-      });
+      const payload = response.ok
+        ? await readProviderJsonBody(response, {
+            emptyBody: {},
+            invalidJsonMessage: "Doubao Seedream returned an invalid JSON response",
+          })
+        : await readProviderErrorBody(response, "Doubao Seedream", signal);
       if (!response.ok) handleArkError(response, payload);
       return payload;
     },
@@ -164,7 +168,7 @@ function handleArkError(response: Response, payload: unknown): never {
     optionalString(record?.error) ??
     optionalString(nestedError?.message) ??
     `Doubao Seedream request failed with HTTP ${response.status}`;
-  const details = compactObject({ code, status: response.status });
+  const details = withRetryAfterSeconds(response, compactObject({ code, status: response.status }));
   if (response.status === 400 || response.status === 404 || response.status === 422) {
     throw new ProviderRequestError(response.status === 404 ? 404 : 400, message, details, "invalid_input");
   }

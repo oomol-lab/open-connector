@@ -16,6 +16,7 @@ import {
   providerInputError,
   providerUserAgent,
   ProviderRequestError,
+  withRetryAfterSeconds,
   requiredInputString,
 } from "../provider-runtime.ts";
 import { minimaxTextModels, selectMinimaxModels } from "./text-models.ts";
@@ -205,7 +206,7 @@ async function minimaxRequestJson(
 
   const payload = await readMinimaxPayload(response);
   if (!response.ok || hasMinimaxBodyError(payload)) {
-    throw mapMinimaxError(response.ok ? 400 : response.status, payload);
+    throw mapMinimaxError(response.ok ? 400 : response.status, payload, response);
   }
   return payload;
 }
@@ -337,20 +338,21 @@ async function readMinimaxPayload(response: Response): Promise<Record<string, un
   }
 }
 
-function mapMinimaxError(status: number, payload: Record<string, unknown>): ProviderRequestError {
+function mapMinimaxError(status: number, payload: Record<string, unknown>, response: Response): ProviderRequestError {
+  const details = withRetryAfterSeconds(response, payload);
   const errorCode = readMinimaxErrorCode(payload);
   const message = readMinimaxErrorMessage(payload) ?? `MiniMax request failed with status ${status}`;
 
   if (status === 401 || status === 403 || errorCode === "1004" || errorCode === "2049") {
-    return new ProviderRequestError(401, message, payload);
+    return new ProviderRequestError(401, message, details);
   }
   if (status === 429 || errorCode === "1002" || errorCode === "1008" || errorCode === "1039") {
-    return new ProviderRequestError(429, message, payload);
+    return new ProviderRequestError(429, message, details);
   }
   if (status >= 400 && status < 500) {
-    return new ProviderRequestError(400, message, payload);
+    return new ProviderRequestError(400, message, details);
   }
-  return new ProviderRequestError(status >= 500 ? 502 : status || 502, message, payload);
+  return new ProviderRequestError(status >= 500 ? 502 : status || 502, message, details);
 }
 
 function hasMinimaxBodyError(payload: Record<string, unknown>): boolean {

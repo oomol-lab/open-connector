@@ -27,9 +27,9 @@ export const creatorEndpoints: readonly JustoneapiEndpoint[] = [
         sort: s.withDefault(
           s.withEnum(
             s.string(
-              "Creator search sorting. Values: FANS sorts by follower count descending, DEFAULT uses Pugongying intelligent ranking.\n\nAvailable Values:\n- `DEFAULT`: Platform default intelligent ranking\n- `FANS`: Sort by follower count descending",
+              "Creator search sorting. Defaults to FANS.\n\nAvailable Values:\n- `DEFAULT`: Platform default intelligent ranking\n- `FANS`: Sort by follower count descending\n- `READ_MEDIAN`: Sort by daily-note median reads descending\n- `ENGAGEMENT_MEDIAN`: Sort by daily-note median interactions descending\n- `PRICE_ASC`: Sort by all quoted prices ascending\n- `PRICE_DESC`: Sort by all quoted prices descending",
             ),
-            ["DEFAULT", "FANS"],
+            ["DEFAULT", "FANS", "READ_MEDIAN", "ENGAGEMENT_MEDIAN", "PRICE_ASC", "PRICE_DESC"],
           ),
           "FANS",
         ),
@@ -1827,6 +1827,63 @@ export const creatorEndpoints: readonly JustoneapiEndpoint[] = [
         page: s.integer("Page number. The first page is 1.", { default: 1 }),
       },
       { required: ["appId", "startDate", "endDate"] },
+    ),
+  },
+  {
+    name: "qq_huxuan_creator_marketplace_hot_content_trends",
+    method: "GET",
+    path: "/api/qq-huxuan/cgi-bin/advertiser/finder_publisher/get_rank_finder_content/v1",
+    authLocation: "query",
+    description:
+      "Lists QQ Huxuan hot Video Account content by month and creator category, with six descending sort metrics and page-number pagination. Use it to research monthly content trends for Tencent Huxuan campaign planning.",
+    inputSchema: s.object(
+      "Hot Content Trends input.",
+      {
+        category: s.withEnum(
+          s.string(
+            "Creator category. ALL includes every category.\n\nAvailable Values:\n- `ALL`: All creator categories\n- `FOOD`: Food\n- `LIFESTYLE`: Lifestyle\n- `COMEDY`: Comedy\n- `EMOTION`: Emotion and relationships\n- `SOCIETY`: Society\n- `HUMANITIES_ARTS`: Humanities and arts\n- `DRAMA`: Drama\n- `ENTERTAINMENT`: Entertainment\n- `TECHNOLOGY`: Technology\n- `FINANCE`: Finance\n- `FILM_TV_VARIETY`: Film, television and variety shows\n- `GAMING`: Gaming\n- `PARENTING`: Parenting\n- `MUSIC`: Music\n- `TRAVEL`: Travel\n- `SPORTS`: Sports\n- `SCIENCE`: Science education\n- `AUTOMOTIVE`: Automotive\n- `EDUCATION`: Education\n- `CAREER`: Career\n- `HEALTH`: Health\n- `PETS`: Pets",
+            { default: "ALL" },
+          ),
+          [
+            "ALL",
+            "FOOD",
+            "LIFESTYLE",
+            "COMEDY",
+            "EMOTION",
+            "SOCIETY",
+            "HUMANITIES_ARTS",
+            "DRAMA",
+            "ENTERTAINMENT",
+            "TECHNOLOGY",
+            "FINANCE",
+            "FILM_TV_VARIETY",
+            "GAMING",
+            "PARENTING",
+            "MUSIC",
+            "TRAVEL",
+            "SPORTS",
+            "SCIENCE",
+            "AUTOMOTIVE",
+            "EDUCATION",
+            "CAREER",
+            "HEALTH",
+            "PETS",
+          ],
+        ),
+        sort: s.withEnum(
+          s.string(
+            "Sort metric. Results are sorted in descending order.\n\nAvailable Values:\n- `INTERACTION`: Interaction count\n- `PLAY`: Play count\n- `THUMB_LIKE`: Thumbs-up like count\n- `HEART_LIKE`: Heart like count\n- `COMMENT`: Comment count\n- `SHARE`: Share count",
+            { default: "INTERACTION" },
+          ),
+          ["INTERACTION", "PLAY", "THUMB_LIKE", "HEART_LIKE", "COMMENT", "SHARE"],
+        ),
+        month: s.string("Statistics month in yyyy-MM format. Omit to use the latest month available on QQ Huxuan."),
+        page: s.integer("Page number, starting at 1. Each page contains up to 48 items.", {
+          format: "int32",
+          default: 1,
+        }),
+      },
+      {},
     ),
   },
 ];

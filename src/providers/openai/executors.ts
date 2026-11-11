@@ -11,6 +11,7 @@ import {
   createProviderTimeout,
   isAbortLikeError,
   ProviderRequestError,
+  withRetryAfterSeconds,
   providerUserAgent,
 } from "../provider-runtime.ts";
 
@@ -398,7 +399,7 @@ async function assertOpenAiResponse(response: Response, mode: "validate" | "exec
   const error = await readOpenAiError(response);
 
   if (response.status === 429) {
-    throw new ProviderRequestError(429, error.message);
+    throw new ProviderRequestError(429, error.message, withRetryAfterSeconds(response));
   }
   if (mode === "validate" && (response.status === 401 || response.status === 403)) {
     throw new ProviderRequestError(400, error.message);
