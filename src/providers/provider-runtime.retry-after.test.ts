@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { readRetryAfterSeconds, withRetryAfterSeconds } from "./provider-runtime.ts";
+import { readProviderErrorBody, readRetryAfterSeconds, withRetryAfterSeconds } from "./provider-runtime.ts";
 
 const now = Date.parse("2026-09-26T10:00:00Z");
 
@@ -64,5 +64,28 @@ describe("withRetryAfterSeconds", () => {
     );
     expect(withRetryAfterSeconds(new Response(null, { status: 429 }), details)).toBe(details);
     expect(withRetryAfterSeconds(new Response(null, { status: 429 }))).toBeUndefined();
+  });
+});
+
+describe("readProviderErrorBody", () => {
+  it.each([
+    ['{"error":{"message":"slow down"}}', { error: { message: "slow down" } }],
+    ["slow down", "slow down"],
+    ["", {}],
+  ])("reads JSON, plain text and empty error bodies: %j", async (body, expected) => {
+    expect(await readProviderErrorBody(new Response(body as string, { status: 429 }), "Test")).toEqual(expected);
+  });
+
+  it("falls back without retaining an oversized error body", async () => {
+    expect(await readProviderErrorBody(new Response("x".repeat(65 * 1024)), "Test")).toEqual({});
+  });
+
+  it("preserves the caller's cancellation reason while reading the body", async () => {
+    const controller = new AbortController();
+    const response = new Response(new ReadableStream({ start() {} }));
+    const reason = new Error("Cancelled by caller");
+    const result = readProviderErrorBody(response, "Test", controller.signal);
+    controller.abort(reason);
+    await expect(result).rejects.toBe(reason);
   });
 });

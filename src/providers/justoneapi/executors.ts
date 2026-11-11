@@ -74,7 +74,11 @@ const handlers = mapProviderActionHandlers(
     parameters.set("token", token);
     const headers = new Headers({ accept: "application/json", "user-agent": providerUserAgent });
     let body: string | undefined;
-    if (endpoint.authLocation === "form") {
+    if (endpoint.bodyEncoding === "json") {
+      headers.set("content-type", "application/json");
+      body = JSON.stringify(values);
+      url.searchParams.set("token", token);
+    } else if (endpoint.authLocation === "form") {
       headers.set("content-type", "application/x-www-form-urlencoded;charset=UTF-8");
       body = parameters.toString();
     } else {

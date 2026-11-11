@@ -5,7 +5,12 @@ import type { ApiKeyProviderContext } from "../provider-executors.ts";
 import { createHash } from "node:crypto";
 import { compactObject, optionalInteger, optionalRecord, optionalString, requiredRecord } from "../../core/cast.ts";
 import { defineApiKeyProviderExecutors } from "../provider-executors.ts";
-import { ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
+import {
+  readProviderErrorBody,
+  withRetryAfterSeconds,
+  ProviderRequestError,
+  providerUserAgent,
+} from "../provider-runtime.ts";
 
 export const paystackApiBaseUrl = "https://api.paystack.co";
 const paystackValidationPath = "/customer";
@@ -259,12 +264,10 @@ async function requestPaystack(input: PaystackRequestInput): Promise<PaystackRes
     );
   }
 
-  const payload = await readPaystackPayload(response);
   if (!response.ok) {
-    throw mapPaystackError(response.status, payload, input.phase);
+    throw mapPaystackError(response, await readProviderErrorBody(response, "Paystack"), input.phase);
   }
-
-  return payload;
+  return readPaystackPayload(response);
 }
 
 async function readPaystackPayload(response: Response): Promise<PaystackResponseBody> {
@@ -285,25 +288,26 @@ function readRequiredDataObject(payload: PaystackResponseBody): Record<string, u
   return requiredRecord(payload.data, "data", providerOutputError);
 }
 
-function mapPaystackError(
-  status: number,
-  payload: PaystackResponseBody,
-  phase: "validate" | "execute",
-): ProviderRequestError {
-  const message = optionalString(payload.message) ?? `Paystack request failed with status ${status}`;
+function mapPaystackError(response: Response, payload: unknown, phase: "validate" | "execute"): ProviderRequestError {
+  const status = response.status;
+  const details = withRetryAfterSeconds(response, payload);
+  const message =
+    optionalString(optionalRecord(payload)?.message) ??
+    optionalString(payload) ??
+    `Paystack request failed with status ${status}`;
   if (phase === "validate" && (status === 401 || status === 403)) {
-    return new ProviderRequestError(400, message, payload);
+    return new ProviderRequestError(400, message, details);
   }
   if (status === 401 || status === 403) {
-    return new ProviderRequestError(401, message, payload);
+    return new ProviderRequestError(401, message, details);
   }
   if (status === 429) {
-    return new ProviderRequestError(429, message, payload);
+    return new ProviderRequestError(429, message, details);
   }
   if (status === 400 || status === 404) {
-    return new ProviderRequestError(400, message, payload);
+    return new ProviderRequestError(400, message, details);
   }
-  return new ProviderRequestError(status >= 500 ? 502 : status, message, payload);
+  return new ProviderRequestError(status >= 500 ? 502 : status, message, details);
 }
 
 function encodePath(value: unknown): string {

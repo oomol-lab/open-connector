@@ -287,55 +287,55 @@ export const socialGlobalEndpoints: readonly JustoneapiEndpoint[] = [
     authLocation: "query",
     description:
       "Search YouTube videos by keyword with optional language, upload-date, duration, and sort filters, or continue with a pagination token. Use it to discover public videos or browse additional result pages.",
-    inputSchema: {
-      ...s.object(
-        "Input for YouTube General Search.",
-        {
-          keyword: s.withDefault(
-            s.string("Search term. Required for the first page; leave empty when using nextToken."),
-            "",
-          ),
-          lang: s.string(
-            "Optional IETF language tag for localized results, such as en-US. Leave empty to use the default language.",
-          ),
-          uploadDate: s.withDefault(
-            s.withEnum(
-              s.string(
-                "Upload-date filter.\n\nAvailable Values:\n- `all`: No upload-date limit\n- `lastHour`: Uploaded within the last hour\n- `today`: Uploaded today\n- `thisWeek`: Uploaded this week\n- `thisMonth`: Uploaded this month\n- `thisYear`: Uploaded this year",
-              ),
-              ["all", "lastHour", "today", "thisWeek", "thisMonth", "thisYear"],
+    inputSchema: s.object(
+      "Input for YouTube General Search.",
+      {
+        keyword: s.withDefault(
+          s.string("Search term. Required for the first page; leave empty when using nextToken."),
+          "",
+        ),
+        lang: s.string(
+          "Optional IETF language tag for localized results, such as en-US. Leave empty to use the default language.",
+        ),
+        uploadDate: s.withDefault(
+          s.withEnum(
+            s.string(
+              "Upload-date filter.\n\nAvailable Values:\n- `all`: No upload-date limit\n- `lastHour`: Uploaded within the last hour\n- `today`: Uploaded today\n- `thisWeek`: Uploaded this week\n- `thisMonth`: Uploaded this month\n- `thisYear`: Uploaded this year",
             ),
-            "all",
+            ["all", "lastHour", "today", "thisWeek", "thisMonth", "thisYear"],
           ),
-          duration: s.withDefault(
-            s.withEnum(
-              s.string(
-                "Video-duration filter.\n\nAvailable Values:\n- `all`: No duration limit\n- `short`: Short videos under 4 minutes\n- `medium`: Medium videos from 4 to 20 minutes\n- `long`: Long videos over 20 minutes",
-              ),
-              ["all", "short", "medium", "long"],
+          "all",
+        ),
+        duration: s.withDefault(
+          s.withEnum(
+            s.string(
+              "Video-duration filter.\n\nAvailable Values:\n- `all`: No duration limit\n- `short`: Short videos under 4 minutes\n- `medium`: Medium videos from 4 to 20 minutes\n- `long`: Long videos over 20 minutes",
             ),
-            "all",
+            ["all", "short", "medium", "long"],
           ),
-          sortBy: s.withDefault(
-            s.withEnum(
-              s.string(
-                "Sort order for search results.\n\nAvailable Values:\n- `relevance`: Sort by relevance\n- `uploadDate`: Sort by upload date\n- `viewCount`: Sort by view count\n- `rating`: Sort by rating",
-              ),
-              ["relevance", "uploadDate", "viewCount", "rating"],
+          "all",
+        ),
+        sortBy: s.withDefault(
+          s.withEnum(
+            s.string(
+              "Sort order for search results.\n\nAvailable Values:\n- `relevance`: Sort by relevance\n- `uploadDate`: Sort by upload date\n- `viewCount`: Sort by view count\n- `rating`: Sort by rating",
             ),
-            "relevance",
+            ["relevance", "uploadDate", "viewCount", "rating"],
           ),
-          nextToken: s.string(
-            "Pagination token returned by the previous response. When provided, the keyword and filter parameters are ignored; very long tokens may exceed GET URL limits.",
-          ),
-        },
-        { required: [] },
-      ),
-      anyOf: [
-        { required: ["keyword"], properties: { keyword: { type: "string", minLength: 1 } } },
-        { required: ["nextToken"], properties: { nextToken: { type: "string", minLength: 1 } } },
-      ],
-    },
+          "relevance",
+        ),
+        nextToken: s.string(
+          "Pagination token returned by the previous response. When provided, the keyword and filter parameters are ignored; very long tokens may exceed GET URL limits.",
+        ),
+      },
+      {
+        required: [],
+        anyOf: [
+          { required: ["keyword"], properties: { keyword: { type: "string", minLength: 1 } } },
+          { required: ["nextToken"], properties: { nextToken: { type: "string", minLength: 1 } } },
+        ],
+      },
+    ),
   },
   {
     name: "youtube_video_details",
@@ -710,50 +710,181 @@ export const socialGlobalEndpoints: readonly JustoneapiEndpoint[] = [
     ),
   },
   {
-    name: "linkedin_user_published_posts",
+    name: "linkedin_company_details",
     method: "GET",
-    path: "/api/linkedin/get-user-posts/v1",
+    path: "/api/linkedin/get-company-detail/v1",
     authLocation: "query",
     description:
-      "Retrieves posts published, commented on, or reacted to by a LinkedIn member using a profile URL, activity type, offset, and pagination token. Use it to review public professional activity and continue through additional result pages.",
+      "Retrieves a public LinkedIn company profile by its vanity name or company page URL. Use it to research a company and obtain its company identifier before querying company job postings.",
     inputSchema: s.object(
-      "Input for LinkedIn User Published Posts.",
-      {
-        url: s.string("Full LinkedIn profile URL.", { minLength: 1 }),
-        type: s.withEnum(
-          s.string(
-            "User activity type.\n\nAvailable Values:\n- `POSTS`: Posts published by the user\n- `COMMENTS`: Posts commented on by the user\n- `REACTIONS`: Posts reacted to by the user",
-          ),
-          ["POSTS", "COMMENTS", "REACTIONS"],
-        ),
-        start: s.withDefault(s.integer("Pagination offset starting from 0, normally increasing by 50."), 0),
-        paginationToken: s.withDefault(s.string("Pagination token returned by a previous response."), ""),
-      },
-      { required: ["url"] },
+      "Company Details input.",
+      { company: s.string("LinkedIn company vanity name or company page URL. School pages are not supported.") },
+      { required: ["company"] },
     ),
   },
   {
-    name: "linkedin_post_comments",
+    name: "linkedin_company_jobs",
     method: "GET",
-    path: "/api/linkedin/get-post-comments/v1",
+    path: "/api/linkedin/get-company-jobs/v1",
     authLocation: "query",
     description:
-      "Retrieves LinkedIn comments for an activity post with relevance or recent sorting, page-based navigation, a pagination token, and optional share URN. Use it to review public discussion around known professional content.",
+      "Retrieves LinkedIn job postings for companies identified by company IDs, vanity names, or company page URLs, with optional keyword, location, posting age, and pagination filters. Use it to track company hiring activity across one or more employers.",
     inputSchema: s.object(
-      "Input for LinkedIn Post Comments.",
+      "Company Jobs input.",
       {
-        postId: s.string("LinkedIn post ID.", { minLength: 1 }),
-        page: s.withDefault(s.integer("Page number, starting from 1."), 1),
-        sortOrder: s.withEnum(
-          s.string(
-            "Comment sort order.\n\nAvailable Values:\n- `RELEVANCE`: Sort comments by relevance\n- `RECENT`: Sort comments from most recent",
-          ),
-          ["RELEVANCE", "RECENT"],
+        companyId: s.string(
+          "Comma-separated numeric LinkedIn company IDs, up to 10. Supply companyId or company. Companies are matched as a union; a page may contain jobs from only some selected companies.",
+          { default: "" },
         ),
-        paginationToken: s.withDefault(s.string("Pagination token returned by a previous response."), ""),
-        shareUrn: s.withDefault(s.string("Optional share URN for a shared post."), ""),
+        company: s.string(
+          "Comma-separated LinkedIn company vanity names or company page URLs, up to 10. Supply companyId or company. An unknown vanity name fails the request.",
+          { default: "" },
+        ),
+        keyword: s.string("Optional job keyword to search within the selected companies.", { default: "" }),
+        location: s.string("Free-text location, such as London, United Kingdom.", { default: "" }),
+        page: s.integer("First page to fetch, from 1 to 100. Each page contains up to 10 jobs.", {
+          format: "int32",
+          default: 1,
+        }),
+        numPages: s.integer(
+          "Number of consecutive pages to fetch, from 1 to 20. The last requested page must not exceed 100.",
+          { format: "int32", default: 1 },
+        ),
+        geoId: s.string("Numeric LinkedIn geographic location ID. Required when radius is supplied.", { default: "" }),
+        sortBy: s.withEnum(
+          s.string(
+            "Sort order. Date sorting applies to the jobs returned in this response.\n\nAvailable Values:\n- `relevance`: Keep relevance ordering\n- `date`: Sort the returned jobs from newest to oldest",
+            { default: "relevance" },
+          ),
+          ["relevance", "date"],
+        ),
+        datePosted: s.withEnum(
+          s.string(
+            "Job posting age filter.\n\nAvailable Values:\n- `all`: All posting dates\n- `today`: Posted within the last 24 hours\n- `3days`: Posted within the last 72 hours\n- `week`: Posted within the last 7 days\n- `month`: Posted within the last 30 days",
+            { default: "all" },
+          ),
+          ["all", "today", "3days", "week", "month"],
+        ),
+        employmentTypes: s.array(
+          "Comma-separated employment types. Applying this filter enables job details and may return fewer jobs than the requested page size.",
+          s.withEnum(s.string("LinkedIn employment type filter"), ["FULLTIME", "PARTTIME", "CONTRACTOR", "INTERN"]),
+        ),
+        seniorityLevels: s.array(
+          "Comma-separated seniority levels. Applying this filter enables job details and may return fewer jobs than the requested page size.",
+          s.withEnum(s.string("LinkedIn job seniority filter"), [
+            "Internship",
+            "Entry level",
+            "Associate",
+            "Mid-Senior level",
+            "Director",
+            "Executive",
+            "Not Applicable",
+          ]),
+        ),
+        remoteJobsOnly: s.boolean({
+          description: "Return only jobs with an explicit remote marker. This best-effort filter may omit remote jobs.",
+          default: false,
+        }),
+        includeDetails: s.boolean({
+          description:
+            "Fetch details for up to 100 jobs per request in addition to search cards. Employment and seniority filters enable details regardless of this value.",
+          default: true,
+        }),
+        radius: s.integer("Search radius in kilometres, at least 1. Requires geoId.", { format: "int32" }),
+        fields: s.string("Comma-separated job fields to include. job_id and job_title are always included.", {
+          default: "",
+        }),
       },
-      { required: ["postId"] },
+      {},
+    ),
+  },
+  {
+    name: "linkedin_job_details",
+    method: "GET",
+    path: "/api/linkedin/get-job-detail/v1",
+    authLocation: "query",
+    description:
+      "Retrieves LinkedIn job details for up to 20 distinct job identifiers, with optional field projection. Use it to inspect selected postings after a job search; unavailable postings are omitted from the result.",
+    inputSchema: s.object(
+      "Job Details input.",
+      {
+        jobId: s.string(
+          "Comma-separated job IDs returned by job search or raw numeric LinkedIn posting IDs, up to 20 distinct values.",
+        ),
+        fields: s.string("Comma-separated job fields to include. job_id and job_title are always included.", {
+          default: "",
+        }),
+      },
+      { required: ["jobId"] },
+    ),
+  },
+  {
+    name: "linkedin_job_search",
+    method: "GET",
+    path: "/api/linkedin/search-job/v1",
+    authLocation: "query",
+    description:
+      "Searches LinkedIn job postings by keyword with location, posting age, company, employment type, seniority, and pagination filters. Use it to discover recruitment opportunities and research hiring activity.",
+    inputSchema: s.object(
+      "Job Search input.",
+      {
+        keyword: s.string("Free-form job search keyword."),
+        location: s.string("Free-text location, such as London, United Kingdom.", { default: "" }),
+        page: s.integer("First page to fetch, from 1 to 100. Each page contains up to 10 jobs.", {
+          format: "int32",
+          default: 1,
+        }),
+        numPages: s.integer(
+          "Number of consecutive pages to fetch, from 1 to 20. The last requested page must not exceed 100.",
+          { format: "int32", default: 1 },
+        ),
+        geoId: s.string("Numeric LinkedIn geographic location ID. Required when radius is supplied.", { default: "" }),
+        sortBy: s.withEnum(
+          s.string(
+            "Sort order. Date sorting applies to the jobs returned in this response.\n\nAvailable Values:\n- `relevance`: Keep relevance ordering\n- `date`: Sort the returned jobs from newest to oldest",
+            { default: "relevance" },
+          ),
+          ["relevance", "date"],
+        ),
+        datePosted: s.withEnum(
+          s.string(
+            "Job posting age filter.\n\nAvailable Values:\n- `all`: All posting dates\n- `today`: Posted within the last 24 hours\n- `3days`: Posted within the last 72 hours\n- `week`: Posted within the last 7 days\n- `month`: Posted within the last 30 days",
+            { default: "all" },
+          ),
+          ["all", "today", "3days", "week", "month"],
+        ),
+        employmentTypes: s.array(
+          "Comma-separated employment types. Applying this filter enables job details and may return fewer jobs than the requested page size.",
+          s.withEnum(s.string("LinkedIn employment type filter"), ["FULLTIME", "PARTTIME", "CONTRACTOR", "INTERN"]),
+        ),
+        seniorityLevels: s.array(
+          "Comma-separated seniority levels. Applying this filter enables job details and may return fewer jobs than the requested page size.",
+          s.withEnum(s.string("LinkedIn job seniority filter"), [
+            "Internship",
+            "Entry level",
+            "Associate",
+            "Mid-Senior level",
+            "Director",
+            "Executive",
+            "Not Applicable",
+          ]),
+        ),
+        companyId: s.string("Numeric LinkedIn company ID to restrict the search to one company.", { default: "" }),
+        remoteJobsOnly: s.boolean({
+          description: "Return only jobs with an explicit remote marker. This best-effort filter may omit remote jobs.",
+          default: false,
+        }),
+        includeDetails: s.boolean({
+          description:
+            "Fetch details for up to 100 jobs per request in addition to search cards. Employment and seniority filters enable details regardless of this value.",
+          default: true,
+        }),
+        radius: s.integer("Search radius in kilometres, at least 1. Requires geoId.", { format: "int32" }),
+        fields: s.string("Comma-separated job fields to include. job_id and job_title are always included.", {
+          default: "",
+        }),
+      },
+      { required: ["keyword"] },
     ),
   },
 ];

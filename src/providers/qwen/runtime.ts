@@ -14,9 +14,11 @@ import {
 } from "../../core/cast.ts";
 import {
   ProviderRequestError,
+  withRetryAfterSeconds,
   providerResponseError,
   providerUserAgent,
   readProviderJsonBody,
+  readProviderErrorBody,
   requiredInputString,
   requiredResponseRecord,
   runProviderRequest,
@@ -668,10 +670,12 @@ async function requestJson(
       body: body ? JSON.stringify(body) : undefined,
       signal,
     });
-    const payload = await readProviderJsonBody(response, {
-      emptyBody: {},
-      invalidJsonMessage: "Qwen returned an invalid JSON response",
-    });
+    const payload = response.ok
+      ? await readProviderJsonBody(response, {
+          emptyBody: {},
+          invalidJsonMessage: "Qwen returned an invalid JSON response",
+        })
+      : await readProviderErrorBody(response, "Qwen", signal);
     if (!response.ok) handleError(response, payload);
     return payload;
   });
@@ -679,16 +683,25 @@ async function requestJson(
 
 function handleError(response: Response, payload: unknown): never {
   const record = optionalRecord(payload);
-  const message = optionalString(record?.message) ?? `Qwen request failed with HTTP ${response.status}`;
+  const message =
+    optionalString(record?.message) ??
+    optionalString(optionalRecord(record?.error)?.message) ??
+    optionalString(payload) ??
+    `Qwen request failed with HTTP ${response.status}`;
   if (response.status === 400 || response.status === 404 || response.status === 422)
     throw new ProviderRequestError(
       response.status === 404 ? 404 : 400,
       message,
-      { status: response.status },
+      withRetryAfterSeconds(response, { status: response.status }),
       "invalid_input",
     );
-  if (response.status === 429) throw new ProviderRequestError(429, message, { status: response.status });
-  throw new ProviderRequestError(response.status >= 500 ? 502 : response.status, message, { status: response.status });
+  if (response.status === 429)
+    throw new ProviderRequestError(429, message, withRetryAfterSeconds(response, { status: response.status }));
+  throw new ProviderRequestError(
+    response.status >= 500 ? 502 : response.status,
+    message,
+    withRetryAfterSeconds(response, { status: response.status }),
+  );
 }
 
 function inputError(message: string): ProviderRequestError {

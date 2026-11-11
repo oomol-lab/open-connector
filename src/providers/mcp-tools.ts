@@ -1,4 +1,4 @@
-import type { McpHttpTransport } from "./mcp-client.ts";
+import type { McpHttpTransport, McpProtocolVersion } from "./mcp-client.ts";
 import type { ProviderFetch } from "./provider-runtime.ts";
 import type { FetchLike, ToolAnnotations } from "@modelcontextprotocol/client";
 
@@ -35,6 +35,7 @@ export interface McpToolSummary {
 }
 export interface McpToolOptions {
   transport?: McpHttpTransport;
+  protocolVersion?: McpProtocolVersion;
   endpoint: string;
   service: string;
   fetcher?: ProviderFetch;
@@ -56,6 +57,7 @@ export async function withMcpToolClient<T>(input: McpToolOptions, run: (client: 
     {
       endpoint: new URL(input.endpoint),
       transport: input.transport ?? "streamable_http",
+      protocolVersion: input.protocolVersion,
       signal: input.signal,
       headers: { "user-agent": providerUserAgent, ...input.headers },
       redirect: input.redirect,

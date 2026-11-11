@@ -17,9 +17,11 @@ import {
 import {
   providerInputError,
   ProviderRequestError,
+  withRetryAfterSeconds,
   providerResponseError,
   providerUserAgent,
   readProviderJsonBody,
+  readProviderErrorBody,
   requiredInputString,
   requiredResponseRecord,
   runProviderRequest,
@@ -282,10 +284,12 @@ async function requestArkJson(input: SeedanceRequestInput): Promise<unknown> {
       body: input.body ? JSON.stringify(input.body) : undefined,
       signal,
     });
-    const payload = await readProviderJsonBody(response, {
-      emptyBody: {},
-      invalidJsonMessage: "Seedance returned an invalid JSON response",
-    });
+    const payload = response.ok
+      ? await readProviderJsonBody(response, {
+          emptyBody: {},
+          invalidJsonMessage: "Seedance returned an invalid JSON response",
+        })
+      : await readProviderErrorBody(response, "Seedance", signal);
     if (!response.ok) handleArkError(response, payload);
     return payload;
   });
@@ -300,7 +304,7 @@ function handleArkError(response: Response, payload: unknown): never {
     optionalString(record?.error) ??
     optionalString(nestedError?.message) ??
     `Seedance request failed with HTTP ${response.status}`;
-  const details = compactObject({ code, status: response.status });
+  const details = withRetryAfterSeconds(response, compactObject({ code, status: response.status }));
   if (response.status === 401 || response.status === 403)
     throw new ProviderRequestError(response.status, message, details);
   if (response.status === 400 || response.status === 404 || response.status === 422) {

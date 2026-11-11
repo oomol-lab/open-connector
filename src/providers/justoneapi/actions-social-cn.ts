@@ -10,39 +10,42 @@ export const socialCnEndpoints: readonly JustoneapiEndpoint[] = [
     authLocation: "query",
     description:
       "Searches recent content across news, Weibo, WeChat, Zhihu, Douyin, Xiaohongshu, Bilibili, and Kuaishou with source and time filters. Use it to monitor a topic across multiple platforms.",
-    inputSchema: {
-      ...s.object(
-        "Input for Social Media Cross-Platform Search.",
-        {
-          keyword: s.string(
-            'Search query string. Supports these five syntax forms:\n- AND (&&): A && B matches content containing both A and B.\n- OR (||): A || B matches content containing A or B.\n- Exclusion (-): -A matches content that does not contain A.\n- Parentheses (): (A && B) || C matches content containing C, or both A and B.\n- English double quotes (""): "A" disables tokenization and requires an exact match for A.\n',
-          ),
-          source: s.withDefault(
-            s.withEnum(
-              s.string(
-                "Target social media platform for search filtering.\n\nAvailable Values:\n- `ALL`: All platforms\n- `NEWS`: News\n- `WEIBO`: Sina Weibo\n- `WEIXIN`: Weixin (WeChat)\n- `ZHIHU`: Zhihu\n- `DOUYIN`: Douyin (TikTok China)\n- `XIAOHONGSHU`: Xiaohongshu (Little Red Book)\n- `BILIBILI`: Bilibili\n- `KUAISHOU`: Kuaishou",
-              ),
-              ["ALL", "NEWS", "WEIBO", "WEIXIN", "ZHIHU", "DOUYIN", "XIAOHONGSHU", "BILIBILI", "KUAISHOU"],
+    inputSchema: s.object(
+      "Input for Social Media Cross-Platform Search.",
+      {
+        keyword: s.string(
+          'Search query string. Supports these five syntax forms:\n- AND (&&): A && B matches content containing both A and B.\n- OR (||): A || B matches content containing A or B.\n- Exclusion (-): -A matches content that does not contain A.\n- Parentheses (): (A && B) || C matches content containing C, or both A and B.\n- English double quotes (""): "A" disables tokenization and requires an exact match for A.\n',
+        ),
+        source: s.withDefault(
+          s.withEnum(
+            s.string(
+              "Target social media platform for search filtering.\n\nAvailable Values:\n- `ALL`: All platforms\n- `NEWS`: News\n- `WEIBO`: Sina Weibo\n- `WEIXIN`: Weixin (WeChat)\n- `ZHIHU`: Zhihu\n- `DOUYIN`: Douyin (TikTok China)\n- `XIAOHONGSHU`: Xiaohongshu (Little Red Book)\n- `BILIBILI`: Bilibili\n- `KUAISHOU`: Kuaishou",
             ),
-            "ALL",
+            ["ALL", "NEWS", "WEIBO", "WEIXIN", "ZHIHU", "DOUYIN", "XIAOHONGSHU", "BILIBILI", "KUAISHOU"],
           ),
-          start: s.string("Start time of the search period (yyyy-MM-dd HH:mm:ss). Required for initial request."),
-          end: s.string("End time of the search period (yyyy-MM-dd HH:mm:ss). Required for initial request."),
-          nextCursor: s.string("Pagination cursor provided by the 'nextCursor' field in the previous response."),
-        },
-        { required: [] },
-      ),
-      anyOf: [
-        { required: ["nextCursor"], properties: { nextCursor: { type: "string", minLength: 1 } } },
-        {
-          required: ["start", "end"],
-          properties: {
-            start: { type: "string", minLength: 1 },
-            end: { type: "string", minLength: 1 },
+          "ALL",
+        ),
+        start: s.string("Start time of the search period (yyyy-MM-dd HH:mm:ss). Required for initial request."),
+        end: s.string("End time of the search period (yyyy-MM-dd HH:mm:ss). Required for initial request."),
+        nextCursor: s.string("Pagination cursor provided by the 'nextCursor' field in the previous response."),
+      },
+      {
+        required: [],
+        anyOf: [
+          {
+            required: ["nextCursor"],
+            properties: { nextCursor: { type: "string", minLength: 1 } },
           },
-        },
-      ],
-    },
+          {
+            required: ["start", "end"],
+            properties: {
+              start: { type: "string", minLength: 1 },
+              end: { type: "string", minLength: 1 },
+            },
+          },
+        ],
+      },
+    ),
   },
   {
     name: "xiaohongshu_rednote_ask_dots_ai",
@@ -516,27 +519,6 @@ export const socialCnEndpoints: readonly JustoneapiEndpoint[] = [
     ),
   },
   {
-    name: "douyin_tiktok_china_user_published_videos",
-    method: "GET",
-    path: "/api/douyin/get-user-video-list/v3",
-    authLocation: "query",
-    description:
-      "Retrieves videos published by a Douyin (TikTok China) user with cursor pagination. Use it to browse a known creator's public video history or continue through video pages.",
-    inputSchema: s.object(
-      "Input for Douyin (TikTok China) User Published Videos.",
-      {
-        secUid: s.string("The unique user ID (sec_uid) on Douyin.", { minLength: 1 }),
-        maxCursor: s.withDefault(
-          s.integer(
-            "Pagination cursor; use 0 for the first page, and the `max_cursor` from the previous response for subsequent pages.",
-          ),
-          0,
-        ),
-      },
-      { required: ["secUid"] },
-    ),
-  },
-  {
     name: "douyin_tiktok_china_video_details",
     method: "GET",
     path: "/api/douyin/get-video-detail/v2",
@@ -735,36 +717,36 @@ export const socialCnEndpoints: readonly JustoneapiEndpoint[] = [
     authLocation: "form",
     description:
       "Retrieves historical articles for a WeChat Official Account identified by ghid or article URL, with an offset cursor from the previous page. Use it to continue through an account's article archive with cursor pagination.",
-    inputSchema: {
-      ...s.object(
-        "Input for WeChat Official Accounts Account Historical Articles.",
-        {
-          ghid: s.withDefault(
-            s.string(
-              "WeChat Official Account original identifier, using the gh_ prefix returned by WeChat. Use either ghid or url.",
-            ),
-            "",
+    inputSchema: s.object(
+      "Input for WeChat Official Accounts Account Historical Articles.",
+      {
+        ghid: s.withDefault(
+          s.string(
+            "WeChat Official Account original identifier, using the gh_ prefix returned by WeChat. Use either ghid or url.",
           ),
-          url: s.withDefault(
-            s.string(
-              "WeChat Official Account article URL used to identify the account and fetch historical articles. Use either ghid or url.",
-            ),
-            "",
+          "",
+        ),
+        url: s.withDefault(
+          s.string(
+            "WeChat Official Account article URL used to identify the account and fetch historical articles. Use either ghid or url.",
           ),
-          offset: s.withDefault(
-            s.string(
-              "PagingInfo.Offset cursor returned by the previous response. Leave it empty for the first page. For this POST endpoint, send it in an application/x-www-form-urlencoded form body.",
-            ),
-            "",
+          "",
+        ),
+        offset: s.withDefault(
+          s.string(
+            "PagingInfo.Offset cursor returned by the previous response. Leave it empty for the first page. For this POST endpoint, send it in an application/x-www-form-urlencoded form body.",
           ),
-        },
-        { required: [] },
-      ),
-      anyOf: [
-        { required: ["ghid"], properties: { ghid: { type: "string", minLength: 1 } } },
-        { required: ["url"], properties: { url: { type: "string", minLength: 1 } } },
-      ],
-    },
+          "",
+        ),
+      },
+      {
+        required: [],
+        anyOf: [
+          { required: ["ghid"], properties: { ghid: { type: "string", minLength: 1 } } },
+          { required: ["url"], properties: { url: { type: "string", minLength: 1 } } },
+        ],
+      },
+    ),
   },
   {
     name: "wechat_official_accounts_article_metrics",
@@ -1005,28 +987,28 @@ export const socialCnEndpoints: readonly JustoneapiEndpoint[] = [
     authLocation: "query",
     description:
       "Retrieves the original-article count for a WeChat Official Account identified by ghid or article URL. Use it to compare original publishing activity across known accounts.",
-    inputSchema: {
-      ...s.object(
-        "Input for WeChat Official Accounts Account Original Article Count.",
-        {
-          ghid: s.withDefault(
-            s.string(
-              "WeChat Official Account original identifier, using the gh_ prefix returned by WeChat. Use either ghid or url.",
-            ),
-            "",
+    inputSchema: s.object(
+      "Input for WeChat Official Accounts Account Original Article Count.",
+      {
+        ghid: s.withDefault(
+          s.string(
+            "WeChat Official Account original identifier, using the gh_ prefix returned by WeChat. Use either ghid or url.",
           ),
-          url: s.withDefault(
-            s.string("WeChat Official Account article URL used to identify the account. Use either ghid or url."),
-            "",
-          ),
-        },
-        { required: [] },
-      ),
-      anyOf: [
-        { required: ["ghid"], properties: { ghid: { type: "string", minLength: 1 } } },
-        { required: ["url"], properties: { url: { type: "string", minLength: 1 } } },
-      ],
-    },
+          "",
+        ),
+        url: s.withDefault(
+          s.string("WeChat Official Account article URL used to identify the account. Use either ghid or url."),
+          "",
+        ),
+      },
+      {
+        required: [],
+        anyOf: [
+          { required: ["ghid"], properties: { ghid: { type: "string", minLength: 1 } } },
+          { required: ["url"], properties: { url: { type: "string", minLength: 1 } } },
+        ],
+      },
+    ),
   },
   {
     name: "wechat_official_accounts_account_principal_info",
@@ -1163,30 +1145,30 @@ export const socialCnEndpoints: readonly JustoneapiEndpoint[] = [
     authLocation: "query",
     description:
       "Finds the WeChat Channels account bound to a WeChat Official Account using either its original ID or an article URL. Use it to connect an official account with its Channels identity.",
-    inputSchema: {
-      ...s.object(
-        "Input for WeChat Channels Get Bound Channel.",
-        {
-          ghid: s.withDefault(
-            s.string(
-              "WeChat Official Account original id used to find the bound WeChat Channels account. Use either ghid or url.",
-            ),
-            "",
+    inputSchema: s.object(
+      "Input for WeChat Channels Get Bound Channel.",
+      {
+        ghid: s.withDefault(
+          s.string(
+            "WeChat Official Account original id used to find the bound WeChat Channels account. Use either ghid or url.",
           ),
-          url: s.withDefault(
-            s.string(
-              "WeChat Official Account article URL used to find the bound WeChat Channels account. Use either ghid or url.",
-            ),
-            "",
+          "",
+        ),
+        url: s.withDefault(
+          s.string(
+            "WeChat Official Account article URL used to find the bound WeChat Channels account. Use either ghid or url.",
           ),
-        },
-        { required: [] },
-      ),
-      anyOf: [
-        { required: ["ghid"], properties: { ghid: { type: "string", minLength: 1 } } },
-        { required: ["url"], properties: { url: { type: "string", minLength: 1 } } },
-      ],
-    },
+          "",
+        ),
+      },
+      {
+        required: [],
+        anyOf: [
+          { required: ["ghid"], properties: { ghid: { type: "string", minLength: 1 } } },
+          { required: ["url"], properties: { url: { type: "string", minLength: 1 } } },
+        ],
+      },
+    ),
   },
   {
     name: "wechat_channels_video_basic_info",
@@ -2058,6 +2040,43 @@ export const socialCnEndpoints: readonly JustoneapiEndpoint[] = [
         offset: s.withDefault(s.string("Pagination offset from the previous result."), ""),
       },
       { required: ["commentId"] },
+    ),
+  },
+  {
+    name: "wechat_channels_video_share_url",
+    method: "GET",
+    path: "/api/weixin-channels/get-video-share-url/v1",
+    authLocation: "query",
+    description:
+      "Generates a share link for a WeChat Channels video identified by objectId. Use it to share a known Channels video or obtain its link for a subsequent lookup.",
+    inputSchema: s.object(
+      "Video Share URL input.",
+      {
+        objectId: s.string("WeChat Channels video objectId as a numeric string of up to 32 digits.", {
+          maxLength: 32,
+          pattern: "^[0-9]+$",
+        }),
+      },
+      { required: ["objectId"] },
+    ),
+  },
+  {
+    name: "xiaohongshu_rednote_user_favorited_notes",
+    method: "GET",
+    path: "/api/xiaohongshu/get-user-faved-note-list/v1",
+    authLocation: "query",
+    description:
+      "Retrieves a Xiaohongshu (RedNote) user's favorited notes by user ID with cursor pagination. Use it to review a user's saved content and research content interests.",
+    inputSchema: s.object(
+      "User Favorited Notes input.",
+      {
+        userId: s.string("Unique user identifier on Xiaohongshu."),
+        lastCursor: s.string(
+          "For the next page, pass the cursor from the previous response. Omit or pass an empty value for the first page.",
+          { default: "" },
+        ),
+      },
+      { required: ["userId"] },
     ),
   },
 ];

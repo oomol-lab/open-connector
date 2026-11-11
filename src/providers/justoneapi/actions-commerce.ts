@@ -98,19 +98,29 @@ export const commerceEndpoints: readonly JustoneapiEndpoint[] = [
   {
     name: "taobao_and_tmall_shop_product_list",
     method: "GET",
-    path: "/api/taobao/get-shop-item-list/v4",
+    path: "/api/taobao/get-shop-item-list/v5",
     authLocation: "query",
     description:
-      "Retrieves products from a Taobao or Tmall shop by seller ID with page-based pagination. Use it to browse or monitor a known seller's catalog across result pages.",
+      "Retrieves products from a Taobao shop by seller ID and shop ID, with optional shop-category filtering, keyword search, sorting, and page-based pagination. Use it to browse a shop catalog or find matching products within a shop.",
     inputSchema: s.object(
-      "Input for Taobao and Tmall Shop Product List.",
+      "Shop Product List input.",
       {
-        sellerId: s.string("Taobao/Tmall seller user ID used to identify the shop.", {
-          minLength: 1,
-        }),
-        page: s.integer("Page number for pagination.", { default: 1 }),
+        sellerId: s.string("Taobao seller user ID associated with the shop."),
+        shopId: s.string("Taobao shop ID associated with the seller."),
+        catId: s.string("Shop category ID from Shop Detail. Omit to include all shop categories."),
+        keyword: s.string(
+          "Keyword to search for products within the shop. Omit to list products without a keyword filter.",
+        ),
+        sort: s.withEnum(
+          s.string(
+            "Product sort order.\n\nAvailable Values:\n- `comprehensive`: Comprehensive sorting\n- `sales`: Sort by sales volume\n- `new`: Sort by new arrivals, newest first\n- `price-asc`: Price, lowest first\n- `price-desc`: Price, highest first",
+            { default: "comprehensive" },
+          ),
+          ["comprehensive", "sales", "new", "price-asc", "price-desc"],
+        ),
+        page: s.integer("Page number, starting from 1.", { format: "int32", default: 1 }),
       },
-      { required: ["sellerId"] },
+      { required: ["sellerId", "shopId"] },
     ),
   },
   {
@@ -247,16 +257,14 @@ export const commerceEndpoints: readonly JustoneapiEndpoint[] = [
   {
     name: "jdcom_product_price",
     method: "GET",
-    path: "/api/jd/get-item-price/v1",
+    path: "/api/jd/get-item-price/v2",
     authLocation: "query",
     description:
-      "Retrieve the current JD.com product price for a known item ID. Use it to check a product's price before catalog comparison or purchase analysis.",
+      "Retrieve JD.com product prices for up to 10 comma-separated item IDs in one request. Use it for batch price checks and catalog comparisons.",
     inputSchema: s.object(
-      "Input for JD.com Product Price.",
-      {
-        itemId: s.string("A unique product identifier on JD.com (item ID).", { minLength: 1 }),
-      },
-      { required: ["itemId"] },
+      "Product Price input.",
+      { itemIds: s.string("Between 1 and 10 numeric JD.com item IDs, separated by commas without spaces.") },
+      { required: ["itemIds"] },
     ),
   },
   {
@@ -273,22 +281,6 @@ export const commerceEndpoints: readonly JustoneapiEndpoint[] = [
         page: s.string("Page number for pagination."),
       },
       { required: ["keyword"] },
-    ),
-  },
-  {
-    name: "jdcom_product_comments",
-    method: "GET",
-    path: "/api/jd/get-item-comments/v2",
-    authLocation: "query",
-    description:
-      "Retrieve paginated JD.com product comments for a specific SKU. Use it to review buyer feedback for that product.",
-    inputSchema: s.object(
-      "Input for JD.com Product Comments.",
-      {
-        itemId: s.string("A unique product identifier on JD.com (item ID).", { minLength: 1 }),
-        page: s.string("Page number for paginated comments."),
-      },
-      { required: ["itemId"] },
     ),
   },
   {
@@ -350,14 +342,29 @@ export const commerceEndpoints: readonly JustoneapiEndpoint[] = [
   {
     name: "1688_product_details",
     method: "GET",
-    path: "/api/1688/get-item-detail/v1",
+    path: "/api/1688/get-item-detail/v2",
     authLocation: "query",
     description:
-      "Retrieves the public product detail for a 1688 wholesale listing by item ID. Use it to review a known offer during product sourcing or catalog research.",
+      "Retrieves 1688 product details by item ID with an optional output language and dropshipping scene. Use it to inspect a known product during sourcing and catalog research.",
     inputSchema: s.object(
-      "Input for 1688 Product Details.",
+      "Product Details input.",
       {
-        itemId: s.string("A unique product identifier on 1688.", { minLength: 1 }),
+        itemId: s.string("1688 product ID."),
+        scene: s.withEnum(
+          s.string("Optional dropshipping pricing scene.\n\nAvailable Values:\n- `drop_shipping`: Dropshipping"),
+          ["drop_shipping"],
+        ),
+        optimizeTitle: s.boolean({
+          description: "Optimize Chinese titles by removing non-core words.",
+          default: false,
+        }),
+        language: s.withEnum(
+          s.string(
+            "Output language.\n\nAvailable Values:\n- `en`: English\n- `zh`: Chinese\n- `ru`: Russian\n- `th`: Thai\n- `pt`: Portuguese\n- `es`: Spanish\n- `tr`: Turkish\n- `vi`: Vietnamese\n- `ja`: Japanese\n- `ko`: Korean",
+            { default: "zh" },
+          ),
+          ["en", "zh", "ru", "th", "pt", "es", "tr", "vi", "ja", "ko"],
+        ),
       },
       { required: ["itemId"] },
     ),
@@ -365,14 +372,33 @@ export const commerceEndpoints: readonly JustoneapiEndpoint[] = [
   {
     name: "1688_product_search",
     method: "GET",
-    path: "/api/1688/search-item-list/v1",
+    path: "/api/1688/search-item-list/v2",
     authLocation: "query",
     description:
-      "Searches 1688 wholesale product listings by keyword. Use it to discover candidate products or suppliers during sourcing and market research.",
+      "Searches 1688 products by keyword with pagination, sorting, price ranges and optional sourcing filters. Use it to discover products during procurement and market research.",
     inputSchema: s.object(
-      "Input for 1688 Product Search.",
+      "Product Search input.",
       {
-        keyword: s.string("Search keyword.", { minLength: 1 }),
+        keyword: s.string("Search keyword."),
+        page: s.integer("Page number, starting at 1.", { format: "int32", default: 1 }),
+        pageSize: s.integer("Number of items requested per page. The returned count may differ.", {
+          format: "int32",
+          default: 20,
+        }),
+        sort: s.withEnum(
+          s.string(
+            "Product sort order.\n\nAvailable Values:\n- `default`: Default order\n- `sales`: Sales order\n- `price_up`: Price ascending\n- `price_down`: Price descending",
+            { default: "default" },
+          ),
+          ["default", "sales", "price_up", "price_down"],
+        ),
+        moq: s.integer("Minimum order quantity filter.", { format: "int32" }),
+        priceStart: s.string("Minimum price filter in CNY."),
+        priceEnd: s.string("Maximum price filter in CNY."),
+        newArrival: s.boolean({ description: "Filter for new products." }),
+        supportDropshipping: s.boolean({ description: "Filter for support for dropshipping." }),
+        freeShipping: s.boolean({ description: "Filter for free shipping." }),
+        isSuperFactory: s.boolean({ description: "Optional super-factory filter." }),
       },
       { required: ["keyword"] },
     ),
@@ -904,5 +930,456 @@ export const commerceEndpoints: readonly JustoneapiEndpoint[] = [
       },
       { required: ["categoryId"] },
     ),
+  },
+  {
+    name: "1688_category_information",
+    method: "GET",
+    path: "/api/1688/get-category-info/v1",
+    authLocation: "query",
+    description:
+      "Retrieves 1688 category information by category ID, or root categories when no ID is supplied. Use it to navigate categories during product sourcing.",
+    inputSchema: s.object("Category Information input.", { catId: s.string("1688 platform category ID.") }, {}),
+  },
+  {
+    name: "1688_category_products",
+    method: "GET",
+    path: "/api/1688/get-category-item-list/v2",
+    authLocation: "query",
+    description:
+      "Retrieves 1688 products by category ID with output language, pagination, sorting and price filters. Use it to discover category products for multilingual sourcing.",
+    inputSchema: s.object(
+      "Category Products input.",
+      {
+        catId: s.string("1688 platform category ID."),
+        language: s.withEnum(
+          s.string(
+            "Output language.\n\nAvailable Values:\n- `en`: English\n- `zh`: Chinese\n- `ru`: Russian\n- `vi`: Vietnamese\n- `ja`: Japanese\n- `ko`: Korean",
+            { default: "zh" },
+          ),
+          ["en", "zh", "ru", "vi", "ja", "ko"],
+        ),
+        page: s.integer("Page number, starting at 1.", { format: "int32", default: 1 }),
+        pageSize: s.integer("Number of items requested per page. The returned count may differ.", {
+          format: "int32",
+          default: 20,
+        }),
+        sort: s.withEnum(
+          s.string(
+            "Product sort order.\n\nAvailable Values:\n- `default`: Default order\n- `sales`: Sales order\n- `price_up`: Price ascending\n- `price_down`: Price descending",
+            { default: "default" },
+          ),
+          ["default", "sales", "price_up", "price_down"],
+        ),
+        priceStart: s.string("Minimum price filter in CNY."),
+        priceEnd: s.string("Maximum price filter in CNY."),
+        newArrival: s.boolean({ description: "Filter for new products." }),
+        supportDropshipping: s.boolean({ description: "Filter for support for dropshipping." }),
+        freeShipping: s.boolean({ description: "Filter for free shipping." }),
+        isSuperFactory: s.boolean({ description: "Optional super-factory filter." }),
+      },
+      { required: ["catId"] },
+    ),
+  },
+  {
+    name: "1688_cross_border_product_search_by_image",
+    method: "GET",
+    path: "/api/1688/search-cross-border-item-by-image/v2",
+    authLocation: "query",
+    description:
+      "Searches 1688 cross-border products by image with language selection, pagination, sorting and sourcing filters. Use it to find products for multilingual visual sourcing.",
+    inputSchema: s.object(
+      "Cross-border Image Search input.",
+      {
+        imgUrl: s.string(
+          "Image reference returned by Image Conversion with searchApiEndpoint=cross_border_v2. Convert full image URLs before searching.",
+        ),
+        language: s.withEnum(
+          s.string(
+            "Output language.\n\nAvailable Values:\n- `en`: English\n- `zh`: Chinese\n- `ru`: Russian\n- `vi`: Vietnamese\n- `ja`: Japanese\n- `ko`: Korean",
+            { default: "en" },
+          ),
+          ["en", "zh", "ru", "vi", "ja", "ko"],
+        ),
+        page: s.integer("Page number, starting at 1.", { format: "int32", default: 1 }),
+        pageSize: s.integer("Number of items requested per page. The returned count may differ.", {
+          format: "int32",
+          default: 20,
+        }),
+        sort: s.withEnum(
+          s.string(
+            "Product sort order.\n\nAvailable Values:\n- `default`: Default order\n- `sales`: Sales order\n- `price_up`: Price ascending\n- `price_down`: Price descending",
+            { default: "default" },
+          ),
+          ["default", "sales", "price_up", "price_down"],
+        ),
+        priceStart: s.string("Minimum price filter in CNY."),
+        priceEnd: s.string("Maximum price filter in CNY."),
+        supportDropshipping: s.boolean({ description: "Filter for support for dropshipping." }),
+        isFactory: s.boolean({ description: "Filter by factory status." }),
+        verifiedSupplier: s.boolean({ description: "Filter for verified sellers." }),
+        freeShipping: s.boolean({ description: "Filter for free shipping." }),
+        newArrival: s.boolean({ description: "Filter for new products." }),
+      },
+      { required: ["imgUrl"] },
+    ),
+  },
+  {
+    name: "1688_cross_border_product_search",
+    method: "GET",
+    path: "/api/1688/search-cross-border-item-list/v1",
+    authLocation: "query",
+    description:
+      "Searches 1688 cross-border products by keyword or category with language selection, pagination and sourcing filters. Use it to discover products for multilingual procurement.",
+    inputSchema: s.object(
+      "Cross-border Product Search input.",
+      {
+        keyword: s.string("Search keyword. Supply keyword or catId."),
+        catId: s.string("1688 category ID. Supply catId or keyword."),
+        page: s.integer("Page number, starting at 1.", { format: "int32", default: 1 }),
+        pageSize: s.integer("Number of items requested per page. The returned count may differ.", {
+          format: "int32",
+          default: 20,
+        }),
+        language: s.withEnum(
+          s.string(
+            "Output language.\n\nAvailable Values:\n- `en`: English\n- `zh`: Chinese\n- `ru`: Russian\n- `vi`: Vietnamese\n- `ja`: Japanese\n- `ko`: Korean",
+            { default: "en" },
+          ),
+          ["en", "zh", "ru", "vi", "ja", "ko"],
+        ),
+        sort: s.withEnum(
+          s.string(
+            "Product sort order.\n\nAvailable Values:\n- `default`: Default order\n- `sales`: Sales order\n- `price_up`: Price ascending\n- `price_down`: Price descending",
+            { default: "default" },
+          ),
+          ["default", "sales", "price_up", "price_down"],
+        ),
+        priceStart: s.string("Minimum price filter in CNY."),
+        priceEnd: s.string("Maximum price filter in CNY."),
+        newArrival: s.boolean({ description: "Filter for new products." }),
+        supportDropshipping: s.boolean({ description: "Filter for support for dropshipping." }),
+        freeShipping: s.boolean({ description: "Filter for free shipping." }),
+        isSuperFactory: s.boolean({ description: "Optional super-factory filter." }),
+      },
+      {},
+    ),
+  },
+  {
+    name: "1688_factory_search",
+    method: "GET",
+    path: "/api/1688/search-factory/v1",
+    authLocation: "query",
+    description:
+      "Searches 1688 factories by keyword with pagination and default or repurchase-rate sorting. Use it to discover manufacturers during procurement research.",
+    inputSchema: s.object(
+      "Factory Search input.",
+      {
+        keyword: s.string("Factory search keyword."),
+        page: s.integer("Page number, starting at 1.", { format: "int32", default: 1 }),
+        pageSize: s.integer("Number of items requested per page. The returned count may differ.", {
+          format: "int32",
+          default: 20,
+        }),
+        sort: s.withEnum(
+          s.string(
+            "Factory sort order.\n\nAvailable Values:\n- `default`: Default order\n- `repurchase_rate`: Repurchase-rate order",
+            { default: "default" },
+          ),
+          ["default", "repurchase_rate"],
+        ),
+      },
+      { required: ["keyword"] },
+    ),
+  },
+  {
+    name: "1688_image_conversion",
+    method: "POST",
+    path: "/api/1688/convert-image/v1",
+    authLocation: "query",
+    bodyEncoding: "json",
+    description:
+      "Converts an image URL or JPEG Base64 input into an image reference for a selected 1688 image search endpoint. Use it to prepare external images for visual product sourcing.",
+    inputSchema: s.object(
+      "Image Conversion input.",
+      {
+        url: s.string("Image URL. Supply either url or imgBase64."),
+        imgBase64: s.string(
+          "JPEG image encoded as Base64 without a data URI prefix; decoded size must not exceed 100 KB.",
+        ),
+        searchApiEndpoint: s.withEnum(
+          s.string("Image search target for the converted reference.", { default: "standard" }),
+          ["standard", "cross_border_v1", "cross_border_v2"],
+        ),
+      },
+      {},
+    ),
+  },
+  {
+    name: "1688_product_description_images",
+    method: "GET",
+    path: "/api/1688/get-item-description-images/v1",
+    authLocation: "query",
+    description:
+      "Retrieves 1688 product description images by item ID. Use it to review listing descriptions during catalog preparation and product research.",
+    inputSchema: s.object(
+      "Product Description Images input.",
+      { itemId: s.string("1688 product ID.") },
+      { required: ["itemId"] },
+    ),
+  },
+  {
+    name: "1688_product_details_by_url",
+    method: "GET",
+    path: "/api/1688/get-item-detail-by-url/v1",
+    authLocation: "query",
+    description:
+      "Retrieves 1688 product details by product URL with an optional output language. Use it to inspect a known listing during sourcing and catalog research.",
+    inputSchema: s.object(
+      "Product Details [URL] input.",
+      {
+        url: s.string("1688 product URL."),
+        scene: s.withEnum(
+          s.string("Optional dropshipping pricing scene.\n\nAvailable Values:\n- `drop_shipping`: Dropshipping"),
+          ["drop_shipping"],
+        ),
+        optimizeTitle: s.boolean({
+          description: "Optimize Chinese titles by removing non-core words.",
+          default: false,
+        }),
+        language: s.withEnum(
+          s.string(
+            "Output language.\n\nAvailable Values:\n- `en`: English\n- `zh`: Chinese\n- `ru`: Russian\n- `th`: Thai\n- `pt`: Portuguese\n- `es`: Spanish\n- `tr`: Turkish\n- `vi`: Vietnamese\n- `ja`: Japanese\n- `ko`: Korean",
+            { default: "zh" },
+          ),
+          ["en", "zh", "ru", "th", "pt", "es", "tr", "vi", "ja", "ko"],
+        ),
+      },
+      { required: ["url"] },
+    ),
+  },
+  {
+    name: "1688_product_reviews",
+    method: "GET",
+    path: "/api/1688/get-item-rating-list/v1",
+    authLocation: "query",
+    description:
+      "Retrieves 1688 product reviews by item ID with pagination and default or latest sorting. Use it to review buyer feedback during product sourcing.",
+    inputSchema: s.object(
+      "Product Reviews input.",
+      {
+        itemId: s.string("1688 product ID."),
+        page: s.integer("Page number, starting at 1.", { format: "int32", default: 1 }),
+        sortType: s.withEnum(
+          s.string(
+            "Review sort order.\n\nAvailable Values:\n- `default`: Default order\n- `latest`: Latest reviews first",
+            { default: "default" },
+          ),
+          ["default", "latest"],
+        ),
+      },
+      { required: ["itemId"] },
+    ),
+  },
+  {
+    name: "1688_product_search_by_image",
+    method: "GET",
+    path: "/api/1688/search-item-by-image/v1",
+    authLocation: "query",
+    description:
+      "Searches 1688 products by image with pagination, sorting and optional sourcing filters. Use it to find matching products during visual sourcing.",
+    inputSchema: s.object(
+      "Product Search by Image input.",
+      {
+        imgUrl: s.string(
+          "Image URL or image reference returned by Image Conversion. Convert external images for the selected search target before searching.",
+        ),
+        page: s.integer("Page number, starting at 1.", { format: "int32", default: 1 }),
+        pageSize: s.integer("Number of items requested per page. The returned count may differ.", {
+          format: "int32",
+          default: 20,
+        }),
+        sort: s.withEnum(
+          s.string(
+            "Product sort order.\n\nAvailable Values:\n- `default`: Default order\n- `sales`: Sales order\n- `price_up`: Price ascending\n- `price_down`: Price descending",
+            { default: "default" },
+          ),
+          ["default", "sales", "price_up", "price_down"],
+        ),
+        moq: s.integer("Minimum order quantity filter.", { format: "int32" }),
+        priceStart: s.string("Minimum price filter in CNY."),
+        priceEnd: s.string("Maximum price filter in CNY."),
+        supportDropshipping: s.boolean({ description: "Filter for support for dropshipping." }),
+        isFactory: s.boolean({ description: "Filter by factory status." }),
+        verifiedSupplier: s.boolean({ description: "Filter for verified sellers." }),
+        freeShipping: s.boolean({ description: "Filter for free shipping." }),
+        newArrival: s.boolean({ description: "Filter for new products." }),
+      },
+      { required: ["imgUrl"] },
+    ),
+  },
+  {
+    name: "1688_product_shipping_fee",
+    method: "GET",
+    path: "/api/1688/get-item-shipping/v1",
+    authLocation: "query",
+    description:
+      "Retrieves a 1688 product shipping estimate for a Chinese province using quantity and optional total weight. Use it to estimate domestic procurement shipping costs.",
+    inputSchema: s.object(
+      "Product Shipping Fee input.",
+      {
+        itemId: s.string("1688 product ID."),
+        province: s.string("Chinese province name or abbreviation, for example Guangdong or gd."),
+        totalQuantity: s.integer("Total number of items to ship.", { format: "int32", default: 1 }),
+        totalWeight: s.number("Total shipment weight in kilograms."),
+      },
+      { required: ["itemId", "province"] },
+    ),
+  },
+  {
+    name: "1688_shop_categories",
+    method: "GET",
+    path: "/api/1688/get-shop-category/v1",
+    authLocation: "query",
+    description:
+      "Retrieves all categories for a 1688 shop by shop URL or seller member ID. Use it to navigate a shop catalog during product sourcing.",
+    inputSchema: s.object(
+      "Shop Categories input.",
+      {
+        shopUrl: s.string("1688 shop homepage URL. Supply shopUrl or memberId."),
+        memberId: s.string("Seller member ID. Supply memberId or shopUrl."),
+      },
+      {},
+    ),
+  },
+  {
+    name: "1688_shop_information",
+    method: "GET",
+    path: "/api/1688/get-shop-info/v1",
+    authLocation: "query",
+    description:
+      "Retrieves 1688 shop information by shop URL or seller member ID. Use it to research a known shop during procurement.",
+    inputSchema: s.object(
+      "Shop Information input.",
+      {
+        shopUrl: s.string("1688 shop homepage URL. Supply shopUrl or memberId."),
+        memberId: s.string("Seller member ID. Supply memberId or shopUrl."),
+      },
+      {},
+    ),
+  },
+  {
+    name: "1688_shop_products_by_member_id",
+    method: "GET",
+    path: "/api/1688/get-shop-item-list/v1",
+    authLocation: "query",
+    description:
+      "Retrieves 1688 shop products by seller member ID with pagination, sorting and optional category and price filters. Use it to research a shop product catalog.",
+    inputSchema: s.object(
+      "Shop Products [ID] input.",
+      {
+        memberId: s.string("Seller member ID."),
+        page: s.integer("Page number, starting at 1.", { format: "int32", default: 1 }),
+        pageSize: s.integer("Number of items requested per page. The returned count may differ.", {
+          format: "int32",
+          default: 20,
+        }),
+        sort: s.withEnum(
+          s.string(
+            "Shop product sort order.\n\nAvailable Values:\n- `default`: Default order\n- `sales`: Sales order\n- `price_up`: Price ascending\n- `price_down`: Price descending\n- `time_up`: Time ascending\n- `time_down`: Time descending",
+            { default: "default" },
+          ),
+          ["default", "sales", "price_up", "price_down", "time_up", "time_down"],
+        ),
+        shopCatId: s.string("Shop category ID."),
+        priceStart: s.string("Minimum price filter in CNY."),
+        priceEnd: s.string("Maximum price filter in CNY."),
+      },
+      { required: ["memberId"] },
+    ),
+  },
+  {
+    name: "1688_shop_products_by_url",
+    method: "GET",
+    path: "/api/1688/get-shop-item-list-by-url/v1",
+    authLocation: "query",
+    description:
+      "Retrieves 1688 shop products by shop homepage URL with pagination, sorting and optional category filters. Use it to research a shop product catalog.",
+    inputSchema: s.object(
+      "Shop Products [URL] input.",
+      {
+        shopUrl: s.string("1688 shop homepage URL."),
+        page: s.integer("Page number, starting at 1.", { format: "int32", default: 1 }),
+        pageSize: s.integer("Number of items requested per page. The returned count may differ.", {
+          format: "int32",
+          default: 20,
+        }),
+        sort: s.withEnum(
+          s.string(
+            "Shop product sort order.\n\nAvailable Values:\n- `default`: Default order\n- `sales`: Sales order\n- `price_up`: Price ascending\n- `price_down`: Price descending\n- `time_up`: Time ascending\n- `time_down`: Time descending",
+            { default: "default" },
+          ),
+          ["default", "sales", "price_up", "price_down", "time_up", "time_down"],
+        ),
+        cat: s.string("Optional category ID filter."),
+        catType: s.withEnum(
+          s.string(
+            "Optional category mode: 0 or 1.\n\nAvailable Values:\n- `0`: Category mode 0\n- `1`: Category mode 1",
+          ),
+          ["0", "1"],
+        ),
+      },
+      { required: ["shopUrl"] },
+    ),
+  },
+  {
+    name: "jdcom_product_description_images",
+    method: "GET",
+    path: "/api/jd/get-item-description-images/v1",
+    authLocation: "query",
+    description:
+      "Retrieve JD.com product description images and product attributes by item ID. Use it to review product introductions for catalog research and product presentation.",
+    inputSchema: s.object(
+      "Product Description Images input.",
+      { itemId: s.string("A unique product identifier on JD.com (item ID).") },
+      { required: ["itemId"] },
+    ),
+  },
+  {
+    name: "taobao_and_tmall_product_description_images",
+    method: "GET",
+    path: "/api/taobao/get-item-description/v1",
+    authLocation: "query",
+    description:
+      "Retrieves Taobao or Tmall product description HTML and a separate list of description images by item ID. Use it to collect listing description assets for catalog preparation and product content review.",
+    inputSchema: s.object(
+      "Product Description Images input.",
+      { itemId: s.string("Unique product identifier on Taobao/Tmall (item ID).") },
+      { required: ["itemId"] },
+    ),
+  },
+  {
+    name: "taobao_and_tmall_shop_detail",
+    method: "GET",
+    path: "/api/taobao/get-shop-detail/v1",
+    authLocation: "query",
+    description:
+      "Retrieves a Taobao shop's homepage information, shop categories, and default product listing by seller ID and shop ID. Use it to inspect a shop and discover its categories before querying products.",
+    inputSchema: s.object(
+      "Shop Detail input.",
+      {
+        sellerId: s.string("Taobao seller user ID associated with the shop."),
+        shopId: s.string("Taobao shop ID associated with the seller."),
+      },
+      { required: ["sellerId", "shopId"] },
+    ),
+  },
+  {
+    name: "xiaohongshu_e_commerce_rednote_product_detail",
+    method: "GET",
+    path: "/api/xiaohongshu-ec/get-product-detail/v1",
+    authLocation: "query",
+    description:
+      "Retrieves Xiaohongshu E-commerce (RedNote) product details by SKU ID. Use it to look up a specific marketplace product for product research and catalog workflows.",
+    inputSchema: s.object("Product Detail input.", { skuId: s.string("Product SKU ID.") }, { required: ["skuId"] }),
   },
 ];
