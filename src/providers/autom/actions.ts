@@ -163,14 +163,6 @@ const automPlaceSchema = s.looseObject(
   { optional: ["title", "address", "website", "phone_number", "lat", "long", "fid"] },
 );
 
-const automSuggestionSchema = s.looseObject(
-  "One suggestion returned by Autom.",
-  {
-    value: s.nullableString("Suggested query."),
-  },
-  { optional: ["value"] },
-);
-
 export const automActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_usage",
@@ -344,7 +336,7 @@ export const automActions: ActionDefinition[] = [
     outputSchema: s.looseObject(
       "The Autom response for Google Autocomplete.",
       {
-        suggestions: s.array("Autocomplete suggestions.", automSuggestionSchema),
+        suggestions: s.stringArray("Autocomplete suggestions."),
       },
       { optional: ["suggestions"] },
     ),
