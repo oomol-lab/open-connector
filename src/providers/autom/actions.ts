@@ -124,6 +124,53 @@ const googleLocationSchema = s.actionOutput(
   "One Google location supported by Autom.",
 );
 
+const automSearchResultSchema = s.looseObject(
+  "One search result returned by Autom.",
+  {
+    position: s.nullableNumber("Position of the result on the page."),
+    title: s.nullableString("Title of the result."),
+    link: s.nullableString("URL of the result."),
+    domain: s.nullableString("Domain of the result."),
+    displayed_link: s.nullableString("Link as the search engine displays it."),
+    source: s.nullableString("Source or site name."),
+    snippet: s.nullableString("Snippet shown under the title."),
+    date: s.nullableString("Date shown with the result, when there is one."),
+  },
+  { optional: ["position", "title", "link", "domain", "displayed_link", "source", "snippet", "date"] },
+);
+
+const automKnowledgeGraphSchema = s.looseObject(
+  "Knowledge graph panel, when Google shows one.",
+  {
+    title: s.nullableString("Title of the entity."),
+    type: s.nullableString("Type of the entity."),
+    website: s.nullableString("Website of the entity."),
+  },
+  { optional: ["title", "type", "website"] },
+);
+
+const automPlaceSchema = s.looseObject(
+  "One place returned by Autom.",
+  {
+    title: s.nullableString("Name of the place."),
+    address: s.nullableString("Address of the place."),
+    website: s.nullableString("Website of the place."),
+    phone_number: s.nullableString("Phone number of the place."),
+    lat: s.nullableNumber("Latitude."),
+    long: s.nullableNumber("Longitude."),
+    fid: s.nullableString("Google Maps feature ID of the place."),
+  },
+  { optional: ["title", "address", "website", "phone_number", "lat", "long", "fid"] },
+);
+
+const automSuggestionSchema = s.looseObject(
+  "One suggestion returned by Autom.",
+  {
+    value: s.nullableString("Suggested query."),
+  },
+  { optional: ["value"] },
+);
+
 export const automActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "get_usage",
@@ -167,6 +214,241 @@ export const automActions: ActionDefinition[] = [
         locations: s.array("The matching Google locations.", googleLocationSchema),
       },
       "Matching Google locations returned by Autom.",
+    ),
+  }),
+  defineProviderAction(service, {
+    name: "google_search",
+    operationType: "read",
+    description:
+      "Search Google and get organic results with their position, title, link and snippet, the knowledge graph and the estimated total.",
+    inputSchema: s.actionInput(
+      {
+        query: s.nonEmptyString('Search query (e.g., "best electric cars").'),
+        country: s.nonEmptyString('Two-letter country code to search from (e.g., "us").'),
+        language: s.nonEmptyString('Two-letter language code of the results (e.g., "en").'),
+        location: s.nonEmptyString(
+          'Google location name to search from, as Find Google Locations returns it (e.g., "Paris,Paris,Ile-de-France,France").',
+        ),
+        page: s.integer("Page of results, starting at 1.", { minimum: 1 }),
+        numResults: s.integer("Number of results per page (e.g., 10).", { minimum: 1 }),
+      },
+      ["query"],
+      "Input for Google Search.",
+    ),
+    outputSchema: s.looseObject(
+      "The Autom response for Google Search.",
+      {
+        organic_results: s.array("Organic results.", automSearchResultSchema),
+        knowledge_graph: automKnowledgeGraphSchema,
+        search_information: s.looseObject(
+          "Search information returned by Autom.",
+          {
+            total_results: s.nullableNumber("Estimated total number of results."),
+          },
+          { optional: ["total_results"] },
+        ),
+        pagination: s.looseObject(
+          "Pagination returned by Autom.",
+          {
+            has_next_page: s.nullableBoolean("Whether another page of results exists."),
+          },
+          { optional: ["has_next_page"] },
+        ),
+      },
+      { optional: ["organic_results", "knowledge_graph", "search_information", "pagination"] },
+    ),
+  }),
+  defineProviderAction(service, {
+    name: "google_search_light",
+    operationType: "read",
+    description: "Search Google and get only the organic results, the fastest and cheapest Google search.",
+    inputSchema: s.actionInput(
+      {
+        query: s.nonEmptyString('Search query (e.g., "best electric cars").'),
+        country: s.nonEmptyString('Two-letter country code to search from (e.g., "us").'),
+        language: s.nonEmptyString('Two-letter language code of the results (e.g., "en").'),
+      },
+      ["query"],
+      "Input for Google Search (Organic Only).",
+    ),
+    outputSchema: s.looseObject(
+      "The Autom response for Google Search (Organic Only).",
+      {
+        organic_results: s.array("Organic results.", automSearchResultSchema),
+      },
+      { optional: ["organic_results"] },
+    ),
+  }),
+  defineProviderAction(service, {
+    name: "google_news",
+    operationType: "read",
+    description: "Search Google News and get articles with title, source, date, link and snippet.",
+    inputSchema: s.actionInput(
+      {
+        query: s.nonEmptyString('Search query (e.g., "best electric cars").'),
+        country: s.nonEmptyString('Two-letter country code to search from (e.g., "us").'),
+        language: s.nonEmptyString('Two-letter language code of the results (e.g., "en").'),
+        page: s.integer("Page of results, starting at 1.", { minimum: 1 }),
+        numResults: s.integer("Number of results per page (e.g., 10).", { minimum: 1 }),
+      },
+      ["query"],
+      "Input for Google News.",
+    ),
+    outputSchema: s.looseObject(
+      "The Autom response for Google News.",
+      {
+        organic_results: s.array("News articles.", automSearchResultSchema),
+        pagination: s.looseObject(
+          "Pagination returned by Autom.",
+          {
+            has_next_page: s.nullableBoolean("Whether another page of results exists."),
+          },
+          { optional: ["has_next_page"] },
+        ),
+      },
+      { optional: ["organic_results", "pagination"] },
+    ),
+  }),
+  defineProviderAction(service, {
+    name: "google_maps",
+    operationType: "read",
+    description: "Search Google Maps and get places with address, website, phone number and coordinates.",
+    inputSchema: s.actionInput(
+      {
+        query: s.nonEmptyString('Search query (e.g., "best electric cars").'),
+        country: s.nonEmptyString('Two-letter country code to search from (e.g., "us").'),
+        language: s.nonEmptyString('Two-letter language code of the results (e.g., "en").'),
+        page: s.integer("Page of results, starting at 1.", { minimum: 1 }),
+      },
+      ["query"],
+      "Input for Google Maps.",
+    ),
+    outputSchema: s.actionOutput(
+      { places: s.array("Places found on Google Maps", automPlaceSchema) },
+      "Places found on Google Maps from Autom.",
+    ),
+  }),
+  defineProviderAction(service, {
+    name: "google_autocomplete",
+    operationType: "read",
+    description: "Get the Google Search autocomplete suggestions for a partial query.",
+    inputSchema: s.actionInput(
+      {
+        query: s.nonEmptyString('Search query (e.g., "best electric cars").'),
+        country: s.nonEmptyString('Two-letter country code to search from (e.g., "us").'),
+        language: s.nonEmptyString('Two-letter language code of the results (e.g., "en").'),
+      },
+      ["query"],
+      "Input for Google Autocomplete.",
+    ),
+    outputSchema: s.looseObject(
+      "The Autom response for Google Autocomplete.",
+      {
+        suggestions: s.array("Autocomplete suggestions.", automSuggestionSchema),
+      },
+      { optional: ["suggestions"] },
+    ),
+  }),
+  defineProviderAction(service, {
+    name: "bing_search",
+    operationType: "read",
+    description: "Search Bing and get organic results with their position, title, link and snippet.",
+    inputSchema: s.actionInput(
+      {
+        query: s.nonEmptyString('Search query (e.g., "best electric cars").'),
+        market: s.nonEmptyString('Bing market code (e.g., "en-US").'),
+        page: s.integer("Page of results, starting at 1.", { minimum: 1 }),
+        numResults: s.integer("Number of results per page (e.g., 10).", { minimum: 1 }),
+      },
+      ["query"],
+      "Input for Bing Search.",
+    ),
+    outputSchema: s.looseObject(
+      "The Autom response for Bing Search.",
+      {
+        organic_results: s.array("Organic results.", automSearchResultSchema),
+        search_information: s.looseObject(
+          "Search information returned by Autom.",
+          {
+            total_results: s.nullableNumber("Estimated total number of results."),
+          },
+          { optional: ["total_results"] },
+        ),
+        pagination: s.looseObject(
+          "Pagination returned by Autom.",
+          {
+            has_next_page: s.nullableBoolean("Whether another page of results exists."),
+          },
+          { optional: ["has_next_page"] },
+        ),
+      },
+      { optional: ["organic_results", "search_information", "pagination"] },
+    ),
+  }),
+  defineProviderAction(service, {
+    name: "duckduckgo_search",
+    operationType: "read",
+    description: "Search DuckDuckGo and get organic results with their position, title, link and snippet.",
+    inputSchema: s.actionInput(
+      {
+        query: s.nonEmptyString('Search query (e.g., "best electric cars").'),
+        country: s.nonEmptyString('Two-letter country code to search from (e.g., "us").'),
+        language: s.nonEmptyString('Two-letter language code of the results (e.g., "en").'),
+        page: s.integer("Page of results, starting at 1.", { minimum: 1 }),
+      },
+      ["query"],
+      "Input for DuckDuckGo Search.",
+    ),
+    outputSchema: s.looseObject(
+      "The Autom response for DuckDuckGo Search.",
+      {
+        organic_results: s.array("Organic results.", automSearchResultSchema),
+      },
+      { optional: ["organic_results"] },
+    ),
+  }),
+  defineProviderAction(service, {
+    name: "yahoo_search",
+    operationType: "read",
+    description: "Search Yahoo and get organic results with their position, title, link and snippet.",
+    inputSchema: s.actionInput(
+      {
+        query: s.nonEmptyString('Search query (e.g., "best electric cars").'),
+        country: s.nonEmptyString('Two-letter country code to search from (e.g., "us").'),
+        language: s.nonEmptyString('Two-letter language code of the results (e.g., "en").'),
+        page: s.integer("Page of results, starting at 1.", { minimum: 1 }),
+      },
+      ["query"],
+      "Input for Yahoo Search.",
+    ),
+    outputSchema: s.looseObject(
+      "The Autom response for Yahoo Search.",
+      {
+        organic_results: s.array("Organic results.", automSearchResultSchema),
+      },
+      { optional: ["organic_results"] },
+    ),
+  }),
+  defineProviderAction(service, {
+    name: "brave_search",
+    operationType: "read",
+    description: "Search Brave's web index and get organic results with their position, title, link and snippet.",
+    inputSchema: s.actionInput(
+      {
+        query: s.nonEmptyString('Search query (e.g., "best electric cars").'),
+        country: s.nonEmptyString('Two-letter country code to search from (e.g., "us").'),
+        language: s.nonEmptyString('Two-letter language code of the results (e.g., "en").'),
+        page: s.integer("Page of results, starting at 1.", { minimum: 1 }),
+      },
+      ["query"],
+      "Input for Brave Search.",
+    ),
+    outputSchema: s.looseObject(
+      "The Autom response for Brave Search.",
+      {
+        organic_results: s.array("Organic results.", automSearchResultSchema),
+      },
+      { optional: ["organic_results"] },
     ),
   }),
 ];
