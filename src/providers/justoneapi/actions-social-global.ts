@@ -743,12 +743,14 @@ export const socialGlobalEndpoints: readonly JustoneapiEndpoint[] = [
         keyword: s.string("Optional job keyword to search within the selected companies.", { default: "" }),
         location: s.string("Free-text location, such as London, United Kingdom.", { default: "" }),
         page: s.integer("First page to fetch, from 1 to 100. Each page contains up to 10 jobs.", {
+          minimum: 1,
+          maximum: 100,
           format: "int32",
           default: 1,
         }),
         numPages: s.integer(
           "Number of consecutive pages to fetch, from 1 to 20. The last requested page must not exceed 100.",
-          { format: "int32", default: 1 },
+          { minimum: 1, maximum: 20, format: "int32", default: 1 },
         ),
         geoId: s.string("Numeric LinkedIn geographic location ID. Required when radius is supplied.", { default: "" }),
         sortBy: s.withEnum(
@@ -790,12 +792,17 @@ export const socialGlobalEndpoints: readonly JustoneapiEndpoint[] = [
             "Fetch details for up to 100 jobs per request in addition to search cards. Employment and seniority filters enable details regardless of this value.",
           default: true,
         }),
-        radius: s.integer("Search radius in kilometres, at least 1. Requires geoId.", { format: "int32" }),
+        radius: s.integer("Search radius in kilometres, at least 1. Requires geoId.", { minimum: 1, format: "int32" }),
         fields: s.string("Comma-separated job fields to include. job_id and job_title are always included.", {
           default: "",
         }),
       },
-      {},
+      {
+        anyOf: [
+          { required: ["companyId"], properties: { companyId: { type: "string", minLength: 1 } } },
+          { required: ["company"], properties: { company: { type: "string", minLength: 1 } } },
+        ],
+      },
     ),
   },
   {
@@ -831,12 +838,14 @@ export const socialGlobalEndpoints: readonly JustoneapiEndpoint[] = [
         keyword: s.string("Free-form job search keyword."),
         location: s.string("Free-text location, such as London, United Kingdom.", { default: "" }),
         page: s.integer("First page to fetch, from 1 to 100. Each page contains up to 10 jobs.", {
+          minimum: 1,
+          maximum: 100,
           format: "int32",
           default: 1,
         }),
         numPages: s.integer(
           "Number of consecutive pages to fetch, from 1 to 20. The last requested page must not exceed 100.",
-          { format: "int32", default: 1 },
+          { minimum: 1, maximum: 20, format: "int32", default: 1 },
         ),
         geoId: s.string("Numeric LinkedIn geographic location ID. Required when radius is supplied.", { default: "" }),
         sortBy: s.withEnum(
@@ -879,7 +888,7 @@ export const socialGlobalEndpoints: readonly JustoneapiEndpoint[] = [
             "Fetch details for up to 100 jobs per request in addition to search cards. Employment and seniority filters enable details regardless of this value.",
           default: true,
         }),
-        radius: s.integer("Search radius in kilometres, at least 1. Requires geoId.", { format: "int32" }),
+        radius: s.integer("Search radius in kilometres, at least 1. Requires geoId.", { minimum: 1, format: "int32" }),
         fields: s.string("Comma-separated job fields to include. job_id and job_title are always included.", {
           default: "",
         }),

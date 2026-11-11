@@ -39,6 +39,16 @@ function validateRelatedInputs(path: string, values: Record<string, unknown>) {
       throw providerInputError("The last requested page must not exceed 10000");
     }
   }
+  if (path === "/api/linkedin/get-company-jobs/v1" || path === "/api/linkedin/search-job/v1") {
+    const page = optionalNumber(values.page) ?? 1;
+    const numPages = optionalNumber(values.numPages) ?? 1;
+    if (page + numPages - 1 > 100) {
+      throw providerInputError("The last requested page must not exceed 100");
+    }
+    if (values.radius != null && !values.geoId) {
+      throw providerInputError("geoId is required when radius is supplied");
+    }
+  }
   if ("similarUserId" in values || "similarWord" in values) {
     if (Boolean(values.similarUserId) !== Boolean(values.similarWord)) {
       throw providerInputError("similarUserId and similarWord must be provided together");

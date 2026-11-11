@@ -7,6 +7,7 @@ import { compactObject, optionalInteger, optionalRecord, optionalString, require
 import { defineApiKeyProviderExecutors } from "../provider-executors.ts";
 import {
   readProviderErrorBody,
+  runProviderRequest,
   withRetryAfterSeconds,
   ProviderRequestError,
   providerUserAgent,
@@ -25,6 +26,7 @@ interface PaystackRequestInput {
   path: string;
   apiKey: string;
   fetcher: typeof fetch;
+  signal?: AbortSignal;
   phase: "validate" | "execute";
   method?: "GET" | "POST" | "PUT";
   query?: Record<string, unknown>;
@@ -66,11 +68,13 @@ export const executors: ProviderExecutors = defineApiKeyProviderExecutors("payst
 export async function validatePaystackCredential(
   input: Record<string, string>,
   fetcher: typeof fetch,
+  signal?: AbortSignal,
 ): Promise<CredentialValidationResult> {
   const payload = await requestPaystack({
     path: paystackValidationPath,
     apiKey: input.apiKey,
     fetcher,
+    signal,
     phase: "validate",
     query: {
       page: 1,
@@ -100,6 +104,7 @@ async function listCustomers(input: Record<string, unknown>, context: PaystackAc
     path: "/customer",
     apiKey: context.apiKey,
     fetcher: context.fetcher,
+    signal: context.signal,
     phase: "execute",
     query: readListQuery(input),
   });
@@ -115,6 +120,7 @@ async function createCustomer(input: Record<string, unknown>, context: PaystackA
     method: "POST",
     apiKey: context.apiKey,
     fetcher: context.fetcher,
+    signal: context.signal,
     phase: "execute",
     body: compactObject({
       email: optionalString(input.email),
@@ -135,6 +141,7 @@ async function getCustomer(input: Record<string, unknown>, context: PaystackActi
     path: `/customer/${encodePath(input.email_or_code)}`,
     apiKey: context.apiKey,
     fetcher: context.fetcher,
+    signal: context.signal,
     phase: "execute",
   });
 
@@ -149,6 +156,7 @@ async function updateCustomer(input: Record<string, unknown>, context: PaystackA
     method: "PUT",
     apiKey: context.apiKey,
     fetcher: context.fetcher,
+    signal: context.signal,
     phase: "execute",
     body: compactObject({
       first_name: optionalString(input.first_name),
@@ -169,6 +177,7 @@ async function initializeTransaction(input: Record<string, unknown>, context: Pa
     method: "POST",
     apiKey: context.apiKey,
     fetcher: context.fetcher,
+    signal: context.signal,
     phase: "execute",
     body: compactObject({
       email: optionalString(input.email),
@@ -188,6 +197,7 @@ async function listTransactions(input: Record<string, unknown>, context: Paystac
     path: "/transaction",
     apiKey: context.apiKey,
     fetcher: context.fetcher,
+    signal: context.signal,
     phase: "execute",
     query: compactObject({
       ...readListQuery(input),
@@ -207,6 +217,7 @@ async function getTransaction(input: Record<string, unknown>, context: PaystackA
     path: `/transaction/${encodePath(input.id)}`,
     apiKey: context.apiKey,
     fetcher: context.fetcher,
+    signal: context.signal,
     phase: "execute",
   });
 
@@ -220,6 +231,7 @@ async function verifyTransaction(input: Record<string, unknown>, context: Paysta
     path: `/transaction/verify/${encodePath(input.reference)}`,
     apiKey: context.apiKey,
     fetcher: context.fetcher,
+    signal: context.signal,
     phase: "execute",
   });
 
@@ -245,9 +257,8 @@ async function requestPaystack(input: PaystackRequestInput): Promise<PaystackRes
     }
   }
 
-  let response: Response;
-  try {
-    response = await input.fetcher(url, {
+  return runProviderRequest({ label: "Paystack", signal: input.signal }, async (signal) => {
+    const response = await input.fetcher(url, {
       method: input.method ?? "GET",
       headers: {
         authorization: `Bearer ${input.apiKey}`,
@@ -256,18 +267,13 @@ async function requestPaystack(input: PaystackRequestInput): Promise<PaystackRes
         "user-agent": providerUserAgent,
       },
       body: input.body ? JSON.stringify(input.body) : undefined,
+      signal,
     });
-  } catch (error) {
-    throw new ProviderRequestError(
-      502,
-      error instanceof Error ? `Paystack request failed: ${error.message}` : "Paystack request failed",
-    );
-  }
-
-  if (!response.ok) {
-    throw mapPaystackError(response, await readProviderErrorBody(response, "Paystack"), input.phase);
-  }
-  return readPaystackPayload(response);
+    if (!response.ok) {
+      throw mapPaystackError(response, await readProviderErrorBody(response, "Paystack", signal), input.phase);
+    }
+    return readPaystackPayload(response);
+  });
 }
 
 async function readPaystackPayload(response: Response): Promise<PaystackResponseBody> {

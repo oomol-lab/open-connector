@@ -27,7 +27,7 @@ export const creatorEndpoints: readonly JustoneapiEndpoint[] = [
         sort: s.withDefault(
           s.withEnum(
             s.string(
-              "Creator search sorting. Values: FANS sorts by follower count descending, DEFAULT uses Pugongying intelligent ranking; READ_MEDIAN and ENGAGEMENT_MEDIAN sort by median reads and engagement, and PRICE_ASC/PRICE_DESC sort by price.\n\nAvailable Values:\n- `DEFAULT`: Platform default intelligent ranking\n- `FANS`: Sort by follower count descending",
+              "Creator search sorting. Defaults to FANS.\n\nAvailable Values:\n- `DEFAULT`: Platform default intelligent ranking\n- `FANS`: Sort by follower count descending\n- `READ_MEDIAN`: Sort by daily-note median reads descending\n- `ENGAGEMENT_MEDIAN`: Sort by daily-note median interactions descending\n- `PRICE_ASC`: Sort by all quoted prices ascending\n- `PRICE_DESC`: Sort by all quoted prices descending",
             ),
             ["DEFAULT", "FANS", "READ_MEDIAN", "ENGAGEMENT_MEDIAN", "PRICE_ASC", "PRICE_DESC"],
           ),

@@ -1061,7 +1061,12 @@ export const commerceEndpoints: readonly JustoneapiEndpoint[] = [
         freeShipping: s.boolean({ description: "Filter for free shipping." }),
         isSuperFactory: s.boolean({ description: "Optional super-factory filter." }),
       },
-      {},
+      {
+        anyOf: [
+          { required: ["keyword"], properties: { keyword: { type: "string", minLength: 1 } } },
+          { required: ["catId"], properties: { catId: { type: "string", minLength: 1 } } },
+        ],
+      },
     ),
   },
   {
@@ -1111,7 +1116,12 @@ export const commerceEndpoints: readonly JustoneapiEndpoint[] = [
           ["standard", "cross_border_v1", "cross_border_v2"],
         ),
       },
-      {},
+      {
+        anyOf: [
+          { required: ["url"], properties: { url: { type: "string", minLength: 1 } } },
+          { required: ["imgBase64"], properties: { imgBase64: { type: "string", minLength: 1 } } },
+        ],
+      },
     ),
   },
   {
@@ -1248,7 +1258,12 @@ export const commerceEndpoints: readonly JustoneapiEndpoint[] = [
         shopUrl: s.string("1688 shop homepage URL. Supply shopUrl or memberId."),
         memberId: s.string("Seller member ID. Supply memberId or shopUrl."),
       },
-      {},
+      {
+        anyOf: [
+          { required: ["shopUrl"], properties: { shopUrl: { type: "string", minLength: 1 } } },
+          { required: ["memberId"], properties: { memberId: { type: "string", minLength: 1 } } },
+        ],
+      },
     ),
   },
   {
@@ -1264,7 +1279,12 @@ export const commerceEndpoints: readonly JustoneapiEndpoint[] = [
         shopUrl: s.string("1688 shop homepage URL. Supply shopUrl or memberId."),
         memberId: s.string("Seller member ID. Supply memberId or shopUrl."),
       },
-      {},
+      {
+        anyOf: [
+          { required: ["shopUrl"], properties: { shopUrl: { type: "string", minLength: 1 } } },
+          { required: ["memberId"], properties: { memberId: { type: "string", minLength: 1 } } },
+        ],
+      },
     ),
   },
   {

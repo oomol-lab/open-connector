@@ -16,7 +16,7 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
 });
 
 export const credentialValidators: CredentialValidators = {
-  apiKey(input, { fetcher }) {
-    return validatePaystackCredential({ apiKey: input.apiKey, ...input.values }, fetcher);
+  apiKey(input, { fetcher, signal }) {
+    return validatePaystackCredential({ apiKey: input.apiKey, ...input.values }, fetcher, signal);
   },
 };

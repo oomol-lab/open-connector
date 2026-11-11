@@ -80,7 +80,12 @@ async function submitTransform(
     async (signal) => {
       const response = await providerFetch(url, { signal });
       if (!response.ok)
-        throw new ProviderRequestError(response.status, `Source download failed with HTTP ${response.status}`);
+        throw new ProviderRequestError(
+          response.status,
+          `Source download failed with HTTP ${response.status}`,
+          undefined,
+          response.status === 401 || response.status === 403 ? "invalid_input" : undefined,
+        );
       return readBoundedResponseBytes(response, {
         maxBytes: 100 * 1024 * 1024,
         fieldName: "PDFCraft source file",
@@ -112,7 +117,12 @@ async function submitTransform(
         const response = await providerFetch(uploadUrl, { method: "PUT", headers: uploadHeaders, body: bytes, signal });
         await response.body?.cancel();
         if (!response.ok)
-          throw new ProviderRequestError(response.status, `PDFCraft upload failed with HTTP ${response.status}`);
+          throw new ProviderRequestError(
+            response.status,
+            `PDFCraft upload failed with HTTP ${response.status}`,
+            undefined,
+            response.status === 401 || response.status === 403 ? "provider_error" : undefined,
+          );
       },
     );
     return await toolData(context, "launch_transform", { uuid, parameters });
