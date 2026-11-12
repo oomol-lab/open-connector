@@ -26,6 +26,13 @@ async function runAction<T>(name: string, input: Record<string, unknown>): Promi
   return result.data;
 }
 
+const hostKeyFingerprint = process.env.SFTP_HOST_KEY_FINGERPRINT;
+if (!hostKeyFingerprint) {
+  console.warn(
+    "SFTP_HOST_KEY_FINGERPRINT is not set: saving the connection trusts the host key the server presents now and replaces any key pinned by an earlier run. Set it to keep the pin across runs.",
+  );
+}
+
 await fetchJson(`${baseUrl}/api/connections/sftp`, {
   method: "PUT",
   headers: adminHeaders({ "content-type": "application/json" }),
@@ -38,7 +45,7 @@ await fetchJson(`${baseUrl}/api/connections/sftp`, {
       password,
       privateKey,
       passphrase: process.env.SFTP_PASSPHRASE,
-      hostKeyFingerprint: process.env.SFTP_HOST_KEY_FINGERPRINT,
+      hostKeyFingerprint,
     },
   }),
 });

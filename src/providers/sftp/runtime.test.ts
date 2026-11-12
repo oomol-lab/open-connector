@@ -24,6 +24,8 @@ const hostKeyFingerprint = fingerprintOf(hostKey.public);
 let server: InstanceType<typeof Server>;
 let serverPort = 0;
 let files: Map<string, MemoryNode>;
+/** Paths STAT and LSTAT report as missing, as if another client created them right after the check. */
+let hiddenFromStat: Set<string>;
 
 beforeAll(async () => {
   server = new Server({ hostKeys: [hostKey.private] }, (client) => serveClient(client));
@@ -36,6 +38,7 @@ afterAll(async () => {
 });
 
 function resetFiles(): void {
+  hiddenFromStat = new Set();
   files = new Map<string, MemoryNode>([
     ["/", { kind: "dir" }],
     ["/home", { kind: "dir" }],
@@ -90,6 +93,16 @@ describe("sftp credential validation", () => {
       }),
     ).rejects.toBeInstanceOf(ProviderRequestError);
     expect(dependencies.connectSocket).not.toHaveBeenCalled();
+  });
+
+  it("stops waiting for a stalled DNS lookup when the caller aborts", async () => {
+    const controller = new AbortController();
+    const pending = validateSftpCredential(values, controller.signal, {
+      ...dependencies,
+      lookup: () => new Promise(() => undefined),
+    });
+    setTimeout(() => controller.abort(), 20);
+    await expect(pending).rejects.toMatchObject({ status: 504 });
   });
 
   it("rejects hosts that carry a scheme or port", async () => {
@@ -181,6 +194,46 @@ describe("sftp actions", () => {
     await expect(stored.get("download-1")?.text()).resolves.toBe("quarter,total\nq3,42\n");
 
     await expect(sftpActionHandlers.download_file({ path: "reports" }, context)).rejects.toMatchObject({ status: 400 });
+  });
+
+  it("never truncates a file another client created after the existence check", async () => {
+    resetFiles();
+    const transitFiles: TransitFileStore = {
+      maxBytes: 1024,
+      async create() {
+        throw new Error("create is not expected in this test");
+      },
+      async read() {
+        const file = new File(["replacement"], "race.txt", { type: "text/plain" });
+        return { file, sizeBytes: file.size, name: file.name, mimeType: file.type };
+      },
+      async delete() {
+        return true;
+      },
+    };
+    const racedPath = `${homeDirectory}/race.txt`;
+    files.set(racedPath, { kind: "file", data: Buffer.from("first writer") });
+    hiddenFromStat.add(racedPath);
+    const context = await validatedContext(transitFiles);
+
+    await expect(
+      sftpActionHandlers.upload_file({ path: "race.txt", file: { fileId: "upload-1" } }, context),
+    ).rejects.toMatchObject({ status: 400, message: expect.stringContaining("could not be created exclusively") });
+    expect(files.get(racedPath)).toEqual({ kind: "file", data: Buffer.from("first writer") });
+  });
+
+  it("keeps surrounding spaces in remote paths", async () => {
+    resetFiles();
+    files.set(`${homeDirectory}/notes.txt `, { kind: "file", data: Buffer.from("trailing space") });
+    const context = await validatedContext();
+
+    await expect(sftpActionHandlers.delete_file({ path: "notes.txt " }, context)).resolves.toEqual({
+      path: "notes.txt ",
+      deleted: true,
+    });
+    expect(files.has(`${homeDirectory}/notes.txt `)).toBe(false);
+    expect(files.has(`${homeDirectory}/notes.txt`)).toBe(true);
+    await expect(sftpActionHandlers.stat({ path: "" }, context)).rejects.toMatchObject({ status: 400 });
   });
 
   it("creates, renames and removes entries", async () => {
@@ -276,8 +329,9 @@ function serveSftp(sftp: SFTPWrapper): void {
     sftp.name(reqId, [{ filename: resolved, longname: resolved, attrs: {} as Attributes }]);
   });
   const stat = (reqId: number, path: string): void => {
-    const node = files.get(resolvePath(path));
-    if (!node) return void sftp.status(reqId, STATUS_CODE.NO_SUCH_FILE);
+    const resolved = resolvePath(path);
+    const node = files.get(resolved);
+    if (!node || hiddenFromStat.has(resolved)) return void sftp.status(reqId, STATUS_CODE.NO_SUCH_FILE);
     sftp.attrs(reqId, attributes(node));
   };
   sftp.on("STAT", stat);
@@ -305,6 +359,7 @@ function serveSftp(sftp: SFTPWrapper): void {
     const resolved = resolvePath(filename);
     const node = files.get(resolved);
     if (flags & OPEN_MODE.WRITE) {
+      if (flags & OPEN_MODE.EXCL && node) return void sftp.status(reqId, STATUS_CODE.FAILURE);
       if (files.get(posix.dirname(resolved))?.kind !== "dir") return void sftp.status(reqId, STATUS_CODE.NO_SUCH_FILE);
       if (!node || flags & OPEN_MODE.TRUNC) files.set(resolved, { kind: "file", data: Buffer.alloc(0) });
     } else if (node?.kind !== "file") {

@@ -12,7 +12,7 @@ const sizeSchema = s.nonNegativeInteger("Size in bytes as reported by the server
 const modifiedAtSchema = s.nullableString(
   "Last modification time as an ISO 8601 timestamp, when the server reports it.",
 );
-const transitFileSchema = s.object("The downloaded file stored in the local transit file service.", {
+const transitFileSchema = s.requiredObject("The downloaded file stored in the local transit file service.", {
   fileId: s.string("Transit file identifier."),
   downloadUrl: s.string("URL that serves the downloaded file from the local transit file service."),
   sizeBytes: sizeSchema,
@@ -36,11 +36,11 @@ export const sftpActions: ActionDefinition[] = [
       },
       { optional: ["maxEntries"] },
     ),
-    outputSchema: s.object("The directory listing.", {
+    outputSchema: s.requiredObject("The directory listing.", {
       path: s.string("The directory path that was listed, as given."),
       entries: s.array(
         "Entries in the directory, sorted by name.",
-        s.object("One directory entry.", {
+        s.requiredObject("One directory entry.", {
           name: s.string("Entry name without its directory."),
           path: s.string("Entry path built from the listed directory and the entry name."),
           type: entryTypeSchema,
@@ -56,10 +56,10 @@ export const sftpActions: ActionDefinition[] = [
     name: "stat",
     operationType: "read",
     description: "Read the type, size, timestamps and permissions of one remote path, following symbolic links.",
-    inputSchema: s.object("The remote path to inspect.", {
+    inputSchema: s.requiredObject("The remote path to inspect.", {
       path: s.nonEmptyString(`Remote file or directory path. ${remotePathDescription}`),
     }),
-    outputSchema: s.object("Attributes of the remote path.", {
+    outputSchema: s.requiredObject("Attributes of the remote path.", {
       path: s.string("The inspected path, as given."),
       type: entryTypeSchema,
       sizeBytes: sizeSchema,
@@ -85,7 +85,7 @@ export const sftpActions: ActionDefinition[] = [
       },
       { optional: ["mimeType"] },
     ),
-    outputSchema: s.object("The downloaded file.", {
+    outputSchema: s.requiredObject("The downloaded file.", {
       path: s.string("The remote file path, as given."),
       file: transitFileSchema,
     }),
@@ -103,7 +103,7 @@ export const sftpActions: ActionDefinition[] = [
       },
       { optional: ["overwrite"] },
     ),
-    outputSchema: s.object("The uploaded file.", {
+    outputSchema: s.requiredObject("The uploaded file.", {
       path: s.string("The remote destination path, as given."),
       sizeBytes: sizeSchema,
       overwritten: s.boolean("Whether an existing remote file was replaced."),
@@ -113,10 +113,10 @@ export const sftpActions: ActionDefinition[] = [
     name: "delete_file",
     operationType: "destructive",
     description: "Delete one remote file. Directories are rejected; use remove_directory for them.",
-    inputSchema: s.object("The remote file to delete.", {
+    inputSchema: s.requiredObject("The remote file to delete.", {
       path: s.nonEmptyString(`Remote file path. ${remotePathDescription}`),
     }),
-    outputSchema: s.object("The deleted file.", {
+    outputSchema: s.requiredObject("The deleted file.", {
       path: s.string("The deleted path, as given."),
       deleted: s.boolean("Always true once the server confirmed the deletion."),
     }),
@@ -135,7 +135,7 @@ export const sftpActions: ActionDefinition[] = [
       },
       { optional: ["recursive"] },
     ),
-    outputSchema: s.object("The created directory.", {
+    outputSchema: s.requiredObject("The created directory.", {
       path: s.string("The directory path, as given."),
       created: s.boolean("Whether a new directory was created; false when recursive found it already present."),
     }),
@@ -144,11 +144,11 @@ export const sftpActions: ActionDefinition[] = [
     name: "rename",
     operationType: "write",
     description: "Rename or move a remote file or directory. Most servers refuse to replace an existing destination.",
-    inputSchema: s.object("The remote path to rename and its new path.", {
+    inputSchema: s.requiredObject("The remote path to rename and its new path.", {
       fromPath: s.nonEmptyString(`Existing remote path. ${remotePathDescription}`),
       toPath: s.nonEmptyString(`New remote path. ${remotePathDescription}`),
     }),
-    outputSchema: s.object("The completed rename.", {
+    outputSchema: s.requiredObject("The completed rename.", {
       fromPath: s.string("The original path, as given."),
       toPath: s.string("The new path, as given."),
     }),
@@ -166,7 +166,7 @@ export const sftpActions: ActionDefinition[] = [
       },
       { optional: ["recursive"] },
     ),
-    outputSchema: s.object("The removed directory.", {
+    outputSchema: s.requiredObject("The removed directory.", {
       path: s.string("The removed directory path, as given."),
       removed: s.boolean("Always true once the server confirmed the removal."),
     }),

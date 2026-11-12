@@ -8,8 +8,9 @@ import type { ReadableStream as NodeReadableStream } from "node:stream/web";
 import { createHash } from "node:crypto";
 import { connect as connectSocket } from "node:net";
 import { Readable } from "node:stream";
+import { pipeline } from "node:stream/promises";
 import SftpClient from "ssh2-sftp-client";
-import { optionalInteger, optionalString } from "../../core/cast.ts";
+import { optionalInteger, optionalString, requiredRawString } from "../../core/cast.ts";
 import { resolveGuardedEgressTarget } from "../../core/guarded-fetch.ts";
 import { createPinnedLookup } from "../../core/guarded-socket.ts";
 import { isPrivateNetworkAccessAllowed, storeResponseInTransit } from "../../core/request.ts";
@@ -27,6 +28,10 @@ const fileTransferTimeoutMs = 300_000;
 const closeGraceMs = 2_000;
 const defaultMaxEntries = 1_000;
 const fingerprintPrefix = "SHA256:";
+// SFTP status codes (draft-ietf-secsh-filexfer); servers before protocol v6
+// report an exclusive-create conflict as the generic FAILURE.
+const sftpStatusFailure = 4;
+const sftpStatusFileAlreadyExists = 11;
 
 interface SftpCredential {
   host: string;
@@ -220,7 +225,18 @@ export const sftpActionHandlers: ProviderActionHandlers<"sftp", SftpActionHandle
         if (existing && !overwrite) {
           throw providerInputError(`${path} already exists; set overwrite to true to replace it.`);
         }
-        await client.put(Readable.fromWeb(source.file.stream() as NodeReadableStream<Uint8Array>), path);
+        const body = Readable.fromWeb(source.file.stream() as NodeReadableStream<Uint8Array>);
+        try {
+          // The existence check above only produces a clear message; the exclusive
+          // open is what keeps a concurrent writer's file from being truncated.
+          await pipeline(body, client.createWriteStream(path, { flags: overwrite ? "w" : "wx" }));
+        } catch (error) {
+          const code = (error as { code?: unknown } | null)?.code;
+          if (!overwrite && (code === sftpStatusFailure || code === sftpStatusFileAlreadyExists)) {
+            throw providerInputError(`${path} could not be created exclusively; it may already exist.`);
+          }
+          throw error;
+        }
         return { path, sizeBytes: source.sizeBytes, overwritten: existing !== false };
       },
       fileTransferTimeoutMs,
@@ -334,13 +350,16 @@ async function withSftpSession<T>(
 
   try {
     timeout.signal.throwIfAborted();
-    const target = await resolveGuardedEgressTarget(`https://${credential.host}`, {
-      fieldName: "SFTP host",
-      createError: providerInputError,
-      createResolutionError: (message) => new ProviderRequestError(502, message),
-      allowPrivateNetwork: isPrivateNetworkAccessAllowed(),
-      lookup: dependencies.lookup,
-    });
+    const target = await untilAborted(
+      resolveGuardedEgressTarget(`https://${credential.host}`, {
+        fieldName: "SFTP host",
+        createError: providerInputError,
+        createResolutionError: (message) => new ProviderRequestError(502, message),
+        allowPrivateNetwork: isPrivateNetworkAccessAllowed(),
+        lookup: dependencies.lookup,
+      }),
+      timeout.signal,
+    );
     if (target.addresses.length === 0) {
       throw new ProviderRequestError(502, "SFTP host could not be resolved for validation.");
     }
@@ -386,6 +405,31 @@ async function withSftpSession<T>(
     }
     destroySocket();
   }
+}
+
+/**
+ * Settle as soon as `signal` aborts. A `node:dns` lookup cannot be cancelled,
+ * so a stalled resolver would otherwise hold the request past its timeout.
+ */
+function untilAborted<T>(promise: Promise<T>, signal: AbortSignal): Promise<T> {
+  return new Promise((resolve, reject) => {
+    const onAbort = (): void => reject(signal.reason);
+    if (signal.aborted) {
+      onAbort();
+      return;
+    }
+    signal.addEventListener("abort", onAbort, { once: true });
+    promise.then(
+      (value) => {
+        signal.removeEventListener("abort", onAbort);
+        resolve(value);
+      },
+      (error: unknown) => {
+        signal.removeEventListener("abort", onAbort);
+        reject(error);
+      },
+    );
+  });
 }
 
 async function closeGracefully(client: SftpClient): Promise<void> {
@@ -499,8 +543,12 @@ function hostKeyFingerprint(key: Buffer): string {
   return createHash("sha256").update(key).digest("base64").replace(/=+$/, "");
 }
 
+/** Keep the path byte for byte: surrounding spaces are legal in remote file names. */
 function readRemotePath(value: unknown, fieldName: string): string {
-  const path = requiredInputString(value, fieldName);
+  const path = requiredRawString(value, fieldName, providerInputError);
+  if (path.length === 0) {
+    throw providerInputError(`${fieldName} must not be empty.`);
+  }
   if (path.includes("\0")) {
     throw providerInputError(`${fieldName} must not contain NUL characters.`);
   }
