@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { ProviderRequestError } from "../provider-runtime.ts";
 import { credentialValidators, mailveriActionHandlers } from "./executors.ts";
 
 const verifyEmail = (fetcher: (url: string | URL | Request, init?: RequestInit) => Promise<Response>) =>
@@ -63,6 +64,25 @@ describe("MailVeri verify_email", () => {
   });
 });
 
+describe("MailVeri request failures", () => {
+  it("keeps a ProviderRequestError raised by the shared fetcher", async () => {
+    const admission = new ProviderRequestError(429, "Too many requests in flight", undefined, "rate_limited");
+    await expect(
+      verifyEmail(async () => {
+        throw admission;
+      }),
+    ).rejects.toBe(admission);
+  });
+
+  it("maps a network failure to 502", async () => {
+    await expect(
+      verifyEmail(async () => {
+        throw new TypeError("fetch failed");
+      }),
+    ).rejects.toMatchObject({ status: 502, message: "MailVeri request failed: fetch failed" });
+  });
+});
+
 describe("MailVeri get_balance", () => {
   it("reads the free balance endpoint", async () => {
     const result = await mailveriActionHandlers.get_balance(
@@ -91,6 +111,15 @@ describe("MailVeri credential validation", () => {
       metadata: { validationEndpoint: "/v1/get-balance/", balance: 5000 },
     });
     expect(result?.profile?.accountId).toMatch(/^mailveri:api_key:[0-9a-f]{16}$/);
+  });
+
+  it("rejects a balance response without a balance", async () => {
+    await expect(
+      credentialValidators.apiKey!(
+        { apiKey: "test-key", values: {} },
+        { fetcher: async () => Response.json({ error: 0, message: "ok" }) },
+      ),
+    ).rejects.toMatchObject({ status: 502 });
   });
 
   it("maps a rejected key to a field error", async () => {

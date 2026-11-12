@@ -6,7 +6,13 @@ import { createHash } from "node:crypto";
 import { compactObject, optionalBoolean, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
 import { defineApiKeyProviderExecutors } from "../provider-executors.ts";
 import { defineProviderProxy } from "../provider-proxy.ts";
-import { isAbortLikeError, ProviderRequestError, providerUserAgent, requiredInputString } from "../provider-runtime.ts";
+import {
+  ProviderRequestError,
+  providerUserAgent,
+  readProviderTextBody,
+  requiredInputString,
+  runProviderRequest,
+} from "../provider-runtime.ts";
 
 const service = "mailveri";
 const apiBaseUrl = "https://api.mailveri.com";
@@ -64,6 +70,10 @@ export const credentialValidators: CredentialValidators = {
       { path: "/v1/get-balance/", method: "GET" },
       "validate",
     );
+    const remaining = optionalInteger(balance.balance);
+    if (remaining === undefined) {
+      throw new ProviderRequestError(502, "MailVeri get-balance returned no balance", balance);
+    }
     return {
       profile: {
         accountId: `mailveri:api_key:${createHash("sha256").update(input.apiKey).digest("hex").slice(0, 16)}`,
@@ -72,7 +82,7 @@ export const credentialValidators: CredentialValidators = {
       metadata: {
         apiBaseUrl,
         validationEndpoint: "/v1/get-balance/",
-        balance: optionalInteger(balance.balance),
+        balance: remaining,
       },
     };
   },
@@ -83,30 +93,24 @@ async function mailveriRequest(
   request: { path: string; method: "GET" | "POST"; body?: Record<string, unknown> },
   phase: ProviderRequestPhase = "execute",
 ): Promise<Record<string, unknown>> {
-  let response: Response;
-  let payload: unknown;
-  try {
-    response = await context.fetcher(new URL(request.path, apiBaseUrl).toString(), {
-      method: request.method,
-      headers: {
-        accept: "application/json",
-        authorization: `Bearer ${context.apiKey}`,
-        "user-agent": providerUserAgent,
-        ...(request.body ? { "content-type": "application/json" } : {}),
-      },
-      body: request.body ? JSON.stringify(request.body) : undefined,
-      signal: context.signal,
-    });
-    payload = await readMailveriPayload(response);
-  } catch (error) {
-    if (isAbortLikeError(error)) {
-      throw new ProviderRequestError(504, "MailVeri request timed out");
-    }
-    throw new ProviderRequestError(
-      502,
-      error instanceof Error ? `MailVeri request failed: ${error.message}` : "MailVeri request failed",
-    );
-  }
+  const { response, payload } = await runProviderRequest(
+    { signal: context.signal, label: "MailVeri" },
+    async (signal) => {
+      const response = await context.fetcher(new URL(request.path, apiBaseUrl).toString(), {
+        method: request.method,
+        headers: {
+          accept: "application/json",
+          authorization: `Bearer ${context.apiKey}`,
+          "user-agent": providerUserAgent,
+          ...(request.body ? { "content-type": "application/json" } : {}),
+        },
+        body: request.body ? JSON.stringify(request.body) : undefined,
+        signal,
+      });
+      const text = await readProviderTextBody(response, "MailVeri response", undefined, signal);
+      return { response, payload: parseMailveriPayload(text) };
+    },
+  );
 
   if (!response.ok) {
     throw createMailveriHttpError(response, payload, phase);
@@ -126,9 +130,8 @@ async function mailveriRequest(
   return record;
 }
 
-async function readMailveriPayload(response: Response): Promise<unknown> {
+function parseMailveriPayload(text: string): unknown {
   // Rejected keys answer with a plain-text 403 body, so JSON parsing must be optional.
-  const text = await response.text();
   if (!text.trim()) {
     return null;
   }
