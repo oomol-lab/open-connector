@@ -5,9 +5,20 @@ import type { ProviderFetch } from "../provider-runtime.ts";
 
 import { compactObject, optionalBoolean, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
 import { encodePathSegment } from "../../core/request.ts";
-import { ProviderRequestError, providerUserAgent, runProviderRequest } from "../provider-runtime.ts";
+import {
+  ProviderRequestError,
+  providerUserAgent,
+  requiredInputString,
+  runProviderRequest,
+} from "../provider-runtime.ts";
 
 export const zoomApiBaseUrl = "https://api.zoom.us/v2";
+
+/**
+ * Zoom's error code for a summary the API will not return. Zoom uses it for three causes it does not tell
+ * apart by code: summary access restricted to IP ranges, summaries shared by email only, or the summary in Trash.
+ */
+const zoomSummaryNotAccessibleCode = 2305;
 
 type ZoomRequestPhase = "validate" | "execute";
 type ZoomActionHandler = ProviderRuntimeHandler<OAuthProviderContext>;
@@ -25,7 +36,7 @@ export const zoomActionHandlers: ProviderActionHandlers<"zoom", ZoomActionHandle
   async get_user(input, context) {
     const payload = await requestZoomJson({
       context,
-      path: `/users/${encodePathSegment(requiredString(input.userId, "userId"))}`,
+      path: `/users/${encodePathSegment(optionalString(input.userId) ?? "me")}`,
       phase: "execute",
     });
 
@@ -52,6 +63,52 @@ export const zoomActionHandlers: ProviderActionHandlers<"zoom", ZoomActionHandle
       pagination: normalizePagination(payload),
       meetings: objectArray(payload.meetings).map(normalizeMeeting),
     };
+  },
+  async list_user_meeting_summaries(input, context) {
+    const payload = await requestZoomJson({
+      context,
+      path: `/users/${encodePathSegment(optionalString(input.userId) ?? "me")}/meeting_summaries`,
+      phase: "execute",
+      query: compactObject({
+        from: optionalString(input.from),
+        to: optionalString(input.to),
+        time_filter_field: optionalString(input.timeFilterField),
+        page_size: optionalPositiveIntegerString(input.pageSize, "pageSize"),
+        next_page_token: optionalString(input.nextPageToken),
+      }),
+    });
+
+    return {
+      summaries: objectArray(payload.summaries).map(normalizeSummaryMeeting),
+      nextPageToken: optionalString(payload.next_page_token) ?? null,
+      pageSize: optionalInteger(payload.page_size) ?? null,
+      from: optionalString(payload.from) ?? null,
+      to: optionalString(payload.to) ?? null,
+    };
+  },
+  async get_meeting_summary(input, context) {
+    const meetingUuid = requiredInputString(input.meetingUuid, "meetingUuid");
+    try {
+      const payload = await requestZoomJson({
+        context,
+        path: `/meetings/${encodeMeetingUuid(meetingUuid)}/meeting_summary`,
+        phase: "execute",
+      });
+      return { available: true, unavailableReason: null, unavailableMessage: null, summary: normalizeSummary(payload) };
+    } catch (error) {
+      if (
+        error instanceof ProviderRequestError &&
+        optionalRecord(error.details)?.code === zoomSummaryNotAccessibleCode
+      ) {
+        return {
+          available: false,
+          unavailableReason: "not_accessible",
+          unavailableMessage: error.message,
+          summary: null,
+        };
+      }
+      throw error;
+    }
   },
   async create_meeting(input, context) {
     const payload = await requestZoomJson({
@@ -271,6 +328,68 @@ function normalizeUser(payload: unknown): Record<string, unknown> {
     pmi: maybeString(record.pmi),
     raw: record,
   };
+}
+
+/**
+ * Zoom asks for a meeting UUID that starts with "/" or contains "//" to be encoded twice,
+ * so the encoded slash survives its own path decoding.
+ */
+function encodeMeetingUuid(meetingUuid: string): string {
+  const encoded = encodePathSegment(meetingUuid);
+  return meetingUuid.startsWith("/") || meetingUuid.includes("//") ? encodePathSegment(encoded) : encoded;
+}
+
+function normalizeSummaryMeeting(record: Record<string, unknown>): Record<string, unknown> {
+  return {
+    meetingUuid: optionalString(record.meeting_uuid) ?? null,
+    meetingId: maybeMeetingId(record.meeting_id),
+    meetingHostId: optionalString(record.meeting_host_id) ?? null,
+    meetingHostEmail: optionalString(record.meeting_host_email) ?? null,
+    meetingTopic: optionalString(record.meeting_topic) ?? null,
+    meetingStartTime: optionalString(record.meeting_start_time) ?? null,
+    meetingEndTime: optionalString(record.meeting_end_time) ?? null,
+    summaryStartTime: optionalString(record.summary_start_time) ?? null,
+    summaryEndTime: optionalString(record.summary_end_time) ?? null,
+    summaryCreatedTime: optionalString(record.summary_created_time) ?? null,
+    summaryLastModifiedTime: optionalString(record.summary_last_modified_time) ?? null,
+  };
+}
+
+function normalizeSummary(record: Record<string, unknown>): Record<string, unknown> {
+  const edited = optionalRecord(record.edited_summary);
+  return {
+    ...normalizeSummaryMeeting(record),
+    summaryLastModifiedUserId: optionalString(record.summary_last_modified_user_id) ?? null,
+    summaryLastModifiedUserEmail: optionalString(record.summary_last_modified_user_email) ?? null,
+    summaryTitle: optionalString(record.summary_title) ?? null,
+    summaryContent: optionalString(record.summary_content) ?? null,
+    summaryDocUrl: optionalString(record.summary_doc_url) ?? null,
+    summaryOverview: optionalString(record.summary_overview) ?? null,
+    summaryDetails: normalizeSummaryDetails(record.summary_details),
+    nextSteps: normalizeNextSteps(record.next_steps),
+    editedSummary: edited
+      ? {
+          summaryOverview: optionalString(edited.summary_overview) ?? null,
+          // Zoom documents the edited details as text; keep the section list if it sends one.
+          summaryDetails:
+            typeof edited.summary_details === "string"
+              ? edited.summary_details
+              : normalizeSummaryDetails(edited.summary_details),
+          nextSteps: normalizeNextSteps(edited.next_steps),
+        }
+      : null,
+  };
+}
+
+function normalizeSummaryDetails(value: unknown): Array<Record<string, unknown>> {
+  return objectArray(value).map((detail) => ({
+    label: optionalString(detail.label) ?? null,
+    summary: optionalString(detail.summary) ?? null,
+  }));
+}
+
+function normalizeNextSteps(value: unknown): string[] {
+  return Array.isArray(value) ? value.filter((step): step is string => typeof step === "string") : [];
 }
 
 function normalizeMeeting(payload: unknown): Record<string, unknown> {
