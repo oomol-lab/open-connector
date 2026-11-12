@@ -11,6 +11,7 @@ import {
   compactObject,
   optionalBoolean,
   optionalInteger as asOptionalInteger,
+  optionalRawString,
   optionalRecord as asOptionalObject,
   optionalString as asOptionalString,
   optionalStringArray,
@@ -945,7 +946,8 @@ function appendAdfText(value: unknown, parts: string[]): void {
 
   const type = asOptionalString(record.type);
   if (type === "text") {
-    const text = asOptionalString(record.text);
+    // Keep edge whitespace: adjacent text nodes split where marks change, so trimming them joins words.
+    const text = optionalRawString(record.text);
     if (text) {
       parts.push(text);
     }
