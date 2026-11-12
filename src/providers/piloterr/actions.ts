@@ -459,13 +459,15 @@ export const piloterrActions: ProviderActionDefinition[] = [
     operationType: "read",
     description:
       "Get a LinkedIn company's profile by page URL, slug or ID, or by website domain: industry, size, headquarters, specialties and followers.",
-    inputSchema: s.requireAnyProperty(
+    inputSchema: s.requireExactlyOneProperty(
       s.actionInput(
         {
           query: s.nonEmptyString(
             'LinkedIn company page URL, slug or ID (e.g., "https://www.linkedin.com/company/ferrari").',
           ),
-          domain: s.nonEmptyString('Company website domain, when the LinkedIn page is unknown (e.g., "ferrari.com").'),
+          domain: s.nonEmptyString(
+            'Company website domain, when the LinkedIn page is unknown (e.g., "ferrari.com"). Provide exactly one of query or domain.',
+          ),
         },
         [],
         "Input for Get LinkedIn Company.",
@@ -519,11 +521,13 @@ export const piloterrActions: ProviderActionDefinition[] = [
     operationType: "read",
     description:
       "Get a company's Crunchbase profile by name, permalink or URL, or by website domain: description, size, categories, locations, investors and products.",
-    inputSchema: s.requireAnyProperty(
+    inputSchema: s.requireExactlyOneProperty(
       s.actionInput(
         {
           query: s.nonEmptyString('Company name, Crunchbase permalink or URL (e.g., "openai").'),
-          domain: s.nonEmptyString('Company website domain, for a reverse lookup (e.g., "openai.com").'),
+          domain: s.nonEmptyString(
+            'Company website domain, for a reverse lookup (e.g., "openai.com"). Provide exactly one of query or domain.',
+          ),
         },
         [],
         "Input for Get Crunchbase Company.",

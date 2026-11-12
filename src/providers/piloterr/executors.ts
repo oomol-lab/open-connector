@@ -235,22 +235,29 @@ async function piloterrRequest(
       fetcher: context.fetcher,
       signal: context.signal,
       query,
-      phase,
       body,
       headers: { "x-api-key": context.apiKey },
     });
   } catch (error) {
     if (error instanceof ProviderRequestError) {
-      throw piloterrRequestError(error.status, error.message, error.details);
+      throw piloterrRequestError(error.status, error.message, error.details, phase);
     }
     throw error;
   }
 }
 
-function piloterrRequestError(status: number, message: string, details?: unknown): ProviderRequestError {
+function piloterrRequestError(
+  status: number,
+  message: string,
+  details?: unknown,
+  phase: ProviderRequestPhase = "execute",
+): ProviderRequestError {
   // Piloterr answers an exceeded rate limit with 401, which would otherwise read as a rejected key.
   if (status === 401 && /rate limit/i.test(message)) {
     return new ProviderRequestError(429, message, details);
+  }
+  if (phase === "validate" && (status === 401 || status === 403)) {
+    return new ProviderRequestError(400, message, details);
   }
   return new ProviderRequestError(status, message, details);
 }
