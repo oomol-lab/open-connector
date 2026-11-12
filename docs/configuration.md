@@ -224,7 +224,7 @@ Some self-hosted services are only reachable over a LAN or an overlay network
 such as Tailscale or NetBird. To allow those connections, set
 `OOMOL_CONNECT_ALLOW_PRIVATE_NETWORK=true`. When enabled, connections for the
 self-hosted providers that opt in (**Apache Doris**, **Dokploy**, **n8n**, **GitLab**,
-**Gitea**, **Home Assistant**, **IMAP Mailbox**, **Kubernetes**, and others) may target:
+**Gitea**, **Home Assistant**, **IMAP Mailbox**, **Kubernetes**, **SFTP**, and others) may target:
 
 - RFC 1918 ranges: `10.0.0.0/8`, `172.16.0.0/12`, `192.168.0.0/16`
 - Carrier-grade NAT / shared address space `100.64.0.0/10` (Tailscale, NetBird)

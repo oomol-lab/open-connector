@@ -55,6 +55,20 @@ KUBERNETES_CA_DATA=LS0tLS1CRUdJTi... \
 node examples/local-http/kubernetes.ts
 ```
 
+Run SFTP against any SSH server that offers the SFTP subsystem. The example lists and inspects
+`SFTP_PATH` (default: the login directory). Set `SFTP_WRITE_DIR` as well to create a scratch
+directory there, upload, rename, download and delete a file, and remove the directory again. Leave
+`SFTP_HOST_KEY_FINGERPRINT` empty to record the key the server presents when the connection is saved.
+Missing credentials produce a skip message.
+
+```bash
+SFTP_HOST=sftp.example.com \
+SFTP_USERNAME=deploy \
+SFTP_PRIVATE_KEY="$(cat ~/.ssh/id_ed25519_connector)" \
+SFTP_WRITE_DIR=/tmp \
+node examples/local-http/sftp.ts
+```
+
 Run App Store Connect with an API key created in App Store Connect. Pass the `.p8` file through
 `APP_STORE_CONNECT_PRIVATE_KEY_PATH`, or inline its PEM contents through
 `APP_STORE_CONNECT_PRIVATE_KEY`. Omit `APP_STORE_CONNECT_ISSUER_ID` when you use an Individual API

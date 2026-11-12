@@ -1,4 +1,4 @@
-import type { GuardedFetchDnsLookup, ResolvedAddress } from "../../core/guarded-fetch.ts";
+import type { GuardedFetchDnsLookup } from "../../core/guarded-fetch.ts";
 import type { FetchMessageObject, ImapFlowOptions, MessageStructureObject, SearchObject } from "imapflow";
 import type { LookupFunction, Socket, TcpNetConnectOpts } from "node:net";
 
@@ -15,6 +15,7 @@ import { Readable } from "node:stream";
 import { pipeline } from "node:stream/promises";
 import nodemailer from "nodemailer";
 import { resolveGuardedEgressTarget } from "../../core/guarded-fetch.ts";
+import { createPinnedLookup } from "../../core/guarded-socket.ts";
 import { isIpAddress, isPrivateNetworkAccessAllowed } from "../../core/request.ts";
 import { mailAttachmentDownloadByteLimit, mailConnectionTimeoutMs, mailImapPort, mailSmtpPort } from "./config.ts";
 import { MailProtocolError } from "./errors.ts";
@@ -504,17 +505,6 @@ async function pinMailHost(
     ...(!isIpAddress(target.url.hostname) ? { servername: target.url.hostname } : {}),
     lookup: createPinnedLookup(target.addresses),
   };
-}
-
-function createPinnedLookup(addresses: ResolvedAddress[]): LookupFunction {
-  return ((_hostname, options, callback) => {
-    if (typeof options === "object" && options.all) {
-      callback(null, addresses);
-      return;
-    }
-    const first = addresses[0]!;
-    callback(null, first.address, first.family);
-  }) as LookupFunction;
 }
 
 async function createSmtpTransport(

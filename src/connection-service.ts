@@ -402,6 +402,7 @@ export class ConnectionService {
     const values = normalizeCredentialValues({
       fields: auth.fields,
       values: input.values ?? {},
+      preserveSecrets: true,
       createError: (message) => new ConnectionError("invalid_input", message),
     });
     const credential: ResolvedCredential = {
