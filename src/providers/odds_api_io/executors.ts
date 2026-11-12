@@ -14,7 +14,12 @@ import {
 import { arrayPayload, objectPayload, requestJson } from "../http-json-runtime.ts";
 import { defineApiKeyProviderExecutors } from "../provider-executors.ts";
 import { defineProviderProxy } from "../provider-proxy.ts";
-import { providerInputError, requiredInputNumber, requiredInputString } from "../provider-runtime.ts";
+import {
+  providerInputError,
+  requiredInputNumber,
+  requiredInputString,
+  runProviderRequest,
+} from "../provider-runtime.ts";
 
 const service = "odds_api_io";
 const apiBaseUrl = "https://api.odds-api.io/v3";
@@ -118,15 +123,17 @@ function oddsApiIoRequest(
   query: Record<string, QueryValue> = {},
   phase: ProviderRequestPhase = "execute",
 ): Promise<unknown> {
-  return requestJson({
-    providerName: "Odds-API.io",
-    baseUrl: apiBaseUrl,
-    path,
-    fetcher: context.fetcher,
-    signal: context.signal,
-    query: { ...query, apiKey: context.apiKey },
-    phase,
-  });
+  return runProviderRequest({ label: "Odds-API.io", signal: context.signal }, (signal) =>
+    requestJson({
+      providerName: "Odds-API.io",
+      baseUrl: apiBaseUrl,
+      path,
+      fetcher: context.fetcher,
+      signal,
+      query: { ...query, apiKey: context.apiKey },
+      phase,
+    }),
+  );
 }
 
 function commaList(value: unknown, fieldName: string): string {
