@@ -85,25 +85,20 @@ export function createLocalAuthMiddleware(options: LocalAuthOptions): Middleware
       return;
     }
 
-    if (
-      isConnectionManagementPath(context.req.path) &&
-      !adminToken &&
-      (runtimeToken ||
-        options.verifyRuntimeJwt ||
-        (options.hasRuntimeTokens ? await options.hasRuntimeTokens() : options.resolveRuntimeToken !== undefined))
-    ) {
-      return writeRuntimeFailure(context, {
-        status: 403,
-        errorCode: "forbidden",
-        message: "Configure an admin token to manage connections.",
-      });
-    }
     if (adminToken && matchesConfiguredToken(context, adminToken)) adminBearerRequests.add(context.req.raw);
     if (await hasValidToken(context, options, scope)) {
       if (scope === "admin") {
         await installAdminCookieForBearer(context, options);
       }
       return;
+    }
+
+    if (scope === "admin" && !adminToken) {
+      return writeRuntimeFailure(context, {
+        status: 403,
+        errorCode: "forbidden",
+        message: "Configure an admin token to access management endpoints.",
+      });
     }
 
     // Admin elevation for action runs is only available when an admin token is
@@ -181,7 +176,7 @@ function isPublicPath(path: string, method: string): boolean {
 export async function readLocalAuthSession(context: Context, options: LocalAuthOptions): Promise<LocalAuthSession> {
   const adminToken = normalizeToken(options.adminToken);
   if (!adminToken) {
-    return { adminAuthConfigured: false, authenticated: true };
+    return { adminAuthConfigured: false, authenticated: !(await requiresRuntimeAuthentication(options)) };
   }
 
   const authenticated = await hasRequestToken(context, adminToken);
@@ -225,17 +220,9 @@ async function hasValidToken(context: Context, options: LocalAuthOptions, scope:
   const skipStaticRuntimeToken = scope === "runtime" && options.authMode === "oauth";
   const token = skipStaticRuntimeToken ? undefined : tokenForScope(options, scope);
   if (!token) {
-    if (scope === "admin") {
-      return true;
-    }
-    const authMode = options.authMode ?? "runtime_token";
-    const acceptsOAuth = (authMode === "oauth" || authMode === "mixed") && options.resolveOAuthToken !== undefined;
-    if (authMode !== "oauth" && !acceptsOAuth && !options.requireRuntimeAuth && !options.verifyRuntimeJwt) {
-      const hasRuntimeTokens = options.hasRuntimeTokens
-        ? await options.hasRuntimeTokens()
-        : options.resolveRuntimeToken !== undefined;
-      if (!hasRuntimeTokens) return true;
-    }
+    const required = await requiresRuntimeAuthentication(options);
+    if (scope === "admin") return !required;
+    if (!required) return true;
     return hasValidRuntimeToken(context, options);
   }
 
@@ -244,6 +231,20 @@ async function hasValidToken(context: Context, options: LocalAuthOptions, scope:
   }
 
   return scope === "runtime" ? await hasValidRuntimeToken(context, options) : false;
+}
+
+async function requiresRuntimeAuthentication(options: LocalAuthOptions): Promise<boolean> {
+  if (options.authMode === "none") return false;
+  if (
+    normalizeToken(options.runtimeToken) ||
+    options.requireRuntimeAuth ||
+    options.verifyRuntimeJwt ||
+    options.authMode === "oauth" ||
+    (options.authMode === "mixed" && options.resolveOAuthToken)
+  ) {
+    return true;
+  }
+  return options.hasRuntimeTokens ? await options.hasRuntimeTokens() : options.resolveRuntimeToken !== undefined;
 }
 
 async function hasRequestToken(context: Context, token: string): Promise<boolean> {

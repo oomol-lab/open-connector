@@ -97,7 +97,7 @@ describe("createLocalAuthMiddleware", () => {
         })
       ).status,
     ).toBe(200);
-    expect((await app.request("/mcp-not-runtime")).status).toBe(200);
+    expect((await app.request("/mcp-not-runtime")).status).toBe(403);
   });
 
   it("does not open POST /v1/actions when runtime tokens exist but admin token is unset", async () => {
@@ -277,3 +277,70 @@ function createSchemeApp(): Hono {
 function authorize(scheme: string, token: string): Record<string, string> {
   return { authorization: `${scheme} ${token}` };
 }
+
+const protectedRuntimeConfigurations: Array<{
+  name: string;
+  options: Parameters<typeof createLocalAuthMiddleware>[0];
+}> = [
+  { name: "static token", options: { runtimeToken: "runtime-secret" } },
+  { name: "JWT", options: { verifyRuntimeJwt: async () => true } },
+  { name: "stored token", options: { hasRuntimeTokens: async () => true } },
+  { name: "resolver without token count", options: { resolveRuntimeToken: async () => undefined } },
+  {
+    name: "required authentication without stored tokens",
+    options: { requireRuntimeAuth: true, hasRuntimeTokens: async () => false },
+  },
+  { name: "OAuth only", options: { authMode: "oauth" } },
+  { name: "mixed OAuth", options: { authMode: "mixed", resolveOAuthToken: async () => undefined } },
+];
+
+describe.each(protectedRuntimeConfigurations)("admin authentication with $name", ({ options }) => {
+  it.each([false, true])("requires an administrator credential (configured: %s)", async (configured) => {
+    const app = new Hono();
+    app.use("*", createLocalAuthMiddleware({ ...options, adminToken: configured ? "admin-secret" : undefined }));
+    app.all("*", (context) => context.json({ ok: true }));
+    for (const path of [
+      "/api/runtime-tokens",
+      "/api/connections",
+      "/api/oauth/configs",
+      "/api/runtime-policy",
+      "/api/future-admin-route",
+      "/v1/connections",
+      "/v1/providers/example/setup",
+    ]) {
+      for (const method of ["GET", "POST", "PUT", "DELETE"]) {
+        expect((await app.request(path, { method })).status).toBe(configured ? 401 : 403);
+        expect((await app.request(path, { method, headers: authorize("Bearer", "runtime-secret") })).status).toBe(
+          configured ? 401 : 403,
+        );
+        expect((await app.request(path, { method, headers: authorize("Bearer", "admin-secret") })).status).toBe(
+          configured ? 200 : 403,
+        );
+      }
+    }
+    for (const path of ["/health", "/oauth/callback", "/oauth/jwks", "/api/auth/session"]) {
+      expect((await app.request(path)).status).toBe(200);
+    }
+  });
+});
+
+it.each([
+  {},
+  { authMode: "none" as const, runtimeToken: "unused", requireRuntimeAuth: true },
+  { hasRuntimeTokens: async () => false },
+])("keeps unauthenticated local administration available: %j", async (options) => {
+  const app = new Hono();
+  app.use("*", createLocalAuthMiddleware(options));
+  app.get("/api/connections", (context) => context.json({ ok: true }));
+  expect((await app.request("/api/connections")).status).toBe(200);
+});
+
+it("closes anonymous administration when the first stored runtime token appears", async () => {
+  let active = false;
+  const app = new Hono();
+  app.use("*", createLocalAuthMiddleware({ hasRuntimeTokens: async () => active }));
+  app.post("/api/runtime-tokens", (context) => context.json({ ok: true }));
+  expect((await app.request("/api/runtime-tokens", { method: "POST" })).status).toBe(200);
+  active = true;
+  expect((await app.request("/api/runtime-tokens", { method: "POST" })).status).toBe(403);
+});
