@@ -1,4 +1,9 @@
-import type { CredentialValidationResult, ProviderExecutors } from "../../core/types.ts";
+import type {
+  CredentialValidationResult,
+  ExecutionContext,
+  ProviderExecutors,
+  ResolvedCredential,
+} from "../../core/types.ts";
 import type { ApiKeyProviderContext, ProviderActionHandlers, ProviderActionSources } from "../provider-executors.ts";
 
 import {
@@ -9,7 +14,7 @@ import {
   requiredRecord,
   requiredString,
 } from "../../core/cast.ts";
-import { defineApiKeyProviderExecutors, mapProviderActionSources } from "../provider-executors.ts";
+import { defineProviderExecutors, mapProviderActionSources } from "../provider-executors.ts";
 import {
   providerInputError,
   ProviderRequestError,
@@ -23,7 +28,14 @@ const validationPath = "/v1/users/me";
 
 type PipedrivePhase = "validate" | "execute";
 type PipedriveMethod = "GET" | "POST" | "PATCH" | "DELETE";
-type PipedriveActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
+type PipedriveActionHandler = (input: Record<string, unknown>, context: PipedriveContext) => Promise<unknown>;
+
+export interface PipedriveAccess {
+  authHeaders: Record<string, string>;
+  origin: string;
+}
+
+interface PipedriveContext extends PipedriveAccess, Pick<ApiKeyProviderContext, "fetcher" | "signal"> {}
 
 interface Operation {
   method: PipedriveMethod;
@@ -79,14 +91,81 @@ export const pipedriveActionHandlers: ProviderActionHandlers<"pipedrive", Pipedr
     executeOperation(operation),
   );
 
-export const executors: ProviderExecutors = defineApiKeyProviderExecutors(service, pipedriveActionHandlers);
+export const executors: ProviderExecutors = defineProviderExecutors<PipedriveContext>({
+  service,
+  handlers: pipedriveActionHandlers,
+  async createContext(context, fetcher): Promise<PipedriveContext> {
+    return { ...(await requirePipedriveAccess(context)), fetcher, signal: context.signal };
+  },
+});
+
+export async function requirePipedriveAccess(context: ExecutionContext): Promise<PipedriveAccess> {
+  const credential = await context.getCredential(service);
+  if (credential?.authType === "api_key" || credential?.authType === "oauth2") {
+    return pipedriveAccess(credential);
+  }
+  throw new ProviderRequestError(401, "Configure pipedrive API token or OAuth credentials first.");
+}
+
+function pipedriveAccess(credential: Extract<ResolvedCredential, { authType: "api_key" | "oauth2" }>): PipedriveAccess {
+  if (credential.authType === "api_key") {
+    return { authHeaders: { "x-api-token": credential.apiKey }, origin: apiOrigin };
+  }
+  return {
+    authHeaders: { authorization: `${credential.tokenType} ${credential.accessToken}` },
+    origin: pipedriveOrigin(credential.metadata.api_domain),
+  };
+}
+
+function pipedriveOrigin(value: unknown): string {
+  const apiDomain = optionalString(value);
+  if (!apiDomain) {
+    return apiOrigin;
+  }
+  const url = URL.canParse(apiDomain) ? new URL(apiDomain) : undefined;
+  if (
+    !url ||
+    url.protocol !== "https:" ||
+    !url.hostname.endsWith(".pipedrive.com") ||
+    url.port ||
+    url.username ||
+    url.password
+  ) {
+    throw providerInputError("Pipedrive api_domain must be an https pipedrive.com address");
+  }
+  return url.origin;
+}
 
 export async function validatePipedriveCredential(
   input: Record<string, string>,
   fetcher: typeof fetch,
 ): Promise<CredentialValidationResult> {
   const apiKey = requiredString(input.apiKey, "apiKey", (message) => new ProviderRequestError(401, message));
-  const payload = await requestPipedriveJson({ apiKey, fetcher }, { path: validationPath, phase: "validate" });
+  return readPipedriveProfile(
+    await requestPipedriveJson(
+      { authHeaders: { "x-api-token": apiKey }, origin: apiOrigin, fetcher },
+      { path: validationPath, phase: "validate" },
+    ),
+    apiOrigin,
+    "Pipedrive API Token",
+  );
+}
+
+export async function validatePipedriveOAuthCredential(
+  credential: Extract<ResolvedCredential, { authType: "oauth2" }>,
+  fetcher: typeof fetch,
+): Promise<CredentialValidationResult> {
+  const access = pipedriveAccess(credential);
+  const result = readPipedriveProfile(
+    await requestPipedriveJson({ ...access, fetcher }, { path: validationPath, phase: "validate" }),
+    access.origin,
+    "Pipedrive OAuth",
+  );
+  const scope = optionalString(credential.metadata.scope);
+  return { ...result, grantedScopes: scope ? scope.split(/\s+/u).filter(Boolean) : [] };
+}
+
+function readPipedriveProfile(payload: unknown, origin: string, fallbackName: string): CredentialValidationResult {
   const user = requiredRecord(
     requiredRecord(payload, "Pipedrive validation response", providerResponseError).data,
     "data",
@@ -98,13 +177,10 @@ export async function validatePipedriveCredential(
     profile: {
       accountId,
       displayName:
-        optionalString(user.name) ??
-        optionalString(user.email) ??
-        optionalString(user.company_name) ??
-        "Pipedrive API Token",
+        optionalString(user.name) ?? optionalString(user.email) ?? optionalString(user.company_name) ?? fallbackName,
     },
     metadata: compactObject({
-      apiBaseUrl: apiOrigin,
+      apiBaseUrl: origin,
       validationEndpoint: validationPath,
       userId: optionalInteger(user.id),
       companyId: optionalInteger(user.company_id),
@@ -130,7 +206,7 @@ function executeOperation(operation: Operation): PipedriveActionHandler {
 }
 
 async function requestPipedriveJson(
-  context: Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">,
+  context: PipedriveContext,
   options: {
     path: string;
     method?: PipedriveMethod;
@@ -142,13 +218,13 @@ async function requestPipedriveJson(
 ): Promise<unknown> {
   let response: Response;
   try {
-    response = await context.fetcher(buildUrl(options.path, options.query), {
+    response = await context.fetcher(buildUrl(context.origin, options.path, options.query), {
       method: options.method ?? "GET",
       headers: {
         accept: "application/json",
         "content-type": "application/json",
         "user-agent": providerUserAgent,
-        "x-api-token": context.apiKey,
+        ...context.authHeaders,
       },
       body: options.body === undefined ? undefined : JSON.stringify(options.body),
       signal: context.signal,
@@ -175,8 +251,8 @@ async function requestPipedriveJson(
   return record;
 }
 
-function buildUrl(path: string, query: Record<string, string | undefined> = {}): URL {
-  const url = new URL(path, apiOrigin);
+function buildUrl(origin: string, path: string, query: Record<string, string | undefined> = {}): URL {
+  const url = new URL(path, origin);
   for (const [key, value] of Object.entries(query)) {
     if (value !== undefined) {
       url.searchParams.set(key, value);
