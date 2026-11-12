@@ -222,6 +222,28 @@ describe("sftp actions", () => {
     expect(files.get(racedPath)).toEqual({ kind: "file", data: Buffer.from("first writer") });
   });
 
+  it("reports an upload as failed when the server rejects the final CLOSE", async () => {
+    resetFiles();
+    const transitFiles: TransitFileStore = {
+      maxBytes: 1024,
+      async create() {
+        throw new Error("create is not expected in this test");
+      },
+      async read() {
+        const file = new File(["body"], "close-fails.txt", { type: "text/plain" });
+        return { file, sizeBytes: file.size, name: file.name, mimeType: file.type };
+      },
+      async delete() {
+        return true;
+      },
+    };
+    const context = await validatedContext(transitFiles);
+
+    await expect(
+      sftpActionHandlers.upload_file({ path: "close-fails.txt", file: { fileId: "upload-1" } }, context),
+    ).rejects.toMatchObject({ status: 400, message: expect.stringContaining("SFTP server refused the request") });
+  });
+
   it("keeps surrounding spaces in remote paths", async () => {
     resetFiles();
     files.set(`${homeDirectory}/notes.txt `, { kind: "file", data: Buffer.from("trailing space") });
@@ -389,7 +411,11 @@ function serveSftp(sftp: SFTPWrapper): void {
     sftp.attrs(reqId, attributes(node));
   });
   sftp.on("CLOSE", (reqId, handle) => {
+    const entry = fromHandle(handle);
     handles.delete(Number(handle.toString()));
+    if (entry?.flags && entry.flags & OPEN_MODE.WRITE && entry.path.endsWith("/close-fails.txt")) {
+      return void sftp.status(reqId, STATUS_CODE.FAILURE);
+    }
     sftp.status(reqId, STATUS_CODE.OK);
   });
   sftp.on("MKDIR", (reqId, path) => {

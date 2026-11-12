@@ -226,13 +226,20 @@ export const sftpActionHandlers: ProviderActionHandlers<"sftp", SftpActionHandle
           throw providerInputError(`${path} already exists; set overwrite to true to replace it.`);
         }
         const body = Readable.fromWeb(source.file.stream() as NodeReadableStream<Uint8Array>);
+        // The existence check above only produces a clear message; the exclusive
+        // open is what keeps a concurrent writer's file from being truncated.
+        const remote = client.createWriteStream(path, { flags: overwrite ? "w" : "wx" });
+        let opened = false;
+        remote.once("open", () => {
+          opened = true;
+        });
         try {
-          // The existence check above only produces a clear message; the exclusive
-          // open is what keeps a concurrent writer's file from being truncated.
-          await pipeline(body, client.createWriteStream(path, { flags: overwrite ? "w" : "wx" }));
+          // Settles only after the server answered CLOSE: ssh2 destroys the stream in
+          // _final and stream.finished waits for that destroy, so a failed CLOSE rejects.
+          await pipeline(body, remote);
         } catch (error) {
           const code = (error as { code?: unknown } | null)?.code;
-          if (!overwrite && (code === sftpStatusFailure || code === sftpStatusFileAlreadyExists)) {
+          if (!overwrite && !opened && (code === sftpStatusFailure || code === sftpStatusFileAlreadyExists)) {
             throw providerInputError(`${path} could not be created exclusively; it may already exist.`);
           }
           throw error;
