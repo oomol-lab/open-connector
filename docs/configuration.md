@@ -81,6 +81,14 @@ OOMOL_CONNECT_ALLOWED_PROXIES="github" \
 npm run dev
 ```
 
+When runtime authentication is enabled, management endpoints require a separately configured
+`OOMOL_CONNECT_ADMIN_TOKEN`. If it is missing, admin-scoped requests return `403`, including
+requests to create runtime tokens or modify connections and OAuth configuration. Runtime tokens
+and JWTs do not grant admin access. This also applies to OAuth runtime authentication and stored
+runtime tokens. Configure the admin token before creating the first persistent runtime token;
+once that token exists, anonymous management access is disabled. Unauthenticated local operation
+remains available when no runtime authentication is configured or runtime auth mode is `none`.
+
 Create persistent runtime tokens from the web console Access tab or `POST /api/runtime-tokens`.
 Only token hashes are stored: the Node server stores persistent-token records in its selected SQLite
 or PostgreSQL database, while
