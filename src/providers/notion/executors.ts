@@ -1050,9 +1050,22 @@ function buildCreatePageBody(input: Record<string, unknown>) {
     throw new ProviderRequestError(400, "markdown cannot be used with children");
   }
 
+  if ((parent?.page_id || (!parent && parentId)) && properties) {
+    const unsupported = Object.keys(properties).filter((key) => key !== "title");
+    if (unsupported.length > 0) {
+      throw new ProviderRequestError(
+        400,
+        `A page parent only supports properties.title; unsupported properties: ${unsupported.join(", ")}. Use parentId + title for a child page, or parent: {data_source_id: "..."} with properties matching the data source schema.`,
+      );
+    }
+  }
+
   if (parent) {
     if (typeof input.title === "string") {
-      throw new ProviderRequestError(400, "title cannot be used with parent; use properties instead");
+      throw new ProviderRequestError(
+        400,
+        "title cannot be used with parent. For a child page, use parentId + title and omit parent; otherwise put the title in properties.",
+      );
     }
     if (parentId && !isSamePageParent(parent, parentId)) {
       throw new ProviderRequestError(400, "parent and parentId must describe the same page parent");

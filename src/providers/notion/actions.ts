@@ -243,7 +243,10 @@ const pageParent = s.oneOf(
       { required: ["workspace"], description: "Workspace parent." },
     ),
   ],
-  { description: "The official Notion parent object." },
+  {
+    description:
+      'A Notion parent object, not a string: {"page_id":"..."}, {"data_source_id":"..."}, or {"workspace":true}.',
+  },
 );
 
 const commentParent = s.oneOf(
@@ -486,21 +489,48 @@ export const notionActions: ActionDefinition[] = [
   action({
     name: "create_page",
     operationType: "write",
-    description: "Create a Notion page under a parent page, data source, or workspace-level private area.",
+    description:
+      "Create a Notion page. For a child of a page, use parentId + title. For native Notion input, use a parent object + properties without a top-level title.",
     requiredScopes: notionWriteScopes,
-    inputSchema: s.object(
-      {
-        parent: pageParent,
-        parentId: s.string({ description: "Simple parent page ID." }),
-        title: s.string({ description: "Simple page title used with parentId." }),
-        properties: notionProperties,
-        children: s.array(notionObject, { description: "Child blocks to create with the page." }),
-        markdown: s.string({ description: "Enhanced Markdown content for the page." }),
-        icon: notionObject,
-        cover: notionObject,
-        template: notionObject,
-      },
-      { description: "The input payload for this action." },
+    inputSchema: s.withExamples(
+      s.object(
+        {
+          parent: {
+            ...pageParent,
+            description:
+              'A parent object, not a string: {"page_id":"..."}, {"data_source_id":"..."}, or {"workspace":true}. Use properties for the title. For a plain page ID and title, omit parent and use parentId + title instead. Workspace parents require a public connection or personal access token.',
+          },
+          parentId: s.string({
+            description: "Plain page ID string, not a data source ID. Use with title instead of parent.",
+          }),
+          title: s.string({
+            description:
+              "Page title for the simple parentId form. Do not combine with parent; native parent objects use properties instead.",
+          }),
+          properties: {
+            ...notionProperties,
+            description:
+              "Notion page properties. A page parent permits only the title property. For a data source parent, keys must match its schema (for example, Name). With parentId + title, the title property is generated automatically.",
+          },
+          children: s.array(notionObject, { description: "Child blocks to create with the page." }),
+          markdown: s.string({ description: "Enhanced Markdown content for the page." }),
+          icon: notionObject,
+          cover: notionObject,
+          template: notionObject,
+        },
+        { description: "The input payload for this action." },
+      ),
+      [
+        { parentId: "7b2e4c1a-9d3f-4e5b-8a6c-1f2d3e4b5a60", title: "Test Note", markdown: "Page content" },
+        {
+          parent: { page_id: "7b2e4c1a-9d3f-4e5b-8a6c-1f2d3e4b5a60" },
+          properties: { title: { title: [{ text: { content: "Test Note" } }] } },
+        },
+        {
+          parent: { data_source_id: "7b2e4c1a-9d3f-4e5b-8a6c-1f2d3e4b5a60" },
+          properties: { Name: { title: [{ text: { content: "Test Note" } }] } },
+        },
+      ],
     ),
     outputSchema: page,
   }),
@@ -533,7 +563,11 @@ export const notionActions: ActionDefinition[] = [
     inputSchema: s.object(
       {
         pageId: s.string({ minLength: 1, description: "The page ID to move." }),
-        parent: pageParent,
+        parent: {
+          ...pageParent,
+          description:
+            'Destination parent object, not a string: {"page_id":"..."} or {"data_source_id":"..."}. This action has no parentId shorthand.',
+        },
       },
       { required: ["pageId", "parent"], description: "The input payload for this action." },
     ),
