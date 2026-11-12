@@ -374,8 +374,11 @@ describe("ConnectionService", () => {
     });
   });
 
-  it("stores custom credential values after trimming declared fields", async () => {
-    const service = createService([customCredentialProvider]);
+  it("preserves custom credential secrets while trimming non-secret fields", async () => {
+    const validate = vi.fn(async () => ({}));
+    const service = createService([customCredentialProvider], {
+      providerLoader: new FakeProviderLoader({ customCredential: validate }),
+    });
 
     await service.connectWithCustomCredential("database", {
       values: {
@@ -384,11 +387,13 @@ describe("ConnectionService", () => {
       },
     });
 
+    expect(validate).toHaveBeenCalledWith({ values: { host: "localhost", password: " secret " } }, expect.anything());
+
     await expect(service.getCredential("database")).resolves.toMatchObject({
       authType: "custom_credential",
       values: {
         host: "localhost",
-        password: "secret",
+        password: " secret ",
       },
     });
   });

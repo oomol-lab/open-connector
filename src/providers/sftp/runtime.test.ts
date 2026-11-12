@@ -7,7 +7,9 @@ import { connect } from "node:net";
 import { posix } from "node:path";
 import ssh2 from "ssh2";
 import { afterAll, beforeAll, describe, expect, it, vi } from "vitest";
+import { normalizeCredentialValues } from "../../core/credential-fields.ts";
 import { ProviderRequestError } from "../provider-runtime.ts";
+import { provider } from "./definition.ts";
 import { createSftpContext, sftpActionHandlers, validateSftpCredential } from "./runtime.ts";
 
 const { Server, utils } = ssh2;
@@ -16,8 +18,14 @@ const { STATUS_CODE, OPEN_MODE } = utils.sftp;
 const homeDirectory = "/home/deploy";
 const publicLookup = async () => [{ address: "93.184.216.34", family: 4 as const }];
 
-type MemoryNode = { kind: "dir" } | { kind: "file"; data: Buffer };
+type MemoryNode = ({ kind: "dir" } | { kind: "file"; data: Buffer }) & { mode?: number };
 
+const privateKeyPassphrase = " private key passphrase ";
+const userKey = utils.generateKeyPairSync("ed25519", {
+  passphrase: privateKeyPassphrase,
+  cipher: "aes256-cbc",
+  rounds: 16,
+});
 const hostKey = utils.generateKeyPairSync("ed25519");
 const hostKeyFingerprint = fingerprintOf(hostKey.public);
 
@@ -26,6 +34,8 @@ let serverPort = 0;
 let files: Map<string, MemoryNode>;
 /** Paths STAT and LSTAT report as missing, as if another client created them right after the check. */
 let hiddenFromStat: Set<string>;
+let password = "correct-password";
+let chmodRequests: number[] = [];
 
 beforeAll(async () => {
   server = new Server({ hostKeys: [hostKey.private] }, (client) => serveClient(client));
@@ -39,6 +49,8 @@ afterAll(async () => {
 
 function resetFiles(): void {
   hiddenFromStat = new Set();
+  password = "correct-password";
+  chmodRequests = [];
   files = new Map<string, MemoryNode>([
     ["/", { kind: "dir" }],
     ["/home", { kind: "dir" }],
@@ -63,6 +75,33 @@ async function validatedContext(transitFiles?: TransitFileStore) {
 }
 
 describe("sftp credential validation", () => {
+  it("uses an encrypted private key without trimming its passphrase", async () => {
+    resetFiles();
+    const auth = provider.auth[0]!;
+    if (auth.type !== "custom_credential") throw new Error("Expected custom credentials");
+    const credentials = normalizeCredentialValues({
+      fields: auth.fields,
+      values: {
+        host: values.host,
+        username: values.username,
+        privateKey: userKey.private,
+        passphrase: privateKeyPassphrase,
+      },
+      preserveSecrets: true,
+      createError: (message) => new Error(message),
+    });
+    const validation = await validateSftpCredential(credentials, undefined, dependencies);
+    const context = createSftpContext(credentials, validation.metadata!, undefined, undefined, dependencies);
+    await expect(sftpActionHandlers.stat({ path: "notes.txt" }, context)).resolves.toMatchObject({ sizeBytes: 5 });
+  });
+  it.each([" correct-password ", "   "])("preserves password whitespace: %j", async (secret) => {
+    resetFiles();
+    password = secret;
+    await expect(
+      validateSftpCredential({ ...values, password: secret }, undefined, dependencies),
+    ).resolves.toHaveProperty("metadata.hostKeyFingerprint", hostKeyFingerprint);
+  });
+
   it("records the presented host key and the account identity", async () => {
     resetFiles();
     const result = await validateSftpCredential(values, undefined, dependencies);
@@ -113,6 +152,28 @@ describe("sftp credential validation", () => {
 });
 
 describe("sftp actions", () => {
+  it.each([0o600, 0o644, 0o755])("preserves existing permissions %i when overwriting", async (mode) => {
+    resetFiles();
+    files.set(`${homeDirectory}/notes.txt`, { kind: "file", data: Buffer.from("old"), mode });
+    const file = new File(["replacement"], "notes.txt");
+    const transitFiles: TransitFileStore = {
+      maxBytes: 1024,
+      async create() {
+        throw new Error("Unexpected download");
+      },
+      async read() {
+        return { file, sizeBytes: file.size, name: file.name, mimeType: file.type };
+      },
+      async delete() {
+        return true;
+      },
+    };
+    const context = await validatedContext(transitFiles);
+    await sftpActionHandlers.upload_file({ path: "notes.txt", file: { fileId: "upload" }, overwrite: true }, context);
+    expect(files.get(`${homeDirectory}/notes.txt`)).toEqual({ kind: "file", data: Buffer.from("replacement"), mode });
+    expect(chmodRequests).toEqual([]);
+  });
+
   it("refuses to execute when the server host key changed after validation", async () => {
     resetFiles();
     const context = createSftpContext(
@@ -184,7 +245,11 @@ describe("sftp actions", () => {
     await expect(
       sftpActionHandlers.upload_file({ path: "reports/new.txt", file: { fileId: "upload-1" } }, context),
     ).resolves.toEqual({ path: "reports/new.txt", sizeBytes: 13, overwritten: false });
-    expect(files.get(`${homeDirectory}/reports/new.txt`)).toEqual({ kind: "file", data: Buffer.from("uploaded body") });
+    expect(files.get(`${homeDirectory}/reports/new.txt`)).toEqual({
+      kind: "file",
+      data: Buffer.from("uploaded body"),
+      mode: 0o600,
+    });
 
     const download = await sftpActionHandlers.download_file({ path: "reports/q3.csv", mimeType: "text/csv" }, context);
     expect(download).toMatchObject({
@@ -312,11 +377,19 @@ function fingerprintOf(publicKey: string): string {
 function serveClient(client: Connection): void {
   client.on("error", () => undefined);
   client.on("authentication", (context) => {
-    if (context.method === "password" && context.username === "deploy" && context.password === "correct-password") {
+    if (context.method === "password" && context.username === "deploy" && context.password === password) {
       context.accept();
       return;
     }
-    context.reject(["password"]);
+    if (
+      context.method === "publickey" &&
+      context.username === "deploy" &&
+      context.key.data.equals(Buffer.from(userKey.public.split(" ")[1]!, "base64"))
+    ) {
+      context.accept();
+      return;
+    }
+    context.reject(["password", "publickey"]);
   });
   client.on("ready", () => {
     client.on("session", (accept) => {
@@ -334,7 +407,7 @@ function serveSftp(sftp: SFTPWrapper): void {
   const toHandle = (id: number): Buffer => Buffer.from(String(id));
   const fromHandle = (handle: Buffer) => handles.get(Number(handle.toString()));
   const attributes = (node: MemoryNode): Attributes => ({
-    mode: node.kind === "dir" ? 0o040755 : 0o100644,
+    mode: (node.kind === "dir" ? 0o040000 : 0o100000) | (node.mode ?? (node.kind === "dir" ? 0o755 : 0o644)),
     uid: 1000,
     gid: 1000,
     size: node.kind === "file" ? node.data.length : 4096,
@@ -377,13 +450,19 @@ function serveSftp(sftp: SFTPWrapper): void {
       })),
     );
   });
-  sftp.on("OPEN", (reqId, filename, flags) => {
+  sftp.on("OPEN", (reqId, filename, flags, attrs) => {
     const resolved = resolvePath(filename);
     const node = files.get(resolved);
     if (flags & OPEN_MODE.WRITE) {
       if (flags & OPEN_MODE.EXCL && node) return void sftp.status(reqId, STATUS_CODE.FAILURE);
       if (files.get(posix.dirname(resolved))?.kind !== "dir") return void sftp.status(reqId, STATUS_CODE.NO_SUCH_FILE);
-      if (!node || flags & OPEN_MODE.TRUNC) files.set(resolved, { kind: "file", data: Buffer.alloc(0) });
+      if (!node || flags & OPEN_MODE.TRUNC) {
+        files.set(resolved, {
+          kind: "file",
+          data: Buffer.alloc(0),
+          mode: node?.mode ?? (node ? 0o644 : (attrs.mode ?? 0o666) & ~0o022),
+        });
+      }
     } else if (node?.kind !== "file") {
       return void sftp.status(reqId, STATUS_CODE.NO_SUCH_FILE);
     }
@@ -402,7 +481,16 @@ function serveSftp(sftp: SFTPWrapper): void {
     const next = Buffer.alloc(Math.max(node.data.length, offset + data.length));
     node.data.copy(next);
     data.copy(next, offset);
-    files.set(path, { kind: "file", data: next });
+    files.set(path, { ...node, data: next });
+    sftp.status(reqId, STATUS_CODE.OK);
+  });
+  sftp.on("FSETSTAT", (reqId, handle, attrs) => {
+    const node = files.get(fromHandle(handle)?.path ?? "");
+    if (!node) return void sftp.status(reqId, STATUS_CODE.FAILURE);
+    if (attrs.mode !== undefined) {
+      chmodRequests.push(attrs.mode & 0o7777);
+      node.mode = attrs.mode & 0o7777;
+    }
     sftp.status(reqId, STATUS_CODE.OK);
   });
   sftp.on("FSTAT", (reqId, handle) => {

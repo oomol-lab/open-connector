@@ -4,13 +4,14 @@ import type { ProviderActionHandlers } from "../provider-executors.ts";
 import type { ProviderTransitFile } from "../provider-files.ts";
 import type { Socket, TcpNetConnectOpts } from "node:net";
 import type { ReadableStream as NodeReadableStream } from "node:stream/web";
+import type { SFTPWrapper } from "ssh2";
 
 import { createHash } from "node:crypto";
 import { connect as connectSocket } from "node:net";
 import { Readable } from "node:stream";
 import { pipeline } from "node:stream/promises";
 import SftpClient from "ssh2-sftp-client";
-import { optionalInteger, optionalString, requiredRawString } from "../../core/cast.ts";
+import { optionalInteger, optionalRawString, optionalString, requiredRawString } from "../../core/cast.ts";
 import { resolveGuardedEgressTarget } from "../../core/guarded-fetch.ts";
 import { createPinnedLookup } from "../../core/guarded-socket.ts";
 import { isPrivateNetworkAccessAllowed, storeResponseInTransit } from "../../core/request.ts";
@@ -74,6 +75,7 @@ interface SftpSessionRequest {
 }
 
 interface SftpSession {
+  channel: SFTPWrapper;
   /** Fingerprint of the host key the server presented, without the `SHA256:` prefix. */
   hostKeyFingerprint: string;
 }
@@ -217,7 +219,7 @@ export const sftpActionHandlers: ProviderActionHandlers<"sftp", SftpActionHandle
     const source = await readTransitFileInput(input.file, context);
     return withActionSession(
       context,
-      async (client) => {
+      async (client, session) => {
         const existing = await client.exists(path);
         if (existing === "d") {
           throw providerInputError(`${path} is a directory; include the file name in path.`);
@@ -225,25 +227,27 @@ export const sftpActionHandlers: ProviderActionHandlers<"sftp", SftpActionHandle
         if (existing && !overwrite) {
           throw providerInputError(`${path} already exists; set overwrite to true to replace it.`);
         }
-        const body = Readable.fromWeb(source.file.stream() as NodeReadableStream<Uint8Array>);
-        // The existence check above only produces a clear message; the exclusive
-        // open is what keeps a concurrent writer's file from being truncated.
-        const remote = client.createWriteStream(path, { flags: overwrite ? "w" : "wx" });
-        let opened = false;
-        remote.once("open", () => {
-          opened = true;
-        });
+        let handle: Buffer;
         try {
-          // Settles only after the server answered CLOSE: ssh2 destroys the stream in
-          // _final and stream.finished waits for that destroy, so a failed CLOSE rejects.
-          await pipeline(body, remote);
+          // OPEN preserves existing permissions and applies 0600 only to new files.
+          // Supplying the handle also bypasses the write stream's implicit chmod.
+          handle = await new Promise<Buffer>((resolve, reject) => {
+            session.channel.open(path, overwrite ? "w" : "wx", 0o600, (error, handle) => {
+              if (error) reject(error);
+              else resolve(handle);
+            });
+          });
         } catch (error) {
           const code = (error as { code?: unknown } | null)?.code;
-          if (!overwrite && !opened && (code === sftpStatusFailure || code === sftpStatusFileAlreadyExists)) {
+          if (!overwrite && (code === sftpStatusFailure || code === sftpStatusFileAlreadyExists)) {
             throw providerInputError(`${path} could not be created exclusively; it may already exist.`);
           }
           throw error;
         }
+        const body = Readable.fromWeb(source.file.stream() as NodeReadableStream<Uint8Array>);
+        const remote = session.channel.createWriteStream(path, { handle });
+        // Wait for the server's CLOSE response, including failures after the final write.
+        await pipeline(body, remote);
         return { path, sizeBytes: source.sizeBytes, overwritten: existing !== false };
       },
       fileTransferTimeoutMs,
@@ -377,7 +381,7 @@ async function withSftpSession<T>(
       lookup: createPinnedLookup(target.addresses),
       autoSelectFamily: true,
     });
-    await client.connect({
+    const channel = await client.connect({
       sock: socket,
       username: credential.username,
       password: credential.password,
@@ -395,7 +399,7 @@ async function withSftpSession<T>(
       },
     });
     state.connected = true;
-    return await operation(client, { hostKeyFingerprint: state.presentedHostKey! }, timeout.signal);
+    return await operation(client, { channel, hostKeyFingerprint: state.presentedHostKey! }, timeout.signal);
   } catch (error) {
     if (error instanceof ProviderRequestError) {
       throw error;
@@ -500,7 +504,7 @@ function parseSftpCredential(values: Record<string, string>): SftpCredential {
     throw providerInputError("host must be a hostname or IPv4 address, without a scheme, port or path.");
   }
   const username = requiredInputString(values.username, "username");
-  const password = optionalString(values.password);
+  const password = optionalRawString(values.password);
   const privateKey = optionalString(values.privateKey);
   if (!password && !privateKey) {
     throw providerInputError("Provide a password, a private key, or both.");
@@ -511,7 +515,7 @@ function parseSftpCredential(values: Record<string, string>): SftpCredential {
     username,
     password,
     privateKey,
-    passphrase: optionalString(values.passphrase),
+    passphrase: optionalRawString(values.passphrase),
     hostKeyFingerprint: parseFingerprint(values.hostKeyFingerprint),
   };
 }
