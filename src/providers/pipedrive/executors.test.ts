@@ -1,8 +1,8 @@
 import type { ExecutionContext, ResolvedCredential } from "../../core/types.ts";
 
-import { describe, expect, it } from "vitest";
-import { credentialValidators } from "./executors.ts";
-import { requirePipedriveAccess } from "./runtime.ts";
+import { describe, expect, it, vi } from "vitest";
+import { credentialValidators, proxy } from "./executors.ts";
+import { pipedrivePath, requirePipedriveAccess } from "./runtime.ts";
 
 function oauthCredential(metadata: Record<string, unknown>): Extract<ResolvedCredential, { authType: "oauth2" }> {
   return {
@@ -21,11 +21,11 @@ function contextWith(credential: ResolvedCredential | undefined): ExecutionConte
 describe("Pipedrive OAuth", () => {
   it("validates an OAuth credential against the account's api_domain with a bearer token", async () => {
     const result = await credentialValidators.oauth2!(
-      oauthCredential({ api_domain: "https://acme.pipedrive.com", scope: "deals:full contacts:read" }),
+      oauthCredential({ api_domain: "https://acme.pipedrive.com", scope: "deals:full,contacts:read" }),
       {
         fetcher: async (url, init) => {
           const headers = new Headers(init?.headers);
-          expect(url.toString()).toBe("https://acme.pipedrive.com/v1/users/me");
+          expect(url.toString()).toBe("https://acme.pipedrive.com/api/v1/users/me");
           expect(headers.get("authorization")).toBe("Bearer pd-oauth-token");
           expect(headers.has("x-api-token")).toBe(false);
           return Response.json({ success: true, data: { id: 7, name: "Alice", company_id: 3 } });
@@ -80,5 +80,52 @@ describe("Pipedrive OAuth", () => {
 
   it("asks for credentials when none is connected", async () => {
     await expect(requirePipedriveAccess(contextWith(undefined))).rejects.toMatchObject({ status: 401 });
+  });
+
+  it("adds /api to v1 paths on a company host only", () => {
+    expect(pipedrivePath("https://acme.pipedrive.com", "/v1/webhooks")).toBe("/api/v1/webhooks");
+    expect(pipedrivePath("https://acme.pipedrive.com", "/api/v2/deals")).toBe("/api/v2/deals");
+    expect(pipedrivePath("https://api.pipedrive.com", "/v1/webhooks")).toBe("/v1/webhooks");
+  });
+
+  it("sends proxy requests to the credential's host with the matching auth header", async () => {
+    const requests: Array<{ url: string; authorization: string | null; token: string | null }> = [];
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+        const headers = new Headers(init?.headers);
+        requests.push({
+          url: String(input),
+          authorization: headers.get("authorization"),
+          token: headers.get("x-api-token"),
+        });
+        return Response.json({ success: true });
+      }),
+    );
+    try {
+      const apiKey: ResolvedCredential = {
+        authType: "api_key",
+        apiKey: "pd-token",
+        values: {},
+        profile: { accountId: "8", displayName: "Bob", grantedScopes: [] },
+        metadata: {},
+      };
+      const oauth = oauthCredential({ api_domain: "https://acme.pipedrive.com" });
+      for (const [credential, endpoint] of [
+        [oauth, "/v1/webhooks"],
+        [oauth, "/api/v2/deals"],
+        [apiKey, "/v1/webhooks"],
+      ] as const) {
+        await expect(proxy({ method: "GET", endpoint }, contextWith(credential))).resolves.toMatchObject({ ok: true });
+      }
+    } finally {
+      vi.unstubAllGlobals();
+    }
+
+    expect(requests).toEqual([
+      { url: "https://acme.pipedrive.com/api/v1/webhooks", authorization: "Bearer pd-oauth-token", token: null },
+      { url: "https://acme.pipedrive.com/api/v2/deals", authorization: "Bearer pd-oauth-token", token: null },
+      { url: "https://api.pipedrive.com/v1/webhooks", authorization: null, token: "pd-token" },
+    ]);
   });
 });

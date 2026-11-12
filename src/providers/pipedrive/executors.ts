@@ -4,6 +4,7 @@ import type { IntegrationDefinition } from "../../triggers/common/integration.ts
 import { defineProviderProxy } from "../provider-proxy.ts";
 import {
   executors,
+  pipedrivePath,
   requirePipedriveAccess,
   validatePipedriveCredential,
   validatePipedriveOAuthCredential,
@@ -30,8 +31,10 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
   },
   auth: { type: "none" },
   sensitiveHeaders: ["x-api-token"],
-  async customizeRequest({ context, headers }) {
-    for (const [name, value] of Object.entries((await requirePipedriveAccess(context)).authHeaders)) {
+  async customizeRequest({ context, headers, url }) {
+    const access = await requirePipedriveAccess(context);
+    url.pathname = pipedrivePath(access.origin, url.pathname);
+    for (const [name, value] of Object.entries(access.authHeaders)) {
       headers.set(name, value);
     }
   },

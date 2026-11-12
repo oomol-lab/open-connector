@@ -162,7 +162,7 @@ export async function validatePipedriveOAuthCredential(
     "Pipedrive OAuth",
   );
   const scope = optionalString(credential.metadata.scope);
-  return { ...result, grantedScopes: scope ? scope.split(/\s+/u).filter(Boolean) : [] };
+  return { ...result, grantedScopes: scope ? scope.split(/[\s,]+/u).filter(Boolean) : [] };
 }
 
 function readPipedriveProfile(payload: unknown, origin: string, fallbackName: string): CredentialValidationResult {
@@ -251,8 +251,12 @@ async function requestPipedriveJson(
   return record;
 }
 
+export function pipedrivePath(origin: string, path: string): string {
+  return origin !== apiOrigin && path.startsWith("/v1/") ? `/api${path}` : path;
+}
+
 function buildUrl(origin: string, path: string, query: Record<string, string | undefined> = {}): URL {
-  const url = new URL(path, origin);
+  const url = new URL(pipedrivePath(origin, path), origin);
   for (const [key, value] of Object.entries(query)) {
     if (value !== undefined) {
       url.searchParams.set(key, value);
