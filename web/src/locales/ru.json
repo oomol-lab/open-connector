@@ -426,7 +426,8 @@
       "reset": "OAuth client сброшен.",
       "resetFailed": "Не удалось сбросить OAuth client.",
       "useDefaultScopes": "Использовать разрешения по умолчанию",
-      "customScopes": "Собственные scope (по одному на строку; пусто — только обязательные)",
+      "customScopes": "Собственные scope (пусто — только обязательные)",
+      "scopePlaceholder": "Добавить scope",
       "additionalScopes": "Дополнительные разрешения",
       "advancedScopes": "Расширенные настройки OAuth scope"
     },

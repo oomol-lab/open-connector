@@ -426,7 +426,8 @@
       "reset": "OAuth 用戶端已重設。",
       "resetFailed": "無法重設 OAuth 用戶端。",
       "useDefaultScopes": "使用預設權限",
-      "customScopes": "自訂 scope（每行一個；留空僅申請必要權限）",
+      "customScopes": "自訂 scope（留空僅申請必要權限）",
+      "scopePlaceholder": "新增 scope",
       "additionalScopes": "額外權限",
       "advancedScopes": "進階 OAuth scope 設定"
     },

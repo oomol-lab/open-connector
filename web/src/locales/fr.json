@@ -426,7 +426,8 @@
       "reset": "Client OAuth réinitialisé.",
       "resetFailed": "Échec de la réinitialisation du client OAuth.",
       "useDefaultScopes": "Utiliser les autorisations par défaut",
-      "customScopes": "Scopes personnalisés (un par ligne ; vide pour les seuls scopes requis)",
+      "customScopes": "Scopes personnalisés (vide pour les seuls scopes requis)",
+      "scopePlaceholder": "Ajouter un scope",
       "additionalScopes": "Autorisations supplémentaires",
       "advancedScopes": "Scopes OAuth avancés"
     },

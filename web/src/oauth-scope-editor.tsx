@@ -5,7 +5,7 @@ import { useTranslate } from "@embra/i18n/react";
 import { ChevronRight } from "lucide-react";
 import { useEffect, useId, useState } from "react";
 import { Label } from "./components/ui/label";
-import { Textarea } from "./components/ui/textarea";
+import { StringArrayInput } from "./components/ui/string-array-input";
 import { normalizeOAuthScopes, toggleOAuthScope } from "./oauth-scopes";
 
 interface OAuthScopeSelection {
@@ -83,12 +83,12 @@ export function OAuthScopeEditor({ options, selection }: OAuthScopeEditorProps):
           </div>
         </fieldset>
       ) : null}
-      <details className="group min-w-0" open={selection.custom}>
-        <summary className="flex cursor-pointer list-none items-center gap-2 text-sm font-medium [&::-webkit-details-marker]:hidden">
+      <details className="group min-w-0">
+        <summary className="flex h-11 cursor-pointer list-none items-center gap-2 text-sm font-medium outline-none focus-visible:ring-2 focus-visible:ring-ring/40 [&::-webkit-details-marker]:hidden">
           <ChevronRight className="size-4 shrink-0 transition-transform group-open:rotate-90" aria-hidden="true" />
           {t("providers.oauthClientSettings.advancedScopes")}
         </summary>
-        <div className="grid gap-4 pt-3">
+        <div className="grid gap-4 pt-2 pb-3">
           <div className="flex items-center gap-3">
             <input
               id={`${id}-defaults`}
@@ -101,20 +101,19 @@ export function OAuthScopeEditor({ options, selection }: OAuthScopeEditorProps):
               {t("providers.oauthClientSettings.useDefaultScopes")}
             </Label>
           </div>
-          {selection.custom ? (
-            <div className="grid min-w-0 gap-2">
-              <Label htmlFor={`${id}-custom`} className="leading-snug">
-                {t("providers.oauthClientSettings.customScopes")}
-              </Label>
-              <Textarea
-                id={`${id}-custom`}
-                value={selection.scopes.join("\n")}
-                onChange={(event) =>
-                  selection.setScopes(event.target.value === "" ? [] : event.target.value.split("\n"))
-                }
-              />
-            </div>
-          ) : null}
+          <div className="grid min-w-0 gap-2">
+            <Label htmlFor={`${id}-custom`} className="leading-snug">
+              {selection.custom ? t("providers.oauthClientSettings.customScopes") : "OAuth scopes"}
+            </Label>
+            <StringArrayInput
+              key={selection.custom ? "custom" : "default"}
+              id={`${id}-custom`}
+              value={selection.selectedScopes}
+              readOnly={!selection.custom}
+              onChange={selection.setScopes}
+              placeholder={t("providers.oauthClientSettings.scopePlaceholder")}
+            />
+          </div>
         </div>
       </details>
     </div>

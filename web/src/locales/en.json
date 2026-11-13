@@ -426,7 +426,8 @@
       "reset": "OAuth client reset.",
       "resetFailed": "Failed to reset OAuth client.",
       "useDefaultScopes": "Use default permissions",
-      "customScopes": "Custom scopes (one per line; empty requests only required scopes)",
+      "customScopes": "Custom scopes (empty requests only required scopes)",
+      "scopePlaceholder": "Add a scope",
       "additionalScopes": "Additional permissions",
       "advancedScopes": "Advanced OAuth scopes"
     },
