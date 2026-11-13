@@ -275,9 +275,12 @@ export const piloterrActions: ProviderActionDefinition[] = [
         removeSelectors: s.nonEmptyString("Comma-separated CSS selectors to remove before capturing."),
         waitForSelector: s.nonEmptyString("CSS selector to wait for before capturing."),
         fullPageScroll: s.boolean("Scroll the full page to load lazy content before capturing."),
-        fullPageScrollDuration: s.integer("Delay between full-page scroll steps in milliseconds (defaults to 400).", {
-          minimum: 0,
-        }),
+        fullPageScrollDuration: s.number(
+          "Time spent scrolling before a full-page capture in milliseconds (defaults to 400).",
+          {
+            minimum: 0,
+          },
+        ),
         removeAds: s.boolean("Remove ads before capturing."),
       },
       ["url"],

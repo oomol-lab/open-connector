@@ -182,6 +182,10 @@ async function takePiloterrScreenshot(
   if (!transitFiles) {
     throw providerInputError("Piloterr screenshots require local transit file storage.");
   }
+  // Allow scrolling and capture delay in addition to page loading and file transfer.
+  const scrollDurationMs = input.fullPageScroll ? (optionalNumber(input.fullPageScrollDuration) ?? 400) : 0;
+  const waitMs = scrollDurationMs + (optionalNumber(input.delay) ?? 0) * 1000;
+  const timeoutMs = waitMs > 0 ? waitMs + 30_000 : undefined;
   const url = new URL("/v2/website/screenshot", apiBaseUrl);
   for (const [key, value] of Object.entries(
     queryParams({
@@ -196,13 +200,13 @@ async function takePiloterrScreenshot(
       remove_selectors: optionalString(input.removeSelectors),
       wait_for_selector: optionalString(input.waitForSelector),
       full_page_scroll: optionalBoolean(input.fullPageScroll),
-      full_page_scroll_duration: optionalInteger(input.fullPageScrollDuration),
+      full_page_scroll_duration: optionalNumber(input.fullPageScrollDuration),
       remove_ads: optionalBoolean(input.removeAds),
     }),
   )) {
     url.searchParams.set(key, value);
   }
-  return runProviderRequest({ signal: context.signal, label: "Piloterr screenshot" }, async (signal) => {
+  return runProviderRequest({ signal: context.signal, label: "Piloterr screenshot", timeoutMs }, async (signal) => {
     const response = await context.fetcher(url.toString(), {
       headers: { accept: "*/*", "user-agent": providerUserAgent, "x-api-key": context.apiKey },
       signal,
