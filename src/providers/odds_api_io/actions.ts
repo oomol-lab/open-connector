@@ -7,6 +7,7 @@ const service = "odds_api_io";
 
 const sportSlugField = s.nonEmptyString('Sport slug from list_sports (e.g., "football" or "basketball").');
 const eventIdField = s.positiveInteger("Odds-API.io event ID, as returned by list_events.");
+const eventStatuses = ["pending", "live", "settled", "cancelled"];
 const bookmakersField = s.stringArray('Bookmaker names from list_bookmakers (e.g., "Bet365"). Up to 30 names.', {
   minItems: 1,
   maxItems: 30,
@@ -39,7 +40,7 @@ const eventProperties = {
   homeId: s.nullableInteger("Home participant ID."),
   awayId: s.nullableInteger("Away participant ID."),
   date: s.string("Scheduled start time in ISO 8601 format."),
-  status: s.string("Event status, such as pending, live or settled."),
+  status: s.string("Event status: pending, live, settled or cancelled."),
   sport: nameSlugSchema("Sport of the event."),
   league: nameSlugSchema("League of the event."),
   scores: scoresSchema,
@@ -146,7 +147,7 @@ export const oddsApiIoActions: ProviderActionDefinition[] = [
         sport: sportSlugField,
         league: s.nonEmptyString('League slug from list_leagues (e.g., "england-premier-league").'),
         participantId: s.positiveInteger("Only return events where this participant plays home or away."),
-        status: s.stringArray('Event statuses to include (e.g., "pending", "live" or "settled").', { minItems: 1 }),
+        status: s.array("Event statuses to include.", s.stringEnum(eventStatuses), { minItems: 1, uniqueItems: true }),
         from: s.dateTime('Earliest start time, in RFC 3339 format (e.g., "2026-11-14T00:00:00Z").'),
         to: s.dateTime("Latest start time, in RFC 3339 format. Defaults to 14 days from now."),
         bookmaker: s.nonEmptyString("Only return events that have odds from this bookmaker."),

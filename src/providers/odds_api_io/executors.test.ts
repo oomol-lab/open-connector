@@ -1,6 +1,8 @@
 import type { ExecutionContext } from "../../core/types.ts";
 
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { validateActionInput } from "../../core/validation.ts";
+import { oddsApiIoActions } from "./actions.ts";
 import { credentialValidators, executors } from "./executors.ts";
 
 const apiKey = "odds-api-io-test-key";
@@ -58,6 +60,14 @@ describe("Odds-API.io actions", () => {
       from: "2026-11-14T00:00:00Z",
       limit: "50",
     });
+  });
+
+  it("accepts only the event statuses Odds-API.io supports", () => {
+    const action = oddsApiIoActions.find((candidate) => candidate.name === "list_events")!;
+
+    expect(validateActionInput(action, { sport: "football", status: ["pending", "cancelled"] }).valid).toBe(true);
+    expect(validateActionInput(action, { sport: "football", status: ["upcoming"] }).valid).toBe(false);
+    expect(validateActionInput(action, { sport: "football", status: ["live", "live"] }).valid).toBe(false);
   });
 
   it("requests odds for several events with comma-separated IDs and bookmakers", async () => {
