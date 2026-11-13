@@ -424,7 +424,9 @@
       "failed": "OAuth client の保存に失敗しました。",
       "resetting": "OAuth client をリセット中...",
       "reset": "OAuth client をリセットしました。",
-      "resetFailed": "OAuth client のリセットに失敗しました。"
+      "resetFailed": "OAuth client のリセットに失敗しました。",
+      "useDefaultScopes": "既定の権限を使用",
+      "customScopes": "カスタム scope（1 行に 1 つ。空欄の場合は必要な権限のみ）"
     },
     "execution": {
       "executable": "実行可能",

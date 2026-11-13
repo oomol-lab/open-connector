@@ -248,18 +248,11 @@ export class SaasProjectService {
     managedProjectId?: string,
     signal?: AbortSignal,
   ): Promise<{ project: ManagedProject; config: SaasProviderConfig }> {
-    const provider = this.getProvider(service);
+    this.getProvider(service);
     this.requireOrigin();
     const project = await this.requireProject(managedProjectId);
     const discovery = await this.discover(project, signal);
     const config = this.findConfig(discovery, service, configId);
-    const auth = provider.auth.find((auth) => auth.type === "oauth2")!;
-    const required = new Set(auth.authorizationOptions?.filter((option) => option.required).map((option) => option.id));
-    for (const id of required)
-      for (const dependency of auth.authorizationOptions?.find((option) => option.id === id)?.requires ?? [])
-        required.add(dependency);
-    if ([...required].some((scope) => !config.effectiveScopes.includes(scope)))
-      throw new SaasError("oauth_source_scope_missing", "The SaaS configuration is missing required OAuth scopes.");
     const supportsAction = config.actionIds.some((id) => this.options.catalog.actionsById.get(id)?.service === service);
     if (!supportsAction && !config.proxyAvailable)
       throw new SaasError(

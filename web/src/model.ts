@@ -8,7 +8,8 @@ export type AuthDefinition =
   | {
       type: "oauth2";
       scopes: string[];
-      optionalScopes?: string[];
+      supportsScopeSelection?: boolean;
+      requiredScopes?: string[];
       authorizationOptions?: OAuthAuthorizationOption[];
       clientFields?: CredentialField[];
       clientSetup?: OAuthClientSetup;
@@ -21,7 +22,6 @@ export interface OAuthAuthorizationOption {
   required: boolean;
   defaultSelected: boolean;
   risk: "standard" | "sensitive" | "destructive";
-  requires?: string[];
 }
 
 export type ProviderScenario =

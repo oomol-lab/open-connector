@@ -26,6 +26,7 @@ export const provider: ProviderDefinition = {
   auth: [
     {
       type: "oauth2",
+      requiredScopes: ["accounts:read", "offline"],
       authorizationUrl: "https://api.typeform.com/oauth/authorize",
       tokenUrl: "https://api.typeform.com/oauth/token",
       scopes: typeformRequestedProviderScopes,

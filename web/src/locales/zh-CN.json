@@ -424,7 +424,9 @@
       "failed": "保存 OAuth client 失败。",
       "resetting": "正在重置 OAuth client...",
       "reset": "OAuth client 已重置。",
-      "resetFailed": "重置 OAuth client 失败。"
+      "resetFailed": "重置 OAuth client 失败。",
+      "useDefaultScopes": "使用默认权限",
+      "customScopes": "自定义 scope（每行一个；留空仅申请必需权限）"
     },
     "execution": {
       "executable": "可执行",

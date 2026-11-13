@@ -14,6 +14,7 @@ export const provider: ProviderDefinition = {
   auth: [
     {
       type: "oauth2",
+      requiredScopes: ["personal"],
       authorizationUrl: "https://cloud.ouraring.com/oauth/authorize",
       tokenUrl: "https://api.ouraring.com/oauth/token",
       scopes: ouraOauthScopes,

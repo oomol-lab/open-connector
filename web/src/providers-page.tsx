@@ -40,6 +40,7 @@ import { Link, useParams, useSearchParams } from "react-router";
 import { toast } from "sonner";
 import { defaultMarketplaceDiscoveryUrl, isDefaultMarketplace } from "../../src/marketplace/default-marketplace";
 import { apiDelete, apiPost, apiPut } from "./api";
+import { Textarea } from "./components/ui/textarea";
 import { CredentialInput } from "./credential-input";
 import { AddCustomMcp, CustomMcpSettings } from "./custom-mcp";
 import { DefaultMarketplaceCatalog } from "./default-marketplace-catalog";
@@ -1741,10 +1742,13 @@ function ConnectionForm(props: ConnectionFormProps): ReactNode {
   const [authorizationUrl, setAuthorizationUrl] = useState<string>();
   const [values, setValues] = useState<Record<string, string>>({});
   const authorizationOptions = props.auth.type === "oauth2" && !remote ? props.auth.authorizationOptions : undefined;
-  const { selectedOptionIds: selectedAuthorizationOptionIds, toggleOption } = useOAuthAuthorizationOptions(
-    authorizationOptions,
-    props.connection?.profile?.grantedScopes,
-  );
+  const {
+    selectedOptionIds: selectedAuthorizationOptionIds,
+    toggleOption,
+    custom,
+    setCustom,
+    setScopes,
+  } = useOAuthAuthorizationOptions(authorizationOptions);
   const [manualClientId, setManualClientId] = useState("");
   const [manualClientSecret, setManualClientSecret] = useState("");
   const manualClientConfigFields = useMemo(() => clientConfigFieldsFor(props.auth), [props.auth]);
@@ -1844,7 +1848,7 @@ function ConnectionForm(props: ConnectionFormProps): ReactNode {
                 props.provider.service,
                 connectionName,
                 manual ? { auth: props.auth, values: manualValues } : undefined,
-                selectedAuthorizationOptionIds,
+                custom ? selectedAuthorizationOptionIds : undefined,
               ),
             )
           : await apiPost<{ authorizationUrl: string; connectionRequestId: string; expiresAt: string }>(
@@ -1853,7 +1857,7 @@ function ConnectionForm(props: ConnectionFormProps): ReactNode {
                 service: props.provider.service,
                 connectionName,
                 appId: props.connection?.id,
-                authorizationOptionIds: authorizationOptions ? selectedAuthorizationOptionIds : undefined,
+                authorizationOptionIds: custom ? selectedAuthorizationOptionIds : undefined,
               },
             );
         setAuthorizationUrl(result.authorizationUrl);
@@ -2012,28 +2016,42 @@ function ConnectionForm(props: ConnectionFormProps): ReactNode {
           ))}
         </>
       ) : null}
-      {authorizationOptions?.length ? (
+      {props.auth.type === "oauth2" && !remote && props.auth.supportsScopeSelection !== false ? (
         <div className="form-grid">
           <Label>
-            <span>Permissions</span>
+            <span>{t("providers.oauthClientSettings.scopes")}</span>
           </Label>
-          {authorizationOptions.map((option) => {
-            const checked = selectedAuthorizationOptionIds.includes(option.id);
-            return (
-              <label key={option.id} className="flex items-start gap-2 text-sm">
-                <input
-                  type="checkbox"
-                  checked={checked}
-                  disabled={option.required}
-                  onChange={(event) => toggleOption(option.id, event.target.checked)}
-                />
-                <span>
-                  <strong>{option.label}</strong>
-                  <small className="block text-muted-foreground">{option.description}</small>
-                </span>
-              </label>
-            );
-          })}
+          <label className="flex items-center gap-2">
+            <input type="checkbox" checked={!custom} onChange={(event) => setCustom(!event.target.checked)} />
+            {t("providers.oauthClientSettings.useDefaultScopes")}
+          </label>
+          {custom ? (
+            <Label>
+              <span>{t("providers.oauthClientSettings.customScopes")}</span>
+              <Textarea
+                value={selectedAuthorizationOptionIds.join("\n")}
+                onChange={(event) => setScopes(event.target.value === "" ? [] : event.target.value.split("\n"))}
+              />
+            </Label>
+          ) : null}
+          {custom &&
+            (authorizationOptions ?? []).map((option) => {
+              const checked = option.required || selectedAuthorizationOptionIds.includes(option.id);
+              return (
+                <label key={option.id} className="flex items-start gap-2 text-sm">
+                  <input
+                    type="checkbox"
+                    checked={checked}
+                    disabled={option.required}
+                    onChange={(event) => toggleOption(option.id, event.target.checked)}
+                  />
+                  <span>
+                    <strong>{option.label}</strong>
+                    <small className="block text-muted-foreground">{option.description}</small>
+                  </span>
+                </label>
+              );
+            })}
         </div>
       ) : null}
       {authDescription ? <small className="block text-muted-foreground">{authDescription}</small> : null}

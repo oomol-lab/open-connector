@@ -19,6 +19,7 @@ export const provider: ProviderDefinition = {
   auth: [
     {
       type: "oauth2",
+      requiredScopes: ["offline_access", "auth:user.id:read"],
       authorizationUrl: "https://accounts.feishu.cn/open-apis/authen/v1/authorize",
       tokenUrl: "https://open.feishu.cn/open-apis/authen/v2/oauth/token",
       scopes: feishuOAuthScopes,

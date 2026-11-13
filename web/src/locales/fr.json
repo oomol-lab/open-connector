@@ -424,7 +424,9 @@
       "failed": "Échec de l’enregistrement du client OAuth.",
       "resetting": "Réinitialisation du client OAuth...",
       "reset": "Client OAuth réinitialisé.",
-      "resetFailed": "Échec de la réinitialisation du client OAuth."
+      "resetFailed": "Échec de la réinitialisation du client OAuth.",
+      "useDefaultScopes": "Utiliser les autorisations par défaut",
+      "customScopes": "Scopes personnalisés (un par ligne ; vide pour les seuls scopes requis)"
     },
     "execution": {
       "executable": "Exécutable",

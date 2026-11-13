@@ -1,71 +1,29 @@
-import type { OAuthAuthorizationOption } from "./model";
-
-import { describe, expect, it } from "vitest";
+import { expect, test } from "vitest";
 import { initialOAuthAuthorizationOptionIds, toggleOAuthAuthorizationOption } from "./oauth-authorization-options";
-
-const options: OAuthAuthorizationOption[] = [
+const options = [
   {
-    id: "channels:read",
-    label: "Channels",
-    description: "Read channels.",
+    id: "required",
+    label: "Required",
+    description: "",
     required: true,
-    defaultSelected: true,
-    risk: "standard",
+    defaultSelected: false,
+    risk: "standard" as const,
   },
   {
-    id: "channels:history",
-    label: "History",
-    description: "Read history.",
+    id: "optional",
+    label: "Optional",
+    description: "",
     required: false,
     defaultSelected: false,
-    risk: "sensitive",
-    requires: ["channels:read"],
+    risk: "standard" as const,
   },
 ];
-
-describe("OAuth authorization option selection", () => {
-  it("selects required and default options when there are no granted scopes", () => {
-    expect(initialOAuthAuthorizationOptionIds(options, undefined)).toEqual(["channels:read"]);
-  });
-
-  it("selects requirements together with a dependent option", () => {
-    expect(toggleOAuthAuthorizationOption(options, ["channels:read"], "channels:history", true)).toEqual([
-      "channels:read",
-      "channels:history",
-    ]);
-  });
-
-  it("removes dependent options when their requirement is deselected", () => {
-    expect(
-      toggleOAuthAuthorizationOption(options, ["channels:read", "channels:history"], "channels:read", false),
-    ).toEqual(["channels:read"]);
-  });
-
-  it("restores the dependencies of a required option", () => {
-    const dependentRequiredOptions: OAuthAuthorizationOption[] = [
-      {
-        id: "base",
-        label: "Base",
-        description: "Base permission.",
-        required: false,
-        defaultSelected: false,
-        risk: "standard",
-      },
-      {
-        id: "feature",
-        label: "Feature",
-        description: "Required feature.",
-        required: true,
-        defaultSelected: true,
-        risk: "standard",
-        requires: ["base"],
-      },
-    ];
-
-    expect(initialOAuthAuthorizationOptionIds(dependentRequiredOptions, [])).toEqual(["base", "feature"]);
-    expect(toggleOAuthAuthorizationOption(dependentRequiredOptions, ["base", "feature"], "base", false)).toEqual([
-      "base",
-      "feature",
-    ]);
-  });
+test("默认选择 required，不把候选项当作默认值", () => {
+  expect(initialOAuthAuthorizationOptionIds(options)).toEqual(["required"]);
+});
+test("取消选项保留未知 scope 并补齐 required", () => {
+  expect(toggleOAuthAuthorizationOption(options, ["future", "optional"], "optional", false)).toEqual([
+    "future",
+    "required",
+  ]);
 });

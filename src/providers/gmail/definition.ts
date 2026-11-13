@@ -22,7 +22,12 @@ export const provider: ProviderDefinition = {
       tokenUrl: "https://oauth2.googleapis.com/token",
       revocationUrl: "https://oauth2.googleapis.com/revoke",
       scopes: gmailAuthorizableScopes,
-      optionalScopes: gmailOptionalScopes,
+      authorizationOptions: gmailOptionalScopes.map((id) => ({
+        id,
+        label: id,
+        description: "",
+        risk: "standard" as const,
+      })),
       tokenEndpointAuthMethod: "client_secret_post",
       authorizationParams: {
         access_type: "offline",

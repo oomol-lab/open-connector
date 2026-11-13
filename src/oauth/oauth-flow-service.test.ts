@@ -68,6 +68,7 @@ const selectableOAuthProvider: ProviderDefinition = {
       tokenUrl: "https://example.com/oauth/token",
       scopes: ["core", "base", "middle", "feature"],
       tokenEndpointAuthMethod: "client_secret_post",
+      requiredScopes: ["core"],
       authorizationOptions: [
         authorizationOption("core", true),
         authorizationOption("base"),
@@ -89,22 +90,19 @@ const optionalScopeOAuthProvider: ProviderDefinition = {
       authorizationUrl: "https://example.com/oauth/authorize",
       tokenUrl: "https://example.com/oauth/token",
       scopes: ["core"],
-      optionalScopes: ["feature"],
+      requiredScopes: ["core"],
       tokenEndpointAuthMethod: "client_secret_post",
       authorizationOptions: [authorizationOption("core", true), authorizationOption("feature")],
     },
   ],
 };
 
-function authorizationOption(id: string, required = false, requires?: string[]): OAuthAuthorizationOption {
+function authorizationOption(id: string, _required = false, _requires?: string[]): OAuthAuthorizationOption {
   return {
     id,
     label: id,
     description: `${id} access.`,
-    required,
-    defaultSelected: required,
     risk: "standard",
-    requires,
   };
 }
 
@@ -319,6 +317,22 @@ describe("OAuthFlowService", () => {
     },
   );
 
+  it.each([
+    { authorizationOptionIds: [] },
+    { authorizationOptionIds: ["future:scope"] },
+    { authorizationOptionIds: ["feature"] },
+  ])("连接入口保留未列出的 scope 和空数组：%j", async ({ authorizationOptionIds }) => {
+    const { flow, clientConfigs } = createServices([optionalScopeOAuthProvider]);
+    await clientConfigs.upsertConfig({ service: "optional", clientId: "client", clientSecret: "secret" });
+    const started = await flow.startConnectionRequest({
+      service: "optional",
+      owner: "owner",
+      authorizationOptionIds,
+    });
+    const actual = new URL(started.authorizationUrl).searchParams.get("scope")?.split(" ");
+    expect(actual).toEqual([...authorizationOptionIds, "core"]);
+  });
+
   it.each(["authorization", "connection request"])("preserves Tencent Docs scope=all for %s", async (entry) => {
     const services = createServices([{ ...tencentDocsProvider, actions: [] }]);
     await services.clientConfigs.upsertConfig({
@@ -460,7 +474,12 @@ describe("OAuthFlowService", () => {
     expect(new URL(started.authorizationUrl).searchParams.get("scope")).toBe("read");
   });
 
-  it("resolves transitive option requirements without treating requested scopes as grants", async () => {
+  it.each([
+    { scope: undefined, granted: [] },
+    { scope: "", granted: [] },
+    { scope: "core", granted: ["core"] },
+    { scope: "core feature future", granted: ["core", "feature", "future"] },
+  ])("adds required request scopes without checking returned scope $scope", async ({ scope, granted }) => {
     const services = createServices([selectableOAuthProvider]);
     await services.clientConfigs.upsertConfig({
       service: "selectable",
@@ -469,18 +488,18 @@ describe("OAuthFlowService", () => {
     });
     vi.stubGlobal(
       "fetch",
-      vi.fn(async () => Response.json({ access_token: "access-token", token_type: "Bearer" })),
+      vi.fn(async () => Response.json({ access_token: "access-token", token_type: "Bearer", scope })),
     );
 
     const started = await services.flow.startAuthorization({
       service: "selectable",
       authorizationOptionIds: ["feature"],
     });
-    expect(new URL(started.authorizationUrl).searchParams.get("scope")).toBe("core base middle feature");
+    expect(new URL(started.authorizationUrl).searchParams.get("scope")).toBe("feature core");
 
     await services.flow.completeAuthorization({ state: started.state, code: "code" });
     await expect(services.connections.getCredential("selectable")).resolves.toMatchObject({
-      profile: { grantedScopes: [] },
+      profile: { grantedScopes: granted },
     });
   });
 
@@ -499,7 +518,7 @@ describe("OAuthFlowService", () => {
       service: "optional",
       authorizationOptionIds: ["feature"],
     });
-    expect(new URL(selected.authorizationUrl).searchParams.get("scope")).toBe("core feature");
+    expect(new URL(selected.authorizationUrl).searchParams.get("scope")).toBe("feature core");
 
     await services.clientConfigs.upsertConfig({
       service: "optional",
@@ -1293,6 +1312,36 @@ describe("OAuthFlowService", () => {
       new URL(started.authorizationUrl).searchParams.get("code_challenge"),
     );
   });
+
+  it.each([{ scopes: [] }, { scopes: ["future:scope"] }])(
+    "回调保留最初的请求范围，忽略途中修改的默认配置：$scopes",
+    async ({ scopes }) => {
+      let exchangedScopes: string[] | undefined;
+      const { flow, clientConfigs } = createServices([oauthProvider], {
+        oauthRuntime: {
+          async exchangeCode({ clientConfig }) {
+            exchangedScopes = clientConfig.requestedScopes;
+            return { accessToken: "token", tokenType: "Bearer", metadata: {} };
+          },
+        },
+      });
+      await clientConfigs.upsertConfig({
+        service: "example",
+        clientId: "client",
+        clientSecret: "secret",
+        extra: { tenant: "tenant" },
+      });
+      const started = await flow.startAuthorization({ service: "example", authorizationOptionIds: scopes });
+      await clientConfigs.upsertConfig({
+        service: "example",
+        clientId: "client",
+        requestedScopes: ["changed"],
+        extra: { tenant: "tenant" },
+      });
+      await flow.completeAuthorization({ state: started.state, code: "code" });
+      expect(exchangedScopes).toEqual(scopes);
+    },
+  );
 
   it("stores the token returned by a provider OAuth runtime", async () => {
     const expiresAt = new Date(Date.now() + 60 * 60 * 1000).toISOString();

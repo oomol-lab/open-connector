@@ -28,7 +28,12 @@ export const provider: ProviderDefinition = {
       tokenUrl: "https://oauth2.googleapis.com/token",
       revocationUrl: "https://oauth2.googleapis.com/revoke",
       scopes: googledriveOAuthScopes,
-      optionalScopes: [googleDriveFileScope],
+      authorizationOptions: [googleDriveFileScope].map((id) => ({
+        id,
+        label: id,
+        description: "",
+        risk: "standard" as const,
+      })),
       tokenEndpointAuthMethod: "client_secret_post",
       authorizationParams: {
         access_type: "offline",

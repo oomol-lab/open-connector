@@ -299,7 +299,7 @@ export const zoomActions: ActionDefinition[] = [
     description:
       "Fetch the AI Companion summary of one meeting instance by its UUID. When Zoom answers 403 code 2305 (summary access restricted to IP ranges, summaries shared by email only, or the summary in Trash), the result is available false with a reason instead of an error.",
     requiredScopes: [zoomMeetingSummaryReadScope],
-    inputSchema: s.object("The input payload for fetching one Zoom meeting summary.", {
+    inputSchema: s.requiredObject("The input payload for fetching one Zoom meeting summary.", {
       meetingUuid: s.nonEmptyString("The meeting instance UUID returned by list_user_meeting_summaries."),
     }),
     outputSchema: s.object("The response returned when fetching one Zoom meeting summary.", {

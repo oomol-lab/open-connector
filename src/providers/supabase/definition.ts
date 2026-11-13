@@ -19,6 +19,7 @@ export const provider: ProviderDefinition = {
       authorizationUrl: "https://api.supabase.com/v1/oauth/authorize",
       tokenUrl: "https://api.supabase.com/v1/oauth/token",
       scopes: [...supabaseProviderScopes],
+      authorizationRequestFields: { scope: false },
       tokenEndpointAuthMethod: "client_secret_basic",
     },
     {

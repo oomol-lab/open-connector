@@ -9,6 +9,7 @@ export const provider: ProviderDefinition = {
   auth: [
     {
       type: "oauth2",
+      requiredScopes: ["openid"],
       authorizationUrl: "https://orcid.org/oauth/authorize",
       tokenUrl: "https://orcid.org/oauth/token",
       scopes: ["openid", "/authenticate"],

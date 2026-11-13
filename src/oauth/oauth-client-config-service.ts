@@ -159,7 +159,7 @@ export class OAuthClientConfigService {
       service,
       clientId,
       clientSecret,
-      requestedScopes: normalizeRequestedScopes(service, input.requestedScopes, requestableScopes(auth)),
+      requestedScopes: normalizeRequestedScopes(input.requestedScopes),
       redirectUri: normalizeRedirectUri(input.redirectUri),
       extra: normalizeCredentialValues({
         fields: filterClientConfigFields(auth.clientConfigFields, "extra"),
@@ -224,7 +224,7 @@ export class OAuthClientConfigService {
   /** Resolve the scopes an authorization request should send. */
   getEffectiveScopes(service: string, config: OAuthClientConfig): string[] {
     const auth = this.getOAuthDefinition(service);
-    return filterDeclaredScopes(config.requestedScopes, requestableScopes(auth)) ?? [...auth.scopes];
+    return resolveRequestedOAuthScopes(auth, config.requestedScopes);
   }
 
   private listOAuthProviders(): Array<{ service: string; auth: OAuth2AuthDefinition }> {
@@ -259,7 +259,7 @@ export class OAuthClientConfigService {
         .map((field) => field.key),
       auth,
       requestedScopes: config?.requestedScopes ?? null,
-      effectiveScopes: filterDeclaredScopes(config?.requestedScopes, requestableScopes(auth)) ?? [...auth.scopes],
+      effectiveScopes: resolveRequestedOAuthScopes(auth, config?.requestedScopes),
       extra: config?.extra ?? {},
     };
   }
@@ -342,36 +342,12 @@ function normalizeStoredOAuthClientConfig(config: OAuthClientConfig | undefined)
   };
 }
 
-function normalizeRequestedScopes(
-  service: string,
-  requestedScopes: string[] | undefined,
-  providerScopes: string[],
-): string[] | undefined {
-  if (requestedScopes === undefined) {
-    return undefined;
-  }
+function normalizeRequestedScopes(requestedScopes: string[] | undefined): string[] | undefined {
+  if (requestedScopes === undefined) return undefined;
   if (!Array.isArray(requestedScopes) || requestedScopes.some((scope) => typeof scope !== "string")) {
     throw new OAuthClientConfigError("invalid_input", "requestedScopes must be an array of strings.");
   }
-
-  const normalized = [...new Set(requestedScopes.map((scope) => scope.trim()))];
-  if (normalized.length === 0) {
-    throw new OAuthClientConfigError("invalid_input", "requestedScopes must contain at least one scope.");
-  }
-  if (normalized.some((scope) => !scope)) {
-    throw new OAuthClientConfigError("invalid_input", "requestedScopes must not contain empty values.");
-  }
-
-  const declaredScopes = new Set(providerScopes);
-  const undeclaredScope = normalized.find((scope) => !declaredScopes.has(scope));
-  if (undeclaredScope) {
-    throw new OAuthClientConfigError(
-      "invalid_input",
-      `requestedScopes contains a scope not declared by ${service}: ${undeclaredScope}.`,
-    );
-  }
-
-  return normalized;
+  return [...new Set(requestedScopes.map((scope) => scope.trim()).filter(Boolean))];
 }
 
 /**
@@ -424,35 +400,6 @@ function normalizeRedirectUri(value: string | undefined): string | undefined {
   return trimmed;
 }
 
-/**
- * Resolve stored requested scopes against the currently declared provider
- * scopes. A provider can stop declaring a scope after configs were saved (for
- * example when the platform restricts who may request it); rejecting the stored
- * value would break the config listing and every re-authorization, so read
- * paths drop undeclared scopes and fall back to the provider defaults when none
- * survive. Writes stay strict via normalizeRequestedScopes.
- */
-function filterDeclaredScopes(requestedScopes: string[] | undefined, providerScopes: string[]): string[] | undefined {
-  if (requestedScopes === undefined) {
-    return undefined;
-  }
-
-  const declaredScopes = new Set(providerScopes);
-  const filtered = [...new Set(requestedScopes.map((scope) => scope.trim()))].filter((scope) =>
-    declaredScopes.has(scope),
-  );
-  return filtered.length > 0 ? filtered : undefined;
-}
-
-/**
- * The scopes a client config may request: the provider's declared scopes and
- * its optional ones. A config that names none is answered with the declared
- * scopes alone, so an optional scope joins a request only by name.
- */
-function requestableScopes(auth: OAuth2AuthDefinition): string[] {
-  return auth.optionalScopes?.length ? [...auth.scopes, ...auth.optionalScopes] : auth.scopes;
-}
-
 function readStringRecord(value: unknown): Record<string, string> {
   const record = optionalRecord(value);
   if (!record) {
@@ -475,4 +422,10 @@ function assertOAuthEndpointUrl(value: string): void {
   if (url.protocol !== "https:") {
     throw new OAuthClientConfigError("invalid_input", "OAuth endpoint URL must use https.");
   }
+}
+
+/** Add connection prerequisites without rejecting unknown or reduced requested scopes. */
+export function resolveRequestedOAuthScopes(auth: OAuth2AuthDefinition, scopes?: string[]): string[] {
+  if (auth.authorizationRequestFields?.scope === false) return [];
+  return [...new Set([...(normalizeRequestedScopes(scopes) ?? auth.scopes), ...(auth.requiredScopes ?? [])])];
 }

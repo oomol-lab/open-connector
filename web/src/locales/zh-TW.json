@@ -424,7 +424,9 @@
       "failed": "無法儲存 OAuth 用戶端。",
       "resetting": "正在重設 OAuth 用戶端...",
       "reset": "OAuth 用戶端已重設。",
-      "resetFailed": "無法重設 OAuth 用戶端。"
+      "resetFailed": "無法重設 OAuth 用戶端。",
+      "useDefaultScopes": "使用預設權限",
+      "customScopes": "自訂 scope（每行一個；留空僅申請必要權限）"
     },
     "execution": {
       "executable": "可執行",

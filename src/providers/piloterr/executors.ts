@@ -1,6 +1,5 @@
 import type { QueryValue } from "../../core/request.ts";
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
-import type { ProviderRequestPhase } from "../http-json-runtime.ts";
 import type { ApiKeyProviderContext, ProviderActionHandlers, ProviderRuntimeHandler } from "../provider-executors.ts";
 import type { ProviderTransitFile } from "../provider-files.ts";
 
@@ -144,7 +143,7 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
 export const credentialValidators: CredentialValidators = {
   async apiKey(input, { fetcher, signal }) {
     const usage = objectPayload(
-      await piloterrRequest("/v2/usage", { apiKey: input.apiKey, fetcher, signal }, {}, "validate"),
+      await piloterrRequest("/v2/usage", { apiKey: input.apiKey, fetcher, signal }),
       "Piloterr usage",
     );
     const account = optionalRecord(usage.account);
@@ -224,7 +223,6 @@ async function piloterrRequest(
   path: string,
   context: RequestContext,
   query: Record<string, QueryValue> = {},
-  phase: ProviderRequestPhase = "execute",
   body?: unknown,
 ): Promise<unknown> {
   try {
@@ -240,24 +238,21 @@ async function piloterrRequest(
     });
   } catch (error) {
     if (error instanceof ProviderRequestError) {
-      throw piloterrRequestError(error.status, error.message, error.details, phase);
+      throw piloterrRequestError(error.status, error.message, error.details);
     }
     throw error;
   }
 }
 
-function piloterrRequestError(
-  status: number,
-  message: string,
-  details?: unknown,
-  phase: ProviderRequestPhase = "execute",
-): ProviderRequestError {
+function piloterrRequestError(status: number, message: string, details?: unknown): ProviderRequestError {
   // Piloterr answers an exceeded rate limit with 401, which would otherwise read as a rejected key.
   if (status === 401 && /rate limit/i.test(message)) {
     return new ProviderRequestError(429, message, details);
   }
-  if (phase === "validate" && (status === 401 || status === 403)) {
-    return new ProviderRequestError(400, message, details);
-  }
-  return new ProviderRequestError(status, message, details);
+  return new ProviderRequestError(
+    status,
+    message,
+    details,
+    status === 401 || status === 403 ? "provider_error" : undefined,
+  );
 }

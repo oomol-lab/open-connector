@@ -27,7 +27,7 @@ export const provider: ProviderDefinition = {
       authorizationUrl: `${linearMcpIssuer}/authorize`,
       tokenUrl: `${linearMcpIssuer}/token`,
       scopes: ["read"],
-      optionalScopes: ["write"],
+      authorizationOptions: ["write"].map((id) => ({ id, label: id, description: "", risk: "standard" as const })),
       tokenEndpointAuthMethod: "none",
       pkce: { method: "S256" },
       authorizationParams: { resource: linearMcpEndpoint },

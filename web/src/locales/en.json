@@ -424,7 +424,9 @@
       "failed": "Failed to save OAuth client.",
       "resetting": "Resetting OAuth client...",
       "reset": "OAuth client reset.",
-      "resetFailed": "Failed to reset OAuth client."
+      "resetFailed": "Failed to reset OAuth client.",
+      "useDefaultScopes": "Use default permissions",
+      "customScopes": "Custom scopes (one per line; empty requests only required scopes)"
     },
     "execution": {
       "executable": "Executable",

@@ -51,7 +51,12 @@ export const provider: ProviderDefinition = {
       authorizationUrl: shopifyAuthorizationUrl,
       tokenUrl: shopifyTokenUrl,
       scopes: shopifyOAuthScopes,
-      optionalScopes: shopifyOptionalScopes,
+      authorizationOptions: shopifyOptionalScopes.map((id) => ({
+        id,
+        label: id,
+        description: "",
+        risk: "standard" as const,
+      })),
       scopeSeparator: ",",
       tokenEndpointAuthMethod: "client_secret_post",
       clientConfigFields: [

@@ -424,7 +424,9 @@
       "failed": "Не удалось сохранить OAuth client.",
       "resetting": "Сброс OAuth client...",
       "reset": "OAuth client сброшен.",
-      "resetFailed": "Не удалось сбросить OAuth client."
+      "resetFailed": "Не удалось сбросить OAuth client.",
+      "useDefaultScopes": "Использовать разрешения по умолчанию",
+      "customScopes": "Собственные scope (по одному на строку; пусто — только обязательные)"
     },
     "execution": {
       "executable": "Выполняемое",

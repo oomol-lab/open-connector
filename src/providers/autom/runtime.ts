@@ -349,7 +349,12 @@ function mapAutomError(status: number, message: string | undefined, phase: Autom
   if (status === 401 && message && /rate limit/i.test(message)) {
     return new ProviderRequestError(429, message);
   }
-  return new ProviderRequestError(status, message ?? fallback);
+  return new ProviderRequestError(
+    status,
+    message ?? fallback,
+    undefined,
+    status === 401 || status === 403 ? "provider_error" : undefined,
+  );
 }
 
 function hashAutomApiKey(apiKey: string): string {

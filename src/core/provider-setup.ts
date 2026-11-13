@@ -2,6 +2,7 @@ import type {
   ApiKeyAuthDefinition,
   CredentialDefinition,
   OAuth2AuthDefinition,
+  OAuthAuthorizationOption,
   OAuthClientConfigFieldDefinition,
   ProviderAuthDefinition,
 } from "./types.ts";
@@ -24,10 +25,16 @@ export type ProviderAuthSetup =
       clientFields: OAuthClientConfigFieldDefinition[];
       clientSetup?: OAuth2AuthDefinition["clientSetup"];
       scopes: string[];
-      /** Additional scopes for explicit selection; requestedScopes replaces the default list. */
-      optionalScopes?: string[];
-      authorizationOptions?: OAuth2AuthDefinition["authorizationOptions"];
+      supportsScopeSelection: boolean;
+      /** Scopes added to every authorization request for connection validation or renewal. */
+      requiredScopes?: string[];
+      authorizationOptions?: OAuthAuthorizationOptionSetup[];
     };
+
+interface OAuthAuthorizationOptionSetup extends OAuthAuthorizationOption {
+  required: boolean;
+  defaultSelected: boolean;
+}
 
 export interface ProviderSetupLabels {
   apiKey: string;
@@ -50,10 +57,31 @@ export function describeProviderAuth(auth: ProviderAuthDefinition, labels?: Prov
         clientFields: oauthClientFields(auth, labels),
         clientSetup: auth.clientSetup,
         scopes: auth.scopes,
-        optionalScopes: auth.optionalScopes,
-        authorizationOptions: auth.authorizationOptions,
+        supportsScopeSelection: auth.authorizationRequestFields?.scope !== false,
+        requiredScopes: auth.requiredScopes,
+        authorizationOptions: describeOAuthAuthorizationOptions(auth),
       };
   }
+}
+
+function describeOAuthAuthorizationOptions(auth: OAuth2AuthDefinition): OAuthAuthorizationOptionSetup[] {
+  const defaults = new Set(auth.scopes);
+  const required = new Set(auth.requiredScopes);
+  const options = new Map(auth.authorizationOptions?.map((option) => [option.id, option]));
+  const candidates = new Set([...defaults, ...required, ...options.keys()]);
+
+  // Selection flags come from request policy, never from provider-reported grants.
+  return [...candidates].map((id) => {
+    const option = options.get(id);
+    return {
+      id,
+      label: option?.label ?? id,
+      description: option?.description ?? "",
+      risk: option?.risk ?? "standard",
+      required: required.has(id),
+      defaultSelected: defaults.has(id),
+    };
+  });
 }
 
 /** The key itself plus the provider's extra fields, in the shape credential forms and validation share. */

@@ -20,6 +20,7 @@ export const provider: ProviderDefinition = {
   auth: [
     {
       type: "oauth2",
+      requiredScopes: ["offline_access"],
       authorizationUrl: "https://api.sunsama.com/oauth/authorize",
       tokenUrl: "https://api.sunsama.com/oauth/token",
       refreshTokenUrl: "https://api.sunsama.com/oauth/token",

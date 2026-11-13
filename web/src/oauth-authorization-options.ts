@@ -2,41 +2,26 @@ import type { OAuthAuthorizationOption } from "./model";
 
 import { useEffect, useState } from "react";
 
-export interface OAuthAuthorizationOptionSelection {
-  selectedOptionIds: string[];
-  toggleOption(optionId: string, selected: boolean): void;
-}
-
-export function useOAuthAuthorizationOptions(
-  options: OAuthAuthorizationOption[] | undefined,
-  grantedScopes?: unknown,
-): OAuthAuthorizationOptionSelection {
-  const [selectedOptionIds, setSelectedOptionIds] = useState(() =>
-    initialOAuthAuthorizationOptionIds(options ?? [], grantedScopes),
-  );
+export function useOAuthAuthorizationOptions(options: OAuthAuthorizationOption[] | undefined) {
+  const [selectedOptionIds, setSelectedOptionIds] = useState(() => initialOAuthAuthorizationOptionIds(options ?? []));
+  const [custom, setCustom] = useState(false);
   useEffect(() => {
-    setSelectedOptionIds(initialOAuthAuthorizationOptionIds(options ?? [], grantedScopes));
-  }, [options, grantedScopes]);
-  const toggleOption = (optionId: string, selected: boolean) => {
-    setSelectedOptionIds((current) => toggleOAuthAuthorizationOption(options ?? [], current, optionId, selected));
+    setSelectedOptionIds(initialOAuthAuthorizationOptionIds(options ?? []));
+    setCustom(false);
+  }, [options]);
+  return {
+    selectedOptionIds,
+    custom,
+    setCustom,
+    setScopes: setSelectedOptionIds,
+    toggleOption(optionId: string, selected: boolean) {
+      setSelectedOptionIds((current) => toggleOAuthAuthorizationOption(options ?? [], current, optionId, selected));
+    },
   };
-  return { selectedOptionIds, toggleOption };
 }
 
-export function initialOAuthAuthorizationOptionIds(
-  options: OAuthAuthorizationOption[],
-  grantedScopes?: unknown,
-): string[] {
-  const selectedIds = new Set(
-    options
-      .filter((option) =>
-        Array.isArray(grantedScopes)
-          ? option.required || grantedScopes.includes(option.id)
-          : option.required || option.defaultSelected,
-      )
-      .map((option) => option.id),
-  );
-  return normalizeOAuthAuthorizationOptionIds(options, selectedIds);
+export function initialOAuthAuthorizationOptionIds(options: OAuthAuthorizationOption[]): string[] {
+  return options.filter((option) => option.required || option.defaultSelected).map((option) => option.id);
 }
 
 export function toggleOAuthAuthorizationOption(
@@ -45,26 +30,9 @@ export function toggleOAuthAuthorizationOption(
   optionId: string,
   selected: boolean,
 ): string[] {
-  const selectedIds = new Set(current);
-  if (selected) {
-    selectedIds.add(optionId);
-  } else {
-    const removedIds = new Set([optionId]);
-    for (const removedId of removedIds) {
-      for (const option of options) {
-        if (option.requires?.includes(removedId)) removedIds.add(option.id);
-      }
-    }
-    for (const removedId of removedIds) selectedIds.delete(removedId);
-  }
-  return normalizeOAuthAuthorizationOptionIds(options, selectedIds);
-}
-
-function normalizeOAuthAuthorizationOptionIds(options: OAuthAuthorizationOption[], selectedIds: Set<string>): string[] {
-  for (const option of options) if (option.required) selectedIds.add(option.id);
-  for (const selectedId of selectedIds) {
-    const option = options.find((candidate) => candidate.id == selectedId);
-    for (const requiredId of option?.requires ?? []) selectedIds.add(requiredId);
-  }
-  return options.filter((option) => selectedIds.has(option.id)).map((option) => option.id);
+  const ids = new Set(current);
+  if (selected) ids.add(optionId);
+  else ids.delete(optionId);
+  for (const option of options) if (option.required) ids.add(option.id);
+  return [...ids];
 }

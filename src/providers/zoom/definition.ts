@@ -17,15 +17,16 @@ export const provider: ProviderDefinition = {
   auth: [
     {
       type: "oauth2",
+      requiredScopes: ["user:read:user"],
       authorizationUrl: "https://zoom.us/oauth/authorize",
       tokenUrl: "https://zoom.us/oauth/token",
       refreshTokenUrl: "https://zoom.us/oauth/token",
       scopes: zoomProviderScopes,
-      optionalScopes: [
+      authorizationOptions: [
         "cloud_recording:read:recording",
         "cloud_recording:read:recording:admin",
         ...zoomMeetingSummaryScopes,
-      ],
+      ].map((id) => ({ id, label: id, description: "", risk: "standard" as const })),
       tokenEndpointAuthMethod: "client_secret_basic",
     },
   ],

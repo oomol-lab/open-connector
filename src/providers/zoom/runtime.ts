@@ -98,6 +98,7 @@ export const zoomActionHandlers: ProviderActionHandlers<"zoom", ZoomActionHandle
     } catch (error) {
       if (
         error instanceof ProviderRequestError &&
+        error.status === 403 &&
         optionalRecord(error.details)?.code === zoomSummaryNotAccessibleCode
       ) {
         return {
@@ -242,7 +243,12 @@ function createZoomError(status: number, payload: unknown, phase: ZoomRequestPha
     return new ProviderRequestError(400, message, payload);
   }
   if (status === 401 || status === 403) {
-    return new ProviderRequestError(401, message, payload);
+    return new ProviderRequestError(
+      status,
+      message,
+      payload,
+      status === 401 && optionalRecord(payload)?.code === 124 ? "authorization_failed" : "provider_error",
+    );
   }
   if (status >= 400 && status < 500) {
     return new ProviderRequestError(400, message, payload);

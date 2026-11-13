@@ -137,7 +137,7 @@ describe("OAuthClientConfigService", () => {
     expect((await service.listConfigs()).map((config) => config.missingFields)).toEqual([["developerToken"]]);
   });
 
-  it("normalizes a requested scope subset and rejects provider-undeclared scopes", () => {
+  it("normalizes requested scopes and preserves provider-undeclared scopes", () => {
     const service = new OAuthClientConfigService({
       catalog: createCatalogStore([oauthProvider("example")]),
       origin: "http://localhost:3000",
@@ -152,16 +152,16 @@ describe("OAuthClientConfigService", () => {
       }),
     ).toMatchObject({ requestedScopes: ["write", "read"] });
 
-    expect(() =>
+    expect(
       service.normalizeConfig("example", {
         clientId: "client-id",
         clientSecret: "client-secret",
         requestedScopes: ["admin"],
       }),
-    ).toThrow("requestedScopes contains a scope not declared by example: admin.");
+    ).toMatchObject({ requestedScopes: ["admin"] });
   });
 
-  it("drops stored scopes the provider no longer declares instead of failing reads", async () => {
+  it("preserves stored scopes even when the catalog no longer declares them", async () => {
     const store = new MemoryOAuthClientConfigStore();
     await store.set({
       service: "example",
@@ -178,7 +178,7 @@ describe("OAuthClientConfigService", () => {
     });
 
     await expect(service.listConfigs()).resolves.toMatchObject([
-      { service: "example", requestedScopes: ["read", "removed"], effectiveScopes: ["read"] },
+      { service: "example", requestedScopes: ["read", "removed"], effectiveScopes: ["read", "removed"] },
     ]);
     expect(
       service.getEffectiveScopes("example", {
@@ -189,30 +189,26 @@ describe("OAuthClientConfigService", () => {
         extra: {},
         secretExtra: {},
       }),
-    ).toEqual(["read", "write"]);
+    ).toEqual(["removed"]);
   });
 
-  it("rejects an empty requested scope subset", () => {
+  it("preserves an empty requested scope subset", () => {
     const service = new OAuthClientConfigService({
       catalog: createCatalogStore([oauthProvider("example")]),
       origin: "http://localhost:3000",
       store: new MemoryOAuthClientConfigStore(),
     });
 
-    expect(() =>
-      service.normalizeConfig("example", {
-        clientId: "client-id",
-        clientSecret: "client-secret",
-        requestedScopes: [],
-      }),
-    ).toThrow("requestedScopes must contain at least one scope.");
+    expect(
+      service.normalizeConfig("example", { clientId: "client-id", clientSecret: "client-secret", requestedScopes: [] }),
+    ).toMatchObject({ requestedScopes: [] });
   });
 
   it("accepts the provider's optional scopes by name and leaves them out of the default", async () => {
     const provider = oauthProvider("example");
     const auth = provider.auth[0]!;
     if (auth.type !== "oauth2") throw new Error("Expected OAuth fixture");
-    auth.optionalScopes = ["admin"];
+    auth.authorizationOptions = [{ id: "admin", label: "Admin", description: "Admin", risk: "standard" }];
     const service = new OAuthClientConfigService({
       catalog: createCatalogStore([provider]),
       origin: "http://localhost:3000",
@@ -231,20 +227,20 @@ describe("OAuthClientConfigService", () => {
     expect(service.getEffectiveScopes("example", unnamed)).toEqual(["read", "write"]);
     await expect(service.getSummary("example")).resolves.toMatchObject({ effectiveScopes: ["read", "write"] });
 
-    expect(() =>
+    expect(
       service.normalizeConfig("example", {
         clientId: "client-id",
         clientSecret: "client-secret",
         requestedScopes: ["root"],
       }),
-    ).toThrow("requestedScopes contains a scope not declared by example: root.");
+    ).toMatchObject({ requestedScopes: ["root"] });
   });
 
   it("keeps a stored optional scope on reads", async () => {
     const provider = oauthProvider("example");
     const auth = provider.auth[0]!;
     if (auth.type !== "oauth2") throw new Error("Expected OAuth fixture");
-    auth.optionalScopes = ["admin"];
+    auth.authorizationOptions = [{ id: "admin", label: "Admin", description: "Admin", risk: "standard" }];
     const store = new MemoryOAuthClientConfigStore();
     await store.set({
       service: "example",
