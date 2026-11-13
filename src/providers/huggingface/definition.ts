@@ -16,6 +16,7 @@ export const provider: ProviderDefinition = {
   auth: [
     {
       type: "oauth2",
+      requiredScopes: ["openid", "profile"],
       authorizationUrl: "https://huggingface.co/oauth/authorize",
       tokenUrl: "https://huggingface.co/oauth/token",
       scopes: huggingfaceOAuthScopes,

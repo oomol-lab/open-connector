@@ -11,29 +11,12 @@ export const provider: ProviderDefinition = {
   auth: [
     {
       type: "oauth2",
+      requiredScopes: ["quote:read"],
       authorizationUrl: "https://webapi.futunn.com/oauth2/authorize/confirm",
       tokenUrl: "https://webapi.futunn.com/oauth2/token",
       scopes: ["quote:read", "trade:read"],
       tokenEndpointAuthMethod: "none",
       pkce: { method: "S256" },
-      authorizationOptions: [
-        {
-          id: "quote:read",
-          label: "Market data",
-          description: "Read market data, financial research, and content search results.",
-          required: true,
-          defaultSelected: true,
-          risk: "standard",
-        },
-        {
-          id: "trade:read",
-          label: "Account information",
-          description: "Read authorized accounts, balances, positions, orders, and execution fills.",
-          required: false,
-          defaultSelected: true,
-          risk: "sensitive",
-        },
-      ],
       clientSetup: {
         docsUrl: "https://open.futunn.com/zh-cn/api/overview/getting-started",
         steps: [

@@ -10,6 +10,7 @@ export const provider: ProviderDefinition = {
   auth: [
     {
       type: "oauth2",
+      requiredScopes: ["spark:kms"],
       authorizationUrl: "https://webexapis.com/v1/authorize",
       tokenUrl: "https://webexapis.com/v1/access_token",
       scopes: [

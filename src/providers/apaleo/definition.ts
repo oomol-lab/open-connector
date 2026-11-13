@@ -12,6 +12,7 @@ export const provider: ProviderDefinition = {
   auth: [
     {
       type: "oauth2",
+      requiredScopes: ["openid", "profile", "offline_access"],
       authorizationUrl: "https://identity.apaleo.com/connect/authorize",
       tokenUrl: "https://identity.apaleo.com/connect/token",
       scopes: ["openid", "profile", "offline_access", "setup.read", "setup.manage"],

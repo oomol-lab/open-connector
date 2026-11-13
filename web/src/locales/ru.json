@@ -424,7 +424,14 @@
       "failed": "Не удалось сохранить OAuth client.",
       "resetting": "Сброс OAuth client...",
       "reset": "OAuth client сброшен.",
-      "resetFailed": "Не удалось сбросить OAuth client."
+      "resetFailed": "Не удалось сбросить OAuth client.",
+      "useDefaultScopes": "Использовать разрешения по умолчанию",
+      "scopeLabel": "Области доступа OAuth",
+      "emptyScopes": "Будут запрошены только основные разрешения для подключения.",
+      "removeScope": "Удалить {{scope}}",
+      "scopePlaceholder": "Добавить scope",
+      "additionalScopes": "Дополнительные разрешения",
+      "advancedScopes": "Дополнительные настройки"
     },
     "execution": {
       "executable": "Выполняемое",

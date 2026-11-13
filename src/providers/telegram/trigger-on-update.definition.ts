@@ -43,7 +43,7 @@ export const snapshot: TriggerKeySnapshot & { readonly type: "integration" } = {
       handle: "dropPendingUpdates",
       jsonSchema: s.boolean(),
       nullable: false,
-      value: true,
+      value: false,
       description: "Discard updates queued before the webhook is created or resumed.",
     },
     {

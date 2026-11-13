@@ -12,6 +12,7 @@ export const provider: ProviderDefinition = {
   auth: [
     {
       type: "oauth2",
+      requiredScopes: ["user:read"],
       authorizationUrl: "https://oauth.posthog.com/oauth/authorize/",
       tokenUrl: "https://oauth.posthog.com/oauth/token/",
       scopes: [

@@ -21,6 +21,7 @@ export const provider: ProviderDefinition = {
   auth: [
     {
       type: "oauth2",
+      requiredScopes: ["identify"],
       authorizationUrl: "https://discord.com/oauth2/authorize",
       tokenUrl: "https://discord.com/api/oauth2/token",
       scopes: discordScopes,

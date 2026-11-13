@@ -1,7 +1,7 @@
 import type { ProviderDefinition } from "../../core/types.ts";
 
 import { googlesheetsActions } from "./actions.ts";
-import { googlesheetsOAuthScopes, googlesheetsOptionalScopes } from "./scopes.ts";
+import { googlesheetsOAuthScopes } from "./scopes.ts";
 import { snapshot as triggerSnapshot0_0 } from "./trigger-on-row-added.definition.ts";
 import { triggerPermissions } from "./trigger-permissions.ts";
 
@@ -20,11 +20,11 @@ export const provider: ProviderDefinition = {
   auth: [
     {
       type: "oauth2",
+      requiredScopes: ["openid", "email", "profile"],
       authorizationUrl: "https://accounts.google.com/o/oauth2/v2/auth",
       tokenUrl: "https://oauth2.googleapis.com/token",
       revocationUrl: "https://oauth2.googleapis.com/revoke",
       scopes: googlesheetsOAuthScopes,
-      optionalScopes: googlesheetsOptionalScopes,
       tokenEndpointAuthMethod: "client_secret_post",
       authorizationParams: {
         access_type: "offline",

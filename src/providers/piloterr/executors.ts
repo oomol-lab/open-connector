@@ -1,6 +1,5 @@
 import type { QueryValue } from "../../core/request.ts";
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
-import type { ProviderRequestPhase } from "../http-json-runtime.ts";
 import type { ApiKeyProviderContext, ProviderActionHandlers, ProviderRuntimeHandler } from "../provider-executors.ts";
 import type { ProviderTransitFile } from "../provider-files.ts";
 
@@ -13,7 +12,7 @@ import {
   optionalString,
 } from "../../core/cast.ts";
 import { queryParams, storeResponseInTransit } from "../../core/request.ts";
-import { arrayPayload, objectPayload, requestJson } from "../http-json-runtime.ts";
+import { arrayPayload, objectPayload } from "../http-json-runtime.ts";
 import { defineApiKeyProviderExecutors } from "../provider-executors.ts";
 import { defineProviderProxy } from "../provider-proxy.ts";
 import {
@@ -22,6 +21,7 @@ import {
   providerUserAgent,
   ProviderRequestError,
   readProviderErrorTextBody,
+  readProviderJsonBody,
   requiredInputString,
   runProviderRequest,
 } from "../provider-runtime.ts";
@@ -43,12 +43,23 @@ const piloterrActionHandlers: ProviderActionHandlers<"piloterr", Handler> = {
     return { html };
   },
   async render_html(input, context) {
+    // Allow page loading, the requested post-load wait, and 30 seconds for transport.
+    const pageLoadSeconds = optionalInteger(input.timeout);
+    const waitSeconds = optionalNumber(input.waitInSeconds);
+    const timeoutMs = ((pageLoadSeconds ?? 30) + (waitSeconds ?? 0) + 30) * 1000;
     const html = optionalRawString(
-      await piloterrRequest("/v2/website/rendering", context, {
-        query: requiredInputString(input.url, "url"),
-        wait_in_seconds: optionalNumber(input.waitInSeconds),
-        block_ads: optionalBoolean(input.blockAds),
-      }),
+      await piloterrRequest(
+        "/v2/website/rendering",
+        context,
+        {
+          query: requiredInputString(input.url, "url"),
+          wait_in_seconds: waitSeconds,
+          block_ads: optionalBoolean(input.blockAds),
+          wait_for: optionalString(input.waitFor),
+          timeout: pageLoadSeconds,
+        },
+        timeoutMs,
+      ),
     );
     if (html === undefined) {
       throw providerResponseError("Piloterr render_html returned no HTML");
@@ -144,7 +155,7 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
 export const credentialValidators: CredentialValidators = {
   async apiKey(input, { fetcher, signal }) {
     const usage = objectPayload(
-      await piloterrRequest("/v2/usage", { apiKey: input.apiKey, fetcher, signal }, {}, "validate"),
+      await piloterrRequest("/v2/usage", { apiKey: input.apiKey, fetcher, signal }),
       "Piloterr usage",
     );
     const account = optionalRecord(usage.account);
@@ -171,6 +182,10 @@ async function takePiloterrScreenshot(
   if (!transitFiles) {
     throw providerInputError("Piloterr screenshots require local transit file storage.");
   }
+  // Allow scrolling and capture delay in addition to page loading and file transfer.
+  const scrollDurationMs = input.fullPageScroll ? (optionalNumber(input.fullPageScrollDuration) ?? 400) : 0;
+  const waitMs = scrollDurationMs + (optionalNumber(input.delay) ?? 0) * 1000;
+  const timeoutMs = waitMs > 0 ? waitMs + 30_000 : undefined;
   const url = new URL("/v2/website/screenshot", apiBaseUrl);
   for (const [key, value] of Object.entries(
     queryParams({
@@ -182,13 +197,16 @@ async function takePiloterrScreenshot(
       viewport_width: optionalInteger(input.viewportWidth),
       viewport_height: optionalInteger(input.viewportHeight),
       delay: optionalNumber(input.delay),
-      remove_cookie_banners: optionalBoolean(input.removeCookieBanners),
+      remove_selectors: optionalString(input.removeSelectors),
+      wait_for_selector: optionalString(input.waitForSelector),
+      full_page_scroll: optionalBoolean(input.fullPageScroll),
+      full_page_scroll_duration: optionalNumber(input.fullPageScrollDuration),
       remove_ads: optionalBoolean(input.removeAds),
     }),
   )) {
     url.searchParams.set(key, value);
   }
-  return runProviderRequest({ signal: context.signal, label: "Piloterr screenshot" }, async (signal) => {
+  return runProviderRequest({ signal: context.signal, label: "Piloterr screenshot", timeoutMs }, async (signal) => {
     const response = await context.fetcher(url.toString(), {
       headers: { accept: "*/*", "user-agent": providerUserAgent, "x-api-key": context.apiKey },
       signal,
@@ -224,40 +242,43 @@ async function piloterrRequest(
   path: string,
   context: RequestContext,
   query: Record<string, QueryValue> = {},
-  phase: ProviderRequestPhase = "execute",
-  body?: unknown,
+  timeoutMs?: number,
 ): Promise<unknown> {
-  try {
-    return await requestJson({
-      providerName: "Piloterr",
-      baseUrl: apiBaseUrl,
-      path,
-      fetcher: context.fetcher,
-      signal: context.signal,
-      query,
-      body,
-      headers: { "x-api-key": context.apiKey },
+  return runProviderRequest({ label: "Piloterr", signal: context.signal, timeoutMs }, async (signal) => {
+    const url = new URL(path, apiBaseUrl);
+    for (const [key, value] of Object.entries(queryParams(query))) url.searchParams.set(key, value);
+    const response = await context.fetcher(url.toString(), {
+      headers: { accept: "application/json", "user-agent": providerUserAgent, "x-api-key": context.apiKey },
+      signal,
     });
-  } catch (error) {
-    if (error instanceof ProviderRequestError) {
-      throw piloterrRequestError(error.status, error.message, error.details, phase);
+    const payload = await readProviderJsonBody(response, {
+      emptyBody: "",
+      trimEmptyBody: false,
+      invalidJsonMessage: "Piloterr returned invalid JSON",
+      invalidJsonFallback: (text) => text,
+    });
+    if (!response.ok) {
+      const record = optionalRecord(payload);
+      const message =
+        optionalString(record?.error) ??
+        optionalString(record?.message) ??
+        optionalString(payload) ??
+        `Piloterr request failed with HTTP ${response.status}`;
+      throw piloterrRequestError(response.status, message, payload);
     }
-    throw error;
-  }
+    return payload;
+  });
 }
 
-function piloterrRequestError(
-  status: number,
-  message: string,
-  details?: unknown,
-  phase: ProviderRequestPhase = "execute",
-): ProviderRequestError {
+function piloterrRequestError(status: number, message: string, details?: unknown): ProviderRequestError {
   // Piloterr answers an exceeded rate limit with 401, which would otherwise read as a rejected key.
   if (status === 401 && /rate limit/i.test(message)) {
     return new ProviderRequestError(429, message, details);
   }
-  if (phase === "validate" && (status === 401 || status === 403)) {
-    return new ProviderRequestError(400, message, details);
-  }
-  return new ProviderRequestError(status, message, details);
+  return new ProviderRequestError(
+    status,
+    message,
+    details,
+    status === 401 || status === 403 ? "provider_error" : undefined,
+  );
 }

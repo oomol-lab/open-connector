@@ -60,8 +60,9 @@ import {
   OAuthAppDialog,
   splitClientConfigFieldValues,
 } from "./oauth-app-form";
-import { useOAuthAuthorizationOptions } from "./oauth-authorization-options";
 import { usesSaasOAuth, watchOAuthRequest } from "./oauth-connection-request";
+import { OAuthScopeEditor, useOAuthScopeSelection } from "./oauth-scope-editor";
+import { normalizeOAuthScopes } from "./oauth-scopes";
 import { OneKeyProviderOption } from "./onekey-provider-option";
 import { isOneKeyPromotionHidden, setOneKeyPromotionHidden } from "./onekey-visibility";
 import {
@@ -1580,7 +1581,11 @@ export function oauthAuthorizationRequestBody(
   manual?: ManualOAuthAuthorizationInput,
   authorizationOptionIds?: string[],
 ): OAuthAuthorizationRequestBody {
-  const body: OAuthAuthorizationRequestBody = { service, connectionName, authorizationOptionIds };
+  const body: OAuthAuthorizationRequestBody = {
+    service,
+    connectionName,
+    authorizationOptionIds: normalizeOAuthScopes(authorizationOptionIds),
+  };
   if (manual) {
     const { extra, secretExtra } = splitClientConfigFieldValues(
       clientConfigFieldsFor(manual.auth),
@@ -1740,11 +1745,11 @@ function ConnectionForm(props: ConnectionFormProps): ReactNode {
   const [pending, setPending] = useState(false);
   const [authorizationUrl, setAuthorizationUrl] = useState<string>();
   const [values, setValues] = useState<Record<string, string>>({});
-  const authorizationOptions = props.auth.type === "oauth2" && !remote ? props.auth.authorizationOptions : undefined;
-  const { selectedOptionIds: selectedAuthorizationOptionIds, toggleOption } = useOAuthAuthorizationOptions(
-    authorizationOptions,
-    props.connection?.profile?.grantedScopes,
-  );
+  const oauthAuth = props.auth.type === "oauth2" ? props.auth : undefined;
+  const authorizationOptions = remote ? undefined : oauthAuth?.authorizationOptions;
+  const defaultScopes =
+    props.oauthClientMode === "manual" ? oauthAuth?.scopes : (props.oauthConfig?.effectiveScopes ?? oauthAuth?.scopes);
+  const scopeSelection = useOAuthScopeSelection(defaultScopes);
   const [manualClientId, setManualClientId] = useState("");
   const [manualClientSecret, setManualClientSecret] = useState("");
   const manualClientConfigFields = useMemo(() => clientConfigFieldsFor(props.auth), [props.auth]);
@@ -1844,7 +1849,7 @@ function ConnectionForm(props: ConnectionFormProps): ReactNode {
                 props.provider.service,
                 connectionName,
                 manual ? { auth: props.auth, values: manualValues } : undefined,
-                selectedAuthorizationOptionIds,
+                scopeSelection.requestedScopes,
               ),
             )
           : await apiPost<{ authorizationUrl: string; connectionRequestId: string; expiresAt: string }>(
@@ -1853,7 +1858,7 @@ function ConnectionForm(props: ConnectionFormProps): ReactNode {
                 service: props.provider.service,
                 connectionName,
                 appId: props.connection?.id,
-                authorizationOptionIds: authorizationOptions ? selectedAuthorizationOptionIds : undefined,
+                authorizationOptionIds: normalizeOAuthScopes(scopeSelection.requestedScopes),
               },
             );
         setAuthorizationUrl(result.authorizationUrl);
@@ -2012,29 +2017,12 @@ function ConnectionForm(props: ConnectionFormProps): ReactNode {
           ))}
         </>
       ) : null}
-      {authorizationOptions?.length ? (
-        <div className="form-grid">
-          <Label>
-            <span>Permissions</span>
-          </Label>
-          {authorizationOptions.map((option) => {
-            const checked = selectedAuthorizationOptionIds.includes(option.id);
-            return (
-              <label key={option.id} className="flex items-start gap-2 text-sm">
-                <input
-                  type="checkbox"
-                  checked={checked}
-                  disabled={option.required}
-                  onChange={(event) => toggleOption(option.id, event.target.checked)}
-                />
-                <span>
-                  <strong>{option.label}</strong>
-                  <small className="block text-muted-foreground">{option.description}</small>
-                </span>
-              </label>
-            );
-          })}
-        </div>
+      {props.auth.type === "oauth2" && !remote && props.auth.supportsScopeSelection !== false ? (
+        <OAuthScopeEditor
+          options={authorizationOptions}
+          selection={scopeSelection}
+          requiredScopes={props.auth.requiredScopes}
+        />
       ) : null}
       {authDescription ? <small className="block text-muted-foreground">{authDescription}</small> : null}
       {fields.map((field) => (

@@ -20,6 +20,7 @@ export const provider: ProviderDefinition = {
   auth: [
     {
       type: "oauth2",
+      requiredScopes: ["read:jira-user", "offline_access"],
       authorizationUrl: "https://auth.atlassian.com/authorize",
       tokenUrl: "https://auth.atlassian.com/oauth/token",
       scopes: jiraOAuthScopes,

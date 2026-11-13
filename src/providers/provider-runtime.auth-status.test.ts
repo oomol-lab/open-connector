@@ -15,6 +15,7 @@ import {
 } from "./clinicalkey/executors.ts";
 import { executors as deepgramExecutors } from "./deepgram/executors.ts";
 import { credentialValidators as dovetailValidators } from "./dovetail/executors.ts";
+import { executors as figmaExecutors } from "./figma/executors.ts";
 import { executors as helpdeskExecutors } from "./helpdesk/executors.ts";
 import { executors as mondayExecutors } from "./monday/executors.ts";
 import { ProviderRequestError, toProviderExecutionError } from "./provider-runtime.ts";
@@ -98,7 +99,6 @@ const authFailureCases: AuthFailureCase[] = [
     actionId: "teable.list_spaces",
     credential: apiKeyCredential,
   },
-  { service: "zoom", executors: zoomExecutors, actionId: "zoom.list_meetings", credential: oauthCredential },
 ];
 
 interface ValidatePhaseCase {
@@ -371,4 +371,20 @@ describe("provider-local endpoint denials", () => {
     expect(result).toMatchObject({ ok: false, error: { code: "invalid_input" } });
     expect(httpStatusOf(result)).toBe(400);
   });
+});
+
+it.each([401, 403])("preserves ambiguous Zoom HTTP %s errors without requesting reauthorization", async (status) => {
+  const result = await runExpiredCredential(
+    { service: "zoom", executors: zoomExecutors, actionId: "zoom.list_meetings", credential: oauthCredential },
+    status,
+  );
+  expect(result).toMatchObject({ ok: false, error: { code: "provider_error" } });
+});
+
+it.each([401, 403])("preserves ambiguous Figma HTTP %s errors without requesting reauthorization", async (status) => {
+  const result = await runExpiredCredential(
+    { service: "figma", executors: figmaExecutors, actionId: "figma.get_current_user", credential: oauthCredential },
+    status,
+  );
+  expect(result).toMatchObject({ ok: false, error: { code: "provider_error" } });
 });

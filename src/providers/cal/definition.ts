@@ -12,6 +12,7 @@ export const provider: ProviderDefinition = {
   auth: [
     {
       type: "oauth2",
+      requiredScopes: ["PROFILE_READ"],
       authorizationUrl: "https://app.cal.com/auth/oauth2/authorize",
       tokenUrl: "https://api.cal.com/v2/auth/oauth2/token",
       scopes: calProviderScopes,

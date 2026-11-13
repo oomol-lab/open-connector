@@ -782,13 +782,10 @@ function createFigmaError(
   if (phase === "validate" && (status === 401 || status === 403)) {
     return new ProviderRequestError(400, message, payload);
   }
-  if (phase === "execute" && (status === 401 || status === 403)) {
-    return new ProviderRequestError(401, message, payload);
-  }
   if ([400, 404, 422].includes(status)) {
     return new ProviderRequestError(400, message, payload);
   }
-  return new ProviderRequestError(status || 502, message, payload);
+  return new ProviderRequestError(status || 502, message, payload, "provider_error");
 }
 
 function extractFigmaErrorMessage(payload: unknown): string | undefined {

@@ -11,19 +11,10 @@ export const provider: ProviderDefinition = {
   auth: [
     {
       type: "oauth2",
+      requiredScopes: ["shops_r"],
       authorizationUrl: "https://www.etsy.com/oauth/connect",
       tokenUrl: "https://api.etsy.com/v3/public/oauth/token",
       scopes: ["shops_r", "listings_r", "transactions_r", "transactions_w"],
-      optionalScopes: [
-        "address_r",
-        "address_w",
-        "email_r",
-        "listings_d",
-        "listings_w",
-        "profile_r",
-        "profile_w",
-        "shops_w",
-      ],
       tokenEndpointAuthMethod: "none",
       pkce: {
         method: "S256",

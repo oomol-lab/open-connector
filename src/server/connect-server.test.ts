@@ -990,21 +990,42 @@ describe("ConnectServer", () => {
     expect(new URL(body.authorizationUrl).searchParams.get("scope")).toBe("read");
   });
 
-  it.each([
-    ["malformed", "read"],
-    ["empty", []],
-    ["provider-undeclared", ["admin"]],
-  ])("rejects %s requested scopes through the public API", async (_case, requestedScopes) => {
-    const app = createTestServer([oauthProvider]).createApp();
-    const response = await app.request("/api/oauth/configs/oauth_example", {
-      method: "PUT",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ clientId: "client-id", clientSecret: "client-secret", requestedScopes }),
-    });
+  it.each([["malformed", "read"]])(
+    "rejects %s requested scopes through the public API",
+    async (_case, requestedScopes) => {
+      const app = createTestServer([oauthProvider]).createApp();
+      const response = await app.request("/api/oauth/configs/oauth_example", {
+        method: "PUT",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ clientId: "client-id", clientSecret: "client-secret", requestedScopes }),
+      });
 
-    expect(response.status).toBe(400);
-    await expect(response.json()).resolves.toMatchObject({ error: { code: "invalid_input" } });
-  });
+      expect(response.status).toBe(400);
+      await expect(response.json()).resolves.toMatchObject({ error: { code: "invalid_input" } });
+    },
+  );
+
+  it.each([{ requestedScopes: [] }, { requestedScopes: ["admin"] }])(
+    "passes explicit scopes through the public API: %j",
+    async ({ requestedScopes }) => {
+      const app = createTestServer([oauthProvider]).createApp();
+      const response = await app.request("/api/oauth/configs/oauth_example", {
+        method: "PUT",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ clientId: "client-id", clientSecret: "client-secret", requestedScopes }),
+      });
+      expect(response.status).toBe(200);
+      const authorization = await app.request("/api/oauth/authorizations", {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ service: "oauth_example" }),
+      });
+      expect(authorization.status).toBe(200);
+      expect(new URL((await authorization.json()).authorizationUrl).searchParams.get("scope")).toBe(
+        requestedScopes.join(" ") || null,
+      );
+    },
+  );
 
   it("stores a per-provider redirect URI override through the public API and reports it", async () => {
     const app = createTestServer([oauthProvider]).createApp();

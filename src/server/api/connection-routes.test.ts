@@ -311,15 +311,15 @@ it.each([undefined, "https://client.example/done"])(
   },
 );
 
-it("applies declared authorization options and always includes required scopes", async () => {
+it("preserves requested scopes and always includes required identity scopes", async () => {
   const { call } = await setup(undefined, {}, { ...githubProvider, service: "example", actions: [] });
   const response = await call("/v1/connections/example/connect", { authorizationOptionIds: ["repo"] });
   expect(response.status).toBe(200);
   const url = new URL((await response.json()).data.authorizationUrl);
-  expect(url.searchParams.get("scope")).toBe("read:user repo");
-  const invalid = await call("/v1/connections/example/connect", { authorizationOptionIds: ["unknown"] });
-  expect(invalid.status).toBe(400);
-  expect((await invalid.json()).errorCode).toBe("invalid_input");
+  expect(new Set(url.searchParams.get("scope")?.split(" "))).toEqual(new Set(["repo", "read:user"]));
+  const custom = await call("/v1/connections/example/connect", { authorizationOptionIds: ["unknown"] });
+  expect(custom.status).toBe(200);
+  expect(new URL((await custom.json()).data.authorizationUrl).searchParams.get("scope")).toBe("unknown read:user");
 });
 
 it.each([undefined, "", "read", "read:user repo extra"])(

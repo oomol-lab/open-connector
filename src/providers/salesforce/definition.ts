@@ -11,6 +11,7 @@ export const provider: ProviderDefinition = {
   auth: [
     {
       type: "oauth2",
+      requiredScopes: ["refresh_token"],
       authorizationUrl: "https://login.salesforce.com/services/oauth2/authorize",
       tokenUrl: "https://login.salesforce.com/services/oauth2/token",
       scopes: ["api", "refresh_token"],

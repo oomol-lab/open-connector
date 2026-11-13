@@ -56,7 +56,7 @@ export const linearMcpToolsByAction: ProviderActionSources<typeof service, strin
 
 /**
  * The tools every grant must serve at sign-in. The writes stay out on purpose: a
- * read-only grant, the default, or an older server may not list them, and a
+ * read-only grant or an older server may not list them, and a
  * credential must not be refused for a tool its grant could never call.
  */
 const linearMcpSignInTools = [

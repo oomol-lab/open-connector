@@ -1,7 +1,7 @@
 import type { ProviderDefinition } from "../../core/types.ts";
 
 import { shopifyActions } from "./actions.ts";
-import { shopifyOAuthScopes, shopifyOptionalScopes } from "./scopes.ts";
+import { shopifyOAuthScopes } from "./scopes.ts";
 import { snapshot as triggerSnapshot0_0 } from "./trigger-on-shop-event.definition.ts";
 import { triggerPermissions } from "./trigger-permissions.ts";
 
@@ -51,7 +51,6 @@ export const provider: ProviderDefinition = {
       authorizationUrl: shopifyAuthorizationUrl,
       tokenUrl: shopifyTokenUrl,
       scopes: shopifyOAuthScopes,
-      optionalScopes: shopifyOptionalScopes,
       scopeSeparator: ",",
       tokenEndpointAuthMethod: "client_secret_post",
       clientConfigFields: [

@@ -19,9 +19,8 @@ const provider: ProviderDefinition = {
       tokenUrl: "https://provider.example/token",
       tokenEndpointAuthMethod: "client_secret_post",
       scopes: ["read"],
-      authorizationOptions: [
-        { id: "read", label: "Read", description: "Read", required: true, defaultSelected: true, risk: "standard" },
-      ],
+      requiredScopes: ["read"],
+      authorizationOptions: [{ id: "read", label: "Read", description: "Read", risk: "standard" }],
     },
   ],
   actions: [
@@ -407,7 +406,24 @@ describe("SaasProjectService", () => {
     expect(fetcher).toHaveBeenCalledTimes(1);
   });
 
-  it.each([{ effectiveScopes: [] }, { service: "other" }, { actionIds: [], proxyAvailable: false }])(
+  it.each([[], ["read", "future"], ["future"]].map((effectiveScopes) => ({ effectiveScopes })))(
+    "accepts remote scope metadata $effectiveScopes without a completeness check",
+    async ({ effectiveScopes }) => {
+      const { service, fetcher } = setup();
+      await service.configure(input);
+      fetcher.mockResolvedValue(
+        Response.json({
+          success: true,
+          data: { ...discovery, providerConfigs: [{ ...discovery.providerConfigs[0], effectiveScopes }] },
+        }),
+      );
+      await expect(service.setSource("example", { mode: "saas", providerConfigId: "config" })).resolves.toMatchObject({
+        mode: "saas",
+      });
+    },
+  );
+
+  it.each([{ service: "other" }, { actionIds: [], proxyAvailable: false }])(
     "rejects incompatible remote configuration %j",
     async (changes) => {
       const { service, fetcher } = setup();

@@ -1,7 +1,7 @@
 import type { ProviderDefinition } from "../../core/types.ts";
 
 import { googlecalendarActions } from "./actions.ts";
-import { googlecalendarOAuthScopes, googlecalendarOptionalScopes } from "./scopes.ts";
+import { googlecalendarOAuthScopes } from "./scopes.ts";
 import { snapshot as triggerSnapshot0_0 } from "./trigger-on-event-changed.definition.ts";
 import { triggerPermissions } from "./trigger-permissions.ts";
 
@@ -18,11 +18,11 @@ export const provider: ProviderDefinition = {
   auth: [
     {
       type: "oauth2",
+      requiredScopes: ["openid", "email", "profile"],
       authorizationUrl: "https://accounts.google.com/o/oauth2/v2/auth",
       tokenUrl: "https://oauth2.googleapis.com/token",
       revocationUrl: "https://oauth2.googleapis.com/revoke",
       scopes: googlecalendarOAuthScopes,
-      optionalScopes: googlecalendarOptionalScopes,
       tokenEndpointAuthMethod: "client_secret_post",
       authorizationParams: {
         access_type: "offline",

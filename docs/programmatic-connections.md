@@ -38,7 +38,8 @@ hidden from execution discovery. It excludes virtual no-auth and Marketplace ent
 
 `GET /v1/providers/:service/setup` describes what a provider needs before it can be connected:
 the credential fields of each supported credential type, the OAuth client inputs, the default
-scopes (`scopes`), the additional scopes available for explicit selection (`optionalScopes`),
+scopes (`scopes`), connection prerequisites (`requiredScopes`), curated extra permissions
+(`authorizationOptions`),
 the provider's registration steps, the callback URL to register, and which OAuth client inputs
 are still missing. It never returns saved values, so a host can build its own connection form
 from it and submit through the endpoints below.
@@ -48,10 +49,14 @@ from it and submit through the endpoints below.
 For local OAuth, configure your provider's OAuth client through the console or
 `/api/oauth/configs/:service` first. Register `/oauth/callback` on this runtime as the callback URL.
 
-Omit `requestedScopes` to request every default scope and no optional scopes. When provided,
-`requestedScopes` replaces the default scope list: only the listed scopes are requested, and
-each must appear in the provider's `scopes` or `optionalScopes`. Include any identity scopes
-needed by the provider's credential validator; defaults are not added automatically.
+Defaults cover the provider's ordinary capabilities. Most connection forms can proceed directly to
+OAuth. Only explicitly defined `authorizationOptions` become extra permission controls, with localized
+labels and descriptions; do not turn default or required scope lists into checkboxes. Selecting an
+extra permission adds it to the effective defaults. Advanced scope editing replaces the request list.
+
+Omit `requestedScopes` to use the configured defaults. An explicit array replaces the defaults;
+`[]` requests only the `requiredScopes` that the runtime adds for connection validation or renewal.
+Unknown scopes are allowed. Provider-reported grants are display metadata, never a local permission check.
 
 For example, a Google Calendar OAuth client config for editing events, listing calendars, and
 querying availability can use:

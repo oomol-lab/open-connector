@@ -218,6 +218,8 @@ export const automActions: ActionDefinition[] = [
         query: s.nonEmptyString('Search query (e.g., "best electric cars").'),
         country: s.nonEmptyString('Two-letter country code to search from (e.g., "us").'),
         language: s.nonEmptyString('Two-letter language code of the results (e.g., "en").'),
+        tbs: s.nonEmptyString('Google advanced filters, such as "qdr:d" for the past day.'),
+        safe: s.stringEnum("Google SafeSearch setting. Omit to use Google's default.", ["active", "off"]),
         location: s.nonEmptyString(
           'Google location name to search from, as Find Google Locations returns it (e.g., "Paris,Paris,Ile-de-France,France").',
         ),

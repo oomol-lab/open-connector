@@ -30,25 +30,13 @@ export const translation: ProviderTranslation = {
     },
     oauth2: {
       authorizationOptions: {
-        "read:user": {
-          label: "账号资料",
-          description: "识别连接的 GitHub 账号。",
-        },
-        repo: {
-          label: "仓库",
-          description: "读取和修改公开及私有仓库。",
-        },
-        "user:email": {
-          label: "电子邮箱",
-          description: "读取账号的电子邮箱地址。",
-        },
         workflow: {
-          label: "工作流",
-          description: "更新 GitHub Actions 工作流文件。",
+          label: "修改工作流",
+          description: "创建和更新 GitHub Actions 工作流文件。",
         },
         delete_repo: {
           label: "删除仓库",
-          description: "永久删除仓库。",
+          description: "删除你拥有管理权限的仓库。",
         },
       },
     },

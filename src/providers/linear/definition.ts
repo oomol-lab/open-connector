@@ -22,7 +22,6 @@ export const provider: ProviderDefinition = {
       authorizationUrl: "https://linear.app/oauth/authorize",
       tokenUrl: "https://api.linear.app/oauth/token",
       scopes: linearOAuthScopes,
-      optionalScopes: ["admin"],
       scopeSeparator: ",",
       tokenEndpointAuthMethod: "client_secret_post",
       authorizationParams: {},

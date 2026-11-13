@@ -1,14 +1,7 @@
 import type { ProviderDefinition } from "../../core/types.ts";
 
 import { githubActions } from "./actions.ts";
-import {
-  githubOAuthScopes,
-  githubReadUserScope,
-  githubUserEmailScope,
-  githubRepoScope,
-  githubWorkflowScope,
-  githubDeleteRepoScope,
-} from "./scopes.ts";
+import { githubOAuthScopes, githubReadUserScope, githubWorkflowScope, githubDeleteRepoScope } from "./scopes.ts";
 import { snapshot as triggerSnapshot0_0 } from "./trigger-on-repo-event.definition.ts";
 import { triggerPermissions } from "./trigger-permissions.ts";
 import { snapshot as triggerSnapshot1_0 } from "./trigger-watch-pull-request.definition.ts";
@@ -31,49 +24,21 @@ export const provider: ProviderDefinition = {
   auth: [
     {
       type: "oauth2",
+      requiredScopes: [githubReadUserScope],
       authorizationUrl: "https://github.com/login/oauth/authorize",
       tokenUrl: "https://github.com/login/oauth/access_token",
       scopes: githubOAuthScopes,
       authorizationOptions: [
         {
-          id: githubReadUserScope,
-          label: "Account profile",
-          description: "Identify the connected GitHub account.",
-          required: true,
-          defaultSelected: true,
-          risk: "standard",
-        },
-        {
-          id: githubRepoScope,
-          label: "Repositories",
-          description: "Read and modify public and private repositories.",
-          required: false,
-          defaultSelected: true,
-          risk: "sensitive",
-        },
-        {
-          id: githubUserEmailScope,
-          label: "Email addresses",
-          description: "Read the account's email addresses.",
-          required: false,
-          defaultSelected: false,
-          risk: "sensitive",
-        },
-        {
           id: githubWorkflowScope,
-          label: "Workflows",
-          description: "Update GitHub Actions workflow files.",
-          required: false,
-          defaultSelected: false,
+          label: "Edit workflows",
+          description: "Create and update GitHub Actions workflow files.",
           risk: "sensitive",
-          requires: [githubRepoScope],
         },
         {
           id: githubDeleteRepoScope,
           label: "Delete repositories",
-          description: "Permanently delete repositories.",
-          required: false,
-          defaultSelected: false,
+          description: "Delete repositories you administer.",
           risk: "destructive",
         },
       ],

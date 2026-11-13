@@ -19,6 +19,7 @@ export const provider: ProviderDefinition = {
   auth: [
     {
       type: "oauth2",
+      requiredScopes: ["openid", "email", "profile"],
       authorizationUrl: googleMeetAuthorizationUrl,
       tokenUrl: googleMeetTokenUrl,
       scopes: googleMeetOAuthScopes,

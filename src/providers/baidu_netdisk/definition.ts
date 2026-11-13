@@ -12,6 +12,7 @@ export const provider: ProviderDefinition = {
   auth: [
     {
       type: "oauth2",
+      requiredScopes: ["basic", "netdisk"],
       authorizationUrl: "https://openapi.baidu.com/oauth/2.0/authorize",
       tokenUrl: "https://openapi.baidu.com/oauth/2.0/token",
       scopes: baiduNetdiskOAuthScopes,

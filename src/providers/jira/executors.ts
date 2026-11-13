@@ -14,7 +14,6 @@ import {
   optionalRawString,
   optionalRecord as asOptionalObject,
   optionalString as asOptionalString,
-  optionalStringArray,
 } from "../../core/cast.ts";
 import { assertPublicHttpUrl, isPrivateNetworkAccessAllowed } from "../../core/request.ts";
 import { defineProviderExecutors } from "../provider-executors.ts";
@@ -670,9 +669,6 @@ function readAccessibleResources(payload: unknown) {
     }
     requireNonEmptyString(record.id, "jira accessible resource id");
     requireNonEmptyString(record.url, "jira accessible resource URL");
-    if (!optionalStringArray(record.scopes)) {
-      throw new ProviderRequestError(502, "jira accessible resource scopes must be an array of strings");
-    }
     return record as JiraAccessibleResource;
   });
 }
@@ -681,10 +677,6 @@ function pickPrimaryResource(resources: JiraAccessibleResource[]) {
   const candidates: JiraAccessibleResource[] = [];
 
   for (const resource of resources) {
-    const scopes = readScopeArray(resource.scopes);
-    if (!scopes.includes("read:jira-work") && !scopes.includes("write:jira-work")) {
-      continue;
-    }
     if (!asOptionalString(resource.id) || !asOptionalString(resource.url)) {
       continue;
     }

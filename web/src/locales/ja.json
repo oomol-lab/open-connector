@@ -424,7 +424,14 @@
       "failed": "OAuth client の保存に失敗しました。",
       "resetting": "OAuth client をリセット中...",
       "reset": "OAuth client をリセットしました。",
-      "resetFailed": "OAuth client のリセットに失敗しました。"
+      "resetFailed": "OAuth client のリセットに失敗しました。",
+      "useDefaultScopes": "既定の権限を使用",
+      "scopeLabel": "認可スコープ",
+      "emptyScopes": "接続に必要な基本権限のみを要求します。",
+      "removeScope": "{{scope}} を削除",
+      "scopePlaceholder": "scope を追加",
+      "additionalScopes": "追加の権限",
+      "advancedScopes": "詳細設定"
     },
     "execution": {
       "executable": "実行可能",

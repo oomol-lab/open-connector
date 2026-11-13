@@ -424,7 +424,14 @@
       "failed": "Échec de l’enregistrement du client OAuth.",
       "resetting": "Réinitialisation du client OAuth...",
       "reset": "Client OAuth réinitialisé.",
-      "resetFailed": "Échec de la réinitialisation du client OAuth."
+      "resetFailed": "Échec de la réinitialisation du client OAuth.",
+      "useDefaultScopes": "Utiliser les autorisations par défaut",
+      "scopeLabel": "Autorisations OAuth",
+      "emptyScopes": "Seules les autorisations de base nécessaires à la connexion seront demandées.",
+      "removeScope": "Retirer {{scope}}",
+      "scopePlaceholder": "Ajouter un scope",
+      "additionalScopes": "Autorisations supplémentaires",
+      "advancedScopes": "Paramètres avancés"
     },
     "execution": {
       "executable": "Exécutable",

@@ -18,6 +18,7 @@ export const provider: ProviderDefinition = {
   auth: [
     {
       type: "oauth2",
+      requiredScopes: ["User.Read", "offline_access"],
       authorizationUrl: "https://login.microsoftonline.com/{tenant}/oauth2/v2.0/authorize",
       tokenUrl: "https://login.microsoftonline.com/{tenant}/oauth2/v2.0/token",
       scopes: outlookOAuthScopes,

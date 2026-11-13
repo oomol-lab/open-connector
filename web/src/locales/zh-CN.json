@@ -424,7 +424,14 @@
       "failed": "保存 OAuth client 失败。",
       "resetting": "正在重置 OAuth client...",
       "reset": "OAuth client 已重置。",
-      "resetFailed": "重置 OAuth client 失败。"
+      "resetFailed": "重置 OAuth client 失败。",
+      "useDefaultScopes": "使用默认权限",
+      "scopeLabel": "授权范围",
+      "emptyScopes": "仅申请连接所需的基本权限。",
+      "removeScope": "移除 {{scope}}",
+      "scopePlaceholder": "添加 scope",
+      "additionalScopes": "额外权限",
+      "advancedScopes": "高级设置"
     },
     "execution": {
       "executable": "可执行",

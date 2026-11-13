@@ -149,12 +149,9 @@ export type OAuth2AuthDefinition = {
   revocationUrl?: string;
   /** Default OAuth scopes when no requestedScopes or authorization options are selected. */
   scopes: string[];
-  /**
-   * Additional scopes available for explicit selection through requestedScopes or authorization
-   * options. requestedScopes replaces the default list; default scopes are not added automatically.
-   */
-  optionalScopes?: string[];
-  /** Selectable provider-native OAuth scopes for programmatic connections. */
+  /** Scopes added before authorization for identity validation or token renewal; never a grant check. */
+  requiredScopes?: string[];
+  /** Curated extra permissions with localizable explanations; ordinary access belongs in scopes. */
   authorizationOptions?: OAuthAuthorizationOption[];
   /** Separator used when joining OAuth scopes. Defaults to a space. */
   scopeSeparator?: " " | ",";
@@ -215,10 +212,7 @@ export interface OAuthAuthorizationOption {
   id: string;
   label: string;
   description: string;
-  required: boolean;
-  defaultSelected: boolean;
   risk: "standard" | "sensitive" | "destructive";
-  requires?: string[];
 }
 
 /**
