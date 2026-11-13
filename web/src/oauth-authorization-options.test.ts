@@ -15,3 +15,12 @@ test("custom requests preserve unknown and empty scopes without restoring defaul
   expect(normalizeOAuthScopes([])).toEqual([]);
   expect(normalizeOAuthScopes(undefined)).toBeUndefined();
 });
+
+test("checkbox changes match padded scopes and preserve unrelated raw input", () => {
+  const raw = [" delete ", "future  ", "delete", ""];
+  expect(toggleOAuthScope(["read"], raw, "delete", true, true)).toEqual(raw);
+  const next = toggleOAuthScope(["read"], raw, "delete", false, true);
+  expect(next).toEqual(["future  ", ""]);
+  expect(normalizeOAuthScopes(next)).toEqual(["future"]);
+  expect(toggleOAuthScope(["read"], [" read ", " delete "], "delete", false, false)).toBeUndefined();
+});

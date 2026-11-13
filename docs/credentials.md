@@ -289,7 +289,7 @@ curl -s -X POST http://localhost:3000/api/oauth/authorizations \
   -d '{"service":"github","connectionName":"work","clientId":"...","clientSecret":"..."}'
 ```
 
-Connection-scoped OAuth client requests may include the same validated `requestedScopes` subset.
+Connection-scoped OAuth client requests follow the same `requestedScopes` replacement and normalization rules: unknown scopes and explicit empty arrays are accepted, whitespace and duplicates are removed, and connection prerequisites are added automatically.
 
 The callback URL is still the deployment's `/oauth/callback` (for example,
 `https://connect.example.com/oauth/callback`), and the connection keeps the supplied app values

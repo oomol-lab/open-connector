@@ -1757,6 +1757,7 @@ function ConnectionForm(props: ConnectionFormProps): ReactNode {
     setCustom,
     setScopes,
   } = useOAuthAuthorizationOptions(defaultScopes);
+  const selectedScopes = normalizeOAuthScopes(selectedAuthorizationOptionIds)!;
   const [manualClientId, setManualClientId] = useState("");
   const [manualClientSecret, setManualClientSecret] = useState("");
   const manualClientConfigFields = useMemo(() => clientConfigFieldsFor(props.auth), [props.auth]);
@@ -2033,7 +2034,7 @@ function ConnectionForm(props: ConnectionFormProps): ReactNode {
                 <label key={option.id} className="flex items-start gap-2 text-sm">
                   <input
                     type="checkbox"
-                    checked={option.required || selectedAuthorizationOptionIds.includes(option.id)}
+                    checked={option.required || selectedScopes.includes(option.id)}
                     disabled={option.required}
                     onChange={(event) => toggleOption(option.id, event.target.checked)}
                   />

@@ -30,11 +30,24 @@ export function toggleOAuthScope(
   selected: boolean,
   custom: boolean,
 ): string[] | undefined {
-  const scopes = new Set(requested ?? defaults);
-  if (selected) scopes.add(scope);
-  else scopes.delete(scope);
-  if (!custom && scopes.size === defaults.length && defaults.every((value) => scopes.has(value))) return undefined;
-  return [...scopes];
+  const current = requested ?? defaults;
+  const target = scope.trim();
+  const matches = (value: string) => value.trim() === target;
+  let next = current;
+  if (selected) {
+    if (!current.some(matches)) next = [...current, target];
+  } else {
+    next = current.filter((value) => !matches(value));
+  }
+  const normalized = normalizeOAuthScopes(next)!;
+  const normalizedDefaults = normalizeOAuthScopes(defaults)!;
+  if (
+    !custom &&
+    normalized.length === normalizedDefaults.length &&
+    normalizedDefaults.every((value) => normalized.includes(value))
+  )
+    return undefined;
+  return next;
 }
 
 export function normalizeOAuthScopes(values: string[] | undefined): string[] | undefined {
