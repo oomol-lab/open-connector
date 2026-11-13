@@ -10,7 +10,7 @@ Each service has one fixed endpoint and supports multiple connections. Supported
 
 - **No authentication**: tools are discovered when the service is added.
 - **API key / Headers**: define header names and optional prefixes, then enter each connection's values in the existing connection form. For example, `Authorization` with the prefix `Bearer `, or `X-API-Key` with an empty prefix.
-- **OAuth**: Connect discovers authorization endpoints and registers a public PKCE client when supported. Supply a client ID and optional secret for a pre-registered application. Manual endpoint configuration is available when discovery is unavailable. Authorize an account after registering the service.
+- **OAuth**: Connect discovers authorization endpoints and registers a public PKCE client when supported. By default, the registered client is named `OOMOL Connect`. Set `OOMOL_CONNECT_CUSTOM_MCP_CLIENT_NAME`, `OOMOL_CONNECT_CUSTOM_MCP_CLIENT_LOGO_URI` and `OOMOL_CONNECT_CUSTOM_MCP_CLIENT_URI` to show your own name and links on consent screens. Services registered earlier keep their client. Supply a client ID and optional secret for a pre-registered application. Manual endpoint configuration is available when discovery is unavailable. Authorize an account after registering the service.
 
 Client ID Metadata Documents, credentials embedded in URLs, query-parameter keys, stdio servers, and MCP resources/prompts are not supported by this feature. The HTTP transports are Streamable HTTP and legacy SSE. Use the final endpoint URL; redirects are not followed.
 

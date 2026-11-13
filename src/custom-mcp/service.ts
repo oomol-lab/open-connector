@@ -3,18 +3,20 @@ import type { ResolvedCredential, RuntimeLogger } from "../core/types.ts";
 import type { OAuthClientConfig, OAuthClientConfigService } from "../oauth/oauth-client-config-service.ts";
 import type { CustomMcpStore } from "../server/storage/custom-mcp-store.ts";
 import type { CustomMcpCatalog } from "./catalog.ts";
-import type { CustomMcpRecord, CustomMcpRegistration } from "./definition.ts";
+import type { CustomMcpRecord, CustomMcpRegistration, McpOAuthClientMetadata } from "./definition.ts";
 
 import { isProviderId } from "../core/provider-id.ts";
 import { OAuthClientConfigError } from "../oauth/oauth-client-config-service.ts";
 import { HttpRequestError } from "../server/api/http-utils.ts";
-import { customMcpNameKey, suggestMcpService } from "./definition.ts";
+import { customMcpNameKey, DEFAULT_MCP_OAUTH_CLIENT_NAME, suggestMcpService } from "./definition.ts";
 import { prepareMcpRegistration } from "./registration.ts";
 
 export interface CustomMcpServiceOptions {
   catalog: CustomMcpCatalog;
   store: CustomMcpStore;
   oauthClientConfigs: OAuthClientConfigService;
+  /** Name and links shown on the consent screen when Connect registers its own OAuth client. */
+  oauthClientMetadata?: McpOAuthClientMetadata;
   logger?: RuntimeLogger;
 }
 
@@ -23,12 +25,14 @@ export class CustomMcpService {
   readonly catalog: CustomMcpCatalog;
   private readonly store: CustomMcpStore;
   private readonly oauthClientConfigs: OAuthClientConfigService;
+  private readonly oauthClientMetadata: McpOAuthClientMetadata;
   private readonly logger?: RuntimeLogger;
 
   constructor(options: CustomMcpServiceOptions) {
     this.catalog = options.catalog;
     this.store = options.store;
     this.oauthClientConfigs = options.oauthClientConfigs;
+    this.oauthClientMetadata = options.oauthClientMetadata ?? { clientName: DEFAULT_MCP_OAUTH_CLIENT_NAME };
     this.logger = options.logger;
   }
 
@@ -42,7 +46,13 @@ export class CustomMcpService {
     const service = input.service ?? suggestMcpService(input.displayName);
     this.assertServiceAvailable(service);
     this.assertNameAvailable(input.displayName);
-    const { config, oauthClient } = await prepareMcpRegistration(input, service, redirectUri, signal);
+    const { config, oauthClient } = await prepareMcpRegistration(
+      input,
+      service,
+      redirectUri,
+      this.oauthClientMetadata,
+      signal,
+    );
     const record: CustomMcpRecord = { ...config, revision: crypto.randomUUID(), actions: [] };
     let client: OAuthClientConfig | undefined;
     try {

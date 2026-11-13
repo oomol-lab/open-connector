@@ -3,6 +3,7 @@ import type { ActionPolicyService } from "../core/action-policy.ts";
 import type { ProviderHttpDispatchOptions } from "../core/provider-http-dispatch.ts";
 import type { ProviderNetworkPolicy } from "../core/provider-network-policy.ts";
 import type { RuntimeLogger, TransitFileUpload } from "../core/types.ts";
+import type { McpOAuthClientMetadata } from "../custom-mcp/definition.ts";
 import type { IProviderLoader } from "../providers/provider-loader.ts";
 import type { RuntimeJwtVerifier } from "./api/runtime-jwt.ts";
 import type { ITransitFileService } from "./files/transit-file-store.ts";
@@ -72,6 +73,8 @@ export interface ConnectAppOptions {
   mcpOutputMode?: McpOutputMode;
   oauthCloseDelaySeconds?: number;
   oauthResultOrigins?: string[];
+  /** Name and links Connect sends when it registers its own OAuth client with a custom MCP server. */
+  customMcpOAuthClient?: McpOAuthClientMetadata;
 }
 
 export interface ConnectApp {
@@ -149,6 +152,7 @@ export async function createConnectApp(options: ConnectAppOptions): Promise<Conn
     catalog,
     store: options.runtimeDatabase.customMcpStore,
     oauthClientConfigs,
+    oauthClientMetadata: options.customMcpOAuthClient,
     logger: options.logger,
   });
   const connections = new ConnectionService({
