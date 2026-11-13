@@ -72,6 +72,7 @@ const oddsApiIoActionHandlers: ProviderActionHandlers<"odds_api_io", Handler> = 
       await oddsApiIoRequest("/odds", context, {
         eventId: requiredInputNumber(input.eventId, "eventId"),
         bookmakers: commaList(input.bookmakers, "bookmakers"),
+        markets: optionalStringArray(input.markets)?.join(","),
       }),
       "Odds-API.io get_odds",
     );
@@ -82,6 +83,7 @@ const oddsApiIoActionHandlers: ProviderActionHandlers<"odds_api_io", Handler> = 
         await oddsApiIoRequest("/odds/multi", context, {
           eventIds: commaList(input.eventIds, "eventIds"),
           bookmakers: commaList(input.bookmakers, "bookmakers"),
+          markets: optionalStringArray(input.markets)?.join(","),
         }),
         "Odds-API.io get_multi_odds",
       ),

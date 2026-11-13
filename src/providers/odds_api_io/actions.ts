@@ -7,6 +7,10 @@ const service = "odds_api_io";
 
 const sportSlugField = s.nonEmptyString('Sport slug from list_sports (e.g., "football" or "basketball").');
 const eventIdField = s.positiveInteger("Odds-API.io event ID, as returned by list_events.");
+const marketsField = s.stringArray(
+  'Market names to keep, matched case-insensitively (e.g., "ML", "Spread" or "Totals"). Up to 40 names. Omit to return every market.',
+  { minItems: 1, maxItems: 40 },
+);
 const eventStatuses = ["pending", "live", "settled", "cancelled"];
 const bookmakersField = s.stringArray('Bookmaker names from list_bookmakers (e.g., "Bet365"). Up to 30 names.', {
   minItems: 1,
@@ -175,7 +179,7 @@ export const oddsApiIoActions: ProviderActionDefinition[] = [
     description:
       "Get pre-match or live odds for one event from the chosen bookmakers, grouped by bookmaker and market.",
     inputSchema: s.actionInput(
-      { eventId: eventIdField, bookmakers: bookmakersField },
+      { eventId: eventIdField, bookmakers: bookmakersField, markets: marketsField },
       ["eventId", "bookmakers"],
       "Input for Get Odds.",
     ),
@@ -189,6 +193,7 @@ export const oddsApiIoActions: ProviderActionDefinition[] = [
       {
         eventIds: s.array("Event IDs from list_events. Up to 10 IDs.", eventIdField, { minItems: 1, maxItems: 10 }),
         bookmakers: bookmakersField,
+        markets: marketsField,
       },
       ["eventIds", "bookmakers"],
       "Input for Get Multi Odds.",

@@ -74,7 +74,7 @@ describe("Odds-API.io actions", () => {
     const requests = stubFetch([{ id: 1, bookmakers: {} }]);
 
     const result = await executors["odds_api_io.get_multi_odds"]!(
-      { eventIds: [1, 2], bookmakers: ["Bet365", "Unibet"] },
+      { eventIds: [1, 2], bookmakers: ["Bet365", "Unibet"], markets: ["ML", "Totals HT"] },
       context,
     );
 
@@ -83,7 +83,17 @@ describe("Odds-API.io actions", () => {
     expect(url.pathname).toBe("/v3/odds/multi");
     expect(url.searchParams.get("eventIds")).toBe("1,2");
     expect(url.searchParams.get("bookmakers")).toBe("Bet365,Unibet");
+    expect(url.searchParams.get("markets")).toBe("ML,Totals HT");
     expect(url.searchParams.get("apiKey")).toBe(apiKey);
+  });
+
+  it("omits the markets filter when none is given", async () => {
+    const requests = stubFetch({ id: 7, bookmakers: {} });
+
+    const result = await executors["odds_api_io.get_odds"]!({ eventId: 7, bookmakers: ["Bet365"] }, context);
+
+    expect(result).toMatchObject({ ok: true, output: { id: 7 } });
+    expect(Object.fromEntries(requests[0]!.searchParams)).toEqual({ apiKey, eventId: "7", bookmakers: "Bet365" });
   });
 
   it("reads one event by ID from the path", async () => {
