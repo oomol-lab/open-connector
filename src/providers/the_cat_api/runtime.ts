@@ -1,5 +1,5 @@
-import type { ProviderActionHandlers } from "../provider-executors.ts";
-import type { ApiKeyProviderContext } from "../provider-executors.ts";
+import type { ProviderActionHandlers, ApiKeyProviderContext } from "../provider-executors.ts";
+import type { ProviderRequestContext } from "../provider-runtime.ts";
 
 import {
   compactObject,
@@ -22,11 +22,10 @@ export const theCatApiBaseUrl = "https://api.thecatapi.com/v1/";
 const theCatApiValidationPath = "/breeds";
 
 type TheCatApiRequestPhase = "validate" | "execute";
-type TheCatApiContext = Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
 
 export const theCatApiActionHandlers: ProviderActionHandlers<
   "the_cat_api",
-  (input: Record<string, unknown>, context: TheCatApiContext) => Promise<unknown>
+  (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>
 > = {
   search_images(input, context) {
     return executeSearchImages(input, context);
@@ -45,7 +44,7 @@ export const theCatApiActionHandlers: ProviderActionHandlers<
   },
 };
 
-export async function validateTheCatApiCredential(context: TheCatApiContext): Promise<{
+export async function validateTheCatApiCredential(context: ApiKeyProviderContext): Promise<{
   profile: { accountId: string; displayName: string };
   metadata: Record<string, unknown>;
 }> {
@@ -73,7 +72,7 @@ export async function validateTheCatApiCredential(context: TheCatApiContext): Pr
   };
 }
 
-async function executeSearchImages(input: Record<string, unknown>, context: TheCatApiContext) {
+async function executeSearchImages(input: Record<string, unknown>, context: ApiKeyProviderContext) {
   const payload = await requestTheCatApiJson({
     path: "/images/search",
     apiKey: context.apiKey,
@@ -85,7 +84,7 @@ async function executeSearchImages(input: Record<string, unknown>, context: TheC
   return { images: images.map(normalizeImage).filter((image) => image !== null) };
 }
 
-async function executeGetImage(input: Record<string, unknown>, context: TheCatApiContext) {
+async function executeGetImage(input: Record<string, unknown>, context: ApiKeyProviderContext) {
   const payload = await requestTheCatApiJson({
     path: `/images/${encodeURIComponent(readRequiredString(input.imageId, "imageId"))}`,
     apiKey: context.apiKey,
@@ -96,7 +95,7 @@ async function executeGetImage(input: Record<string, unknown>, context: TheCatAp
   return { image: requireNormalizedImage(payload) };
 }
 
-async function executeListBreeds(input: Record<string, unknown>, context: TheCatApiContext) {
+async function executeListBreeds(input: Record<string, unknown>, context: ApiKeyProviderContext) {
   const payload = await requestTheCatApiJson({
     path: "/breeds",
     apiKey: context.apiKey,
@@ -108,7 +107,7 @@ async function executeListBreeds(input: Record<string, unknown>, context: TheCat
   return { breeds: breeds.map(normalizeBreed).filter((breed) => breed !== null) };
 }
 
-async function executeSearchBreeds(input: Record<string, unknown>, context: TheCatApiContext) {
+async function executeSearchBreeds(input: Record<string, unknown>, context: ApiKeyProviderContext) {
   const payload = await requestTheCatApiJson({
     path: "/breeds/search",
     apiKey: context.apiKey,
@@ -122,7 +121,7 @@ async function executeSearchBreeds(input: Record<string, unknown>, context: TheC
   return { breeds: breeds.map(normalizeBreed).filter((breed) => breed !== null) };
 }
 
-async function executeGetBreed(input: Record<string, unknown>, context: TheCatApiContext) {
+async function executeGetBreed(input: Record<string, unknown>, context: ApiKeyProviderContext) {
   const payload = await requestTheCatApiJson({
     path: `/breeds/${encodeURIComponent(readRequiredString(input.breedId, "breedId"))}`,
     apiKey: context.apiKey,
@@ -160,7 +159,7 @@ async function requestTheCatApiJson(input: {
   path: string;
   apiKey: string;
   query: Record<string, string | undefined>;
-  context: Pick<ApiKeyProviderContext, "fetcher" | "signal">;
+  context: ProviderRequestContext;
   phase: TheCatApiRequestPhase;
 }) {
   const timeout = createProviderTimeout(input.context.signal);

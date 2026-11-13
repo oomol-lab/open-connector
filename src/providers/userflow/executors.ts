@@ -1,6 +1,5 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-executors.ts";
-import type { ApiKeyProviderContext } from "../provider-executors.ts";
+import type { ProviderActionHandlers, ApiKeyProviderContext } from "../provider-executors.ts";
 
 import { compactObject, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import { defineApiKeyProviderExecutors } from "../provider-executors.ts";
@@ -103,7 +102,7 @@ function appendExpand(url: URL, expand: unknown): void {
 }
 
 async function deleteUserflowObject(
-  context: Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">,
+  context: ApiKeyProviderContext,
   resource: "users" | "groups",
   idField: "user_id" | "group_id",
   id: string,
@@ -113,7 +112,7 @@ async function deleteUserflowObject(
 }
 
 async function requestUserflow(
-  context: Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">,
+  context: ApiKeyProviderContext,
   pathOrUrl: string | URL,
   input: { method?: "GET" | "POST" | "DELETE"; body?: Record<string, unknown> } = {},
   mode: "validate" | "execute" = "execute",

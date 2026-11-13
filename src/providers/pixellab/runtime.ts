@@ -1,6 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
-import type { ProviderActionHandlerSubset } from "../provider-executors.ts";
-import type { ApiKeyProviderContext } from "../provider-executors.ts";
+import type { ProviderActionHandlerSubset, ApiKeyProviderContext } from "../provider-executors.ts";
 import type { ProviderTransitFile } from "../provider-files.ts";
 import type { ProviderFetch } from "../provider-runtime.ts";
 
@@ -143,7 +142,7 @@ export async function pixellabRequestJson(
   method: "DELETE" | "GET" | "PATCH" | "POST",
   path: string,
   body: Record<string, unknown> | undefined,
-  context: Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">,
+  context: ApiKeyProviderContext,
 ): Promise<unknown> {
   let response: Response;
   let payload: unknown;

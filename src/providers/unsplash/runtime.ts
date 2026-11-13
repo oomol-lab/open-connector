@@ -1,6 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-executors.ts";
-import type { ApiKeyProviderContext } from "../provider-executors.ts";
+import type { ProviderActionHandlers, ApiKeyProviderContext } from "../provider-executors.ts";
 
 import { compactObject, optionalInteger, optionalNumber, optionalRecord, optionalString } from "../../core/cast.ts";
 import { ProviderRequestError, providerUserAgent, runProviderRequest } from "../provider-runtime.ts";
@@ -163,7 +162,7 @@ export async function validateUnsplashCredential(
 }
 
 async function requestUnsplashJson(input: {
-  context: Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
+  context: ApiKeyProviderContext;
   path: string;
   query?: Record<string, string | number | undefined>;
   phase: "validate" | "execute";

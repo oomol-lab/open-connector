@@ -1,6 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-executors.ts";
-import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-executors.ts";
+import type { ProviderActionHandlers, ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-executors.ts";
 
 import {
   compactObject,
@@ -367,7 +366,7 @@ async function deleteUtterances(input: Record<string, unknown>, context: ApiKeyP
 }
 
 async function witAiRequest<T>(
-  context: Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">,
+  context: ApiKeyProviderContext,
   input: WitAiRequestInput,
   phase: WitAiRequestPhase = "execute",
 ): Promise<T> {

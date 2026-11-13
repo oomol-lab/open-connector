@@ -1,6 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-executors.ts";
-import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-executors.ts";
+import type { ProviderActionHandlers, ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-executors.ts";
 import type { ProviderFetch } from "../provider-runtime.ts";
 
 import { optionalNumber, optionalRecord, optionalString } from "../../core/cast.ts";
@@ -204,15 +203,12 @@ export async function validateToriiCredential(
 
 async function requestToriiObject(
   options: ToriiRequestOptions,
-  context: Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">,
+  context: ApiKeyProviderContext,
 ): Promise<Record<string, unknown>> {
   return requireProviderObject(await requestToriiJson(options, context), "Torii response");
 }
 
-async function requestToriiJson(
-  options: ToriiRequestOptions,
-  context: Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">,
-): Promise<unknown> {
+async function requestToriiJson(options: ToriiRequestOptions, context: ApiKeyProviderContext): Promise<unknown> {
   return runProviderRequest({ signal: context.signal, label: "Torii" }, async (signal) => {
     const headers: Record<string, string> = {
       accept: "application/json",

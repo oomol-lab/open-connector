@@ -4,8 +4,8 @@ import type {
   ProviderExecutors,
   ProviderProxyExecutor,
 } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-executors.ts";
-import type { ApiKeyProviderContext } from "../provider-executors.ts";
+import type { ProviderActionHandlers, ApiKeyProviderContext } from "../provider-executors.ts";
+import type { ProviderRequestContext } from "../provider-runtime.ts";
 
 import {
   compactObject,
@@ -151,7 +151,7 @@ async function getTeltelAccountBalance(context: ApiKeyProviderContext): Promise<
 async function teltelRequest<T>(input: {
   path: string;
   apiKey: string;
-  context: Pick<ApiKeyProviderContext, "fetcher" | "signal">;
+  context: ProviderRequestContext;
   phase: TeltelRequestPhase;
   method?: "GET" | "POST";
   query?: Record<string, string | number | undefined>;

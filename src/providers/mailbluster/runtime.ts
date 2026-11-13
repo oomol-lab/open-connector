@@ -1,6 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-executors.ts";
-import type { ApiKeyProviderContext } from "../provider-executors.ts";
+import type { ProviderActionHandlers, ApiKeyProviderContext } from "../provider-executors.ts";
 
 import { compactObject, optionalBoolean, optionalRecord, optionalString, stringArray } from "../../core/cast.ts";
 import {
@@ -116,7 +115,7 @@ function updateLeadBody(input: Record<string, unknown>): Record<string, unknown>
 }
 
 async function requestMailblusterJson(input: {
-  context: Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
+  context: ApiKeyProviderContext;
   method: "GET" | "POST" | "PUT" | "DELETE";
   path: string;
   body?: Record<string, unknown>;

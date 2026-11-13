@@ -1,6 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-executors.ts";
-import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-executors.ts";
+import type { ProviderActionHandlers, ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-executors.ts";
 import type { ProviderFetch } from "../provider-runtime.ts";
 
 import { compactObject, optionalRecord, optionalString } from "../../core/cast.ts";
@@ -8,7 +7,6 @@ import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts"
 
 export const exaApiBaseUrl = "https://api.exa.ai";
 
-type ExaContext = Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
 type ExaActionHandler = ProviderRuntimeHandler<ApiKeyProviderContext>;
 
 interface ExaRequestInput {
@@ -70,7 +68,7 @@ export async function validateExaApiKey(
   };
 }
 
-async function exaRequest(input: ExaRequestInput, context: ExaContext): Promise<unknown> {
+async function exaRequest(input: ExaRequestInput, context: ApiKeyProviderContext): Promise<unknown> {
   const response = await exaRawRequest(input, context);
   if (!response.ok) {
     throw await buildExaError(response, input.mode ?? "execute");
@@ -87,7 +85,7 @@ async function exaRequest(input: ExaRequestInput, context: ExaContext): Promise<
   }
 }
 
-async function exaRawRequest(input: ExaRequestInput, context: ExaContext): Promise<Response> {
+async function exaRawRequest(input: ExaRequestInput, context: ApiKeyProviderContext): Promise<Response> {
   try {
     return await context.fetcher(new URL(input.path, exaApiBaseUrl), {
       method: input.method ?? "POST",

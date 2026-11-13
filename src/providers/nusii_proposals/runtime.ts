@@ -1,6 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-executors.ts";
-import type { ApiKeyProviderContext } from "../provider-executors.ts";
+import type { ProviderActionHandlers, ApiKeyProviderContext } from "../provider-executors.ts";
 
 import { compactObject, optionalRecord, optionalString } from "../../core/cast.ts";
 import {
@@ -17,8 +16,7 @@ export const nusiiProposalsApiBaseUrl = "https://app.nusii.com/api/v2/";
 
 type NusiiProposalsRequestPhase = "validate" | "execute";
 type NusiiProposalsMethod = "GET" | "POST" | "PUT";
-type NusiiProposalsContext = Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
-type NusiiProposalsActionHandler = (input: Record<string, unknown>, context: NusiiProposalsContext) => Promise<unknown>;
+type NusiiProposalsActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
 const clientWriteFields = [
   "email",

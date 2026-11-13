@@ -1,6 +1,5 @@
 import type { CredentialValidationResult, ExecutionResult } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-executors.ts";
-import type { ApiKeyProviderContext } from "../provider-executors.ts";
+import type { ProviderActionHandlers, ApiKeyProviderContext } from "../provider-executors.ts";
 
 import { compactObject, optionalInteger, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import { providerUserAgent, ProviderRequestError, toProviderExecutionError } from "../provider-runtime.ts";
@@ -18,7 +17,7 @@ type RoamScimActionHandler = (input: Record<string, unknown>, context: ApiKeyPro
 
 interface RoamScimRequestInput {
   path: string;
-  context: Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
+  context: ApiKeyProviderContext;
   phase: RoamScimRequestPhase;
   authenticated?: boolean;
   method?: string;
@@ -219,9 +218,7 @@ export const roamScimActionHandlers: ProviderActionHandlers<"roam_scim", RoamSci
   },
 };
 
-export async function validateRoamScimCredential(
-  input: Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">,
-): Promise<CredentialValidationResult> {
+export async function validateRoamScimCredential(input: ApiKeyProviderContext): Promise<CredentialValidationResult> {
   const payload = await requestRoamScimJson({
     path: "/Users",
     context: input,

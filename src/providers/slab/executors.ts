@@ -1,6 +1,5 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-executors.ts";
-import type { ApiKeyProviderContext } from "../provider-executors.ts";
+import type { ProviderActionHandlers, ApiKeyProviderContext } from "../provider-executors.ts";
 
 import {
   compactObject,
@@ -602,7 +601,7 @@ export const credentialValidators: CredentialValidators = {
 
 async function requestSlabData(
   request: SlabGraphqlRequest,
-  context: Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">,
+  context: ApiKeyProviderContext,
   phase: "execute" | "validate" = "execute",
 ): Promise<Record<string, unknown>> {
   let response: Response;

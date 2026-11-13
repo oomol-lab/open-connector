@@ -1,5 +1,4 @@
-import type { ProviderActionHandlers } from "../provider-executors.ts";
-import type { ApiKeyProviderContext } from "../provider-executors.ts";
+import type { ProviderActionHandlers, ApiKeyProviderContext } from "../provider-executors.ts";
 
 import { compactObject, optionalString } from "../../core/cast.ts";
 import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
@@ -169,7 +168,7 @@ interface CurrencyscoopRequestInput {
 
 async function currencyscoopRequest(
   input: CurrencyscoopRequestInput,
-  context: Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">,
+  context: ApiKeyProviderContext,
 ): Promise<{ meta: Record<string, unknown>; response: unknown }> {
   let response: Response;
   let payload: unknown;

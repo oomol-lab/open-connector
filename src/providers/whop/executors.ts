@@ -1,6 +1,5 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-executors.ts";
-import type { ApiKeyProviderContext } from "../provider-executors.ts";
+import type { ProviderActionHandlers, ApiKeyProviderContext } from "../provider-executors.ts";
 
 import { compactObject, optionalBoolean, optionalNumber, optionalRawString, optionalRecord } from "../../core/cast.ts";
 import { defineApiKeyProviderExecutors } from "../provider-executors.ts";
@@ -16,8 +15,7 @@ const whopValidationPath = "/companies";
 
 type WhopQueryValue = boolean | number | readonly string[] | string | undefined;
 type WhopRequestMode = "validate" | "execute";
-type WhopActionContext = Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
-type WhopActionHandler = (input: Record<string, unknown>, context: WhopActionContext) => Promise<unknown>;
+type WhopActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
 interface WhopRequestOptions {
   apiKey: string;

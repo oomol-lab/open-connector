@@ -1,6 +1,5 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-executors.ts";
-import type { ApiKeyProviderContext } from "../provider-executors.ts";
+import type { ProviderActionHandlers, ApiKeyProviderContext } from "../provider-executors.ts";
 
 import { compactObject, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
 import { defineApiKeyProviderExecutors } from "../provider-executors.ts";
@@ -14,8 +13,7 @@ const imgbbValidationProbeImageBase64 =
   "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+/p9sAAAAASUVORK5CYII=";
 
 type ImgbbRequestPhase = "validate" | "execute";
-type ImgbbActionContext = Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
-type ImgbbActionHandler = (input: Record<string, unknown>, context: ImgbbActionContext) => Promise<unknown>;
+type ImgbbActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
 interface ImgbbHostedVariant {
   filename: string;
@@ -77,7 +75,7 @@ export const credentialValidators: CredentialValidators = {
 
 async function requestImgbbUpload(
   body: FormData,
-  context: ImgbbActionContext,
+  context: ApiKeyProviderContext,
   phase: ImgbbRequestPhase,
 ): Promise<unknown> {
   const url = new URL(imgbbUploadPath, imgbbApiBaseUrl);

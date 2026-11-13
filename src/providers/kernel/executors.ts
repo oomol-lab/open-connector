@@ -1,6 +1,6 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-executors.ts";
-import type { ApiKeyProviderContext } from "../provider-executors.ts";
+import type { ProviderActionHandlers, ApiKeyProviderContext } from "../provider-executors.ts";
+import type { ProviderRequestContext } from "../provider-runtime.ts";
 
 import { optionalRecord, optionalString } from "../../core/cast.ts";
 import { defineApiKeyProviderExecutors } from "../provider-executors.ts";
@@ -19,7 +19,7 @@ interface KernelRequestInput {
   apiKey: string;
   query?: Record<string, unknown>;
   body?: Record<string, unknown>;
-  context: Pick<ApiKeyProviderContext, "fetcher" | "signal">;
+  context: ProviderRequestContext;
   phase: KernelRequestPhase;
 }
 

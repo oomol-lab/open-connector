@@ -1,6 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-executors.ts";
-import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-executors.ts";
+import type { ProviderActionHandlers, ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-executors.ts";
 import type { ProviderFetch } from "../provider-runtime.ts";
 
 import { compactObject, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
@@ -109,7 +108,7 @@ export async function validateBenchmarkEmailCredential(
 }
 
 async function requestBenchmarkEmailJson(input: {
-  context: Pick<BenchmarkEmailContext, "apiKey" | "baseUrl" | "fetcher" | "signal">;
+  context: BenchmarkEmailContext;
   phase: BenchmarkEmailRequestPhase;
   query?: Record<string, string | undefined>;
 }): Promise<unknown> {

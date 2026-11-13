@@ -5,8 +5,7 @@ import type {
   ProviderExecutors,
   ProviderProxyExecutor,
 } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-executors.ts";
-import type { ProviderRuntimeHandler } from "../provider-executors.ts";
+import type { ProviderActionHandlers, ProviderRuntimeHandler } from "../provider-executors.ts";
 
 import { Buffer } from "node:buffer";
 import { optionalInteger, optionalRecord, optionalString, recordOrEmpty, requiredString } from "../../core/cast.ts";
@@ -233,7 +232,7 @@ function buildBamboohrApiBaseUrl(companyDomain: string): string {
 }
 
 async function requestBamboohrJson(input: {
-  context: Pick<BamboohrContext, "authorization" | "companyDomain" | "fetcher" | "signal">;
+  context: BamboohrContext;
   path: string;
   query?: Record<string, string | number | boolean | undefined>;
 }): Promise<unknown> {

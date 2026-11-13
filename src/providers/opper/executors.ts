@@ -21,7 +21,6 @@ const anthropicApiVersion = "2023-06-01";
 const inferenceTimeoutMs = 300_000;
 
 type ActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
-type RequestContext = Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
 
 interface OpperRequest {
   path: "/models" | "/chat/completions" | "/v1/messages";
@@ -72,7 +71,7 @@ export const credentialValidators: CredentialValidators = {
   },
 };
 
-function requestOpper(input: OpperRequest, context: RequestContext): Promise<Record<string, unknown>> {
+function requestOpper(input: OpperRequest, context: ApiKeyProviderContext): Promise<Record<string, unknown>> {
   const headers = new Headers({
     authorization: `Bearer ${context.apiKey}`,
     "content-type": "application/json",

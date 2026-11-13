@@ -1,7 +1,6 @@
 import type { QueryValue } from "../../core/request.ts";
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-executors.ts";
-import type { ApiKeyProviderContext } from "../provider-executors.ts";
+import type { ProviderActionHandlers, ApiKeyProviderContext } from "../provider-executors.ts";
 
 import { Buffer } from "node:buffer";
 import {
@@ -37,7 +36,7 @@ type OpenweatherActionHandler = (input: Record<string, unknown>, context: ApiKey
 
 interface OpenweatherJsonRequestInput {
   path: string;
-  context: Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
+  context: ApiKeyProviderContext;
   phase: OpenweatherPhase;
   method?: string;
   query?: Record<string, QueryValue>;
@@ -47,7 +46,7 @@ interface OpenweatherJsonRequestInput {
 interface OpenweatherBinaryRequestInput {
   baseUrl: string;
   path: string;
-  context: Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
+  context: ApiKeyProviderContext;
   phase: OpenweatherPhase;
   query?: Record<string, QueryValue>;
 }

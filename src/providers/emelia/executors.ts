@@ -1,6 +1,5 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-executors.ts";
-import type { ApiKeyProviderContext } from "../provider-executors.ts";
+import type { ProviderActionHandlers, ApiKeyProviderContext } from "../provider-executors.ts";
 
 import { compactObject, optionalRecord, optionalString } from "../../core/cast.ts";
 import { defineApiKeyProviderExecutors } from "../provider-executors.ts";
@@ -127,7 +126,7 @@ async function requestEmeliaContacts(
 async function requestEmeliaJson(
   path: string,
   input: { method: string; query: URLSearchParams },
-  context: Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">,
+  context: ApiKeyProviderContext,
   phase: EmeliaRequestPhase,
 ): Promise<unknown> {
   const url = new URL(path, emeliaApiBaseUrl);

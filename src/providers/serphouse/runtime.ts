@@ -1,13 +1,11 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-executors.ts";
-import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-executors.ts";
+import type { ProviderActionHandlers, ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-executors.ts";
 
 import { compactObject, optionalRecord, optionalString, requiredRecord, stringArray } from "../../core/cast.ts";
 import { providerResponseError, providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
 
 type SerphousePhase = "validate" | "execute";
 type SerphouseQueryValue = string | number | undefined;
-type SerphouseActionContext = Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
 type SerphouseActionHandler = ProviderRuntimeHandler<ApiKeyProviderContext>;
 
 export const serphouseBaseUrl = "https://api.serphouse.com";
@@ -160,7 +158,7 @@ async function requestSerphouseJson(input: {
   method: "GET" | "POST";
   query?: Record<string, SerphouseQueryValue>;
   body?: Record<string, unknown>;
-  context: SerphouseActionContext;
+  context: ApiKeyProviderContext;
   phase: SerphousePhase;
 }): Promise<unknown> {
   let response: Response;

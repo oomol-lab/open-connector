@@ -1,6 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-executors.ts";
-import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-executors.ts";
+import type { ProviderActionHandlers, ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-executors.ts";
 
 import { looseArray, optionalRecord, optionalString, rawStringOrNull } from "../../core/cast.ts";
 import {
@@ -109,7 +108,7 @@ export async function validateStatistaCredential(
 
 async function requestStatistaJson(
   options: StatistaRequestOptions,
-  context: Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">,
+  context: ApiKeyProviderContext,
 ): Promise<Record<string, unknown>> {
   const url = new URL(options.path, statistaApiBaseUrl);
   for (const [key, value] of Object.entries(options.query ?? {})) {

@@ -1,6 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-executors.ts";
-import type { ApiKeyProviderContext } from "../provider-executors.ts";
+import type { ProviderActionHandlers, ApiKeyProviderContext } from "../provider-executors.ts";
 import type { ProviderFetch } from "../provider-runtime.ts";
 
 import { Buffer } from "node:buffer";
@@ -17,8 +16,7 @@ export const bugHerdApiBaseUrl = "https://www.bugherd.com";
 
 type BugHerdPhase = "validate" | "execute";
 type BugHerdQuery = Record<string, string | number | boolean | undefined>;
-type BugHerdActionContext = Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
-type BugHerdActionHandler = (input: Record<string, unknown>, context: BugHerdActionContext) => Promise<unknown>;
+type BugHerdActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
 export const bugHerdActionHandlers: ProviderActionHandlers<"bug_herd", BugHerdActionHandler> = {
   show_organization(_input, context) {

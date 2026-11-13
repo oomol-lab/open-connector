@@ -1,6 +1,5 @@
 import type { CredentialValidationResult, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-executors.ts";
-import type { ApiKeyProviderContext } from "../provider-executors.ts";
+import type { ProviderActionHandlers, ApiKeyProviderContext } from "../provider-executors.ts";
 
 import { createHash } from "node:crypto";
 import { optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
@@ -104,7 +103,7 @@ export const credentialValidators = {
 async function requestRealPhoneValidation(input: {
   path: string;
   phone: string;
-  context: Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
+  context: ApiKeyProviderContext;
   mode: "validate" | "execute";
   includeEnrichment: boolean;
 }): Promise<RealPhoneValidationResponse> {

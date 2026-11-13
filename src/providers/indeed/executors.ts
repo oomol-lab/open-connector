@@ -152,9 +152,7 @@ async function requestGraphQl(input: GraphQlRequest, context: OAuthProviderConte
   return readProviderJson<Record<string, unknown>>(response, "Indeed GraphQL");
 }
 
-async function requestUserInfo(
-  context: Pick<OAuthProviderContext, "accessToken" | "fetcher" | "signal">,
-): Promise<Record<string, unknown>> {
+async function requestUserInfo(context: OAuthProviderContext): Promise<Record<string, unknown>> {
   const response = await context.fetcher(userInfoUrl, {
     headers: { authorization: `Bearer ${context.accessToken}` },
     signal: context.signal,

@@ -5,8 +5,7 @@ import type {
   ProviderExecutors,
   ProviderProxyExecutor,
 } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-executors.ts";
-import type { ApiKeyProviderContext } from "../provider-executors.ts";
+import type { ProviderActionHandlers, ApiKeyProviderContext } from "../provider-executors.ts";
 
 import { compactObject, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import { compactJson, queryParams } from "../../core/request.ts";
@@ -234,7 +233,7 @@ function getJson(
 
 async function requestJson(
   path: string,
-  context: Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">,
+  context: ApiKeyProviderContext,
   options: { method?: "GET" | "POST" | "PUT" | "DELETE"; query?: Record<string, unknown>; body?: unknown } = {},
 ): Promise<unknown> {
   const url = new URL(`${apiBaseUrl}${path}`);

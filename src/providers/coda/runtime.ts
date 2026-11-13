@@ -1,6 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-executors.ts";
-import type { ApiKeyProviderContext } from "../provider-executors.ts";
+import type { ProviderActionHandlers, ApiKeyProviderContext } from "../provider-executors.ts";
 
 import {
   compactObject,
@@ -29,7 +28,6 @@ interface CodaCredentialInput {
 
 type CodaRequestMode = "validate" | "execute";
 type CodaQueryValue = string | number | boolean | string[] | undefined;
-type CodaRuntimeContext = Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
 type CodaActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
 export const codaActionHandlers: ProviderActionHandlers<"coda", CodaActionHandler> = {
@@ -224,7 +222,7 @@ export async function validateCodaApiKey(
   input: CodaCredentialInput,
   options: { fetcher: typeof fetch; signal?: AbortSignal },
 ): Promise<CredentialValidationResult> {
-  const context: CodaRuntimeContext = {
+  const context: ApiKeyProviderContext = {
     apiKey: input.apiKey,
     fetcher: options.fetcher,
     signal: options.signal,
@@ -261,7 +259,7 @@ export async function validateCodaApiKey(
 }
 
 async function requestCodaList(input: {
-  context: CodaRuntimeContext;
+  context: ApiKeyProviderContext;
   path: string;
   query?: Record<string, CodaQueryValue>;
   mode: CodaRequestMode;
@@ -283,7 +281,7 @@ async function requestCodaList(input: {
 }
 
 async function requestCodaObject(input: {
-  context: CodaRuntimeContext;
+  context: ApiKeyProviderContext;
   path: string;
   method?: "GET" | "POST";
   query?: Record<string, CodaQueryValue>;
@@ -296,7 +294,7 @@ async function requestCodaObject(input: {
 }
 
 async function requestCodaJson(input: {
-  context: CodaRuntimeContext;
+  context: ApiKeyProviderContext;
   path: string;
   method?: "GET" | "POST";
   query?: Record<string, CodaQueryValue>;

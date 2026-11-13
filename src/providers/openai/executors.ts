@@ -1,6 +1,6 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-executors.ts";
-import type { ApiKeyProviderContext } from "../provider-executors.ts";
+import type { ProviderActionHandlers, ApiKeyProviderContext } from "../provider-executors.ts";
+import type { ProviderRequestContext } from "../provider-runtime.ts";
 
 import { Buffer } from "node:buffer";
 import { compactObject, optionalRecord, optionalString } from "../../core/cast.ts";
@@ -21,8 +21,6 @@ interface UploadSource {
   mimeType: string;
 }
 
-type OpenAiActionContext = ApiKeyProviderContext;
-
 interface OpenAiRequestInput {
   method?: "GET" | "POST";
   path: string;
@@ -31,7 +29,7 @@ interface OpenAiRequestInput {
   mode?: "validate" | "execute";
 }
 
-type OpenAiActionHandler = (input: Record<string, unknown>, context: OpenAiActionContext) => Promise<unknown>;
+type OpenAiActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
 const service = "openai";
 const openaiApiBaseUrl = "https://api.openai.com/v1";
@@ -124,7 +122,7 @@ export const credentialValidators: CredentialValidators = {
   },
 };
 
-async function openaiListModels(context: OpenAiActionContext) {
+async function openaiListModels(context: ApiKeyProviderContext) {
   return openaiJsonRequest(
     context.apiKey,
     {
@@ -134,7 +132,7 @@ async function openaiListModels(context: OpenAiActionContext) {
   );
 }
 
-async function openaiGetModel(input: Record<string, unknown>, context: OpenAiActionContext) {
+async function openaiGetModel(input: Record<string, unknown>, context: ApiKeyProviderContext) {
   return openaiJsonRequest(
     context.apiKey,
     {
@@ -144,7 +142,7 @@ async function openaiGetModel(input: Record<string, unknown>, context: OpenAiAct
   );
 }
 
-async function openaiCreateResponse(input: Record<string, unknown>, context: OpenAiActionContext) {
+async function openaiCreateResponse(input: Record<string, unknown>, context: ApiKeyProviderContext) {
   assertStreamingDisabled(input);
   return openaiJsonRequest(
     context.apiKey,
@@ -157,7 +155,7 @@ async function openaiCreateResponse(input: Record<string, unknown>, context: Ope
   );
 }
 
-async function openaiGetResponse(input: Record<string, unknown>, context: OpenAiActionContext) {
+async function openaiGetResponse(input: Record<string, unknown>, context: ApiKeyProviderContext) {
   return openaiJsonRequest(
     context.apiKey,
     {
@@ -169,7 +167,7 @@ async function openaiGetResponse(input: Record<string, unknown>, context: OpenAi
   );
 }
 
-async function openaiListInputItems(input: Record<string, unknown>, context: OpenAiActionContext) {
+async function openaiListInputItems(input: Record<string, unknown>, context: ApiKeyProviderContext) {
   return openaiJsonRequest(
     context.apiKey,
     {
@@ -187,7 +185,7 @@ async function openaiListInputItems(input: Record<string, unknown>, context: Ope
   );
 }
 
-async function openaiGetInputTokenCounts(input: Record<string, unknown>, context: OpenAiActionContext) {
+async function openaiGetInputTokenCounts(input: Record<string, unknown>, context: ApiKeyProviderContext) {
   return openaiJsonRequest(
     context.apiKey,
     {
@@ -199,7 +197,7 @@ async function openaiGetInputTokenCounts(input: Record<string, unknown>, context
   );
 }
 
-async function openaiCreateEmbeddings(input: Record<string, unknown>, context: OpenAiActionContext) {
+async function openaiCreateEmbeddings(input: Record<string, unknown>, context: ApiKeyProviderContext) {
   return openaiJsonRequest(
     context.apiKey,
     {
@@ -211,7 +209,7 @@ async function openaiCreateEmbeddings(input: Record<string, unknown>, context: O
   );
 }
 
-async function openaiCreateModeration(input: Record<string, unknown>, context: OpenAiActionContext) {
+async function openaiCreateModeration(input: Record<string, unknown>, context: ApiKeyProviderContext) {
   return openaiJsonRequest(
     context.apiKey,
     {
@@ -223,7 +221,7 @@ async function openaiCreateModeration(input: Record<string, unknown>, context: O
   );
 }
 
-async function openaiCreateImage(input: Record<string, unknown>, context: OpenAiActionContext) {
+async function openaiCreateImage(input: Record<string, unknown>, context: ApiKeyProviderContext) {
   assertStreamingDisabled(input);
   return openaiJsonRequest(
     context.apiKey,
@@ -236,7 +234,7 @@ async function openaiCreateImage(input: Record<string, unknown>, context: OpenAi
   );
 }
 
-async function openaiCreateSpeech(input: Record<string, unknown>, context: OpenAiActionContext) {
+async function openaiCreateSpeech(input: Record<string, unknown>, context: ApiKeyProviderContext) {
   assertSpeechStreamingDisabled(input);
   const response = await openaiRawRequest(
     context.apiKey,
@@ -262,7 +260,7 @@ async function openaiCreateSpeech(input: Record<string, unknown>, context: OpenA
   };
 }
 
-async function openaiCreateAudioTranscription(input: Record<string, unknown>, context: OpenAiActionContext) {
+async function openaiCreateAudioTranscription(input: Record<string, unknown>, context: ApiKeyProviderContext) {
   assertStreamingDisabled(input);
   const response = await openaiRawRequest(
     context.apiKey,
@@ -280,7 +278,7 @@ async function openaiCreateAudioTranscription(input: Record<string, unknown>, co
   return openaiReadJsonOrTextResponse(response);
 }
 
-async function openaiCreateAudioTranslation(input: Record<string, unknown>, context: OpenAiActionContext) {
+async function openaiCreateAudioTranslation(input: Record<string, unknown>, context: ApiKeyProviderContext) {
   const response = await openaiRawRequest(
     context.apiKey,
     {
@@ -294,7 +292,7 @@ async function openaiCreateAudioTranslation(input: Record<string, unknown>, cont
   return openaiReadJsonOrTextResponse(response);
 }
 
-async function openaiCreateBatch(input: Record<string, unknown>, context: OpenAiActionContext) {
+async function openaiCreateBatch(input: Record<string, unknown>, context: ApiKeyProviderContext) {
   return openaiJsonRequest(
     context.apiKey,
     {
@@ -306,7 +304,7 @@ async function openaiCreateBatch(input: Record<string, unknown>, context: OpenAi
   );
 }
 
-async function openaiGetBatch(input: Record<string, unknown>, context: OpenAiActionContext) {
+async function openaiGetBatch(input: Record<string, unknown>, context: ApiKeyProviderContext) {
   return openaiJsonRequest(
     context.apiKey,
     {
@@ -316,7 +314,7 @@ async function openaiGetBatch(input: Record<string, unknown>, context: OpenAiAct
   );
 }
 
-async function openaiCancelBatch(input: Record<string, unknown>, context: OpenAiActionContext) {
+async function openaiCancelBatch(input: Record<string, unknown>, context: ApiKeyProviderContext) {
   return openaiJsonRequest(
     context.apiKey,
     {
@@ -495,7 +493,7 @@ function appendQueryValue(url: URL, key: string, value: unknown): void {
 
 async function buildOpenAiAudioFormData(
   input: Record<string, unknown>,
-  context: Pick<OpenAiActionContext, "fetcher" | "signal">,
+  context: ProviderRequestContext,
   arrayFieldMap: Record<string, string> = {},
 ): Promise<FormData> {
   const source = await resolveAudioUploadSource(input, context);
@@ -521,7 +519,7 @@ async function buildOpenAiAudioFormData(
 
 async function resolveAudioUploadSource(
   input: Record<string, unknown>,
-  context: Pick<OpenAiActionContext, "fetcher" | "signal">,
+  context: ProviderRequestContext,
 ): Promise<UploadSource> {
   const nestedFile = optionalRecord(input.file);
   if (!nestedFile) {
@@ -566,10 +564,7 @@ async function resolveAudioUploadSource(
   };
 }
 
-async function fetchPublicAudioUrl(
-  url: string,
-  context: Pick<OpenAiActionContext, "fetcher" | "signal">,
-): Promise<Response> {
+async function fetchPublicAudioUrl(url: string, context: ProviderRequestContext): Promise<Response> {
   assertPublicAudioUrl(url);
   const timeout = createProviderTimeout(context.signal);
   let response: Response;

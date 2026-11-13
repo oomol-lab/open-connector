@@ -1,5 +1,4 @@
-import type { ProviderActionHandlers } from "../provider-executors.ts";
-import type { ApiKeyProviderContext } from "../provider-executors.ts";
+import type { ProviderActionHandlers, ApiKeyProviderContext } from "../provider-executors.ts";
 
 import { compactObject, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
 import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
@@ -16,8 +15,7 @@ const defaultAnalyzeExtractors = [
   "senses",
 ] as const;
 
-type TextrazorContext = Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
-type TextrazorActionHandler = (input: Record<string, unknown>, context: TextrazorContext) => Promise<unknown>;
+type TextrazorActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
 export const textrazorActionHandlers: ProviderActionHandlers<"textrazor", TextrazorActionHandler> = {
   account_info(_input, context) {
@@ -40,7 +38,7 @@ export const textrazorActionHandlers: ProviderActionHandlers<"textrazor", Textra
   },
 };
 
-export async function validateTextrazorApiKey(context: TextrazorContext): Promise<{
+export async function validateTextrazorApiKey(context: ApiKeyProviderContext): Promise<{
   profile: { accountId: string; displayName: string };
   metadata: Record<string, unknown>;
 }> {
@@ -63,7 +61,7 @@ export async function validateTextrazorApiKey(context: TextrazorContext): Promis
   };
 }
 
-async function textrazorAccountInfo(context: TextrazorContext, phase: "validate" | "execute" = "execute") {
+async function textrazorAccountInfo(context: ApiKeyProviderContext, phase: "validate" | "execute" = "execute") {
   const response = await context.fetcher(`${textrazorApiBaseUrl}/account/`, {
     method: "GET",
     headers: textrazorHeaders(context.apiKey),
@@ -74,7 +72,7 @@ async function textrazorAccountInfo(context: TextrazorContext, phase: "validate"
   return readTextrazorJson(response);
 }
 
-async function textrazorAnalyzeContent(input: Record<string, unknown>, context: TextrazorContext) {
+async function textrazorAnalyzeContent(input: Record<string, unknown>, context: ApiKeyProviderContext) {
   const response = await context.fetcher(`${textrazorApiBaseUrl}/`, {
     method: "POST",
     headers: textrazorFormHeaders(context.apiKey),
@@ -85,7 +83,7 @@ async function textrazorAnalyzeContent(input: Record<string, unknown>, context: 
   return readAnalysisResponse(response);
 }
 
-async function textrazorExtractEntities(input: Record<string, unknown>, context: TextrazorContext) {
+async function textrazorExtractEntities(input: Record<string, unknown>, context: ApiKeyProviderContext) {
   const response = await context.fetcher(`${textrazorApiBaseUrl}/`, {
     method: "POST",
     headers: textrazorFormHeaders(context.apiKey),
@@ -96,7 +94,7 @@ async function textrazorExtractEntities(input: Record<string, unknown>, context:
   return readAnalysisResponse(response);
 }
 
-async function textrazorClassifyText(input: Record<string, unknown>, context: TextrazorContext) {
+async function textrazorClassifyText(input: Record<string, unknown>, context: ApiKeyProviderContext) {
   const response = await context.fetcher(`${textrazorApiBaseUrl}/`, {
     method: "POST",
     headers: textrazorFormHeaders(context.apiKey),
@@ -107,7 +105,7 @@ async function textrazorClassifyText(input: Record<string, unknown>, context: Te
   return readAnalysisResponse(response);
 }
 
-async function textrazorCustomClassifierManager(input: Record<string, unknown>, context: TextrazorContext) {
+async function textrazorCustomClassifierManager(input: Record<string, unknown>, context: ApiKeyProviderContext) {
   const operation = String(input.operation);
   const classifierId = readRequiredInputString(input.classifier_id, "classifier_id");
 
@@ -173,7 +171,7 @@ async function textrazorCustomClassifierManager(input: Record<string, unknown>, 
   }
 }
 
-async function textrazorDictionaryManager(input: Record<string, unknown>, context: TextrazorContext) {
+async function textrazorDictionaryManager(input: Record<string, unknown>, context: ApiKeyProviderContext) {
   const operation = String(input.operation);
   const dictionaryId = optionalString(input.dictionary_id);
 

@@ -20,7 +20,7 @@ type AirfocusHandler = ProviderRuntimeHandler<ApiKeyProviderContext>;
 
 interface AirfocusRequestInput {
   path: string;
-  context: Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
+  context: ApiKeyProviderContext;
   phase: RequestPhase;
   method?: "GET" | "POST" | "PUT" | "DELETE";
   body?: Record<string, unknown>;

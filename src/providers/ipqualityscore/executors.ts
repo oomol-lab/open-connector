@@ -1,6 +1,5 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-executors.ts";
-import type { ApiKeyProviderContext } from "../provider-executors.ts";
+import type { ProviderActionHandlers, ApiKeyProviderContext } from "../provider-executors.ts";
 
 import { isIP } from "node:net";
 import { compactObject, optionalBoolean, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
@@ -21,11 +20,7 @@ const ipqualityscoreFetch = createProviderFetch({ skipDnsValidation: true });
 
 type IpqualityscoreRequestPhase = "validate" | "execute";
 type IpqualityscoreFamily = "email" | "ip" | "phone" | "url";
-type IpqualityscoreActionContext = Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
-type IpqualityscoreActionHandler = (
-  input: Record<string, unknown>,
-  context: IpqualityscoreActionContext,
-) => Promise<unknown>;
+type IpqualityscoreActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
 export const ipqualityscoreActionHandlers: ProviderActionHandlers<"ipqualityscore", IpqualityscoreActionHandler> = {
   check_ip_reputation(input, context) {
@@ -165,7 +160,7 @@ async function requestIpqualityscore(
     phase: IpqualityscoreRequestPhase;
     query?: Array<[string, string | undefined]>;
   },
-  context: IpqualityscoreActionContext,
+  context: ApiKeyProviderContext,
 ): Promise<Record<string, unknown>> {
   const url = buildIpqualityscoreUrl(context.apiKey, input.family, input.value, input.query);
 

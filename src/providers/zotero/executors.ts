@@ -186,7 +186,7 @@ interface RequestOptions {
 async function request(
   path: string,
   options: RequestOptions,
-  context: Pick<Context, "apiKey" | "fetcher" | "signal">,
+  context: ApiKeyProviderContext,
 ): Promise<{ response: Response; payload: unknown }> {
   const url = new URL(path, baseUrl);
   for (const [name, value] of Object.entries(options.query ?? {}))

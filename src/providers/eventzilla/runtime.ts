@@ -1,6 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-executors.ts";
-import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-executors.ts";
+import type { ProviderActionHandlers, ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-executors.ts";
 import type { ProviderFetch } from "../provider-runtime.ts";
 
 import { compactObject, optionalInteger, optionalNumber, optionalRecord, optionalString } from "../../core/cast.ts";
@@ -16,7 +15,6 @@ export const eventzillaApiBaseUrl = "https://www.eventzillaapi.net/api/v2";
 const eventzillaValidationPath = "/users";
 
 type EventzillaPhase = "validate" | "execute";
-type EventzillaContext = Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
 type EventzillaActionHandler = ProviderRuntimeHandler<ApiKeyProviderContext>;
 
 interface EventzillaRequestInput {
@@ -202,7 +200,7 @@ export async function validateEventzillaCredential(
 
 async function requestEventzillaJson(
   input: EventzillaRequestInput,
-  context: EventzillaContext,
+  context: ApiKeyProviderContext,
 ): Promise<Record<string, unknown>> {
   const timeout = createProviderTimeout(context.signal);
   try {

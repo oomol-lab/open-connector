@@ -4,8 +4,7 @@ import type {
   ProviderExecutors,
   ProviderProxyExecutor,
 } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-executors.ts";
-import type { ApiKeyProviderContext } from "../provider-executors.ts";
+import type { ProviderActionHandlers, ApiKeyProviderContext } from "../provider-executors.ts";
 
 import { Validator } from "@cfworker/json-schema";
 import { Buffer } from "node:buffer";
@@ -33,8 +32,6 @@ interface PassslotRequestInput {
   phase?: PassslotRequestPhase;
   allowEmpty?: boolean;
 }
-
-type PassslotRequestContext = Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
 
 const emptyPassslotResponse = Symbol("empty PassSlot response");
 
@@ -161,7 +158,7 @@ function requirePassslotIdentifier(value: unknown): string {
 
 async function requestPassslotArray(
   input: PassslotRequestInput,
-  context: PassslotRequestContext,
+  context: ApiKeyProviderContext,
 ): Promise<Array<Record<string, unknown>>> {
   const payload = await requestPassslotJson(input, context);
   return objectArray(payload, "PassSlot response", providerResponseError);
@@ -169,7 +166,7 @@ async function requestPassslotArray(
 
 async function requestPassslotObject(
   input: PassslotRequestInput,
-  context: PassslotRequestContext,
+  context: ApiKeyProviderContext,
 ): Promise<Record<string, unknown>> {
   const payload = await requestPassslotJson(input, context);
   const object = optionalRecord(payload);
@@ -179,7 +176,7 @@ async function requestPassslotObject(
   return object;
 }
 
-async function requestPassslotJson(input: PassslotRequestInput, context: PassslotRequestContext): Promise<unknown> {
+async function requestPassslotJson(input: PassslotRequestInput, context: ApiKeyProviderContext): Promise<unknown> {
   const response = await context.fetcher(`${passslotApiBaseUrl}${input.path}`, {
     method: input.method ?? "GET",
     headers: {

@@ -1,6 +1,5 @@
 import type { CredentialValidationResult, ProviderExecutors } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-executors.ts";
-import type { ApiKeyProviderContext } from "../provider-executors.ts";
+import type { ProviderActionHandlers, ApiKeyProviderContext } from "../provider-executors.ts";
 
 import {
   compactObject,
@@ -311,7 +310,7 @@ export async function validatePandadocCredential(
 }
 
 async function requestPandadocJson(
-  context: Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">,
+  context: ApiKeyProviderContext,
   options: {
     path: string;
     method?: string;

@@ -4,8 +4,7 @@ import type {
   ProviderExecutors,
   ProviderProxyExecutor,
 } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-executors.ts";
-import type { ApiKeyProviderContext } from "../provider-executors.ts";
+import type { ProviderActionHandlers, ApiKeyProviderContext } from "../provider-executors.ts";
 
 import { optionalRecord, optionalString, stringArray } from "../../core/cast.ts";
 import { jsonObject, queryParams } from "../../core/request.ts";
@@ -253,7 +252,7 @@ export const credentialValidators: CredentialValidators = {
 };
 
 async function requestMotionJson(input: {
-  context: Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
+  context: ApiKeyProviderContext;
   path: string;
   phase: MotionPhase;
   method?: MotionMethod;

@@ -1,6 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-executors.ts";
-import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-executors.ts";
+import type { ProviderActionHandlers, ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-executors.ts";
 import type { ProviderFetch } from "../provider-runtime.ts";
 
 import { compactObject, objectArray, optionalRecord, optionalString, requiredRecord } from "../../core/cast.ts";
@@ -22,7 +21,7 @@ type CourierActionHandler = ProviderRuntimeHandler<ApiKeyProviderContext>;
 interface CourierRequestInput {
   path: string;
   method: "DELETE" | "GET" | "POST" | "PUT";
-  context: Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
+  context: ApiKeyProviderContext;
   phase: CourierRequestPhase;
   params?: Record<string, string | undefined>;
   body?: unknown;

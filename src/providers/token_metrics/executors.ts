@@ -1,6 +1,5 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-executors.ts";
-import type { ApiKeyProviderContext } from "../provider-executors.ts";
+import type { ProviderActionHandlers, ApiKeyProviderContext } from "../provider-executors.ts";
 
 import { optionalRecord, optionalString } from "../../core/cast.ts";
 import { defineApiKeyProviderExecutors } from "../provider-executors.ts";
@@ -107,7 +106,7 @@ export const credentialValidators: CredentialValidators = {
 async function tokenMetricsGet(
   path: string,
   query: Record<string, TokenMetricsQueryValue>,
-  context: Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">,
+  context: ApiKeyProviderContext,
   phase: TokenMetricsPhase,
 ): Promise<Record<string, unknown>> {
   const url = new URL(path.startsWith("/") ? path.slice(1) : path, `${tokenMetricsApiBaseUrl}/`);

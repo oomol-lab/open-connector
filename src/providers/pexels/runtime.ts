@@ -1,6 +1,5 @@
 import type { CredentialValidationResult, ProviderExecutors } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-executors.ts";
-import type { ApiKeyProviderContext } from "../provider-executors.ts";
+import type { ProviderActionHandlers, ApiKeyProviderContext } from "../provider-executors.ts";
 
 import {
   optionalBoolean,
@@ -160,7 +159,7 @@ async function getVideoList(
 }
 
 async function requestPexelsJson(
-  context: Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">,
+  context: ApiKeyProviderContext,
   path: string,
   query: Record<string, PexelsQueryValue> = {},
   phase: PexelsPhase = "execute",

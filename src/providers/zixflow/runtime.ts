@@ -1,6 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-executors.ts";
-import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-executors.ts";
+import type { ProviderActionHandlers, ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-executors.ts";
 import type { ProviderFetch } from "../provider-runtime.ts";
 
 import { compactObject, optionalRecord, optionalString, requiredRecord, requiredString } from "../../core/cast.ts";
@@ -21,7 +20,7 @@ type ZixflowRequestPhase = "validate" | "execute";
 type ZixflowActionHandler = ProviderRuntimeHandler<ApiKeyProviderContext>;
 
 interface ZixflowRequestOptions {
-  context: Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
+  context: ApiKeyProviderContext;
   path: string;
   phase: ZixflowRequestPhase;
   method?: "GET" | "POST" | "PATCH" | "DELETE";
@@ -169,7 +168,7 @@ export async function validateZixflowCredential(
 
 async function createDynamicItem(
   input: Record<string, unknown>,
-  context: Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">,
+  context: ApiKeyProviderContext,
   family: "collection-records" | "list-entries",
   parentKey: "collectionId" | "listId",
   outputKey: "record" | "entry",
@@ -192,7 +191,7 @@ async function createDynamicItem(
 }
 
 async function requestZixflowWrapped(
-  context: Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">,
+  context: ApiKeyProviderContext,
   path: string,
   phase: ZixflowRequestPhase,
   outputKey: string,
@@ -208,7 +207,7 @@ async function requestZixflowWrapped(
 }
 
 async function requestZixflowStatus(
-  context: Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">,
+  context: ApiKeyProviderContext,
   path: string,
   phase: ZixflowRequestPhase,
   method: "GET" | "POST" | "PATCH" | "DELETE" = "GET",

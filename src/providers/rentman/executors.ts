@@ -4,8 +4,7 @@ import type {
   ProviderExecutors,
   ProviderProxyExecutor,
 } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-executors.ts";
-import type { ApiKeyProviderContext } from "../provider-executors.ts";
+import type { ProviderActionHandlers, ApiKeyProviderContext } from "../provider-executors.ts";
 import type { RentmanActionName } from "./actions.ts";
 
 import { compactObject, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
@@ -173,7 +172,7 @@ function rentmanUrl(path: string, query?: Record<string, string | number | undef
 }
 
 async function requestRentman(input: {
-  context: Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
+  context: ApiKeyProviderContext;
   url: URL;
   mode: "validate" | "execute";
 }): Promise<unknown> {

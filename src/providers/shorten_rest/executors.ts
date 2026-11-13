@@ -1,6 +1,5 @@
 import type { CredentialValidationResult, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-executors.ts";
-import type { ApiKeyProviderContext } from "../provider-executors.ts";
+import type { ProviderActionHandlers, ApiKeyProviderContext } from "../provider-executors.ts";
 
 import { compactObject, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
 import { defineApiKeyProviderExecutors } from "../provider-executors.ts";
@@ -17,7 +16,7 @@ type ShortenRestActionHandler = (input: Record<string, unknown>, context: ApiKey
 interface ShortenRestRequestInput {
   method: "GET" | "POST" | "PUT" | "DELETE";
   path: string;
-  context: Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
+  context: ApiKeyProviderContext;
   phase: ShortenRestRequestPhase;
   query?: Record<string, string | number | undefined>;
   body?: Record<string, unknown>;

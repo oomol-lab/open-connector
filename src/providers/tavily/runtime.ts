@@ -1,6 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-executors.ts";
-import type { ApiKeyProviderContext } from "../provider-executors.ts";
+import type { ProviderActionHandlers, ApiKeyProviderContext } from "../provider-executors.ts";
 
 import { compactObject, optionalNumber, optionalRecord, optionalString } from "../../core/cast.ts";
 import {
@@ -74,10 +73,7 @@ export async function validateTavilyCredential(
   };
 }
 
-async function tavilyRequest(
-  context: Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">,
-  input: TavilyRequestInput,
-): Promise<unknown> {
+async function tavilyRequest(context: ApiKeyProviderContext, input: TavilyRequestInput): Promise<unknown> {
   const response = await tavilyRawRequest(context, input);
   if (!response.ok) {
     throw await buildTavilyError(response, input.phase ?? "execute");
@@ -91,10 +87,7 @@ async function tavilyRequest(
   }
 }
 
-async function tavilyRawRequest(
-  context: Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">,
-  input: TavilyRequestInput,
-): Promise<Response> {
+async function tavilyRawRequest(context: ApiKeyProviderContext, input: TavilyRequestInput): Promise<Response> {
   const timeout = createProviderTimeout(context.signal);
   try {
     return await context.fetcher(new URL(input.path, tavilyApiBaseUrl), {

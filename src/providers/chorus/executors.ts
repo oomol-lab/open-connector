@@ -1,6 +1,5 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-executors.ts";
-import type { ApiKeyProviderContext } from "../provider-executors.ts";
+import type { ProviderActionHandlers, ApiKeyProviderContext } from "../provider-executors.ts";
 
 import { optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import { defineApiKeyProviderExecutors } from "../provider-executors.ts";
@@ -13,7 +12,6 @@ const chorusValidationPath = "/api/v1/users/me";
 
 type ChorusPhase = "validate" | "execute";
 type ChorusAcceptHeader = "application/json" | "application/vnd.api+json";
-type ChorusContext = Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
 type ChorusActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
 export const chorusActionHandlers: ProviderActionHandlers<"chorus", ChorusActionHandler> = {
@@ -161,7 +159,7 @@ async function requestChorusJson(input: {
   path: string;
   accept: ChorusAcceptHeader;
   phase: ChorusPhase;
-  context: ChorusContext;
+  context: ApiKeyProviderContext;
   query?: URLSearchParams;
 }): Promise<unknown> {
   return runProviderRequest({ signal: input.context.signal, label: "Chorus" }, async (signal) => {

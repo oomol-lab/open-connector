@@ -1,6 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-executors.ts";
-import type { ApiKeyProviderContext } from "../provider-executors.ts";
+import type { ProviderActionHandlers, ApiKeyProviderContext } from "../provider-executors.ts";
 import type { ProviderFetch } from "../provider-runtime.ts";
 
 import { compactObject, optionalBoolean, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
@@ -16,8 +15,7 @@ const brightDataStatusPath = "/status";
 
 type BrightDataRequestPhase = "validate" | "execute";
 type BrightDataQueryValue = string | number | boolean | undefined;
-type BrightDataActionContext = Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
-type BrightDataActionHandler = (input: Record<string, unknown>, context: BrightDataActionContext) => Promise<unknown>;
+type BrightDataActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
 interface BrightDataRequestOptions {
   apiKey: string;
@@ -79,7 +77,7 @@ export async function validateBrightDataCredential(
 }
 
 async function getAccountStatus(
-  context: BrightDataActionContext,
+  context: ApiKeyProviderContext,
   phase: BrightDataRequestPhase,
 ): Promise<{
   status: string;
@@ -108,7 +106,7 @@ async function getAccountStatus(
   };
 }
 
-async function listDatasets(context: BrightDataActionContext): Promise<unknown> {
+async function listDatasets(context: ApiKeyProviderContext): Promise<unknown> {
   const payload = await requestBrightDataJson({
     apiKey: context.apiKey,
     path: "/datasets/list",
@@ -124,7 +122,7 @@ async function listDatasets(context: BrightDataActionContext): Promise<unknown> 
   };
 }
 
-async function getDatasetMetadata(input: Record<string, unknown>, context: BrightDataActionContext): Promise<unknown> {
+async function getDatasetMetadata(input: Record<string, unknown>, context: ApiKeyProviderContext): Promise<unknown> {
   const datasetId = requiredInputString(input.datasetId, "datasetId");
   const payload = await requestBrightDataJson({
     apiKey: context.apiKey,
@@ -143,7 +141,7 @@ async function getDatasetMetadata(input: Record<string, unknown>, context: Brigh
   };
 }
 
-async function listDatasetViews(context: BrightDataActionContext): Promise<unknown> {
+async function listDatasetViews(context: ApiKeyProviderContext): Promise<unknown> {
   const payload = await requestBrightDataJson({
     apiKey: context.apiKey,
     path: "/datasets/views",
@@ -159,7 +157,7 @@ async function listDatasetViews(context: BrightDataActionContext): Promise<unkno
   };
 }
 
-async function getSnapshotMetadata(input: Record<string, unknown>, context: BrightDataActionContext): Promise<unknown> {
+async function getSnapshotMetadata(input: Record<string, unknown>, context: ApiKeyProviderContext): Promise<unknown> {
   const snapshotId = requiredInputString(input.snapshotId, "snapshotId");
   const payload = await requestBrightDataJson({
     apiKey: context.apiKey,
@@ -177,7 +175,7 @@ async function getSnapshotMetadata(input: Record<string, unknown>, context: Brig
   };
 }
 
-async function getSnapshotParts(input: Record<string, unknown>, context: BrightDataActionContext): Promise<unknown> {
+async function getSnapshotParts(input: Record<string, unknown>, context: ApiKeyProviderContext): Promise<unknown> {
   const snapshotId = requiredInputString(input.snapshotId, "snapshotId");
   const payload = await requestBrightDataJson({
     apiKey: context.apiKey,

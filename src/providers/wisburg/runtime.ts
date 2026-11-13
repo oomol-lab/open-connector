@@ -115,7 +115,7 @@ async function getWisburgResource(
 }
 
 async function wisburgRequest(
-  context: Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">,
+  context: ApiKeyProviderContext,
   input: WisburgRequestInput,
 ): Promise<Record<string, unknown>> {
   return runProviderRequest({ signal: context.signal, label: "Wisburg" }, async (signal) => {

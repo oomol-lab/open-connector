@@ -1,6 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-executors.ts";
-import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-executors.ts";
+import type { ProviderActionHandlers, ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-executors.ts";
 import type { ProviderFetch } from "../provider-runtime.ts";
 
 import { compactObject, optionalInteger, optionalRecord, requiredRecord } from "../../core/cast.ts";
@@ -73,7 +72,7 @@ export async function validateTwentyCrmCredential(
 }
 
 async function listMetadataObjects(
-  context: Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">,
+  context: ApiKeyProviderContext,
   phase: TwentyCrmPhase = "execute",
 ): Promise<{ objects: Record<string, unknown>[]; raw: Record<string, unknown> }> {
   const payload = await requestTwentyCrmJson(
@@ -204,7 +203,7 @@ async function deleteRecord(
 
 async function requestTwentyCrmJson(
   options: TwentyCrmRequestOptions,
-  context: Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">,
+  context: ApiKeyProviderContext,
   phase: TwentyCrmPhase = "execute",
 ): Promise<unknown> {
   const url = new URL(options.path, twentyCrmApiUrl);

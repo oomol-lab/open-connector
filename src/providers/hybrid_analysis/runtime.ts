@@ -1,5 +1,4 @@
-import type { ProviderActionHandlers } from "../provider-executors.ts";
-import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-executors.ts";
+import type { ProviderActionHandlers, ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-executors.ts";
 
 import { optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
 import { ProviderRequestError } from "../provider-runtime.ts";
@@ -73,7 +72,7 @@ export async function validateHybridAnalysisCredential(
 
 async function request(
   path: string,
-  context: Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">,
+  context: ApiKeyProviderContext,
   query?: Record<string, string>,
   validating = false,
 ): Promise<unknown> {

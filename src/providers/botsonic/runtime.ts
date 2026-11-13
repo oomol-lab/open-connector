@@ -1,6 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-executors.ts";
-import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-executors.ts";
+import type { ProviderActionHandlers, ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-executors.ts";
 import type { ProviderFetch } from "../provider-runtime.ts";
 
 import { compactObject, optionalRecord, optionalString } from "../../core/cast.ts";
@@ -10,9 +9,10 @@ export const botsonicApiBaseUrl = "https://api.botsonic.ai";
 const botsonicValidationPath = "/v1/business/bot-faq/all";
 export const botsonicAuthHeader = "X-BOT-KEY";
 
-type BotsonicContext = Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
-
-export const botsonicActionHandlers: ProviderActionHandlers<"botsonic", ProviderRuntimeHandler<BotsonicContext>> = {
+export const botsonicActionHandlers: ProviderActionHandlers<
+  "botsonic",
+  ProviderRuntimeHandler<ApiKeyProviderContext>
+> = {
   async generate_response(input, context) {
     return asRecord(
       await requestBotsonic({
@@ -116,7 +116,7 @@ export async function validateBotsonicCredential(
 async function requestBotsonic(input: {
   path: string;
   method: "GET" | "POST";
-  context: BotsonicContext;
+  context: ApiKeyProviderContext;
   query?: Array<[string, unknown]>;
   body?: unknown;
   phase?: "validate" | "execute";

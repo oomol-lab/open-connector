@@ -1,6 +1,5 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-executors.ts";
-import type { ApiKeyProviderContext } from "../provider-executors.ts";
+import type { ProviderActionHandlers, ApiKeyProviderContext } from "../provider-executors.ts";
 
 import { compactObject, optionalRawString, optionalRecord, optionalString } from "../../core/cast.ts";
 import { requireApiKeyCredential } from "../provider-credentials.ts";
@@ -187,7 +186,7 @@ function filteredQuery(input: Record<string, unknown>): Record<string, string | 
 async function balldontlieRequestJson(input: {
   path: string;
   query: Record<string, string | string[] | undefined>;
-  context: Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
+  context: ApiKeyProviderContext;
   phase: BalldontliePhase;
 }): Promise<unknown> {
   const url = new URL(`/fifa/worldcup/v1${input.path}`, balldontlieWorldcupApiOrigin);

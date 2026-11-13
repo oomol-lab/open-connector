@@ -5,6 +5,7 @@ import type {
   ProviderActionSources,
   ProviderRuntimeHandler,
 } from "../provider-executors.ts";
+import type { ProviderRequestContext } from "../provider-runtime.ts";
 
 import { optionalRecord, optionalString } from "../../core/cast.ts";
 import { mapProviderActionSources } from "../provider-executors.ts";
@@ -133,7 +134,7 @@ async function requestSkioJson(input: {
   apiKey: string;
   path: string;
   phase: SkioPhase;
-  context: Pick<ApiKeyProviderContext, "fetcher" | "signal">;
+  context: ProviderRequestContext;
   query?: URLSearchParams;
 }): Promise<unknown> {
   return runProviderRequest({ signal: input.context.signal, label: "Skio" }, async (signal) => {

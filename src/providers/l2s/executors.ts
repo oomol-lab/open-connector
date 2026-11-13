@@ -4,8 +4,7 @@ import type {
   ProviderExecutors,
   ProviderProxyExecutor,
 } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-executors.ts";
-import type { ApiKeyProviderContext } from "../provider-executors.ts";
+import type { ProviderActionHandlers, ApiKeyProviderContext } from "../provider-executors.ts";
 
 import { compactObject, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import { defineApiKeyProviderExecutors } from "../provider-executors.ts";
@@ -89,9 +88,7 @@ export const credentialValidators: CredentialValidators = {
   },
 };
 
-async function validateL2sCredential(
-  context: Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">,
-): Promise<CredentialValidationResult> {
+async function validateL2sCredential(context: ApiKeyProviderContext): Promise<CredentialValidationResult> {
   const payload = await l2sRequest(context, {
     method: "GET",
     path: l2sValidationPath,
@@ -117,10 +114,7 @@ async function validateL2sCredential(
   };
 }
 
-async function l2sRequest(
-  context: Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">,
-  input: L2sRequestInput,
-): Promise<unknown> {
+async function l2sRequest(context: ApiKeyProviderContext, input: L2sRequestInput): Promise<unknown> {
   const timeout = createProviderTimeout(context.signal);
 
   try {

@@ -1,6 +1,5 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-executors.ts";
-import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-executors.ts";
+import type { ProviderActionHandlers, ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-executors.ts";
 
 import { compactObject, optionalInteger, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import { encodePathSegment } from "../../core/request.ts";
@@ -106,7 +105,7 @@ export const credentialValidators: CredentialValidators = {
 async function listResource(
   spec: ResourceSpec,
   input: Record<string, unknown>,
-  context: Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">,
+  context: ApiKeyProviderContext,
 ): Promise<Record<string, unknown>> {
   const raw = objectPayload(await rechargeRequest(spec.path, context, { query: rechargeQuery(input) }), spec.plural);
   return {
@@ -120,7 +119,7 @@ async function listResource(
 async function getResource(
   spec: ResourceSpec,
   input: Record<string, unknown>,
-  context: Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">,
+  context: ApiKeyProviderContext,
 ): Promise<Record<string, unknown>> {
   const id = encodePathSegment(requiredString(input.id, "id"));
   const raw = objectPayload(
@@ -135,7 +134,7 @@ async function getResource(
 
 function rechargeRequest(
   path: string,
-  context: Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">,
+  context: ApiKeyProviderContext,
   options:
     | "validate"
     | {

@@ -1,6 +1,5 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-executors.ts";
-import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-executors.ts";
+import type { ProviderActionHandlers, ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-executors.ts";
 
 import { compactObject, optionalBoolean, optionalInteger, optionalString, requiredString } from "../../core/cast.ts";
 import { encodePathSegment } from "../../core/request.ts";
@@ -86,7 +85,7 @@ export const credentialValidators: CredentialValidators = {
 
 function tldvRequest(
   path: string,
-  context: Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">,
+  context: ApiKeyProviderContext,
   options:
     | {
         method?: string;

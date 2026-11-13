@@ -1,6 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-executors.ts";
-import type { ApiKeyProviderContext } from "../provider-executors.ts";
+import type { ProviderActionHandlers, ApiKeyProviderContext } from "../provider-executors.ts";
 
 import { compactObject, optionalBoolean } from "../../core/cast.ts";
 import { ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
@@ -339,7 +338,7 @@ async function executeMarketMovers(input: Record<string, unknown>, context: ApiK
 async function twelveDataGet(
   path: string,
   query: Record<string, QueryValue>,
-  context: Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">,
+  context: ApiKeyProviderContext,
   phase: TwelveDataRequestPhase,
 ): Promise<unknown> {
   const url = new URL(path, twelveDataApiBaseUrl);

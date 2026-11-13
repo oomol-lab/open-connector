@@ -23,7 +23,7 @@ type RequestPhase = "validate" | "execute";
 type YoplanningHandler = ProviderRuntimeHandler<ApiKeyProviderContext>;
 
 interface YoplanningRequestInput {
-  context: Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
+  context: ApiKeyProviderContext;
   path: string;
   query?: Record<string, string | number | undefined>;
   phase: RequestPhase;

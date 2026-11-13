@@ -14,7 +14,6 @@ const requestLabel = "Cheaper Inference";
 const inferenceRequestTimeoutMs = 300_000;
 
 type ActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
-type CheaperinferenceRequestContext = Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
 
 interface CheaperinferenceInferenceInput {
   path: string;
@@ -68,10 +67,7 @@ export const credentialValidators: CredentialValidators = {
   },
 };
 
-function listCheaperinferenceModels(
-  context: CheaperinferenceRequestContext,
-  mode: "validate" | "execute",
-): Promise<unknown> {
+function listCheaperinferenceModels(context: ApiKeyProviderContext, mode: "validate" | "execute"): Promise<unknown> {
   return runProviderRequest({ signal: context.signal, label: requestLabel }, async (signal) => {
     const response = await context.fetcher(`${cheaperinferenceApiBaseUrl}/models`, {
       method: "GET",
@@ -84,7 +80,7 @@ function listCheaperinferenceModels(
 
 function cheaperinferenceInferenceRequest(
   input: CheaperinferenceInferenceInput,
-  context: CheaperinferenceRequestContext,
+  context: ApiKeyProviderContext,
 ): Promise<unknown> {
   return runProviderRequest(
     { signal: context.signal, label: requestLabel, timeoutMs: inferenceRequestTimeoutMs },

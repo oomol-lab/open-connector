@@ -741,10 +741,7 @@ async function getStatsArray(
   };
 }
 
-async function listMailtrapAccounts(
-  context: Pick<MailtrapActionContext, "apiKey" | "fetcher" | "signal">,
-  phase: MailtrapPhase,
-) {
+async function listMailtrapAccounts(context: MailtrapActionContext, phase: MailtrapPhase) {
   return requestMailtrapResourceArray({
     ...context,
     path: "/api/accounts",

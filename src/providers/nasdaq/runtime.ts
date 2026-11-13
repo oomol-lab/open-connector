@@ -1,6 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-executors.ts";
-import type { ApiKeyProviderContext } from "../provider-executors.ts";
+import type { ProviderActionHandlers, ApiKeyProviderContext } from "../provider-executors.ts";
 
 import { compactObject, optionalRecord, optionalString } from "../../core/cast.ts";
 import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
@@ -11,8 +10,7 @@ type QueryValue = string | number | boolean | undefined;
 type NasdaqRequestPhase = "validate" | "execute";
 type NasdaqDatatableScalar = string | number | boolean | null;
 type NasdaqDatatableRow = Record<string, NasdaqDatatableScalar>;
-type NasdaqActionContext = Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
-type NasdaqActionHandler = (input: Record<string, unknown>, context: NasdaqActionContext) => Promise<unknown>;
+type NasdaqActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
 const defaultDividendColumns = [
   "ticker",
@@ -84,7 +82,7 @@ export async function validateNasdaqCredential(
 
 async function executeGetDatatableMetadata(
   input: Record<string, unknown>,
-  context: NasdaqActionContext,
+  context: ApiKeyProviderContext,
 ): Promise<unknown> {
   const payload = readRequiredObject(
     await nasdaqGet(buildDatatableMetadataPath(readRequiredDatatableCode(input)), {}, context, "execute"),
@@ -114,7 +112,7 @@ async function executeGetDatatableMetadata(
   };
 }
 
-async function executeGetDatatable(input: Record<string, unknown>, context: NasdaqActionContext): Promise<unknown> {
+async function executeGetDatatable(input: Record<string, unknown>, context: ApiKeyProviderContext): Promise<unknown> {
   const payload = readRequiredObject(
     await nasdaqGet(
       buildDatatableDataPath(readRequiredDatatableCode(input)),
@@ -145,7 +143,7 @@ async function executeGetDatatable(input: Record<string, unknown>, context: Nasd
   };
 }
 
-function executeGetTableRow(input: Record<string, unknown>, context: NasdaqActionContext): Promise<unknown> {
+function executeGetTableRow(input: Record<string, unknown>, context: ApiKeyProviderContext): Promise<unknown> {
   const datatableCode = readDatatableCodeForRowQuery(input);
   const filterColumnName = readRequiredInputString(input, "filterColumnName");
   const filterColumnValue = readRequiredInputString(input, "filterColumnValue");
@@ -162,7 +160,7 @@ function executeGetTableRow(input: Record<string, unknown>, context: NasdaqActio
   );
 }
 
-function executeGetDividendHistory(input: Record<string, unknown>, context: NasdaqActionContext): Promise<unknown> {
+function executeGetDividendHistory(input: Record<string, unknown>, context: ApiKeyProviderContext): Promise<unknown> {
   return executeDatatableQuery(
     "SHARADAR/SF1",
     compactObject({
@@ -179,7 +177,7 @@ function executeGetDividendHistory(input: Record<string, unknown>, context: Nasd
 
 async function executeGetAnalystRatings(
   input: Record<string, unknown>,
-  context: NasdaqActionContext,
+  context: ApiKeyProviderContext,
 ): Promise<unknown> {
   const symbol = readRequiredInputString(input, "symbol");
   const analystRatings = await executeDatatableQuery("ZACKS/AR", { ticker: symbol }, context);
@@ -191,7 +189,10 @@ async function executeGetAnalystRatings(
   };
 }
 
-async function executeGetEndOfDayQuote(input: Record<string, unknown>, context: NasdaqActionContext): Promise<unknown> {
+async function executeGetEndOfDayQuote(
+  input: Record<string, unknown>,
+  context: ApiKeyProviderContext,
+): Promise<unknown> {
   const result = await executeDatatableQuery(
     "QUOTEMEDIA/PRICES",
     compactObject({
@@ -214,7 +215,7 @@ async function executeGetEndOfDayQuote(input: Record<string, unknown>, context: 
 async function executeDatatableQuery(
   datatableCode: string,
   query: Record<string, QueryValue>,
-  context: NasdaqActionContext,
+  context: ApiKeyProviderContext,
 ): Promise<{
   columns: Array<{ name: string; type: string }>;
   rows: NasdaqDatatableRow[];
@@ -245,7 +246,7 @@ async function executeDatatableQuery(
 async function nasdaqGet(
   path: string,
   query: Record<string, QueryValue>,
-  context: NasdaqActionContext,
+  context: ApiKeyProviderContext,
   phase: NasdaqRequestPhase,
 ): Promise<unknown> {
   const url = new URL(toRelativePath(path), `${nasdaqApiBaseUrl}/`);

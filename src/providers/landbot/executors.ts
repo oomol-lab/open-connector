@@ -4,8 +4,7 @@ import type {
   ProviderExecutors,
   ProviderProxyExecutor,
 } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-executors.ts";
-import type { ApiKeyProviderContext } from "../provider-executors.ts";
+import type { ProviderActionHandlers, ApiKeyProviderContext } from "../provider-executors.ts";
 
 import { compactObject, optionalInteger, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import { defineApiKeyProviderExecutors } from "../provider-executors.ts";
@@ -99,9 +98,7 @@ export const credentialValidators: CredentialValidators = {
   },
 };
 
-async function validateLandbotCredential(
-  context: Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">,
-): Promise<CredentialValidationResult> {
+async function validateLandbotCredential(context: ApiKeyProviderContext): Promise<CredentialValidationResult> {
   await landbotRequest({
     path: "channels/",
     query: { limit: 1 },
@@ -124,7 +121,7 @@ async function validateLandbotCredential(
 async function landbotRequest(input: {
   path: string;
   method?: string;
-  context: Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
+  context: ApiKeyProviderContext;
   query?: Record<string, LandbotQueryValue>;
   body?: Record<string, unknown>;
   phase?: LandbotPhase;

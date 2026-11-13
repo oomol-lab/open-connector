@@ -1,6 +1,5 @@
 import type { CredentialValidationResult, ExecutionResult } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-executors.ts";
-import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-executors.ts";
+import type { ProviderActionHandlers, ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-executors.ts";
 
 import { compactObject, optionalRecord, optionalString, requiredStringArray } from "../../core/cast.ts";
 import {
@@ -39,7 +38,7 @@ type SellerSpritePhase = "validate" | "execute";
 
 interface SellerSpriteRequest {
   path: string;
-  context: Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
+  context: ApiKeyProviderContext;
   phase: SellerSpritePhase;
   method?: "GET" | "POST";
   body?: Record<string, unknown>;

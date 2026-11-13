@@ -5,8 +5,7 @@ import type {
   ProviderExecutors,
   ProviderProxyExecutor,
 } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-executors.ts";
-import type { ApiKeyProviderContext } from "../provider-executors.ts";
+import type { ProviderActionHandlers, ApiKeyProviderContext } from "../provider-executors.ts";
 
 import { Buffer } from "node:buffer";
 import {
@@ -189,7 +188,7 @@ async function listContacts(input: Record<string, unknown>, context: ApiKeyProvi
 }
 
 async function requestChartmogulJson(input: {
-  context: Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
+  context: ApiKeyProviderContext;
   path: string;
   query?: Record<string, QueryValue>;
   phase: ChartmogulRequestPhase;

@@ -1,6 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-executors.ts";
-import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-executors.ts";
+import type { ProviderActionHandlers, ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-executors.ts";
 
 import { createHash } from "node:crypto";
 import {
@@ -163,7 +162,7 @@ function buildKintoneApiBaseUrl(subdomain: string): string {
 }
 
 async function requestKintoneJson(input: {
-  context: Pick<KintoneActionContext, "apiKey" | "apiBaseUrl" | "fetcher" | "signal">;
+  context: KintoneActionContext;
   path: string;
   query?: Record<string, KintoneQueryValue | undefined>;
   phase: KintonePhase;

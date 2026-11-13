@@ -1,6 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-executors.ts";
-import type { ApiKeyProviderContext } from "../provider-executors.ts";
+import type { ProviderActionHandlers, ApiKeyProviderContext } from "../provider-executors.ts";
 
 import { compactObject, optionalNumber, optionalRecord, optionalString } from "../../core/cast.ts";
 import {
@@ -15,8 +14,7 @@ import {
 export const linkupApiBaseUrl = "https://api.linkup.so";
 const linkupValidationPath = "/v1/credits/balance";
 
-type LinkupActionContext = ApiKeyProviderContext;
-type LinkupActionHandler = (input: Record<string, unknown>, context: LinkupActionContext) => Promise<unknown>;
+type LinkupActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
 interface LinkupRequestInput {
   method: "GET" | "POST";
@@ -129,10 +127,7 @@ export async function validateLinkupCredential(
   };
 }
 
-async function linkupRequest(
-  context: Pick<LinkupActionContext, "apiKey" | "fetcher" | "signal">,
-  input: LinkupRequestInput,
-): Promise<unknown> {
+async function linkupRequest(context: ApiKeyProviderContext, input: LinkupRequestInput): Promise<unknown> {
   const timeout = createProviderTimeout(context.signal);
   try {
     const response = await context.fetcher(new URL(input.path, linkupApiBaseUrl), {

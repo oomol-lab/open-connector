@@ -22,7 +22,6 @@ const anthropicApiVersion = "2023-06-01";
 const inferenceTimeoutMs = 300_000;
 
 type ActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
-type RequestContext = Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
 
 interface RuncrateRequest {
   path: "/models" | "/chat/completions" | "/messages";
@@ -74,7 +73,7 @@ export const credentialValidators: CredentialValidators = {
   },
 };
 
-function requestRuncrate(input: RuncrateRequest, context: RequestContext): Promise<Record<string, unknown>> {
+function requestRuncrate(input: RuncrateRequest, context: ApiKeyProviderContext): Promise<Record<string, unknown>> {
   const headers = new Headers({
     authorization: `Bearer ${context.apiKey}`,
     "content-type": "application/json",

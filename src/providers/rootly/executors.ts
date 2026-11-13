@@ -4,8 +4,7 @@ import type {
   ProviderExecutors,
   ProviderProxyExecutor,
 } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-executors.ts";
-import type { ApiKeyProviderContext } from "../provider-executors.ts";
+import type { ProviderActionHandlers, ApiKeyProviderContext } from "../provider-executors.ts";
 
 import { booleanString, compactObject, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import { defineApiKeyProviderExecutors } from "../provider-executors.ts";
@@ -80,7 +79,7 @@ export const credentialValidators: CredentialValidators = {
 async function rootlyGetSingleResource(
   path: string,
   query: Record<string, string>,
-  context: Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">,
+  context: ApiKeyProviderContext,
 ): Promise<Record<string, unknown>> {
   const payload = await rootlyGetJson(path, query, context);
   return {
@@ -110,7 +109,7 @@ async function rootlyGetList(
 async function rootlyGetJson(
   path: string,
   query: Record<string, string>,
-  context: Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">,
+  context: ApiKeyProviderContext,
 ): Promise<unknown> {
   const url = new URL(`${rootlyApiBaseUrl}${path}`);
   for (const [name, value] of Object.entries(query)) {

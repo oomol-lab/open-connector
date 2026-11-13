@@ -99,7 +99,7 @@ interface RequestOptions {
 }
 
 async function request(
-  context: Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">,
+  context: ApiKeyProviderContext,
   path: string,
   options: RequestOptions = {},
   phase: "validate" | "execute" = "execute",

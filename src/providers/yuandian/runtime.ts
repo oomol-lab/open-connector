@@ -1,6 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-executors.ts";
-import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-executors.ts";
+import type { ProviderActionHandlers, ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-executors.ts";
 import type { ProviderFetch } from "../provider-runtime.ts";
 
 import { compactObject, optionalRecord, optionalString, rawStringOrNull } from "../../core/cast.ts";
@@ -261,7 +260,7 @@ async function executeHallucinationCheck(input: Record<string, unknown>, context
 
 async function yuandianRequest(
   input: YuandianRequestInput,
-  context: Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">,
+  context: ApiKeyProviderContext,
   phase: "validate" | "execute",
 ): Promise<{ response: Response; payload: unknown }> {
   const path = input.path.startsWith("/") ? input.path.slice(1) : input.path;

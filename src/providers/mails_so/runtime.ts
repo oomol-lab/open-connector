@@ -1,6 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-executors.ts";
-import type { ApiKeyProviderContext } from "../provider-executors.ts";
+import type { ProviderActionHandlers, ApiKeyProviderContext } from "../provider-executors.ts";
 
 import { optionalBoolean, optionalNumber, optionalRecord, optionalString, stringArray } from "../../core/cast.ts";
 import {
@@ -71,7 +70,7 @@ async function buildMailsSoProviderAccountId(apiKey: string): Promise<string> {
 }
 
 async function requestSingleValidation(input: {
-  context: Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
+  context: ApiKeyProviderContext;
   email: string;
   phase: MailsSoRequestPhase;
 }): Promise<unknown> {
@@ -128,7 +127,7 @@ async function requestBatch(input: {
 
 async function requestMailsSoJson(input: {
   path: string;
-  context: Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
+  context: ApiKeyProviderContext;
   phase: MailsSoRequestPhase;
   method?: "GET" | "POST";
   body?: Record<string, unknown>;

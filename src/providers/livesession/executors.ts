@@ -4,8 +4,7 @@ import type {
   ProviderExecutors,
   ProviderProxyExecutor,
 } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-executors.ts";
-import type { ApiKeyProviderContext } from "../provider-executors.ts";
+import type { ProviderActionHandlers, ApiKeyProviderContext } from "../provider-executors.ts";
 
 import { createHash } from "node:crypto";
 import { optionalInteger, optionalRecord, optionalString, rawStringOrNull } from "../../core/cast.ts";
@@ -98,7 +97,7 @@ async function listSessions(input: Record<string, unknown>, context: ApiKeyProvi
 async function requestLivesessionJson(input: {
   path: string;
   query: Record<string, string>;
-  context: Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
+  context: ApiKeyProviderContext;
   mode: "validate" | "execute";
 }): Promise<unknown> {
   const url = new URL(`${livesessionApiBaseUrl}${input.path}`);

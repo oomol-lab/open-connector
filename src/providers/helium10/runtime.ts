@@ -1,8 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-executors.ts";
-import type { OAuthProviderContext, ProviderRuntimeHandler } from "../provider-executors.ts";
-import type { Client } from "@modelcontextprotocol/client";
-import type { JsonSchemaType } from "@modelcontextprotocol/client";
+import type { ProviderActionHandlers, OAuthProviderContext, ProviderRuntimeHandler } from "../provider-executors.ts";
+import type { Client, JsonSchemaType } from "@modelcontextprotocol/client";
 
 import { UnauthorizedError } from "@modelcontextprotocol/client";
 import { SdkHttpError } from "@modelcontextprotocol/client";
@@ -111,17 +109,14 @@ export async function validateHelium10Credential(
   };
 }
 
-async function listTools(context: Pick<OAuthProviderContext, "accessToken" | "fetcher" | "signal">): Promise<Tool[]> {
+async function listTools(context: OAuthProviderContext): Promise<Tool[]> {
   const result = await withClient(context, (client) =>
     client.listTools({}, { timeout: defaultProviderRequestTimeoutMs, signal: context.signal }),
   );
   return result.tools.filter((tool) => readOnlyTools.has(tool.name));
 }
 
-async function withClient<T>(
-  context: Pick<OAuthProviderContext, "accessToken" | "fetcher" | "signal">,
-  run: (client: Client) => Promise<T>,
-): Promise<T> {
+async function withClient<T>(context: OAuthProviderContext, run: (client: Client) => Promise<T>): Promise<T> {
   return withMcpClient(
     {
       endpoint: new URL(helium10McpEndpoint),

@@ -1,6 +1,5 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-executors.ts";
-import type { ApiKeyProviderContext } from "../provider-executors.ts";
+import type { ProviderActionHandlers, ApiKeyProviderContext } from "../provider-executors.ts";
 
 import {
   compactObject,
@@ -20,8 +19,7 @@ const instantlyAiValidationPath = "/api/v2/campaigns?limit=1";
 
 type InstantlyAiRequestPhase = "validate" | "execute";
 type InstantlyAiMethod = "GET" | "POST";
-type InstantlyAiContext = Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
-type InstantlyAiActionHandler = (input: Record<string, unknown>, context: InstantlyAiContext) => Promise<unknown>;
+type InstantlyAiActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
 export const instantlyAiActionHandlers: ProviderActionHandlers<"instantly_ai", InstantlyAiActionHandler> = {
   list_campaigns(input, context) {
@@ -140,7 +138,7 @@ function buildCreateLeadBody(input: Record<string, unknown>): Record<string, unk
 
 async function instantlyAiGetJson(
   path: string,
-  context: InstantlyAiContext,
+  context: ApiKeyProviderContext,
   phase: InstantlyAiRequestPhase,
 ): Promise<unknown> {
   return instantlyAiRequestJson("GET", path, undefined, context, phase);
@@ -149,7 +147,7 @@ async function instantlyAiGetJson(
 async function instantlyAiPostJson(
   path: string,
   body: Record<string, unknown>,
-  context: InstantlyAiContext,
+  context: ApiKeyProviderContext,
 ): Promise<unknown> {
   return instantlyAiRequestJson("POST", path, body, context, "execute");
 }
@@ -158,7 +156,7 @@ async function instantlyAiRequestJson(
   method: InstantlyAiMethod,
   path: string,
   body: Record<string, unknown> | undefined,
-  context: InstantlyAiContext,
+  context: ApiKeyProviderContext,
   phase: InstantlyAiRequestPhase,
 ): Promise<unknown> {
   let response: Response;

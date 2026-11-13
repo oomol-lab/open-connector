@@ -1,6 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-executors.ts";
-import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-executors.ts";
+import type { ProviderActionHandlers, ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-executors.ts";
 
 import { optionalBoolean, optionalInteger, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
@@ -104,11 +103,7 @@ function setOptionalQuery(url: URL, key: string, value: string | number | boolea
   }
 }
 
-async function fernGetJson(
-  path: string,
-  context: Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">,
-  phase: FernRequestPhase,
-): Promise<unknown> {
+async function fernGetJson(path: string, context: ApiKeyProviderContext, phase: FernRequestPhase): Promise<unknown> {
   let response: Response;
   let payload: unknown;
   try {

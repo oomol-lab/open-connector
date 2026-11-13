@@ -1,6 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-executors.ts";
-import type { ApiKeyProviderContext } from "../provider-executors.ts";
+import type { ProviderActionHandlers, ApiKeyProviderContext } from "../provider-executors.ts";
 
 import {
   booleanString,
@@ -158,7 +157,7 @@ export async function validateSmartsheetCredential(
 async function requestSmartsheetJson(input: {
   method: "GET" | "POST" | "PUT" | "DELETE";
   path: string;
-  context: Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
+  context: ApiKeyProviderContext;
   params: Record<string, string | undefined>;
   phase: SmartsheetPhase;
   body?: unknown;

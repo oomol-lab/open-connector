@@ -1,6 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-executors.ts";
-import type { ApiKeyProviderContext } from "../provider-executors.ts";
+import type { ProviderActionHandlers, ApiKeyProviderContext } from "../provider-executors.ts";
 
 import { optionalRecord, optionalString } from "../../core/cast.ts";
 import { ProviderRequestError } from "../provider-runtime.ts";
@@ -58,7 +57,7 @@ export async function validateWhat3wordsCredential(
 async function what3wordsGet(
   path: string,
   query: Record<string, What3wordsQueryValue>,
-  context: Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">,
+  context: ApiKeyProviderContext,
   phase: What3wordsPhase = "execute",
 ): Promise<unknown> {
   let response: Response;

@@ -1,6 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-executors.ts";
-import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-executors.ts";
+import type { ProviderActionHandlers, ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-executors.ts";
+import type { ProviderRequestContext } from "../provider-runtime.ts";
 
 import { compactObject, optionalNumber, optionalRecord, optionalString } from "../../core/cast.ts";
 import {
@@ -63,7 +63,7 @@ async function requestSeventeenTrack(
   path: string,
   body: unknown,
   apiKey: string,
-  context: Pick<ApiKeyProviderContext, "fetcher" | "signal">,
+  context: ProviderRequestContext,
   phase: "validate" | "execute",
 ) {
   const timeout = createProviderTimeout(context.signal);

@@ -6,7 +6,7 @@ export const oauthConnectionInput: z.ZodType<
   Omit<OAuthConnectionRequestInput, "owner" | "service" | "target" | "signal" | "connectionName">
 > = z.strictObject({
   returnUri: z.string().optional(),
-  authorizationOptionIds: z.array(z.string().trim().min(1)).optional(),
+  authorizationOptionIds: z.array(z.string()).optional(),
   extra: z.record(z.string(), z.unknown()).optional(),
   secretExtra: z.record(z.string(), z.string().trim().min(1)).optional(),
 });
@@ -21,7 +21,7 @@ export const consoleOAuthConnectionInput: z.ZodType<{
   service: z.string().trim().min(1),
   connectionName: z.string().regex(/^[a-zA-Z0-9][a-zA-Z0-9_-]{0,63}$/),
   appId: z.string().min(1).optional(),
-  authorizationOptionIds: z.array(z.string().trim().min(1)).optional(),
+  authorizationOptionIds: z.array(z.string()).optional(),
   returnUri: z.string().optional(),
 });
 

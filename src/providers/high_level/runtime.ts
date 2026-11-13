@@ -1,6 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-executors.ts";
-import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-executors.ts";
+import type { ProviderActionHandlers, ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-executors.ts";
 
 import { createHash } from "node:crypto";
 import {
@@ -18,7 +17,7 @@ export const highLevelApiVersion = "2021-07-28";
 
 type HighLevelRequestPhase = "validate" | "execute";
 
-export interface HighLevelContext extends Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal"> {
+export interface HighLevelContext extends ApiKeyProviderContext {
   locationId: string;
 }
 

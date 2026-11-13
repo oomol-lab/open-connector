@@ -1,6 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-executors.ts";
-import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-executors.ts";
+import type { ProviderActionHandlers, ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-executors.ts";
 
 import { createHash } from "node:crypto";
 import { compactObject, optionalBoolean, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
@@ -20,7 +19,7 @@ const higgsfieldAiDefaultVideoModelId = "higgsfield-ai/dop/standard";
 
 type HiggsfieldAiRequestPhase = "validate" | "execute";
 
-export interface HiggsfieldAiContext extends Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal"> {
+export interface HiggsfieldAiContext extends ApiKeyProviderContext {
   apiSecret: string;
 }
 

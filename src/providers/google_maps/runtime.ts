@@ -137,7 +137,7 @@ export async function validateCredential(
 async function requestJson(
   url: URL,
   options: RequestOptions,
-  context: Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">,
+  context: ApiKeyProviderContext,
   phase: Phase,
   label: string,
 ): Promise<unknown> {

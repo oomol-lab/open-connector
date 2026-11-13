@@ -1,6 +1,6 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-executors.ts";
-import type { ApiKeyProviderContext } from "../provider-executors.ts";
+import type { ProviderActionHandlers, ApiKeyProviderContext } from "../provider-executors.ts";
+import type { ProviderRequestContext } from "../provider-runtime.ts";
 
 import { createHash } from "node:crypto";
 import { optionalBoolean, optionalNumber, optionalRecord, optionalString } from "../../core/cast.ts";
@@ -73,7 +73,7 @@ export const credentialValidators: CredentialValidators = {
 async function requestKickboxVerify(input: {
   apiKey: string;
   email: string;
-  context: Pick<ApiKeyProviderContext, "fetcher" | "signal">;
+  context: ProviderRequestContext;
   phase: KickboxRequestPhase;
 }): Promise<unknown> {
   return requestKickboxJson({
@@ -90,7 +90,7 @@ async function requestKickboxVerify(input: {
 
 async function requestKickboxDisposable(input: {
   domainOrEmail: string;
-  context: Pick<ApiKeyProviderContext, "fetcher" | "signal">;
+  context: ProviderRequestContext;
   phase: KickboxRequestPhase;
 }): Promise<unknown> {
   return requestKickboxJson({
@@ -104,7 +104,7 @@ async function requestKickboxDisposable(input: {
 async function requestKickboxJson(input: {
   baseUrl: string;
   path: string;
-  context: Pick<ApiKeyProviderContext, "fetcher" | "signal">;
+  context: ProviderRequestContext;
   phase: KickboxRequestPhase;
   apiKey?: string;
   query?: Record<string, string | undefined>;

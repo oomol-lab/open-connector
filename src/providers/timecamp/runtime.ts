@@ -1,6 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-executors.ts";
-import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-executors.ts";
+import type { ProviderActionHandlers, ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-executors.ts";
 
 import { booleanString, compactObject, optionalRecord, optionalRawString, optionalString } from "../../core/cast.ts";
 import {
@@ -214,10 +213,7 @@ export async function validateTimecampCredential(
   };
 }
 
-async function requestTimerAction(
-  body: Record<string, unknown>,
-  context: Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">,
-): Promise<unknown> {
+async function requestTimerAction(body: Record<string, unknown>, context: ApiKeyProviderContext): Promise<unknown> {
   const payload = await requestTimecampJson({
     path: "/timer",
     method: "POST",
@@ -234,7 +230,7 @@ async function requestTimerAction(
 async function requestTimecampJson(input: {
   path: string;
   method: "GET" | "POST" | "PUT";
-  context: Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
+  context: ApiKeyProviderContext;
   params?: Record<string, TimecampQueryValue>;
   body?: Record<string, unknown>;
   phase: TimecampPhase;

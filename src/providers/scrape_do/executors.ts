@@ -4,8 +4,8 @@ import type {
   ProviderExecutors,
   ProviderProxyExecutor,
 } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-executors.ts";
-import type { ApiKeyProviderContext } from "../provider-executors.ts";
+import type { ProviderActionHandlers, ApiKeyProviderContext } from "../provider-executors.ts";
+import type { ProviderRequestContext } from "../provider-runtime.ts";
 
 import {
   compactObject,
@@ -200,7 +200,7 @@ async function requestScrapeDoAccount(
 async function requestScrapeDoRaw(
   url: string,
   input: Record<string, unknown>,
-  context: Pick<ApiKeyProviderContext, "fetcher" | "signal">,
+  context: ProviderRequestContext,
   phase: ScrapeDoPhase,
 ): Promise<Response> {
   const controller = new AbortController();

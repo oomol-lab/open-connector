@@ -1,6 +1,5 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-executors.ts";
-import type { ApiKeyProviderContext } from "../provider-executors.ts";
+import type { ProviderActionHandlers, ApiKeyProviderContext } from "../provider-executors.ts";
 
 import { optionalBoolean, optionalRecord, optionalString } from "../../core/cast.ts";
 import { defineApiKeyProviderExecutors } from "../provider-executors.ts";
@@ -125,7 +124,7 @@ function sendMessage(input: Record<string, unknown>, context: ApiKeyProviderCont
 async function requestTelnyx(input: {
   path: string;
   method?: "GET" | "POST";
-  context: Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
+  context: ApiKeyProviderContext;
   body?: Record<string, unknown>;
   query?: Array<[string, unknown]>;
   phase: TelnyxRequestPhase;

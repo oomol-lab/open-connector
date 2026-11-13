@@ -1,6 +1,5 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-executors.ts";
-import type { ApiKeyProviderContext } from "../provider-executors.ts";
+import type { ProviderActionHandlers, ApiKeyProviderContext } from "../provider-executors.ts";
 
 import { compactObject, optionalRecord, optionalString } from "../../core/cast.ts";
 import { defineApiKeyProviderExecutors } from "../provider-executors.ts";
@@ -10,12 +9,11 @@ import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts"
 const service = "companyenrich";
 const companyenrichApiBaseUrl = "https://api.companyenrich.com";
 
-type CompanyenrichContext = Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
-type CompanyenrichActionHandler = (input: Record<string, unknown>, context: CompanyenrichContext) => Promise<unknown>;
+type CompanyenrichActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
 interface CompanyenrichRequest {
   path: string;
-  context: CompanyenrichContext;
+  context: ApiKeyProviderContext;
   method?: "GET" | "POST";
   query?: Record<string, unknown>;
   body?: Record<string, unknown>;

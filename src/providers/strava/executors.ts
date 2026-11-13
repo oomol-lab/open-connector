@@ -1,6 +1,5 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-executors.ts";
-import type { OAuthProviderContext } from "../provider-executors.ts";
+import type { ProviderActionHandlers, OAuthProviderContext } from "../provider-executors.ts";
 
 import {
   compactObject,
@@ -502,7 +501,7 @@ async function stravaGetSegmentEffortStreams(
   return { streams: payload };
 }
 
-interface StravaRequestInput extends Pick<OAuthProviderContext, "accessToken" | "fetcher" | "signal"> {
+interface StravaRequestInput extends OAuthProviderContext {
   method?: "GET" | "POST" | "PUT";
   query?: Record<string, unknown>;
   body?: BodyInit;

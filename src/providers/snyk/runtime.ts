@@ -1,6 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-executors.ts";
-import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-executors.ts";
+import type { ProviderActionHandlers, ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-executors.ts";
 
 import { optionalBoolean, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import {
@@ -19,7 +18,7 @@ interface SnykResponse {
 }
 
 interface RequestInput {
-  context: Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
+  context: ApiKeyProviderContext;
   path: string;
   query?: Record<string, QueryValue>;
   commaArrays?: readonly string[];

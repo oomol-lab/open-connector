@@ -1,6 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-executors.ts";
-import type { ApiKeyProviderContext } from "../provider-executors.ts";
+import type { ProviderActionHandlers, ApiKeyProviderContext } from "../provider-executors.ts";
 
 import { compactObject, optionalBoolean, optionalNumber, optionalRecord, optionalString } from "../../core/cast.ts";
 import { ProviderRequestError, providerUserAgent, runProviderRequest } from "../provider-runtime.ts";
@@ -182,7 +181,7 @@ async function executeCreateSwap(input: Record<string, unknown>, context: ApiKey
 
 async function uniswapApiRequest(
   input: UniswapRequestInput,
-  context: Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">,
+  context: ApiKeyProviderContext,
 ): Promise<Record<string, unknown>> {
   return runProviderRequest(
     { signal: context.signal, timeoutMs: uniswapApiDefaultRequestTimeoutMs, label: "uniswap_api" },

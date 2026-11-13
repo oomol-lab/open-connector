@@ -1,6 +1,5 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-executors.ts";
-import type { ApiKeyProviderContext } from "../provider-executors.ts";
+import type { ProviderActionHandlers, ApiKeyProviderContext } from "../provider-executors.ts";
 import type { Client } from "@modelcontextprotocol/client";
 
 import { UnauthorizedError } from "@modelcontextprotocol/client";
@@ -16,9 +15,8 @@ import { sellerspriteMcpActions } from "./actions.ts";
 const service = "sellersprite_mcp";
 const endpoint = "https://mcp.sellersprite.com/mcp";
 const timeoutMs = 60_000;
-type Context = Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
 type ToolResult = Awaited<ReturnType<Client["callTool"]>>;
-type SellerSpriteMcpHandler = (input: Record<string, unknown>, context: Context) => Promise<unknown>;
+type SellerSpriteMcpHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
 const handlers: ProviderActionHandlers<"sellersprite_mcp", SellerSpriteMcpHandler> = mapProviderActionHandlers(
   service,
@@ -65,7 +63,7 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
     if (!headers.has("content-type")) headers.set("content-type", "application/json");
   },
 });
-async function discover(context: Context): Promise<unknown[]> {
+async function discover(context: ApiKeyProviderContext): Promise<unknown[]> {
   return withClient(context, async (client) => {
     const result = await client.listTools({}, { timeout: timeoutMs });
     const tools = result.tools.filter((tool) => tool.name !== "secret_invalid");
@@ -79,13 +77,17 @@ async function discover(context: Context): Promise<unknown[]> {
     }));
   });
 }
-async function call(context: Context, name: string, argumentsInput: Record<string, unknown>): Promise<unknown> {
+async function call(
+  context: ApiKeyProviderContext,
+  name: string,
+  argumentsInput: Record<string, unknown>,
+): Promise<unknown> {
   return withClient(context, async (client) => {
     const result = await client.callTool({ name, arguments: argumentsInput }, { timeout: timeoutMs });
     return { result: normalize(result) };
   });
 }
-async function withClient<T>(context: Context, run: (client: Client) => Promise<T>): Promise<T> {
+async function withClient<T>(context: ApiKeyProviderContext, run: (client: Client) => Promise<T>): Promise<T> {
   const headers = new Headers({ "secret-key": context.apiKey, "user-agent": providerUserAgent });
   return withMcpClient(
     {

@@ -1,6 +1,5 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-executors.ts";
-import type { ApiKeyProviderContext } from "../provider-executors.ts";
+import type { ProviderActionHandlers, ApiKeyProviderContext } from "../provider-executors.ts";
 
 import {
   compactObject,
@@ -25,8 +24,7 @@ const service = "woodpecker_co";
 export const woodpeckerCoApiBaseUrl = "https://api.woodpecker.co/rest";
 
 type WoodpeckerCoPhase = "validate" | "execute";
-type WoodpeckerCoContext = Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
-type WoodpeckerCoActionHandler = (input: Record<string, unknown>, context: WoodpeckerCoContext) => Promise<unknown>;
+type WoodpeckerCoActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
 interface NormalizedWoodpeckerUser {
   id: number | null;
@@ -210,7 +208,7 @@ async function requestWoodpeckerCoJson(input: {
   method: "GET";
   path: string;
   params?: Record<string, string | undefined>;
-  context: WoodpeckerCoContext;
+  context: ApiKeyProviderContext;
   phase: WoodpeckerCoPhase;
 }): Promise<unknown> {
   const url = new URL(normalizeWoodpeckerCoPath(input.path), `${woodpeckerCoApiBaseUrl}/`);

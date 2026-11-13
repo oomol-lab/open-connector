@@ -1,6 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-executors.ts";
-import type { ApiKeyProviderContext } from "../provider-executors.ts";
+import type { ProviderActionHandlers, ApiKeyProviderContext } from "../provider-executors.ts";
 
 import { compactObject, optionalNumber, optionalRecord, optionalString } from "../../core/cast.ts";
 import { ProviderRequestError, providerUserAgent, requiredInputString } from "../provider-runtime.ts";
@@ -77,7 +76,7 @@ async function executeQuery(input: Record<string, unknown>, context: TurbotPipes
 async function turbotPipesPostJson(
   path: string,
   body: Record<string, unknown>,
-  context: Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">,
+  context: ApiKeyProviderContext,
   phase: TurbotPipesRequestPhase,
 ): Promise<unknown> {
   let response: Response;

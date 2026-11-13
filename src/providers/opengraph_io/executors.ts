@@ -1,6 +1,5 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-executors.ts";
-import type { ApiKeyProviderContext } from "../provider-executors.ts";
+import type { ProviderActionHandlers, ApiKeyProviderContext } from "../provider-executors.ts";
 
 import { compactObject, optionalBoolean, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
 import { assertPublicHttpUrl } from "../../core/request.ts";
@@ -188,7 +187,7 @@ function buildScreenshotQuery(input: Record<string, unknown>): Record<string, Op
 async function opengraphIoRequest(input: {
   path: string;
   query: Record<string, OpenGraphIoQueryValue>;
-  context: Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
+  context: ApiKeyProviderContext;
   phase: OpenGraphIoRequestPhase;
 }): Promise<unknown> {
   const url = new URL(input.path, opengraphIoApiBaseUrl);

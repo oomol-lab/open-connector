@@ -1,6 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-executors.ts";
-import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-executors.ts";
+import type { ProviderActionHandlers, ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-executors.ts";
 
 import { compactObject, optionalNumber, optionalRecord, optionalString } from "../../core/cast.ts";
 import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
@@ -88,7 +87,7 @@ async function getCurrentUser(context: ApiKeyProviderContext): Promise<unknown> 
 }
 
 async function fetchCurrentUser(
-  context: Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">,
+  context: ApiKeyProviderContext,
   phase: FeltRequestPhase,
 ): Promise<Record<string, unknown>> {
   const payload = await requestFelt({ method: "GET", path: "/user" }, context, phase);
@@ -170,7 +169,7 @@ async function requestFelt(
     query?: Record<string, unknown>;
     body?: Record<string, unknown>;
   },
-  context: Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">,
+  context: ApiKeyProviderContext,
   phase: FeltRequestPhase,
 ): Promise<unknown> {
   const url = new URL(`${feltApiBaseUrl}${input.path}`);

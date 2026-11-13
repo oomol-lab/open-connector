@@ -1,5 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-executors.ts";
+import type { ApiKeyProviderContext, ProviderActionHandlers } from "../provider-executors.ts";
 
 import { compactObject, optionalNumber, optionalRecord, optionalString } from "../../core/cast.ts";
 import { encodePathSegment } from "../../core/request.ts";
@@ -121,7 +121,7 @@ function buildGrafanaCloudUrl(path: string, query: Record<string, unknown> = {})
 }
 
 async function requestGrafanaCloud(
-  context: Pick<GrafanaCloudContext, "apiKey" | "fetcher" | "signal">,
+  context: ApiKeyProviderContext,
   url: URL,
   phase: GrafanaCloudRequestPhase,
 ): Promise<unknown> {

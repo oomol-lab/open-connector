@@ -1,5 +1,4 @@
-import type { ProviderActionHandlers } from "../provider-executors.ts";
-import type { ApiKeyProviderContext } from "../provider-executors.ts";
+import type { ProviderActionHandlers, ApiKeyProviderContext } from "../provider-executors.ts";
 
 import { compactObject, optionalRecord } from "../../core/cast.ts";
 import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
@@ -250,7 +249,7 @@ export async function validateTextitApiKey(input: {
 async function requestTextitJson(input: {
   path: string;
   method: "DELETE" | "GET" | "POST";
-  context: Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
+  context: ApiKeyProviderContext;
   query?: Record<string, unknown>;
   body?: unknown;
 }): Promise<unknown> {

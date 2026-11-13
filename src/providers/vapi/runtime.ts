@@ -5,7 +5,7 @@ import type {
   ProviderActionName,
   ProviderActionSources,
 } from "../provider-executors.ts";
-import type { ProviderFetch } from "../provider-runtime.ts";
+import type { ProviderRequestContext, ProviderFetch } from "../provider-runtime.ts";
 
 import {
   base64Bytes,
@@ -384,7 +384,7 @@ function prepareOpenAiChatBody(input: Record<string, unknown>): Record<string, u
 
 async function buildVapiMultipartFormData(
   input: Record<string, unknown>,
-  context: Pick<ApiKeyProviderContext, "fetcher" | "signal">,
+  context: ProviderRequestContext,
 ): Promise<FormData> {
   const formData = new FormData();
   const fileInput = optionalRecord(input.file);
@@ -403,7 +403,7 @@ async function buildVapiMultipartFormData(
 
 async function resolveVapiUploadSource(
   input: Record<string, unknown>,
-  context: Pick<ApiKeyProviderContext, "fetcher" | "signal">,
+  context: ProviderRequestContext,
 ): Promise<{ bytes: ArrayBuffer; fileName: string; mimeType: string }> {
   const fileName = firstNonEmptyString(input.name);
   const mimeType = firstNonEmptyString(input.mimetype) ?? "application/octet-stream";

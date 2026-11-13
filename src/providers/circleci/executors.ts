@@ -4,8 +4,8 @@ import type {
   ProviderExecutors,
   ProviderProxyExecutor,
 } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-executors.ts";
-import type { ApiKeyProviderContext } from "../provider-executors.ts";
+import type { ProviderActionHandlers, ApiKeyProviderContext } from "../provider-executors.ts";
+import type { ProviderRequestContext } from "../provider-runtime.ts";
 
 import { compactObject, optionalRecord, optionalString } from "../../core/cast.ts";
 import { defineApiKeyProviderExecutors } from "../provider-executors.ts";
@@ -185,7 +185,7 @@ async function requestCircleciJson<T>(input: {
   apiKey: string;
   path: string;
   phase: CircleciRequestPhase;
-  context?: Pick<ApiKeyProviderContext, "fetcher" | "signal">;
+  context?: ProviderRequestContext;
   fetcher?: typeof fetch;
   signal?: AbortSignal;
   method?: string;

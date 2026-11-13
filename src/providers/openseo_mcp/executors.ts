@@ -59,7 +59,7 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
     if (!headers.has("accept")) headers.set("accept", "application/json, text/event-stream");
   },
 });
-function connection(context: Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">) {
+function connection(context: ApiKeyProviderContext) {
   return {
     endpoint,
     service: "OpenSEO",

@@ -1,6 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-executors.ts";
-import type { ApiKeyProviderContext } from "../provider-executors.ts";
+import type { ProviderActionHandlers, ApiKeyProviderContext } from "../provider-executors.ts";
 
 import { optionalBoolean, optionalInteger, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import {
@@ -90,7 +89,7 @@ async function requestDropcontactJson(
     query?: Array<[string, string]>;
     body?: Record<string, unknown>;
   },
-  context: Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">,
+  context: ApiKeyProviderContext,
   mode: RequestMode,
 ): Promise<unknown> {
   const url = new URL(input.path, dropcontactApiBaseUrl);

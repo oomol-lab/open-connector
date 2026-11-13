@@ -1,6 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-executors.ts";
-import type { ApiKeyProviderContext } from "../provider-executors.ts";
+import type { ProviderActionHandlers, ApiKeyProviderContext } from "../provider-executors.ts";
 
 import { compactObject, objectArray, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import {
@@ -18,7 +17,6 @@ interface CockroachLabsCredentialInput {
 }
 
 type CockroachLabsRequestPhase = "validate" | "execute";
-type CockroachLabsRuntimeContext = Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
 type CockroachLabsActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
 export const cockroachLabsActionHandlers: ProviderActionHandlers<"cockroach_labs", CockroachLabsActionHandler> = {
@@ -148,7 +146,7 @@ export async function validateCockroachLabsApiKey(
   input: CockroachLabsCredentialInput,
   options: { fetcher: typeof fetch; signal?: AbortSignal },
 ): Promise<CredentialValidationResult> {
-  const context: CockroachLabsRuntimeContext = {
+  const context: ApiKeyProviderContext = {
     apiKey: input.apiKey,
     fetcher: options.fetcher,
     signal: options.signal,
@@ -180,7 +178,7 @@ export async function validateCockroachLabsApiKey(
 }
 
 async function requestCockroachLabsObject(input: {
-  context: CockroachLabsRuntimeContext;
+  context: ApiKeyProviderContext;
   path: string;
   phase: CockroachLabsRequestPhase;
   responseContext: string;
@@ -196,7 +194,7 @@ async function requestCockroachLabsObject(input: {
 }
 
 async function requestCockroachLabsJson(input: {
-  context: CockroachLabsRuntimeContext;
+  context: ApiKeyProviderContext;
   path: string;
   phase: CockroachLabsRequestPhase;
   query?: URLSearchParams;

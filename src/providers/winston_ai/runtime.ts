@@ -1,6 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-executors.ts";
-import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-executors.ts";
+import type { ProviderActionHandlers, ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-executors.ts";
 
 import { optionalRecord, optionalString } from "../../core/cast.ts";
 import { jsonObject } from "../../core/request.ts";
@@ -92,10 +91,7 @@ function buildScanBody(input: Record<string, unknown>): Record<string, unknown> 
   });
 }
 
-async function requestWinstonAiJson(
-  input: WinstonAiRequestInput,
-  context: Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">,
-): Promise<unknown> {
+async function requestWinstonAiJson(input: WinstonAiRequestInput, context: ApiKeyProviderContext): Promise<unknown> {
   return runProviderRequest(
     { signal: context.signal, timeoutMs: winstonAiDefaultRequestTimeoutMs, label: "Winston AI" },
     async (signal) => {

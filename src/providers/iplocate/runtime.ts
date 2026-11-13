@@ -1,6 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-executors.ts";
-import type { ApiKeyProviderContext } from "../provider-executors.ts";
+import type { ProviderActionHandlers, ApiKeyProviderContext } from "../provider-executors.ts";
 
 import { isIP } from "node:net";
 import { optionalRecord, optionalString } from "../../core/cast.ts";
@@ -109,7 +108,7 @@ export async function validateIplocateCredential(
 
 async function requestIplocateObject(
   input: IplocateRequestInput,
-  context: Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">,
+  context: ApiKeyProviderContext,
   phase: IplocateRequestPhase,
   responseLabel: string,
 ): Promise<Record<string, unknown>> {
@@ -123,7 +122,7 @@ async function requestIplocateObject(
 
 async function requestIplocateJson(
   input: IplocateRequestInput,
-  context: Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">,
+  context: ApiKeyProviderContext,
   phase: IplocateRequestPhase,
 ): Promise<unknown> {
   const url = new URL(`${iplocateApiBaseUrl}${input.path}`);

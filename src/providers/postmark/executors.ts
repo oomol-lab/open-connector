@@ -1,6 +1,5 @@
 import type { ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-executors.ts";
-import type { ApiKeyProviderContext } from "../provider-executors.ts";
+import type { ProviderActionHandlers, ApiKeyProviderContext } from "../provider-executors.ts";
 
 import { compactObject, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
 import { defineApiKeyProviderExecutors } from "../provider-executors.ts";
@@ -104,7 +103,7 @@ async function editTemplate(input: Record<string, unknown>, context: ApiKeyProvi
 
 async function requestPostmarkJson<T = unknown>(input: {
   path: string;
-  context: Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
+  context: ApiKeyProviderContext;
   mode: "validate" | "execute";
   method?: string;
   query?: Record<string, string | number | boolean | undefined>;

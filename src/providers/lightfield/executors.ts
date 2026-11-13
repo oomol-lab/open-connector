@@ -1,6 +1,5 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-executors.ts";
-import type { ApiKeyProviderContext } from "../provider-executors.ts";
+import type { ProviderActionHandlers, ApiKeyProviderContext } from "../provider-executors.ts";
 
 import { compactObject, optionalString, requiredString } from "../../core/cast.ts";
 import { encodePathSegment } from "../../core/request.ts";
@@ -158,7 +157,7 @@ async function getLightfieldRecord(
 
 async function requestLightfield(input: {
   path: string;
-  context: Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
+  context: ApiKeyProviderContext;
   mode: LightfieldRequestMode;
   query?: Record<string, string>;
 }): Promise<unknown> {

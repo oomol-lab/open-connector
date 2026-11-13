@@ -1,6 +1,5 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-executors.ts";
-import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-executors.ts";
+import type { ProviderActionHandlers, ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-executors.ts";
 
 import { compactObject, optionalRecord, optionalString } from "../../core/cast.ts";
 import { defineApiKeyProviderExecutors } from "../provider-executors.ts";
@@ -76,10 +75,7 @@ export const credentialValidators: CredentialValidators = {
   },
 };
 
-async function edenaiRequest(
-  context: Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">,
-  request: EdenAiRequest,
-): Promise<unknown> {
+async function edenaiRequest(context: ApiKeyProviderContext, request: EdenAiRequest): Promise<unknown> {
   let response: Response;
   try {
     response = await context.fetcher(`${edenaiApiBaseUrl}${request.path}`, {

@@ -4,7 +4,8 @@ import type {
   ProviderExecutors,
   ResolvedCredential,
 } from "../../core/types.ts";
-import type { ApiKeyProviderContext, ProviderActionHandlers, ProviderActionSources } from "../provider-executors.ts";
+import type { ProviderActionHandlers, ProviderActionSources } from "../provider-executors.ts";
+import type { ProviderRequestContext } from "../provider-runtime.ts";
 
 import {
   compactObject,
@@ -35,7 +36,7 @@ interface PipedriveAccess {
   origin: string;
 }
 
-interface PipedriveContext extends PipedriveAccess, Pick<ApiKeyProviderContext, "fetcher" | "signal"> {}
+interface PipedriveContext extends PipedriveAccess, ProviderRequestContext {}
 
 interface Operation {
   method: PipedriveMethod;

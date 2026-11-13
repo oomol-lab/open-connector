@@ -6,8 +6,7 @@ import { ProviderRequestError, providerUserAgent, requiredInputString } from "..
 
 export const mem0ApiBaseUrl = "https://api.mem0.ai";
 
-type Mem0ActionContext = Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
-type Mem0ActionHandler = (input: Record<string, unknown>, context: Mem0ActionContext) => Promise<unknown>;
+type Mem0ActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 type QueryValue = string | number | boolean | null | undefined | readonly string[] | Record<string, unknown>;
 
 interface Mem0RequestInput {
@@ -84,7 +83,7 @@ export async function validateMem0ApiKey(
   };
 }
 
-function addMem0Memories(input: Record<string, unknown>, context: Mem0ActionContext): Promise<unknown> {
+function addMem0Memories(input: Record<string, unknown>, context: ApiKeyProviderContext): Promise<unknown> {
   if (!optionalString(input.memory) && !Array.isArray(input.messages)) {
     throw new ProviderRequestError(400, "memory or messages must be provided");
   }
@@ -116,7 +115,7 @@ function addMem0Memories(input: Record<string, unknown>, context: Mem0ActionCont
   });
 }
 
-function getMem0Memories(input: Record<string, unknown>, context: Mem0ActionContext): Promise<unknown> {
+function getMem0Memories(input: Record<string, unknown>, context: ApiKeyProviderContext): Promise<unknown> {
   return mem0Request(context, {
     method: "POST",
     path: "/v2/memories/",
@@ -130,7 +129,7 @@ function getMem0Memories(input: Record<string, unknown>, context: Mem0ActionCont
   });
 }
 
-function searchMem0Memories(input: Record<string, unknown>, context: Mem0ActionContext): Promise<unknown> {
+function searchMem0Memories(input: Record<string, unknown>, context: ApiKeyProviderContext): Promise<unknown> {
   return mem0Request(context, {
     method: "POST",
     path: "/v2/memories/search/",
@@ -149,13 +148,13 @@ function searchMem0Memories(input: Record<string, unknown>, context: Mem0ActionC
   });
 }
 
-function getMem0Memory(input: Record<string, unknown>, context: Mem0ActionContext): Promise<unknown> {
+function getMem0Memory(input: Record<string, unknown>, context: ApiKeyProviderContext): Promise<unknown> {
   return mem0Request(context, {
     path: `/v1/memories/${encodeURIComponent(requiredInputString(input.memory_id, "memory_id"))}/`,
   });
 }
 
-function updateMem0Memory(input: Record<string, unknown>, context: Mem0ActionContext): Promise<unknown> {
+function updateMem0Memory(input: Record<string, unknown>, context: ApiKeyProviderContext): Promise<unknown> {
   if (!optionalString(input.text) && !optionalRecord(input.metadata)) {
     throw new ProviderRequestError(400, "text or metadata must be provided");
   }
@@ -169,7 +168,7 @@ function updateMem0Memory(input: Record<string, unknown>, context: Mem0ActionCon
   });
 }
 
-async function deleteMem0Memory(input: Record<string, unknown>, context: Mem0ActionContext): Promise<unknown> {
+async function deleteMem0Memory(input: Record<string, unknown>, context: ApiKeyProviderContext): Promise<unknown> {
   const memoryId = requiredInputString(input.memory_id, "memory_id");
   const response = await mem0RawRequest(context, {
     method: "DELETE",
@@ -188,13 +187,13 @@ async function deleteMem0Memory(input: Record<string, unknown>, context: Mem0Act
   });
 }
 
-function getMem0MemoryHistory(input: Record<string, unknown>, context: Mem0ActionContext): Promise<unknown> {
+function getMem0MemoryHistory(input: Record<string, unknown>, context: ApiKeyProviderContext): Promise<unknown> {
   return mem0Request(context, {
     path: `/v1/memories/${encodeURIComponent(requiredInputString(input.memory_id, "memory_id"))}/history/`,
   });
 }
 
-function getMem0Events(input: Record<string, unknown>, context: Mem0ActionContext): Promise<unknown> {
+function getMem0Events(input: Record<string, unknown>, context: ApiKeyProviderContext): Promise<unknown> {
   return mem0Request(context, {
     path: "/v1/events/",
     query: compactObject({
@@ -207,13 +206,13 @@ function getMem0Events(input: Record<string, unknown>, context: Mem0ActionContex
   });
 }
 
-function getMem0Event(input: Record<string, unknown>, context: Mem0ActionContext): Promise<unknown> {
+function getMem0Event(input: Record<string, unknown>, context: ApiKeyProviderContext): Promise<unknown> {
   return mem0Request(context, {
     path: `/v1/event/${encodeURIComponent(requiredInputString(input.event_id, "event_id"))}/`,
   });
 }
 
-function getMem0Users(input: Record<string, unknown>, context: Mem0ActionContext): Promise<unknown> {
+function getMem0Users(input: Record<string, unknown>, context: ApiKeyProviderContext): Promise<unknown> {
   const orgId = optionalString(input.org_id);
   const projectId = optionalString(input.project_id);
   if ((orgId && !projectId) || (!orgId && projectId)) {
@@ -229,7 +228,7 @@ function getMem0Users(input: Record<string, unknown>, context: Mem0ActionContext
   });
 }
 
-async function mem0Request(context: Mem0ActionContext, input: Mem0RequestInput): Promise<unknown> {
+async function mem0Request(context: ApiKeyProviderContext, input: Mem0RequestInput): Promise<unknown> {
   const response = await mem0RawRequest(context, input);
 
   if (!response.ok) {
@@ -253,7 +252,7 @@ async function mem0Request(context: Mem0ActionContext, input: Mem0RequestInput):
   }
 }
 
-function mem0RawRequest(context: Mem0ActionContext, input: Mem0RequestInput): Promise<Response> {
+function mem0RawRequest(context: ApiKeyProviderContext, input: Mem0RequestInput): Promise<Response> {
   const url = new URL(input.path, mem0ApiBaseUrl);
   appendQuery(url, input.query);
 

@@ -1,6 +1,5 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-executors.ts";
-import type { ApiKeyProviderContext } from "../provider-executors.ts";
+import type { ProviderActionHandlers, ApiKeyProviderContext } from "../provider-executors.ts";
 
 import { optionalNumber, optionalRecord, optionalString } from "../../core/cast.ts";
 import { defineApiKeyProviderExecutors } from "../provider-executors.ts";
@@ -12,8 +11,7 @@ const geocodioApiBaseUrl = "https://api.geocod.io";
 const geocodioApiVersion = "v1.12";
 const geocodioValidationQuery = "1109 N Highland St, Arlington VA";
 
-type GeocodioActionContext = Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
-type GeocodioActionHandler = (input: Record<string, unknown>, context: GeocodioActionContext) => Promise<unknown>;
+type GeocodioActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
 export const geocodioActionHandlers: ProviderActionHandlers<"geocodio", GeocodioActionHandler> = {
   single_geocode(input, context) {
@@ -81,7 +79,7 @@ export const credentialValidators: CredentialValidators = {
 async function geocodioGet(
   path: string,
   query: Record<string, string | number | undefined>,
-  context: GeocodioActionContext,
+  context: ApiKeyProviderContext,
   phase: "validate" | "execute" = "execute",
 ): Promise<unknown> {
   return geocodioRequest(buildGeocodioUrl(path, query, context.apiKey), { method: "GET" }, context, phase);
@@ -91,7 +89,7 @@ async function geocodioPost(
   path: string,
   query: Record<string, string | number | undefined>,
   body: unknown,
-  context: GeocodioActionContext,
+  context: ApiKeyProviderContext,
 ): Promise<unknown> {
   return geocodioRequest(
     buildGeocodioUrl(path, query, context.apiKey),
@@ -121,7 +119,7 @@ function buildGeocodioUrl(path: string, query: Record<string, string | number | 
 async function geocodioRequest(
   url: URL,
   init: RequestInit,
-  context: GeocodioActionContext,
+  context: ApiKeyProviderContext,
   phase: "validate" | "execute",
 ): Promise<unknown> {
   let response: Response;

@@ -1,6 +1,6 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 import type { ProviderActionHandlers } from "../provider-executors.ts";
-import type { ProviderFetch } from "../provider-runtime.ts";
+import type { ProviderRequestContext, ProviderFetch } from "../provider-runtime.ts";
 
 import {
   compactObject,
@@ -181,7 +181,7 @@ async function listAccounts(
 
 async function requestOAuthAccounts(
   accessToken: string,
-  context: Pick<CloudflareBrowserRenderingContext, "fetcher" | "signal">,
+  context: ProviderRequestContext,
   input: { page?: number; perPage?: number } = {},
   phase: CloudflareRequestPhase = "execute",
 ): Promise<{ accounts: Array<Record<string, unknown>>; resultInfo: Record<string, unknown> }> {
@@ -207,7 +207,7 @@ async function requestOAuthAccounts(
 
 async function requestAccounts(
   accessToken: string,
-  context: Pick<CloudflareBrowserRenderingContext, "fetcher" | "signal">,
+  context: ProviderRequestContext,
   input: { page?: number; perPage?: number } = {},
 ): Promise<{ accounts: Array<Record<string, unknown>>; resultInfo: Record<string, unknown> }> {
   const envelope = await cloudflareRequestEnvelope(
@@ -437,7 +437,7 @@ async function cloudflareRequestEnvelope(
     query?: Record<string, QueryValue>;
     body?: Record<string, unknown>;
   },
-  context: Pick<CloudflareBrowserRenderingContext, "fetcher" | "signal">,
+  context: ProviderRequestContext,
   phase: CloudflareRequestPhase,
 ): Promise<CloudflareEnvelope> {
   let response: Response;

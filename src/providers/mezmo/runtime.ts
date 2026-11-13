@@ -1,6 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-executors.ts";
-import type { ApiKeyProviderContext } from "../provider-executors.ts";
+import type { ProviderActionHandlers, ApiKeyProviderContext } from "../provider-executors.ts";
 import type { ProviderFetch } from "../provider-runtime.ts";
 
 import { optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
@@ -14,8 +13,7 @@ import {
 export const mezmoApiBaseUrl = "https://api.mezmo.com";
 
 type MezmoPhase = "validate" | "execute";
-type MezmoActionContext = Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
-type MezmoActionHandler = (input: Record<string, unknown>, context: MezmoActionContext) => Promise<unknown>;
+type MezmoActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
 const usageListPaths: Record<"list_app_usages" | "list_host_usages" | "list_tag_usages", string> = {
   list_app_usages: "/v1/usage/apps",
@@ -87,7 +85,7 @@ export async function validateMezmoCredential(
 async function requestDimensionUsage(
   actionName: keyof typeof usageListPaths,
   input: Record<string, unknown>,
-  context: MezmoActionContext,
+  context: ApiKeyProviderContext,
 ): Promise<Array<Record<string, unknown>>> {
   const payload = await requestMezmoJson({
     path: usageListPaths[actionName],
@@ -104,7 +102,7 @@ async function requestDimensionUsage(
 }
 
 async function requestMezmoIngestionStatus(
-  context: MezmoActionContext,
+  context: ApiKeyProviderContext,
   phase: MezmoPhase,
 ): Promise<{ isIngesting: boolean }> {
   const payload = await requestMezmoJson({
@@ -126,7 +124,7 @@ async function requestMezmoIngestionStatus(
 async function requestMezmoJson(input: {
   path: string;
   params: Record<string, string | undefined>;
-  context: MezmoActionContext;
+  context: ApiKeyProviderContext;
   phase: MezmoPhase;
 }): Promise<unknown> {
   return runProviderRequest({ signal: input.context.signal, label: "Mezmo" }, async (signal) => {

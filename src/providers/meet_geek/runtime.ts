@@ -1,6 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-executors.ts";
-import type { ApiKeyProviderContext } from "../provider-executors.ts";
+import type { ProviderActionHandlers, ApiKeyProviderContext } from "../provider-executors.ts";
 
 import {
   compactObject,
@@ -22,8 +21,7 @@ export const meetGeekApiBaseUrls = {
 type MeetGeekRegion = keyof typeof meetGeekApiBaseUrls;
 type MeetGeekQueryValue = string | number | undefined;
 type MeetGeekPhase = "validate" | "execute";
-type MeetGeekActionContext = Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
-type MeetGeekActionHandler = (input: Record<string, unknown>, context: MeetGeekActionContext) => Promise<unknown>;
+type MeetGeekActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
 export const meetGeekActionHandlers: ProviderActionHandlers<"meet_geek", MeetGeekActionHandler> = {
   list_meetings(input, context) {
@@ -85,7 +83,7 @@ export async function validateMeetGeekCredential(
 async function executeMeetingsPage(
   path: string,
   input: Record<string, unknown>,
-  context: MeetGeekActionContext,
+  context: ApiKeyProviderContext,
 ): Promise<Record<string, unknown>> {
   const payload = await meetGeekJsonRequest(path, buildPaginationQuery(input), readRegion(input), context, "execute");
   const record = requireProviderRecord(payload, "MeetGeek response");
@@ -99,7 +97,7 @@ async function executeMeetingsPage(
 
 async function executeMeeting(
   input: Record<string, unknown>,
-  context: MeetGeekActionContext,
+  context: ApiKeyProviderContext,
 ): Promise<Record<string, unknown>> {
   const meetingId = readMeetingId(input);
   const payload = await meetGeekJsonRequest(
@@ -116,7 +114,7 @@ async function executeMeeting(
 
 async function executeSummary(
   input: Record<string, unknown>,
-  context: MeetGeekActionContext,
+  context: ApiKeyProviderContext,
 ): Promise<Record<string, unknown>> {
   const meetingId = readMeetingId(input);
   const payload = await meetGeekJsonRequest(
@@ -137,7 +135,7 @@ async function executeSummary(
 
 async function executeTranscript(
   input: Record<string, unknown>,
-  context: MeetGeekActionContext,
+  context: ApiKeyProviderContext,
 ): Promise<Record<string, unknown>> {
   const meetingId = readMeetingId(input);
   const payload = await meetGeekJsonRequest(
@@ -159,7 +157,7 @@ async function executeTranscript(
 
 async function executeHighlights(
   input: Record<string, unknown>,
-  context: MeetGeekActionContext,
+  context: ApiKeyProviderContext,
 ): Promise<Record<string, unknown>> {
   const meetingId = readMeetingId(input);
   const payload = await meetGeekJsonRequest(
@@ -180,7 +178,7 @@ async function executeHighlights(
 
 async function executeInsights(
   input: Record<string, unknown>,
-  context: MeetGeekActionContext,
+  context: ApiKeyProviderContext,
 ): Promise<Record<string, unknown>> {
   const meetingId = readMeetingId(input);
   const payload = await meetGeekJsonRequest(
@@ -197,7 +195,7 @@ async function executeInsights(
 
 async function executeTeams(
   input: Record<string, unknown>,
-  context: MeetGeekActionContext,
+  context: ApiKeyProviderContext,
   phase: MeetGeekPhase,
 ): Promise<{ shareAccess: Array<Record<string, unknown>>; viewAccess: Array<Record<string, unknown>> }> {
   const payload = await meetGeekJsonRequest("/v1/teams", {}, readRegion(input), context, phase);
@@ -212,7 +210,7 @@ async function meetGeekJsonRequest(
   path: string,
   query: Record<string, MeetGeekQueryValue>,
   region: MeetGeekRegion,
-  context: MeetGeekActionContext,
+  context: ApiKeyProviderContext,
   phase: MeetGeekPhase,
 ): Promise<unknown> {
   const url = new URL(path, meetGeekApiBaseUrls[region]);

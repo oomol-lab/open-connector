@@ -202,11 +202,7 @@ function granolaUrl(path: string, query?: Record<string, unknown>): URL {
   return url;
 }
 
-function requestGranola(
-  context: Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">,
-  url: URL,
-  mode: GranolaRequestMode,
-): Promise<unknown> {
+function requestGranola(context: ApiKeyProviderContext, url: URL, mode: GranolaRequestMode): Promise<unknown> {
   return runProviderRequest({ signal: context.signal, label: "Granola" }, async (signal) => {
     const response = await context.fetcher(url.toString(), {
       method: "GET",
