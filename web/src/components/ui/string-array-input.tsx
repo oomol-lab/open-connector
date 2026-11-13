@@ -10,6 +10,7 @@ interface StringArrayInputProps {
   autoComplete?: React.HTMLInputAutoCompleteAttribute;
   id?: string;
   onChange: (value: string[]) => void;
+  removeLabel: (value: string) => string;
   readOnly?: boolean;
   placeholder?: string;
   value: string[];
@@ -22,6 +23,7 @@ export function StringArrayInput({
   onChange,
   placeholder,
   readOnly = false,
+  removeLabel,
   value,
 }: StringArrayInputProps) {
   const [draft, setDraft] = React.useState("");
@@ -70,7 +72,7 @@ export function StringArrayInput({
               }}
             >
               <XIcon />
-              <span className="sr-only">{item}</span>
+              <span className="sr-only">{removeLabel(item)}</span>
             </Button>
           ) : null}
         </Badge>

@@ -31,14 +31,14 @@ export const provider: ProviderDefinition = {
       authorizationOptions: [
         {
           id: githubWorkflowScope,
-          label: "Workflows",
-          description: "Update GitHub Actions workflow files.",
+          label: "Edit workflows",
+          description: "Create and update GitHub Actions workflow files.",
           risk: "sensitive",
         },
         {
           id: githubDeleteRepoScope,
           label: "Delete repositories",
-          description: "Permanently delete repositories.",
+          description: "Delete repositories you administer.",
           risk: "destructive",
         },
       ],

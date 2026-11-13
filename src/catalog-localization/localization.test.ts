@@ -109,8 +109,7 @@ describe("localized provider metadata", () => {
       authorizationOptions: expect.arrayContaining([
         {
           id: "workflow",
-          label: "工作流",
-          description: "更新 GitHub Actions 工作流文件。",
+          ...zhCN.providers.github!.auth!.oauth2!.authorizationOptions!.workflow,
           risk: "sensitive",
         },
       ]),

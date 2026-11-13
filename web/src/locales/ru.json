@@ -426,10 +426,12 @@
       "reset": "OAuth client сброшен.",
       "resetFailed": "Не удалось сбросить OAuth client.",
       "useDefaultScopes": "Использовать разрешения по умолчанию",
-      "customScopes": "Собственные scope (пусто — только обязательные)",
+      "scopeLabel": "Области доступа OAuth",
+      "emptyScopes": "Будут запрошены только основные разрешения для подключения.",
+      "removeScope": "Удалить {{scope}}",
       "scopePlaceholder": "Добавить scope",
       "additionalScopes": "Дополнительные разрешения",
-      "advancedScopes": "Расширенные настройки OAuth scope"
+      "advancedScopes": "Дополнительные настройки"
     },
     "execution": {
       "executable": "Выполняемое",

@@ -20,6 +20,7 @@ interface OAuthScopeSelection {
 
 interface OAuthScopeEditorProps {
   options: OAuthAuthorizationOption[] | undefined;
+  requiredScopes?: string[];
   selection: OAuthScopeSelection;
 }
 
@@ -47,9 +48,11 @@ export function useOAuthScopeSelection(defaultScopes: string[] | undefined): OAu
   };
 }
 
-export function OAuthScopeEditor({ options, selection }: OAuthScopeEditorProps): ReactNode {
+export function OAuthScopeEditor({ options, selection, requiredScopes }: OAuthScopeEditorProps): ReactNode {
   const t = useTranslate();
   const id = useId();
+  const showBasicPermissions =
+    selection.custom && selection.selectedScopes.length === 0 && Boolean(requiredScopes?.length);
   return (
     <div className="grid min-w-0 gap-4">
       {options?.length ? (
@@ -103,16 +106,23 @@ export function OAuthScopeEditor({ options, selection }: OAuthScopeEditorProps):
           </div>
           <div className="grid min-w-0 gap-2">
             <Label htmlFor={`${id}-custom`} className="leading-snug">
-              {selection.custom ? t("providers.oauthClientSettings.customScopes") : "OAuth scopes"}
+              {t("providers.oauthClientSettings.scopeLabel")}
             </Label>
             <StringArrayInput
               key={selection.custom ? "custom" : "default"}
               id={`${id}-custom`}
+              aria-describedby={showBasicPermissions ? `${id}-help` : undefined}
               value={selection.selectedScopes}
               readOnly={!selection.custom}
+              removeLabel={(scope) => t("providers.oauthClientSettings.removeScope", { scope })}
               onChange={selection.setScopes}
               placeholder={t("providers.oauthClientSettings.scopePlaceholder")}
             />
+            {showBasicPermissions ? (
+              <p id={`${id}-help`} className="text-sm text-muted-foreground">
+                {t("providers.oauthClientSettings.emptyScopes")}
+              </p>
+            ) : null}
           </div>
         </div>
       </details>

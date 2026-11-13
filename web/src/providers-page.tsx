@@ -2018,7 +2018,11 @@ function ConnectionForm(props: ConnectionFormProps): ReactNode {
         </>
       ) : null}
       {props.auth.type === "oauth2" && !remote && props.auth.supportsScopeSelection !== false ? (
-        <OAuthScopeEditor options={authorizationOptions} selection={scopeSelection} />
+        <OAuthScopeEditor
+          options={authorizationOptions}
+          selection={scopeSelection}
+          requiredScopes={props.auth.requiredScopes}
+        />
       ) : null}
       {authDescription ? <small className="block text-muted-foreground">{authDescription}</small> : null}
       {fields.map((field) => (

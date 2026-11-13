@@ -11,12 +11,12 @@ export const translation: ProviderTranslation = {
     oauth2: {
       authorizationOptions: {
         "search:read.public": {
-          label: "公开频道消息搜索",
-          description: "使用 Slack Real-time Search 搜索公开频道的消息，需要 Slack 单独批准。",
+          label: "搜索公开频道",
+          description: "适用于内部应用或已上架 Slack Marketplace 的应用。",
         },
         "search:read.private": {
-          label: "私有频道消息搜索",
-          description: "使用 Slack Real-time Search 搜索私有频道的消息，需要 Slack 单独批准。",
+          label: "搜索私有频道",
+          description: "搜索你有权访问的私有频道消息，需在 Slack 内确认授权。",
         },
       },
     },

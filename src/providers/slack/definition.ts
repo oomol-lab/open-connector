@@ -9,14 +9,14 @@ const service = "slack";
 const slackAuthorizationOptions: OAuthAuthorizationOption[] = [
   {
     id: "search:read.public",
-    label: "Public message search",
-    description: "Search public-channel messages with Slack Real-time Search. Requires separate Slack approval.",
+    label: "Search public channels",
+    description: "Available to internal apps and apps listed in the Slack Marketplace.",
     risk: "sensitive",
   },
   {
     id: "search:read.private",
-    label: "Private message search",
-    description: "Search private-channel messages with Slack Real-time Search. Requires separate Slack approval.",
+    label: "Search private channels",
+    description: "Search messages in private channels you can access. Requires your consent in Slack.",
     risk: "sensitive",
   },
 ];
