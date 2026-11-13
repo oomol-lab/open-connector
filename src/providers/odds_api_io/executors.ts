@@ -25,7 +25,6 @@ const service = "odds_api_io";
 const apiBaseUrl = "https://api.odds-api.io/v3";
 
 type Handler = ProviderRuntimeHandler<ApiKeyProviderContext>;
-type RequestContext = Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
 
 const oddsApiIoActionHandlers: ProviderActionHandlers<"odds_api_io", Handler> = {
   async list_sports(_input, context) {
@@ -121,7 +120,7 @@ export const credentialValidators: CredentialValidators = {
 
 function oddsApiIoRequest(
   path: string,
-  context: RequestContext,
+  context: ApiKeyProviderContext,
   query: Record<string, QueryValue> = {},
   phase: ProviderRequestPhase = "execute",
 ): Promise<unknown> {

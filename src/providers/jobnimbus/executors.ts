@@ -1,6 +1,5 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-executors.ts";
-import type { ApiKeyProviderContext } from "../provider-executors.ts";
+import type { ProviderActionHandlers, ApiKeyProviderContext } from "../provider-executors.ts";
 
 import { createHash } from "node:crypto";
 import {
@@ -21,8 +20,7 @@ const jobnimbusApiBaseUrl = "https://app.jobnimbus.com/api1";
 const jobnimbusValidationPath = "/account/settings";
 
 type JobnimbusRequestPhase = "validate" | "execute";
-type JobnimbusActionContext = Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
-type JobnimbusActionHandler = (input: Record<string, unknown>, context: JobnimbusActionContext) => Promise<unknown>;
+type JobnimbusActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 type JobnimbusRequestMethod = "GET" | "POST" | "PUT";
 
 interface JobnimbusResponsePayload {

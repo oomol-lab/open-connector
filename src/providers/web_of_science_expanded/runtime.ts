@@ -1,6 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-executors.ts";
-import type { ApiKeyProviderContext } from "../provider-executors.ts";
+import type { ProviderActionHandlers, ApiKeyProviderContext } from "../provider-executors.ts";
 
 import {
   compactObject,
@@ -24,10 +23,9 @@ import {
 const webOfScienceExpandedApiBaseUrl = "https://wos-api.clarivate.com/api/wos";
 
 type WebOfScienceExpandedPhase = "validate" | "execute";
-type WebOfScienceExpandedContext = Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
 type WebOfScienceExpandedActionHandler = (
   input: Record<string, unknown>,
-  context: WebOfScienceExpandedContext,
+  context: ApiKeyProviderContext,
 ) => Promise<unknown>;
 
 export const webOfScienceExpandedActionHandlers: ProviderActionHandlers<
@@ -187,7 +185,7 @@ export async function validateWebOfScienceExpandedCredential(
 async function executeRelatedDocumentRequest(
   path: "/citing" | "/related",
   input: Record<string, unknown>,
-  context: WebOfScienceExpandedContext,
+  context: ApiKeyProviderContext,
 ) {
   validateSearchOptions(input);
   const limit = optionalInteger(input.limit) ?? 10;
@@ -264,7 +262,7 @@ interface WebOfScienceExpandedRequest {
 
 async function requestWebOfScienceExpandedJson(
   input: WebOfScienceExpandedRequest,
-  context: WebOfScienceExpandedContext,
+  context: ApiKeyProviderContext,
 ): Promise<unknown> {
   const timeout = createProviderTimeout(context.signal);
   try {

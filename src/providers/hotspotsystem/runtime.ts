@@ -1,5 +1,4 @@
-import type { ProviderActionHandlers } from "../provider-executors.ts";
-import type { ApiKeyProviderContext } from "../provider-executors.ts";
+import type { ProviderActionHandlers, ApiKeyProviderContext } from "../provider-executors.ts";
 
 import { compactObject, optionalInteger, optionalNumber, optionalRecord, optionalString } from "../../core/cast.ts";
 import { createProviderTimeout, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
@@ -11,11 +10,7 @@ const hotspotsystemRequestTimeoutMs = 15_000;
 
 type HotspotsystemRequestPhase = "validate" | "execute";
 type QueryValue = string | number | undefined;
-type HotspotsystemActionContext = ApiKeyProviderContext;
-type HotspotsystemActionHandler = (
-  input: Record<string, unknown>,
-  context: HotspotsystemActionContext,
-) => Promise<unknown>;
+type HotspotsystemActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
 interface HotspotsystemRequestInput {
   path: string;
@@ -169,7 +164,7 @@ export async function validateHotspotsystemCredential(
 
 async function hotspotsystemRequestJson(
   input: HotspotsystemRequestInput,
-  context: Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">,
+  context: ApiKeyProviderContext,
   phase: HotspotsystemRequestPhase,
 ): Promise<HotspotsystemResponse> {
   const response = await hotspotsystemRawRequest(input, context);
@@ -191,7 +186,7 @@ async function hotspotsystemRequestJson(
 
 async function hotspotsystemRawRequest(
   input: HotspotsystemRequestInput,
-  context: Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">,
+  context: ApiKeyProviderContext,
 ): Promise<Response> {
   const normalizedPath = input.path.startsWith("/") ? input.path.slice(1) : input.path;
   const url = new URL(normalizedPath, `${hotspotsystemApiBaseUrl}/`);

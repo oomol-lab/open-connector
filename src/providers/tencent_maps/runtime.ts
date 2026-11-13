@@ -1,5 +1,4 @@
-import type { ProviderActionHandlers } from "../provider-executors.ts";
-import type { ApiKeyProviderContext } from "../provider-executors.ts";
+import type { ProviderActionHandlers, ApiKeyProviderContext } from "../provider-executors.ts";
 
 import { compactObject, optionalBoolean } from "../../core/cast.ts";
 import { providerUserAgent, ProviderRequestError, providerInputError } from "../provider-runtime.ts";
@@ -10,8 +9,6 @@ const tencentMapsValidationPath = "/ws/district/v1/list";
 const tencentMapsAuthStatuses = new Set([110, 111, 112, 113, 190, 199]);
 const tencentMapsRateLimitStatuses = new Set([120, 121]);
 const tencentMapsInputStatuses = new Set([300, 301, 306, 310, 311, 320, 330]);
-
-type RuntimeContext = Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
 
 type QueryValue = string | number | undefined;
 type TencentMapsRequestPhase = "validate" | "execute";
@@ -27,7 +24,7 @@ type TencentMapsResponsePayload = Record<string, unknown> & {
   data_version?: unknown;
 };
 
-type TencentMapsActionHandler = (input: Record<string, unknown>, runtime: RuntimeContext) => Promise<unknown>;
+type TencentMapsActionHandler = (input: Record<string, unknown>, runtime: ApiKeyProviderContext) => Promise<unknown>;
 
 export const tencentMapsActionHandlers: ProviderActionHandlers<"tencent_maps", TencentMapsActionHandler> = {
   geocode(input, runtime) {
@@ -77,7 +74,7 @@ export const tencentMapsActionHandlers: ProviderActionHandlers<"tencent_maps", T
   },
 };
 
-export async function validateTencentMapsCredential(context: RuntimeContext): Promise<{
+export async function validateTencentMapsCredential(context: ApiKeyProviderContext): Promise<{
   profile: { accountId: string; displayName: string };
   metadata: Record<string, unknown>;
 }> {
@@ -94,7 +91,7 @@ export async function validateTencentMapsCredential(context: RuntimeContext): Pr
 
 export { tencentMapsApiBaseUrl };
 
-async function executeGeocode(input: Record<string, unknown>, runtime: RuntimeContext) {
+async function executeGeocode(input: Record<string, unknown>, runtime: ApiKeyProviderContext) {
   const payload = await tencentMapsGet(
     "/ws/geocoder/v1",
     compactObject({
@@ -128,7 +125,7 @@ async function executeGeocode(input: Record<string, unknown>, runtime: RuntimeCo
   };
 }
 
-async function executeReverseGeocode(input: Record<string, unknown>, runtime: RuntimeContext) {
+async function executeReverseGeocode(input: Record<string, unknown>, runtime: ApiKeyProviderContext) {
   const payload = await tencentMapsGet(
     "/ws/geocoder/v1",
     compactObject({
@@ -152,7 +149,7 @@ async function executeReverseGeocode(input: Record<string, unknown>, runtime: Ru
   };
 }
 
-async function executeSearchPlaces(input: Record<string, unknown>, runtime: RuntimeContext) {
+async function executeSearchPlaces(input: Record<string, unknown>, runtime: ApiKeyProviderContext) {
   const region = readRequiredString(input.region, "region");
   const autoExtend = readOptionalInteger(input.autoExtend);
   const locationBias = readOptionalString(input.locationBias);
@@ -175,7 +172,7 @@ async function executeSearchPlaces(input: Record<string, unknown>, runtime: Runt
   return buildPoiSearchOutput(payload);
 }
 
-async function executeSearchPlacesAround(input: Record<string, unknown>, runtime: RuntimeContext) {
+async function executeSearchPlacesAround(input: Record<string, unknown>, runtime: ApiKeyProviderContext) {
   const payload = await tencentMapsGet(
     "/ws/place/v1/search",
     compactObject({
@@ -199,7 +196,7 @@ async function executeSearchPlacesAround(input: Record<string, unknown>, runtime
   return buildPoiSearchOutput(payload);
 }
 
-async function executeSearchPlacesPolygon(input: Record<string, unknown>, runtime: RuntimeContext) {
+async function executeSearchPlacesPolygon(input: Record<string, unknown>, runtime: ApiKeyProviderContext) {
   const payload = await tencentMapsGet(
     "/ws/place/v1/search_by_polygon",
     compactObject({
@@ -217,7 +214,7 @@ async function executeSearchPlacesPolygon(input: Record<string, unknown>, runtim
   return buildPoiSearchOutput(payload);
 }
 
-async function executeGetPlaceDetail(input: Record<string, unknown>, runtime: RuntimeContext) {
+async function executeGetPlaceDetail(input: Record<string, unknown>, runtime: ApiKeyProviderContext) {
   const payload = await tencentMapsGet(
     "/ws/place/v1/detail",
     compactObject({
@@ -235,7 +232,7 @@ async function executeGetPlaceDetail(input: Record<string, unknown>, runtime: Ru
   };
 }
 
-async function executeInputTips(input: Record<string, unknown>, runtime: RuntimeContext) {
+async function executeInputTips(input: Record<string, unknown>, runtime: ApiKeyProviderContext) {
   const payload = await tencentMapsGet(
     "/ws/place/v1/suggestion",
     compactObject({
@@ -260,7 +257,7 @@ async function executeInputTips(input: Record<string, unknown>, runtime: Runtime
   };
 }
 
-async function executeIpLocate(input: Record<string, unknown>, runtime: RuntimeContext) {
+async function executeIpLocate(input: Record<string, unknown>, runtime: ApiKeyProviderContext) {
   const ip = readOptionalString(input.ip) ?? undefined;
   const payload = await tencentMapsGet(
     "/ws/location/v1/ip",
@@ -279,7 +276,7 @@ async function executeIpLocate(input: Record<string, unknown>, runtime: RuntimeC
   };
 }
 
-async function executeDistrictSearch(input: Record<string, unknown>, runtime: RuntimeContext) {
+async function executeDistrictSearch(input: Record<string, unknown>, runtime: ApiKeyProviderContext) {
   const mode = readRequiredString(input.mode, "mode");
   const path = buildDistrictPath(mode);
   const payload = await tencentMapsGet(
@@ -301,7 +298,7 @@ async function executeDistrictSearch(input: Record<string, unknown>, runtime: Ru
   };
 }
 
-async function executeWeather(input: Record<string, unknown>, runtime: RuntimeContext) {
+async function executeWeather(input: Record<string, unknown>, runtime: ApiKeyProviderContext) {
   const payload = await tencentMapsGet(
     "/ws/weather/v1",
     compactObject({
@@ -323,7 +320,7 @@ async function executeWeather(input: Record<string, unknown>, runtime: RuntimeCo
   };
 }
 
-async function executeRouteDriving(input: Record<string, unknown>, runtime: RuntimeContext) {
+async function executeRouteDriving(input: Record<string, unknown>, runtime: ApiKeyProviderContext) {
   const payload = await tencentMapsGet(
     "/ws/direction/v1/driving",
     compactObject({
@@ -353,7 +350,7 @@ async function executeRouteDriving(input: Record<string, unknown>, runtime: Runt
   return buildRouteOutput(payload);
 }
 
-async function executeRouteWalking(input: Record<string, unknown>, runtime: RuntimeContext) {
+async function executeRouteWalking(input: Record<string, unknown>, runtime: ApiKeyProviderContext) {
   const payload = await tencentMapsGet(
     "/ws/direction/v1/walking",
     compactObject({
@@ -368,7 +365,7 @@ async function executeRouteWalking(input: Record<string, unknown>, runtime: Runt
   return buildRouteOutput(payload);
 }
 
-async function executeRouteBicycling(input: Record<string, unknown>, runtime: RuntimeContext) {
+async function executeRouteBicycling(input: Record<string, unknown>, runtime: ApiKeyProviderContext) {
   const payload = await tencentMapsGet(
     "/ws/direction/v1/bicycling",
     compactObject({
@@ -384,7 +381,7 @@ async function executeRouteBicycling(input: Record<string, unknown>, runtime: Ru
   return buildRouteOutput(payload);
 }
 
-async function executeRouteTransit(input: Record<string, unknown>, runtime: RuntimeContext) {
+async function executeRouteTransit(input: Record<string, unknown>, runtime: ApiKeyProviderContext) {
   const payload = await tencentMapsGet(
     "/ws/direction/v1/transit",
     compactObject({
@@ -403,7 +400,7 @@ async function executeRouteTransit(input: Record<string, unknown>, runtime: Runt
   return buildRouteOutput(payload);
 }
 
-async function executeDistanceMatrix(input: Record<string, unknown>, runtime: RuntimeContext) {
+async function executeDistanceMatrix(input: Record<string, unknown>, runtime: ApiKeyProviderContext) {
   const mode = readRequiredString(input.mode, "mode");
   const from = readRequiredString(input.from, "from");
   const to = readRequiredString(input.to, "to");

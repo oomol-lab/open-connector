@@ -1,6 +1,5 @@
 import type { CredentialValidationResult, ProviderExecutors } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-executors.ts";
-import type { ApiKeyProviderContext } from "../provider-executors.ts";
+import type { ProviderActionHandlers, ApiKeyProviderContext } from "../provider-executors.ts";
 
 import { compactObject, optionalBoolean, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import { defineApiKeyProviderExecutors } from "../provider-executors.ts";
@@ -9,11 +8,9 @@ import { ProviderRequestError, providerUserAgent } from "../provider-runtime.ts"
 export const phantombusterApiBaseUrl = "https://api.phantombuster.com/api/v2";
 const apiKeyHeader = "X-Phantombuster-Key";
 
-type Context = ApiKeyProviderContext;
-
 export const phantombusterActionHandlers: ProviderActionHandlers<
   "phantombuster",
-  (input: Record<string, unknown>, context: Context) => Promise<unknown>
+  (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>
 > = {
   async get_current_organization(_input, context) {
     return { organization: await requestJson("GET", "/orgs/fetch", context) };
@@ -99,7 +96,7 @@ export async function validatePhantombusterCredential(
 async function requestJson(
   method: "GET" | "POST",
   path: string,
-  context: Pick<Context, "apiKey" | "fetcher" | "signal">,
+  context: ApiKeyProviderContext,
   body?: Record<string, unknown>,
 ): Promise<unknown> {
   let response: Response;

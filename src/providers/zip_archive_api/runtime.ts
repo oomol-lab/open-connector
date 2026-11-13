@@ -1,5 +1,4 @@
-import type { ProviderActionHandlers } from "../provider-executors.ts";
-import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-executors.ts";
+import type { ProviderActionHandlers, ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-executors.ts";
 import type { ProviderTransitFile } from "../provider-files.ts";
 
 import { compactObject, optionalInteger, optionalString, requiredString } from "../../core/cast.ts";
@@ -86,7 +85,7 @@ async function extractArchive(input: Record<string, unknown>, context: ApiKeyPro
 async function requestArchiveApi(
   path: string,
   body: Record<string, unknown>,
-  context: Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">,
+  context: ApiKeyProviderContext,
   accept = "application/zip, application/octet-stream",
 ): Promise<Response> {
   const url = new URL(path, zipArchiveApiBaseUrl);

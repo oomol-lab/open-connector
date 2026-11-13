@@ -1,6 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-executors.ts";
-import type { ApiKeyProviderContext } from "../provider-executors.ts";
+import type { ProviderActionHandlers, ApiKeyProviderContext } from "../provider-executors.ts";
 
 import { createHash } from "node:crypto";
 import { compactObject, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
@@ -16,8 +15,7 @@ export const ordinalApiBaseUrl = "https://app.tryordinal.com/api/v1";
 const ordinalValidationPath = "/workspace";
 
 type OrdinalRequestPhase = "validate" | "execute";
-type OrdinalActionContext = ApiKeyProviderContext;
-type OrdinalActionHandler = (input: Record<string, unknown>, context: OrdinalActionContext) => Promise<unknown>;
+type OrdinalActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
 export const ordinalActionHandlers: ProviderActionHandlers<"ordinal", OrdinalActionHandler> = {
   async get_workspace(_input, context) {
@@ -113,7 +111,7 @@ export async function validateOrdinalCredential(
   fetcher: typeof fetch,
   signal?: AbortSignal,
 ): Promise<CredentialValidationResult> {
-  const context: OrdinalActionContext = {
+  const context: ApiKeyProviderContext = {
     apiKey: requiredString(apiKey, "apiKey", (message) => new ProviderRequestError(401, message)),
     fetcher,
     signal,
@@ -145,7 +143,7 @@ export async function validateOrdinalCredential(
 }
 
 async function requestOrdinalJson(input: {
-  context: Pick<OrdinalActionContext, "apiKey" | "fetcher" | "signal">;
+  context: ApiKeyProviderContext;
   path: string;
   query?: Record<string, unknown>;
   phase: OrdinalRequestPhase;
@@ -157,7 +155,7 @@ async function requestOrdinalJson(input: {
 }
 
 async function requestOrdinalResponse(input: {
-  context: Pick<OrdinalActionContext, "apiKey" | "fetcher" | "signal">;
+  context: ApiKeyProviderContext;
   path: string;
   query?: Record<string, unknown>;
 }): Promise<Response> {

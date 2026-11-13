@@ -1,6 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-executors.ts";
-import type { ApiKeyProviderContext } from "../provider-executors.ts";
+import type { ProviderActionHandlers, ApiKeyProviderContext } from "../provider-executors.ts";
 
 import {
   compactObject,
@@ -25,8 +24,7 @@ const authProbePath = "/api/auth";
 const projectInfoPath = "/api/project/info";
 
 type OwlProtocolRequestPhase = "validate" | "execute";
-type OwlProtocolActionContext = ApiKeyProviderContext;
-type OwlProtocolActionHandler = (input: Record<string, unknown>, context: OwlProtocolActionContext) => Promise<unknown>;
+type OwlProtocolActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
 interface OwlProtocolProject {
   slug: string;
@@ -97,7 +95,7 @@ export async function validateOwlProtocolCredential(
   fetcher: typeof fetch,
   signal?: AbortSignal,
 ): Promise<CredentialValidationResult> {
-  const context: Pick<OwlProtocolActionContext, "apiKey" | "fetcher" | "signal"> = {
+  const context: ApiKeyProviderContext = {
     apiKey: requiredString(apiKey, "apiKey", (message) => new ProviderRequestError(401, message)),
     fetcher,
     signal,
@@ -140,7 +138,7 @@ export async function validateOwlProtocolCredential(
 }
 
 async function requestOwlProtocolJson(input: {
-  context: Pick<OwlProtocolActionContext, "apiKey" | "fetcher" | "signal">;
+  context: ApiKeyProviderContext;
   method: "GET" | "POST" | "PATCH";
   path: string;
   phase: OwlProtocolRequestPhase;

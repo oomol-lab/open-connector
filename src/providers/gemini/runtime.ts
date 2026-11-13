@@ -1,4 +1,5 @@
 import type { ApiKeyProviderContext } from "../provider-executors.ts";
+import type { ProviderRequestContext } from "../provider-runtime.ts";
 
 import { compactObject, optionalInteger, optionalNumber, optionalRecord, optionalString } from "../../core/cast.ts";
 import { jsonObject, readBoundedResponseBytes } from "../../core/request.ts";
@@ -57,10 +58,7 @@ interface GeminiDownloadedMedia {
   mimeType?: string;
 }
 
-export interface GeminiRuntimeContext extends Pick<
-  ApiKeyProviderContext,
-  "apiKey" | "fetcher" | "signal" | "transitFiles"
-> {
+export interface GeminiRuntimeContext extends ApiKeyProviderContext {
   sleep: (ms: number) => Promise<void>;
   now: () => number;
   pollIntervalMs: number;
@@ -94,7 +92,7 @@ export function buildOperationResource(operationName: string, defaultModel: stri
 }
 
 export async function fetchGeminiModelsWithMode(
-  context: Pick<GeminiRuntimeContext, "apiKey" | "fetcher" | "signal">,
+  context: ApiKeyProviderContext,
   mode: GeminiErrorMode,
 ): Promise<{ models: GeminiModelSummary[]; nextPageToken?: string }> {
   const models: GeminiModelSummary[] = [];
@@ -126,7 +124,7 @@ export async function fetchGeminiModelsWithMode(
 
 export async function listGeminiModels(
   input: Record<string, unknown>,
-  context: Pick<GeminiRuntimeContext, "apiKey" | "fetcher" | "signal">,
+  context: ApiKeyProviderContext,
 ): Promise<unknown> {
   const filterPrefix = optionalString(input.filter_prefix);
   const { models, nextPageToken } = await fetchGeminiModelsWithMode(context, "execute");
@@ -143,7 +141,7 @@ export async function listGeminiModels(
 
 export async function generateGeminiContent(
   input: Record<string, unknown>,
-  context: Pick<GeminiRuntimeContext, "apiKey" | "fetcher" | "signal">,
+  context: ApiKeyProviderContext,
 ): Promise<unknown> {
   const model = resolveGeminiModel(input.model, geminiDefaultTextModel);
   const voiceName = optionalString(input.voice_name);
@@ -196,7 +194,7 @@ export async function generateGeminiContent(
 
 export async function embedGeminiContent(
   input: Record<string, unknown>,
-  context: Pick<GeminiRuntimeContext, "apiKey" | "fetcher" | "signal">,
+  context: ApiKeyProviderContext,
 ): Promise<unknown> {
   const model = resolveGeminiModel(input.model, geminiDefaultEmbeddingModel);
   const response = await fetchGemini(
@@ -239,7 +237,7 @@ export async function embedGeminiContent(
 
 export async function countGeminiTokens(
   input: Record<string, unknown>,
-  context: Pick<GeminiRuntimeContext, "apiKey" | "fetcher" | "signal">,
+  context: ApiKeyProviderContext,
 ): Promise<unknown> {
   const model = resolveGeminiModel(input.model, geminiDefaultTokenCountModel);
   const response = await fetchGemini(
@@ -340,7 +338,7 @@ export async function generateGeminiImage(
 
 export async function generateGeminiVideos(
   input: Record<string, unknown>,
-  context: Pick<GeminiRuntimeContext, "apiKey" | "fetcher" | "signal">,
+  context: ApiKeyProviderContext,
 ): Promise<unknown> {
   const model = resolveGeminiModel(input.model, geminiDefaultVideoModel);
   const response = await fetchGemini(
@@ -453,7 +451,7 @@ export async function waitForGeminiVideo(
 
 async function fetchGeminiVideoOperation(
   input: Record<string, unknown>,
-  context: Pick<GeminiRuntimeContext, "apiKey" | "fetcher" | "signal">,
+  context: ApiKeyProviderContext,
 ): Promise<Record<string, unknown>> {
   const operationName = buildOperationResource(
     optionalString(input.operation_name) ?? "",
@@ -606,7 +604,7 @@ function decodeBase64Bytes(data: string): Uint8Array {
 async function fetchGemini(
   url: string,
   init: RequestInit,
-  context: Pick<GeminiRuntimeContext, "fetcher" | "signal">,
+  context: ProviderRequestContext,
   requestName: string,
   timeoutMs = geminiDefaultRequestTimeoutMs,
 ): Promise<Response> {
@@ -644,10 +642,7 @@ async function fetchGemini(
   }
 }
 
-async function downloadMediaBytes(
-  url: string,
-  context: Pick<GeminiRuntimeContext, "apiKey" | "fetcher" | "signal" | "transitFiles">,
-): Promise<GeminiDownloadedMedia> {
+async function downloadMediaBytes(url: string, context: ApiKeyProviderContext): Promise<GeminiDownloadedMedia> {
   if (!context.transitFiles) {
     throw new ProviderRequestError(502, "gemini media actions require server-side file transit");
   }

@@ -1,5 +1,4 @@
-import type { ProviderActionHandlers } from "../provider-executors.ts";
-import type { ApiKeyProviderContext } from "../provider-executors.ts";
+import type { ProviderActionHandlers, ApiKeyProviderContext } from "../provider-executors.ts";
 
 import { compactObject, optionalNumber, optionalRecord, optionalString } from "../../core/cast.ts";
 import {
@@ -17,7 +16,7 @@ type HoldedActionHandler = (input: Record<string, unknown>, context: ApiKeyProvi
 interface HoldedRequestInput {
   method: "GET" | "POST";
   path: string;
-  context: Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
+  context: ApiKeyProviderContext;
   query: Record<string, string | undefined>;
   body?: Record<string, unknown>;
   phase: HoldedPhase;

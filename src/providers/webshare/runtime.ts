@@ -1,6 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-executors.ts";
-import type { ApiKeyProviderContext } from "../provider-executors.ts";
+import type { ProviderActionHandlers, ApiKeyProviderContext } from "../provider-executors.ts";
 
 import { optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
 import { ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
@@ -59,7 +58,7 @@ async function webshareGetProfile(context: ApiKeyProviderContext): Promise<Recor
 }
 
 async function requestWebshareProfile(
-  context: Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">,
+  context: ApiKeyProviderContext,
   phase: WebshareRequestPhase,
 ): Promise<Record<string, unknown>> {
   const payload = await webshareRequest(context, { path: "/api/v2/profile/" }, phase);
@@ -150,7 +149,7 @@ async function webshareListStats(
 }
 
 async function webshareRequest(
-  context: Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">,
+  context: ApiKeyProviderContext,
   request: WebshareRequestInput,
   phase: WebshareRequestPhase,
 ): Promise<unknown> {

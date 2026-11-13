@@ -1,6 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-executors.ts";
-import type { ApiKeyProviderContext } from "../provider-executors.ts";
+import type { ProviderActionHandlers, ApiKeyProviderContext } from "../provider-executors.ts";
 
 import { compactObject, optionalBoolean, optionalString, positiveInteger, requiredRecord } from "../../core/cast.ts";
 import {
@@ -20,7 +19,6 @@ interface CodacyCredentialInput {
 
 type CodacyRequestPhase = "validate" | "execute";
 type CodacyQueryValue = string | number | boolean | undefined;
-type CodacyRuntimeContext = Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
 type CodacyActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
 export const codacyActionHandlers: ProviderActionHandlers<"codacy", CodacyActionHandler> = {
@@ -156,7 +154,7 @@ export async function validateCodacyApiKey(
   input: CodacyCredentialInput,
   options: { fetcher: typeof fetch; signal?: AbortSignal },
 ): Promise<CredentialValidationResult> {
-  const context: CodacyRuntimeContext = {
+  const context: ApiKeyProviderContext = {
     apiKey: input.apiKey,
     fetcher: options.fetcher,
     signal: options.signal,
@@ -188,7 +186,7 @@ export async function validateCodacyApiKey(
 }
 
 async function requestCodacyJson<T>(input: {
-  context: CodacyRuntimeContext;
+  context: ApiKeyProviderContext;
   path: string;
   phase: CodacyRequestPhase;
   query?: Record<string, CodacyQueryValue>;
@@ -203,7 +201,7 @@ async function requestCodacyJson<T>(input: {
 }
 
 async function codacyFetch(input: {
-  context: CodacyRuntimeContext;
+  context: ApiKeyProviderContext;
   path: string;
   query?: Record<string, CodacyQueryValue>;
 }): Promise<Response> {

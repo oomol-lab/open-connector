@@ -1,6 +1,5 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-executors.ts";
-import type { ApiKeyProviderContext } from "../provider-executors.ts";
+import type { ProviderActionHandlers, ApiKeyProviderContext } from "../provider-executors.ts";
 
 import { optionalInteger, optionalRecord, optionalString, requiredRecord } from "../../core/cast.ts";
 import { jsonObject } from "../../core/request.ts";
@@ -13,8 +12,7 @@ const genderApiApiBaseUrl = "https://gender-api.com/v2";
 const genderApiStatisticsPath = "/statistic";
 
 type GenderApiPhase = "validate" | "execute";
-type GenderApiActionContext = Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
-type GenderApiActionHandler = (input: Record<string, unknown>, context: GenderApiActionContext) => Promise<unknown>;
+type GenderApiActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
 export const genderApiActionHandlers: ProviderActionHandlers<"gender_api", GenderApiActionHandler> = {
   query_gender_by_first_name(input, context) {
@@ -134,7 +132,7 @@ export const credentialValidators: CredentialValidators = {
 async function requestGenderApi(input: {
   path: string;
   method: "GET" | "POST";
-  context: GenderApiActionContext;
+  context: ApiKeyProviderContext;
   phase: GenderApiPhase;
   body?: Record<string, unknown>;
 }): Promise<unknown> {

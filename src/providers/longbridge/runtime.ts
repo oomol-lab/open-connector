@@ -1,6 +1,9 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
-import type { ProviderActionHandlerSubset, ProviderActionHandlers } from "../provider-executors.ts";
-import type { OAuthProviderContext } from "../provider-executors.ts";
+import type {
+  ProviderActionHandlerSubset,
+  ProviderActionHandlers,
+  OAuthProviderContext,
+} from "../provider-executors.ts";
 import type { LongbridgeReadonlyActionSpec, LongbridgeReadonlyParamSpec } from "./readonly-action-specs.ts";
 
 import {
@@ -32,7 +35,7 @@ type LongbridgeQueryValue = string | readonly string[] | undefined;
 export interface LongbridgeRequestOptions {
   method: LongbridgeHttpMethod;
   path: string;
-  context: Pick<OAuthProviderContext, "accessToken" | "fetcher" | "signal">;
+  context: OAuthProviderContext;
   phase: LongbridgeRequestPhase;
   query?: Record<string, LongbridgeQueryValue>;
   body?: Record<string, unknown>;

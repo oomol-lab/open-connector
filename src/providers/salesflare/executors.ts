@@ -4,8 +4,7 @@ import type {
   ProviderExecutors,
   ProviderProxyExecutor,
 } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-executors.ts";
-import type { ApiKeyProviderContext } from "../provider-executors.ts";
+import type { ProviderActionHandlers, ApiKeyProviderContext } from "../provider-executors.ts";
 
 import {
   compactObject,
@@ -29,7 +28,7 @@ type SalesflareActionHandler = (input: Record<string, unknown>, context: ApiKeyP
 interface SalesflareRequestInput {
   method: "GET" | "POST" | "PUT";
   path: string;
-  context: Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
+  context: ApiKeyProviderContext;
   phase?: SalesflareRequestPhase;
   query?: Record<string, unknown>;
   body?: unknown;

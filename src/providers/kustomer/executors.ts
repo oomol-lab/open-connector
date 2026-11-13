@@ -1,6 +1,5 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-executors.ts";
-import type { ApiKeyProviderContext } from "../provider-executors.ts";
+import type { ProviderActionHandlers, ApiKeyProviderContext } from "../provider-executors.ts";
 
 import { optionalRecord, optionalString, requiredRecord, requiredString } from "../../core/cast.ts";
 import { defineApiKeyProviderExecutors } from "../provider-executors.ts";
@@ -16,8 +15,7 @@ import {
 const service = "kustomer";
 const kustomerApiBaseUrl = "https://api.kustomerapp.com/v1";
 
-type KustomerActionContext = Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
-type KustomerActionHandler = (input: Record<string, unknown>, context: KustomerActionContext) => Promise<unknown>;
+type KustomerActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 type KustomerQueryValue = string | number | boolean | null | undefined;
 
 interface KustomerRequestInput {

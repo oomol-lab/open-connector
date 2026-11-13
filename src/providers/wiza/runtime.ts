@@ -1,6 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-executors.ts";
-import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-executors.ts";
+import type { ProviderActionHandlers, ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-executors.ts";
 
 import { optionalRecord, optionalString } from "../../core/cast.ts";
 import { encodePathSegment, jsonObject } from "../../core/request.ts";
@@ -66,10 +65,7 @@ export async function validateWizaCredential(
   };
 }
 
-async function requestWizaJson(
-  options: WizaRequestOptions,
-  context: Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">,
-): Promise<unknown> {
+async function requestWizaJson(options: WizaRequestOptions, context: ApiKeyProviderContext): Promise<unknown> {
   const headers: Record<string, string> = {
     accept: "application/json",
     authorization: `Bearer ${context.apiKey}`,

@@ -62,7 +62,7 @@ export const credentialValidators: CredentialValidators = {
 };
 
 async function withClickUpMcpClient<T>(
-  context: Pick<OAuthProviderContext, "accessToken" | "fetcher" | "signal">,
+  context: OAuthProviderContext,
   phase: "validate" | "execute",
   run: (client: Client) => Promise<T>,
 ): Promise<T> {

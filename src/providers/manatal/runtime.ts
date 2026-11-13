@@ -1,17 +1,15 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-executors.ts";
-import type { ApiKeyProviderContext } from "../provider-executors.ts";
+import type { ProviderActionHandlers, ApiKeyProviderContext } from "../provider-executors.ts";
 import type { ProviderFetch } from "../provider-runtime.ts";
 
 import { compactObject, optionalRecord } from "../../core/cast.ts";
 import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
 
-type ManatalActionContext = Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
-type ManatalActionHandler = (input: Record<string, unknown>, context: ManatalActionContext) => Promise<unknown>;
+type ManatalActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
 interface ManatalRequestOptions {
   path: string;
-  context: ManatalActionContext;
+  context: ApiKeyProviderContext;
   phase: "validate" | "execute";
   method?: "GET" | "POST" | "PATCH" | "DELETE";
   query?: Record<string, string | number | boolean | undefined>;
@@ -161,7 +159,7 @@ export async function validateManatalCredential(
   fetcher: ProviderFetch,
   signal?: AbortSignal,
 ): Promise<CredentialValidationResult> {
-  const context: ManatalActionContext = {
+  const context: ApiKeyProviderContext = {
     apiKey: readRequiredString(apiKey, "apiKey"),
     fetcher,
     signal,
@@ -193,7 +191,7 @@ export async function validateManatalCredential(
 }
 
 async function listRecords(input: {
-  context: ManatalActionContext;
+  context: ApiKeyProviderContext;
   path: string;
   collectionKey: string;
   query: Record<string, string | number | boolean | undefined>;
@@ -220,7 +218,7 @@ async function listRecords(input: {
 }
 
 async function readRecord(input: {
-  context: ManatalActionContext;
+  context: ApiKeyProviderContext;
   path: string;
   outputKey: string;
 }): Promise<Record<string, unknown>> {
@@ -237,7 +235,7 @@ async function readRecord(input: {
 }
 
 async function writeRecord(input: {
-  context: ManatalActionContext;
+  context: ApiKeyProviderContext;
   path: string;
   outputKey: string;
   method: "POST" | "PATCH";

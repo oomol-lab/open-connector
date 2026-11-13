@@ -1,6 +1,5 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-executors.ts";
-import type { ApiKeyProviderContext } from "../provider-executors.ts";
+import type { ProviderActionHandlers, ApiKeyProviderContext } from "../provider-executors.ts";
 
 import { optionalRecord, optionalString } from "../../core/cast.ts";
 import { defineApiKeyProviderExecutors } from "../provider-executors.ts";
@@ -15,8 +14,7 @@ const ip2whoisHostedDomainsPath = "/domains";
 const ip2whoisValidationDomain = "example.com";
 
 type Ip2whoisRequestPhase = "validate" | "execute";
-type Ip2whoisActionContext = Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
-type Ip2whoisActionHandler = (input: Record<string, unknown>, context: Ip2whoisActionContext) => Promise<unknown>;
+type Ip2whoisActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
 interface Ip2whoisRequestInput {
   baseUrl: string;
@@ -90,7 +88,7 @@ export const credentialValidators: CredentialValidators = {
   },
 };
 
-async function requestIp2whoisJson(input: Ip2whoisRequestInput, context: Ip2whoisActionContext): Promise<unknown> {
+async function requestIp2whoisJson(input: Ip2whoisRequestInput, context: ApiKeyProviderContext): Promise<unknown> {
   const url = buildIp2whoisUrl(input, context.apiKey);
 
   let response: Response;

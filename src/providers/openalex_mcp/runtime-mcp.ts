@@ -23,7 +23,6 @@ import { openalexMcpActionNames } from "./actions.ts";
 import { openalexMcpEndpoint } from "./endpoints.ts";
 
 const service = "openalex_mcp";
-type OpenalexMcpContext = Pick<OAuthProviderContext, "accessToken" | "fetcher" | "signal">;
 type OpenalexMcpToolCall = Awaited<ReturnType<Client["callTool"]>>;
 
 /**
@@ -107,7 +106,7 @@ async function listOpenalexMcpToolNames(client: Client, signal: AbortSignal): Pr
 
 /** Call one tool in a fresh MCP session and return its text and parsed payload. */
 function callOpenalexMcpTool(
-  context: OpenalexMcpContext,
+  context: OAuthProviderContext,
   name: string,
   args: Record<string, unknown>,
 ): Promise<OpenalexMcpToolResult> {
@@ -186,7 +185,7 @@ function parseOpenalexMcpEmails(value: unknown): string[] {
 }
 
 function withOpenalexMcpClient<T>(
-  context: OpenalexMcpContext,
+  context: OAuthProviderContext,
   run: (client: Client, signal: AbortSignal) => Promise<T>,
 ): Promise<T> {
   return runProviderRequest({ signal: context.signal, label: "OpenAlex MCP" }, (signal) =>

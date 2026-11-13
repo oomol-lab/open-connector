@@ -1,6 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-executors.ts";
-import type { ApiKeyProviderContext } from "../provider-executors.ts";
+import type { ProviderActionHandlers, ApiKeyProviderContext } from "../provider-executors.ts";
 import type { ProviderFetch } from "../provider-runtime.ts";
 
 import {
@@ -16,8 +15,7 @@ import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts"
 export const neonApiBaseUrl: string = "https://console.neon.tech/api/v2";
 
 type NeonQueryValue = string | number | boolean | undefined;
-type NeonActionContext = Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
-type NeonActionHandler = (input: Record<string, unknown>, context: NeonActionContext) => Promise<unknown>;
+type NeonActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
 interface NeonRequestInput {
   apiKey: string;
@@ -127,7 +125,7 @@ export async function validateNeonCredential(
   };
 }
 
-async function getCurrentUser(context: NeonActionContext): Promise<Record<string, unknown>> {
+async function getCurrentUser(context: ApiKeyProviderContext): Promise<Record<string, unknown>> {
   return normalizeCurrentUser(
     await requestNeonJson({
       apiKey: context.apiKey,
@@ -138,7 +136,7 @@ async function getCurrentUser(context: NeonActionContext): Promise<Record<string
   );
 }
 
-async function listProjects(input: Record<string, unknown>, context: NeonActionContext): Promise<unknown> {
+async function listProjects(input: Record<string, unknown>, context: ApiKeyProviderContext): Promise<unknown> {
   const payload = requireResponseObject(
     await requestNeonJson({
       apiKey: context.apiKey,
@@ -163,7 +161,7 @@ async function listProjects(input: Record<string, unknown>, context: NeonActionC
   };
 }
 
-async function getProject(input: Record<string, unknown>, context: NeonActionContext): Promise<unknown> {
+async function getProject(input: Record<string, unknown>, context: ApiKeyProviderContext): Promise<unknown> {
   const projectId = readRequiredInputString(input, "projectId");
   const payload = requireResponseObject(
     await requestNeonJson({
@@ -181,7 +179,7 @@ async function getProject(input: Record<string, unknown>, context: NeonActionCon
   };
 }
 
-async function createProject(input: Record<string, unknown>, context: NeonActionContext): Promise<unknown> {
+async function createProject(input: Record<string, unknown>, context: ApiKeyProviderContext): Promise<unknown> {
   const payload = requireResponseObject(
     await requestNeonJson({
       apiKey: context.apiKey,
@@ -212,7 +210,7 @@ async function createProject(input: Record<string, unknown>, context: NeonAction
   };
 }
 
-async function updateProject(input: Record<string, unknown>, context: NeonActionContext): Promise<unknown> {
+async function updateProject(input: Record<string, unknown>, context: ApiKeyProviderContext): Promise<unknown> {
   const projectId = readRequiredInputString(input, "projectId");
   assertAnyField(input, ["name", "historyRetentionSeconds"]);
   const payload = requireResponseObject(
@@ -239,7 +237,7 @@ async function updateProject(input: Record<string, unknown>, context: NeonAction
   };
 }
 
-async function deleteProject(input: Record<string, unknown>, context: NeonActionContext): Promise<unknown> {
+async function deleteProject(input: Record<string, unknown>, context: ApiKeyProviderContext): Promise<unknown> {
   const projectId = readRequiredInputString(input, "projectId");
   const payload = requireResponseObject(
     await requestNeonJson({
@@ -259,7 +257,7 @@ async function deleteProject(input: Record<string, unknown>, context: NeonAction
   };
 }
 
-async function listBranches(input: Record<string, unknown>, context: NeonActionContext): Promise<unknown> {
+async function listBranches(input: Record<string, unknown>, context: ApiKeyProviderContext): Promise<unknown> {
   const projectId = readRequiredInputString(input, "projectId");
   const payload = requireResponseObject(
     await requestNeonJson({
@@ -286,7 +284,7 @@ async function listBranches(input: Record<string, unknown>, context: NeonActionC
   };
 }
 
-async function getBranch(input: Record<string, unknown>, context: NeonActionContext): Promise<unknown> {
+async function getBranch(input: Record<string, unknown>, context: ApiKeyProviderContext): Promise<unknown> {
   const projectId = readRequiredInputString(input, "projectId");
   const branchId = readRequiredInputString(input, "branchId");
   const payload = requireResponseObject(
@@ -306,7 +304,7 @@ async function getBranch(input: Record<string, unknown>, context: NeonActionCont
   };
 }
 
-async function createBranch(input: Record<string, unknown>, context: NeonActionContext): Promise<unknown> {
+async function createBranch(input: Record<string, unknown>, context: ApiKeyProviderContext): Promise<unknown> {
   const projectId = readRequiredInputString(input, "projectId");
   if (optionalString(input.parentLsn) && optionalString(input.parentTimestamp)) {
     throw new ProviderRequestError(400, "parentLsn and parentTimestamp cannot be used together");
@@ -339,7 +337,7 @@ async function createBranch(input: Record<string, unknown>, context: NeonActionC
   };
 }
 
-async function updateBranch(input: Record<string, unknown>, context: NeonActionContext): Promise<unknown> {
+async function updateBranch(input: Record<string, unknown>, context: ApiKeyProviderContext): Promise<unknown> {
   const projectId = readRequiredInputString(input, "projectId");
   const branchId = readRequiredInputString(input, "branchId");
   assertAnyField(input, ["name", "protected"]);
@@ -367,7 +365,7 @@ async function updateBranch(input: Record<string, unknown>, context: NeonActionC
   };
 }
 
-async function deleteBranch(input: Record<string, unknown>, context: NeonActionContext): Promise<unknown> {
+async function deleteBranch(input: Record<string, unknown>, context: ApiKeyProviderContext): Promise<unknown> {
   const projectId = readRequiredInputString(input, "projectId");
   const branchId = readRequiredInputString(input, "branchId");
   const payload = await requestNeonJson({
@@ -396,7 +394,7 @@ async function deleteBranch(input: Record<string, unknown>, context: NeonActionC
   };
 }
 
-async function listDatabases(input: Record<string, unknown>, context: NeonActionContext): Promise<unknown> {
+async function listDatabases(input: Record<string, unknown>, context: ApiKeyProviderContext): Promise<unknown> {
   const projectId = readRequiredInputString(input, "projectId");
   const branchId = readRequiredInputString(input, "branchId");
   const payload = requireResponseObject(
@@ -415,7 +413,7 @@ async function listDatabases(input: Record<string, unknown>, context: NeonAction
   };
 }
 
-async function getDatabase(input: Record<string, unknown>, context: NeonActionContext): Promise<unknown> {
+async function getDatabase(input: Record<string, unknown>, context: ApiKeyProviderContext): Promise<unknown> {
   const projectId = readRequiredInputString(input, "projectId");
   const branchId = readRequiredInputString(input, "branchId");
   const databaseName = readRequiredInputString(input, "databaseName");
@@ -435,7 +433,7 @@ async function getDatabase(input: Record<string, unknown>, context: NeonActionCo
   };
 }
 
-async function createDatabase(input: Record<string, unknown>, context: NeonActionContext): Promise<unknown> {
+async function createDatabase(input: Record<string, unknown>, context: ApiKeyProviderContext): Promise<unknown> {
   const projectId = readRequiredInputString(input, "projectId");
   const branchId = readRequiredInputString(input, "branchId");
   const payload = requireResponseObject(
@@ -462,7 +460,7 @@ async function createDatabase(input: Record<string, unknown>, context: NeonActio
   };
 }
 
-async function updateDatabase(input: Record<string, unknown>, context: NeonActionContext): Promise<unknown> {
+async function updateDatabase(input: Record<string, unknown>, context: ApiKeyProviderContext): Promise<unknown> {
   const projectId = readRequiredInputString(input, "projectId");
   const branchId = readRequiredInputString(input, "branchId");
   const databaseName = readRequiredInputString(input, "databaseName");
@@ -491,7 +489,7 @@ async function updateDatabase(input: Record<string, unknown>, context: NeonActio
   };
 }
 
-async function deleteDatabase(input: Record<string, unknown>, context: NeonActionContext): Promise<unknown> {
+async function deleteDatabase(input: Record<string, unknown>, context: ApiKeyProviderContext): Promise<unknown> {
   const projectId = readRequiredInputString(input, "projectId");
   const branchId = readRequiredInputString(input, "branchId");
   const databaseName = readRequiredInputString(input, "databaseName");
@@ -521,7 +519,7 @@ async function deleteDatabase(input: Record<string, unknown>, context: NeonActio
   };
 }
 
-async function listOperations(input: Record<string, unknown>, context: NeonActionContext): Promise<unknown> {
+async function listOperations(input: Record<string, unknown>, context: ApiKeyProviderContext): Promise<unknown> {
   const projectId = readRequiredInputString(input, "projectId");
   const payload = requireResponseObject(
     await requestNeonJson({
@@ -544,7 +542,7 @@ async function listOperations(input: Record<string, unknown>, context: NeonActio
   };
 }
 
-async function getOperation(input: Record<string, unknown>, context: NeonActionContext): Promise<unknown> {
+async function getOperation(input: Record<string, unknown>, context: ApiKeyProviderContext): Promise<unknown> {
   const projectId = readRequiredInputString(input, "projectId");
   const operationId = readRequiredInputString(input, "operationId");
   const payload = requireResponseObject(

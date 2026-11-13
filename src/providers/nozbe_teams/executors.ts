@@ -1,6 +1,5 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-executors.ts";
-import type { ApiKeyProviderContext } from "../provider-executors.ts";
+import type { ProviderActionHandlers, ApiKeyProviderContext } from "../provider-executors.ts";
 
 import { compactObject, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import { defineApiKeyProviderExecutors } from "../provider-executors.ts";
@@ -20,8 +19,7 @@ const nozbeTeamsValidationPath = "/teams";
 const nozbeTeamsMaxResponseBytes = 10 * 1024 * 1024;
 
 type NozbeRequestPhase = "validate" | "execute";
-type NozbeContext = Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
-type NozbeActionHandler = (input: Record<string, unknown>, context: NozbeContext) => Promise<unknown>;
+type NozbeActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
 interface NozbeRequestInput {
   method: "GET" | "POST" | "PUT" | "DELETE";
@@ -143,7 +141,7 @@ export const credentialValidators: CredentialValidators = {
 
 async function requestNozbeArray(
   input: NozbeRequestInput,
-  context: NozbeContext,
+  context: ApiKeyProviderContext,
   phase: NozbeRequestPhase,
 ): Promise<unknown[]> {
   const payload = await requestNozbeJson(input, context, phase);
@@ -155,7 +153,7 @@ async function requestNozbeArray(
 
 async function requestNozbeObject(
   input: NozbeRequestInput,
-  context: NozbeContext,
+  context: ApiKeyProviderContext,
   phase: NozbeRequestPhase,
 ): Promise<Record<string, unknown>> {
   const payload = await requestNozbeJson(input, context, phase);
@@ -168,7 +166,7 @@ async function requestNozbeObject(
 
 async function requestNozbeJson(
   input: NozbeRequestInput,
-  context: NozbeContext,
+  context: ApiKeyProviderContext,
   phase: NozbeRequestPhase,
 ): Promise<unknown> {
   const url = new URL(`${nozbeTeamsApiBaseUrl}${input.path}`);

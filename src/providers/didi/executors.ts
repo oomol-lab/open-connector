@@ -86,7 +86,7 @@ export const credentialValidators: CredentialValidators = {
     };
   },
 };
-function connection(context: Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">) {
+function connection(context: ApiKeyProviderContext) {
   const url = new URL(endpoint);
   url.searchParams.set("key", requiredInputString(context.apiKey, "MCP Key"));
   return {

@@ -25,6 +25,12 @@ import { readBoundedResponseBytes } from "../core/request.ts";
  */
 export type ProviderFetch = typeof fetch;
 
+/** Transport dependencies for provider requests that do not need credentials. */
+export interface ProviderRequestContext {
+  fetcher: ProviderFetch;
+  signal?: AbortSignal;
+}
+
 export interface ProviderFetchOptions {
   /** Bind runtime policy; private targets still require the transport's allowPrivateNetwork opt-in. */
   network?: ProviderNetworkPolicy;

@@ -1,6 +1,5 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-executors.ts";
-import type { ApiKeyProviderContext } from "../provider-executors.ts";
+import type { ProviderActionHandlers, ApiKeyProviderContext } from "../provider-executors.ts";
 
 import { compactObject, optionalNumber, optionalRecord, optionalString } from "../../core/cast.ts";
 import { defineApiKeyProviderExecutors } from "../provider-executors.ts";
@@ -12,8 +11,7 @@ const conductorApiBaseUrl = "https://api.cm.conductor.com";
 const conductorWebsitesPath = "/v2/entities/websites";
 
 type ConductorRequestPhase = "validate" | "execute";
-type ConductorContext = Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
-type ConductorActionHandler = (input: Record<string, unknown>, context: ConductorContext) => Promise<unknown>;
+type ConductorActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
 export const conductorActionHandlers: ProviderActionHandlers<"conductor", ConductorActionHandler> = {
   list_websites(_input, context) {
@@ -156,7 +154,7 @@ export const credentialValidators: CredentialValidators = {
 
 async function requestWrappedConductorJson(input: {
   path: string;
-  context: ConductorContext;
+  context: ApiKeyProviderContext;
   phase: ConductorRequestPhase;
   query?: Record<string, unknown>;
   wrapper: "array" | "object";
@@ -183,7 +181,7 @@ async function requestWrappedConductorJson(input: {
 
 async function requestConductorJson(input: {
   path: string;
-  context: ConductorContext;
+  context: ApiKeyProviderContext;
   phase: ConductorRequestPhase;
   query?: Record<string, unknown>;
 }): Promise<unknown> {

@@ -6,7 +6,7 @@ import type {
   TransitFileWriter,
 } from "../core/types.ts";
 import type { ProviderActionNames } from "./action-contracts.generated.ts";
-import type { ProviderFetch } from "./provider-runtime.ts";
+import type { ProviderFetch, ProviderRequestContext } from "./provider-runtime.ts";
 
 import { requireApiKeyCredential, requireOAuthCredential, requireBearerCredential } from "./provider-credentials.ts";
 import { createProviderFetch, providerFetch, toProviderExecutionError } from "./provider-runtime.ts";
@@ -124,11 +124,9 @@ export interface ProviderExecutorDefinition<TContext> {
   skipDnsValidation?: boolean;
 }
 
-export interface ApiKeyProviderContext {
+export interface ApiKeyProviderContext extends ProviderRequestContext {
   apiKey: string;
-  fetcher: ProviderFetch;
   transitFiles?: TransitFileWriter;
-  signal?: AbortSignal;
 }
 
 /**
@@ -147,22 +145,18 @@ export interface ApiKeyActionRequest {
   values?: Record<string, string>;
 }
 
-export interface OAuthProviderContext {
+export interface OAuthProviderContext extends ProviderRequestContext {
   accessToken: string;
   tokenType?: string;
   accountId?: string;
   providerSecret?: Record<string, unknown>;
-  fetcher: ProviderFetch;
   transitFiles?: TransitFileWriter;
-  signal?: AbortSignal;
 }
 
-export interface BearerProviderContext {
+export interface BearerProviderContext extends ProviderRequestContext {
   accessToken: string;
   tokenType?: string;
-  fetcher: ProviderFetch;
   transitFiles?: TransitFileWriter;
-  signal?: AbortSignal;
 }
 
 /**

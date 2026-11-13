@@ -1,5 +1,4 @@
-import type { ProviderActionHandlers } from "../provider-executors.ts";
-import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-executors.ts";
+import type { ProviderActionHandlers, ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-executors.ts";
 
 import {
   compactObject,
@@ -54,7 +53,7 @@ export const hasdataActionHandlers: ProviderActionHandlers<"hasdata", HasdataAct
 async function requestHasdataJson(input: {
   path: string;
   init: RequestInit;
-  context: Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
+  context: ApiKeyProviderContext;
 }): Promise<Record<string, unknown>> {
   input.context.signal?.throwIfAborted();
   const timeout = createProviderTimeout(input.context.signal, hasdataDefaultRequestTimeoutMs);

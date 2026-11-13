@@ -1,6 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-executors.ts";
-import type { ApiKeyProviderContext } from "../provider-executors.ts";
+import type { ProviderActionHandlers, ApiKeyProviderContext } from "../provider-executors.ts";
 import type { ProviderFetch } from "../provider-runtime.ts";
 
 import { compactObject, optionalBoolean, optionalRecord, optionalString } from "../../core/cast.ts";
@@ -9,8 +8,7 @@ import { isAbortLikeError, providerUserAgent, ProviderRequestError, requiredInpu
 
 export const metasoApiBaseUrl = "https://metaso.cn/api/v1";
 
-type MetasoActionContext = Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
-type MetasoActionHandler = (input: Record<string, unknown>, context: MetasoActionContext) => Promise<unknown>;
+type MetasoActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 type MetasoPhase = "validate" | "execute";
 type MetasoChatStreamChunk = Record<string, unknown>;
 type MetasoReaderFormat = "markdown" | "json";
@@ -96,7 +94,7 @@ export async function validateMetasoCredential(
 async function requestMetasoJson(
   path: string,
   body: Record<string, unknown>,
-  context: MetasoActionContext,
+  context: ApiKeyProviderContext,
   phase: MetasoPhase,
 ): Promise<Record<string, unknown>> {
   const response = await requestMetaso(path, body, context, phase, "application/json");
@@ -106,7 +104,7 @@ async function requestMetasoJson(
 async function requestMetaso(
   path: string,
   body: Record<string, unknown>,
-  context: MetasoActionContext,
+  context: ApiKeyProviderContext,
   phase: MetasoPhase,
   accept: string,
 ): Promise<Response> {

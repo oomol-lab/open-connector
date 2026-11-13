@@ -1,6 +1,5 @@
 import type { CredentialValidationResult, ProviderExecutors } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-executors.ts";
-import type { ApiKeyProviderContext } from "../provider-executors.ts";
+import type { ProviderActionHandlers, ApiKeyProviderContext } from "../provider-executors.ts";
 
 import {
   compactObject,
@@ -17,11 +16,9 @@ import { ProviderRequestError, providerUserAgent } from "../provider-runtime.ts"
 
 export const pilvioApiBaseUrl = "https://api.pilvio.com/v1";
 
-type Context = ApiKeyProviderContext;
-
 export const pilvioActionHandlers: ProviderActionHandlers<
   "pilvio",
-  (input: Record<string, unknown>, context: Context) => Promise<unknown>
+  (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>
 > = {
   async get_current_user(_input, context) {
     const payload = await requestJson("/user-resource/user", {}, context);
@@ -88,7 +85,7 @@ export async function validatePilvioCredential(
 async function requestJson(
   path: string,
   query: Record<string, string | undefined>,
-  context: Pick<Context, "apiKey" | "fetcher" | "signal">,
+  context: ApiKeyProviderContext,
 ): Promise<unknown> {
   const url = new URL(path.replace(/^\//, ""), `${pilvioApiBaseUrl}/`);
   for (const [key, value] of Object.entries(query)) if (value !== undefined) url.searchParams.set(key, value);

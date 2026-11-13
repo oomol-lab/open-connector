@@ -1,6 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-executors.ts";
-import type { ApiKeyProviderContext } from "../provider-executors.ts";
+import type { ProviderActionHandlers, ApiKeyProviderContext } from "../provider-executors.ts";
 
 import {
   compactObject,
@@ -27,7 +26,6 @@ interface CodemagicCredentialInput {
 
 type CodemagicRequestPhase = "validate" | "execute";
 type CodemagicQueryValue = string | number | boolean | string[] | undefined;
-type CodemagicRuntimeContext = Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
 type CodemagicActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
 export const codemagicActionHandlers: ProviderActionHandlers<"codemagic", CodemagicActionHandler> = {
@@ -209,7 +207,7 @@ export async function validateCodemagicApiKey(
   input: CodemagicCredentialInput,
   options: { fetcher: typeof fetch; signal?: AbortSignal },
 ): Promise<CredentialValidationResult> {
-  const context: CodemagicRuntimeContext = {
+  const context: ApiKeyProviderContext = {
     apiKey: input.apiKey,
     fetcher: options.fetcher,
     signal: options.signal,
@@ -247,7 +245,7 @@ export async function validateCodemagicApiKey(
 }
 
 async function requestCodemagicV3Json<T>(input: {
-  context: CodemagicRuntimeContext;
+  context: ApiKeyProviderContext;
   path: string;
   phase: CodemagicRequestPhase;
   method?: string;
@@ -272,7 +270,7 @@ async function requestCodemagicV3Json<T>(input: {
 }
 
 async function requestCodemagicLegacyJson<T>(input: {
-  context: CodemagicRuntimeContext;
+  context: ApiKeyProviderContext;
   path: string;
   phase: CodemagicRequestPhase;
   method?: string;
@@ -297,7 +295,7 @@ async function requestCodemagicLegacyJson<T>(input: {
 
 async function codemagicFetch(input: {
   baseUrl: string;
-  context: CodemagicRuntimeContext;
+  context: ApiKeyProviderContext;
   path: string;
   method?: string;
   query?: Record<string, CodemagicQueryValue>;

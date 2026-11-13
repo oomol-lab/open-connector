@@ -1,6 +1,5 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-executors.ts";
-import type { ApiKeyProviderContext } from "../provider-executors.ts";
+import type { ProviderActionHandlers, ApiKeyProviderContext } from "../provider-executors.ts";
 
 import { compactObject, looseArray, optionalRecord, optionalString } from "../../core/cast.ts";
 import { encodePathSegment } from "../../core/request.ts";
@@ -18,7 +17,6 @@ const chatarminApiBaseUrl = "https://api.chatarmin.com/api/public";
 
 type ChatarminRequestPhase = "validate" | "execute";
 type ChatarminMethod = "GET" | "POST" | "PUT" | "DELETE";
-type ChatarminContext = Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
 type ChatarminActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
 export const chatarminActionHandlers: ProviderActionHandlers<"chatarmin", ChatarminActionHandler> = {
@@ -232,7 +230,7 @@ export const credentialValidators: CredentialValidators = {
 async function listChatarminRecords(
   path: string,
   input: Record<string, unknown>,
-  context: ChatarminContext,
+  context: ApiKeyProviderContext,
   queryFields = ["page", "limit", "search", "groupBy", "startDate", "endDate"],
 ): Promise<unknown> {
   const payload = await chatarminRequestJson(
@@ -254,7 +252,7 @@ async function listChatarminRecords(
 async function readChatarminResource(
   path: string,
   fieldName: string,
-  context: ChatarminContext,
+  context: ApiKeyProviderContext,
 ): Promise<Record<string, unknown>> {
   const payload = await chatarminRequestJson({ method: "GET", path }, context, "execute");
   return { [fieldName]: requireChatarminObject(payload) };
@@ -265,13 +263,13 @@ async function writeChatarminResource(
   path: string,
   body: Record<string, unknown>,
   fieldName: string,
-  context: ChatarminContext,
+  context: ApiKeyProviderContext,
 ): Promise<Record<string, unknown>> {
   const payload = await chatarminRequestJson({ method, path, body }, context, "execute");
   return { [fieldName]: requireChatarminObject(payload) };
 }
 
-async function deleteChatarminResource(path: string, context: ChatarminContext): Promise<{ success: true }> {
+async function deleteChatarminResource(path: string, context: ApiKeyProviderContext): Promise<{ success: true }> {
   await chatarminRequestJson({ method: "DELETE", path }, context, "execute");
   return { success: true };
 }
@@ -283,7 +281,7 @@ async function chatarminRequestJson(
     query?: Record<string, string | undefined>;
     body?: Record<string, unknown>;
   },
-  context: ChatarminContext,
+  context: ApiKeyProviderContext,
   phase: ChatarminRequestPhase,
 ): Promise<unknown> {
   return runProviderRequest({ signal: context.signal, label: "Chatarmin" }, async (signal) => {

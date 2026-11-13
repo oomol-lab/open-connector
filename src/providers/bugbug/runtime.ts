@@ -1,6 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-executors.ts";
-import type { ApiKeyProviderContext } from "../provider-executors.ts";
+import type { ProviderActionHandlers, ApiKeyProviderContext } from "../provider-executors.ts";
 import type { ProviderFetch } from "../provider-runtime.ts";
 
 import { compactObject, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
@@ -11,8 +10,7 @@ const bugbugValidationPath = "/api/v2/tests/";
 
 type BugbugRequestPhase = "validate" | "execute";
 type BugbugQueryValue = boolean | number | string | null | undefined;
-type BugbugActionContext = Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
-type BugbugActionHandler = (input: Record<string, unknown>, context: BugbugActionContext) => Promise<unknown>;
+type BugbugActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
 interface BugbugRequestOptions {
   apiKey: string;
@@ -90,7 +88,7 @@ export async function validateBugbugCredential(
 
 async function listBugbugTests(
   input: Record<string, unknown>,
-  context: BugbugActionContext,
+  context: ApiKeyProviderContext,
 ): Promise<Record<string, unknown>> {
   return requestBugbugJson<Record<string, unknown>>({
     apiKey: context.apiKey,
@@ -109,7 +107,7 @@ async function listBugbugTests(
 
 async function getBugbugTest(
   input: Record<string, unknown>,
-  context: BugbugActionContext,
+  context: ApiKeyProviderContext,
 ): Promise<Record<string, unknown>> {
   return requestBugbugJson<Record<string, unknown>>({
     apiKey: context.apiKey,
@@ -123,7 +121,7 @@ async function getBugbugTest(
 
 async function listBugbugSuites(
   input: Record<string, unknown>,
-  context: BugbugActionContext,
+  context: ApiKeyProviderContext,
 ): Promise<Record<string, unknown>> {
   return requestBugbugJson<Record<string, unknown>>({
     apiKey: context.apiKey,
@@ -142,7 +140,7 @@ async function listBugbugSuites(
 
 async function getBugbugSuite(
   input: Record<string, unknown>,
-  context: BugbugActionContext,
+  context: ApiKeyProviderContext,
 ): Promise<Record<string, unknown>> {
   return requestBugbugJson<Record<string, unknown>>({
     apiKey: context.apiKey,
@@ -156,7 +154,7 @@ async function getBugbugSuite(
 
 async function listBugbugProfiles(
   input: Record<string, unknown>,
-  context: BugbugActionContext,
+  context: ApiKeyProviderContext,
 ): Promise<Record<string, unknown>> {
   return requestBugbugJson<Record<string, unknown>>({
     apiKey: context.apiKey,
@@ -173,7 +171,7 @@ async function listBugbugProfiles(
 
 async function listBugbugTestRuns(
   input: Record<string, unknown>,
-  context: BugbugActionContext,
+  context: ApiKeyProviderContext,
 ): Promise<Record<string, unknown>> {
   return requestBugbugJson<Record<string, unknown>>({
     apiKey: context.apiKey,
@@ -195,7 +193,7 @@ async function listBugbugTestRuns(
 
 async function runBugbugTest(
   input: Record<string, unknown>,
-  context: BugbugActionContext,
+  context: ApiKeyProviderContext,
 ): Promise<Record<string, unknown>> {
   return requestBugbugJson<Record<string, unknown>>({
     apiKey: context.apiKey,
@@ -214,7 +212,7 @@ async function runBugbugTest(
 
 async function getBugbugTestRunStatus(
   input: Record<string, unknown>,
-  context: BugbugActionContext,
+  context: ApiKeyProviderContext,
 ): Promise<Record<string, unknown>> {
   return requestBugbugJson<Record<string, unknown>>({
     apiKey: context.apiKey,

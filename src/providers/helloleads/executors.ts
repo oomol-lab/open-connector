@@ -1,6 +1,6 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-executors.ts";
-import type { ApiKeyProviderContext } from "../provider-executors.ts";
+import type { ProviderActionHandlers, ApiKeyProviderContext } from "../provider-executors.ts";
+import type { ProviderRequestContext } from "../provider-runtime.ts";
 
 import { compactObject, optionalRecord, requiredString } from "../../core/cast.ts";
 import { defineApiKeyProviderExecutors } from "../provider-executors.ts";
@@ -15,8 +15,7 @@ const submitWebFormPath = "/index.php/app/account/visitorKeyPost";
 
 type HelloleadsMode = "validate" | "execute";
 type HelloleadsFieldType = "text" | "textarea" | "dropdown" | "multiselect" | "date" | "file" | "hidden" | "unknown";
-type HelloleadsActionContext = ApiKeyProviderContext;
-type HelloleadsActionHandler = (input: Record<string, unknown>, context: HelloleadsActionContext) => Promise<unknown>;
+type HelloleadsActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
 interface HelloleadsFieldDefinition {
   field?: unknown;
@@ -160,7 +159,7 @@ export const credentialValidators: CredentialValidators = {
   },
 };
 
-async function loadWebForm(apiKey: string, context: HelloleadsActionContext): Promise<LoadedWebForm> {
+async function loadWebForm(apiKey: string, context: ApiKeyProviderContext): Promise<LoadedWebForm> {
   const definitionUrl = new URL(formDefinitionPath, helloleadsApiBaseUrl);
   definitionUrl.searchParams.set("key", requiredHelloleadsApiKey(apiKey));
 
@@ -196,7 +195,7 @@ async function loadWebForm(apiKey: string, context: HelloleadsActionContext): Pr
   };
 }
 
-async function loadRecaptchaSetting(organizationId: string, context: HelloleadsActionContext): Promise<boolean> {
+async function loadRecaptchaSetting(organizationId: string, context: ApiKeyProviderContext): Promise<boolean> {
   const settingsUrl = new URL(recaptchaSettingsPath, helloleadsApiBaseUrl);
   settingsUrl.searchParams.set("organizationId", organizationId);
   settingsUrl.searchParams.set("recaptchaSelection", "v2");
@@ -217,7 +216,7 @@ async function loadRecaptchaSetting(organizationId: string, context: HelloleadsA
 async function fetchHelloleadsJson(
   url: URL,
   init: RequestInit,
-  context: Pick<HelloleadsActionContext, "fetcher" | "signal">,
+  context: ProviderRequestContext,
   mode: HelloleadsMode,
 ): Promise<Record<string, unknown>> {
   let response: Response;

@@ -1,6 +1,5 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-executors.ts";
-import type { ApiKeyProviderContext } from "../provider-executors.ts";
+import type { ProviderActionHandlers, ApiKeyProviderContext } from "../provider-executors.ts";
 
 import { compactObject, optionalNumber, optionalString } from "../../core/cast.ts";
 import { defineApiKeyProviderExecutors } from "../provider-executors.ts";
@@ -11,8 +10,7 @@ const service = "geoapify";
 const geoapifyApiBaseUrl = "https://api.geoapify.com";
 const geoapifyValidationPath = "/v1/geocode/search";
 
-type GeoapifyActionContext = Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
-type GeoapifyActionHandler = (input: Record<string, unknown>, context: GeoapifyActionContext) => Promise<unknown>;
+type GeoapifyActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
 export const geoapifyActionHandlers: ProviderActionHandlers<"geoapify", GeoapifyActionHandler> = {
   forward_geocode(input, context) {
@@ -160,7 +158,7 @@ async function requestGeoapify(input: {
   query?: Record<string, string | number | boolean | undefined>;
   method: "GET" | "POST";
   body?: unknown;
-  context: GeoapifyActionContext;
+  context: ApiKeyProviderContext;
   phase: "validate" | "execute";
 }): Promise<unknown> {
   let response: Response;

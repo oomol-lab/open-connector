@@ -4,8 +4,7 @@ import type {
   ProviderExecutors,
   ProviderProxyExecutor,
 } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-executors.ts";
-import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-executors.ts";
+import type { ProviderActionHandlers, ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-executors.ts";
 import type { ProviderFetch } from "../provider-runtime.ts";
 
 import {
@@ -25,7 +24,6 @@ export const ninjapearApiBaseUrl = "https://nubela.co";
 
 type NinjapearRequestPhase = "validate" | "execute";
 type NinjapearQueryValue = string | number | boolean | undefined;
-type NinjapearContext = Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
 type NinjapearActionHandler = ProviderRuntimeHandler<ApiKeyProviderContext>;
 
 export const ninjapearActionHandlers: ProviderActionHandlers<"ninjapear", NinjapearActionHandler> = {
@@ -165,7 +163,7 @@ async function validateNinjapearCredential(
 async function requestNinjapear(
   path: string,
   query: Record<string, NinjapearQueryValue>,
-  context: NinjapearContext,
+  context: ApiKeyProviderContext,
   phase: NinjapearRequestPhase,
 ): Promise<Record<string, unknown>> {
   const url = new URL(path, ninjapearApiBaseUrl);

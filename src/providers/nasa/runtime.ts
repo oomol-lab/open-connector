@@ -1,6 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-executors.ts";
-import type { ApiKeyProviderContext } from "../provider-executors.ts";
+import type { ProviderActionHandlers, ApiKeyProviderContext } from "../provider-executors.ts";
 
 import { compactObject, optionalBoolean, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
 import { providerUserAgent, ProviderRequestError, requiredInputString } from "../provider-runtime.ts";
@@ -9,8 +8,7 @@ export const nasaApiBaseUrl = "https://api.nasa.gov";
 
 type QueryValue = string | number | boolean | undefined;
 type NasaRequestPhase = "validate" | "execute";
-type NasaActionContext = Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
-type NasaActionHandler = (input: Record<string, unknown>, context: NasaActionContext) => Promise<unknown>;
+type NasaActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 type EpicImageKind = "natural" | "enhanced" | "aerosol" | "cloud";
 
 export const nasaActionHandlers: ProviderActionHandlers<"nasa", NasaActionHandler> = {
@@ -128,7 +126,7 @@ export async function validateNasaCredential(
   };
 }
 
-async function executeGetApod(input: Record<string, unknown>, context: NasaActionContext): Promise<unknown> {
+async function executeGetApod(input: Record<string, unknown>, context: ApiKeyProviderContext): Promise<unknown> {
   const payload = readResponseObject(
     await nasaGetJson(
       "/planetary/apod",
@@ -157,7 +155,7 @@ async function executeGetApod(input: Record<string, unknown>, context: NasaActio
   };
 }
 
-async function executeBrowseNeo(input: Record<string, unknown>, context: NasaActionContext): Promise<unknown> {
+async function executeBrowseNeo(input: Record<string, unknown>, context: ApiKeyProviderContext): Promise<unknown> {
   const payload = readResponseObject(
     await nasaGetJson(
       "/neo/rest/v1/neo/browse",
@@ -180,7 +178,7 @@ async function executeBrowseNeo(input: Record<string, unknown>, context: NasaAct
   };
 }
 
-async function executeGetNeoLookup(input: Record<string, unknown>, context: NasaActionContext): Promise<unknown> {
+async function executeGetNeoLookup(input: Record<string, unknown>, context: ApiKeyProviderContext): Promise<unknown> {
   const asteroidId = encodeURIComponent(requiredInputString(input.asteroidId, "asteroidId"));
   const payload = readResponseObject(
     await nasaGetJson(`/neo/rest/v1/neo/${asteroidId}`, {}, context, "execute"),
@@ -194,7 +192,7 @@ async function executeGetNeoLookup(input: Record<string, unknown>, context: Nasa
 
 async function executeSearchNearEarthObjects(
   input: Record<string, unknown>,
-  context: NasaActionContext,
+  context: ApiKeyProviderContext,
 ): Promise<unknown> {
   const startDate = requiredInputString(input.startDate, "startDate");
   const endDate = optionalString(input.endDate);
@@ -232,7 +230,7 @@ async function executeSearchNearEarthObjects(
 async function executeDonkiList(
   path: string,
   input: Record<string, unknown>,
-  context: NasaActionContext,
+  context: ApiKeyProviderContext,
 ): Promise<unknown> {
   const payload = readResponseArray(
     await nasaGetJson(path, buildDonkiQuery(input), context, "execute"),
@@ -247,7 +245,7 @@ async function executeDonkiList(
 async function executeEpicImages(
   kind: EpicImageKind,
   date: string | undefined,
-  context: NasaActionContext,
+  context: ApiKeyProviderContext,
 ): Promise<unknown> {
   const path = date ? `/EPIC/api/${kind}/date/${date}` : `/EPIC/api/${kind}`;
   const payload = readResponseArray(await nasaGetJson(path, {}, context, "execute"), `${path} response`);
@@ -257,7 +255,7 @@ async function executeEpicImages(
   };
 }
 
-async function executeEpicDateList(kind: EpicImageKind, context: NasaActionContext): Promise<unknown> {
+async function executeEpicDateList(kind: EpicImageKind, context: ApiKeyProviderContext): Promise<unknown> {
   try {
     const payload = readResponseArray(
       await nasaGetJson(`/EPIC/api/${kind}/all`, {}, context, "execute"),
@@ -301,7 +299,7 @@ function buildDonkiQuery(input: Record<string, unknown>): Record<string, QueryVa
 async function nasaGetJson(
   path: string,
   query: Record<string, QueryValue>,
-  context: NasaActionContext,
+  context: ApiKeyProviderContext,
   phase: NasaRequestPhase,
 ): Promise<unknown> {
   const url = new URL(path, nasaApiBaseUrl);

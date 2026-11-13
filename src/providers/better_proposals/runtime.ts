@@ -1,6 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-executors.ts";
-import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-executors.ts";
+import type { ProviderActionHandlers, ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-executors.ts";
 import type { ProviderFetch } from "../provider-runtime.ts";
 
 import { compactObject, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
@@ -10,7 +9,6 @@ const betterProposalsApiBaseUrl = "https://api.betterproposals.io";
 const validationPath = "/settings";
 
 type RequestPhase = "validate" | "execute";
-type BetterProposalsContext = Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
 type ActionHandler = ProviderRuntimeHandler<ApiKeyProviderContext>;
 
 const proposalListPaths: Record<string, string> = {
@@ -115,7 +113,7 @@ export async function validateBetterProposalsCredential(
 async function listResources(
   path: string,
   input: Record<string, unknown>,
-  context: BetterProposalsContext,
+  context: ApiKeyProviderContext,
 ): Promise<Record<string, unknown>> {
   const query = compactObject({
     page: readOptionalPositiveInteger(input.page, "page"),
@@ -132,7 +130,7 @@ async function listResources(
   };
 }
 
-async function getResource(path: string, context: BetterProposalsContext): Promise<Record<string, unknown>> {
+async function getResource(path: string, context: ApiKeyProviderContext): Promise<Record<string, unknown>> {
   const payload = await getJson(path, context, "execute");
   const record = requireObjectPayload(payload);
 
@@ -145,7 +143,7 @@ async function getResource(path: string, context: BetterProposalsContext): Promi
 
 async function getJson(
   path: string,
-  context: BetterProposalsContext,
+  context: ApiKeyProviderContext,
   phase: RequestPhase,
   query: Record<string, unknown> = {},
 ): Promise<unknown> {

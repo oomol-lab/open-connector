@@ -1,6 +1,5 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-executors.ts";
-import type { ApiKeyProviderContext } from "../provider-executors.ts";
+import type { ProviderActionHandlers, ApiKeyProviderContext } from "../provider-executors.ts";
 
 import { compactObject, optionalInteger, optionalNumber, optionalRecord, optionalString } from "../../core/cast.ts";
 import { compactJson } from "../../core/request.ts";
@@ -19,13 +18,12 @@ const gammaApiBaseUrl = "https://public-api.gamma.app";
 const gammaApiVersionPath = "/v1.0";
 
 type GammaRequestPhase = "validate" | "execute";
-type GammaActionContext = Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
-type GammaActionHandler = (input: Record<string, unknown>, context: GammaActionContext) => Promise<unknown>;
+type GammaActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
 interface GammaRequestInput {
   method: "GET" | "POST";
   path: string;
-  context: GammaActionContext;
+  context: ApiKeyProviderContext;
   phase: GammaRequestPhase;
   query?: Record<string, string | undefined>;
   body?: Record<string, unknown>;
@@ -68,7 +66,7 @@ export const executors: ProviderExecutors = defineApiKeyProviderExecutors(servic
 
 export const credentialValidators: CredentialValidators = {
   async apiKey(input, { fetcher, signal }) {
-    const context: GammaActionContext = {
+    const context: ApiKeyProviderContext = {
       apiKey: input.apiKey,
       fetcher,
       signal,
@@ -95,7 +93,7 @@ export const credentialValidators: CredentialValidators = {
   },
 };
 
-async function createGeneration(input: Record<string, unknown>, context: GammaActionContext): Promise<unknown> {
+async function createGeneration(input: Record<string, unknown>, context: ApiKeyProviderContext): Promise<unknown> {
   const payload = await gammaRequest({
     method: "POST",
     path: "/generations",
@@ -109,7 +107,7 @@ async function createGeneration(input: Record<string, unknown>, context: GammaAc
   };
 }
 
-async function getGeneration(input: Record<string, unknown>, context: GammaActionContext): Promise<unknown> {
+async function getGeneration(input: Record<string, unknown>, context: ApiKeyProviderContext): Promise<unknown> {
   return {
     generation: await fetchGeneration(requiredInputString(input.generationId, "generationId"), context),
   };
@@ -117,7 +115,7 @@ async function getGeneration(input: Record<string, unknown>, context: GammaActio
 
 async function createGenerationFromTemplate(
   input: Record<string, unknown>,
-  context: GammaActionContext,
+  context: ApiKeyProviderContext,
 ): Promise<unknown> {
   const payload = await gammaRequest({
     method: "POST",
@@ -132,7 +130,10 @@ async function createGenerationFromTemplate(
   };
 }
 
-async function createGenerationAndWait(input: Record<string, unknown>, context: GammaActionContext): Promise<unknown> {
+async function createGenerationAndWait(
+  input: Record<string, unknown>,
+  context: ApiKeyProviderContext,
+): Promise<unknown> {
   const created = (await createGeneration(input, context)) as { generation: GammaGeneration };
   return waitForGeneration(
     {
@@ -146,7 +147,7 @@ async function createGenerationAndWait(input: Record<string, unknown>, context: 
 
 async function createGenerationFromTemplateAndWait(
   input: Record<string, unknown>,
-  context: GammaActionContext,
+  context: ApiKeyProviderContext,
 ): Promise<unknown> {
   const created = (await createGenerationFromTemplate(input, context)) as { generation: GammaGeneration };
   return waitForGeneration(
@@ -159,7 +160,7 @@ async function createGenerationFromTemplateAndWait(
   );
 }
 
-async function waitForGeneration(input: Record<string, unknown>, context: GammaActionContext): Promise<unknown> {
+async function waitForGeneration(input: Record<string, unknown>, context: ApiKeyProviderContext): Promise<unknown> {
   const generationId = requiredInputString(input.generationId, "generationId");
   const timeoutMs = toMilliseconds(input.timeoutSeconds, 120_000);
   const pollIntervalMs = toMilliseconds(input.pollIntervalSeconds, 5_000);
@@ -197,7 +198,7 @@ async function waitForGeneration(input: Record<string, unknown>, context: GammaA
   }
 }
 
-async function listThemes(input: Record<string, unknown>, context: GammaActionContext): Promise<unknown> {
+async function listThemes(input: Record<string, unknown>, context: ApiKeyProviderContext): Promise<unknown> {
   const payload = await gammaRequest({
     method: "GET",
     path: "/themes",
@@ -213,7 +214,7 @@ async function listThemes(input: Record<string, unknown>, context: GammaActionCo
   };
 }
 
-async function listFolders(input: Record<string, unknown>, context: GammaActionContext): Promise<unknown> {
+async function listFolders(input: Record<string, unknown>, context: ApiKeyProviderContext): Promise<unknown> {
   const payload = await gammaRequest({
     method: "GET",
     path: "/folders",
@@ -269,7 +270,7 @@ function buildListQuery(input: Record<string, unknown>): Record<string, string |
 
 async function fetchGeneration(
   generationId: string,
-  context: GammaActionContext,
+  context: ApiKeyProviderContext,
   timeoutMs?: number,
 ): Promise<GammaGeneration & Record<string, unknown>> {
   const payload = await gammaRequest({

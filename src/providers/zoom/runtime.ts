@@ -1,6 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-executors.ts";
-import type { OAuthProviderContext, ProviderRuntimeHandler } from "../provider-executors.ts";
+import type { ProviderActionHandlers, OAuthProviderContext, ProviderRuntimeHandler } from "../provider-executors.ts";
 import type { ProviderFetch } from "../provider-runtime.ts";
 
 import { compactObject, optionalBoolean, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
@@ -24,7 +23,7 @@ type ZoomRequestPhase = "validate" | "execute";
 type ZoomActionHandler = ProviderRuntimeHandler<OAuthProviderContext>;
 
 interface ZoomRequestInput {
-  context: Pick<OAuthProviderContext, "accessToken" | "fetcher" | "signal">;
+  context: OAuthProviderContext;
   path: string;
   phase: ZoomRequestPhase;
   method?: "GET" | "POST" | "PATCH";

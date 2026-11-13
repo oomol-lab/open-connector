@@ -1,6 +1,5 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-executors.ts";
-import type { ApiKeyProviderContext } from "../provider-executors.ts";
+import type { ProviderActionHandlers, ApiKeyProviderContext } from "../provider-executors.ts";
 
 import { compactObject, optionalNumber, optionalRecord, optionalString } from "../../core/cast.ts";
 import { defineApiKeyProviderExecutors } from "../provider-executors.ts";
@@ -15,8 +14,7 @@ const ip2locationValidationIp = "8.8.8.8";
 
 type Ip2locationRequestPhase = "validate" | "execute";
 type Ip2locationQueryValue = string | number | undefined;
-type Ip2locationActionContext = Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
-type Ip2locationActionHandler = (input: Record<string, unknown>, context: Ip2locationActionContext) => Promise<unknown>;
+type Ip2locationActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
 interface Ip2locationRequestInput {
   baseUrl: string;
@@ -107,7 +105,7 @@ export const credentialValidators: CredentialValidators = {
 
 async function requestIp2locationJson(
   input: Ip2locationRequestInput,
-  context: Ip2locationActionContext,
+  context: ApiKeyProviderContext,
 ): Promise<Record<string, unknown>> {
   let response: Response;
   let payload: unknown;

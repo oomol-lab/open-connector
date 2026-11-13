@@ -1,6 +1,5 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-executors.ts";
-import type { GoogleChatRuntimeContext } from "./runtime.ts";
+import type { ProviderActionHandlers, OAuthProviderContext } from "../provider-executors.ts";
 
 import {
   compactObject,
@@ -51,7 +50,7 @@ const emailLocalPart = "[A-Za-z0-9!#$%&'*+=?^_`{|}~-]+(?:\\.[A-Za-z0-9!#$%&'*+=?
 const emailDomainLabel = "[A-Za-z0-9](?:[A-Za-z0-9-]*[A-Za-z0-9])?";
 const userEmailPattern = new RegExp(`^${emailLocalPart}@${emailDomainLabel}(?:\\.${emailDomainLabel})+$`);
 
-type GoogleChatActionHandler = (input: Record<string, unknown>, context: GoogleChatRuntimeContext) => Promise<unknown>;
+type GoogleChatActionHandler = (input: Record<string, unknown>, context: OAuthProviderContext) => Promise<unknown>;
 
 interface ListSpacesPayload {
   spaces?: unknown;
@@ -110,7 +109,7 @@ export const credentialValidators: CredentialValidators = {
   customCredential: googleServiceAccountValidator(service, googleChatServiceAccountScopes),
 };
 
-async function listSpaces(input: Record<string, unknown>, context: GoogleChatRuntimeContext) {
+async function listSpaces(input: Record<string, unknown>, context: OAuthProviderContext) {
   const payload = await googleChatJsonRequest<ListSpacesPayload>(`${googleChatApiBaseUrl}/spaces`, {
     context,
     query: compactObject({
@@ -126,7 +125,7 @@ async function listSpaces(input: Record<string, unknown>, context: GoogleChatRun
   };
 }
 
-async function getSpace(input: Record<string, unknown>, context: GoogleChatRuntimeContext) {
+async function getSpace(input: Record<string, unknown>, context: OAuthProviderContext) {
   const spaceName = resolveSpaceName(input.space, "space is required");
   const payload = await googleChatJsonRequest<unknown>(`${googleChatApiBaseUrl}/${encodeResourceName(spaceName)}`, {
     context,
@@ -144,7 +143,7 @@ async function getSpace(input: Record<string, unknown>, context: GoogleChatRunti
  * Finding the space needs nothing beyond chat.spaces.readonly, which the read
  * actions already use. Naming its peer needs more, so that part is best effort.
  */
-async function findDirectMessage(input: Record<string, unknown>, context: GoogleChatRuntimeContext) {
+async function findDirectMessage(input: Record<string, unknown>, context: OAuthProviderContext) {
   const name = resolveUserName(input.user);
   let payload: unknown;
   try {
@@ -215,7 +214,7 @@ async function findDirectMessage(input: Record<string, unknown>, context: Google
  * looked up in the Workspace directory through the People API, where the same id
  * names the person.
  */
-async function getDirectMessagePeer(input: Record<string, unknown>, context: GoogleChatRuntimeContext) {
+async function getDirectMessagePeer(input: Record<string, unknown>, context: OAuthProviderContext) {
   const spaceName = resolveSpaceName(input.space, "space is required");
   const space = requiredResponseRecord(
     await googleChatJsonRequest<unknown>(`${googleChatApiBaseUrl}/${encodeResourceName(spaceName)}`, { context }),
@@ -238,7 +237,7 @@ async function getDirectMessagePeer(input: Record<string, unknown>, context: Goo
  * for any space type; unlike get_direct_message_peer it names everyone and makes
  * no claim about who "the" other participant is.
  */
-async function listSpaceMembers(input: Record<string, unknown>, context: GoogleChatRuntimeContext) {
+async function listSpaceMembers(input: Record<string, unknown>, context: OAuthProviderContext) {
   const spaceName = resolveSpaceName(input.space, "space is required");
   const pageSize = resolvePageSize(input.pageSize);
   const page = await listSpaceMembersPage(spaceName, { pageSize, pageToken: optionalString(input.pageToken) }, context);
@@ -280,7 +279,7 @@ function resolveUserName(value: unknown): string {
   return `users/${trimmed}`;
 }
 
-async function listMessages(input: Record<string, unknown>, context: GoogleChatRuntimeContext) {
+async function listMessages(input: Record<string, unknown>, context: OAuthProviderContext) {
   const spaceName = resolveSpaceName(input.space, "space is required");
   const payload = await googleChatJsonRequest<ListMessagesPayload>(
     `${googleChatApiBaseUrl}/${encodeResourceName(spaceName)}/messages`,
@@ -305,7 +304,7 @@ async function listMessages(input: Record<string, unknown>, context: GoogleChatR
   };
 }
 
-async function getMessage(input: Record<string, unknown>, context: GoogleChatRuntimeContext) {
+async function getMessage(input: Record<string, unknown>, context: OAuthProviderContext) {
   const messageName = resolveMessageName(input);
   const payload = await googleChatJsonRequest<unknown>(`${googleChatApiBaseUrl}/${encodeResourceName(messageName)}`, {
     context,
@@ -315,7 +314,7 @@ async function getMessage(input: Record<string, unknown>, context: GoogleChatRun
   return message;
 }
 
-async function createMessage(input: Record<string, unknown>, context: GoogleChatRuntimeContext) {
+async function createMessage(input: Record<string, unknown>, context: OAuthProviderContext) {
   const spaceName = resolveSpaceName(input.space, "space is required");
   const text = requireRawText(input.text, "text is required");
   // Read the thread raw: optionalString() trims and then treats the result as

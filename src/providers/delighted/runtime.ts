@@ -1,6 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-executors.ts";
-import type { ApiKeyProviderContext } from "../provider-executors.ts";
+import type { ProviderActionHandlers, ApiKeyProviderContext } from "../provider-executors.ts";
 
 import { Buffer } from "node:buffer";
 import {
@@ -101,7 +100,7 @@ export async function validateDelightedCredential(
 async function delightedCreateOrUpdatePerson(input: Record<string, unknown>, context: ApiKeyProviderContext) {
   assertPersonCreateInput(input);
   const response = await requestDelightedJson({
-    ...requestContext(context),
+    ...context,
     path: "/people.json",
     method: "POST",
     mode: "execute",
@@ -129,7 +128,7 @@ async function delightedListPeople(input: Record<string, unknown>, context: ApiK
     throw new ProviderRequestError(400, "Only one of email or phone_number may be provided.");
   }
   const response = await requestDelightedJson({
-    ...requestContext(context),
+    ...context,
     path: "/people.json",
     mode: "execute",
     query: compactObject({
@@ -155,7 +154,7 @@ async function delightedListUnsubscribedPeople(input: Record<string, unknown>, c
   const perPage = optionalInteger(input.per_page) ?? 20;
   const page = optionalInteger(input.page) ?? 1;
   const response = await requestDelightedJson({
-    ...requestContext(context),
+    ...context,
     path: "/unsubscribes.json",
     mode: "execute",
     query: compactObject({
@@ -173,7 +172,7 @@ async function delightedListBouncedPeople(input: Record<string, unknown>, contex
   const perPage = optionalInteger(input.per_page) ?? 20;
   const page = optionalInteger(input.page) ?? 1;
   const response = await requestDelightedJson({
-    ...requestContext(context),
+    ...context,
     path: "/bounces.json",
     mode: "execute",
     query: compactObject({
@@ -189,7 +188,7 @@ async function delightedListBouncedPeople(input: Record<string, unknown>, contex
 
 async function delightedUnsubscribePerson(input: Record<string, unknown>, context: ApiKeyProviderContext) {
   const response = await requestDelightedJson({
-    ...requestContext(context),
+    ...context,
     path: "/unsubscribes.json",
     method: "POST",
     mode: "execute",
@@ -200,7 +199,7 @@ async function delightedUnsubscribePerson(input: Record<string, unknown>, contex
 
 async function delightedDeletePerson(input: Record<string, unknown>, context: ApiKeyProviderContext) {
   const response = await requestDelightedJson({
-    ...requestContext(context),
+    ...context,
     path: buildDeletePersonPath(input),
     method: "DELETE",
     mode: "execute",
@@ -214,7 +213,7 @@ async function delightedListSurveyResponses(input: Record<string, unknown>, cont
   const expand =
     Array.isArray(input.expand) && input.expand.length > 0 ? input.expand.map((entry) => String(entry)) : ["notes"];
   const response = await requestDelightedJson({
-    ...requestContext(context),
+    ...context,
     path: "/survey_responses.json",
     mode: "execute",
     query: compactObject({
@@ -237,7 +236,7 @@ async function delightedListSurveyResponses(input: Record<string, unknown>, cont
 
 async function delightedGetMetrics(input: Record<string, unknown>, context: ApiKeyProviderContext) {
   const response = await requestDelightedJson({
-    ...requestContext(context),
+    ...context,
     path: delightedValidationPath,
     mode: "execute",
     query: compactObject({
@@ -249,16 +248,6 @@ async function delightedGetMetrics(input: Record<string, unknown>, context: ApiK
   });
   return {
     metrics: requireObjectPayload(response.payload, "metrics"),
-  };
-}
-
-function requestContext(
-  context: ApiKeyProviderContext,
-): Pick<DelightedRequestOptions, "apiKey" | "fetcher" | "signal"> {
-  return {
-    apiKey: context.apiKey,
-    fetcher: context.fetcher,
-    signal: context.signal,
   };
 }
 

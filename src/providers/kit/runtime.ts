@@ -1,6 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-executors.ts";
-import type { ApiKeyProviderContext } from "../provider-executors.ts";
+import type { ProviderActionHandlers, ApiKeyProviderContext } from "../provider-executors.ts";
 
 import {
   compactObject,
@@ -184,9 +183,7 @@ export const kitActionHandlers: ProviderActionHandlers<"kit", KitActionHandler> 
   },
 };
 
-export async function validateKitCredential(
-  input: Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">,
-): Promise<CredentialValidationResult> {
+export async function validateKitCredential(input: ApiKeyProviderContext): Promise<CredentialValidationResult> {
   const payload = await requestKitJson({
     method: "GET",
     path: "/account",

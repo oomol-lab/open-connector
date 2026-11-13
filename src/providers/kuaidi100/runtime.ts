@@ -162,7 +162,7 @@ function normalizeKuaidi100Output(value: unknown): Record<string, unknown> {
 }
 
 function withKuaidi100Client<T>(
-  context: Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">,
+  context: ApiKeyProviderContext,
   phase: Kuaidi100Phase,
   run: (client: Client) => Promise<T>,
 ): Promise<T> {

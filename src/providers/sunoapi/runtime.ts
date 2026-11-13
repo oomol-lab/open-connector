@@ -1,6 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-executors.ts";
-import type { ApiKeyProviderContext } from "../provider-executors.ts";
+import type { ProviderActionHandlers, ApiKeyProviderContext } from "../provider-executors.ts";
 import type { ProviderFetch } from "../provider-runtime.ts";
 
 import { optionalNumber, optionalRecord, optionalString } from "../../core/cast.ts";
@@ -14,8 +13,7 @@ import {
 
 export const sunoApiBaseUrl = "https://api.sunoapi.org";
 
-type SunoApiActionContext = Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
-type SunoApiActionHandler = (input: Record<string, unknown>, context: SunoApiActionContext) => Promise<unknown>;
+type SunoApiActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
 export const sunoapiActionHandlers: ProviderActionHandlers<"sunoapi", SunoApiActionHandler> = {
   get_remaining_credits(_input, context) {
@@ -122,7 +120,7 @@ export async function validateSunoApiCredential(
   };
 }
 
-async function getRemainingCredits(context: SunoApiActionContext): Promise<{ credits: number }> {
+async function getRemainingCredits(context: ApiKeyProviderContext): Promise<{ credits: number }> {
   const payload = await requestSunoApiJson({
     ...context,
     method: "GET",
@@ -138,7 +136,7 @@ async function getRemainingCredits(context: SunoApiActionContext): Promise<{ cre
 
 async function getSunoApiRecordInfo(
   input: Record<string, unknown>,
-  context: SunoApiActionContext,
+  context: ApiKeyProviderContext,
   path: string,
   label: string,
 ): Promise<Record<string, unknown>> {
@@ -155,7 +153,7 @@ async function getSunoApiRecordInfo(
 
 async function submitSunoApiTask(
   input: Record<string, unknown>,
-  context: SunoApiActionContext,
+  context: ApiKeyProviderContext,
   path: string,
   label: string,
 ): Promise<{ taskId: string }> {
@@ -181,7 +179,7 @@ async function submitSunoApiTask(
 
 async function submitSunoApiObject(
   input: Record<string, unknown>,
-  context: SunoApiActionContext,
+  context: ApiKeyProviderContext,
   path: string,
   label: string,
 ): Promise<Record<string, unknown>> {

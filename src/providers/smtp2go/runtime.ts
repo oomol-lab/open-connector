@@ -1,6 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-executors.ts";
-import type { ApiKeyProviderContext } from "../provider-executors.ts";
+import type { ProviderActionHandlers, ApiKeyProviderContext } from "../provider-executors.ts";
 
 import { compactObject, optionalRawString, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import { providerUserAgent, ProviderRequestError, runProviderRequest } from "../provider-runtime.ts";
@@ -190,7 +189,7 @@ export async function validateSmtp2goCredential(
 async function requestSmtp2goJson(input: {
   path: string;
   body: Record<string, unknown>;
-  context: Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
+  context: ApiKeyProviderContext;
   phase: Smtp2goPhase;
 }): Promise<Record<string, unknown>> {
   return runProviderRequest({ signal: input.context.signal, label: "SMTP2GO" }, async (signal) => {

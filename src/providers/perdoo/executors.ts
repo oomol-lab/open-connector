@@ -1,6 +1,5 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-executors.ts";
-import type { ApiKeyProviderContext } from "../provider-executors.ts";
+import type { ProviderActionHandlers, ApiKeyProviderContext } from "../provider-executors.ts";
 
 import {
   compactObject,
@@ -17,8 +16,7 @@ import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts"
 const service = "perdoo";
 const perdooGraphqlUrl = "https://eu.perdoo.com/graphql/";
 
-type PerdooContext = Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
-type PerdooActionHandler = (input: Record<string, unknown>, context: PerdooContext) => Promise<unknown>;
+type PerdooActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 type PerdooRequestPhase = "validate" | "execute";
 
 interface PerdooGraphqlRequest {
@@ -283,7 +281,7 @@ export const credentialValidators: CredentialValidators = {
 
 async function requestPerdooData(
   request: PerdooGraphqlRequest,
-  context: PerdooContext,
+  context: ApiKeyProviderContext,
   phase: PerdooRequestPhase,
 ): Promise<Record<string, unknown>> {
   const payload = await requestPerdooGraphql(request, context, phase);
@@ -295,7 +293,7 @@ async function requestPerdooData(
 
 async function requestPerdooGraphql(
   request: PerdooGraphqlRequest,
-  context: PerdooContext,
+  context: ApiKeyProviderContext,
   phase: PerdooRequestPhase,
 ): Promise<PerdooGraphqlPayload> {
   let response: Response;

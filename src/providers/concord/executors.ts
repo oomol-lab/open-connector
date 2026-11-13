@@ -1,6 +1,5 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-executors.ts";
-import type { ApiKeyProviderContext } from "../provider-executors.ts";
+import type { ProviderActionHandlers, ApiKeyProviderContext } from "../provider-executors.ts";
 
 import {
   optionalBoolean,
@@ -117,18 +116,14 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
 
 async function requestConcordObject(
   path: string,
-  context: Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">,
+  context: ApiKeyProviderContext,
   phase: ConcordPhase,
   label: string,
 ): Promise<Record<string, unknown>> {
   return requiredRecord(await requestConcordJson(path, context, phase), `Concord ${label}`, providerResponseError);
 }
 
-async function requestConcordJson(
-  path: string,
-  context: Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">,
-  phase: ConcordPhase,
-): Promise<unknown> {
+async function requestConcordJson(path: string, context: ApiKeyProviderContext, phase: ConcordPhase): Promise<unknown> {
   return runProviderRequest({ signal: context.signal, label: "Concord" }, async (signal) => {
     const response = await context.fetcher(`${concordApiBaseUrl}${path}`, {
       headers: {

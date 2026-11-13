@@ -1,6 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-executors.ts";
-import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-executors.ts";
+import type { ProviderActionHandlers, ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-executors.ts";
 import type { ProviderFetch } from "../provider-runtime.ts";
 
 import { compactObject, optionalString } from "../../core/cast.ts";
@@ -152,7 +151,7 @@ function listRunsQuery(input: Record<string, unknown>): Array<[string, string | 
 
 async function requestTriggerDevJson(
   options: TriggerDevRequestOptions,
-  context: Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">,
+  context: ApiKeyProviderContext,
 ): Promise<TriggerDevJsonObject> {
   const response = await triggerDevFetch(options, context);
   if (!response.ok) {
@@ -163,10 +162,7 @@ async function requestTriggerDevJson(
   return parseTriggerDevJson(response);
 }
 
-async function triggerDevFetch(
-  options: TriggerDevRequestOptions,
-  context: Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">,
-): Promise<Response> {
+async function triggerDevFetch(options: TriggerDevRequestOptions, context: ApiKeyProviderContext): Promise<Response> {
   const url = new URL(options.path, triggerDevApiBaseUrl);
   const method = options.method ?? "GET";
   for (const [key, value] of options.query ?? []) {

@@ -1,6 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-executors.ts";
-import type { ApiKeyProviderContext } from "../provider-executors.ts";
+import type { ProviderActionHandlers, ApiKeyProviderContext } from "../provider-executors.ts";
 
 import { optionalNumber, optionalString, requiredRecord } from "../../core/cast.ts";
 import {
@@ -345,7 +344,7 @@ async function executeMappedTableAction(options: MappedTableActionOptions): Prom
 
 async function tushareRequest(
   input: TushareRequestInput,
-  context: Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">,
+  context: ApiKeyProviderContext,
 ): Promise<Record<string, unknown>> {
   const timeout = createProviderTimeout(context.signal);
   try {

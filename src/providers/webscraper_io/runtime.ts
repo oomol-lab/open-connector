@@ -1,6 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-executors.ts";
-import type { ApiKeyProviderContext } from "../provider-executors.ts";
+import type { ProviderActionHandlers, ApiKeyProviderContext } from "../provider-executors.ts";
 
 import {
   objectArray,
@@ -171,7 +170,7 @@ export async function validateWebscraperIoCredential(
 
 async function requestWebscraperIoJson(
   input: WebscraperIoRequestInput,
-  context: Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">,
+  context: ApiKeyProviderContext,
 ): Promise<Record<string, unknown>> {
   const timeout = createProviderTimeout(context.signal);
   try {
@@ -208,7 +207,7 @@ async function requestWebscraperIoJson(
 
 async function requestWebscraperIoText(
   input: Pick<WebscraperIoRequestInput, "path" | "query" | "phase">,
-  context: Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">,
+  context: ApiKeyProviderContext,
 ): Promise<string> {
   const timeout = createProviderTimeout(context.signal);
   try {

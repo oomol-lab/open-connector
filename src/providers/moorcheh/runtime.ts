@@ -1,6 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-executors.ts";
-import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-executors.ts";
+import type { ProviderActionHandlers, ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-executors.ts";
 
 import { optionalInteger, optionalNumber, optionalRecord, optionalString, requiredRecord } from "../../core/cast.ts";
 import { jsonObject } from "../../core/request.ts";
@@ -149,7 +148,7 @@ export async function validateMoorchehCredential(
 
 async function requestMoorchehJson(
   input: MoorchehRequestInput,
-  context: Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">,
+  context: ApiKeyProviderContext,
   phase: RequestPhase,
 ): Promise<Record<string, unknown>> {
   const timeout = createProviderTimeout(context.signal);

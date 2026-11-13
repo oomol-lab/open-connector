@@ -1,6 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-executors.ts";
-import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-executors.ts";
+import type { ProviderActionHandlers, ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-executors.ts";
 
 import { compactObject, optionalBoolean, optionalNumber, optionalRawString, optionalRecord } from "../../core/cast.ts";
 import {
@@ -64,7 +63,7 @@ export async function validateZenscrapeCredential(
 async function requestZenscrapeRaw(
   query: Record<string, string | number | boolean | undefined>,
   forwardHeaders: Record<string, string> | undefined,
-  context: Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">,
+  context: ApiKeyProviderContext,
   phase: ZenscrapePhase,
 ): Promise<{ response: Response; bodyText: string }> {
   return runProviderRequest(

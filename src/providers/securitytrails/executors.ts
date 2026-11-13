@@ -4,8 +4,8 @@ import type {
   ProviderExecutors,
   ProviderProxyExecutor,
 } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-executors.ts";
-import type { ApiKeyProviderContext } from "../provider-executors.ts";
+import type { ProviderActionHandlers, ApiKeyProviderContext } from "../provider-executors.ts";
+import type { ProviderRequestContext } from "../provider-runtime.ts";
 
 import { optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
 import { defineApiKeyProviderExecutors } from "../provider-executors.ts";
@@ -130,7 +130,7 @@ export const credentialValidators: CredentialValidators = {
 async function securitytrailsRequest(
   apiKey: string,
   input: SecuritytrailsRequestInput,
-  context: Pick<ApiKeyProviderContext, "fetcher" | "signal">,
+  context: ProviderRequestContext,
   phase: SecuritytrailsRequestPhase,
 ): Promise<Record<string, unknown>> {
   const response = await securitytrailsRawRequest(apiKey, input, context);
@@ -151,7 +151,7 @@ async function securitytrailsRequest(
 async function securitytrailsRawRequest(
   apiKey: string,
   input: SecuritytrailsRequestInput,
-  context: Pick<ApiKeyProviderContext, "fetcher" | "signal">,
+  context: ProviderRequestContext,
 ): Promise<Response> {
   const url = new URL(input.path, securitytrailsApiBaseUrl);
   for (const [key, value] of Object.entries(input.query ?? {})) {

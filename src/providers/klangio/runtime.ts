@@ -1,6 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-executors.ts";
-import type { ApiKeyProviderContext } from "../provider-executors.ts";
+import type { ProviderActionHandlers, ApiKeyProviderContext } from "../provider-executors.ts";
 
 import { optionalRecord, optionalString } from "../../core/cast.ts";
 import { assertPublicHttpUrl, readBoundedResponseBytes, storeResponseInTransit } from "../../core/request.ts";
@@ -130,9 +129,7 @@ export const klangioActionHandlers: ProviderActionHandlers<"klangio", KlangioAct
   },
 };
 
-export async function validateKlangioCredential(
-  context: Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">,
-): Promise<CredentialValidationResult> {
+export async function validateKlangioCredential(context: ApiKeyProviderContext): Promise<CredentialValidationResult> {
   const validationEndpoint = `/job/${klangioValidationJobId}/status`;
   const response = await context.fetcher(buildKlangioUrl(validationEndpoint), {
     method: "GET",

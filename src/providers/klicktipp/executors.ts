@@ -1,6 +1,5 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-executors.ts";
-import type { ApiKeyProviderContext } from "../provider-executors.ts";
+import type { ProviderActionHandlers, ApiKeyProviderContext } from "../provider-executors.ts";
 
 import { optionalNumber, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import { defineApiKeyProviderExecutors } from "../provider-executors.ts";
@@ -28,8 +27,7 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
   },
 });
 
-type KlicktippActionContext = Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
-type KlicktippActionHandler = (input: Record<string, unknown>, context: KlicktippActionContext) => Promise<unknown>;
+type KlicktippActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
 export const klicktippActionHandlers: ProviderActionHandlers<"klicktipp", KlicktippActionHandler> = {
   async signin(input, context): Promise<unknown> {
@@ -95,7 +93,7 @@ function buildSigninBody(input: Record<string, unknown>): Record<string, unknown
 async function requestKlicktippJson(
   path: string,
   body: Record<string, unknown>,
-  context: KlicktippActionContext,
+  context: ApiKeyProviderContext,
 ): Promise<unknown> {
   const timeout = createProviderTimeout(context.signal);
   let response: Response;

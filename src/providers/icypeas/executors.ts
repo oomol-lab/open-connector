@@ -4,8 +4,7 @@ import type {
   ProviderExecutors,
   ProviderProxyExecutor,
 } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-executors.ts";
-import type { ApiKeyProviderContext } from "../provider-executors.ts";
+import type { ProviderActionHandlers, ApiKeyProviderContext } from "../provider-executors.ts";
 
 import { optionalRecord, optionalString } from "../../core/cast.ts";
 import { jsonObject } from "../../core/request.ts";
@@ -25,8 +24,7 @@ const icypeasApiBaseUrl = "https://app.icypeas.com/api";
 const icypeasValidationPath = "/bulk-single-searchs/read";
 
 type IcypeasRequestMode = "validate" | "execute";
-type IcypeasActionContext = Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
-type IcypeasActionHandler = (input: Record<string, unknown>, context: IcypeasActionContext) => Promise<unknown>;
+type IcypeasActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
 export const icypeasActionHandlers: ProviderActionHandlers<"icypeas", IcypeasActionHandler> = {
   async get_subscription_information(input, context) {
@@ -180,7 +178,7 @@ async function requestIcypeasJson(
     path: string;
     body: Record<string, unknown>;
   },
-  context: IcypeasActionContext,
+  context: ApiKeyProviderContext,
   mode: IcypeasRequestMode,
 ): Promise<unknown> {
   const timeout = createProviderTimeout(context.signal);

@@ -1,5 +1,5 @@
-import type { ProviderActionHandlers } from "../provider-executors.ts";
-import type { ApiKeyProviderContext } from "../provider-executors.ts";
+import type { ProviderActionHandlers, ApiKeyProviderContext } from "../provider-executors.ts";
+import type { ProviderRequestContext } from "../provider-runtime.ts";
 
 import { compactObject, optionalInteger, optionalRecord, optionalString, requiredRecord } from "../../core/cast.ts";
 import { providerUserAgent, ProviderRequestError, providerInputError } from "../provider-runtime.ts";
@@ -8,10 +8,9 @@ export const textcortexApiBaseUrl = "https://api.textcortex.com/v1";
 const textcortexApiOrigin = "https://api.textcortex.com";
 
 type TextcortexRequestPhase = "validate" | "execute";
-type TextcortexContext = Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
-type TextcortexActionHandler = (input: Record<string, unknown>, context: TextcortexContext) => Promise<unknown>;
+type TextcortexActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-export async function validateTextcortexCredential(context: TextcortexContext): Promise<{
+export async function validateTextcortexCredential(context: ApiKeyProviderContext): Promise<{
   profile: { accountId: string; displayName: string };
   metadata: Record<string, unknown>;
 }> {
@@ -51,7 +50,7 @@ export const textcortexActionHandlers: ProviderActionHandlers<"textcortex", Text
   },
 };
 
-async function listModels(context: TextcortexContext) {
+async function listModels(context: ApiKeyProviderContext) {
   const payload = await textcortexRequest({
     path: "/models",
     method: "GET",
@@ -66,7 +65,7 @@ async function listModels(context: TextcortexContext) {
   };
 }
 
-async function retrieveModel(input: Record<string, unknown>, context: TextcortexContext) {
+async function retrieveModel(input: Record<string, unknown>, context: ApiKeyProviderContext) {
   const modelId = readRequiredInputString(input.modelId, "modelId");
   const payload = await textcortexRequest({
     path: `/models/${encodeURIComponent(modelId)}`,
@@ -81,7 +80,7 @@ async function retrieveModel(input: Record<string, unknown>, context: Textcortex
   };
 }
 
-async function createChatCompletion(input: Record<string, unknown>, context: TextcortexContext) {
+async function createChatCompletion(input: Record<string, unknown>, context: ApiKeyProviderContext) {
   if (input.stream === true) {
     throw new ProviderRequestError(400, "stream=true is not supported by connector actions");
   }
@@ -133,7 +132,7 @@ async function textcortexRequest(input: {
   method: "GET" | "POST";
   body?: Record<string, unknown>;
   apiKey: string;
-  context: Pick<ApiKeyProviderContext, "fetcher" | "signal">;
+  context: ProviderRequestContext;
   phase: TextcortexRequestPhase;
 }) {
   const url = new URL(`/v1${input.path}`, textcortexApiOrigin);

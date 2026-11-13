@@ -1,6 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-executors.ts";
-import type { ApiKeyProviderContext } from "../provider-executors.ts";
+import type { ProviderActionHandlers, ApiKeyProviderContext } from "../provider-executors.ts";
 
 import { compactObject, optionalNumber, optionalRecord, optionalString } from "../../core/cast.ts";
 import { ProviderRequestError, providerUserAgent, providerInputError } from "../provider-runtime.ts";
@@ -50,7 +49,7 @@ export async function validateMindbodyCredential(
 
 async function executeListBusinesses(
   input: Record<string, unknown>,
-  context: Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">,
+  context: ApiKeyProviderContext,
   phase: MindbodyRequestPhase,
 ): Promise<MindbodyListBusinessesOutput> {
   const payload = await mindbodyGetJson({
@@ -65,7 +64,7 @@ async function executeListBusinesses(
 async function mindbodyGetJson(input: {
   path: string;
   query: Record<string, unknown>;
-  context: Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
+  context: ApiKeyProviderContext;
   phase: MindbodyRequestPhase;
 }): Promise<unknown> {
   const url = new URL(input.path, mindbodyApiBaseUrl);

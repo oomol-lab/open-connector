@@ -1,4 +1,4 @@
-import type { GoogleChatRuntimeContext } from "./runtime.ts";
+import type { OAuthProviderContext } from "../provider-executors.ts";
 
 import { compactObject, looseArray, optionalRecord, optionalString, recordOrEmpty } from "../../core/cast.ts";
 import { ProviderRequestError, providerResponseError } from "../provider-runtime.ts";
@@ -87,7 +87,7 @@ interface SpaceMembersPageRequest {
  */
 export async function resolveDirectMessagePeer(
   spaceName: string,
-  context: GoogleChatRuntimeContext,
+  context: OAuthProviderContext,
 ): Promise<DirectMessagePeer> {
   const [selfUser, members] = await Promise.all([readSelfUserName(context), listAllMembers(spaceName, context)]);
   const humans = members.filter((member) => member.type === "HUMAN");
@@ -122,7 +122,7 @@ export async function resolveDirectMessagePeer(
 export async function listSpaceMembersPage(
   spaceName: string,
   request: SpaceMembersPageRequest,
-  context: GoogleChatRuntimeContext,
+  context: OAuthProviderContext,
 ): Promise<SpaceMembersPage> {
   const [selfUser, page] = await Promise.all([readSelfUserName(context), fetchMemberPage(spaceName, request, context)]);
   const humans = page.members.filter((member) => member.type === "HUMAN");
@@ -151,7 +151,7 @@ function ambiguousPeer(candidates: ChatMember[]): DirectMessagePeer {
 }
 
 /** The authenticated user's own `users/{id}`; People and Chat share the id. */
-async function readSelfUserName(context: GoogleChatRuntimeContext): Promise<string> {
+async function readSelfUserName(context: OAuthProviderContext): Promise<string> {
   let payload: Record<string, unknown>;
   try {
     payload = recordOrEmpty(
@@ -197,7 +197,7 @@ function explainLookupError(summary: string, error: unknown, forbiddenHint: stri
   return new ProviderRequestError(error.status, `${summary}: ${detail}.${hint}`, error.details);
 }
 
-async function listAllMembers(spaceName: string, context: GoogleChatRuntimeContext): Promise<ChatMember[]> {
+async function listAllMembers(spaceName: string, context: OAuthProviderContext): Promise<ChatMember[]> {
   let members: ChatMember[] = [];
   let pageToken: string | undefined;
   for (let page = 0; page < maxDirectMessageMemberPages; page += 1) {
@@ -231,7 +231,7 @@ async function listAllMembers(spaceName: string, context: GoogleChatRuntimeConte
 async function fetchMemberPage(
   spaceName: string,
   request: SpaceMembersPageRequest,
-  context: GoogleChatRuntimeContext,
+  context: OAuthProviderContext,
 ): Promise<ChatMemberPage> {
   const payload = await googleChatJsonRequest<ListMembershipsPayload>(
     `${googleChatApiBaseUrl}/${encodeResourceName(spaceName)}/members`,
@@ -279,7 +279,7 @@ function toChatMember(value: unknown): ChatMember[] {
  */
 export async function attachSenderProfiles(
   messages: Record<string, unknown>[],
-  context: GoogleChatRuntimeContext,
+  context: OAuthProviderContext,
 ): Promise<Record<string, unknown>[]> {
   const profiles = await lookupProfiles(
     missingChatProfiles(messages.flatMap((message) => humanSender(message))),
@@ -329,7 +329,7 @@ function mergeProfile(chat: ChatUser, directory: MemberProfile | undefined): Mem
  * People API limit per call. A member whose profile cannot be read keeps a null
  * name and a reason; a failure of a whole call gives each member in it that reason.
  */
-async function lookupProfiles(users: string[], context: GoogleChatRuntimeContext): Promise<Map<string, MemberProfile>> {
+async function lookupProfiles(users: string[], context: OAuthProviderContext): Promise<Map<string, MemberProfile>> {
   const batches = Array.from({ length: Math.ceil(users.length / maxProfilesPerLookup) }, (_, index) =>
     users.slice(index * maxProfilesPerLookup, (index + 1) * maxProfilesPerLookup),
   );
@@ -337,10 +337,7 @@ async function lookupProfiles(users: string[], context: GoogleChatRuntimeContext
   return new Map(results.flatMap((result) => [...result]));
 }
 
-async function lookupProfileBatch(
-  users: string[],
-  context: GoogleChatRuntimeContext,
-): Promise<Map<string, MemberProfile>> {
+async function lookupProfileBatch(users: string[], context: OAuthProviderContext): Promise<Map<string, MemberProfile>> {
   let payload: Record<string, unknown>;
   try {
     payload = recordOrEmpty(

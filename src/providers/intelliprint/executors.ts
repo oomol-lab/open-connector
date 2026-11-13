@@ -1,6 +1,5 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-executors.ts";
-import type { ApiKeyProviderContext } from "../provider-executors.ts";
+import type { ProviderActionHandlers, ApiKeyProviderContext } from "../provider-executors.ts";
 
 import { compactObject, optionalBoolean, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
 import { encodePathSegment } from "../../core/request.ts";
@@ -13,11 +12,7 @@ const intelliprintApiBaseUrl = "https://api.intelliprint.net/v1";
 const printsPath = "/prints";
 
 type IntelliprintRequestPhase = "validate" | "execute";
-type IntelliprintActionContext = Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
-type IntelliprintActionHandler = (
-  input: Record<string, unknown>,
-  context: IntelliprintActionContext,
-) => Promise<unknown>;
+type IntelliprintActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
 type IntelliprintOutputKey = "print" | "background" | "mailingList" | "recipient";
 
@@ -112,7 +107,7 @@ export const credentialValidators: CredentialValidators = {
 async function listIntelliprintObjects(
   path: string,
   query: URLSearchParams,
-  context: IntelliprintActionContext,
+  context: ApiKeyProviderContext,
 ): Promise<Record<string, unknown>> {
   const payload = await intelliprintGetJson(path, query, context, "execute");
   const record = readObject(payload, "Intelliprint list response must be an object");
@@ -132,7 +127,7 @@ async function listIntelliprintObjects(
 async function getIntelliprintObject(
   path: string,
   outputKey: IntelliprintOutputKey,
-  context: IntelliprintActionContext,
+  context: ApiKeyProviderContext,
 ): Promise<Record<string, unknown>> {
   const payload = await intelliprintGetJson(path, new URLSearchParams(), context, "execute");
   const record = readObject(payload, `Intelliprint ${outputKey} response must be an object`);
@@ -146,7 +141,7 @@ async function getIntelliprintObject(
 async function intelliprintGetJson(
   path: string,
   query: URLSearchParams,
-  context: IntelliprintActionContext,
+  context: ApiKeyProviderContext,
   phase: IntelliprintRequestPhase,
 ): Promise<unknown> {
   const url = new URL(`${intelliprintApiBaseUrl}${path}`);

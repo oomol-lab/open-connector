@@ -4,8 +4,7 @@ import type {
   ProviderExecutors,
   ProviderProxyExecutor,
 } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-executors.ts";
-import type { ApiKeyProviderContext } from "../provider-executors.ts";
+import type { ProviderActionHandlers, ApiKeyProviderContext } from "../provider-executors.ts";
 
 import {
   compactObject,
@@ -106,7 +105,7 @@ export const credentialValidators: CredentialValidators = {
 };
 
 async function listAccounts(
-  context: Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">,
+  context: ApiKeyProviderContext,
   phase: SaasCustomDomainsPhase,
 ): Promise<{ accounts: Array<Record<string, unknown>> }> {
   const payload = await requestSaasCustomDomainsJson({ method: "GET", path: "/accounts" }, context, phase);
@@ -288,7 +287,7 @@ async function requestSaasCustomDomainsJson(
     query?: Record<string, QueryValue>;
     form?: Record<string, FormValue>;
   },
-  context: Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">,
+  context: ApiKeyProviderContext,
   phase: SaasCustomDomainsPhase,
 ): Promise<unknown> {
   const url = new URL(`${saasCustomDomainsApiUrl.pathname}${request.path}`, saasCustomDomainsApiUrl.origin);

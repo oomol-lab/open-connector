@@ -1,6 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-executors.ts";
-import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-executors.ts";
+import type { ProviderActionHandlers, ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-executors.ts";
 
 import { compactObject, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
 import { encodePathSegment } from "../../core/request.ts";
@@ -140,7 +139,7 @@ export async function validateJazzhrCredential(
 
 async function listJazzhrRecords(
   input: Record<string, unknown>,
-  context: Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">,
+  context: ApiKeyProviderContext,
   config: JazzhrListConfig,
 ): Promise<Record<string, unknown>> {
   const payload = await requestJazzhrJson({
@@ -159,7 +158,7 @@ async function listJazzhrRecords(
 
 async function getJazzhrRecord(
   input: Record<string, unknown>,
-  context: Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">,
+  context: ApiKeyProviderContext,
   config: JazzhrGetConfig,
 ): Promise<Record<string, unknown>> {
   const id = readRequiredString(input, config.idField);

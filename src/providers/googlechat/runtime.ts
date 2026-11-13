@@ -7,10 +7,8 @@ export const googleChatApiBaseUrl = "https://chat.googleapis.com/v1";
 
 const service = "googlechat";
 
-export type GoogleChatRuntimeContext = OAuthProviderContext;
-
 interface GoogleChatRequestInput {
-  context: Pick<GoogleChatRuntimeContext, "accessToken" | "fetcher" | "signal">;
+  context: OAuthProviderContext;
   method?: string;
   query?: Record<string, GoogleQueryValue>;
   body?: unknown;

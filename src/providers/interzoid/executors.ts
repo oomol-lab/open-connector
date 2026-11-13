@@ -1,6 +1,5 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-executors.ts";
-import type { ApiKeyProviderContext } from "../provider-executors.ts";
+import type { ProviderActionHandlers, ApiKeyProviderContext } from "../provider-executors.ts";
 
 import { compactObject, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
 import { defineApiKeyProviderExecutors } from "../provider-executors.ts";
@@ -16,8 +15,7 @@ const service = "interzoid";
 const interzoidApiBaseUrl = "https://api.interzoid.com";
 
 type InterzoidPhase = "validate" | "execute";
-type InterzoidContext = Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
-type InterzoidActionHandler = (input: Record<string, unknown>, context: InterzoidContext) => Promise<unknown>;
+type InterzoidActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
 interface InterzoidRequestInput {
   path: string;
@@ -197,7 +195,7 @@ export const credentialValidators: CredentialValidators = {
 
 async function requestInterzoidJson(
   input: InterzoidRequestInput,
-  context: InterzoidContext,
+  context: ApiKeyProviderContext,
 ): Promise<Record<string, unknown>> {
   const timeout = createProviderTimeout(context.signal);
 

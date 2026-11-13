@@ -1,5 +1,4 @@
-import type { ProviderActionHandlers } from "../provider-executors.ts";
-import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-executors.ts";
+import type { ProviderActionHandlers, ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-executors.ts";
 
 import { compactObject, optionalRawString, optionalRecord, requiredRecord, requiredString } from "../../core/cast.ts";
 import {
@@ -356,7 +355,7 @@ export async function fetchHashnodeCurrentUser(
 }
 
 async function requestCurrentUser(
-  context: Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">,
+  context: ApiKeyProviderContext,
   phase: HashnodeRequestPhase,
 ): Promise<Record<string, unknown>> {
   const payload = await requestHashnodeGraphql({

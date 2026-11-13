@@ -1,6 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-executors.ts";
-import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-executors.ts";
+import type { ProviderActionHandlers, ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-executors.ts";
 
 import { compactObject, optionalInteger, optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
@@ -10,7 +9,6 @@ const validationPath = "/api/public/integration-health";
 
 type PodscribePhase = "validate" | "execute";
 type PodscribeActionHandler = ProviderRuntimeHandler<ApiKeyProviderContext>;
-type PodscribeContext = Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
 
 export const podscribeActionHandlers: ProviderActionHandlers<"podscribe", PodscribeActionHandler> = {
   get_integration_health(input, context) {
@@ -78,7 +76,7 @@ async function requestPodscribeJson(
   method: "GET" | "POST",
   path: string,
   body: Record<string, unknown> | undefined,
-  context: PodscribeContext,
+  context: ApiKeyProviderContext,
   phase: PodscribePhase,
 ): Promise<unknown> {
   let response: Response;

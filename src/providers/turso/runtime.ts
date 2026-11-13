@@ -1,6 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-executors.ts";
-import type { ApiKeyProviderContext } from "../provider-executors.ts";
+import type { ProviderActionHandlers, ApiKeyProviderContext } from "../provider-executors.ts";
 
 import { compactObject, optionalNumber, optionalRecord, optionalString } from "../../core/cast.ts";
 import {
@@ -161,10 +160,7 @@ export async function validateTursoCredential(
   };
 }
 
-async function requestTursoJson(
-  input: TursoRequestInput,
-  context: Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">,
-): Promise<unknown> {
+async function requestTursoJson(input: TursoRequestInput, context: ApiKeyProviderContext): Promise<unknown> {
   const timeout = createProviderTimeout(context.signal);
   try {
     const response = await context.fetcher(new URL(input.path, tursoApiBaseUrl), {

@@ -1,5 +1,4 @@
-import type { ProviderActionHandlers } from "../provider-executors.ts";
-import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-executors.ts";
+import type { ProviderActionHandlers, ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-executors.ts";
 
 import { compactObject, optionalRecord, optionalString } from "../../core/cast.ts";
 import { encodePathSegment, jsonObject } from "../../core/request.ts";
@@ -14,7 +13,7 @@ type FlyQueryValue = string | number | boolean | undefined;
 export const flyActionHandlers: ProviderActionHandlers<"fly", ProviderRuntimeHandler<ApiKeyProviderContext>> = {
   list_apps(input, context) {
     return requestFlyJson({
-      ...requestContext(context),
+      ...context,
       method: "GET",
       path: "apps",
       query: [
@@ -25,14 +24,14 @@ export const flyActionHandlers: ProviderActionHandlers<"fly", ProviderRuntimeHan
   },
   get_app(input, context) {
     return requestFlyJson({
-      ...requestContext(context),
+      ...context,
       method: "GET",
       path: `apps/${encodePathSegment(requiredActionString(input.app_name, "app_name"))}`,
     });
   },
   list_machines(input, context) {
     return requestFlyJson({
-      ...requestContext(context),
+      ...context,
       method: "GET",
       path: `apps/${encodePathSegment(requiredActionString(input.app_name, "app_name"))}/machines`,
       query: [
@@ -46,7 +45,7 @@ export const flyActionHandlers: ProviderActionHandlers<"fly", ProviderRuntimeHan
   create_machine(input, context) {
     const appName = requiredActionString(input.app_name, "app_name");
     return requestFlyJson({
-      ...requestContext(context),
+      ...context,
       body: jsonObject({
         config: input.config,
         lease_ttl: input.lease_ttl,
@@ -64,14 +63,14 @@ export const flyActionHandlers: ProviderActionHandlers<"fly", ProviderRuntimeHan
   },
   get_machine(input, context) {
     return requestFlyJson({
-      ...requestContext(context),
+      ...context,
       method: "GET",
       path: buildMachinePath(input),
     });
   },
   async start_machine(input, context) {
     await requestFlyJson({
-      ...requestContext(context),
+      ...context,
       expectJson: false,
       method: "POST",
       path: `${buildMachinePath(input)}/start`,
@@ -80,7 +79,7 @@ export const flyActionHandlers: ProviderActionHandlers<"fly", ProviderRuntimeHan
   },
   async stop_machine(input, context) {
     await requestFlyJson({
-      ...requestContext(context),
+      ...context,
       body: buildOptionalBody({
         signal: optionalString(input.signal),
         timeout: optionalString(input.timeout),
@@ -93,7 +92,7 @@ export const flyActionHandlers: ProviderActionHandlers<"fly", ProviderRuntimeHan
   },
   async restart_machine(input, context) {
     await requestFlyJson({
-      ...requestContext(context),
+      ...context,
       expectJson: false,
       method: "POST",
       path: `${buildMachinePath(input)}/restart`,
@@ -106,7 +105,7 @@ export const flyActionHandlers: ProviderActionHandlers<"fly", ProviderRuntimeHan
   },
   wait_for_machine(input, context) {
     return requestFlyJson({
-      ...requestContext(context),
+      ...context,
       method: "GET",
       path: `${buildMachinePath(input)}/wait`,
       query: [
@@ -154,14 +153,6 @@ export async function validateFlyCredential(
       sourceMachineId: optionalString(tokenInfo?.source_machine_id),
       apps: Array.isArray(tokenInfo?.apps) ? tokenInfo.apps : undefined,
     }),
-  };
-}
-
-function requestContext(context: ApiKeyProviderContext): Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal"> {
-  return {
-    apiKey: context.apiKey,
-    fetcher: context.fetcher,
-    signal: context.signal,
   };
 }
 

@@ -5,8 +5,7 @@ import type {
   ProviderExecutors,
   ProviderProxyExecutor,
 } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-executors.ts";
-import type { ApiKeyProviderContext } from "../provider-executors.ts";
+import type { ProviderActionHandlers, ApiKeyProviderContext } from "../provider-executors.ts";
 
 import { compactObject, optionalRecord, optionalString } from "../../core/cast.ts";
 import { compactJson, queryParams } from "../../core/request.ts";
@@ -113,7 +112,7 @@ async function listCollection(
 
 async function requestCertifierJson(
   path: string,
-  context: Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">,
+  context: ApiKeyProviderContext,
   options: { method?: "GET" | "POST"; query?: Record<string, unknown>; body?: unknown } = {},
 ): Promise<unknown> {
   const url = new URL(path, `${apiBaseUrl}/`);

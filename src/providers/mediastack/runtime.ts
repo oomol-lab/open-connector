@@ -1,6 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-executors.ts";
-import type { ApiKeyProviderContext } from "../provider-executors.ts";
+import type { ProviderActionHandlers, ApiKeyProviderContext } from "../provider-executors.ts";
 
 import {
   compactObject,
@@ -23,10 +22,9 @@ export const mediastackApiBaseUrl = "https://api.mediastack.com/v1";
 
 type MediastackPhase = "validate" | "execute";
 type MediastackQueryValue = string | number | undefined;
-type MediastackActionContext = Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
-type MediastackActionHandler = (input: Record<string, unknown>, context: MediastackActionContext) => Promise<unknown>;
+type MediastackActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
-interface MediastackRequestInput extends MediastackActionContext {
+interface MediastackRequestInput extends ApiKeyProviderContext {
   path: string;
   query: Record<string, MediastackQueryValue>;
   phase: MediastackPhase;
@@ -74,7 +72,7 @@ export async function validateMediastackCredential(
   };
 }
 
-async function searchNewsSources(input: Record<string, unknown>, context: MediastackActionContext): Promise<unknown> {
+async function searchNewsSources(input: Record<string, unknown>, context: ApiKeyProviderContext): Promise<unknown> {
   const payload = await requestMediastackJson({
     ...context,
     path: "/sources",
@@ -97,7 +95,7 @@ async function searchNewsSources(input: Record<string, unknown>, context: Medias
   };
 }
 
-async function searchLiveNews(input: Record<string, unknown>, context: MediastackActionContext): Promise<unknown> {
+async function searchLiveNews(input: Record<string, unknown>, context: ApiKeyProviderContext): Promise<unknown> {
   const payload = await requestMediastackJson({
     ...context,
     path: "/news",

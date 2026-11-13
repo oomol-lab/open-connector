@@ -1,6 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-executors.ts";
-import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-executors.ts";
+import type { ProviderActionHandlers, ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-executors.ts";
 import type { ProviderFetch } from "../provider-runtime.ts";
 
 import { compactObject, optionalRecord, optionalString } from "../../core/cast.ts";
@@ -11,7 +10,6 @@ const beehiivApiOrigin = "https://api.beehiiv.com";
 export const beehiivApiBaseUrl: string = `${beehiivApiOrigin}/v2`;
 
 type BeehiivPhase = "validate" | "execute";
-type BeehiivContext = Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
 type BeehiivActionHandler = ProviderRuntimeHandler<ApiKeyProviderContext>;
 
 export const beehiivActionHandlers: ProviderActionHandlers<"beehiiv", BeehiivActionHandler> = {
@@ -164,7 +162,7 @@ function appendArrayQuery(url: URL, queryKey: string, value: unknown): void {
 
 async function requestBeehiiv(
   pathOrUrl: string | URL,
-  context: BeehiivContext,
+  context: ApiKeyProviderContext,
   phase: BeehiivPhase,
 ): Promise<Record<string, unknown>> {
   const url =

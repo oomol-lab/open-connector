@@ -1,6 +1,5 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-executors.ts";
-import type { ApiKeyProviderContext } from "../provider-executors.ts";
+import type { ProviderActionHandlers, ApiKeyProviderContext } from "../provider-executors.ts";
 
 import { compactObject, optionalRecord, optionalString } from "../../core/cast.ts";
 import { defineApiKeyProviderExecutors } from "../provider-executors.ts";
@@ -11,8 +10,7 @@ const service = "ipstack";
 const ipstackApiBaseUrl = "https://api.ipstack.com";
 
 type IpstackRequestPhase = "validate" | "execute";
-type IpstackActionContext = Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
-type IpstackActionHandler = (input: Record<string, unknown>, context: IpstackActionContext) => Promise<unknown>;
+type IpstackActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
 export const ipstackActionHandlers: ProviderActionHandlers<"ipstack", IpstackActionHandler> = {
   lookup_current_ip(input, context) {
@@ -96,7 +94,7 @@ async function requestIpstackLookup(
     phase: IpstackRequestPhase;
     fields?: string[];
   },
-  context: IpstackActionContext,
+  context: ApiKeyProviderContext,
 ): Promise<unknown> {
   const url = new URL(input.path, ipstackApiBaseUrl);
   url.searchParams.set("access_key", context.apiKey);

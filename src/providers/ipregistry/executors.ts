@@ -1,6 +1,5 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-executors.ts";
-import type { ApiKeyProviderContext } from "../provider-executors.ts";
+import type { ProviderActionHandlers, ApiKeyProviderContext } from "../provider-executors.ts";
 
 import { optionalRecord, optionalString } from "../../core/cast.ts";
 import { defineApiKeyProviderExecutors } from "../provider-executors.ts";
@@ -12,8 +11,7 @@ const ipregistryBaseUrl = "https://api.ipregistry.co";
 const validationIp = "8.8.8.8";
 
 type IpregistryRequestPhase = "validate" | "execute";
-type IpregistryActionContext = Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
-type IpregistryActionHandler = (input: Record<string, unknown>, context: IpregistryActionContext) => Promise<unknown>;
+type IpregistryActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
 export const ipregistryActionHandlers: ProviderActionHandlers<"ipregistry", IpregistryActionHandler> = {
   async lookup_ip(input, context) {
@@ -149,7 +147,7 @@ async function requestIpregistryJson(
     method?: "GET" | "POST";
     body?: unknown;
   },
-  context: IpregistryActionContext,
+  context: ApiKeyProviderContext,
 ): Promise<unknown> {
   const method = input.method ?? "GET";
 

@@ -1,6 +1,5 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-executors.ts";
-import type { ApiKeyProviderContext } from "../provider-executors.ts";
+import type { ProviderActionHandlers, ApiKeyProviderContext } from "../provider-executors.ts";
 
 import { compactObject, optionalRecord } from "../../core/cast.ts";
 import { defineApiKeyProviderExecutors } from "../provider-executors.ts";
@@ -78,10 +77,7 @@ export const credentialValidators: CredentialValidators = {
   },
 };
 
-async function writerRequest(
-  context: Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">,
-  input: WriterRequestInput,
-): Promise<unknown> {
+async function writerRequest(context: ApiKeyProviderContext, input: WriterRequestInput): Promise<unknown> {
   const apiKey = context.apiKey.trim();
   if (!apiKey) {
     throw new ProviderRequestError(400, "writer apiKey is required");

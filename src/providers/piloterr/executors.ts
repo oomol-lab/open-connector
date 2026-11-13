@@ -30,7 +30,6 @@ const service = "piloterr";
 const apiBaseUrl = "https://api.piloterr.com";
 
 type Handler = ProviderRuntimeHandler<ApiKeyProviderContext>;
-type RequestContext = Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
 
 const piloterrActionHandlers: ProviderActionHandlers<"piloterr", Handler> = {
   async fetch_html(input, context) {
@@ -240,7 +239,7 @@ async function takePiloterrScreenshot(
 
 async function piloterrRequest(
   path: string,
-  context: RequestContext,
+  context: ApiKeyProviderContext,
   query: Record<string, QueryValue> = {},
   timeoutMs?: number,
 ): Promise<unknown> {

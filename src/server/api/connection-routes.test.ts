@@ -317,7 +317,9 @@ it("preserves requested scopes and always includes required identity scopes", as
   expect(response.status).toBe(200);
   const url = new URL((await response.json()).data.authorizationUrl);
   expect(new Set(url.searchParams.get("scope")?.split(" "))).toEqual(new Set(["repo", "read:user"]));
-  const custom = await call("/v1/connections/example/connect", { authorizationOptionIds: ["unknown"] });
+  const custom = await call("/v1/connections/example/connect", {
+    authorizationOptionIds: [" unknown ", "unknown", "", " "],
+  });
   expect(custom.status).toBe(200);
   expect(new URL((await custom.json()).data.authorizationUrl).searchParams.get("scope")).toBe("unknown read:user");
 });

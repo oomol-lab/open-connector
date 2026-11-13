@@ -4,8 +4,7 @@ import type {
   ProviderExecutors,
   ProviderProxyExecutor,
 } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-executors.ts";
-import type { ApiKeyProviderContext } from "../provider-executors.ts";
+import type { ProviderActionHandlers, ApiKeyProviderContext } from "../provider-executors.ts";
 
 import {
   compactObject,
@@ -178,11 +177,7 @@ function otterAiUrl(path: string, query?: Record<string, unknown>): URL {
   return url;
 }
 
-async function requestOtterAi(
-  context: Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">,
-  url: URL,
-  phase: OtterAiRequestPhase,
-): Promise<unknown> {
+async function requestOtterAi(context: ApiKeyProviderContext, url: URL, phase: OtterAiRequestPhase): Promise<unknown> {
   let response: Response;
   try {
     response = await context.fetcher(url, {

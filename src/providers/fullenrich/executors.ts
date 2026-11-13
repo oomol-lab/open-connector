@@ -1,6 +1,5 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-executors.ts";
-import type { ApiKeyProviderContext } from "../provider-executors.ts";
+import type { ProviderActionHandlers, ApiKeyProviderContext } from "../provider-executors.ts";
 
 import { compactObject, optionalRecord, optionalString } from "../../core/cast.ts";
 import { defineApiKeyProviderExecutors } from "../provider-executors.ts";
@@ -16,11 +15,10 @@ const service = "fullenrich";
 const fullenrichApiBaseUrl = "https://app.fullenrich.com/api/v2";
 
 type FullenrichPhase = "validate" | "execute";
-type FullenrichActionContext = Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
-type FullenrichActionHandler = (input: Record<string, unknown>, context: FullenrichActionContext) => Promise<unknown>;
+type FullenrichActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
 interface FullenrichRequestOptions {
-  context: FullenrichActionContext;
+  context: ApiKeyProviderContext;
   path: string;
   method?: "GET" | "POST";
   body?: Record<string, unknown>;

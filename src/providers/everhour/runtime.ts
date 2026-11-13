@@ -1,6 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-executors.ts";
-import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-executors.ts";
+import type { ProviderActionHandlers, ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-executors.ts";
 import type { ProviderFetch } from "../provider-runtime.ts";
 
 import { compactObject, optionalBoolean, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
@@ -17,7 +16,6 @@ const everhourValidationPath = "/users/me";
 type EverhourRequestPhase = "validate" | "execute";
 type EverhourMethod = "GET" | "POST" | "DELETE";
 type EverhourQueryValue = string | number | boolean | undefined;
-type EverhourContext = Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
 type EverhourActionHandler = ProviderRuntimeHandler<ApiKeyProviderContext>;
 
 interface EverhourRequestInput {
@@ -227,7 +225,7 @@ export async function validateEverhourCredential(
   };
 }
 
-async function requestEverhourJson(input: EverhourRequestInput, context: EverhourContext): Promise<unknown> {
+async function requestEverhourJson(input: EverhourRequestInput, context: ApiKeyProviderContext): Promise<unknown> {
   const url = new URL(input.path, everhourApiBaseUrl);
   for (const [key, value] of Object.entries(input.query ?? {})) {
     if (value !== undefined) {

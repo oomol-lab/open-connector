@@ -1,6 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-executors.ts";
-import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-executors.ts";
+import type { ProviderActionHandlers, ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-executors.ts";
 import type { ProviderFetch } from "../provider-runtime.ts";
 
 import { optionalRecord, optionalString, recordOrEmpty } from "../../core/cast.ts";
@@ -15,12 +14,12 @@ type JsonObject = Record<string, unknown>;
 type BooqableRequestMethod = "GET" | "POST";
 type BooqablePhase = "validate" | "execute";
 
-export interface BooqableContext extends Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal"> {
+export interface BooqableContext extends ApiKeyProviderContext {
   companySlug: string;
 }
 
 interface BooqableRequestInput {
-  context: Pick<BooqableContext, "apiKey" | "companySlug" | "fetcher" | "signal">;
+  context: BooqableContext;
   method: BooqableRequestMethod;
   path: string;
   phase?: BooqablePhase;

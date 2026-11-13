@@ -1,6 +1,5 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-executors.ts";
-import type { ApiKeyProviderContext } from "../provider-executors.ts";
+import type { ProviderActionHandlers, ApiKeyProviderContext } from "../provider-executors.ts";
 import type { Client } from "@modelcontextprotocol/client";
 
 import { UnauthorizedError } from "@modelcontextprotocol/client";
@@ -17,8 +16,7 @@ const luckinMcpOrigin = "https://gwmcp.lkcoffee.com";
 const luckinMcpEndpoint = "https://gwmcp.lkcoffee.com/order/user/mcp";
 const luckinRequestTimeoutMs = 60_000;
 
-type LuckinActionContext = Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
-type LuckinActionHandler = (input: Record<string, unknown>, context: LuckinActionContext) => Promise<unknown>;
+type LuckinActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 type LuckinMcpToolResult = Awaited<ReturnType<Client["callTool"]>>;
 
 export const luckinActionHandlers: ProviderActionHandlers<"luckin_coffee", LuckinActionHandler> = {
@@ -89,7 +87,7 @@ async function listLuckinMcpTools(input: {
 }
 
 async function callLuckinMcpTool(
-  context: LuckinActionContext,
+  context: ApiKeyProviderContext,
   toolName: string,
   argumentsInput: Record<string, unknown>,
 ): Promise<unknown> {

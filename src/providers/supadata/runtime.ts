@@ -1,6 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-executors.ts";
-import type { ApiKeyProviderContext } from "../provider-executors.ts";
+import type { ProviderActionHandlers, ApiKeyProviderContext } from "../provider-executors.ts";
 import type { ProviderFetch } from "../provider-runtime.ts";
 
 import { compactObject, optionalNumber, optionalRecord, optionalString } from "../../core/cast.ts";
@@ -9,8 +8,7 @@ import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts"
 export const supadataApiBaseUrl = "https://api.supadata.ai/v1";
 
 type SupadataRequestPhase = "validate" | "execute";
-type SupadataActionContext = Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
-type SupadataActionHandler = (input: Record<string, unknown>, context: SupadataActionContext) => Promise<unknown>;
+type SupadataActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
 const supadataActionPaths: Record<string, string> = {
   get_account: "/me",
@@ -100,7 +98,7 @@ export async function validateSupadataCredential(
 async function supadataGet(
   path: string,
   query: Record<string, unknown>,
-  context: SupadataActionContext,
+  context: ApiKeyProviderContext,
   phase: SupadataRequestPhase,
 ): Promise<unknown> {
   const url = new URL(`${supadataApiBaseUrl}${path}`);

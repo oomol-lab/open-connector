@@ -1,5 +1,4 @@
-import type { ProviderActionHandlers } from "../provider-executors.ts";
-import type { ApiKeyProviderContext } from "../provider-executors.ts";
+import type { ProviderActionHandlers, ApiKeyProviderContext } from "../provider-executors.ts";
 
 import { compactObject, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
 import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
@@ -107,7 +106,7 @@ interface CurrentsApiRequestInput {
 
 async function currentsApiRequest(
   input: CurrentsApiRequestInput,
-  context: Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">,
+  context: ApiKeyProviderContext,
   phase: CurrentsApiPhase,
 ): Promise<unknown> {
   const { payload } = await currentsApiRawRequest(input, context, phase);
@@ -116,7 +115,7 @@ async function currentsApiRequest(
 
 async function currentsApiRawRequest(
   input: CurrentsApiRequestInput,
-  context: Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">,
+  context: ApiKeyProviderContext,
   phase: CurrentsApiPhase,
 ): Promise<{ response: Response; payload: unknown }> {
   const url = new URL(input.path, currentsApiBaseUrl);

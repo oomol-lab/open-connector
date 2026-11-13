@@ -1,13 +1,11 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-executors.ts";
-import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-executors.ts";
+import type { ProviderActionHandlers, ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-executors.ts";
 import type { ProviderFetch } from "../provider-runtime.ts";
 
 import { compactObject, optionalRecord, optionalString } from "../../core/cast.ts";
 import { providerUserAgent, ProviderRequestError } from "../provider-runtime.ts";
 
 type BeaconchainRequestPhase = "validate" | "execute";
-type BeaconchainActionContext = Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
 type BeaconchainActionHandler = ProviderRuntimeHandler<ApiKeyProviderContext>;
 
 export const beaconchainApiBaseUrl = "https://beaconcha.in";
@@ -61,7 +59,7 @@ export async function validateBeaconchainCredential(
   };
 }
 
-async function getStakingQueues(input: Record<string, unknown>, context: BeaconchainActionContext): Promise<unknown> {
+async function getStakingQueues(input: Record<string, unknown>, context: ApiKeyProviderContext): Promise<unknown> {
   const payload = await requestBeaconchainJson(
     "/api/v2/ethereum/queues",
     {
@@ -110,10 +108,7 @@ async function getStakingQueues(input: Record<string, unknown>, context: Beaconc
   };
 }
 
-async function getNetworkPerformance(
-  input: Record<string, unknown>,
-  context: BeaconchainActionContext,
-): Promise<unknown> {
+async function getNetworkPerformance(input: Record<string, unknown>, context: ApiKeyProviderContext): Promise<unknown> {
   const payload = await requestBeaconchainJson(
     "/api/v2/ethereum/performance-aggregate",
     {
@@ -191,7 +186,7 @@ async function getNetworkPerformance(
   };
 }
 
-async function getValidator(input: Record<string, unknown>, context: BeaconchainActionContext): Promise<unknown> {
+async function getValidator(input: Record<string, unknown>, context: ApiKeyProviderContext): Promise<unknown> {
   const payload = await requestBeaconchainJson(
     "/api/v2/ethereum/validators",
     buildValidatorsBody(
@@ -216,7 +211,7 @@ async function getValidator(input: Record<string, unknown>, context: Beaconchain
   };
 }
 
-async function listValidators(input: Record<string, unknown>, context: BeaconchainActionContext): Promise<unknown> {
+async function listValidators(input: Record<string, unknown>, context: ApiKeyProviderContext): Promise<unknown> {
   const payload = await requestBeaconchainJson(
     "/api/v2/ethereum/validators",
     buildValidatorsBody(
@@ -241,7 +236,7 @@ async function listValidators(input: Record<string, unknown>, context: Beaconcha
 
 async function getValidatorConsensusRewards(
   input: Record<string, unknown>,
-  context: BeaconchainActionContext,
+  context: ApiKeyProviderContext,
 ): Promise<unknown> {
   const payload = await requestBeaconchainJson(
     "/api/v2/ethereum/validators/rewards-list",
@@ -287,7 +282,7 @@ function buildValidatorsBody(
 async function requestBeaconchainJson(
   path: string,
   body: Record<string, unknown>,
-  context: BeaconchainActionContext,
+  context: ApiKeyProviderContext,
   phase: BeaconchainRequestPhase,
 ): Promise<Record<string, unknown>> {
   let response: Response;

@@ -1,6 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-executors.ts";
-import type { ApiKeyProviderContext } from "../provider-executors.ts";
+import type { ProviderActionHandlers, ApiKeyProviderContext } from "../provider-executors.ts";
 
 import { compactObject, optionalString } from "../../core/cast.ts";
 import {
@@ -151,7 +150,7 @@ export async function validateGlyphicCredential(
 
 async function requestGlyphicObject(
   path: string,
-  context: Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">,
+  context: ApiKeyProviderContext,
   label: string,
 ): Promise<Record<string, unknown>> {
   const payload = await requestGlyphicJson({ method: "GET", path }, context, "execute");
@@ -160,7 +159,7 @@ async function requestGlyphicObject(
 
 async function requestGlyphicArray(
   path: string,
-  context: Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">,
+  context: ApiKeyProviderContext,
   label: string,
 ): Promise<Array<Record<string, unknown>>> {
   const payload = await requestGlyphicJson({ method: "GET", path }, context, "execute");
@@ -173,7 +172,7 @@ async function requestGlyphicJson(
     path: string;
     query?: Record<string, GlyphicQueryValue>;
   },
-  context: Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">,
+  context: ApiKeyProviderContext,
   mode: GlyphicRequestMode,
 ): Promise<unknown> {
   const timeout = createProviderTimeout(context.signal);

@@ -1,5 +1,4 @@
-import type { ProviderActionHandlerSubset } from "../provider-executors.ts";
-import type { OAuthProviderContext } from "../provider-executors.ts";
+import type { ProviderActionHandlerSubset, OAuthProviderContext } from "../provider-executors.ts";
 
 import { compactObject, optionalObjectArray, optionalRecord, optionalString } from "../../core/cast.ts";
 import { ProviderRequestError, readProviderJsonBody, requiredInputString } from "../provider-runtime.ts";
@@ -14,7 +13,7 @@ const feishuScopeErrorCodes = new Set([99991679]);
 const feishuInvalidInputErrorCodes = new Set([800010701, 900015206]);
 
 /** The OAuth call context plus the API base of the deployment the token belongs to. */
-type FeishuActionContext = Pick<OAuthProviderContext, "accessToken" | "fetcher" | "signal"> & {
+type FeishuActionContext = OAuthProviderContext & {
   readonly openBaseUrl: string;
 };
 interface FeishuActionHandler {

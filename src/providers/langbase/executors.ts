@@ -4,8 +4,7 @@ import type {
   ProviderExecutors,
   ProviderProxyExecutor,
 } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-executors.ts";
-import type { ApiKeyProviderContext } from "../provider-executors.ts";
+import type { ProviderActionHandlers, ApiKeyProviderContext } from "../provider-executors.ts";
 
 import { compactObject, optionalNumber, optionalRecord, optionalString } from "../../core/cast.ts";
 import { defineApiKeyProviderExecutors } from "../provider-executors.ts";
@@ -57,9 +56,7 @@ export const credentialValidators: CredentialValidators = {
   },
 };
 
-async function validateLangbaseCredential(
-  context: Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">,
-): Promise<CredentialValidationResult> {
+async function validateLangbaseCredential(context: ApiKeyProviderContext): Promise<CredentialValidationResult> {
   const payload = await requestLangbaseJson({
     path: langbaseMemoryPath,
     context,
@@ -153,7 +150,7 @@ async function retrieveLangbaseMemory(
 
 async function requestLangbaseJson(input: {
   path: string;
-  context: Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
+  context: ApiKeyProviderContext;
   phase: LangbaseRequestPhase;
   method?: "GET" | "POST" | "DELETE";
   body?: Record<string, unknown>;

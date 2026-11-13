@@ -21,7 +21,6 @@ const apiBaseUrl = "https://api.uberllm.dev/v1";
 const inferenceTimeoutMs = 300_000;
 
 type ActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
-type RequestContext = Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
 
 interface UberllmRequest {
   path: "/models" | "/chat/completions" | "/balance";
@@ -63,7 +62,7 @@ export const credentialValidators: CredentialValidators = {
   },
 };
 
-function requestUberllm(input: UberllmRequest, context: RequestContext): Promise<Record<string, unknown>> {
+function requestUberllm(input: UberllmRequest, context: ApiKeyProviderContext): Promise<Record<string, unknown>> {
   return runProviderRequest(
     {
       signal: context.signal,

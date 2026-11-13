@@ -42,8 +42,6 @@ import {
 const service = "notion_mcp";
 const selfUserId = "self";
 
-type NotionMcpContext = Pick<OAuthProviderContext, "accessToken" | "fetcher" | "signal">;
-
 /** One action's tool, the arguments it sends, and the typed reading of the answer beside the raw text. */
 interface NotionMcpActionSource {
   tool: string;
@@ -143,7 +141,7 @@ export const executors: ProviderExecutors = defineOAuthProviderExecutors(service
 export const credentialValidators: CredentialValidators = {
   /** Require the baseline read tools, then identify the user by the Notion user ID. */
   async oauth2(input, { fetcher, signal }) {
-    const context: NotionMcpContext = { accessToken: input.accessToken, fetcher, signal };
+    const context: OAuthProviderContext = { accessToken: input.accessToken, fetcher, signal };
     const { toolCount, self } = await withNotionMcpClient(context, async (client, signal) => {
       const tools = await listNotionTools(client, signal);
       const available = new Set(tools.map((tool) => tool.name));
@@ -211,7 +209,7 @@ async function listNotionTools(client: Client, signal: AbortSignal): Promise<Arr
 }
 
 async function callNotionTool(
-  context: NotionMcpContext,
+  context: OAuthProviderContext,
   name: string,
   input: Record<string, unknown>,
 ): Promise<NotionMcpToolResult> {
@@ -250,7 +248,7 @@ function notionToolError(name: string, record: Record<string, unknown>): Provide
 }
 
 function withNotionMcpClient<T>(
-  context: NotionMcpContext,
+  context: OAuthProviderContext,
   run: (client: Client, signal: AbortSignal) => Promise<T>,
 ): Promise<T> {
   return runProviderRequest({ signal: context.signal, label: "Notion MCP" }, (signal) =>

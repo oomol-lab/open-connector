@@ -1,6 +1,5 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
-import type { ProviderActionHandlers } from "../provider-executors.ts";
-import type { ApiKeyProviderContext } from "../provider-executors.ts";
+import type { ProviderActionHandlers, ApiKeyProviderContext } from "../provider-executors.ts";
 
 import { compactObject, optionalNumber, optionalRecord, optionalString } from "../../core/cast.ts";
 import { assertPublicHttpUrl } from "../../core/request.ts";
@@ -17,8 +16,7 @@ const needleApiBaseUrl = "https://needle.app";
 const needleSearchBaseUrl = "https://search.needle.app";
 const needleValidationPath = "/api/v1/collections";
 
-type NeedleActionContext = Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
-type NeedleActionHandler = (input: Record<string, unknown>, context: NeedleActionContext) => Promise<unknown>;
+type NeedleActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
 interface NeedleRequestInput {
   baseUrl?: string;
@@ -70,7 +68,7 @@ export async function validateNeedleCredential(
   };
 }
 
-async function listCollections(context: NeedleActionContext): Promise<unknown> {
+async function listCollections(context: ApiKeyProviderContext): Promise<unknown> {
   const payload = await needleRequest(context, {
     path: "/api/v1/collections",
     method: "GET",
@@ -81,7 +79,7 @@ async function listCollections(context: NeedleActionContext): Promise<unknown> {
   };
 }
 
-async function createCollection(input: Record<string, unknown>, context: NeedleActionContext): Promise<unknown> {
+async function createCollection(input: Record<string, unknown>, context: ApiKeyProviderContext): Promise<unknown> {
   const payload = await needleRequest(context, {
     path: "/api/v1/collections",
     method: "POST",
@@ -96,7 +94,7 @@ async function createCollection(input: Record<string, unknown>, context: NeedleA
   };
 }
 
-async function getCollection(input: Record<string, unknown>, context: NeedleActionContext): Promise<unknown> {
+async function getCollection(input: Record<string, unknown>, context: ApiKeyProviderContext): Promise<unknown> {
   const payload = await needleRequest(context, {
     path: `/api/v1/collections/${encodeURIComponent(requiredInputString(input.collection_id, "collection_id"))}`,
     method: "GET",
@@ -107,7 +105,7 @@ async function getCollection(input: Record<string, unknown>, context: NeedleActi
   };
 }
 
-async function getCollectionStats(input: Record<string, unknown>, context: NeedleActionContext): Promise<unknown> {
+async function getCollectionStats(input: Record<string, unknown>, context: ApiKeyProviderContext): Promise<unknown> {
   const payload = await needleRequest(context, {
     path: `/api/v1/collections/${encodeURIComponent(requiredInputString(input.collection_id, "collection_id"))}/stats`,
     method: "GET",
@@ -124,7 +122,7 @@ async function getCollectionStats(input: Record<string, unknown>, context: Needl
   });
 }
 
-async function listCollectionFiles(input: Record<string, unknown>, context: NeedleActionContext): Promise<unknown> {
+async function listCollectionFiles(input: Record<string, unknown>, context: ApiKeyProviderContext): Promise<unknown> {
   const payload = await needleRequest(context, {
     path: `/api/v1/collections/${encodeURIComponent(requiredInputString(input.collection_id, "collection_id"))}/files`,
     method: "GET",
@@ -135,7 +133,7 @@ async function listCollectionFiles(input: Record<string, unknown>, context: Need
   };
 }
 
-async function addFilesToCollection(input: Record<string, unknown>, context: NeedleActionContext): Promise<unknown> {
+async function addFilesToCollection(input: Record<string, unknown>, context: ApiKeyProviderContext): Promise<unknown> {
   if (!Array.isArray(input.files) || input.files.length === 0) {
     throw new ProviderRequestError(400, "files must contain at least one item");
   }
@@ -161,7 +159,7 @@ async function addFilesToCollection(input: Record<string, unknown>, context: Nee
   };
 }
 
-async function searchCollection(input: Record<string, unknown>, context: NeedleActionContext): Promise<unknown> {
+async function searchCollection(input: Record<string, unknown>, context: ApiKeyProviderContext): Promise<unknown> {
   const collectionId = requiredInputString(input.collection_id, "collection_id");
   const payload = await needleRequest(context, {
     baseUrl: needleSearchBaseUrl,
@@ -180,7 +178,7 @@ async function searchCollection(input: Record<string, unknown>, context: NeedleA
 }
 
 async function needleRequest(
-  context: NeedleActionContext,
+  context: ApiKeyProviderContext,
   input: NeedleRequestInput,
 ): Promise<Record<string, unknown>> {
   const response = await needleRawRequest(context, input);
@@ -209,7 +207,7 @@ async function needleRequest(
   }
 }
 
-async function needleRawRequest(context: NeedleActionContext, input: NeedleRequestInput): Promise<Response> {
+async function needleRawRequest(context: ApiKeyProviderContext, input: NeedleRequestInput): Promise<Response> {
   const timeout = createProviderTimeout(context.signal);
 
   try {
