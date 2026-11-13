@@ -83,8 +83,10 @@ export const projectClassIdSchema: JsonSchema = s.string(
 export const purchaseTypeIdSchema: JsonSchema = s.string(
   "Comma-separated procurement type IDs, or -100 for all: 0 other, 1 services, 2 construction, 3 goods.",
 );
-export const moneyBoundSchema: JsonSchema = s.nullableString(
-  "Project amount bound in yuan (CNY), as a numeric string. Empty or null means no bound.",
+export const moneyBoundSchema: JsonSchema = s.nullable(
+  s.union([s.string("Amount as a numeric string."), s.number("Amount as a number.")], {
+    description: "Project amount bound in yuan (CNY), as a number or numeric string. Empty or null means no bound.",
+  }),
 );
 export const partyNamesSchema: JsonSchema = s.string(
   "Comma-separated company names, matched fuzzily within the given role.",
@@ -157,12 +159,6 @@ const projectListItemFields: Record<string, JsonSchema> = {
 /** Listing item shared by the code-based project searches. */
 export const projectListItemSchema: JsonSchema = s.looseObject("One tender or award notice.", {
   id: s.integer("Project ID; pass it with publishTime to the detail actions."),
-  ...projectListItemFields,
-});
-
-/** Listing item of the project-number lookup, which returns IDs as strings. */
-export const numberedProjectListItemSchema: JsonSchema = s.looseObject("One tender or award notice.", {
-  id: s.string("Project ID as a numeric string; pass it with publishTime to the detail actions."),
   ...projectListItemFields,
 });
 

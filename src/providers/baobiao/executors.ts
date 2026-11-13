@@ -2,7 +2,7 @@ import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } f
 import type { ApiKeyProviderContext, ProviderActionSources } from "../provider-executors.ts";
 
 import { sha256Hex } from "../../core/aws-sigv4.ts";
-import { looseArray, optionalRecord, optionalString } from "../../core/cast.ts";
+import { looseArray, optionalIntegerOrNull, optionalRecord, optionalString } from "../../core/cast.ts";
 import { defineApiKeyProviderExecutors, mapProviderActionSources } from "../provider-executors.ts";
 import { defineProviderProxy, providerProxyEndpointPrefixes } from "../provider-proxy.ts";
 import { ProviderRequestError, requiredInputString } from "../provider-runtime.ts";
@@ -28,7 +28,16 @@ const nullableCompany = (envelope: Record<string, unknown>) => ({ company: optio
 const endpoints: ProviderActionSources<typeof service, BaobiaoEndpoint> = {
   search_projects_simple: { path: "/bid/SearchProjectForAI" },
   search_projects: { path: "/bid/searchProjectApi" },
-  search_projects_by_number: { path: "/bid/getProjectByProjectNumber", output: listOf("projects") },
+  search_projects_by_number: {
+    path: "/bid/getProjectByProjectNumber",
+    // This endpoint returns IDs as strings while the detail actions take integers.
+    output: (envelope) => ({
+      projects: looseArray(envelope.data).map((item) => ({
+        ...optionalRecord(item),
+        id: optionalIntegerOrNull(optionalRecord(item)?.id),
+      })),
+    }),
+  },
   search_projects_by_source_url: { path: "/bid/searchProjectByCollectUrl" },
   search_contracts: { path: "/bid/searchProjectContactApi" },
   get_project_content: { path: "/bid/getZTBProjectDetail", form: true, body: projectDetail },
@@ -118,7 +127,12 @@ export const credentialValidators: CredentialValidators = {
       );
     } catch (error) {
       if (isBaobiaoInvalidKeyError(error)) throw new ProviderRequestError(400, "Baobiao API key is invalid", error);
-      if (!(error instanceof ProviderRequestError) || (error.status !== 400 && error.status !== 403)) throw error;
+      // Only a business envelope proves the gateway recognized the key; a raw HTTP 4xx carries no details.
+      const businessRejection =
+        error instanceof ProviderRequestError &&
+        (error.status === 400 || error.status === 403) &&
+        optionalRecord(error.details) !== undefined;
+      if (!businessRejection) throw error;
       accountResourcesAvailable = false;
     }
     const hash = sha256Hex(input.apiKey);

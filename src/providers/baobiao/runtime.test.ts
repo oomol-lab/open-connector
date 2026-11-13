@@ -93,7 +93,13 @@ test("pollBaobiaoSearchQuery reports a failed rewrite as an upstream error", asy
 });
 
 test("executors rename action fields to the gateway's per-endpoint field names", async () => {
-  const fetcher = vi.fn<typeof fetch>(async () => Response.json({ code: 200, data: [] }));
+  const fetcher = jsonFetcher(
+    { code: 200, data: { proposeProjectID: 5 } },
+    { code: 200, data: [] },
+    { code: 200, data: { enterpriseName: "x" } },
+    { state: 1, data: [] },
+    { code: 200, data: [{ id: "8", title: "t" }] },
+  );
   vi.stubGlobal("fetch", fetcher);
   const context: ExecutionContext = {
     getCredential: async () => ({
@@ -106,10 +112,19 @@ test("executors rename action fields to the gateway's per-endpoint field names",
   };
   const publishTime = "2026-06-08 14:30:30";
 
-  await executors["baobiao.get_planned_project"]!({ id: 5, publishTime }, context);
-  await executors["baobiao.list_planned_project_files"]!({ id: 5, publishTime }, context);
-  await executors["baobiao.get_company_registration"]!({ query: "91100000000013477B", keyType: "2" }, context);
-  await executors["baobiao.list_project_files"]!({ id: 7, publishTime }, context);
+  const results = [
+    await executors["baobiao.get_planned_project"]!({ id: 5, publishTime }, context),
+    await executors["baobiao.list_planned_project_files"]!({ id: 5, publishTime }, context),
+    await executors["baobiao.get_company_registration"]!({ query: "91100000000013477B", keyType: "2" }, context),
+    await executors["baobiao.list_project_files"]!({ id: 7, publishTime }, context),
+  ];
+  for (const result of results) expect(result).toMatchObject({ ok: true });
+  await expect(
+    executors["baobiao.search_projects_by_number"]!({ projectNumber: "N1" }, context),
+  ).resolves.toMatchObject({
+    ok: true,
+    output: { projects: [{ id: 8, title: "t" }] },
+  });
 
   const bodies = fetcher.mock.calls.map(([, init]) => init?.body);
   expect(JSON.parse(String(bodies[0]))).toEqual({ id: 5, publishtime: publishTime });
@@ -142,4 +157,10 @@ test("credential validation rejects only a key the gateway does not recognize", 
       { fetcher: jsonFetcher({ code: 403, subCode: "0100590001", subMsg: "invalid" }) },
     ),
   ).rejects.toMatchObject({ status: 400, message: "Baobiao API key is invalid" });
+  await expect(
+    validate(
+      { apiKey: "secret", values: {} },
+      { fetcher: vi.fn<typeof fetch>(async () => new Response("Forbidden", { status: 403 })) },
+    ),
+  ).rejects.toMatchObject({ status: 403, message: "Forbidden" });
 });

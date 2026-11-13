@@ -16,7 +16,6 @@ import {
   limitedKeywordFilterSchemas,
   moneyBoundSchema,
   namedProjectListItemSchema,
-  numberedProjectListItemSchema,
   orderByTypeSchema,
   pageIndexSchema,
   pageNumberSchema,
@@ -140,7 +139,7 @@ export const baobiaoProjectActions: ActionDefinition[] = [
       ),
     }),
     outputSchema: s.requiredObject("Notices that carry the project number.", {
-      projects: s.array("Matching notices.", numberedProjectListItemSchema),
+      projects: s.array("Matching notices.", projectListItemSchema),
     }),
   }),
   defineProviderAction(service, {
