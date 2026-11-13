@@ -40,7 +40,6 @@ import { Link, useParams, useSearchParams } from "react-router";
 import { toast } from "sonner";
 import { defaultMarketplaceDiscoveryUrl, isDefaultMarketplace } from "../../src/marketplace/default-marketplace";
 import { apiDelete, apiPost, apiPut } from "./api";
-import { Textarea } from "./components/ui/textarea";
 import { CredentialInput } from "./credential-input";
 import { AddCustomMcp, CustomMcpSettings } from "./custom-mcp";
 import { DefaultMarketplaceCatalog } from "./default-marketplace-catalog";
@@ -61,8 +60,9 @@ import {
   OAuthAppDialog,
   splitClientConfigFieldValues,
 } from "./oauth-app-form";
-import { normalizeOAuthScopes, useOAuthAuthorizationOptions } from "./oauth-authorization-options";
 import { usesSaasOAuth, watchOAuthRequest } from "./oauth-connection-request";
+import { OAuthScopeEditor, useOAuthScopeSelection } from "./oauth-scope-editor";
+import { normalizeOAuthScopes } from "./oauth-scopes";
 import { OneKeyProviderOption } from "./onekey-provider-option";
 import { isOneKeyPromotionHidden, setOneKeyPromotionHidden } from "./onekey-visibility";
 import {
@@ -1749,15 +1749,7 @@ function ConnectionForm(props: ConnectionFormProps): ReactNode {
   const authorizationOptions = remote ? undefined : oauthAuth?.authorizationOptions;
   const defaultScopes =
     props.oauthClientMode === "manual" ? oauthAuth?.scopes : (props.oauthConfig?.effectiveScopes ?? oauthAuth?.scopes);
-  const {
-    requestedScopes,
-    selectedOptionIds: selectedAuthorizationOptionIds,
-    toggleOption,
-    custom,
-    setCustom,
-    setScopes,
-  } = useOAuthAuthorizationOptions(defaultScopes);
-  const selectedScopes = normalizeOAuthScopes(selectedAuthorizationOptionIds)!;
+  const scopeSelection = useOAuthScopeSelection(defaultScopes);
   const [manualClientId, setManualClientId] = useState("");
   const [manualClientSecret, setManualClientSecret] = useState("");
   const manualClientConfigFields = useMemo(() => clientConfigFieldsFor(props.auth), [props.auth]);
@@ -1857,7 +1849,7 @@ function ConnectionForm(props: ConnectionFormProps): ReactNode {
                 props.provider.service,
                 connectionName,
                 manual ? { auth: props.auth, values: manualValues } : undefined,
-                requestedScopes,
+                scopeSelection.requestedScopes,
               ),
             )
           : await apiPost<{ authorizationUrl: string; connectionRequestId: string; expiresAt: string }>(
@@ -1866,7 +1858,7 @@ function ConnectionForm(props: ConnectionFormProps): ReactNode {
                 service: props.provider.service,
                 connectionName,
                 appId: props.connection?.id,
-                authorizationOptionIds: normalizeOAuthScopes(requestedScopes),
+                authorizationOptionIds: normalizeOAuthScopes(scopeSelection.requestedScopes),
               },
             );
         setAuthorizationUrl(result.authorizationUrl);
@@ -2026,45 +2018,7 @@ function ConnectionForm(props: ConnectionFormProps): ReactNode {
         </>
       ) : null}
       {props.auth.type === "oauth2" && !remote && props.auth.supportsScopeSelection !== false ? (
-        <div className="form-grid">
-          {authorizationOptions?.length ? (
-            <fieldset className="form-grid">
-              <legend>{t("providers.oauthClientSettings.additionalScopes")}</legend>
-              {authorizationOptions.map((option) => (
-                <label key={option.id} className="flex items-start gap-2 text-sm">
-                  <input
-                    type="checkbox"
-                    checked={option.required || selectedScopes.includes(option.id)}
-                    disabled={option.required}
-                    onChange={(event) => toggleOption(option.id, event.target.checked)}
-                  />
-                  <span>
-                    <strong>{option.label}</strong>
-                    <small className="block text-muted-foreground">{option.description}</small>
-                  </span>
-                </label>
-              ))}
-            </fieldset>
-          ) : null}
-          <details open={custom}>
-            <summary>{t("providers.oauthClientSettings.advancedScopes")}</summary>
-            <div className="form-grid">
-              <label className="flex items-center gap-2">
-                <input type="checkbox" checked={!custom} onChange={(event) => setCustom(!event.target.checked)} />
-                {t("providers.oauthClientSettings.useDefaultScopes")}
-              </label>
-              {custom ? (
-                <Label>
-                  <span>{t("providers.oauthClientSettings.customScopes")}</span>
-                  <Textarea
-                    value={selectedAuthorizationOptionIds.join("\n")}
-                    onChange={(event) => setScopes(event.target.value === "" ? [] : event.target.value.split("\n"))}
-                  />
-                </Label>
-              ) : null}
-            </div>
-          </details>
-        </div>
+        <OAuthScopeEditor options={authorizationOptions} selection={scopeSelection} />
       ) : null}
       {authDescription ? <small className="block text-muted-foreground">{authDescription}</small> : null}
       {fields.map((field) => (
