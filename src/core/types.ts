@@ -151,7 +151,7 @@ export type OAuth2AuthDefinition = {
   scopes: string[];
   /** Scopes added before authorization for identity validation or token renewal; never a grant check. */
   requiredScopes?: string[];
-  /** Selectable provider-native OAuth scopes for programmatic connections. */
+  /** Curated extra permissions with localizable explanations; ordinary access belongs in scopes. */
   authorizationOptions?: OAuthAuthorizationOption[];
   /** Separator used when joining OAuth scopes. Defaults to a space. */
   scopeSeparator?: " " | ",";

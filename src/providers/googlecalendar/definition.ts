@@ -1,7 +1,7 @@
 import type { ProviderDefinition } from "../../core/types.ts";
 
 import { googlecalendarActions } from "./actions.ts";
-import { googlecalendarOAuthScopes, googlecalendarOptionalScopes } from "./scopes.ts";
+import { googlecalendarOAuthScopes } from "./scopes.ts";
 import { snapshot as triggerSnapshot0_0 } from "./trigger-on-event-changed.definition.ts";
 import { triggerPermissions } from "./trigger-permissions.ts";
 
@@ -23,12 +23,6 @@ export const provider: ProviderDefinition = {
       tokenUrl: "https://oauth2.googleapis.com/token",
       revocationUrl: "https://oauth2.googleapis.com/revoke",
       scopes: googlecalendarOAuthScopes,
-      authorizationOptions: googlecalendarOptionalScopes.map((id) => ({
-        id,
-        label: id,
-        description: "",
-        risk: "standard" as const,
-      })),
       tokenEndpointAuthMethod: "client_secret_post",
       authorizationParams: {
         access_type: "offline",

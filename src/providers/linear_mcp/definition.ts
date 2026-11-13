@@ -11,8 +11,7 @@ const service = "linear_mcp";
  * Linear's MCP authorization server issues public PKCE clients through dynamic
  * registration, so no pre-registered Linear OAuth app is needed: the register
  * step below is written in the same shape as Granola's so a host can script it.
- * The default grant is read-only; the write actions need the optional write
- * scope, asked for through requestedScopes.
+ * The default request includes read and write access.
  */
 export const provider: ProviderDefinition = {
   service,
@@ -26,8 +25,8 @@ export const provider: ProviderDefinition = {
       type: "oauth2",
       authorizationUrl: `${linearMcpIssuer}/authorize`,
       tokenUrl: `${linearMcpIssuer}/token`,
-      scopes: ["read"],
-      authorizationOptions: ["write"].map((id) => ({ id, label: id, description: "", risk: "standard" as const })),
+      scopes: ["read", "write"],
+      requiredScopes: ["read"],
       tokenEndpointAuthMethod: "none",
       pkce: { method: "S256" },
       authorizationParams: { resource: linearMcpEndpoint },
@@ -37,7 +36,7 @@ export const provider: ProviderDefinition = {
           "Copy the Callback URL shown below.",
           'POST {"client_name":"Open Connector","redirect_uris":["<Callback URL>"],"grant_types":["authorization_code","refresh_token"],"response_types":["code"],"token_endpoint_auth_method":"none","scope":"read write"} as JSON to https://mcp.linear.app/register.',
           "Copy the returned client_id into the Client ID field below and leave Client Secret empty.",
-          "Connect with OAuth. The default grant is read-only; request the write scope as well (requestedScopes) to create or update issues and comments.",
+          "Connect with OAuth to read and update issues and comments.",
         ],
       },
     },

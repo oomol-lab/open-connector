@@ -1,7 +1,7 @@
 import type { ProviderDefinition } from "../../core/types.ts";
 
 import { gmailActions } from "./actions.ts";
-import { gmailAuthorizableScopes, gmailOptionalScopes } from "./scopes.ts";
+import { gmailAuthorizableScopes } from "./scopes.ts";
 import { snapshot as triggerSnapshot0_0 } from "./trigger-on-message-received.definition.ts";
 import { triggerPermissions } from "./trigger-permissions.ts";
 
@@ -22,12 +22,6 @@ export const provider: ProviderDefinition = {
       tokenUrl: "https://oauth2.googleapis.com/token",
       revocationUrl: "https://oauth2.googleapis.com/revoke",
       scopes: gmailAuthorizableScopes,
-      authorizationOptions: gmailOptionalScopes.map((id) => ({
-        id,
-        label: id,
-        description: "",
-        risk: "standard" as const,
-      })),
       tokenEndpointAuthMethod: "client_secret_post",
       authorizationParams: {
         access_type: "offline",

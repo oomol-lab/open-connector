@@ -15,16 +15,6 @@ export const provider: ProviderDefinition = {
       authorizationUrl: "https://www.etsy.com/oauth/connect",
       tokenUrl: "https://api.etsy.com/v3/public/oauth/token",
       scopes: ["shops_r", "listings_r", "transactions_r", "transactions_w"],
-      authorizationOptions: [
-        "address_r",
-        "address_w",
-        "email_r",
-        "listings_d",
-        "listings_w",
-        "profile_r",
-        "profile_w",
-        "shops_w",
-      ].map((id) => ({ id, label: id, description: "", risk: "standard" as const })),
       tokenEndpointAuthMethod: "none",
       pkce: {
         method: "S256",

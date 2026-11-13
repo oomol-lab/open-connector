@@ -1647,7 +1647,7 @@ it("requests only drive.file when selected and preserves default Drive authoriza
 });
 
 it.each([
-  { provider: githubProvider, requested: undefined, expected: ["read:user", "repo"] },
+  { provider: githubProvider, requested: undefined, expected: ["read:user", "user:email", "repo"] },
   { provider: githubProvider, requested: ["delete_repo"], expected: ["delete_repo", "read:user"] },
   { provider: posthogProvider, requested: [], expected: ["user:read"] },
 ])(

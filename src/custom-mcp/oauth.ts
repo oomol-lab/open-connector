@@ -77,12 +77,6 @@ export async function prepareMcpOAuth(
         requireIssuer: metadata.authorization_response_iss_parameter_supported === true,
         resource,
         scopes,
-        authorizationOptions: metadata.scopes_supported?.map((id) => ({
-          id,
-          label: id,
-          description: "",
-          risk: "standard" as const,
-        })),
         tokenEndpointAuthMethod: configuredClient.clientSecret
           ? metadata.token_endpoint_auth_methods_supported?.includes("client_secret_basic")
             ? "client_secret_basic"

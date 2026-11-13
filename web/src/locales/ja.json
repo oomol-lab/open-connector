@@ -426,7 +426,9 @@
       "reset": "OAuth client をリセットしました。",
       "resetFailed": "OAuth client のリセットに失敗しました。",
       "useDefaultScopes": "既定の権限を使用",
-      "customScopes": "カスタム scope（1 行に 1 つ。空欄の場合は必要な権限のみ）"
+      "customScopes": "カスタム scope（1 行に 1 つ。空欄の場合は必要な権限のみ）",
+      "additionalScopes": "追加の権限",
+      "advancedScopes": "OAuth スコープの詳細設定"
     },
     "execution": {
       "executable": "実行可能",

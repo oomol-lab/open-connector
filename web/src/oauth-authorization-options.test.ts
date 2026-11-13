@@ -1,29 +1,17 @@
 import { expect, test } from "vitest";
-import { initialOAuthAuthorizationOptionIds, toggleOAuthAuthorizationOption } from "./oauth-authorization-options";
-const options = [
-  {
-    id: "required",
-    label: "Required",
-    description: "",
-    required: true,
-    defaultSelected: false,
-    risk: "standard" as const,
-  },
-  {
-    id: "optional",
-    label: "Optional",
-    description: "",
-    required: false,
-    defaultSelected: false,
-    risk: "standard" as const,
-  },
-];
-test("默认选择 required，不把候选项当作默认值", () => {
-  expect(initialOAuthAuthorizationOptionIds(options)).toEqual(["required"]);
+import { normalizeOAuthScopes, toggleOAuthScope } from "./oauth-authorization-options";
+
+test("extra permission requests retain defaults and revert to implicit defaults when removed", () => {
+  const defaults = ["profile", "read", "write"];
+  const selected = toggleOAuthScope(defaults, undefined, "delete", true, false);
+  expect(normalizeOAuthScopes(selected)).toEqual([...defaults, "delete"]);
+  expect(toggleOAuthScope(defaults, selected, "delete", false, false)).toBeUndefined();
 });
-test("取消选项保留未知 scope 并补齐 required", () => {
-  expect(toggleOAuthAuthorizationOption(options, ["future", "optional"], "optional", false)).toEqual([
-    "future",
-    "required",
-  ]);
+
+test("custom requests preserve unknown and empty scopes without restoring defaults", () => {
+  expect(toggleOAuthScope(["read", "write"], ["future", "delete"], "delete", false, true)).toEqual(["future"]);
+  expect(toggleOAuthScope(["read", "write"], ["delete"], "delete", false, true)).toEqual([]);
+  expect(normalizeOAuthScopes([" future ", "", "future"])).toEqual(["future"]);
+  expect(normalizeOAuthScopes([])).toEqual([]);
+  expect(normalizeOAuthScopes(undefined)).toBeUndefined();
 });

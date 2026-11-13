@@ -17,20 +17,6 @@ export const provider: ProviderDefinition = {
       scopes: ["quote:read", "trade:read"],
       tokenEndpointAuthMethod: "none",
       pkce: { method: "S256" },
-      authorizationOptions: [
-        {
-          id: "quote:read",
-          label: "Market data",
-          description: "Read market data, financial research, and content search results.",
-          risk: "standard",
-        },
-        {
-          id: "trade:read",
-          label: "Account information",
-          description: "Read authorized accounts, balances, positions, orders, and execution fills.",
-          risk: "sensitive",
-        },
-      ],
       clientSetup: {
         docsUrl: "https://open.futunn.com/zh-cn/api/overview/getting-started",
         steps: [

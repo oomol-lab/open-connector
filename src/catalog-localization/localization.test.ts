@@ -108,9 +108,9 @@ describe("localized provider metadata", () => {
     expect(oauth).toMatchObject({
       authorizationOptions: expect.arrayContaining([
         {
-          id: "repo",
-          label: "仓库",
-          description: "读取和修改公开及私有仓库。",
+          id: "workflow",
+          label: "工作流",
+          description: "更新 GitHub Actions 工作流文件。",
           risk: "sensitive",
         },
       ]),

@@ -189,7 +189,7 @@ curl -s -X PUT http://localhost:3000/api/oauth/configs/github \
   -d '{"clientId":"...","clientSecret":"..."}'
 ```
 
-By default, authorization requests include the provider's default scopes, without optional scopes. A deployment that
+By default, authorization requests cover the provider's ordinary capabilities. A deployment that
 needs a smaller permission surface can save `requestedScopes` with the OAuth client configuration:
 
 ```bash
@@ -198,10 +198,14 @@ curl -s -X PUT http://localhost:3000/api/oauth/configs/github \
   -d '{"clientId":"...","clientSecret":"...","requestedScopes":["read:user"]}'
 ```
 
-Every requested scope must come from the provider's declared `auth[].scopes` or `auth[].optionalScopes`. The runtime rejects
-unknown scopes instead of silently expanding authorization. Omit `requestedScopes` to keep the
-provider defaults; when present, the array must contain at least one scope. Config summaries expose
-both `requestedScopes` and the resulting `effectiveScopes`.
+Omit `requestedScopes` to keep the provider defaults. An explicit array replaces them, including
+an empty array; the runtime adds only `requiredScopes` needed for connection validation or renewal.
+Unknown scopes are accepted and upstream APIs determine actual permissions. Config summaries expose
+both `requestedScopes` and the resulting `effectiveScopes`, which describe a future request, not a grant.
+
+The connection form displays only curated extra permissions, such as GitHub repository deletion.
+These options have localized labels and descriptions and extend the defaults when selected.
+Use advanced scope settings to replace the default request with your own list.
 
 For Google Drive, configure the optional `drive.file` scope to access only files created by the app
 or explicitly selected/shared with the app by the user:

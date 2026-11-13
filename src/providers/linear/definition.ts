@@ -22,7 +22,6 @@ export const provider: ProviderDefinition = {
       authorizationUrl: "https://linear.app/oauth/authorize",
       tokenUrl: "https://api.linear.app/oauth/token",
       scopes: linearOAuthScopes,
-      authorizationOptions: ["admin"].map((id) => ({ id, label: id, description: "", risk: "standard" as const })),
       scopeSeparator: ",",
       tokenEndpointAuthMethod: "client_secret_post",
       authorizationParams: {},

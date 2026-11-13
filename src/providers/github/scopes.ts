@@ -9,4 +9,4 @@ export const githubRepoScopes: string[] = [githubRepoScope];
 export const githubWorkflowScopes: string[] = [githubWorkflowScope];
 export const githubDeleteRepoScopes: string[] = [githubDeleteRepoScope];
 
-export const githubOAuthScopes: string[] = [githubReadUserScope, githubRepoScope];
+export const githubOAuthScopes: string[] = [githubReadUserScope, githubUserEmailScope, githubRepoScope];

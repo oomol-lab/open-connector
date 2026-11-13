@@ -1,40 +1,40 @@
-import type { OAuthAuthorizationOption } from "./model";
-
 import { useEffect, useState } from "react";
 
-export function useOAuthAuthorizationOptions(options: OAuthAuthorizationOption[] | undefined) {
-  const [selectedOptionIds, setSelectedOptionIds] = useState(() => initialOAuthAuthorizationOptionIds(options ?? []));
+export function useOAuthAuthorizationOptions(defaultScopes: string[] | undefined) {
+  const [requestedScopes, setScopes] = useState<string[] | undefined>();
   const [custom, setCustom] = useState(false);
   useEffect(() => {
-    setSelectedOptionIds(initialOAuthAuthorizationOptionIds(options ?? []));
+    setScopes(undefined);
     setCustom(false);
-  }, [options]);
+  }, [defaultScopes]);
   return {
-    selectedOptionIds,
+    requestedScopes,
+    selectedOptionIds: requestedScopes ?? defaultScopes ?? [],
     custom,
-    setCustom,
-    setScopes: setSelectedOptionIds,
+    setCustom(enabled: boolean) {
+      setCustom(enabled);
+      setScopes(enabled ? [...(requestedScopes ?? defaultScopes ?? [])] : undefined);
+    },
+    setScopes,
     toggleOption(optionId: string, selected: boolean) {
-      setSelectedOptionIds((current) => toggleOAuthAuthorizationOption(options ?? [], current, optionId, selected));
+      setScopes((current) => toggleOAuthScope(defaultScopes ?? [], current, optionId, selected, custom));
     },
   };
 }
 
-export function initialOAuthAuthorizationOptionIds(options: OAuthAuthorizationOption[]): string[] {
-  return options.filter((option) => option.required || option.defaultSelected).map((option) => option.id);
-}
-
-export function toggleOAuthAuthorizationOption(
-  options: OAuthAuthorizationOption[],
-  current: string[],
-  optionId: string,
+/** Extra permissions extend defaults; explicit custom input remains a replacement. */
+export function toggleOAuthScope(
+  defaults: string[],
+  requested: string[] | undefined,
+  scope: string,
   selected: boolean,
-): string[] {
-  const ids = new Set(current);
-  if (selected) ids.add(optionId);
-  else ids.delete(optionId);
-  for (const option of options) if (option.required) ids.add(option.id);
-  return [...ids];
+  custom: boolean,
+): string[] | undefined {
+  const scopes = new Set(requested ?? defaults);
+  if (selected) scopes.add(scope);
+  else scopes.delete(scope);
+  if (!custom && scopes.size === defaults.length && defaults.every((value) => scopes.has(value))) return undefined;
+  return [...scopes];
 }
 
 export function normalizeOAuthScopes(values: string[] | undefined): string[] | undefined {

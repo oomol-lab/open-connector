@@ -64,24 +64,16 @@ export function describeProviderAuth(auth: ProviderAuthDefinition, labels?: Prov
   }
 }
 
-function describeOAuthAuthorizationOptions(auth: OAuth2AuthDefinition): OAuthAuthorizationOptionSetup[] {
+function describeOAuthAuthorizationOptions(auth: OAuth2AuthDefinition): OAuthAuthorizationOptionSetup[] | undefined {
   const defaults = new Set(auth.scopes);
   const required = new Set(auth.requiredScopes);
-  const options = new Map(auth.authorizationOptions?.map((option) => [option.id, option]));
-  const candidates = new Set([...defaults, ...required, ...options.keys()]);
 
-  // Selection flags come from request policy, never from provider-reported grants.
-  return [...candidates].map((id) => {
-    const option = options.get(id);
-    return {
-      id,
-      label: option?.label ?? id,
-      description: option?.description ?? "",
-      risk: option?.risk ?? "standard",
-      required: required.has(id),
-      defaultSelected: defaults.has(id),
-    };
-  });
+  // Only curated options become controls; request scopes are not a UI catalog.
+  return auth.authorizationOptions?.map((option) => ({
+    ...option,
+    required: required.has(option.id),
+    defaultSelected: defaults.has(option.id),
+  }));
 }
 
 /** The key itself plus the provider's extra fields, in the shape credential forms and validation share. */

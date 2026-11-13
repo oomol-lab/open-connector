@@ -1745,14 +1745,18 @@ function ConnectionForm(props: ConnectionFormProps): ReactNode {
   const [pending, setPending] = useState(false);
   const [authorizationUrl, setAuthorizationUrl] = useState<string>();
   const [values, setValues] = useState<Record<string, string>>({});
-  const authorizationOptions = props.auth.type === "oauth2" && !remote ? props.auth.authorizationOptions : undefined;
+  const oauthAuth = props.auth.type === "oauth2" ? props.auth : undefined;
+  const authorizationOptions = remote ? undefined : oauthAuth?.authorizationOptions;
+  const defaultScopes =
+    props.oauthClientMode === "manual" ? oauthAuth?.scopes : (props.oauthConfig?.effectiveScopes ?? oauthAuth?.scopes);
   const {
+    requestedScopes,
     selectedOptionIds: selectedAuthorizationOptionIds,
     toggleOption,
     custom,
     setCustom,
     setScopes,
-  } = useOAuthAuthorizationOptions(authorizationOptions);
+  } = useOAuthAuthorizationOptions(defaultScopes);
   const [manualClientId, setManualClientId] = useState("");
   const [manualClientSecret, setManualClientSecret] = useState("");
   const manualClientConfigFields = useMemo(() => clientConfigFieldsFor(props.auth), [props.auth]);
@@ -1852,7 +1856,7 @@ function ConnectionForm(props: ConnectionFormProps): ReactNode {
                 props.provider.service,
                 connectionName,
                 manual ? { auth: props.auth, values: manualValues } : undefined,
-                custom ? selectedAuthorizationOptionIds : undefined,
+                requestedScopes,
               ),
             )
           : await apiPost<{ authorizationUrl: string; connectionRequestId: string; expiresAt: string }>(
@@ -1861,7 +1865,7 @@ function ConnectionForm(props: ConnectionFormProps): ReactNode {
                 service: props.provider.service,
                 connectionName,
                 appId: props.connection?.id,
-                authorizationOptionIds: normalizeOAuthScopes(custom ? selectedAuthorizationOptionIds : undefined),
+                authorizationOptionIds: normalizeOAuthScopes(requestedScopes),
               },
             );
         setAuthorizationUrl(result.authorizationUrl);
@@ -2022,30 +2026,14 @@ function ConnectionForm(props: ConnectionFormProps): ReactNode {
       ) : null}
       {props.auth.type === "oauth2" && !remote && props.auth.supportsScopeSelection !== false ? (
         <div className="form-grid">
-          <Label>
-            <span>{t("providers.oauthClientSettings.scopes")}</span>
-          </Label>
-          <label className="flex items-center gap-2">
-            <input type="checkbox" checked={!custom} onChange={(event) => setCustom(!event.target.checked)} />
-            {t("providers.oauthClientSettings.useDefaultScopes")}
-          </label>
-          {custom ? (
-            <Label>
-              <span>{t("providers.oauthClientSettings.customScopes")}</span>
-              <Textarea
-                value={selectedAuthorizationOptionIds.join("\n")}
-                onChange={(event) => setScopes(event.target.value === "" ? [] : event.target.value.split("\n"))}
-              />
-            </Label>
-          ) : null}
-          {custom &&
-            (authorizationOptions ?? []).map((option) => {
-              const checked = option.required || selectedAuthorizationOptionIds.includes(option.id);
-              return (
+          {authorizationOptions?.length ? (
+            <fieldset className="form-grid">
+              <legend>{t("providers.oauthClientSettings.additionalScopes")}</legend>
+              {authorizationOptions.map((option) => (
                 <label key={option.id} className="flex items-start gap-2 text-sm">
                   <input
                     type="checkbox"
-                    checked={checked}
+                    checked={option.required || selectedAuthorizationOptionIds.includes(option.id)}
                     disabled={option.required}
                     onChange={(event) => toggleOption(option.id, event.target.checked)}
                   />
@@ -2054,8 +2042,27 @@ function ConnectionForm(props: ConnectionFormProps): ReactNode {
                     <small className="block text-muted-foreground">{option.description}</small>
                   </span>
                 </label>
-              );
-            })}
+              ))}
+            </fieldset>
+          ) : null}
+          <details open={custom}>
+            <summary>{t("providers.oauthClientSettings.advancedScopes")}</summary>
+            <div className="form-grid">
+              <label className="flex items-center gap-2">
+                <input type="checkbox" checked={!custom} onChange={(event) => setCustom(!event.target.checked)} />
+                {t("providers.oauthClientSettings.useDefaultScopes")}
+              </label>
+              {custom ? (
+                <Label>
+                  <span>{t("providers.oauthClientSettings.customScopes")}</span>
+                  <Textarea
+                    value={selectedAuthorizationOptionIds.join("\n")}
+                    onChange={(event) => setScopes(event.target.value === "" ? [] : event.target.value.split("\n"))}
+                  />
+                </Label>
+              ) : null}
+            </div>
+          </details>
         </div>
       ) : null}
       {authDescription ? <small className="block text-muted-foreground">{authDescription}</small> : null}
