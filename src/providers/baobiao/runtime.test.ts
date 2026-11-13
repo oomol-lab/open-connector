@@ -163,4 +163,7 @@ test("credential validation rejects only a key the gateway does not recognize", 
       { fetcher: vi.fn<typeof fetch>(async () => new Response("Forbidden", { status: 403 })) },
     ),
   ).rejects.toMatchObject({ status: 403, message: "Forbidden" });
+  await expect(
+    validate({ apiKey: "secret", values: {} }, { fetcher: jsonFetcher({ code: 400, msg: "bad request" }) }),
+  ).rejects.toMatchObject({ status: 400, message: "bad request" });
 });

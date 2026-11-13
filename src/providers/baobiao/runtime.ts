@@ -1,7 +1,7 @@
 import type { ApiKeyProviderContext } from "../provider-executors.ts";
 
 import { setTimeout as delay } from "node:timers/promises";
-import { optionalString } from "../../core/cast.ts";
+import { optionalRecord, optionalString } from "../../core/cast.ts";
 import {
   ProviderRequestError,
   providerResponseError,
@@ -88,6 +88,11 @@ export async function pollBaobiaoSearchQuery(
 /** Whether an error is the gateway rejecting the API key itself. */
 export function isBaobiaoInvalidKeyError(error: unknown): boolean {
   return error instanceof ProviderRequestError && error.status === 401;
+}
+
+/** Whether an error is the gateway recognizing the key but refusing the endpoint for lack of grant or balance. */
+export function isBaobiaoEndpointNotGrantedError(error: unknown): boolean {
+  return error instanceof ProviderRequestError && optionalRecord(error.details)?.subCode === endpointNotGrantedSubCode;
 }
 
 function assertBaobiaoSuccess(envelope: Record<string, unknown>): void {

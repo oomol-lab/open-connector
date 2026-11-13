@@ -6,7 +6,13 @@ import { looseArray, optionalIntegerOrNull, optionalRecord, optionalString } fro
 import { defineApiKeyProviderExecutors, mapProviderActionSources } from "../provider-executors.ts";
 import { defineProviderProxy, providerProxyEndpointPrefixes } from "../provider-proxy.ts";
 import { ProviderRequestError, requiredInputString } from "../provider-runtime.ts";
-import { baobiaoBaseUrl, isBaobiaoInvalidKeyError, pollBaobiaoSearchQuery, requestBaobiao } from "./runtime.ts";
+import {
+  baobiaoBaseUrl,
+  isBaobiaoEndpointNotGrantedError,
+  isBaobiaoInvalidKeyError,
+  pollBaobiaoSearchQuery,
+  requestBaobiao,
+} from "./runtime.ts";
 
 const service = "baobiao";
 
@@ -118,7 +124,7 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
 
 export const credentialValidators: CredentialValidators = {
   async apiKey(input, { fetcher, signal }) {
-    // The balance endpoint reads only account data but must be enabled per account, so a business rejection other than a key rejection still proves the key.
+    // The balance endpoint reads only account data but must be enabled per account, so its not-granted rejection still proves the key.
     let accountResourcesAvailable = true;
     try {
       await requestBaobiao(
@@ -127,12 +133,7 @@ export const credentialValidators: CredentialValidators = {
       );
     } catch (error) {
       if (isBaobiaoInvalidKeyError(error)) throw new ProviderRequestError(400, "Baobiao API key is invalid", error);
-      // Only a business envelope proves the gateway recognized the key; a raw HTTP 4xx carries no details.
-      const businessRejection =
-        error instanceof ProviderRequestError &&
-        (error.status === 400 || error.status === 403) &&
-        optionalRecord(error.details) !== undefined;
-      if (!businessRejection) throw error;
+      if (!isBaobiaoEndpointNotGrantedError(error)) throw error;
       accountResourcesAvailable = false;
     }
     const hash = sha256Hex(input.apiKey);
