@@ -1,0 +1,182 @@
+import type { ExecutionContext, ResolvedCredential } from "../../core/types.ts";
+
+import { afterEach, describe, expect, it, vi } from "vitest";
+import { credentialValidators, executors } from "./executors.ts";
+
+const credential: Extract<ResolvedCredential, { authType: "api_key" }> = {
+  authType: "api_key",
+  apiKey: "ss_live_test",
+  values: {},
+  profile: { accountId: "socialscrape:team:team_1", displayName: "SocialScrape team_1", grantedScopes: [] },
+  metadata: {},
+};
+
+const context: ExecutionContext = {
+  getCredential: async () => credential,
+};
+
+/** A SocialScrape success answer around one `data` object. */
+function answer(data: Record<string, unknown>, extra: Record<string, unknown> = {}): Response {
+  return Response.json({
+    ok: true,
+    credits_charged: 1,
+    credits_remaining: 99,
+    cached: false,
+    cached_at: null,
+    request_id: "req_1",
+    data,
+    ...extra,
+  });
+}
+
+/** A SocialScrape error answer. */
+function failure(status: number, code: string, message: string): Response {
+  return Response.json(
+    { ok: false, error: { code, message, retryable: false }, credits_charged: 0, request_id: "req_2" },
+    { status },
+  );
+}
+
+afterEach(() => {
+  vi.unstubAllGlobals();
+});
+
+describe("SocialScrape credentials", () => {
+  it("validates an API key against the credit balance and names the team", async () => {
+    const result = await credentialValidators.apiKey!(
+      { apiKey: "ss_live_test", values: {} },
+      {
+        fetcher: async (url, init) => {
+          expect(url.toString()).toBe("https://api.socialscrape.dev/v1/account/credits");
+          expect(new Headers(init?.headers).get("x-api-key")).toBe("ss_live_test");
+          return answer({ object: "credit_balance", credits_remaining: 99, team_id: "team_1" }, { credits_charged: 0 });
+        },
+      },
+    );
+
+    expect(result).toMatchObject({
+      profile: { accountId: "socialscrape:team:team_1", displayName: "SocialScrape team_1" },
+      metadata: { validationEndpoint: "/v1/account/credits", creditsRemaining: 99 },
+    });
+  });
+
+  it("reports a refused key as a field error, not a reconnect prompt", async () => {
+    await expect(
+      credentialValidators.apiKey!(
+        { apiKey: "wrong", values: {} },
+        { fetcher: async () => failure(401, "unauthorized", "this API key is not valid") },
+      ),
+    ).rejects.toMatchObject({ status: 400, message: "this API key is not valid" });
+  });
+});
+
+describe("SocialScrape actions", () => {
+  it("reads a transcript from a video link", async () => {
+    const fetch = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = new URL(input.toString());
+      expect(url.origin + url.pathname).toBe("https://api.socialscrape.dev/v1/transcript");
+      expect(url.searchParams.get("url")).toBe("https://www.youtube.com/watch?v=abc");
+      expect(url.searchParams.get("language")).toBe("en");
+      expect(new Headers(init?.headers).get("x-api-key")).toBe("ss_live_test");
+      return answer({ object: "transcript", platform: "youtube", source: "captions", text: "hello" });
+    });
+    vi.stubGlobal("fetch", fetch);
+
+    const result = await executors["socialscrape.get_transcript"]!(
+      { url: "https://www.youtube.com/watch?v=abc", language: "en" },
+      context,
+    );
+
+    expect(result).toMatchObject({
+      ok: true,
+      output: {
+        transcript: { platform: "youtube", text: "hello" },
+        meta: { requestId: "req_1", creditsCharged: 1, creditsRemaining: 99, cached: false },
+      },
+    });
+  });
+
+  it("refuses a queued job instead of passing it off as a transcript", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => answer({ object: "job", job_id: "job_1", status: "queued", poll_url: "/v1/jobs/job_1" })),
+    );
+
+    const result = await executors["socialscrape.get_transcript"]!(
+      { url: "https://www.tiktok.com/@a/video/1" },
+      context,
+    );
+
+    expect(result).toMatchObject({ ok: false, error: { code: "provider_error" } });
+  });
+
+  it("looks a profile up by handle without the at sign", async () => {
+    const fetch = vi.fn(async (input: RequestInfo | URL) => {
+      expect(input.toString()).toBe("https://api.socialscrape.dev/v1/instagram/profile?handle=nasa");
+      return answer({ object: "profile", platform: "instagram", handle: "nasa", stats: { followers: 10 } });
+    });
+    vi.stubGlobal("fetch", fetch);
+
+    const result = await executors["socialscrape.get_profile"]!({ platform: "instagram", handle: "@nasa" }, context);
+
+    expect(result).toMatchObject({ ok: true, output: { profile: { handle: "nasa", stats: { followers: 10 } } } });
+  });
+
+  it("lists TikTok videos from the videos route and passes the cursor on", async () => {
+    const fetch = vi.fn(async (input: RequestInfo | URL) => {
+      expect(input.toString()).toBe("https://api.socialscrape.dev/v1/tiktok/profile/videos?handle=nasa&cursor=c1");
+      return answer({ object: "list", items: [{ platform: "tiktok", id: "1" }], cursor: "c2", has_more: true });
+    });
+    vi.stubGlobal("fetch", fetch);
+
+    const result = await executors["socialscrape.list_profile_posts"]!(
+      { platform: "tiktok", handle: "nasa", cursor: "c1" },
+      context,
+    );
+
+    expect(result).toMatchObject({
+      ok: true,
+      output: { posts: [{ platform: "tiktok", id: "1" }], cursor: "c2", hasMore: true },
+    });
+  });
+
+  it("lists posts from the posts route and ends the paging when there is no cursor", async () => {
+    const fetch = vi.fn(async (input: RequestInfo | URL) => {
+      expect(input.toString()).toBe("https://api.socialscrape.dev/v1/threads/profile/posts?handle=zuck");
+      return answer({ object: "list", items: [], cursor: null, has_more: false });
+    });
+    vi.stubGlobal("fetch", fetch);
+
+    const result = await executors["socialscrape.list_profile_posts"]!(
+      { platform: "threads", handle: "zuck" },
+      context,
+    );
+
+    expect(result).toMatchObject({ ok: true, output: { posts: [], cursor: null, hasMore: false } });
+  });
+
+  it("reports an empty balance as insufficient credit with SocialScrape's own message", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => failure(402, "insufficient_credits", "this team has no credits left")),
+    );
+
+    const result = await executors["socialscrape.get_credits"]!({}, context);
+
+    expect(result).toMatchObject({
+      ok: false,
+      error: { code: "insufficient_credit", message: "this team has no credits left" },
+    });
+  });
+
+  it("asks for a reconnect when a stored key stops working", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => failure(401, "unauthorized", "this API key is not valid")),
+    );
+
+    const result = await executors["socialscrape.get_credits"]!({}, context);
+
+    expect(result).toMatchObject({ ok: false, error: { code: "authorization_failed" } });
+  });
+});
