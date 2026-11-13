@@ -34,6 +34,8 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
   async customizeRequest({ context, headers, url }) {
     const access = await requirePipedriveAccess(context);
     url.pathname = pipedrivePath(access.origin, url.pathname);
+    // The connection's credential decides the auth header; a caller-supplied API token must not ride along.
+    headers.delete("x-api-token");
     for (const [name, value] of Object.entries(access.authHeaders)) {
       headers.set(name, value);
     }

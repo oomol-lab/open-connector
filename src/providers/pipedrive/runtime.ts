@@ -30,7 +30,7 @@ type PipedrivePhase = "validate" | "execute";
 type PipedriveMethod = "GET" | "POST" | "PATCH" | "DELETE";
 type PipedriveActionHandler = (input: Record<string, unknown>, context: PipedriveContext) => Promise<unknown>;
 
-export interface PipedriveAccess {
+interface PipedriveAccess {
   authHeaders: Record<string, string>;
   origin: string;
 }
@@ -131,7 +131,7 @@ function pipedriveOrigin(value: unknown): string {
     url.username ||
     url.password
   ) {
-    throw providerInputError("Pipedrive api_domain must be an https pipedrive.com address");
+    throw providerResponseError("Pipedrive api_domain must be an https pipedrive.com address");
   }
   return url.origin;
 }
@@ -156,13 +156,11 @@ export async function validatePipedriveOAuthCredential(
   fetcher: typeof fetch,
 ): Promise<CredentialValidationResult> {
   const access = pipedriveAccess(credential);
-  const result = readPipedriveProfile(
+  return readPipedriveProfile(
     await requestPipedriveJson({ ...access, fetcher }, { path: validationPath, phase: "validate" }),
     access.origin,
     "Pipedrive OAuth",
   );
-  const scope = optionalString(credential.metadata.scope);
-  return { ...result, grantedScopes: scope ? scope.split(/[\s,]+/u).filter(Boolean) : [] };
 }
 
 function readPipedriveProfile(payload: unknown, origin: string, fallbackName: string): CredentialValidationResult {
@@ -181,7 +179,7 @@ function readPipedriveProfile(payload: unknown, origin: string, fallbackName: st
     },
     metadata: compactObject({
       apiBaseUrl: origin,
-      validationEndpoint: validationPath,
+      validationEndpoint: pipedrivePath(origin, validationPath),
       userId: optionalInteger(user.id),
       companyId: optionalInteger(user.company_id),
       companyName: optionalString(user.company_name),

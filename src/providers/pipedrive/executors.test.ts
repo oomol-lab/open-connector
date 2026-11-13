@@ -35,8 +35,7 @@ describe("Pipedrive OAuth", () => {
 
     expect(result).toMatchObject({
       profile: { accountId: "7", displayName: "Alice" },
-      grantedScopes: ["deals:full", "contacts:read"],
-      metadata: { apiBaseUrl: "https://acme.pipedrive.com" },
+      metadata: { apiBaseUrl: "https://acme.pipedrive.com", validationEndpoint: "/api/v1/users/me" },
     });
   });
 
@@ -116,7 +115,9 @@ describe("Pipedrive OAuth", () => {
         [oauth, "/api/v2/deals"],
         [apiKey, "/v1/webhooks"],
       ] as const) {
-        await expect(proxy({ method: "GET", endpoint }, contextWith(credential))).resolves.toMatchObject({ ok: true });
+        await expect(
+          proxy({ method: "GET", endpoint, headers: { "x-api-token": "caller-token" } }, contextWith(credential)),
+        ).resolves.toMatchObject({ ok: true });
       }
     } finally {
       vi.unstubAllGlobals();
