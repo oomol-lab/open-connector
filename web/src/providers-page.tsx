@@ -61,7 +61,7 @@ import {
   OAuthAppDialog,
   splitClientConfigFieldValues,
 } from "./oauth-app-form";
-import { useOAuthAuthorizationOptions } from "./oauth-authorization-options";
+import { normalizeOAuthScopes, useOAuthAuthorizationOptions } from "./oauth-authorization-options";
 import { usesSaasOAuth, watchOAuthRequest } from "./oauth-connection-request";
 import { OneKeyProviderOption } from "./onekey-provider-option";
 import { isOneKeyPromotionHidden, setOneKeyPromotionHidden } from "./onekey-visibility";
@@ -1581,7 +1581,11 @@ export function oauthAuthorizationRequestBody(
   manual?: ManualOAuthAuthorizationInput,
   authorizationOptionIds?: string[],
 ): OAuthAuthorizationRequestBody {
-  const body: OAuthAuthorizationRequestBody = { service, connectionName, authorizationOptionIds };
+  const body: OAuthAuthorizationRequestBody = {
+    service,
+    connectionName,
+    authorizationOptionIds: normalizeOAuthScopes(authorizationOptionIds),
+  };
   if (manual) {
     const { extra, secretExtra } = splitClientConfigFieldValues(
       clientConfigFieldsFor(manual.auth),
@@ -1857,7 +1861,7 @@ function ConnectionForm(props: ConnectionFormProps): ReactNode {
                 service: props.provider.service,
                 connectionName,
                 appId: props.connection?.id,
-                authorizationOptionIds: custom ? selectedAuthorizationOptionIds : undefined,
+                authorizationOptionIds: normalizeOAuthScopes(custom ? selectedAuthorizationOptionIds : undefined),
               },
             );
         setAuthorizationUrl(result.authorizationUrl);

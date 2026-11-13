@@ -107,7 +107,6 @@ const oauthClientConfigRequestSchema = jsonSchema.object(
         "OAuth app client secret. When updating the default app with the same clientId, omission preserves the stored secret. Required for a new confidential client.",
     }),
     requestedScopes: jsonSchema.array(jsonSchema.string(), {
-      minItems: 1,
       description:
         "OAuth request scopes replacing defaults. Omit for defaults; an empty list requests only required scopes. Unknown scopes are passed to the provider.",
     }),
@@ -1952,7 +1951,6 @@ function createOAuthAuthorizationPath(): Record<string, unknown> {
                   description: "Optional connection-scoped OAuth app client secret.",
                 }),
                 requestedScopes: jsonSchema.array(jsonSchema.string(), {
-                  minItems: 1,
                   description:
                     "OAuth request scopes replacing defaults. Required scopes are added automatically. Empty and unknown scopes are accepted.",
                 }),

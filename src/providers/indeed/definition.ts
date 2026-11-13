@@ -12,7 +12,7 @@ export const provider: ProviderDefinition = {
   auth: [
     {
       type: "oauth2",
-      requiredScopes: ["email", "offline_access"],
+      requiredScopes: ["offline_access"],
       authorizationUrl: "https://secure.indeed.com/oauth/v2/authorize",
       tokenUrl: "https://apis.indeed.com/oauth/v2/tokens",
       scopes,

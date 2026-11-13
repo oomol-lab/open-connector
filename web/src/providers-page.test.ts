@@ -610,6 +610,11 @@ describe("named provider connections", () => {
       connectionName: "work",
       values: { apiKey: "secret" },
     });
+    expect(
+      oauthAuthorizationRequestBody("gmail", "personal", undefined, [" custom ", "", "custom", "  "])
+        .authorizationOptionIds,
+    ).toEqual(["custom"]);
+    expect(oauthAuthorizationRequestBody("gmail", "personal", undefined, ["", " "]).authorizationOptionIds).toEqual([]);
     expect(oauthAuthorizationRequestBody("gmail", "personal")).toEqual({
       service: "gmail",
       connectionName: "personal",

@@ -13,6 +13,7 @@ export const provider: ProviderDefinition = {
   auth: [
     {
       type: "oauth2",
+      requiredScopes: ["user:read"],
       authorizationUrl: "https://app.todoist.com/oauth/authorize",
       tokenUrl: "https://api.todoist.com/oauth/access_token",
       scopes: todoistOAuthScopes,

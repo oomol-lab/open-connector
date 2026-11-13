@@ -36,3 +36,7 @@ export function toggleOAuthAuthorizationOption(
   for (const option of options) if (option.required) ids.add(option.id);
   return [...ids];
 }
+
+export function normalizeOAuthScopes(values: string[] | undefined): string[] | undefined {
+  return values === undefined ? undefined : [...new Set(values.map((value) => value.trim()).filter(Boolean))];
+}

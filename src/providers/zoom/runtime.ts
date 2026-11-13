@@ -347,6 +347,7 @@ function encodeMeetingUuid(meetingUuid: string): string {
 
 function normalizeSummaryMeeting(record: Record<string, unknown>): Record<string, unknown> {
   return {
+    raw: record,
     meetingUuid: optionalString(record.meeting_uuid) ?? null,
     meetingId: maybeMeetingId(record.meeting_id),
     meetingHostId: optionalString(record.meeting_host_id) ?? null,

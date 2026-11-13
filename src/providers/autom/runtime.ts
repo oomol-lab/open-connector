@@ -78,6 +78,8 @@ export const automActionHandlers: ProviderActionHandlers<"autom", AutomActionHan
         query: requiredInputString(input.query, "query"),
         gl: optionalString(input.country),
         hl: optionalString(input.language),
+        tbs: optionalString(input.tbs),
+        safe: optionalString(input.safe),
         location: optionalString(input.location),
         page: optionalInteger(input.page),
         num: optionalInteger(input.numResults),

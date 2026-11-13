@@ -152,6 +152,7 @@ const summaryTimeSchema = s.dateTime(
 );
 
 const meetingSummaryMeetingProperties = {
+  raw: s.looseObject("The original Zoom summary record, including additional upstream fields."),
   meetingUuid: s.nullableString(
     "The meeting instance UUID. Pass it to get_meeting_summary; it differs for every occurrence.",
   ),

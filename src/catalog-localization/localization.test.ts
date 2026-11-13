@@ -111,8 +111,6 @@ describe("localized provider metadata", () => {
           id: "repo",
           label: "仓库",
           description: "读取和修改公开及私有仓库。",
-          required: false,
-          defaultSelected: true,
           risk: "sensitive",
         },
       ]),

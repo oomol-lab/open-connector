@@ -15,3 +15,6 @@ const slackReadScopes = [
 const slackWriteScopes = ["chat:write", "im:write", "files:write", "reactions:write"];
 
 export const slackBotOAuthScopes: string[] = [...slackReadScopes, ...slackWriteScopes, "app_mentions:read"];
+
+// Real-time Search requires separate Slack approval and stays opt-in.
+export const slackUserOAuthScopes: string[] = [...slackReadScopes, ...slackWriteScopes, "search:read"];

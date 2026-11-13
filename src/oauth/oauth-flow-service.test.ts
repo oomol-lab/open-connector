@@ -16,7 +16,9 @@ import { createHash } from "node:crypto";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { createCatalogStore } from "../catalog-store.ts";
 import { ConnectionService } from "../connection-service.ts";
+import { provider as githubProvider } from "../providers/github/definition.ts";
 import { provider as googleDriveProvider } from "../providers/googledrive/definition.ts";
+import { provider as posthogProvider } from "../providers/posthog/definition.ts";
 import { provider as slackProvider } from "../providers/slack/definition.ts";
 import { provider as slackbotProvider } from "../providers/slackbot/definition.ts";
 import { executors as slackbotExecutors } from "../providers/slackbot/executors.ts";
@@ -843,6 +845,8 @@ describe("OAuthFlowService", () => {
     const userAuthorizationUrl = new URL(userStarted.authorizationUrl);
     expect(userAuthorizationUrl.pathname).toBe("/oauth/v2_user/authorize");
     expect(userAuthorizationUrl.searchParams.get("scope")).toContain("search:read");
+    expect(userAuthorizationUrl.searchParams.get("scope")).not.toContain("search:read.public");
+    expect(userAuthorizationUrl.searchParams.get("scope")).not.toContain("search:read.private");
     await services.flow.completeAuthorization({ state: userStarted.state, code: "user-code" });
 
     const botStarted = await services.flow.startAuthorization({ service: "slackbot" });
@@ -1641,3 +1645,21 @@ it("requests only drive.file when selected and preserves default Drive authoriza
   const narrow = await services.flow.startAuthorization({ service: "googledrive" });
   expect(new URL(narrow.authorizationUrl).searchParams.get("scope")).toBe("https://www.googleapis.com/auth/drive.file");
 });
+
+it.each([
+  { provider: githubProvider, requested: undefined, expected: ["read:user", "repo"] },
+  { provider: githubProvider, requested: ["delete_repo"], expected: ["delete_repo", "read:user"] },
+  { provider: posthogProvider, requested: [], expected: ["user:read"] },
+])(
+  "requests the selected scope contract in the $provider.service authorization URL: $requested",
+  async ({ provider, requested, expected }) => {
+    const { flow, clientConfigs } = createServices([{ ...provider, actions: [] }]);
+    await clientConfigs.upsertConfig({ service: provider.service, clientId: "client", clientSecret: "secret" });
+    const started = await flow.startConnectionRequest({
+      service: provider.service,
+      owner: "owner",
+      authorizationOptionIds: requested,
+    });
+    expect(new URL(started.authorizationUrl).searchParams.get("scope")?.split(" ")).toEqual(expected);
+  },
+);

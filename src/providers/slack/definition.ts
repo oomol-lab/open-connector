@@ -1,6 +1,7 @@
 import type { OAuthAuthorizationOption, ProviderDefinition } from "../../core/types.ts";
 
 import { slackActions } from "./actions.ts";
+import { slackUserOAuthScopes } from "./scopes.ts";
 import { snapshot as triggerSnapshot0_0 } from "./trigger-on-message-posted.definition.ts";
 import { triggerPermissions } from "./trigger-permissions.ts";
 
@@ -131,7 +132,7 @@ export const provider: ProviderDefinition = {
       authorizationUrl: "https://slack.com/oauth/v2_user/authorize",
       tokenUrl: "https://slack.com/api/oauth.v2.user.access",
       refreshTokenUrl: "https://slack.com/api/oauth.v2.access",
-      scopes: slackAuthorizationOptions.map((option) => option.id),
+      scopes: slackUserOAuthScopes,
       scopeSeparator: ",",
       tokenEndpointAuthMethod: "client_secret_post",
       authorizationOptions: slackAuthorizationOptions,
