@@ -216,8 +216,8 @@ async function hasValidToken(context: Context, options: LocalAuthOptions, scope:
   if (scope === "oauth") {
     return true;
   }
-  if (scope === "runtime" && options.authMode === "none" && !protectedTransitDelete) {
-    return true;
+  if (scope === "runtime" && options.authMode === "none") {
+    return !protectedTransitDelete;
   }
   // In `oauth` mode a configured static runtime token is not accepted: OAuth-only
   // means OAuth-only, so skip straight to runtime-token resolution below.

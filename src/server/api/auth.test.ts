@@ -62,6 +62,32 @@ describe("createLocalAuthMiddleware", () => {
       (await adminOnly.request(file, { method: "DELETE", headers: authorize("Bearer", "admin-secret") })).status,
     ).toBe(200);
 
+    // Explicitly disabling runtime authentication must not reactivate old
+    // credentials on a delete that remains protected by administrator auth.
+    const disabledRuntime = new Hono();
+    disabledRuntime.use(
+      "*",
+      createLocalAuthMiddleware({
+        adminToken: "admin-secret",
+        authMode: "none",
+        runtimeToken: "static-runtime",
+        resolveRuntimeToken: async (token) =>
+          token === "stored-runtime"
+            ? { tokenId: "fixture", allowedActions: [], blockedActions: [], allowedProxies: [] }
+            : undefined,
+        verifyRuntimeJwt: async (token) => token === "jwt-runtime",
+      }),
+    );
+    disabledRuntime.delete("/api/files/:fileId", (context) => context.json({ deleted: true }));
+    for (const token of ["static-runtime", "stored-runtime", "jwt-runtime"]) {
+      expect(
+        (await disabledRuntime.request(file, { method: "DELETE", headers: authorize("Bearer", token) })).status,
+      ).toBe(401);
+    }
+    expect(
+      (await disabledRuntime.request(file, { method: "DELETE", headers: authorize("Bearer", "admin-secret") })).status,
+    ).toBe(200);
+
     // The server wires its token store even when authentication is disabled.
     const authDisabled = new Hono();
     authDisabled.use(
