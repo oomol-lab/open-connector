@@ -82,7 +82,7 @@ export class CustomMcpStore {
       statements.push({
         sql: `insert into oauth_client_configs (service, value, updated_at)
           select service, ?, ? from custom_mcp where service = ? and revision = ?
-          on conflict(service) do update set value = excluded.value, updated_at = excluded.updated_at returning service`,
+          on conflict(tenant_id, service) do update set value = excluded.value, updated_at = excluded.updated_at returning service`,
         values: [value, new Date().toISOString(), record.service, record.revision],
       });
     }

@@ -92,6 +92,7 @@ describe("SqliteRuntimeDatabase", () => {
       "0020_oauth_tables.sql",
       "0021_oauth_refresh_replay.sql",
       "0022_custom_mcp.sql",
+      "0023_tenant.sql",
     ];
     expect(entries.filter((entry) => entry.message === "sqlite migration started")).toEqual(
       migrations.map((migration) => ({ fields: { migration }, message: "sqlite migration started" })),

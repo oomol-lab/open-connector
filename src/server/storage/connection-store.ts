@@ -104,7 +104,7 @@ export class SqlConnectionStore implements IConnectionStore {
       ]),
       {
         sql: `insert into connections (id, revision, service, connection_name, value, updated_at, provider_account_id)
-          select ?, ?, ?, ?, ?, ?, ? where ${fence.sql} on conflict (service, connection_name) do update set
+          select ?, ?, ?, ?, ?, ?, ? where ${fence.sql} on conflict (tenant_id, service, connection_name) do update set
           revision = excluded.revision, value = excluded.value, updated_at = excluded.updated_at,
           source = 'local', managed_project_id = null, provider_config_id = null, external_user_id = null,
           remote_account_id = null, local_request_id = null, provider_account_id = excluded.provider_account_id

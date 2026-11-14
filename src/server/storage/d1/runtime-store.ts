@@ -143,7 +143,7 @@ class D1MarketplaceStore implements IMarketplaceStore {
   async setProviderPreference(preference: ProviderPreference): Promise<void> {
     await this.database
       .prepare(
-        "insert into provider_preferences (service, enabled, created_at, updated_at) values (?, ?, ?, ?) on conflict(service) do update set enabled = excluded.enabled, updated_at = excluded.updated_at",
+        "insert into provider_preferences (service, enabled, created_at, updated_at) values (?, ?, ?, ?) on conflict(tenant_id, service) do update set enabled = excluded.enabled, updated_at = excluded.updated_at",
       )
       .bind(preference.service, preference.enabled ? 1 : 0, preference.createdAt, preference.updatedAt)
       .run();
@@ -169,7 +169,7 @@ export class D1OAuthClientConfigStore implements IOAuthClientConfigStore {
         `
         insert into oauth_client_configs (service, value, updated_at)
         values (?, ?, ?)
-        on conflict(service) do update set value = excluded.value, updated_at = excluded.updated_at
+        on conflict(tenant_id, service) do update set value = excluded.value, updated_at = excluded.updated_at
       `,
       )
       .bind(config.service, await this.secretCodec.encode(JSON.stringify(config)), new Date().toISOString())
@@ -795,7 +795,7 @@ export class D1IdempotencyStore implements IIdempotencyStore {
             key_hash, claim_id, request_hash, state, response_value, created_at, expires_at
           )
           values (?, ?, ?, 'in_progress', null, ?, ?)
-          on conflict(key_hash) do nothing
+          on conflict(tenant_id, key_hash) do nothing
           returning claim_id
         `,
         )

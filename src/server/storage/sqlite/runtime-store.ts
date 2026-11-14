@@ -330,7 +330,7 @@ export class SqliteMarketplaceStore implements IMarketplaceStore {
   async setProviderPreference(preference: ProviderPreference): Promise<void> {
     this.database
       .prepare(
-        "insert into provider_preferences (service, enabled, created_at, updated_at) values (?, ?, ?, ?) on conflict(service) do update set enabled = excluded.enabled, updated_at = excluded.updated_at",
+        "insert into provider_preferences (service, enabled, created_at, updated_at) values (?, ?, ?, ?) on conflict(tenant_id, service) do update set enabled = excluded.enabled, updated_at = excluded.updated_at",
       )
       .run(preference.service, preference.enabled ? 1 : 0, preference.createdAt, preference.updatedAt);
   }
@@ -925,7 +925,7 @@ export class SqliteIdempotencyStore implements IIdempotencyStore {
             key_hash, claim_id, request_hash, state, response_value, created_at, expires_at
           )
           values (?, ?, ?, 'in_progress', null, ?, ?)
-          on conflict(key_hash) do nothing
+          on conflict(tenant_id, key_hash) do nothing
         `,
         )
         .run(input.keyHash, input.claimId, input.requestHash, input.now, input.expiresAt);
@@ -1241,7 +1241,7 @@ async function setServiceJson(input: SetServiceJsonInput): Promise<void> {
       `
       insert into ${input.table} (service, value, updated_at)
       values (?, ?, ?)
-      on conflict(service) do update set value = excluded.value, updated_at = excluded.updated_at
+      on conflict(tenant_id, service) do update set value = excluded.value, updated_at = excluded.updated_at
     `,
     )
     .run(input.service, await input.secretCodec.encode(JSON.stringify(input.value)), new Date().toISOString());
