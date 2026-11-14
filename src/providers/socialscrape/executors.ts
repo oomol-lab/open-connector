@@ -7,6 +7,7 @@ import { queryParams } from "../../core/request.ts";
 import { defineApiKeyProviderExecutors } from "../provider-executors.ts";
 import { defineProviderProxy } from "../provider-proxy.ts";
 import {
+  defaultProviderRequestTimeoutMs,
   providerResponseError,
   providerUserAgent,
   ProviderRequestError,
@@ -142,17 +143,38 @@ async function socialscrapeRequest(
   }
   const jobPath = `/v1/jobs/${jobId}`;
   const startedAt = Date.now();
+  const remainingMs = (): number => jobWaitMs - (Date.now() - startedAt);
+  const stillRunning = (): ProviderRequestError =>
+    new ProviderRequestError(
+      504,
+      `SocialScrape job ${jobId} was still running after ${Math.round(jobWaitMs / 1000)} seconds`,
+      { jobId, pollUrl: new URL(jobPath, apiBaseUrl).toString() },
+    );
   for (;;) {
-    const remaining = jobWaitMs - (Date.now() - startedAt);
-    if (remaining <= 0 || context.signal?.aborted) {
-      throw new ProviderRequestError(
-        504,
-        `SocialScrape job ${jobId} was still running after ${Math.round(jobWaitMs / 1000)} seconds`,
-        { jobId, pollUrl: new URL(jobPath, apiBaseUrl).toString() },
-      );
+    if (remainingMs() <= 0 || context.signal?.aborted) {
+      throw stillRunning();
     }
-    await sleep(Math.min(jobPollIntervalMs, remaining), context.signal);
-    answer = await socialscrapeFetch(jobPath, context, {}, phase);
+    await sleep(Math.min(jobPollIntervalMs, remainingMs()), context.signal);
+    // The sleep may have used up the budget, and a poll must not outlive what is left of it.
+    const remaining = remainingMs();
+    if (remaining <= 0 || context.signal?.aborted) {
+      throw stillRunning();
+    }
+    try {
+      answer = await socialscrapeFetch(
+        jobPath,
+        context,
+        {},
+        phase,
+        Math.min(defaultProviderRequestTimeoutMs, remaining),
+      );
+    } catch (error) {
+      // A poll that timed out says nothing about the job: try again while the budget lasts.
+      if (error instanceof ProviderRequestError && error.status === 504) {
+        continue;
+      }
+      throw error;
+    }
     if (!isJob(answer)) {
       return answer;
     }

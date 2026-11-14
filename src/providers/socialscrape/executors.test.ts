@@ -182,6 +182,40 @@ describe("SocialScrape actions", () => {
     expect(result).toMatchObject({ ok: false, error: { message: expect.stringContaining("job_slow") } });
   });
 
+  it("does not let a stalled poll outlive the wait budget", async () => {
+    vi.useFakeTimers();
+    const startedAt = Date.now();
+    let polls = 0;
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+        if (new URL(input.toString()).pathname === "/v1/transcript") {
+          return job("job_stalled");
+        }
+        polls += 1;
+        // A poll that never answers: it ends only when the request is aborted.
+        return new Promise<Response>((_resolve, reject) => {
+          init?.signal?.addEventListener("abort", () => reject(new DOMException("aborted", "AbortError")));
+        });
+      }),
+    );
+
+    let settledAfterMs = -1;
+    const pending = executors["socialscrape.get_transcript"]!(
+      { url: "https://www.tiktok.com/@a/video/1" },
+      context,
+    ).then((result) => {
+      settledAfterMs = Date.now() - startedAt;
+      return result;
+    });
+    await vi.advanceTimersByTimeAsync(120_000);
+    const result = await pending;
+
+    expect(polls).toBeGreaterThan(0);
+    expect(settledAfterMs).toBeLessThanOrEqual(90_000);
+    expect(result).toMatchObject({ ok: false, error: { message: expect.stringContaining("job_stalled") } });
+  });
+
   it("refuses a job answer that carries no usable job id", async () => {
     vi.stubGlobal(
       "fetch",
