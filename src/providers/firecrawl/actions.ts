@@ -208,17 +208,6 @@ const sourceSchema = s.looseRequiredObject(
   },
   { optional: ["title", "description", "icon"] },
 );
-const activitySchema = s.looseRequiredObject(
-  "A deep research activity item.",
-  {
-    type: s.string("The activity type."),
-    depth: s.integer("The research depth for the activity."),
-    status: s.string("The activity status."),
-    message: s.string("The activity summary message."),
-    timestamp: s.string("The ISO 8601 timestamp of the activity."),
-  },
-  { optional: ["type", "depth", "status", "message", "timestamp"] },
-);
 const jobStartSchema = s.looseRequiredObject(
   "A Firecrawl async job start response.",
   {
@@ -364,15 +353,11 @@ const deepResearchStatusSchema = s.looseRequiredObject(
     success: s.boolean("Whether the request succeeded."),
     id: s.string("The Firecrawl job ID."),
     status: s.string("The current deep research status."),
-    currentDepth: s.integer("The current research depth."),
-    maxDepth: s.integer("The configured maximum research depth."),
-    totalUrls: s.integer("The total URLs processed by the job."),
     expiresAt: s.string("The ISO 8601 expiry timestamp for the job data."),
     data: looseObject,
     sources: s.array("The sources gathered during deep research.", sourceSchema),
-    activities: s.array("The deep research activity timeline.", activitySchema),
   },
-  { optional: ["id", "status", "currentDepth", "maxDepth", "totalUrls", "expiresAt", "data", "sources", "activities"] },
+  { optional: ["id", "status", "expiresAt", "data", "sources"] },
 );
 const llmsTxtStatusSchema = s.looseRequiredObject(
   "A Firecrawl LLMs.txt status response.",
@@ -882,20 +867,18 @@ export const firecrawlActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "deep_research",
     operationType: "write",
-    description: "Start a Firecrawl deep research job.",
+    description:
+      "Start a Firecrawl deep research job. The Firecrawl agent researches the query and returns a markdown report with its sources.",
     inputSchema: s.looseRequiredObject(
       "The input payload for this action.",
       {
         query: s.nonEmptyString("The research question or topic."),
-        formats: s.stringArray("The output formats requested from deep research."),
         jsonOptions: jsonOptionsSchema,
-        maxUrls: s.integer("The maximum URLs the research job may analyze."),
-        maxDepth: s.integer("The maximum research depth for the job."),
-        timeLimit: s.integer("The research time limit in seconds."),
+        maxCredits: s.integer("The maximum credits the research job may spend."),
         systemPrompt: s.string("A system prompt that guides the research agent."),
         analysisPrompt: s.string("A synthesis prompt that guides the final analysis."),
       },
-      { optional: ["formats", "jsonOptions", "maxUrls", "maxDepth", "timeLimit", "systemPrompt", "analysisPrompt"] },
+      { optional: ["jsonOptions", "maxCredits", "systemPrompt", "analysisPrompt"] },
     ),
     outputSchema: s.looseRequiredObject(
       "The output payload for this action.",
@@ -903,12 +886,10 @@ export const firecrawlActions: ActionDefinition[] = [
         success: s.boolean("Whether the job was accepted successfully."),
         id: s.string("The Firecrawl deep research job ID."),
         status: s.string("The current deep research status."),
-        currentDepth: s.integer("The current research depth."),
-        maxDepth: s.integer("The configured maximum research depth."),
         expiresAt: s.string("The ISO 8601 expiry timestamp for the job data."),
         data: looseObject,
       },
-      { optional: ["status", "currentDepth", "maxDepth", "expiresAt", "data"] },
+      { optional: ["status", "expiresAt", "data"] },
     ),
   }),
   defineProviderAction(service, {

@@ -84,8 +84,20 @@ export const firecrawlActionHandlers: ProviderActionHandlers<"firecrawl", Firecr
   start_agent: firecrawlPostAction("/v2/agent", buildDirectBody),
   get_agent_status: firecrawlGetAction((input) => `/v2/agent/${String(input.id)}`),
   agent_cancel: firecrawlDeleteAction((input) => `/v2/agent/${String(input.id)}`),
-  deep_research: firecrawlPostAction("/v1/deep-research", buildDirectBody),
-  get_deep_research_status: firecrawlGetAction((input) => `/v1/deep-research/${String(input.id)}`),
+  // Firecrawl shuts down /v1/deep-research on 2026-12-10; deep research now runs on the agent endpoint.
+  // https://docs.firecrawl.dev/migrating-from-deep-research
+  deep_research: firecrawlPostAction("/v2/agent", buildDeepResearchBody),
+  get_deep_research_status: async (input, context) => {
+    const payload = await firecrawlRequest({
+      apiKey: context.apiKey,
+      apiBaseUrl: context.apiBaseUrl,
+      fetcher: context.fetcher,
+      signal: context.signal,
+      path: `/v2/agent/${String(input.id)}`,
+      phase: "execute",
+    });
+    return toDeepResearchStatus(payload);
+  },
   llms_txt_generate: firecrawlPostAction("/v1/llmstxt", buildDirectBody),
   llms_txt_get: firecrawlGetAction((input) => `/v1/llmstxt/${String(input.id)}`),
   queue_get: firecrawlGetAction(() => "/v2/team/queue-status"),
@@ -219,6 +231,51 @@ function buildCrawlBody(input: Record<string, unknown>): Record<string, unknown>
     ...baseInput,
     scrapeOptions: mergeRecords(optionalRecord(baseInput.scrapeOptions), buildScrapeOptionsFromInput(input)),
   });
+}
+
+/**
+ * Maps a deep research request onto an agent run: the prompts merge into one prompt, and the schema asks
+ * for the report and sources that deep research returned, plus the caller's JSON schema when given.
+ */
+function buildDeepResearchBody(input: Record<string, unknown>): Record<string, unknown> {
+  const jsonOptions = optionalRecord(input.jsonOptions);
+  const jsonSchema = optionalRecord(jsonOptions?.schema);
+  const prompt = [input.query, input.systemPrompt, input.analysisPrompt, jsonOptions?.prompt]
+    .map((part) => optionalString(part))
+    .filter((part) => part !== undefined)
+    .join("\n\n");
+  return compactObject({
+    prompt,
+    schema: {
+      type: "object",
+      properties: {
+        report: { type: "string", description: "A markdown report that answers the question." },
+        sources: {
+          type: "array",
+          description: "The sources the report is based on.",
+          items: {
+            type: "object",
+            properties: { url: { type: "string" }, title: { type: "string" } },
+            required: ["url", "title"],
+          },
+        },
+        json: jsonSchema,
+      },
+      required: jsonSchema ? ["report", "sources", "json"] : ["report", "sources"],
+    },
+    maxCredits: optionalNumber(input.maxCredits),
+  });
+}
+
+/** Returns a finished agent run in the deep research status shape: `data.finalAnalysis`, `data.sources`, `sources`. */
+function toDeepResearchStatus(payload: unknown): unknown {
+  const body = optionalRecord(payload);
+  const data = optionalRecord(body?.data);
+  if (!body || !data) {
+    return payload;
+  }
+  const sources = optionalArray(data.sources);
+  return { ...body, data: { finalAnalysis: data.report, sources, json: data.json }, sources };
 }
 
 function buildHistoricalUsageQuery(input: Record<string, unknown>): Record<string, boolean | undefined> {

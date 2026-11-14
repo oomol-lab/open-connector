@@ -173,3 +173,124 @@ describe("Firecrawl API base URL", () => {
     expect(fetch).not.toHaveBeenCalled();
   });
 });
+
+describe("Firecrawl deep research", () => {
+  function stubAgentFetch(payloads: unknown[]): ReturnType<typeof vi.fn> {
+    const fetch = vi.fn(async (_input: RequestInfo | URL, _init?: RequestInit) => Response.json(payloads.shift()));
+    vi.stubGlobal("fetch", fetch);
+    setDefaultGuardedFetchDnsLookup(async () => [{ address: "93.184.216.34", family: 4 }]);
+    return fetch;
+  }
+
+  const executionContext: ExecutionContext = { getCredential: async () => apiKeyCredential({}) };
+  const reportSchema = {
+    report: { type: "string", description: "A markdown report that answers the question." },
+    sources: {
+      type: "array",
+      description: "The sources the report is based on.",
+      items: {
+        type: "object",
+        properties: { url: { type: "string" }, title: { type: "string" } },
+        required: ["url", "title"],
+      },
+    },
+  };
+
+  it("starts an agent run with the prompts merged and the removed v1 limits dropped", async () => {
+    const fetch = stubAgentFetch([{ success: true, id: "job-1" }]);
+    const studiesSchema = { type: "object", properties: { studies: { type: "array" } } };
+
+    const result = await executors["firecrawl.deep_research"]!(
+      {
+        query: "How do EVs and gas cars compare on lifetime emissions?",
+        systemPrompt: "Prefer peer-reviewed sources.",
+        analysisPrompt: "Answer in three sections.",
+        jsonOptions: { prompt: "List the studies you used.", schema: studiesSchema },
+        maxCredits: 500,
+        maxUrls: 20,
+        maxDepth: 3,
+        timeLimit: 120,
+        formats: ["markdown", "json"],
+      },
+      executionContext,
+    );
+
+    expect(result).toEqual({ ok: true, output: { success: true, id: "job-1" } });
+    expect(requestedUrls(fetch)).toEqual(["https://api.firecrawl.dev/v2/agent"]);
+    const init = fetch.mock.calls[0]![1]!;
+    expect(init.method).toBe("POST");
+    expect(JSON.parse(String(init.body))).toEqual({
+      prompt:
+        "How do EVs and gas cars compare on lifetime emissions?\n\nPrefer peer-reviewed sources.\n\nAnswer in three sections.\n\nList the studies you used.",
+      schema: {
+        type: "object",
+        properties: { ...reportSchema, json: studiesSchema },
+        required: ["report", "sources", "json"],
+      },
+      maxCredits: 500,
+    });
+  });
+
+  it("asks only for the report and sources when no JSON schema is given", async () => {
+    const fetch = stubAgentFetch([{ success: true, id: "job-2" }]);
+
+    await executors["firecrawl.deep_research"]!({ query: "What is Firecrawl?" }, executionContext);
+
+    expect(JSON.parse(String(fetch.mock.calls[0]![1]!.body))).toEqual({
+      prompt: "What is Firecrawl?",
+      schema: { type: "object", properties: reportSchema, required: ["report", "sources"] },
+    });
+  });
+
+  it("returns a completed agent run in the deep research status shape", async () => {
+    const sources = [{ url: "https://example.com/study", title: "Lifetime emissions study" }];
+    const fetch = stubAgentFetch([
+      {
+        success: true,
+        status: "completed",
+        data: { report: "# Findings", sources, json: { studies: ["Lifetime emissions study"] } },
+        expiresAt: "2026-12-01T00:00:00.000Z",
+        creditsUsed: 42,
+      },
+    ]);
+
+    const result = await executors["firecrawl.get_deep_research_status"]!({ id: "job-1" }, executionContext);
+
+    expect(requestedUrls(fetch)).toEqual(["https://api.firecrawl.dev/v2/agent/job-1"]);
+    expect(result).toEqual({
+      ok: true,
+      output: {
+        success: true,
+        status: "completed",
+        data: { finalAnalysis: "# Findings", sources, json: { studies: ["Lifetime emissions study"] } },
+        sources,
+        expiresAt: "2026-12-01T00:00:00.000Z",
+        creditsUsed: 42,
+      },
+    });
+  });
+
+  it("passes processing and failed agent runs through unchanged", async () => {
+    const processing = { success: true, status: "processing", expiresAt: "2026-12-01T00:00:00.000Z" };
+    const failed = {
+      success: true,
+      status: "failed",
+      error: "Agent reached max credits",
+      stopReason: "credit_limit_reached",
+    };
+    const fetch = stubAgentFetch([processing, failed]);
+
+    expect(await executors["firecrawl.get_deep_research_status"]!({ id: "job-1" }, executionContext)).toEqual({
+      ok: true,
+      output: processing,
+    });
+    expect(await executors["firecrawl.get_deep_research_status"]!({ id: "job-1" }, executionContext)).toEqual({
+      ok: true,
+      output: failed,
+    });
+    expect(requestedUrls(fetch)).toEqual([
+      "https://api.firecrawl.dev/v2/agent/job-1",
+      "https://api.firecrawl.dev/v2/agent/job-1",
+    ]);
+  });
+});
