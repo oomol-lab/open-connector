@@ -3,6 +3,78 @@ import { describe, expect, it, vi } from "vitest";
 import { createLocalAuthMiddleware } from "./auth.ts";
 
 describe("createLocalAuthMiddleware", () => {
+  it("lets authenticated runtimes delete transit files without opening admin routes", async () => {
+    let active = true;
+    const deleted: string[] = [];
+    const app = new Hono();
+    app.use(
+      "*",
+      createLocalAuthMiddleware({
+        adminToken: "admin-secret",
+        requireRuntimeAuth: true,
+        hasRuntimeTokens: async () => active,
+        resolveRuntimeToken: async (token) =>
+          active && token === "source-runtime"
+            ? { tokenId: "source-token", allowedActions: [], blockedActions: [], allowedProxies: [] }
+            : undefined,
+      }),
+    );
+    app.get("/api/files/:fileId", (context) => context.text("download"));
+    app.delete("/api/files/:fileId", (context) => {
+      deleted.push(context.req.param("fileId"));
+      return context.json({ deleted: true });
+    });
+    app.post("/api/files", (context) => context.json({ uploaded: true }));
+    app.delete("/v1/connections/:connectionId", (context) => context.json({ deleted: true }));
+    const file = `/api/files/${"a".repeat(32)}.pdf`;
+    expect((await app.request(file)).status).toBe(200);
+    expect((await app.request(file, { method: "DELETE" })).status).toBe(401);
+    expect((await app.request(file, { method: "DELETE", headers: authorize("Bearer", "invalid-token") })).status).toBe(
+      401,
+    );
+    expect(deleted).toEqual([]);
+    expect((await app.request(file, { method: "DELETE", headers: authorize("Bearer", "source-runtime") })).status).toBe(
+      200,
+    );
+    expect((await app.request(file, { method: "DELETE", headers: authorize("Bearer", "admin-secret") })).status).toBe(
+      200,
+    );
+    expect(deleted).toHaveLength(2);
+    for (const [path, method] of [
+      ["/api/files", "POST"],
+      ["/v1/connections/example", "DELETE"],
+    ]) {
+      expect((await app.request(path, { method, headers: authorize("Bearer", "source-runtime") })).status).toBe(401);
+    }
+    active = false;
+    expect((await app.request(file, { method: "DELETE", headers: authorize("Bearer", "source-runtime") })).status).toBe(
+      401,
+    );
+    expect(deleted).toHaveLength(2);
+
+    // An admin-only install has no runtime grant to accept; moving cleanup
+    // into the runtime scope must not turn its absent token into public access.
+    const adminOnly = new Hono();
+    adminOnly.use("*", createLocalAuthMiddleware({ adminToken: "admin-secret" }));
+    adminOnly.delete("/api/files/:fileId", (context) => context.json({ deleted: true }));
+    expect((await adminOnly.request(file, { method: "DELETE" })).status).toBe(401);
+    expect(
+      (await adminOnly.request(file, { method: "DELETE", headers: authorize("Bearer", "admin-secret") })).status,
+    ).toBe(200);
+
+    // The server wires its token store even when authentication is disabled.
+    const authDisabled = new Hono();
+    authDisabled.use(
+      "*",
+      createLocalAuthMiddleware({
+        hasRuntimeTokens: async () => false,
+        resolveRuntimeToken: async () => undefined,
+      }),
+    );
+    authDisabled.delete("/api/files/:fileId", (context) => context.json({ deleted: true }));
+    expect((await authDisabled.request(file, { method: "DELETE" })).status).toBe(200);
+  });
+
   it.each(["required", "jwt", "oauth", "mixed"])(
     "skips token existence queries when %s configuration already requires authentication",
     async (mode) => {
