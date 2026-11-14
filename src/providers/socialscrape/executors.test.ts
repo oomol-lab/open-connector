@@ -37,7 +37,29 @@ function failure(status: number, code: string, message: string): Response {
   );
 }
 
+/** The answer SocialScrape gives, with HTTP 202, for a request that is still running. */
+function job(jobId: string): Response {
+  return Response.json(
+    {
+      ok: true,
+      credits_charged: 0,
+      credits_remaining: 99,
+      cached: false,
+      cached_at: null,
+      request_id: "req_3",
+      data: {
+        object: "job",
+        job_id: jobId,
+        status: "running",
+        poll_url: `https://api.socialscrape.dev/v1/jobs/${jobId}`,
+      },
+    },
+    { status: 202 },
+  );
+}
+
 afterEach(() => {
+  vi.useRealTimers();
   vi.unstubAllGlobals();
 });
 
@@ -96,10 +118,74 @@ describe("SocialScrape actions", () => {
     });
   });
 
-  it("refuses a queued job instead of passing it off as a transcript", async () => {
+  it("polls a queued job until the transcript is ready", async () => {
+    vi.useFakeTimers();
+    const calls: string[] = [];
     vi.stubGlobal(
       "fetch",
-      vi.fn(async () => answer({ object: "job", job_id: "job_1", status: "queued", poll_url: "/v1/jobs/job_1" })),
+      vi.fn(async (input: RequestInfo | URL) => {
+        const url = new URL(input.toString());
+        calls.push(url.pathname);
+        // The job answer twice (the first request, then one poll), then the finished envelope.
+        return calls.length < 3
+          ? job("job_0123456789abcdef01234567")
+          : answer({ object: "transcript", platform: "tiktok", source: "ai", text: "hello" }, { credits_charged: 5 });
+      }),
+    );
+
+    const pending = executors["socialscrape.get_transcript"]!({ url: "https://www.tiktok.com/@a/video/1" }, context);
+    await vi.advanceTimersByTimeAsync(6_000);
+    const result = await pending;
+
+    expect(calls).toEqual([
+      "/v1/transcript",
+      "/v1/jobs/job_0123456789abcdef01234567",
+      "/v1/jobs/job_0123456789abcdef01234567",
+    ]);
+    expect(result).toMatchObject({
+      ok: true,
+      output: { transcript: { platform: "tiktok", text: "hello" }, meta: { creditsCharged: 5 } },
+    });
+  });
+
+  it("never reports a job as a profile, and passes on the error a failed job ends with", async () => {
+    vi.useFakeTimers();
+    const fetch = vi.fn(async (input: RequestInfo | URL) =>
+      new URL(input.toString()).pathname === "/v1/instagram/profile"
+        ? job("job_abc")
+        : failure(404, "not_found", "the platform says this profile does not exist"),
+    );
+    vi.stubGlobal("fetch", fetch);
+
+    const pending = executors["socialscrape.get_profile"]!({ platform: "instagram", handle: "nobody" }, context);
+    await vi.advanceTimersByTimeAsync(3_000);
+    const result = await pending;
+
+    expect(fetch).toHaveBeenCalledTimes(2);
+    expect(result).toMatchObject({
+      ok: false,
+      error: { code: "invalid_input", message: "the platform says this profile does not exist" },
+    });
+  });
+
+  it("gives up on a job that is still running after the wait budget and names it", async () => {
+    vi.useFakeTimers();
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => job("job_slow")),
+    );
+
+    const pending = executors["socialscrape.get_transcript"]!({ url: "https://www.tiktok.com/@a/video/1" }, context);
+    await vi.advanceTimersByTimeAsync(95_000);
+    const result = await pending;
+
+    expect(result).toMatchObject({ ok: false, error: { message: expect.stringContaining("job_slow") } });
+  });
+
+  it("refuses a job answer that carries no usable job id", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => answer({ object: "job", job_id: "../account/credits", status: "pending" })),
     );
 
     const result = await executors["socialscrape.get_transcript"]!(
@@ -178,5 +264,31 @@ describe("SocialScrape actions", () => {
     const result = await executors["socialscrape.get_credits"]!({}, context);
 
     expect(result).toMatchObject({ ok: false, error: { code: "authorization_failed" } });
+  });
+
+  it("keeps the status of an error whose body is not JSON", async () => {
+    const fetch = vi.fn<() => Promise<Response>>();
+    fetch.mockResolvedValueOnce(new Response("<html>Unauthorized</html>", { status: 401 }));
+    fetch.mockResolvedValueOnce(new Response("Too Many Requests", { status: 429 }));
+    vi.stubGlobal("fetch", fetch);
+
+    const refused = await executors["socialscrape.get_credits"]!({}, context);
+    const limited = await executors["socialscrape.get_credits"]!({}, context);
+
+    expect(refused).toMatchObject({ ok: false, error: { code: "authorization_failed" } });
+    expect(limited).toMatchObject({ ok: false, error: { code: "rate_limited" } });
+  });
+
+  it("reports private content as a problem with the request, not with the key", async () => {
+    const fetch = vi.fn<() => Promise<Response>>();
+    fetch.mockResolvedValueOnce(failure(403, "private", "The content is private."));
+    fetch.mockResolvedValueOnce(failure(403, "forbidden", "The key or team is suspended or revoked."));
+    vi.stubGlobal("fetch", fetch);
+
+    const hidden = await executors["socialscrape.get_profile"]!({ platform: "instagram", handle: "someone" }, context);
+    const revoked = await executors["socialscrape.get_profile"]!({ platform: "instagram", handle: "someone" }, context);
+
+    expect(hidden).toMatchObject({ ok: false, error: { code: "invalid_input", message: "The content is private." } });
+    expect(revoked).toMatchObject({ ok: false, error: { code: "authorization_failed" } });
   });
 });
