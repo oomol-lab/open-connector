@@ -50,12 +50,12 @@ const activitySummarySchema = s.looseObject(
 );
 
 const dailySummarySchema = s.looseObject(
-  "One day of wellness data. Each section is null when the device recorded nothing for it that day.",
+  "One day of wellness data. The fields inside each section depend on what the device recorded that day.",
   {
     calendarDate: s.date("The calendar date of the summary."),
     includesWellnessData: s.boolean("Whether the day holds all-day wellness data."),
     includesActivityData: s.boolean("Whether the day holds recorded activities."),
-    movement: s.unknown("Steps, distance and floors."),
+    movement: s.unknown("Steps, wheelchair pushes, and floors climbed and descended."),
     calories: s.unknown("Active, resting and total calories."),
     heartRate: s.unknown("Resting, minimum and maximum heart rate."),
     intensityMinutes: s.unknown("Moderate and vigorous intensity minutes and the weekly goal."),
@@ -254,7 +254,7 @@ export const garminConnectActions: ActionDefinition[] = [
     name: "list_hrv_summaries",
     operationType: "read",
     description:
-      "List overnight heart rate variability for a range of nights: the nightly average, the seven-day average, the personal baseline and the HRV status. Nights without an HRV reading are left out.",
+      "List overnight heart rate variability for a range of nights: the nightly average, the seven-day average, the personal baseline and the HRV status. Garmin lists only nights it holds an HRV record for, and the averages can still be null on such a night.",
     inputSchema: dateRangeInputSchema(),
     outputSchema: s.object("The HRV summaries returned by Garmin Connect.", {
       summaries: s.array("One summary per night with HRV data.", hrvSummarySchema),
