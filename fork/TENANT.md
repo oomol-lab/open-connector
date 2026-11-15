@@ -128,3 +128,11 @@ configs, provider preferences, and the `forInstance()` escape hatch.
   — OC-1 uses `private` and `service` only.
 - Three-backend parity (`sqlite`/`postgres`/`d1`) is enforced by
   `migration-equivalence.test.ts` and the store `.cases.ts` suites.
+- Cross-tenant isolation is enforced by `src/server/api/tenant-isolation.test.ts`
+  (endpoint families against a real `createConnectApp` graph: runtime tokens,
+  token↔tenant binding, connections/requests, OAuth client configs,
+  idempotency keyspaces, run logs) and `tenant-scope.cases.ts` (per-backend
+  store assertions including instance-scope maintenance views). Statements
+  without a tenant predicate are instance-level by design: `resetRuntimeData`,
+  `rotateSecretCodec`, hash lookups, maintenance sweeps, and the SaaS project
+  accounting store.
