@@ -114,7 +114,7 @@ export class SqlTriggerStore implements TriggerStore {
         sql: `insert into trigger_subscriptions (id, tenant_id, mode, token_id, connection_id, trigger_id, status, reconcile_at, value)
         select ?, ?, ?, ?, ?, ?, ?, ?, ? where exists (select 1 from connections where ${t.sql} and id = ? and revision = ? and source = 'local')
         and (? = 'resource-set' or exists (select 1 from runtime_tokens where id = ? and ${t.sql}))
-        on conflict (id) do nothing returning value`,
+        on conflict (id) do nothing returning tenant_id, value`,
         values: [
           record.id,
           tenantForInsert(this.scope),
