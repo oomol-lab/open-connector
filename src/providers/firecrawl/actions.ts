@@ -902,26 +902,39 @@ export const firecrawlActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "llms_txt_generate",
     operationType: "write",
-    description: "Start an LLMs.txt generation job for a website.",
+    description:
+      "Start an LLMs.txt generation job for a website. Firecrawl maps the site and batch scrapes its pages; pass the returned url and urls to llms_txt_get along with the id.",
     inputSchema: s.looseRequiredObject(
       "The input payload for this action.",
       {
         url: s.nonEmptyString("The root URL to turn into LLMs.txt."),
-        maxUrls: s.integer("The maximum URLs to analyze."),
+        maxUrls: s.integer("The maximum URLs to analyze. Defaults to 10."),
         showFullText: s.boolean("Whether the llms-full.txt content should also be generated."),
       },
       { optional: ["maxUrls", "showFullText"] },
     ),
     outputSchema: s.requiredObject("The output payload for this action.", {
       success: s.boolean("Whether the job was accepted successfully."),
-      id: s.string("The Firecrawl LLMs.txt job ID."),
+      id: s.string("The Firecrawl batch scrape job ID behind this LLMs.txt job."),
+      url: s.string("The root URL, to pass to llms_txt_get."),
+      urls: s.stringArray("The page URLs Firecrawl map found, in map order, to pass to llms_txt_get."),
     }),
   }),
   defineProviderAction(service, {
     name: "llms_txt_get",
     operationType: "read",
     description: "Get the current status and generated content of an LLMs.txt job by job ID.",
-    inputSchema: idInput,
+    inputSchema: s.object(
+      "The input payload for this action.",
+      {
+        id: s.nonEmptyString("The Firecrawl job ID."),
+        url: s.string(
+          "The url returned by llms_txt_generate, used in the llms.txt header. Defaults to the site's origin.",
+        ),
+        urls: s.stringArray("The urls returned by llms_txt_generate, used to list the pages in map order."),
+      },
+      { optional: ["url", "urls"] },
+    ),
     outputSchema: llmsTxtStatusSchema,
   }),
   defineProviderAction(service, {

@@ -3,6 +3,8 @@ import type { ExecutionContext, ResolvedCredential } from "../../core/types.ts";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { setDefaultGuardedFetchDnsLookup } from "../../core/guarded-fetch.ts";
 import { withProviderNetworkPolicy } from "../../core/provider-network-policy.ts";
+import { validateActionInput } from "../../core/validation.ts";
+import { firecrawlActions } from "./actions.ts";
 import { credentialValidators, executors, proxy } from "./executors.ts";
 
 const creditUsagePath = "/v2/team/credit-usage";
@@ -292,5 +294,251 @@ describe("Firecrawl deep research", () => {
       "https://api.firecrawl.dev/v2/agent/job-1",
       "https://api.firecrawl.dev/v2/agent/job-1",
     ]);
+  });
+});
+
+describe("Firecrawl LLMs.txt", () => {
+  /** Answers each `METHOD /path?query` with its payload and anything else with a 404. */
+  function stubFirecrawlRoutes(routes: Record<string, unknown>): ReturnType<typeof vi.fn> {
+    const fetch = vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = new URL(String(input));
+      const payload = routes[`${init?.method ?? "GET"} ${url.pathname}${url.search}`];
+      return payload === undefined
+        ? Response.json({ success: false, error: "Not found" }, { status: 404 })
+        : Response.json(payload);
+    });
+    vi.stubGlobal("fetch", fetch);
+    setDefaultGuardedFetchDnsLookup(async () => [{ address: "93.184.216.34", family: 4 }]);
+    return fetch;
+  }
+
+  function requestBody(fetch: ReturnType<typeof vi.fn>, index: number): unknown {
+    return JSON.parse(String(fetch.mock.calls[index]![1]!.body));
+  }
+
+  const executionContext: ExecutionContext = { getCredential: async () => apiKeyCredential({}) };
+  const summaryFormat = {
+    type: "json",
+    prompt: "Write a 3-4 word title and a 9-10 word description of this page.",
+    schema: {
+      type: "object",
+      properties: { title: { type: "string" }, description: { type: "string" } },
+      required: ["title", "description"],
+    },
+  };
+  const mapped = [
+    "https://example.com",
+    "https://example.com/docs",
+    "https://example.com/blog",
+    "https://example.com/pricing",
+  ];
+  const home = {
+    markdown: "# Example\nWelcome.",
+    json: { title: "Example Home", description: "The landing page that introduces Example and its main features." },
+    metadata: { sourceURL: "https://example.com", url: "https://example.com/", statusCode: 200, title: "Example" },
+  };
+  const docs = {
+    markdown: "# Getting started\nInstall it.",
+    json: { title: "Docs Getting Started", description: "How to install Example and make your first API request." },
+    metadata: { sourceURL: "https://example.com/docs", url: "https://example.com/docs", statusCode: 200 },
+  };
+  const blog = {
+    markdown: "Not found",
+    json: { title: "Missing Page", description: "Nothing here." },
+    metadata: { sourceURL: "https://example.com/blog", url: "https://example.com/blog", statusCode: 404 },
+  };
+  // JSON extraction came back empty, so the title and description come from the page metadata.
+  const pricing = {
+    markdown: "# Pricing\nFree and paid plans.",
+    metadata: {
+      sourceURL: "https://example.com/pricing",
+      url: "https://example.com/pricing",
+      statusCode: 200,
+      title: ["Pricing", "Pricing | Example"],
+      description: "Plans and prices for Example.",
+    },
+  };
+  const homeLine =
+    "- [Example Home](https://example.com/): The landing page that introduces Example and its main features.";
+  const docsLine =
+    "- [Docs Getting Started](https://example.com/docs): How to install Example and make your first API request.";
+  const pricingLine = "- [Pricing](https://example.com/pricing): Plans and prices for Example.";
+
+  it("maps the site and batch scrapes the pages with the guide's formats", async () => {
+    const fetch = stubFirecrawlRoutes({
+      "POST /v2/map": { success: true, links: mapped.map((url) => ({ url, title: "Mapped title" })) },
+      "POST /v2/batch/scrape": {
+        success: true,
+        id: "batch-1",
+        url: "https://api.firecrawl.dev/v2/batch/scrape/batch-1",
+      },
+    });
+
+    const result = await executors["firecrawl.llms_txt_generate"]!(
+      { url: "https://example.com", maxUrls: 5, showFullText: true, cache: false },
+      executionContext,
+    );
+
+    expect(result).toEqual({
+      ok: true,
+      output: { success: true, id: "batch-1", url: "https://example.com", urls: mapped },
+    });
+    expect(requestedUrls(fetch)).toEqual([
+      "https://api.firecrawl.dev/v2/map",
+      "https://api.firecrawl.dev/v2/batch/scrape",
+    ]);
+    expect(requestBody(fetch, 0)).toEqual({ url: "https://example.com", limit: 5, includeSubdomains: false });
+    expect(requestBody(fetch, 1)).toEqual({ urls: mapped, formats: ["markdown", summaryFormat], maxAge: 0 });
+  });
+
+  it("maps 10 URLs by default and scrapes no markdown without showFullText", async () => {
+    const fetch = stubFirecrawlRoutes({
+      "POST /v2/map": { success: true, links: [{ url: "https://example.com/docs" }] },
+      "POST /v2/batch/scrape": { success: true, id: "batch-2" },
+    });
+
+    const result = await executors["firecrawl.llms_txt_generate"]!({ url: "https://example.com" }, executionContext);
+
+    expect(result).toEqual({
+      ok: true,
+      output: { success: true, id: "batch-2", url: "https://example.com", urls: ["https://example.com/docs"] },
+    });
+    expect(requestBody(fetch, 0)).toEqual({ url: "https://example.com", limit: 10, includeSubdomains: false });
+    expect(requestBody(fetch, 1)).toEqual({ urls: ["https://example.com/docs"], formats: [summaryFormat] });
+  });
+
+  it("fails without starting a batch scrape when map finds no pages", async () => {
+    const fetch = stubFirecrawlRoutes({ "POST /v2/map": { success: true, links: [] } });
+
+    const result = await executors["firecrawl.llms_txt_generate"]!({ url: "https://example.com" }, executionContext);
+
+    expect(result.ok).toBe(false);
+    expect(result.error?.message).toBe("Firecrawl map found no pages to scrape for https://example.com");
+    expect(requestedUrls(fetch)).toEqual(["https://api.firecrawl.dev/v2/map"]);
+  });
+
+  it("writes llms.txt and llms-full.txt from every page of a completed batch in map order", async () => {
+    const fetch = stubFirecrawlRoutes({
+      "GET /v2/batch/scrape/batch-1": {
+        success: true,
+        status: "completed",
+        completed: 4,
+        total: 4,
+        expiresAt: "2026-12-01T00:00:00.000Z",
+        data: [pricing, docs],
+        next: "https://api.firecrawl.dev/v2/batch/scrape/batch-1?skip=2",
+      },
+      "GET /v2/batch/scrape/batch-1?skip=2": {
+        success: true,
+        status: "completed",
+        completed: 4,
+        total: 4,
+        data: [blog, home],
+        next: null,
+      },
+    });
+
+    const result = await executors["firecrawl.llms_txt_get"]!(
+      { id: "batch-1", url: "https://example.com", urls: mapped },
+      executionContext,
+    );
+
+    expect(result).toEqual({
+      ok: true,
+      output: {
+        success: true,
+        status: "completed",
+        data: {
+          llmstxt: ["# https://example.com llms.txt", "", homeLine, docsLine, pricingLine, ""].join("\n"),
+          llmsfulltxt: [
+            "# https://example.com llms-full.txt",
+            "",
+            "## Example Home",
+            "# Example",
+            "Welcome.",
+            "",
+            "## Docs Getting Started",
+            "# Getting started",
+            "Install it.",
+            "",
+            "## Pricing",
+            "# Pricing",
+            "Free and paid plans.",
+            "",
+            "",
+          ].join("\n"),
+        },
+        expiresAt: "2026-12-01T00:00:00.000Z",
+      },
+    });
+    expect(requestedUrls(fetch)).toEqual([
+      "https://api.firecrawl.dev/v2/batch/scrape/batch-1",
+      "https://api.firecrawl.dev/v2/batch/scrape/batch-1?skip=2",
+    ]);
+  });
+
+  it("falls back to the site origin and Firecrawl's order without the url and urls", async () => {
+    const withoutMarkdown = ({ markdown: _markdown, ...page }: { markdown: string }) => page;
+    stubFirecrawlRoutes({
+      "GET /v2/batch/scrape/batch-2": {
+        success: true,
+        status: "completed",
+        data: [withoutMarkdown(pricing), withoutMarkdown(docs)],
+      },
+    });
+
+    const result = await executors["firecrawl.llms_txt_get"]!({ id: "batch-2" }, executionContext);
+
+    expect(result).toEqual({
+      ok: true,
+      output: {
+        success: true,
+        status: "completed",
+        data: { llmstxt: ["# https://example.com llms.txt", "", pricingLine, docsLine, ""].join("\n") },
+      },
+    });
+  });
+
+  it("reports running, failed and cancelled batches in the LLMs.txt status shape", async () => {
+    const expiresAt = "2026-12-01T00:00:00.000Z";
+    const cases = [
+      [
+        {
+          success: true,
+          status: "scraping",
+          completed: 1,
+          total: 4,
+          data: [docs],
+          next: "https://x/y?skip=1",
+          expiresAt,
+        },
+        { success: true, status: "processing", expiresAt },
+      ],
+      [
+        { success: false, status: "failed", error: "Insufficient credits", data: [] },
+        { success: false, status: "failed", error: "Insufficient credits" },
+      ],
+      [
+        { success: true, status: "cancelled", data: [] },
+        { success: false, status: "failed", error: "Firecrawl batch scrape cancelled" },
+      ],
+    ];
+
+    for (const [payload, output] of cases) {
+      const fetch = stubFirecrawlRoutes({ "GET /v2/batch/scrape/batch-1": payload });
+      expect(await executors["firecrawl.llms_txt_get"]!({ id: "batch-1" }, executionContext)).toEqual({
+        ok: true,
+        output,
+      });
+      expect(requestedUrls(fetch)).toEqual(["https://api.firecrawl.dev/v2/batch/scrape/batch-1"]);
+    }
+  });
+
+  it("takes the url and urls from llms_txt_generate as llms_txt_get input", () => {
+    const action = firecrawlActions.find((candidate) => candidate.id === "firecrawl.llms_txt_get")!;
+
+    expect(validateActionInput(action, { id: "batch-1" }).valid).toBe(true);
+    expect(validateActionInput(action, { id: "batch-1", url: "https://example.com", urls: mapped }).valid).toBe(true);
+    expect(validateActionInput(action, { id: "batch-1", urls: "https://example.com" }).valid).toBe(false);
   });
 });

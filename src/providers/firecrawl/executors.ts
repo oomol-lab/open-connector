@@ -6,7 +6,14 @@ import type {
 } from "../../core/types.ts";
 import type { ProviderActionHandlers } from "../provider-executors.ts";
 
-import { compactObject, optionalNumber, optionalRecord, optionalString, pickOptionalBoolean } from "../../core/cast.ts";
+import {
+  compactObject,
+  optionalNumber,
+  optionalRawString,
+  optionalRecord,
+  optionalString,
+  pickOptionalBoolean,
+} from "../../core/cast.ts";
 import { assertPublicHttpUrl, isPrivateNetworkAccessAllowed } from "../../core/request.ts";
 import { requireApiKeyCredential } from "../provider-credentials.ts";
 import { defineProviderExecutors } from "../provider-executors.ts";
@@ -98,8 +105,10 @@ export const firecrawlActionHandlers: ProviderActionHandlers<"firecrawl", Firecr
     });
     return toDeepResearchStatus(payload);
   },
-  llms_txt_generate: firecrawlPostAction("/v1/llmstxt", buildDirectBody),
-  llms_txt_get: firecrawlGetAction((input) => `/v1/llmstxt/${String(input.id)}`),
+  // Firecrawl shuts down /v1/llmstxt on 2026-12-10; LLMs.txt is now built from map and batch scrape results.
+  // https://docs.firecrawl.dev/migrating-from-llmstxt
+  llms_txt_generate: startLlmsTxt,
+  llms_txt_get: getLlmsTxt,
   queue_get: firecrawlGetAction(() => "/v2/team/queue-status"),
   credit_usage_get: firecrawlGetAction(() => "/v2/team/credit-usage"),
   credit_usage_get_historical: firecrawlGetAction(() => "/v2/team/credit-usage/historical", buildHistoricalUsageQuery),
@@ -276,6 +285,147 @@ function toDeepResearchStatus(payload: unknown): unknown {
   }
   const sources = optionalArray(data.sources);
   return { ...body, data: { finalAnalysis: data.report, sources, json: data.json }, sources };
+}
+
+const llmsTxtSummaryFormat = {
+  type: "json",
+  prompt: "Write a 3-4 word title and a 9-10 word description of this page.",
+  schema: {
+    type: "object",
+    properties: { title: { type: "string" }, description: { type: "string" } },
+    required: ["title", "description"],
+  },
+};
+
+/**
+ * Starts an LLMs.txt job the way the migration guide builds one: map the site, then batch scrape the pages
+ * with a JSON format for each page's title and description, plus markdown for llms-full.txt. A batch scrape
+ * keeps neither the root URL nor the map order, so both come back with the job ID for `llms_txt_get`.
+ */
+async function startLlmsTxt(input: Record<string, unknown>, context: FirecrawlActionContext): Promise<unknown> {
+  const url = String(input.url);
+  const map = optionalRecord(
+    await firecrawlRequest({
+      ...context,
+      method: "POST",
+      path: "/v2/map",
+      body: { url, limit: optionalNumber(input.maxUrls) ?? 10, includeSubdomains: false },
+      phase: "execute",
+    }),
+  );
+  const urls = (optionalArray(map?.links) ?? [])
+    .map((link) => optionalString(optionalRecord(link)?.url ?? link))
+    .filter((link) => link !== undefined);
+  if (urls.length === 0) {
+    throw new ProviderRequestError(422, `Firecrawl map found no pages to scrape for ${url}`, map);
+  }
+
+  const batch = optionalRecord(
+    await firecrawlRequest({
+      ...context,
+      method: "POST",
+      path: "/v2/batch/scrape",
+      body: compactObject({
+        urls,
+        formats: input.showFullText === true ? ["markdown", llmsTxtSummaryFormat] : [llmsTxtSummaryFormat],
+        maxAge: input.cache === false ? 0 : undefined,
+      }),
+      phase: "execute",
+    }),
+  );
+  return { success: batch?.success === true, id: batch?.id, url, urls };
+}
+
+/**
+ * Reads an LLMs.txt job's batch scrape and, once it has completed, returns every page of results written into
+ * the `/v1/llmstxt` status shape. Running batches report `processing`, failed and cancelled ones `failed`.
+ */
+async function getLlmsTxt(input: Record<string, unknown>, context: FirecrawlActionContext): Promise<unknown> {
+  const path = `/v2/batch/scrape/${String(input.id)}`;
+  const job = optionalRecord(await firecrawlRequest({ ...context, path, phase: "execute" })) ?? {};
+  const status = optionalString(job.status);
+  const expiresAt = optionalString(job.expiresAt);
+  if (status === "scraping") {
+    return compactObject({ success: true, status: "processing", expiresAt });
+  }
+  if (status !== "completed") {
+    const error = optionalString(job.error) ?? `Firecrawl batch scrape ${status ?? "failed"}`;
+    return compactObject({ success: false, status: "failed", error, expiresAt });
+  }
+
+  // A completed batch pages its results through `next`, which ends after the last page.
+  const results = [...(optionalArray(job.data) ?? [])];
+  for (let next = optionalString(job.next); next !== undefined;) {
+    const nextUrl = new URL(next, context.apiBaseUrl);
+    const page = optionalRecord(
+      await firecrawlRequest({ ...context, path: `${nextUrl.pathname}${nextUrl.search}`, phase: "execute" }),
+    );
+    results.push(...(optionalArray(page?.data) ?? []));
+    const following = optionalString(page?.next);
+    next = following === next ? undefined : following;
+  }
+
+  return compactObject({
+    success: true,
+    status: "completed",
+    data: buildLlmsTxt(results, optionalString(input.url), optionalStringArray(input.urls)),
+    expiresAt,
+  });
+}
+
+/**
+ * Writes llms.txt and llms-full.txt in the format `/v1/llmstxt` returned, leaving out pages that came back with a
+ * status of 400 or more. Given the root URL and map order from `llms_txt_generate`, the header names the root URL
+ * and the pages follow map order (batch results come back in the order they finish). Without them, the header
+ * names the site's origin and the pages keep the order Firecrawl returned them in.
+ */
+function buildLlmsTxt(results: unknown[], rootUrl?: string, urls?: string[]): Record<string, string> {
+  const pages = results.map((result) => optionalRecord(result) ?? {});
+  const metadataOf = (page: Record<string, unknown>) => optionalRecord(page.metadata) ?? {};
+  const pageUrlOf = (page: Record<string, unknown>) =>
+    firstText(metadataOf(page).url, metadataOf(page).sourceURL) ?? "";
+
+  const kept = pages.filter((page) => (optionalNumber(metadataOf(page).statusCode) ?? 200) < 400);
+  if (urls) {
+    const mapOrder = new Map(urls.map((pageUrl, index) => [pageUrl, index]));
+    const position = (page: Record<string, unknown>) =>
+      mapOrder.get(firstText(metadataOf(page).sourceURL) ?? "") ?? urls.length;
+    kept.sort((a, b) => position(a) - position(b));
+  }
+
+  const root = rootUrl ?? (kept[0] ? siteOrigin(pageUrlOf(kept[0])) : "");
+  let llmstxt = `# ${root} llms.txt\n\n`;
+  let llmsfulltxt = `# ${root} llms-full.txt\n\n`;
+  for (const page of kept) {
+    const summary = optionalRecord(page.json) ?? {};
+    const pageUrl = pageUrlOf(page);
+    const title = firstText(summary.title, metadataOf(page).title) ?? pageUrl;
+    const description = firstText(summary.description, metadataOf(page).description) ?? "";
+    llmstxt += `- [${title}](${pageUrl}): ${description}\n`;
+    llmsfulltxt += `## ${title}\n${optionalRawString(page.markdown) ?? ""}\n\n`;
+  }
+
+  // The pages carry markdown only when `llms_txt_generate` was asked for llms-full.txt.
+  return pages.some((page) => typeof page.markdown === "string") ? { llmstxt, llmsfulltxt } : { llmstxt };
+}
+
+/** Returns the first non-empty string; page metadata can hold a string or a list of strings. */
+function firstText(...values: unknown[]): string | undefined {
+  for (const value of values) {
+    const text = optionalString(Array.isArray(value) ? value[0] : value);
+    if (text !== undefined) {
+      return text;
+    }
+  }
+  return undefined;
+}
+
+function siteOrigin(url: string): string {
+  try {
+    return new URL(url).origin;
+  } catch {
+    return "";
+  }
 }
 
 function buildHistoricalUsageQuery(input: Record<string, unknown>): Record<string, boolean | undefined> {
