@@ -4,6 +4,7 @@ import type { Context, MiddlewareHandler } from "hono";
 
 import { deleteCookie, getCookie, setCookie } from "hono/cookie";
 import { measureExecutionPhase } from "../../core/execution-timing.ts";
+import { requireSubject } from "../../tenant/subject.ts";
 import { TenantError } from "../../tenant/tenant-error.ts";
 import { DEFAULT_TENANT_ID, requireTenantId } from "../../tenant/tenant-id.ts";
 import { isChannelEventVerifyRequest } from "../event-verification/registry.ts";
@@ -59,6 +60,40 @@ const runtimeGrants = new WeakMap<Request, RuntimeGrant>();
 
 export function readRuntimeGrant(context: Context): RuntimeGrant | undefined {
   return runtimeGrants.get(context.req.raw);
+}
+
+/**
+ * The connection-ownership subject stamped on new `connection_requests`
+ * (`owner`). Runtime-token callers own their flows as `service:<tokenId>`;
+ * every other credential shares the tenant's `service:admin` principal —
+ * the same single-owner model the legacy `local-admin` value encoded.
+ * Admin bearers may act on behalf via `?subject=`/`x-connect-subject`.
+ */
+export function readSubject(context: Context): string {
+  const bound = grantSubject(context);
+  const querySubject = context.req.query("subject");
+  const headerSubject = context.req.header("x-connect-subject");
+  if (querySubject !== undefined && headerSubject !== undefined && querySubject !== headerSubject) {
+    throw new TenantError(
+      "subject_conflict",
+      "The ?subject= query parameter and x-connect-subject header disagree.",
+      403,
+    );
+  }
+  const requested = querySubject ?? headerSubject;
+  if (requested !== undefined) {
+    if (requested !== bound && !hasAdminBearer(context)) {
+      throw new TenantError("subject_forbidden", "Only admin credentials may select a subject.", 403);
+    }
+    return requireSubject(requested);
+  }
+  return bound;
+}
+
+function grantSubject(context: Context): string {
+  const grant = runtimeGrants.get(context.req.raw);
+  if (grant) return `service:${grant.tokenId}`;
+  return "service:admin";
 }
 
 /**

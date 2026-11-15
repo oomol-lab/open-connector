@@ -30,6 +30,7 @@ import type {
 import type { RuntimeDatabase } from "./storage/runtime-database.ts";
 import type { IRuntimePolicyStore } from "./storage/runtime-policy-store.ts";
 import type { RuntimeTokenService, IRuntimeTokenStore } from "./storage/runtime-token-service.ts";
+import type { ScopedServices } from "./tenant-services.ts";
 
 import { Hono } from "hono";
 import { compress } from "hono/compress";
@@ -43,7 +44,7 @@ import { ProviderDispatchRequestError, toProviderExecutionError } from "../provi
 import { SaasError } from "../saas/saas-client.ts";
 import { TenantError } from "../tenant/tenant-error.ts";
 import { ActionRunner } from "./actions/action-runner.ts";
-import { clearLocalAuthCookie, createLocalAuthMiddleware, readLocalAuthSession } from "./api/auth.ts";
+import { clearLocalAuthCookie, createLocalAuthMiddleware, readLocalAuthSession, readTenantId } from "./api/auth.ts";
 import { getResponseCachePolicy } from "./api/cache-policy.ts";
 import { createConnectionRoutes } from "./api/connection-routes.ts";
 import { createConsoleCatalogRoutes } from "./api/console-catalog-routes.ts";
@@ -119,6 +120,8 @@ export interface IConnectServerOptions {
   runtimeTokenStore: IRuntimeTokenStore;
   /** Scoped-view factory; request handlers resolve tenant-bound stores through `forTenant`. */
   runtimeDatabase: RuntimeDatabase;
+  /** Root (`local`) service bundle; `services.forTenant(tenantId)` yields the tenant-bound sibling graph. */
+  services: ScopedServices;
   /** Dedicated token for inbound provider event verification. */
   eventVerifyToken?: string;
   actionPolicy?: ActionPolicyService;
@@ -225,13 +228,17 @@ export class ConnectServer {
       app.use("/api/*", compress());
     }
     app.use("*", createLocalAuthMiddleware(auth));
-    const customMcp = this.options.customMcp;
-    if (customMcp) {
-      app.use("*", async (_context, next) => customMcp.catalog.withSnapshot(next));
+    if (this.options.customMcp) {
+      // Each view's catalog holds its own snapshot: resolve the request's
+      // tenant first so custom MCP writes always hit the scoped overlay.
+      app.use("*", async (context, next) => {
+        const scoped = await this.options.services.forTenant(readTenantId(context));
+        return scoped.catalog.withSnapshot(next);
+      });
       app.route(
         "/api/custom-mcp",
         createCustomMcpRoutes({
-          mcp: customMcp,
+          mcp: this.options.customMcp,
           connections: this.options.connections,
           publicOrigin: this.options.publicOrigin,
         }),
@@ -277,7 +284,7 @@ export class ConnectServer {
         getPolicySnapshot: this.getPolicySnapshot,
       }),
     );
-    app.route("/v1", createConnectionRoutes(this.options));
+    app.route("/v1", createConnectionRoutes({ services: this.options.services }));
 
     // Triggers and protocols
     app.route(
@@ -353,17 +360,16 @@ export class ConnectServer {
       app.route(
         "/",
         createSaasOAuthRoutes({
+          services: this.options.services,
           saasProject: saas,
-          saasOAuth: this.options.saasOAuth,
         }),
       );
     }
     app.route(
       "/",
       createConsoleOAuthRoutes({
-        connections: this.options.connections,
-        oauthFlow: this.options.oauthFlow,
-        oauthClientConfigs: this.options.oauthClientConfigs,
+        services: this.options.services,
+        oauthStates: this.options.runtimeDatabase.forInstance().oauthStateStore,
         saasProject: this.options.saasProject,
         logger: this.options.logger,
         oauthCloseDelaySeconds: this.options.oauthCloseDelaySeconds,

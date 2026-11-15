@@ -52,6 +52,13 @@ export class SqlOAuthStateStore implements IOAuthStateStore {
     ]);
   }
 
+  async tenantOf(state: string): Promise<string | undefined> {
+    const [[row]] = await this.transaction([
+      { sql: `select tenant_id from oauth_states where state = ?`, values: [state] },
+    ]);
+    return row ? (row.tenant_id as string) : undefined;
+  }
+
   async take(state: string): Promise<OAuthAuthorizationState | undefined> {
     const t = tenantPredicate(this.scope);
     const [[row]] = await this.transaction([

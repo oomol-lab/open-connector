@@ -73,6 +73,9 @@ export function tenantScopeTests(getDatabase: () => RuntimeDatabase): void {
 
     // Beta cannot consume alpha's state; the row survives for alpha.
     await expect(beta.oauthStateStore.take("shared-state-key")).resolves.toBeUndefined();
+    // The credential-free callback resolves the state's tenant instance-wide,
+    // then takes it under that tenant's scope.
+    await expect(getDatabase().forInstance().oauthStateStore.tenantOf("shared-state-key")).resolves.toBe(ALPHA);
     await expect(alpha.oauthStateStore.take("shared-state-key")).resolves.toMatchObject(state);
     await expect(alpha.oauthStateStore.take("shared-state-key")).resolves.toBeUndefined();
   });

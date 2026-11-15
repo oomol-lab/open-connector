@@ -10,6 +10,7 @@ import type { McpOutputMode } from "./mcp-settings.ts";
 import type { OAuthServerSettings } from "./oauth/settings.ts";
 import type { ISecretCodec } from "./secrets/secret-codec-core.ts";
 import type { RuntimeDatabase } from "./storage/runtime-database.ts";
+import type { ScopedServices, TenantServices } from "./tenant-services.ts";
 import type { Hono } from "hono";
 
 import { ConnectionService } from "../connection-service.ts";
@@ -27,6 +28,7 @@ import { SaasClient } from "../saas/saas-client.ts";
 import { SaasExecutionService } from "../saas/saas-execution-service.ts";
 import { SaasOAuthService } from "../saas/saas-oauth-service.ts";
 import { SaasProjectService } from "../saas/saas-project-service.ts";
+import { DEFAULT_TENANT_ID, requireTenantId } from "../tenant/tenant-id.ts";
 import { TriggerMaintenance } from "../triggers/maintenance.ts";
 import { TriggerRunner } from "../triggers/trigger-runner.ts";
 import { ActionRunner } from "./actions/action-runner.ts";
@@ -82,41 +84,176 @@ export interface ConnectApp {
 }
 
 export async function createConnectApp(options: ConnectAppOptions): Promise<ConnectApp> {
-  const catalog = new CustomMcpCatalog(options.catalog, options.runtimeDatabase.customMcpStore);
-  await catalog.refresh();
-  const providerLoader = new CustomMcpLoader(options.providerLoader, catalog);
   const network = Object.freeze({
     allowPrivateNetwork: options.network?.allowPrivateNetwork ?? false,
     trustedHosts: Object.freeze([...(options.network?.trustedHosts ?? [])]),
   });
   const saasClient = new SaasClient();
-  const saasProject = new SaasProjectService({
+  const allowedCustomOAuth = new Set(options.allowedCustomOAuth);
+  // Cross-tenant lookups (token auth, maintenance sweeps, oauth-state
+  // callback resolution) share the one intentionally unscoped view.
+  const instanceDatabase = options.runtimeDatabase.forInstance();
+
+  // The request-facing service graph is a pure function of the runtime view:
+  // forTenant produces a sibling bundle where every tenant-scoped store is
+  // bound to that tenant. Views are built lazily and cached per tenant.
+  const buildServices = async (database: RuntimeDatabase): Promise<Required<TenantServices>> => {
+    const catalog = new CustomMcpCatalog(options.catalog, database.customMcpStore);
+    await catalog.refresh();
+    const providerLoader = new CustomMcpLoader(options.providerLoader, catalog);
+    const saasProject = new SaasProjectService({
+      catalog,
+      store: database.saasProjectStore,
+      secretCodec: options.secretCodec,
+      configuredOrigin: options.configuredOrigin,
+      client: saasClient,
+    });
+    const saasOAuth = new SaasOAuthService({
+      projects: saasProject,
+      requests: database.connectionRequestStore,
+      client: saasClient,
+    });
+    const saas = new SaasExecutionService({ projects: saasProject, client: saasClient });
+    const marketplace = new MarketplaceService({
+      catalog,
+      store: database.marketplaceStore,
+      secretCodec: options.secretCodec,
+    });
+    await withRuntimeExecution(
+      { network, providerHttpDispatch: options.providerHttpDispatch },
+      { operation: "runtime" },
+      () => marketplace.initialize(),
+    );
+    const isCustomClientConfigAllowed = (service: string): boolean =>
+      allowedCustomOAuth.has("*") || allowedCustomOAuth.has(service) || catalog.getRecord(service) !== undefined;
+    const oauthClientConfigs = new OAuthClientConfigService({
+      catalog,
+      origin: options.publicOrigin,
+      store: database.oauthClientConfigStore,
+      isCustomClientConfigAvailable: (service) => options.secretCodec.encrypted && isCustomClientConfigAllowed(service),
+    });
+    const customMcp = new CustomMcpService({
+      catalog,
+      store: database.customMcpStore,
+      oauthClientConfigs,
+      logger: options.logger,
+    });
+    const connections = new ConnectionService({
+      onConnected: (summary, credential) => customMcp.connectionSaved(summary, credential),
+      providerHttpDispatch: options.providerHttpDispatch,
+      catalog,
+      oauthCredentials: new OAuthCredentialRefreshService(oauthClientConfigs, providerLoader),
+      providerLoader,
+      store: database.connectionStore,
+      logger: options.logger,
+      marketplace,
+    });
+    const actions = new ActionRunner({
+      network,
+      providerHttpDispatch: options.providerHttpDispatch,
+      catalog,
+      providerLoader,
+      connections,
+      runs: database.runLogStore,
+      saas,
+      transitFiles: options.transitFiles,
+      logger: options.logger,
+      marketplace,
+    });
+    const triggers = new TriggerRunner({
+      network,
+      oauthClientConfigs,
+      providerHttpDispatch: options.providerHttpDispatch,
+      catalog,
+      providerLoader,
+      connections,
+      store: database.triggerStore,
+    });
+    const triggerMaintenance = new TriggerMaintenance({
+      network,
+      providerHttpDispatch: options.providerHttpDispatch,
+      store: database.triggerStore,
+      runner: triggers,
+      tokens: database.runtimeTokenStore,
+      // The background sweep services every tenant — instance scope; the API
+      // surface (list/cancel/abandon) keeps the request-scoped stores.
+      maintenanceStore: instanceDatabase.triggerStore,
+      maintenanceTokens: instanceDatabase.runtimeTokenStore,
+      runtimePolicy: instanceDatabase.runtimePolicyStore,
+      deploymentPolicy: options.actionPolicy ?? new ExecutionPolicyService(),
+      logger: options.logger,
+    });
+    const oauthFlow = new OAuthFlowService({
+      clientConfigs: oauthClientConfigs,
+      connections,
+      providerLoader,
+      states: database.oauthStateStore,
+      requests: database.connectionRequestStore,
+      secretCodec: options.secretCodec,
+      isCustomClientConfigAllowed,
+      saasOAuth,
+    });
+    return {
+      catalog,
+      providerLoader,
+      saasProject,
+      saasOAuth,
+      saas,
+      marketplace,
+      oauthClientConfigs,
+      customMcp,
+      connections,
+      actions,
+      oauthFlow,
+      triggers,
+      triggerMaintenance,
+      idempotency: database.idempotencyStore,
+    };
+  };
+
+  const root = await buildServices(options.runtimeDatabase);
+  // `local` resolves to the root bundle itself — sibling views only exist
+  // for other tenants, so single-tenant state (e.g. sync dedup) stays shared.
+  const scopedViews = new Map<string, Promise<TenantServices>>([[DEFAULT_TENANT_ID, Promise.resolve(root)]]);
+  const services: ScopedServices = {
+    ...root,
+    forTenant: (tenantId) => {
+      requireTenantId(tenantId);
+      let view = scopedViews.get(tenantId);
+      if (!view) {
+        view = buildServices(options.runtimeDatabase.forTenant(tenantId));
+        // A failed build must not poison the cache: later requests retry.
+        view.catch(() => {
+          if (scopedViews.get(tenantId) === view) scopedViews.delete(tenantId);
+        });
+        scopedViews.set(tenantId, view);
+        // Bound view retention; `local` is never evicted.
+        for (const [key] of scopedViews) {
+          if (scopedViews.size <= 128) break;
+          if (key !== DEFAULT_TENANT_ID) scopedViews.delete(key);
+        }
+      }
+      return view;
+    },
+  };
+  const {
     catalog,
-    store: options.runtimeDatabase.saasProjectStore,
-    secretCodec: options.secretCodec,
-    configuredOrigin: options.configuredOrigin,
-    client: saasClient,
-  });
-  const saasOAuth = new SaasOAuthService({
-    projects: saasProject,
-    requests: options.runtimeDatabase.connectionRequestStore,
-    client: saasClient,
-  });
-  const saas = new SaasExecutionService({ projects: saasProject, client: saasClient });
-  const marketplace = new MarketplaceService({
-    catalog,
-    store: options.runtimeDatabase.marketplaceStore,
-    secretCodec: options.secretCodec,
-  });
-  await withRuntimeExecution(
-    { network, providerHttpDispatch: options.providerHttpDispatch },
-    { operation: "runtime" },
-    () => marketplace.initialize(),
-  );
+    providerLoader,
+    saasProject,
+    saasOAuth,
+    saas,
+    marketplace,
+    oauthClientConfigs,
+    customMcp,
+    connections,
+    actions,
+    oauthFlow,
+    triggers,
+    triggerMaintenance,
+  } = root;
   // Token authentication must find every tenant's tokens: the hash is the
   // credential boundary, and the resolved grant then binds the request to the
   // token's tenant. Admin token management keeps the default local scope.
-  const instanceDatabase = options.runtimeDatabase.forInstance();
   const runtimeTokens = new RuntimeTokenService(options.runtimeDatabase.runtimeTokenStore, options.logger);
   const authRuntimeTokens = new RuntimeTokenService(instanceDatabase.runtimeTokenStore, options.logger);
   const hasStoredRuntimeTokens = (): Promise<boolean> => instanceDatabase.runtimeTokenStore.hasAny();
@@ -141,67 +278,6 @@ export async function createConnectApp(options: ConnectAppOptions): Promise<Conn
           runtimeTokenStore: instanceDatabase.runtimeTokenStore,
         })
     : undefined;
-  const allowedCustomOAuth = new Set(options.allowedCustomOAuth);
-  const isCustomClientConfigAllowed = (service: string): boolean =>
-    allowedCustomOAuth.has("*") || allowedCustomOAuth.has(service) || catalog.getRecord(service) !== undefined;
-  const oauthClientConfigs = new OAuthClientConfigService({
-    catalog,
-    origin: options.publicOrigin,
-    store: options.runtimeDatabase.oauthClientConfigStore,
-    isCustomClientConfigAvailable: (service) => options.secretCodec.encrypted && isCustomClientConfigAllowed(service),
-  });
-  const customMcp = new CustomMcpService({
-    catalog,
-    store: options.runtimeDatabase.customMcpStore,
-    oauthClientConfigs,
-    logger: options.logger,
-  });
-  const connections = new ConnectionService({
-    onConnected: (summary, credential) => customMcp.connectionSaved(summary, credential),
-    providerHttpDispatch: options.providerHttpDispatch,
-    catalog,
-    oauthCredentials: new OAuthCredentialRefreshService(oauthClientConfigs, providerLoader),
-    providerLoader,
-    store: options.runtimeDatabase.connectionStore,
-    logger: options.logger,
-    marketplace,
-  });
-  const actions = new ActionRunner({
-    network,
-    providerHttpDispatch: options.providerHttpDispatch,
-    catalog,
-    providerLoader,
-    connections,
-    runs: options.runtimeDatabase.runLogStore,
-    saas,
-    transitFiles: options.transitFiles,
-    logger: options.logger,
-    marketplace,
-  });
-
-  const triggers = new TriggerRunner({
-    network,
-    oauthClientConfigs,
-    providerHttpDispatch: options.providerHttpDispatch,
-    catalog,
-    providerLoader,
-    connections,
-    store: options.runtimeDatabase.triggerStore,
-  });
-  const triggerMaintenance = new TriggerMaintenance({
-    network,
-    providerHttpDispatch: options.providerHttpDispatch,
-    store: options.runtimeDatabase.triggerStore,
-    runner: triggers,
-    tokens: options.runtimeDatabase.runtimeTokenStore,
-    // The background sweep services every tenant — instance scope; the API
-    // surface (list/cancel/abandon) keeps the request-scoped stores.
-    maintenanceStore: options.runtimeDatabase.forInstance().triggerStore,
-    maintenanceTokens: options.runtimeDatabase.forInstance().runtimeTokenStore,
-    runtimePolicy: options.runtimeDatabase.runtimePolicyStore,
-    deploymentPolicy: options.actionPolicy ?? new ExecutionPolicyService(),
-    logger: options.logger,
-  });
   return {
     triggerMaintenance,
     saasCleanup: new SaasCleanupService({
@@ -223,16 +299,7 @@ export async function createConnectApp(options: ConnectAppOptions): Promise<Conn
       providerLoader,
       connections,
       oauthClientConfigs,
-      oauthFlow: new OAuthFlowService({
-        clientConfigs: oauthClientConfigs,
-        connections,
-        providerLoader,
-        states: options.runtimeDatabase.oauthStateStore,
-        requests: options.runtimeDatabase.connectionRequestStore,
-        secretCodec: options.secretCodec,
-        isCustomClientConfigAllowed,
-        saasOAuth,
-      }),
+      oauthFlow,
       actions,
       triggers,
       triggerMaintenance,
@@ -263,6 +330,7 @@ export async function createConnectApp(options: ConnectAppOptions): Promise<Conn
       oauthKeys: options.runtimeDatabase.oauthSigningKeyStore,
       runtimeTokenStore: options.runtimeDatabase.runtimeTokenStore,
       runtimeDatabase: options.runtimeDatabase,
+      services,
       actionPolicy: options.actionPolicy,
       logger: options.logger,
       marketplace,

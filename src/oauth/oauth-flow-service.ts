@@ -93,6 +93,13 @@ export interface IOAuthStateStore {
   deleteCreatedBefore(cutoff: string): Promise<void>;
   set(state: OAuthAuthorizationState): Promise<void>;
   take(state: string): Promise<OAuthAuthorizationState | undefined>;
+  /**
+   * Non-destructive tenant resolution used by the credential-free OAuth
+   * callback: the state value is the unguessable handle, so reading its
+   * tenant across scopes is safe — the callback then completes the flow
+   * under that tenant's scoped stores.
+   */
+  tenantOf(state: string): Promise<string | undefined>;
 }
 
 /**

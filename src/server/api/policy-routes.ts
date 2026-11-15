@@ -49,6 +49,15 @@ export function createPolicyRoutes({
       return jsonError(context, 400, "invalid_input", "name is required.");
     }
 
+    const tenantId = readTenantId(context);
+    if (tenantId !== DEFAULT_TENANT_ID) {
+      return jsonError(
+        context,
+        400,
+        "tenant_unsupported",
+        "Runtime tokens for non-local tenants cannot authenticate yet — mint them once execution scopes lift the guard.",
+      );
+    }
     const created = await tokensFor(context).createToken(name, readTokenPolicy(body, true));
     return context.json({
       token: created.token,

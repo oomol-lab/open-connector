@@ -28,6 +28,7 @@ import type {
 import type { IRuntimePolicyStore, RuntimePolicyRecord } from "./storage/runtime-policy-store.ts";
 import type { IRunLogStore, RunLog, RunLogListInput, RunLogPage } from "./storage/runtime-store.ts";
 import type { IRuntimeTokenStore, RuntimeTokenRecord } from "./storage/runtime-token-service.ts";
+import type { ScopedServices } from "./tenant-services.ts";
 
 import { Client, StreamableHTTPClientTransport } from "@modelcontextprotocol/client";
 import { createCipheriv, createHash, randomBytes } from "node:crypto";
@@ -4840,6 +4841,27 @@ function createTestServer(providers: ProviderDefinition[], options: CreateTestSe
     logger: options.logger,
   });
   const staticRoot = typeof options.staticRoot === "string" ? options.staticRoot : undefined;
+  const oauthFlow = new OAuthFlowService({
+    clientConfigs,
+    connections,
+    providerLoader,
+    states: new MemoryOAuthStateStore(),
+    requests: requestDatabase.connectionRequestStore,
+    secretCodec: options.secretCodec,
+    isCustomClientConfigAllowed,
+  });
+  const services: ScopedServices = {
+    catalog,
+    providerLoader,
+    marketplace: options.marketplace,
+    oauthClientConfigs: clientConfigs,
+    customMcp,
+    connections,
+    actions: actionRunner,
+    oauthFlow,
+    idempotency,
+    forTenant: () => Promise.resolve(services),
+  };
 
   return new ConnectServer({
     customMcp,
@@ -4850,15 +4872,7 @@ function createTestServer(providers: ProviderDefinition[], options: CreateTestSe
     providerLoader,
     connections,
     oauthClientConfigs: clientConfigs,
-    oauthFlow: new OAuthFlowService({
-      clientConfigs,
-      connections,
-      providerLoader,
-      states: new MemoryOAuthStateStore(),
-      requests: requestDatabase.connectionRequestStore,
-      secretCodec: options.secretCodec,
-      isCustomClientConfigAllowed,
-    }),
+    oauthFlow,
     actions: actionRunner,
     idempotency,
     transitFiles,
@@ -4870,6 +4884,7 @@ function createTestServer(providers: ProviderDefinition[], options: CreateTestSe
     oauthKeys: requestDatabase.oauthSigningKeyStore,
     runtimeTokenStore: requestDatabase.runtimeTokenStore,
     runtimeDatabase: requestDatabase,
+    services,
     runtimePolicyStore: options.runtimePolicyStore ?? new MemoryRuntimePolicyStore(),
     registerStaticRoutes: staticRoot ? (app) => registerStaticRoutes(app, { root: staticRoot }) : undefined,
     auth: {
@@ -5172,6 +5187,10 @@ class MemoryOAuthStateStore implements IOAuthStateStore {
 
   async set(state: OAuthAuthorizationState): Promise<void> {
     this.states.set(state.state, state);
+  }
+
+  async tenantOf() {
+    return undefined;
   }
 
   async take(state: string): Promise<OAuthAuthorizationState | undefined> {

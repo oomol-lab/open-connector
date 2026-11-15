@@ -1,19 +1,22 @@
-import type { SaasOAuthService } from "../../saas/saas-oauth-service.ts";
 import type { SaasProjectService } from "../../saas/saas-project-service.ts";
+import type { ScopedServices } from "../tenant-services.ts";
+import type { Context } from "hono";
 
 import { Hono } from "hono";
 import { SaasError } from "../../saas/saas-client.ts";
+import { readSubject, readTenantId } from "./auth.ts";
 import { jsonError } from "./http-utils.ts";
 import { renderSaasCompletionPage } from "./saas-completion-page.ts";
 
 export interface SaasOAuthRoutesOptions {
+  services: ScopedServices;
   saasProject: SaasProjectService;
-  saasOAuth: SaasOAuthService;
 }
 
 /** Complete SaaS OAuth flow and browser-initiated connection sync. */
-export function createSaasOAuthRoutes({ saasProject, saasOAuth }: SaasOAuthRoutesOptions): Hono {
+export function createSaasOAuthRoutes({ services, saasProject }: SaasOAuthRoutesOptions): Hono {
   const app = new Hono();
+  const scoped = (context: Context) => services.forTenant(readTenantId(context));
 
   app.get("/oauth/saas/complete", (context) => {
     context.header(
@@ -40,7 +43,12 @@ export function createSaasOAuthRoutes({ saasProject, saasOAuth }: SaasOAuthRoute
         { error: { code: "forbidden", message: "OAuth synchronization requires a same-origin JSON request." } },
         403,
       );
-    const result = await saasOAuth.syncForBrowser(context.req.param("id"), "local-admin", context.req.raw.signal);
+    const { saasOAuth } = await scoped(context);
+    const result = await saasOAuth?.syncForBrowser(
+      context.req.param("id"),
+      readSubject(context),
+      context.req.raw.signal,
+    );
     if (!result) return jsonError(context, 404, "connection_request_not_found", "Connection request not found.");
     context.header("Cache-Control", "private, no-store");
     return context.json(result);

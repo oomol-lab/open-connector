@@ -1597,6 +1597,10 @@ class MemoryOAuthStateStore implements IOAuthStateStore {
     this.states.set(state.state, state);
   }
 
+  async tenantOf() {
+    return undefined;
+  }
+
   async take(state: string): Promise<OAuthAuthorizationState | undefined> {
     const value = this.states.get(state);
     this.states.delete(state);

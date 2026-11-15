@@ -302,6 +302,26 @@ it("persists unknown creation results and never recreates the remote link", asyn
   expect(await env.database.saasProjectStore.getCleanupStats()).toEqual({ pending: 0, manual: 1, paused: false });
 });
 
+it("scopes SaaS connection requests to the admin-selected tenant", async () => {
+  const env = await setup();
+  const { response, data } = await env.start("/v1/connections/example/connect?tenant=alpha");
+  expect(response.status).toBe(200);
+  expect(data.connectionRequestId).toEqual(expect.any(String));
+
+  const alpha = env.database.forTenant("alpha");
+  await expect(alpha.connectionRequestStore.get(data.connectionRequestId, "service:admin")).resolves.toMatchObject({
+    status: "initiated",
+  });
+  await expect(
+    env.database.connectionRequestStore.get(data.connectionRequestId, "service:admin"),
+  ).resolves.toBeUndefined();
+
+  const scopedRead = await env.call(`/v1/connection-requests/${data.connectionRequestId}?tenant=alpha`);
+  expect((await scopedRead.json()).data.status).toBe("initiated");
+  const missed = await env.call(`/v1/connection-requests/${data.connectionRequestId}`);
+  expect(missed.status).toBe(404);
+});
+
 it("merges concurrent polls and resumes a persisted candidate after restart", async () => {
   const env = await setup();
   const { data } = await env.start();
@@ -392,7 +412,7 @@ it("recovers an abandoned creating request as unknown without sending a new link
   await env.database.connectionRequestStore.createSaas({
     connectionRequestId: id,
     connectionId: crypto.randomUUID(),
-    owner: "local-admin",
+    owner: "service:admin",
     service: "example",
     connectionName: crypto.randomUUID(),
     managedProjectId: project.id,
@@ -425,7 +445,7 @@ it("cancels only one waiter while shared synchronization completes for other cal
   abort.abort();
   await polling;
   expect(await env.database.connectionStore.list()).toHaveLength(0);
-  expect(await env.database.connectionRequestStore.get(data.connectionRequestId, "local-admin")).toMatchObject({
+  expect(await env.database.connectionRequestStore.get(data.connectionRequestId, "service:admin")).toMatchObject({
     status: "initiated",
   });
   const third = env.call(`/v1/connection-requests/${data.connectionRequestId}`);
