@@ -1,3 +1,4 @@
+import type { TenantScope } from "../../tenant/tenant-scope.ts";
 /**
  * Row decoding and query helpers shared by the SQL-backed runtime stores (SQLite, PostgreSQL and D1).
  */
@@ -75,6 +76,7 @@ export function readRuntimePolicyRow(row: RuntimeRow): RuntimePolicyRecord {
 export async function listRunLogs(
   input: RunLogListInput,
   maxLimit: number,
+  scope: TenantScope,
   placeholder: (position: number) => string,
   execute: (sql: string, values: Array<string | number>) => readonly RuntimeRow[] | Promise<readonly RuntimeRow[]>,
 ): Promise<RunLogPage> {
@@ -83,6 +85,9 @@ export async function listRunLogs(
   const conditions: string[] = [];
   const values: Array<string | number> = [];
   const bind = (value: string | number): string => placeholder(values.push(value));
+  if (scope !== null) {
+    conditions.push(`tenant_id = ${bind(scope)}`);
+  }
   if (cursor) {
     conditions.push(
       `(started_at < ${bind(cursor.startedAt)} or (started_at = ${bind(cursor.startedAt)} and id < ${bind(cursor.id)}))`,

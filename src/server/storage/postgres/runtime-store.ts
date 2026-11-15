@@ -7,6 +7,7 @@ import type {
   StoredMarketplaceConfig,
 } from "../../../marketplace/marketplace-service.ts";
 import type { IOAuthClientConfigStore, OAuthClientConfig } from "../../../oauth/oauth-client-config-service.ts";
+import type { TenantScope } from "../../../tenant/tenant-scope.ts";
 import type { ISecretCodec } from "../../secrets/secret-codec-core.ts";
 import type { RequestTransaction } from "../connection-request-store.ts";
 import type {
@@ -34,6 +35,7 @@ import type { IRuntimeTokenStore, RuntimeTokenRecord } from "../runtime-token-se
 import type { PoolClient } from "pg";
 
 import { Pool } from "pg";
+import { instanceScope, tenantForInsert, tenantPredicatePg, tenantScope } from "../../../tenant/tenant-scope.ts";
 import { parseRuntimeActionHttpResult } from "../../api/runtime-api.ts";
 import { PlainTextSecretCodec } from "../../secrets/secret-codec-core.ts";
 import { ConnectionRequestStore } from "../connection-request-store.ts";
@@ -61,6 +63,10 @@ export interface PostgresRuntimeDatabaseOptions {
   poolMax?: number;
   connectionTimeoutMs?: number;
   migrations?: MigrationSource;
+  /** Tenant binding for this instance's stores; omitted binds the default tenant. */
+  tenantScope?: TenantScope;
+  /** True only for pools created by open(); sibling views never close the shared pool. */
+  ownsPool?: boolean;
 }
 
 export class PostgresRuntimeDatabase implements RuntimeDatabase {
@@ -83,9 +89,15 @@ export class PostgresRuntimeDatabase implements RuntimeDatabase {
 
   private readonly pool: Pool;
   private readonly secretCodec: ISecretCodec;
+  private readonly scope: TenantScope;
+  private readonly runLimit: number;
+  private readonly ownsPool: boolean;
 
   private constructor(pool: Pool, options: PostgresRuntimeDatabaseOptions) {
     this.pool = pool;
+    this.ownsPool = options.ownsPool === true;
+    this.scope = options.tenantScope === undefined ? "local" : options.tenantScope;
+    this.runLimit = options.runLimit ?? DEFAULT_RUN_LIMIT;
     this.secretCodec = options.secretCodec ?? new PlainTextSecretCodec();
     const transaction: RequestTransaction = (statements) =>
       runInTransaction(pool, async (client) => {
@@ -108,23 +120,50 @@ export class PostgresRuntimeDatabase implements RuntimeDatabase {
     this.customMcpStore = new CustomMcpStore({
       secretCodec: this.secretCodec,
       transaction,
-      read: async (sql) => (await pool.query(sql)).rows,
+      read: async (sql, values) => {
+        let index = 0;
+        return (
+          await pool.query(
+            sql.replaceAll("?", () => `$${++index}`),
+            values,
+          )
+        ).rows;
+      },
+      scope: this.scope,
     });
-    this.connectionRequestStore = new ConnectionRequestStore(transaction, this.secretCodec);
-    this.connectionStore = new SqlConnectionStore(transaction, this.secretCodec);
-    this.triggerStore = new SqlTriggerStore(transaction, this.secretCodec);
+    this.connectionRequestStore = new ConnectionRequestStore(transaction, this.secretCodec, this.scope);
+    this.connectionStore = new SqlConnectionStore(transaction, this.secretCodec, this.scope);
+    this.triggerStore = new SqlTriggerStore(transaction, this.secretCodec, this.scope);
     this.saasProjectStore = new SaasProjectStore(transaction, this.secretCodec);
-    this.oauthClientConfigStore = new PostgresOAuthClientConfigStore(pool, this.secretCodec);
-    this.oauthStateStore = new SqlOAuthStateStore(transaction, this.secretCodec);
-    this.runtimeTokenStore = new PostgresRuntimeTokenStore(pool);
+    this.oauthClientConfigStore = new PostgresOAuthClientConfigStore(pool, this.secretCodec, this.scope);
+    this.oauthStateStore = new SqlOAuthStateStore(transaction, this.secretCodec, this.scope);
+    this.runtimeTokenStore = new PostgresRuntimeTokenStore(pool, this.scope);
     this.runtimePolicyStore = new PostgresRuntimePolicyStore(pool);
-    this.runLogStore = new PostgresRunLogStore(pool, options.runLimit ?? DEFAULT_RUN_LIMIT);
-    this.idempotencyStore = new PostgresIdempotencyStore(pool, this.secretCodec);
-    this.marketplaceStore = new PostgresMarketplaceStore(pool);
+    this.runLogStore = new PostgresRunLogStore(pool, this.runLimit, this.scope);
+    this.idempotencyStore = new PostgresIdempotencyStore(pool, this.secretCodec, this.scope);
+    this.marketplaceStore = new PostgresMarketplaceStore(pool, this.scope);
     this.oauthClientStore = new PostgresOAuthClientStore(pool);
-    this.oauthCodeStore = new PostgresOAuthCodeStore(pool);
-    this.oauthTokenStore = new PostgresOAuthTokenStore(pool);
+    this.oauthCodeStore = new PostgresOAuthCodeStore(pool, this.scope);
+    this.oauthTokenStore = new PostgresOAuthTokenStore(pool, this.scope);
     this.oauthSigningKeyStore = new PostgresOAuthSigningKeyStore(pool);
+  }
+
+  /** A sibling view whose stores are bound to one tenant; shares the connection pool. */
+  forTenant(tenantId: string): PostgresRuntimeDatabase {
+    return new PostgresRuntimeDatabase(this.pool, {
+      secretCodec: this.secretCodec,
+      runLimit: this.runLimit,
+      tenantScope: tenantScope(tenantId),
+    });
+  }
+
+  /** Cross-tenant view for instance jobs (sweepers, rotation); never from request input. */
+  forInstance(): PostgresRuntimeDatabase {
+    return new PostgresRuntimeDatabase(this.pool, {
+      secretCodec: this.secretCodec,
+      runLimit: this.runLimit,
+      tenantScope: instanceScope(),
+    });
   }
 
   static async open(
@@ -143,7 +182,7 @@ export class PostgresRuntimeDatabase implements RuntimeDatabase {
 
     try {
       await assertPostgresSchemaReady(pool, options.migrations);
-      return new PostgresRuntimeDatabase(pool, options);
+      return new PostgresRuntimeDatabase(pool, { ...options, ownsPool: true });
     } catch (error) {
       await pool.end();
       throw error;
@@ -151,7 +190,9 @@ export class PostgresRuntimeDatabase implements RuntimeDatabase {
   }
 
   async close(): Promise<void> {
-    await this.pool.end();
+    if (this.ownsPool) {
+      await this.pool.end();
+    }
   }
 
   async resetRuntimeData(): Promise<void> {
@@ -170,6 +211,8 @@ export class PostgresRuntimeDatabase implements RuntimeDatabase {
         delete from connection_requests;
         delete from runtime_tokens;
         delete from runtime_policy;
+        delete from oauth_authorization_codes;
+        delete from oauth_tokens;
         delete from runs;
         delete from idempotency_records;
         delete from custom_mcp;
@@ -225,32 +268,36 @@ export class PostgresRuntimeDatabase implements RuntimeDatabase {
           await nextSecretCodec.encode(await this.secretCodec.decode(readString(row, "value"))),
           readString(row, "id"),
         ]);
-      const connectionRows = await client.query<RuntimeRow>("select service, connection_name, value from connections");
+      const connectionRows = await client.query<RuntimeRow>(
+        "select tenant_id, service, connection_name, value from connections",
+      );
       const connections = await Promise.all(
         connectionRows.rows.map(async (row) => ({
+          tenantId: readString(row, "tenant_id"),
           service: readString(row, "service"),
           connectionName: readString(row, "connection_name"),
           value: await nextSecretCodec.encode(await this.secretCodec.decode(readString(row, "value"))),
         })),
       );
       for (const connection of connections) {
-        await client.query("update connections set value = $1 where service = $2 and connection_name = $3", [
-          connection.value,
-          connection.service,
-          connection.connectionName,
-        ]);
+        await client.query(
+          "update connections set value = $1 where tenant_id = $2 and service = $3 and connection_name = $4",
+          [connection.value, connection.tenantId, connection.service, connection.connectionName],
+        );
       }
 
-      const configRows = await client.query<RuntimeRow>("select service, value from oauth_client_configs");
+      const configRows = await client.query<RuntimeRow>("select tenant_id, service, value from oauth_client_configs");
       const configs = await Promise.all(
         configRows.rows.map(async (row) => ({
+          tenantId: readString(row, "tenant_id"),
           service: readString(row, "service"),
           value: await nextSecretCodec.encode(await this.secretCodec.decode(readString(row, "value"))),
         })),
       );
       for (const config of configs) {
-        await client.query("update oauth_client_configs set value = $1 where service = $2", [
+        await client.query("update oauth_client_configs set value = $1 where tenant_id = $2 and service = $3", [
           config.value,
+          config.tenantId,
           config.service,
         ]);
       }
@@ -274,19 +321,20 @@ export class PostgresRuntimeDatabase implements RuntimeDatabase {
       }
 
       const responseRows = await client.query<RuntimeRow>(
-        "select key_hash, response_value from idempotency_records where response_value is not null",
+        "select tenant_id, key_hash, response_value from idempotency_records where response_value is not null",
       );
       const responses = await Promise.all(
         responseRows.rows.map(async (row) => ({
+          tenantId: readString(row, "tenant_id"),
           keyHash: readString(row, "key_hash"),
           value: await nextSecretCodec.encode(await this.secretCodec.decode(readString(row, "response_value"))),
         })),
       );
       for (const response of responses) {
-        await client.query("update idempotency_records set response_value = $1 where key_hash = $2", [
-          response.value,
-          response.keyHash,
-        ]);
+        await client.query(
+          "update idempotency_records set response_value = $1 where tenant_id = $2 and key_hash = $3",
+          [response.value, response.tenantId, response.keyHash],
+        );
       }
 
       const marketplaceRows = await client.query<RuntimeRow>("select value from marketplace_config where id = 1");
@@ -302,9 +350,11 @@ export class PostgresRuntimeDatabase implements RuntimeDatabase {
 
 class PostgresMarketplaceStore implements IMarketplaceStore {
   private readonly pool: Pool;
+  private readonly scope: TenantScope;
 
-  constructor(pool: Pool) {
+  constructor(pool: Pool, scope: TenantScope) {
     this.pool = pool;
+    this.scope = scope;
   }
 
   async getConfig(): Promise<StoredMarketplaceConfig | undefined> {
@@ -325,8 +375,10 @@ class PostgresMarketplaceStore implements IMarketplaceStore {
   }
 
   async listProviderPreferences(): Promise<ProviderPreference[]> {
+    const t = tenantPredicatePg(this.scope, 1);
     const result = await this.pool.query<RuntimeRow>(
-      "select service, enabled, created_at, updated_at from provider_preferences order by service",
+      `select service, enabled, created_at, updated_at from provider_preferences where ${t.sql} order by service`,
+      t.values,
     );
     return result.rows.map((row) => ({
       service: readString(row, "service"),
@@ -338,8 +390,8 @@ class PostgresMarketplaceStore implements IMarketplaceStore {
 
   async setProviderPreference(preference: ProviderPreference): Promise<void> {
     await this.pool.query(
-      "insert into provider_preferences (service, enabled, created_at, updated_at) values ($1, $2, $3, $4) on conflict(tenant_id, service) do update set enabled = excluded.enabled, updated_at = excluded.updated_at",
-      [preference.service, preference.enabled, preference.createdAt, preference.updatedAt],
+      "insert into provider_preferences (tenant_id, service, enabled, created_at, updated_at) values ($1, $2, $3, $4, $5) on conflict(tenant_id, service) do update set enabled = excluded.enabled, updated_at = excluded.updated_at",
+      [tenantForInsert(this.scope), preference.service, preference.enabled, preference.createdAt, preference.updatedAt],
     );
   }
 }
@@ -347,16 +399,20 @@ class PostgresMarketplaceStore implements IMarketplaceStore {
 class PostgresOAuthClientConfigStore implements IOAuthClientConfigStore {
   private readonly pool: Pool;
   private readonly secretCodec: ISecretCodec;
+  private readonly scope: TenantScope;
 
-  constructor(pool: Pool, secretCodec: ISecretCodec) {
+  constructor(pool: Pool, secretCodec: ISecretCodec, scope: TenantScope) {
     this.pool = pool;
     this.secretCodec = secretCodec;
+    this.scope = scope;
   }
 
   async get(service: string): Promise<OAuthClientConfig | undefined> {
-    const result = await this.pool.query<RuntimeRow>("select value from oauth_client_configs where service = $1", [
-      service,
-    ]);
+    const t = tenantPredicatePg(this.scope, 2);
+    const result = await this.pool.query<RuntimeRow>(
+      `select value from oauth_client_configs where service = $1 and ${t.sql}`,
+      [service, ...t.values],
+    );
     const row = result.rows[0];
     return row ? parseJson<OAuthClientConfig>(await this.secretCodec.decode(readString(row, "value"))) : undefined;
   }
@@ -364,20 +420,30 @@ class PostgresOAuthClientConfigStore implements IOAuthClientConfigStore {
   async set(config: OAuthClientConfig): Promise<void> {
     await this.pool.query(
       `
-        insert into oauth_client_configs (service, value, updated_at)
-        values ($1, $2, $3)
+        insert into oauth_client_configs (tenant_id, service, value, updated_at)
+        values ($1, $2, $3, $4)
         on conflict(tenant_id, service) do update set value = excluded.value, updated_at = excluded.updated_at
       `,
-      [config.service, await this.secretCodec.encode(JSON.stringify(config)), new Date().toISOString()],
+      [
+        tenantForInsert(this.scope),
+        config.service,
+        await this.secretCodec.encode(JSON.stringify(config)),
+        new Date().toISOString(),
+      ],
     );
   }
 
   async delete(service: string): Promise<void> {
-    await this.pool.query("delete from oauth_client_configs where service = $1", [service]);
+    const t = tenantPredicatePg(this.scope, 2);
+    await this.pool.query(`delete from oauth_client_configs where service = $1 and ${t.sql}`, [service, ...t.values]);
   }
 
   async list(): Promise<OAuthClientConfig[]> {
-    const result = await this.pool.query<RuntimeRow>("select value from oauth_client_configs order by service");
+    const t = tenantPredicatePg(this.scope, 1);
+    const result = await this.pool.query<RuntimeRow>(
+      `select value from oauth_client_configs where ${t.sql} order by service`,
+      t.values,
+    );
     return await Promise.all(
       result.rows.map(async (row) =>
         parseJson<OAuthClientConfig>(await this.secretCodec.decode(readString(row, "value"))),
@@ -388,20 +454,23 @@ class PostgresOAuthClientConfigStore implements IOAuthClientConfigStore {
 
 class PostgresRuntimeTokenStore implements IRuntimeTokenStore {
   private readonly pool: Pool;
+  private readonly scope: TenantScope;
 
-  constructor(pool: Pool) {
+  constructor(pool: Pool, scope: TenantScope) {
     this.pool = pool;
+    this.scope = scope;
   }
 
   async add(record: RuntimeTokenRecord): Promise<void> {
     await this.pool.query(
       `
         insert into runtime_tokens (
-          ${runtimeTokenColumns}
+          tenant_id, ${runtimeTokenColumns}
         )
-        values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+        values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
       `,
       [
+        tenantForInsert(this.scope),
         record.id,
         record.name,
         record.tokenHash,
@@ -417,16 +486,22 @@ class PostgresRuntimeTokenStore implements IRuntimeTokenStore {
   }
 
   async list(): Promise<RuntimeTokenRecord[]> {
-    const result = await this.pool.query<RuntimeRow>(`
+    const t = tenantPredicatePg(this.scope, 1);
+    const result = await this.pool.query<RuntimeRow>(
+      `
       select ${runtimeTokenColumns}
       from runtime_tokens
+      where ${t.sql}
       order by created_at desc, id desc
-    `);
+    `,
+      t.values,
+    );
     return result.rows.map(readRuntimeTokenRow);
   }
 
   async hasAny(): Promise<boolean> {
-    const result = await this.pool.query("select 1 from runtime_tokens limit 1");
+    const t = tenantPredicatePg(this.scope, 1);
+    const result = await this.pool.query(`select 1 from runtime_tokens where ${t.sql} limit 1`, t.values);
     return result.rows.length > 0;
   }
 
@@ -435,9 +510,9 @@ class PostgresRuntimeTokenStore implements IRuntimeTokenStore {
       `
         select ${runtimeTokenColumns}
         from runtime_tokens
-        where token_hash = $1
+        where token_hash = $1 and ${tenantPredicatePg(this.scope, 2).sql}
       `,
-      [tokenHash],
+      [tokenHash, ...tenantPredicatePg(this.scope, 2).values],
     );
     const row = result.rows[0];
     return row ? readRuntimeTokenRow(row) : undefined;
@@ -448,9 +523,9 @@ class PostgresRuntimeTokenStore implements IRuntimeTokenStore {
       `
         select ${runtimeTokenColumns}
         from runtime_tokens
-        where id = $1
+        where id = $1 and ${tenantPredicatePg(this.scope, 2).sql}
       `,
-      [id],
+      [id, ...tenantPredicatePg(this.scope, 2).values],
     );
     const row = result.rows[0];
     return row ? readRuntimeTokenRow(row) : undefined;
@@ -461,7 +536,7 @@ class PostgresRuntimeTokenStore implements IRuntimeTokenStore {
       `
         update runtime_tokens
         set allowed_actions = $1, blocked_actions = $2, allowed_proxies = $3, allowed_connections = $4, allowed_triggers = $5
-        where id = $6
+        where id = $6 and ${tenantPredicatePg(this.scope, 7).sql}
         returning ${runtimeTokenColumns}
       `,
       [
@@ -471,6 +546,7 @@ class PostgresRuntimeTokenStore implements IRuntimeTokenStore {
         JSON.stringify(policy.allowedConnections ?? []),
         JSON.stringify(policy.allowedTriggers ?? []),
         id,
+        ...tenantPredicatePg(this.scope, 7).values,
       ],
     );
     const row = result.rows[0];
@@ -478,12 +554,18 @@ class PostgresRuntimeTokenStore implements IRuntimeTokenStore {
   }
 
   async revoke(id: string): Promise<boolean> {
-    const result = await this.pool.query("delete from runtime_tokens where id = $1", [id]);
+    const t = tenantPredicatePg(this.scope, 2);
+    const result = await this.pool.query(`delete from runtime_tokens where id = $1 and ${t.sql}`, [id, ...t.values]);
     return (result.rowCount ?? 0) > 0;
   }
 
   async markUsed(id: string, usedAt: string): Promise<void> {
-    await this.pool.query("update runtime_tokens set last_used_at = $1 where id = $2", [usedAt, id]);
+    const t = tenantPredicatePg(this.scope, 3);
+    await this.pool.query(`update runtime_tokens set last_used_at = $1 where id = $2 and ${t.sql}`, [
+      usedAt,
+      id,
+      ...t.values,
+    ]);
   }
 }
 
@@ -561,21 +643,24 @@ class PostgresOAuthClientStore implements IOAuthClientStore {
 
 class PostgresOAuthCodeStore implements IOAuthCodeStore {
   private readonly pool: Pool;
+  private readonly scope: TenantScope;
 
-  constructor(pool: Pool) {
+  constructor(pool: Pool, scope: TenantScope) {
     this.pool = pool;
+    this.scope = scope;
   }
 
   async add(record: OAuthAuthorizationCodeRecord): Promise<void> {
     await this.pool.query(
       `
         insert into oauth_authorization_codes (
-          code_hash, client_id, redirect_uri, scope, code_challenge, resource,
+          tenant_id, code_hash, client_id, redirect_uri, scope, code_challenge, resource,
           runtime_token_id, issued_at, expires_at, consumed_at
         )
-        values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+        values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
       `,
       [
+        tenantForInsert(this.scope),
         record.codeHash,
         record.clientId,
         record.redirectUri,
@@ -599,33 +684,48 @@ class PostgresOAuthCodeStore implements IOAuthCodeStore {
         where code_hash = $2
           and consumed_at is null
           and expires_at > $1
+          and ${tenantPredicatePg(this.scope, 3).sql}
         returning *
       `,
-      [Date.now(), codeHash],
+      [Date.now(), codeHash, ...tenantPredicatePg(this.scope, 3).values],
     );
     const row = result.rows[0];
     return row ? readOAuthCodeRow(row) : undefined;
   }
 
   async listByClient(clientId: string): Promise<OAuthAuthorizationCodeRecord[]> {
-    const result = await this.pool.query("select * from oauth_authorization_codes where client_id = $1", [clientId]);
+    const t = tenantPredicatePg(this.scope, 2);
+    const result = await this.pool.query(`select * from oauth_authorization_codes where client_id = $1 and ${t.sql}`, [
+      clientId,
+      ...t.values,
+    ]);
     return result.rows.map((row) => readOAuthCodeRow(row));
   }
 
   async deleteByClient(clientId: string): Promise<void> {
-    await this.pool.query("delete from oauth_authorization_codes where client_id = $1", [clientId]);
+    const t = tenantPredicatePg(this.scope, 2);
+    await this.pool.query(`delete from oauth_authorization_codes where client_id = $1 and ${t.sql}`, [
+      clientId,
+      ...t.values,
+    ]);
   }
 
   async deleteExpired(nowMs: number): Promise<void> {
-    await this.pool.query("delete from oauth_authorization_codes where expires_at <= $1", [nowMs]);
+    const t = tenantPredicatePg(this.scope, 2);
+    await this.pool.query(`delete from oauth_authorization_codes where expires_at <= $1 and ${t.sql}`, [
+      nowMs,
+      ...t.values,
+    ]);
   }
 }
 
 class PostgresOAuthTokenStore implements IOAuthTokenStore {
   private readonly pool: Pool;
+  private readonly scope: TenantScope;
 
-  constructor(pool: Pool) {
+  constructor(pool: Pool, scope: TenantScope) {
     this.pool = pool;
+    this.scope = scope;
   }
 
   async add(record: OAuthAccessTokenRecord): Promise<void> {
@@ -636,12 +736,13 @@ class PostgresOAuthTokenStore implements IOAuthTokenStore {
     await this.pool.query(
       `
         insert into oauth_tokens (
-          token_hash, refresh_token_hash, client_id, runtime_token_id, scope, resource,
+          tenant_id, token_hash, refresh_token_hash, client_id, runtime_token_id, scope, resource,
           issued_at, expires_at, refresh_expires_at, revoked_at, refresh_consumed_at
         )
-        values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
+        values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
       `,
       [
+        tenantForInsert(this.scope),
         record.tokenHash,
         record.refreshTokenHash ?? null,
         record.clientId,
@@ -658,15 +759,21 @@ class PostgresOAuthTokenStore implements IOAuthTokenStore {
   }
 
   async findByAccessTokenHash(tokenHash: string): Promise<OAuthAccessTokenRecord | undefined> {
-    const result = await this.pool.query<RuntimeRow>("select * from oauth_tokens where token_hash = $1", [tokenHash]);
+    const t = tenantPredicatePg(this.scope, 2);
+    const result = await this.pool.query<RuntimeRow>(`select * from oauth_tokens where token_hash = $1 and ${t.sql}`, [
+      tokenHash,
+      ...t.values,
+    ]);
     const row = result.rows[0];
     return row ? readOAuthTokenRow(row) : undefined;
   }
 
   async findByRefreshTokenHash(tokenHash: string): Promise<OAuthAccessTokenRecord | undefined> {
-    const result = await this.pool.query<RuntimeRow>("select * from oauth_tokens where refresh_token_hash = $1", [
-      tokenHash,
-    ]);
+    const t = tenantPredicatePg(this.scope, 2);
+    const result = await this.pool.query<RuntimeRow>(
+      `select * from oauth_tokens where refresh_token_hash = $1 and ${t.sql}`,
+      [tokenHash, ...t.values],
+    );
     const row = result.rows[0];
     return row ? readOAuthTokenRow(row) : undefined;
   }
@@ -690,9 +797,10 @@ class PostgresOAuthTokenStore implements IOAuthTokenStore {
             and refresh_consumed_at is null
             and refresh_expires_at is not null
             and refresh_expires_at > $3
+            and ${tenantPredicatePg(this.scope, 4).sql}
           returning *
         `,
-        [Date.now(), oldRefreshTokenHash, Date.now()],
+        [Date.now(), oldRefreshTokenHash, Date.now(), ...tenantPredicatePg(this.scope, 4).values],
       );
       const row = result.rows[0];
       if (!row) {
@@ -701,12 +809,13 @@ class PostgresOAuthTokenStore implements IOAuthTokenStore {
       await client.query(
         `
           insert into oauth_tokens (
-            token_hash, refresh_token_hash, client_id, runtime_token_id, scope, resource,
+            tenant_id, token_hash, refresh_token_hash, client_id, runtime_token_id, scope, resource,
             issued_at, expires_at, refresh_expires_at, revoked_at
           )
-          values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+          values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
         `,
         [
+          tenantForInsert(this.scope),
           successor.tokenHash,
           successor.refreshTokenHash ?? null,
           successor.clientId,
@@ -725,8 +834,8 @@ class PostgresOAuthTokenStore implements IOAuthTokenStore {
 
   async listByClient(clientId: string): Promise<OAuthAccessTokenRecord[]> {
     const result = await this.pool.query<RuntimeRow>(
-      "select * from oauth_tokens where client_id = $1 order by issued_at, token_hash",
-      [clientId],
+      `select * from oauth_tokens where client_id = $1 and ${tenantPredicatePg(this.scope, 2).sql} order by issued_at, token_hash`,
+      [clientId, ...tenantPredicatePg(this.scope, 2).values],
     );
     return result.rows.map(readOAuthTokenRow);
   }
@@ -736,9 +845,9 @@ class PostgresOAuthTokenStore implements IOAuthTokenStore {
       `
         update oauth_tokens
         set revoked_at = $1
-        where client_id = $2 and runtime_token_id = $3 and revoked_at is null
+        where client_id = $2 and runtime_token_id = $3 and revoked_at is null and ${tenantPredicatePg(this.scope, 4).sql}
       `,
-      [Date.now(), clientId, runtimeTokenId],
+      [Date.now(), clientId, runtimeTokenId, ...tenantPredicatePg(this.scope, 4).values],
     );
     return result.rowCount ?? 0;
   }
@@ -749,8 +858,9 @@ class PostgresOAuthTokenStore implements IOAuthTokenStore {
         delete from oauth_tokens
         where expires_at <= $1
           and (refresh_expires_at is null or refresh_expires_at <= $1)
+          and ${tenantPredicatePg(this.scope, 2).sql}
       `,
-      [nowMs],
+      [nowMs, ...tenantPredicatePg(this.scope, 2).values],
     );
   }
 }
@@ -933,33 +1043,40 @@ class PostgresRuntimePolicyStore implements IRuntimePolicyStore {
 class PostgresIdempotencyStore implements IIdempotencyStore {
   private readonly pool: Pool;
   private readonly secretCodec: ISecretCodec;
+  private readonly scope: TenantScope;
 
-  constructor(pool: Pool, secretCodec: ISecretCodec) {
+  constructor(pool: Pool, secretCodec: ISecretCodec, scope: TenantScope) {
     this.pool = pool;
     this.secretCodec = secretCodec;
+    this.scope = scope;
   }
 
   async claim(input: IdempotencyClaimInput): Promise<IdempotencyClaimResult> {
     const claim = await runInTransaction(this.pool, async (client) => {
-      await client.query("delete from idempotency_records where expires_at <= $1", [input.now]);
+      const sweep = tenantPredicatePg(this.scope, 2);
+      await client.query(`delete from idempotency_records where expires_at <= $1 and ${sweep.sql}`, [
+        input.now,
+        ...sweep.values,
+      ]);
       const inserted = await client.query(
         `
           insert into idempotency_records (
-            key_hash, claim_id, request_hash, state, response_value, created_at, expires_at
+            tenant_id, key_hash, claim_id, request_hash, state, response_value, created_at, expires_at
           )
-          values ($1, $2, $3, 'in_progress', null, $4, $5)
+          values ($1, $2, $3, $4, 'in_progress', null, $5, $6)
           on conflict(tenant_id, key_hash) do nothing
           returning key_hash
         `,
-        [input.keyHash, input.claimId, input.requestHash, input.now, input.expiresAt],
+        [tenantForInsert(this.scope), input.keyHash, input.claimId, input.requestHash, input.now, input.expiresAt],
       );
       if ((inserted.rowCount ?? 0) > 0) {
         return { kind: "acquired" } as const;
       }
 
+      const t = tenantPredicatePg(this.scope, 2);
       const existing = await client.query<RuntimeRow>(
-        "select request_hash, state, response_value from idempotency_records where key_hash = $1",
-        [input.keyHash],
+        `select request_hash, state, response_value from idempotency_records where key_hash = $1 and ${t.sql}`,
+        [input.keyHash, ...t.values],
       );
       return { kind: "existing", row: existing.rows[0]! } as const;
     });
@@ -991,6 +1108,7 @@ class PostgresIdempotencyStore implements IIdempotencyStore {
           and claim_id = $4
           and request_hash = $5
           and state = 'in_progress'
+          and ${tenantPredicatePg(this.scope, 6).sql}
       `,
       [
         await this.secretCodec.encode(JSON.stringify(input.response)),
@@ -998,6 +1116,7 @@ class PostgresIdempotencyStore implements IIdempotencyStore {
         input.keyHash,
         input.claimId,
         input.requestHash,
+        ...tenantPredicatePg(this.scope, 6).values,
       ],
     );
     return (result.rowCount ?? 0) > 0;
@@ -1007,17 +1126,19 @@ class PostgresIdempotencyStore implements IIdempotencyStore {
 class PostgresRunLogStore implements IRunLogStore {
   private readonly pool: Pool;
   private readonly limit: number;
+  private readonly scope: TenantScope;
 
-  constructor(pool: Pool, limit: number) {
+  constructor(pool: Pool, limit: number, scope: TenantScope) {
     this.pool = pool;
     this.limit = limit;
+    this.scope = scope;
   }
 
   async add(run: RunLog): Promise<RunLogWriteResult> {
     await this.pool.query(
       `
-        insert into runs (id, service, action_id, caller, started_at, completed_at, ok, value)
-        values ($1, $2, $3, $4, $5, $6, $7, $8)
+        insert into runs (id, tenant_id, service, action_id, caller, started_at, completed_at, ok, value)
+        values ($1, $2, $3, $4, $5, $6, $7, $8, $9)
         on conflict(id) do update set
           service = excluded.service,
           action_id = excluded.action_id,
@@ -1029,6 +1150,7 @@ class PostgresRunLogStore implements IRunLogStore {
       `,
       [
         run.id,
+        tenantForInsert(this.scope),
         run.service,
         run.actionId,
         run.caller,
@@ -1045,11 +1167,12 @@ class PostgresRunLogStore implements IRunLogStore {
           delete from runs
           where id in (
             select id from runs
+            where ${tenantPredicatePg(this.scope, 2).sql}
             order by started_at desc, id desc
             offset $1
           )
         `,
-        [this.limit],
+        [this.limit, ...tenantPredicatePg(this.scope, 2).values],
       );
       return { retentionApplied: true };
     } catch {
@@ -1058,7 +1181,11 @@ class PostgresRunLogStore implements IRunLogStore {
   }
 
   async get(id: string): Promise<RunLog | undefined> {
-    const result = await this.pool.query<RuntimeRow>("select service, value from runs where id = $1", [id]);
+    const t = tenantPredicatePg(this.scope, 2);
+    const result = await this.pool.query<RuntimeRow>(`select service, value from runs where id = $1 and ${t.sql}`, [
+      id,
+      ...t.values,
+    ]);
     const row = result.rows[0];
     return row ? readRunLogRow(row) : undefined;
   }
@@ -1067,6 +1194,7 @@ class PostgresRunLogStore implements IRunLogStore {
     return listRunLogs(
       input,
       this.limit,
+      this.scope,
       (position) => `$${position}`,
       async (sql, values) => (await this.pool.query<RuntimeRow>(sql, values)).rows,
     );

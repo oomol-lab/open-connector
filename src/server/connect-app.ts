@@ -189,6 +189,10 @@ export async function createConnectApp(options: ConnectAppOptions): Promise<Conn
     store: options.runtimeDatabase.triggerStore,
     runner: triggers,
     tokens: options.runtimeDatabase.runtimeTokenStore,
+    // The background sweep services every tenant — instance scope; the API
+    // surface (list/cancel/abandon) keeps the request-scoped stores.
+    maintenanceStore: options.runtimeDatabase.forInstance().triggerStore,
+    maintenanceTokens: options.runtimeDatabase.forInstance().runtimeTokenStore,
     runtimePolicy: options.runtimeDatabase.runtimePolicyStore,
     deploymentPolicy: options.actionPolicy ?? new ExecutionPolicyService(),
     logger: options.logger,
@@ -199,7 +203,8 @@ export async function createConnectApp(options: ConnectAppOptions): Promise<Conn
       network,
       providerHttpDispatch: options.providerHttpDispatch,
       store: options.runtimeDatabase.saasProjectStore,
-      requests: options.runtimeDatabase.connectionRequestStore,
+      // Maintenance sweeps every tenant's expired saas requests — instance scope.
+      requests: options.runtimeDatabase.forInstance().connectionRequestStore,
       client: saasClient,
       logger: options.logger,
     }),

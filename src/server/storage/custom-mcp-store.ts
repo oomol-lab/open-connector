@@ -1,10 +1,12 @@
 import type { CustomMcpRecord } from "../../custom-mcp/definition.ts";
 import type { OAuthClientConfig } from "../../oauth/oauth-client-config-service.ts";
+import type { SqlParam, TenantScope } from "../../tenant/tenant-scope.ts";
 import type { ISecretCodec } from "../secrets/secret-codec-core.ts";
 import type { RequestStatement, RequestTransaction } from "./connection-request-store.ts";
 import type { RuntimeRow } from "./runtime-sql.ts";
 
 import { customMcpNameKey } from "../../custom-mcp/definition.ts";
+import { tenantForInsert, tenantPredicate } from "../../tenant/tenant-scope.ts";
 import { HttpRequestError } from "../api/http-utils.ts";
 import { parseJson, readString } from "./runtime-sql.ts";
 
@@ -23,7 +25,8 @@ interface McpSyncFailure extends Pick<CustomMcpRecord, "service" | "revision"> {
 interface CustomMcpStoreOptions {
   secretCodec: ISecretCodec;
   transaction: RequestTransaction;
-  read(sql: string): Promise<RuntimeRow[]>;
+  read(sql: string, values?: SqlParam[]): Promise<RuntimeRow[]>;
+  scope: TenantScope;
 }
 
 /** Persist each service and its tool snapshot atomically using the shared runtime SQL dialect. */
@@ -31,20 +34,24 @@ export class CustomMcpStore {
   private readonly transaction: RequestTransaction;
   private readonly secretCodec: ISecretCodec;
   private readonly read: CustomMcpStoreOptions["read"];
+  private readonly scope: TenantScope;
 
   constructor(options: CustomMcpStoreOptions) {
     this.transaction = options.transaction;
     this.secretCodec = options.secretCodec;
     this.read = options.read;
+    this.scope = options.scope;
   }
 
   async version(): Promise<string> {
-    const rows = await this.read("select service, revision from custom_mcp order by service");
+    const t = tenantPredicate(this.scope);
+    const rows = await this.read(`select service, revision from custom_mcp where ${t.sql} order by service`, t.values);
     return JSON.stringify(rows.map((row) => [row.service, row.revision]));
   }
 
   async list(): Promise<CustomMcpRecord[]> {
-    const rows = await this.read("select * from custom_mcp order by service");
+    const t = tenantPredicate(this.scope);
+    const rows = await this.read(`select * from custom_mcp where ${t.sql} order by service`, t.values);
     return rows.map((row) => ({
       service: readString(row, "service"),
       displayName: readString(row, "display_name"),
@@ -63,9 +70,10 @@ export class CustomMcpStore {
   async create(record: McpCreate, oauthClient?: OAuthClientConfig): Promise<void> {
     const statements: RequestStatement[] = [
       {
-        sql: `insert into custom_mcp (service, name_key, display_name, endpoint, transport, auth_json, enabled, actions_json, revision)
-        values (?, ?, ?, ?, ?, ?, ?, '[]', ?) on conflict do nothing returning service`,
+        sql: `insert into custom_mcp (tenant_id, service, name_key, display_name, endpoint, transport, auth_json, enabled, actions_json, revision)
+        values (?, ?, ?, ?, ?, ?, ?, ?, '[]', ?) on conflict do nothing returning service`,
         values: [
+          tenantForInsert(this.scope),
           record.service,
           customMcpNameKey(record.displayName),
           record.displayName,
@@ -79,22 +87,24 @@ export class CustomMcpStore {
     ];
     if (oauthClient) {
       const value = await this.secretCodec.encode(JSON.stringify(oauthClient));
+      const t = tenantPredicate(this.scope);
       statements.push({
-        sql: `insert into oauth_client_configs (service, value, updated_at)
-          select service, ?, ? from custom_mcp where service = ? and revision = ?
+        sql: `insert into oauth_client_configs (tenant_id, service, value, updated_at)
+          select tenant_id, service, ?, ? from custom_mcp where service = ? and revision = ? and ${t.sql}
           on conflict(tenant_id, service) do update set value = excluded.value, updated_at = excluded.updated_at returning service`,
-        values: [value, new Date().toISOString(), record.service, record.revision],
+        values: [value, new Date().toISOString(), record.service, record.revision, ...t.values],
       });
     }
     await this.write(statements);
   }
 
   async updateSettings(record: McpSettingsUpdate, expectedRevision: string): Promise<void> {
+    const t = tenantPredicate(this.scope);
     const nameKey = customMcpNameKey(record.displayName);
     await this.write([
       {
         sql: `update custom_mcp set name_key = ?, display_name = ?, enabled = ?, revision = ?
-        where service = ? and revision = ? and not exists (select 1 from custom_mcp where name_key = ? and service <> ?) returning service`,
+        where service = ? and revision = ? and ${t.sql} and not exists (select 1 from custom_mcp where name_key = ? and service <> ?) returning service`,
         values: [
           nameKey,
           record.displayName,
@@ -102,6 +112,7 @@ export class CustomMcpStore {
           record.revision,
           record.service,
           expectedRevision,
+          ...t.values,
           nameKey,
           record.service,
         ],
@@ -110,33 +121,37 @@ export class CustomMcpStore {
   }
 
   async publishTools(record: McpToolPublication, expectedRevision: string): Promise<void> {
+    const t = tenantPredicate(this.scope);
     await this.write([
       // Match connection deletion's lock order so it cannot leave a stale sync reference.
       {
-        sql: "update connections set revision = revision where id = ? and service = ?",
-        values: [record.syncConnectionId ?? null, record.service],
+        sql: `update connections set revision = revision where id = ? and service = ? and ${t.sql}`,
+        values: [record.syncConnectionId ?? null, record.service, ...t.values],
       },
       {
-        sql: `update custom_mcp set actions_json = ?, sync_connection_id = (select id from connections where id = ? and service = ?),
-          last_synced_at = ?, sync_error = null, revision = ? where service = ? and revision = ? returning service`,
+        sql: `update custom_mcp set actions_json = ?, sync_connection_id = (select id from connections where id = ? and service = ? and ${t.sql}),
+          last_synced_at = ?, sync_error = null, revision = ? where service = ? and revision = ? and ${t.sql} returning service`,
         values: [
           JSON.stringify(record.actions),
           record.syncConnectionId ?? null,
           record.service,
+          ...t.values,
           record.syncedAt,
           record.revision,
           record.service,
           expectedRevision,
+          ...t.values,
         ],
       },
     ]);
   }
 
   async recordSyncFailure(record: McpSyncFailure, expectedRevision: string): Promise<void> {
+    const t = tenantPredicate(this.scope);
     await this.write([
       {
-        sql: "update custom_mcp set sync_error = ?, revision = ? where service = ? and revision = ? returning service",
-        values: [record.syncError, record.revision, record.service, expectedRevision],
+        sql: `update custom_mcp set sync_error = ?, revision = ? where service = ? and revision = ? and ${t.sql} returning service`,
+        values: [record.syncError, record.revision, record.service, expectedRevision, ...t.values],
       },
     ]);
   }
@@ -152,10 +167,11 @@ export class CustomMcpStore {
   }
 
   async delete(service: string, revision: string): Promise<void> {
+    const t = tenantPredicate(this.scope);
     const [[deleted]] = await this.transaction([
       {
-        sql: "delete from custom_mcp where service = ? and revision = ? and not exists (select 1 from connections where service = ?) returning service",
-        values: [service, revision, service],
+        sql: `delete from custom_mcp where service = ? and revision = ? and ${t.sql} and not exists (select 1 from connections where service = ? and ${t.sql}) returning service`,
+        values: [service, revision, ...t.values, service, ...t.values],
       },
     ]);
     if (!deleted)

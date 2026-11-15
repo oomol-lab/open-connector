@@ -29,6 +29,9 @@ interface TriggerMaintenanceOptions extends RuntimeExecutionOptions {
   runtimePolicy: IRuntimePolicyStore;
   deploymentPolicy: ActionPolicyService;
   logger?: RuntimeLogger;
+  /** Instance-scoped stores for the background sweep; defaults to the scoped stores. */
+  maintenanceStore?: TriggerStore;
+  maintenanceTokens?: IRuntimeTokenStore;
 }
 
 export class TriggerMaintenance {
@@ -113,7 +116,9 @@ export class TriggerMaintenance {
 
   private async runBatch(): Promise<void> {
     const deadline = Date.now() + 50_000;
-    const records = await this.options.store.listFlowTriggersForMaintenance(Date.now(), 10);
+    const maintenanceStore = this.options.maintenanceStore ?? this.options.store;
+    const maintenanceTokens = this.options.maintenanceTokens ?? this.options.tokens;
+    const records = await maintenanceStore.listFlowTriggersForMaintenance(Date.now(), 10);
     for (const candidate of records) {
       if (this.shutdown.signal.aborted || Date.now() >= deadline) return;
       const signal = AbortSignal.any([
@@ -121,9 +126,9 @@ export class TriggerMaintenance {
         AbortSignal.timeout(Math.max(1, Math.min(45_000, deadline - Date.now()))),
       ]);
       try {
-        await withSubscription(this.options.store, candidate.id, signal, async (record, save) => {
+        await withSubscription(maintenanceStore, candidate.id, signal, async (record, save) => {
           if (record.status === "deleted" || record.status === "abandoned") return;
-          const token = (await this.options.tokens.list()).find((token) => token.id === record.tokenId);
+          const token = (await maintenanceTokens.list()).find((token) => token.id === record.tokenId);
           const runtime = await this.options.runtimePolicy.get();
           const policy = this.options.deploymentPolicy.createSnapshot(runtime?.rules, token, runtime?.updatedAt);
           if (

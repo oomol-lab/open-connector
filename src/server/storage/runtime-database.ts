@@ -29,4 +29,8 @@ export interface RuntimeDatabase {
   oauthCodeStore: IOAuthCodeStore;
   oauthTokenStore: IOAuthTokenStore;
   oauthSigningKeyStore: IOAuthSigningKeyStore;
+  /** A sibling view whose tenant-scoped stores are bound to `tenantId`; shares the backend. */
+  forTenant(tenantId: string): RuntimeDatabase;
+  /** Cross-tenant view for instance jobs (migrations, sweeps); never bound from request input. */
+  forInstance(): RuntimeDatabase;
 }

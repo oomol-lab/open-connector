@@ -13,6 +13,7 @@ import { defaultMigrationSource } from "../migration-source.ts";
 import { createNodeRuntimeDatabase, migratePostgresRuntimeDatabase } from "../node-runtime-database.ts";
 import { RuntimeTokenService } from "../runtime-token-service.ts";
 import { saasProjectStoreTests, saasMaintenanceTests } from "../saas-project-store.cases.ts";
+import { tenantScopeTests } from "../tenant-scope.cases.ts";
 import { triggerStoreTests } from "../trigger-store.cases.ts";
 import { assertPostgresSchemaReady, migratePostgresDatabase } from "./migrations.ts";
 import { PostgresRuntimeDatabase } from "./runtime-store.ts";
@@ -172,6 +173,7 @@ describe("PostgreSQL migrations with PGlite", () => {
           { name: "0021_oauth_refresh_replay.sql" },
           { name: "0022_custom_mcp.sql" },
           { name: "0023_tenant.sql" },
+          { name: "0024_trigger_source_tenant_pk.sql" },
         ],
       });
 
@@ -240,6 +242,7 @@ describe("PostgreSQL migrations with a custom migration source", () => {
           { name: "0021_oauth_refresh_replay.sql" },
           { name: "0022_custom_mcp.sql" },
           { name: "0023_tenant.sql" },
+          { name: "0024_trigger_source_tenant_pk.sql" },
           { name: "9998_custom.sql" },
         ],
       });
@@ -327,6 +330,7 @@ describe("PostgresRuntimeDatabase with PGlite", () => {
   connectionStoreTests(() => database);
   customMcpStoreTests(() => database);
   triggerStoreTests(() => database);
+  tenantScopeTests(() => database);
 
   it("reads custom MCP catalogs without acquiring the connection transaction lock", async () => {
     const query = vi.spyOn(Client.prototype, "query");

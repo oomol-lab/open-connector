@@ -6,6 +6,7 @@ import type {
   StoredMarketplaceConfig,
 } from "../../../marketplace/marketplace-service.ts";
 import type { IOAuthClientConfigStore, OAuthClientConfig } from "../../../oauth/oauth-client-config-service.ts";
+import type { TenantScope } from "../../../tenant/tenant-scope.ts";
 import type { ISecretCodec } from "../../secrets/secret-codec-core.ts";
 import type { RequestTransaction } from "../connection-request-store.ts";
 import type {
@@ -33,6 +34,7 @@ import type { IRuntimeTokenStore, RuntimeTokenRecord } from "../runtime-token-se
 import type { StatementSync } from "node:sqlite";
 
 import { DatabaseSync } from "node:sqlite";
+import { instanceScope, tenantForInsert, tenantPredicate, tenantScope } from "../../../tenant/tenant-scope.ts";
 import { parseRuntimeActionHttpResult } from "../../api/runtime-api.ts";
 import { PlainTextSecretCodec } from "../../secrets/secret-codec-core.ts";
 import { ConnectionRequestStore } from "../connection-request-store.ts";
@@ -60,31 +62,27 @@ export interface SqliteRuntimeDatabaseOptions {
   runLimit?: number;
   secretCodec?: ISecretCodec;
   migrations?: MigrationSource;
-}
-
-interface SecretJsonInput {
-  database: DatabaseSync;
-  secretCodec: ISecretCodec;
-  table: SecretJsonTable;
-  service: string;
-}
-
-interface SetServiceJsonInput extends SecretJsonInput {
-  value: unknown;
+  /** Tenant binding for this instance's stores; omitted binds the default tenant. */
+  tenantScope?: TenantScope;
+  /** Shared handle for sibling tenant views; skips opening and migrating a new file. */
+  database?: DatabaseSync;
 }
 
 interface RotatedConnectionSecret {
+  tenantId: string;
   service: string;
   connectionName: string;
   value: string;
 }
 
 interface RotatedServiceSecret {
+  tenantId: string;
   service: string;
   value: string;
 }
 
 interface RotatedIdempotencySecret {
+  tenantId: string;
   keyHash: string;
   value: string;
 }
@@ -117,11 +115,21 @@ export class SqliteRuntimeDatabase implements RuntimeDatabase {
 
   private readonly database: DatabaseSync;
   private readonly secretCodec: ISecretCodec;
+  private readonly filename: string;
+  private readonly scope: TenantScope;
+  private readonly runLimit: number;
+  private readonly ownsDatabase: boolean;
 
   constructor(filename: string, options: SqliteRuntimeDatabaseOptions = {}) {
-    this.database = new DatabaseSync(filename);
+    this.filename = filename;
+    this.scope = options.tenantScope === undefined ? "local" : options.tenantScope;
+    this.runLimit = options.runLimit ?? DEFAULT_RUN_LIMIT;
+    this.ownsDatabase = options.database === undefined;
+    this.database = options.database ?? new DatabaseSync(filename);
     this.secretCodec = options.secretCodec ?? new PlainTextSecretCodec();
-    this.initialize(options.migrations ?? defaultMigrationSource, options.logger);
+    if (this.ownsDatabase) {
+      this.initialize(options.migrations ?? defaultMigrationSource, options.logger);
+    }
     const transaction: RequestTransaction = async (statements) =>
       runInTransaction(this.database, () =>
         statements.map(({ sql, values }) => this.database.prepare(sql).all(...values)),
@@ -129,27 +137,50 @@ export class SqliteRuntimeDatabase implements RuntimeDatabase {
     this.customMcpStore = new CustomMcpStore({
       secretCodec: this.secretCodec,
       transaction,
-      read: async (sql) => this.database.prepare(sql).all(),
+      read: async (sql, values) => this.database.prepare(sql).all(...(values ?? [])),
+      scope: this.scope,
     });
-    this.connectionRequestStore = new ConnectionRequestStore(transaction, this.secretCodec);
-    this.connectionStore = new SqlConnectionStore(transaction, this.secretCodec);
-    this.triggerStore = new SqlTriggerStore(transaction, this.secretCodec);
+    this.connectionRequestStore = new ConnectionRequestStore(transaction, this.secretCodec, this.scope);
+    this.connectionStore = new SqlConnectionStore(transaction, this.secretCodec, this.scope);
+    this.triggerStore = new SqlTriggerStore(transaction, this.secretCodec, this.scope);
     this.saasProjectStore = new SaasProjectStore(transaction, this.secretCodec);
-    this.oauthClientConfigStore = new SqliteOAuthClientConfigStore(this.database, this.secretCodec);
-    this.oauthStateStore = new SqlOAuthStateStore(transaction, this.secretCodec);
-    this.runtimeTokenStore = new SqliteRuntimeTokenStore(this.database);
+    this.oauthClientConfigStore = new SqliteOAuthClientConfigStore(this.database, this.secretCodec, this.scope);
+    this.oauthStateStore = new SqlOAuthStateStore(transaction, this.secretCodec, this.scope);
+    this.runtimeTokenStore = new SqliteRuntimeTokenStore(this.database, this.scope);
     this.runtimePolicyStore = new SqliteRuntimePolicyStore(this.database);
-    this.runLogStore = new SqliteRunLogStore(this.database, options.runLimit ?? DEFAULT_RUN_LIMIT);
-    this.idempotencyStore = new SqliteIdempotencyStore(this.database, this.secretCodec);
-    this.marketplaceStore = new SqliteMarketplaceStore(this.database);
+    this.runLogStore = new SqliteRunLogStore(this.database, this.runLimit, this.scope);
+    this.idempotencyStore = new SqliteIdempotencyStore(this.database, this.secretCodec, this.scope);
+    this.marketplaceStore = new SqliteMarketplaceStore(this.database, this.scope);
     this.oauthClientStore = new SqliteOAuthClientStore(this.database);
-    this.oauthCodeStore = new SqliteOAuthCodeStore(this.database);
-    this.oauthTokenStore = new SqliteOAuthTokenStore(this.database);
+    this.oauthCodeStore = new SqliteOAuthCodeStore(this.database, this.scope);
+    this.oauthTokenStore = new SqliteOAuthTokenStore(this.database, this.scope);
     this.oauthSigningKeyStore = new SqliteOAuthSigningKeyStore(this.database);
   }
 
+  /** A sibling view whose stores are bound to one tenant; shares the underlying database file. */
+  forTenant(tenantId: string): SqliteRuntimeDatabase {
+    return new SqliteRuntimeDatabase(this.filename, {
+      secretCodec: this.secretCodec,
+      runLimit: this.runLimit,
+      tenantScope: tenantScope(tenantId),
+      database: this.database,
+    });
+  }
+
+  /** Cross-tenant view for instance jobs (sweepers, rotation); never from request input. */
+  forInstance(): SqliteRuntimeDatabase {
+    return new SqliteRuntimeDatabase(this.filename, {
+      secretCodec: this.secretCodec,
+      runLimit: this.runLimit,
+      tenantScope: instanceScope(),
+      database: this.database,
+    });
+  }
+
   close(): void {
-    this.database.close();
+    if (this.ownsDatabase) {
+      this.database.close();
+    }
   }
 
   async rotateSecretCodec(nextSecretCodec: ISecretCodec): Promise<void> {
@@ -190,9 +221,10 @@ export class SqliteRuntimeDatabase implements RuntimeDatabase {
       );
       const sourceSecrets = await Promise.all(
         this.database
-          .prepare("select id, value from trigger_source_applications")
+          .prepare("select tenant_id, id, value from trigger_source_applications")
           .all()
           .map(async (row) => ({
+            tenantId: readString(row, "tenant_id"),
             id: readString(row, "id"),
             value: await nextSecretCodec.encode(await this.secretCodec.decode(readString(row, "value"))),
           })),
@@ -239,8 +271,8 @@ export class SqliteRuntimeDatabase implements RuntimeDatabase {
         this.database.prepare("update trigger_subscriptions set value = ? where id = ?").run(record.value, record.id);
       for (const record of sourceSecrets)
         this.database
-          .prepare("update trigger_source_applications set value = ? where id = ?")
-          .run(record.value, record.id);
+          .prepare("update trigger_source_applications set value = ? where tenant_id = ? and id = ?")
+          .run(record.value, record.tenantId, record.id);
       writeRotatedConnectionSecrets(this.database, connections);
       writeRotatedServiceSecrets(this.database, "oauth_client_configs", oauthConfigs);
       writeRotatedStateSecrets(this.database, oauthStates);
@@ -276,6 +308,8 @@ export class SqliteRuntimeDatabase implements RuntimeDatabase {
       delete from connection_requests;
       delete from runtime_tokens;
       delete from runtime_policy;
+      delete from oauth_authorization_codes;
+      delete from oauth_tokens;
       delete from runs;
       delete from idempotency_records;
       delete from custom_mcp;
@@ -293,9 +327,11 @@ export class SqliteRuntimeDatabase implements RuntimeDatabase {
 
 export class SqliteMarketplaceStore implements IMarketplaceStore {
   private readonly database: DatabaseSync;
+  private readonly scope: TenantScope;
 
-  constructor(database: DatabaseSync) {
+  constructor(database: DatabaseSync, scope: TenantScope) {
     this.database = database;
+    this.scope = scope;
   }
 
   async getConfig(): Promise<StoredMarketplaceConfig | undefined> {
@@ -316,9 +352,12 @@ export class SqliteMarketplaceStore implements IMarketplaceStore {
   }
 
   async listProviderPreferences(): Promise<ProviderPreference[]> {
+    const t = tenantPredicate(this.scope);
     return this.database
-      .prepare("select service, enabled, created_at, updated_at from provider_preferences order by service")
-      .all()
+      .prepare(
+        `select service, enabled, created_at, updated_at from provider_preferences where ${t.sql} order by service`,
+      )
+      .all(...t.values)
       .map((row) => ({
         service: readString(row, "service"),
         enabled: row.enabled === 1,
@@ -330,46 +369,58 @@ export class SqliteMarketplaceStore implements IMarketplaceStore {
   async setProviderPreference(preference: ProviderPreference): Promise<void> {
     this.database
       .prepare(
-        "insert into provider_preferences (service, enabled, created_at, updated_at) values (?, ?, ?, ?) on conflict(tenant_id, service) do update set enabled = excluded.enabled, updated_at = excluded.updated_at",
+        "insert into provider_preferences (tenant_id, service, enabled, created_at, updated_at) values (?, ?, ?, ?, ?) on conflict(tenant_id, service) do update set enabled = excluded.enabled, updated_at = excluded.updated_at",
       )
-      .run(preference.service, preference.enabled ? 1 : 0, preference.createdAt, preference.updatedAt);
+      .run(
+        tenantForInsert(this.scope),
+        preference.service,
+        preference.enabled ? 1 : 0,
+        preference.createdAt,
+        preference.updatedAt,
+      );
   }
 }
 
 export class SqliteOAuthClientConfigStore implements IOAuthClientConfigStore {
   private readonly database: DatabaseSync;
   private readonly secretCodec: ISecretCodec;
+  private readonly scope: TenantScope;
 
-  constructor(database: DatabaseSync, secretCodec: ISecretCodec) {
+  constructor(database: DatabaseSync, secretCodec: ISecretCodec, scope: TenantScope) {
     this.database = database;
     this.secretCodec = secretCodec;
+    this.scope = scope;
   }
 
   async get(service: string): Promise<OAuthClientConfig | undefined> {
-    return await getSecretJson<OAuthClientConfig>({
-      database: this.database,
-      secretCodec: this.secretCodec,
-      table: "oauth_client_configs",
-      service,
-    });
+    const t = tenantPredicate(this.scope);
+    const row = this.database
+      .prepare(`select value from oauth_client_configs where service = ? and ${t.sql}`)
+      .get(service, ...t.values);
+    return row ? parseJson<OAuthClientConfig>(await this.secretCodec.decode(readString(row, "value"))) : undefined;
   }
 
   async set(config: OAuthClientConfig): Promise<void> {
-    await setServiceJson({
-      database: this.database,
-      secretCodec: this.secretCodec,
-      table: "oauth_client_configs",
-      service: config.service,
-      value: config,
-    });
+    const value = await this.secretCodec.encode(JSON.stringify(config));
+    this.database
+      .prepare(
+        `insert into oauth_client_configs (tenant_id, service, value, updated_at)
+        values (?, ?, ?, ?)
+        on conflict(tenant_id, service) do update set value = excluded.value, updated_at = excluded.updated_at`,
+      )
+      .run(tenantForInsert(this.scope), config.service, value, new Date().toISOString());
   }
 
   async delete(service: string): Promise<void> {
-    this.database.prepare("delete from oauth_client_configs where service = ?").run(service);
+    const t = tenantPredicate(this.scope);
+    this.database.prepare(`delete from oauth_client_configs where service = ? and ${t.sql}`).run(service, ...t.values);
   }
 
   async list(): Promise<OAuthClientConfig[]> {
-    const rows = this.database.prepare("select value from oauth_client_configs order by service").all();
+    const t = tenantPredicate(this.scope);
+    const rows = this.database
+      .prepare(`select value from oauth_client_configs where ${t.sql} order by service`)
+      .all(...t.values);
     return await Promise.all(
       rows.map(async (row) => parseJson<OAuthClientConfig>(await this.secretCodec.decode(readString(row, "value")))),
     );
@@ -378,12 +429,14 @@ export class SqliteOAuthClientConfigStore implements IOAuthClientConfigStore {
 
 export class SqliteRuntimeTokenStore implements IRuntimeTokenStore {
   private readonly database: DatabaseSync;
+  private readonly scope: TenantScope;
   private hasAnyStatement?: StatementSync;
   private findByHashStatement?: StatementSync;
   private markUsedStatement?: StatementSync;
 
-  constructor(database: DatabaseSync) {
+  constructor(database: DatabaseSync, scope: TenantScope) {
     this.database = database;
+    this.scope = scope;
   }
 
   async add(record: RuntimeTokenRecord): Promise<void> {
@@ -391,12 +444,13 @@ export class SqliteRuntimeTokenStore implements IRuntimeTokenStore {
       .prepare(
         `
         insert into runtime_tokens (
-          ${runtimeTokenColumns}
+          tenant_id, ${runtimeTokenColumns}
         )
-        values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `,
       )
       .run(
+        tenantForInsert(this.scope),
         record.id,
         record.name,
         record.tokenHash,
@@ -416,16 +470,19 @@ export class SqliteRuntimeTokenStore implements IRuntimeTokenStore {
         `
         select ${runtimeTokenColumns}
         from runtime_tokens
+        where ${tenantPredicate(this.scope).sql}
         order by created_at desc, id desc
       `,
       )
-      .all()
+      .all(...tenantPredicate(this.scope).values)
       .map(readRuntimeTokenRow);
   }
 
   async hasAny(): Promise<boolean> {
-    this.hasAnyStatement ??= this.database.prepare("select 1 from runtime_tokens limit 1");
-    return this.hasAnyStatement.get() !== undefined;
+    this.hasAnyStatement ??= this.database.prepare(
+      `select 1 from runtime_tokens where ${tenantPredicate(this.scope).sql} limit 1`,
+    );
+    return this.hasAnyStatement.get(...tenantPredicate(this.scope).values) !== undefined;
   }
 
   async findByHash(tokenHash: string): Promise<RuntimeTokenRecord | undefined> {
@@ -433,9 +490,9 @@ export class SqliteRuntimeTokenStore implements IRuntimeTokenStore {
     this.findByHashStatement ??= this.database.prepare(`
       select ${runtimeTokenColumns}
       from runtime_tokens
-      where token_hash = ?
+      where token_hash = ? and ${tenantPredicate(this.scope).sql}
     `);
-    const row = this.findByHashStatement.get(tokenHash);
+    const row = this.findByHashStatement.get(tokenHash, ...tenantPredicate(this.scope).values);
     return row ? readRuntimeTokenRow(row) : undefined;
   }
 
@@ -445,10 +502,10 @@ export class SqliteRuntimeTokenStore implements IRuntimeTokenStore {
         `
         select ${runtimeTokenColumns}
         from runtime_tokens
-        where id = ?
+        where id = ? and ${tenantPredicate(this.scope).sql}
       `,
       )
-      .get(id);
+      .get(id, ...tenantPredicate(this.scope).values);
     return row ? readRuntimeTokenRow(row) : undefined;
   }
 
@@ -458,7 +515,7 @@ export class SqliteRuntimeTokenStore implements IRuntimeTokenStore {
         `
         update runtime_tokens
         set allowed_actions = ?, blocked_actions = ?, allowed_proxies = ?, allowed_connections = ?, allowed_triggers = ?
-        where id = ?
+        where id = ? and ${tenantPredicate(this.scope).sql}
         returning ${runtimeTokenColumns}
       `,
       )
@@ -469,18 +526,22 @@ export class SqliteRuntimeTokenStore implements IRuntimeTokenStore {
         JSON.stringify(policy.allowedConnections ?? []),
         JSON.stringify(policy.allowedTriggers ?? []),
         id,
+        ...tenantPredicate(this.scope).values,
       );
     return row ? readRuntimeTokenRow(row) : undefined;
   }
 
   async revoke(id: string): Promise<boolean> {
-    const result = this.database.prepare("delete from runtime_tokens where id = ?").run(id);
+    const t = tenantPredicate(this.scope);
+    const result = this.database.prepare(`delete from runtime_tokens where id = ? and ${t.sql}`).run(id, ...t.values);
     return result.changes > 0;
   }
 
   async markUsed(id: string, usedAt: string): Promise<void> {
-    this.markUsedStatement ??= this.database.prepare("update runtime_tokens set last_used_at = ? where id = ?");
-    this.markUsedStatement.run(usedAt, id);
+    this.markUsedStatement ??= this.database.prepare(
+      `update runtime_tokens set last_used_at = ? where id = ? and ${tenantPredicate(this.scope).sql}`,
+    );
+    this.markUsedStatement.run(usedAt, id, ...tenantPredicate(this.scope).values);
   }
 }
 
@@ -559,9 +620,11 @@ export class SqliteOAuthClientStore implements IOAuthClientStore {
 
 export class SqliteOAuthCodeStore implements IOAuthCodeStore {
   private readonly database: DatabaseSync;
+  private readonly scope: TenantScope;
 
-  constructor(database: DatabaseSync) {
+  constructor(database: DatabaseSync, scope: TenantScope) {
     this.database = database;
+    this.scope = scope;
   }
 
   async add(record: OAuthAuthorizationCodeRecord): Promise<void> {
@@ -569,13 +632,14 @@ export class SqliteOAuthCodeStore implements IOAuthCodeStore {
       .prepare(
         `
         insert into oauth_authorization_codes (
-          code_hash, client_id, redirect_uri, scope, code_challenge, resource,
+          tenant_id, code_hash, client_id, redirect_uri, scope, code_challenge, resource,
           runtime_token_id, issued_at, expires_at, consumed_at
         )
-        values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `,
       )
       .run(
+        tenantForInsert(this.scope),
         record.codeHash,
         record.clientId,
         record.redirectUri,
@@ -592,7 +656,9 @@ export class SqliteOAuthCodeStore implements IOAuthCodeStore {
   async consume(codeHash: string): Promise<OAuthAuthorizationCodeRecord | undefined> {
     return runInTransaction(this.database, () => {
       const now = Date.now();
-      const row = this.database.prepare("select * from oauth_authorization_codes where code_hash = ?").get(codeHash);
+      const row = this.database
+        .prepare(`select * from oauth_authorization_codes where code_hash = ? and ${tenantPredicate(this.scope).sql}`)
+        .get(codeHash, ...tenantPredicate(this.scope).values);
       if (!row) {
         return undefined;
       }
@@ -602,31 +668,44 @@ export class SqliteOAuthCodeStore implements IOAuthCodeStore {
       }
       const consumedAt = Date.now();
       this.database
-        .prepare("update oauth_authorization_codes set consumed_at = ? where code_hash = ?")
-        .run(consumedAt, codeHash);
+        .prepare(
+          `update oauth_authorization_codes set consumed_at = ? where code_hash = ? and ${tenantPredicate(this.scope).sql}`,
+        )
+        .run(consumedAt, codeHash, ...tenantPredicate(this.scope).values);
       return { ...record, consumedAt };
     });
   }
 
   async listByClient(clientId: string): Promise<OAuthAuthorizationCodeRecord[]> {
-    const rows = this.database.prepare("select * from oauth_authorization_codes where client_id = ?").all(clientId);
+    const t = tenantPredicate(this.scope);
+    const rows = this.database
+      .prepare(`select * from oauth_authorization_codes where client_id = ? and ${t.sql}`)
+      .all(clientId, ...t.values);
     return rows.map((row) => readOAuthCodeRow(row));
   }
 
   async deleteByClient(clientId: string): Promise<void> {
-    this.database.prepare("delete from oauth_authorization_codes where client_id = ?").run(clientId);
+    const t = tenantPredicate(this.scope);
+    this.database
+      .prepare(`delete from oauth_authorization_codes where client_id = ? and ${t.sql}`)
+      .run(clientId, ...t.values);
   }
 
   async deleteExpired(nowMs: number): Promise<void> {
-    this.database.prepare("delete from oauth_authorization_codes where expires_at <= ?").run(nowMs);
+    const t = tenantPredicate(this.scope);
+    this.database
+      .prepare(`delete from oauth_authorization_codes where expires_at <= ? and ${t.sql}`)
+      .run(nowMs, ...t.values);
   }
 }
 
 export class SqliteOAuthTokenStore implements IOAuthTokenStore {
   private readonly database: DatabaseSync;
+  private readonly scope: TenantScope;
 
-  constructor(database: DatabaseSync) {
+  constructor(database: DatabaseSync, scope: TenantScope) {
     this.database = database;
+    this.scope = scope;
   }
 
   async add(record: OAuthAccessTokenRecord): Promise<void> {
@@ -638,13 +717,14 @@ export class SqliteOAuthTokenStore implements IOAuthTokenStore {
       .prepare(
         `
         insert into oauth_tokens (
-          token_hash, refresh_token_hash, client_id, runtime_token_id, scope, resource,
+          tenant_id, token_hash, refresh_token_hash, client_id, runtime_token_id, scope, resource,
           issued_at, expires_at, refresh_expires_at, revoked_at, refresh_consumed_at
         )
-        values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `,
       )
       .run(
+        tenantForInsert(this.scope),
         record.tokenHash,
         record.refreshTokenHash ?? null,
         record.clientId,
@@ -660,12 +740,16 @@ export class SqliteOAuthTokenStore implements IOAuthTokenStore {
   }
 
   async findByAccessTokenHash(tokenHash: string): Promise<OAuthAccessTokenRecord | undefined> {
-    const row = this.database.prepare("select * from oauth_tokens where token_hash = ?").get(tokenHash);
+    const row = this.database
+      .prepare(`select * from oauth_tokens where token_hash = ? and ${tenantPredicate(this.scope).sql}`)
+      .get(tokenHash, ...tenantPredicate(this.scope).values);
     return row ? readOAuthTokenRow(row) : undefined;
   }
 
   async findByRefreshTokenHash(tokenHash: string): Promise<OAuthAccessTokenRecord | undefined> {
-    const row = this.database.prepare("select * from oauth_tokens where refresh_token_hash = ?").get(tokenHash);
+    const row = this.database
+      .prepare(`select * from oauth_tokens where refresh_token_hash = ? and ${tenantPredicate(this.scope).sql}`)
+      .get(tokenHash, ...tenantPredicate(this.scope).values);
     return row ? readOAuthTokenRow(row) : undefined;
   }
 
@@ -689,10 +773,11 @@ export class SqliteOAuthTokenStore implements IOAuthTokenStore {
             and refresh_consumed_at is null
             and refresh_expires_at is not null
             and refresh_expires_at > ?
+            and ${tenantPredicate(this.scope).sql}
           returning *
         `,
         )
-        .all(Date.now(), oldRefreshTokenHash, Date.now());
+        .all(Date.now(), oldRefreshTokenHash, Date.now(), ...tenantPredicate(this.scope).values);
       const row = rows[0];
       if (!row) {
         return undefined;
@@ -704,8 +789,10 @@ export class SqliteOAuthTokenStore implements IOAuthTokenStore {
 
   async listByClient(clientId: string): Promise<OAuthAccessTokenRecord[]> {
     return this.database
-      .prepare("select * from oauth_tokens where client_id = ? order by issued_at, token_hash")
-      .all(clientId)
+      .prepare(
+        `select * from oauth_tokens where client_id = ? and ${tenantPredicate(this.scope).sql} order by issued_at, token_hash`,
+      )
+      .all(clientId, ...tenantPredicate(this.scope).values)
       .map(readOAuthTokenRow);
   }
 
@@ -715,10 +802,10 @@ export class SqliteOAuthTokenStore implements IOAuthTokenStore {
         `
         update oauth_tokens
         set revoked_at = ?
-        where client_id = ? and runtime_token_id = ? and revoked_at is null
+        where client_id = ? and runtime_token_id = ? and revoked_at is null and ${tenantPredicate(this.scope).sql}
       `,
       )
-      .run(Date.now(), clientId, runtimeTokenId);
+      .run(Date.now(), clientId, runtimeTokenId, ...tenantPredicate(this.scope).values);
     return Number(result.changes);
   }
 
@@ -729,9 +816,10 @@ export class SqliteOAuthTokenStore implements IOAuthTokenStore {
         delete from oauth_tokens
         where expires_at <= ?
           and (refresh_expires_at is null or refresh_expires_at <= ?)
+          and ${tenantPredicate(this.scope).sql}
       `,
       )
-      .run(nowMs, nowMs);
+      .run(nowMs, nowMs, ...tenantPredicate(this.scope).values);
   }
 }
 
@@ -909,26 +997,31 @@ export class SqliteRuntimePolicyStore implements IRuntimePolicyStore {
 export class SqliteIdempotencyStore implements IIdempotencyStore {
   private readonly database: DatabaseSync;
   private readonly secretCodec: ISecretCodec;
+  private readonly scope: TenantScope;
 
-  constructor(database: DatabaseSync, secretCodec: ISecretCodec) {
+  constructor(database: DatabaseSync, secretCodec: ISecretCodec, scope: TenantScope) {
     this.database = database;
     this.secretCodec = secretCodec;
+    this.scope = scope;
   }
 
   async claim(input: IdempotencyClaimInput): Promise<IdempotencyClaimResult> {
+    const t = tenantPredicate(this.scope);
     const claim = runInTransaction(this.database, () => {
-      this.database.prepare("delete from idempotency_records where expires_at <= ?").run(input.now);
+      this.database
+        .prepare(`delete from idempotency_records where expires_at <= ? and ${t.sql}`)
+        .run(input.now, ...t.values);
       const inserted = this.database
         .prepare(
           `
           insert into idempotency_records (
-            key_hash, claim_id, request_hash, state, response_value, created_at, expires_at
+            tenant_id, key_hash, claim_id, request_hash, state, response_value, created_at, expires_at
           )
-          values (?, ?, ?, 'in_progress', null, ?, ?)
+          values (?, ?, ?, ?, 'in_progress', null, ?, ?)
           on conflict(tenant_id, key_hash) do nothing
         `,
         )
-        .run(input.keyHash, input.claimId, input.requestHash, input.now, input.expiresAt);
+        .run(tenantForInsert(this.scope), input.keyHash, input.claimId, input.requestHash, input.now, input.expiresAt);
 
       if (inserted.changes > 0) {
         return { kind: "acquired" } as const;
@@ -939,10 +1032,10 @@ export class SqliteIdempotencyStore implements IIdempotencyStore {
           `
           select request_hash, state, response_value
           from idempotency_records
-          where key_hash = ?
+          where key_hash = ? and ${t.sql}
         `,
         )
-        .get(input.keyHash);
+        .get(input.keyHash, ...t.values);
       if (!row) {
         throw new Error("Idempotency record disappeared while claiming it.");
       }
@@ -968,6 +1061,7 @@ export class SqliteIdempotencyStore implements IIdempotencyStore {
   }
 
   async complete(input: CompleteIdempotencyInput): Promise<boolean> {
+    const t = tenantPredicate(this.scope);
     const responseValue = await this.secretCodec.encode(JSON.stringify(input.response));
     const result = this.database
       .prepare(
@@ -978,9 +1072,10 @@ export class SqliteIdempotencyStore implements IIdempotencyStore {
           and claim_id = ?
           and request_hash = ?
           and state = 'in_progress'
+          and ${t.sql}
       `,
       )
-      .run(responseValue, input.expiresAt, input.keyHash, input.claimId, input.requestHash);
+      .run(responseValue, input.expiresAt, input.keyHash, input.claimId, input.requestHash, ...t.values);
     return result.changes > 0;
   }
 }
@@ -988,28 +1083,31 @@ export class SqliteIdempotencyStore implements IIdempotencyStore {
 export class SqliteRunLogStore implements IRunLogStore {
   private readonly database: DatabaseSync;
   private readonly limit: number;
+  private readonly scope: TenantScope;
 
-  constructor(database: DatabaseSync, limit: number) {
+  constructor(database: DatabaseSync, limit: number, scope: TenantScope) {
     this.database = database;
     this.limit = limit;
+    this.scope = scope;
   }
 
   async add(run: RunLog): Promise<RunLogWriteResult> {
-    insertRun(this.database, run);
+    insertRun(this.database, run, tenantForInsert(this.scope));
 
     try {
+      const t = tenantPredicate(this.scope);
       this.database
         .prepare(
           `
           delete from runs
           where id in (
-            select id from runs
+            select id from runs where ${t.sql}
             order by started_at desc, id desc
             limit -1 offset ?
           )
         `,
         )
-        .run(this.limit);
+        .run(...t.values, this.limit);
       return { retentionApplied: true };
     } catch {
       return { retentionApplied: false };
@@ -1017,7 +1115,8 @@ export class SqliteRunLogStore implements IRunLogStore {
   }
 
   async get(id: string): Promise<RunLog | undefined> {
-    const row = this.database.prepare("select service, value from runs where id = ?").get(id);
+    const t = tenantPredicate(this.scope);
+    const row = this.database.prepare(`select service, value from runs where id = ? and ${t.sql}`).get(id, ...t.values);
     return row ? readRunLogRow(row) : undefined;
   }
 
@@ -1025,18 +1124,19 @@ export class SqliteRunLogStore implements IRunLogStore {
     return listRunLogs(
       input,
       this.limit,
+      this.scope,
       () => "?",
       (sql, values) => this.database.prepare(sql).all(...values),
     );
   }
 }
 
-function insertRun(database: DatabaseSync, run: RunLog): void {
+function insertRun(database: DatabaseSync, run: RunLog, tenantId: string): void {
   database
     .prepare(
       `
-      insert into runs (id, service, action_id, caller, started_at, completed_at, ok, value)
-      values (?, ?, ?, ?, ?, ?, ?, ?)
+      insert into runs (id, tenant_id, service, action_id, caller, started_at, completed_at, ok, value)
+      values (?, ?, ?, ?, ?, ?, ?, ?, ?)
       on conflict(id) do update set
         service = excluded.service,
         action_id = excluded.action_id,
@@ -1049,6 +1149,7 @@ function insertRun(database: DatabaseSync, run: RunLog): void {
     )
     .run(
       run.id,
+      tenantId,
       run.service,
       run.actionId,
       run.caller,
@@ -1121,9 +1222,10 @@ async function readRotatedConnectionSecrets(
   currentCodec: ISecretCodec,
   nextCodec: ISecretCodec,
 ): Promise<RotatedConnectionSecret[]> {
-  const rows = database.prepare("select service, connection_name, value from connections").all();
+  const rows = database.prepare("select tenant_id, service, connection_name, value from connections").all();
   return await Promise.all(
     rows.map(async (row) => ({
+      tenantId: readString(row, "tenant_id"),
       service: readString(row, "service"),
       connectionName: readString(row, "connection_name"),
       value: await nextCodec.encode(await currentCodec.decode(readString(row, "value"))),
@@ -1132,9 +1234,11 @@ async function readRotatedConnectionSecrets(
 }
 
 function writeRotatedConnectionSecrets(database: DatabaseSync, connections: RotatedConnectionSecret[]): void {
-  const statement = database.prepare("update connections set value = ? where service = ? and connection_name = ?");
+  const statement = database.prepare(
+    "update connections set value = ? where tenant_id = ? and service = ? and connection_name = ?",
+  );
   for (const connection of connections) {
-    statement.run(connection.value, connection.service, connection.connectionName);
+    statement.run(connection.value, connection.tenantId, connection.service, connection.connectionName);
   }
 }
 
@@ -1144,9 +1248,10 @@ async function readRotatedServiceSecrets(
   nextCodec: ISecretCodec,
   table: SecretJsonTable,
 ): Promise<RotatedServiceSecret[]> {
-  const rows = database.prepare(`select service, value from ${table}`).all();
+  const rows = database.prepare(`select tenant_id, service, value from ${table}`).all();
   return await Promise.all(
     rows.map(async (row) => ({
+      tenantId: readString(row, "tenant_id"),
       service: readString(row, "service"),
       value: await nextCodec.encode(await currentCodec.decode(readString(row, "value"))),
     })),
@@ -1158,9 +1263,9 @@ function writeRotatedServiceSecrets(
   table: SecretJsonTable,
   services: RotatedServiceSecret[],
 ): void {
-  const statement = database.prepare(`update ${table} set value = ? where service = ?`);
+  const statement = database.prepare(`update ${table} set value = ? where tenant_id = ? and service = ?`);
   for (const service of services) {
-    statement.run(service.value, service.service);
+    statement.run(service.value, service.tenantId, service.service);
   }
 }
 
@@ -1191,10 +1296,11 @@ async function readRotatedIdempotencySecrets(
   nextCodec: ISecretCodec,
 ): Promise<RotatedIdempotencySecret[]> {
   const rows = database
-    .prepare("select key_hash, response_value from idempotency_records where response_value is not null")
+    .prepare("select tenant_id, key_hash, response_value from idempotency_records where response_value is not null")
     .all();
   return await Promise.all(
     rows.map(async (row) => ({
+      tenantId: readString(row, "tenant_id"),
       keyHash: readString(row, "key_hash"),
       value: await nextCodec.encode(await currentCodec.decode(readString(row, "response_value"))),
     })),
@@ -1202,9 +1308,11 @@ async function readRotatedIdempotencySecrets(
 }
 
 function writeRotatedIdempotencySecrets(database: DatabaseSync, responses: RotatedIdempotencySecret[]): void {
-  const statement = database.prepare("update idempotency_records set response_value = ? where key_hash = ?");
+  const statement = database.prepare(
+    "update idempotency_records set response_value = ? where tenant_id = ? and key_hash = ?",
+  );
   for (const response of responses) {
-    statement.run(response.value, response.keyHash);
+    statement.run(response.value, response.tenantId, response.keyHash);
   }
 }
 
@@ -1218,31 +1326,4 @@ function runInTransaction<T>(database: DatabaseSync, work: () => T): T {
     database.exec("rollback");
     throw error;
   }
-}
-
-async function getSecretJson<T>(input: SecretJsonInput): Promise<T | undefined> {
-  const stored = getStoredValue(input.database, input.table, "service", input.service);
-  return stored ? parseJson<T>(await input.secretCodec.decode(stored)) : undefined;
-}
-
-function getStoredValue(
-  database: DatabaseSync,
-  table: SecretJsonTable,
-  keyColumn: "service",
-  key: string,
-): string | undefined {
-  const row = database.prepare(`select value from ${table} where ${keyColumn} = ?`).get(key);
-  return row ? readString(row, "value") : undefined;
-}
-
-async function setServiceJson(input: SetServiceJsonInput): Promise<void> {
-  input.database
-    .prepare(
-      `
-      insert into ${input.table} (service, value, updated_at)
-      values (?, ?, ?)
-      on conflict(tenant_id, service) do update set value = excluded.value, updated_at = excluded.updated_at
-    `,
-    )
-    .run(input.service, await input.secretCodec.encode(JSON.stringify(input.value)), new Date().toISOString());
 }

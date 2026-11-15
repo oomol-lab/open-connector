@@ -5,6 +5,7 @@ import type {
   StoredMarketplaceConfig,
 } from "../../../marketplace/marketplace-service.ts";
 import type { IOAuthClientConfigStore, OAuthClientConfig } from "../../../oauth/oauth-client-config-service.ts";
+import type { TenantScope } from "../../../tenant/tenant-scope.ts";
 import type { D1DatabaseBinding } from "../../cloudflare/cloudflare-bindings.ts";
 import type { ISecretCodec } from "../../secrets/secret-codec-core.ts";
 import type { RequestTransaction } from "../connection-request-store.ts";
@@ -30,6 +31,7 @@ import type { RuntimeRow } from "../runtime-sql.ts";
 import type { IRunLogStore, RunLog, RunLogListInput, RunLogPage, RunLogWriteResult } from "../runtime-store.ts";
 import type { IRuntimeTokenStore, RuntimeTokenRecord } from "../runtime-token-service.ts";
 
+import { instanceScope, tenantForInsert, tenantPredicate, tenantScope } from "../../../tenant/tenant-scope.ts";
 import { parseRuntimeActionHttpResult } from "../../api/runtime-api.ts";
 import { PlainTextSecretCodec } from "../../secrets/secret-codec-core.ts";
 import { ConnectionRequestStore } from "../connection-request-store.ts";
@@ -49,11 +51,11 @@ import { DEFAULT_RUN_LIMIT } from "../runtime-store.ts";
 import { SaasProjectStore } from "../saas-project-store.ts";
 import { SqlTriggerStore } from "../trigger-store.ts";
 
-type SecretJsonTable = "oauth_client_configs";
-
 export interface D1RuntimeDatabaseOptions {
   runLimit?: number;
   secretCodec?: ISecretCodec;
+  /** Tenant binding for this instance's stores; omitted binds the default tenant. */
+  tenantScope?: TenantScope;
 }
 
 export class D1RuntimeDatabase implements RuntimeDatabase {
@@ -74,8 +76,17 @@ export class D1RuntimeDatabase implements RuntimeDatabase {
   readonly oauthTokenStore: D1OAuthTokenStore;
   readonly oauthSigningKeyStore: D1OAuthSigningKeyStore;
 
+  private readonly binding: D1DatabaseBinding;
+  private readonly scope: TenantScope;
+  private readonly runLimit: number;
+  private readonly secretCodec: ISecretCodec;
+
   constructor(database: D1DatabaseBinding, options: D1RuntimeDatabaseOptions = {}) {
+    this.binding = database;
+    this.scope = options.tenantScope === undefined ? "local" : options.tenantScope;
+    this.runLimit = options.runLimit ?? DEFAULT_RUN_LIMIT;
     const secretCodec = options.secretCodec ?? new PlainTextSecretCodec();
+    this.secretCodec = secretCodec;
     const transaction: RequestTransaction = async (statements) => {
       const results = await database.batch(statements.map(({ sql, values }) => database.prepare(sql).bind(...values)));
       return results.map((result) => result.results ?? []);
@@ -83,31 +94,58 @@ export class D1RuntimeDatabase implements RuntimeDatabase {
     this.customMcpStore = new CustomMcpStore({
       secretCodec: secretCodec,
       transaction,
-      read: async (sql) => (await database.prepare(sql).all()).results ?? [],
+      read: async (sql, values) =>
+        (
+          await database
+            .prepare(sql)
+            .bind(...(values ?? []))
+            .all()
+        ).results ?? [],
+      scope: this.scope,
     });
-    this.connectionRequestStore = new ConnectionRequestStore(transaction, secretCodec);
-    this.connectionStore = new SqlConnectionStore(transaction, secretCodec);
-    this.triggerStore = new SqlTriggerStore(transaction, secretCodec);
+    this.connectionRequestStore = new ConnectionRequestStore(transaction, secretCodec, this.scope);
+    this.connectionStore = new SqlConnectionStore(transaction, secretCodec, this.scope);
+    this.triggerStore = new SqlTriggerStore(transaction, secretCodec, this.scope);
     this.saasProjectStore = new SaasProjectStore(transaction, secretCodec);
-    this.oauthClientConfigStore = new D1OAuthClientConfigStore(database, secretCodec);
-    this.oauthStateStore = new SqlOAuthStateStore(transaction, secretCodec);
-    this.runtimeTokenStore = new D1RuntimeTokenStore(database);
+    this.oauthClientConfigStore = new D1OAuthClientConfigStore(database, secretCodec, this.scope);
+    this.oauthStateStore = new SqlOAuthStateStore(transaction, secretCodec, this.scope);
+    this.runtimeTokenStore = new D1RuntimeTokenStore(database, this.scope);
     this.runtimePolicyStore = new D1RuntimePolicyStore(database);
-    this.runLogStore = new D1RunLogStore(database, options.runLimit ?? DEFAULT_RUN_LIMIT);
-    this.idempotencyStore = new D1IdempotencyStore(database, secretCodec);
-    this.marketplaceStore = new D1MarketplaceStore(database);
+    this.runLogStore = new D1RunLogStore(database, this.runLimit, this.scope);
+    this.idempotencyStore = new D1IdempotencyStore(database, secretCodec, this.scope);
+    this.marketplaceStore = new D1MarketplaceStore(database, this.scope);
     this.oauthClientStore = new D1OAuthClientStore(database);
-    this.oauthCodeStore = new D1OAuthCodeStore(database);
-    this.oauthTokenStore = new D1OAuthTokenStore(database);
+    this.oauthCodeStore = new D1OAuthCodeStore(database, this.scope);
+    this.oauthTokenStore = new D1OAuthTokenStore(database, this.scope);
     this.oauthSigningKeyStore = new D1OAuthSigningKeyStore(database);
+  }
+
+  /** A sibling view whose stores are bound to one tenant; shares the D1 binding. */
+  forTenant(tenantId: string): D1RuntimeDatabase {
+    return new D1RuntimeDatabase(this.binding, {
+      secretCodec: this.secretCodec,
+      runLimit: this.runLimit,
+      tenantScope: tenantScope(tenantId),
+    });
+  }
+
+  /** Cross-tenant view for instance jobs (sweepers); never from request input. */
+  forInstance(): D1RuntimeDatabase {
+    return new D1RuntimeDatabase(this.binding, {
+      secretCodec: this.secretCodec,
+      runLimit: this.runLimit,
+      tenantScope: instanceScope(),
+    });
   }
 }
 
 class D1MarketplaceStore implements IMarketplaceStore {
   private readonly database: D1DatabaseBinding;
+  private readonly scope: TenantScope;
 
-  constructor(database: D1DatabaseBinding) {
+  constructor(database: D1DatabaseBinding, scope: TenantScope) {
     this.database = database;
+    this.scope = scope;
   }
 
   async getConfig(): Promise<StoredMarketplaceConfig | undefined> {
@@ -129,8 +167,12 @@ class D1MarketplaceStore implements IMarketplaceStore {
   }
 
   async listProviderPreferences(): Promise<ProviderPreference[]> {
+    const t = tenantPredicate(this.scope);
     const { results } = await this.database
-      .prepare("select service, enabled, created_at, updated_at from provider_preferences order by service")
+      .prepare(
+        `select service, enabled, created_at, updated_at from provider_preferences where ${t.sql} order by service`,
+      )
+      .bind(...t.values)
       .all<RuntimeRow>();
     return results.map((row) => ({
       service: readString(row, "service"),
@@ -143,9 +185,15 @@ class D1MarketplaceStore implements IMarketplaceStore {
   async setProviderPreference(preference: ProviderPreference): Promise<void> {
     await this.database
       .prepare(
-        "insert into provider_preferences (service, enabled, created_at, updated_at) values (?, ?, ?, ?) on conflict(tenant_id, service) do update set enabled = excluded.enabled, updated_at = excluded.updated_at",
+        "insert into provider_preferences (tenant_id, service, enabled, created_at, updated_at) values (?, ?, ?, ?, ?) on conflict(tenant_id, service) do update set enabled = excluded.enabled, updated_at = excluded.updated_at",
       )
-      .bind(preference.service, preference.enabled ? 1 : 0, preference.createdAt, preference.updatedAt)
+      .bind(
+        tenantForInsert(this.scope),
+        preference.service,
+        preference.enabled ? 1 : 0,
+        preference.createdAt,
+        preference.updatedAt,
+      )
       .run();
   }
 }
@@ -153,36 +201,54 @@ class D1MarketplaceStore implements IMarketplaceStore {
 export class D1OAuthClientConfigStore implements IOAuthClientConfigStore {
   private readonly database: D1DatabaseBinding;
   private readonly secretCodec: ISecretCodec;
+  private readonly scope: TenantScope;
 
-  constructor(database: D1DatabaseBinding, secretCodec: ISecretCodec) {
+  constructor(database: D1DatabaseBinding, secretCodec: ISecretCodec, scope: TenantScope) {
     this.database = database;
     this.secretCodec = secretCodec;
+    this.scope = scope;
   }
 
   async get(service: string): Promise<OAuthClientConfig | undefined> {
-    return await getSecretJson<OAuthClientConfig>(this.database, this.secretCodec, "oauth_client_configs", service);
+    const t = tenantPredicate(this.scope);
+    const row = await this.database
+      .prepare(`select value from oauth_client_configs where service = ? and ${t.sql}`)
+      .bind(service, ...t.values)
+      .first<RuntimeRow>();
+    return row ? parseJson<OAuthClientConfig>(await this.secretCodec.decode(readString(row, "value"))) : undefined;
   }
 
   async set(config: OAuthClientConfig): Promise<void> {
     await this.database
       .prepare(
         `
-        insert into oauth_client_configs (service, value, updated_at)
-        values (?, ?, ?)
+        insert into oauth_client_configs (tenant_id, service, value, updated_at)
+        values (?, ?, ?, ?)
         on conflict(tenant_id, service) do update set value = excluded.value, updated_at = excluded.updated_at
       `,
       )
-      .bind(config.service, await this.secretCodec.encode(JSON.stringify(config)), new Date().toISOString())
+      .bind(
+        tenantForInsert(this.scope),
+        config.service,
+        await this.secretCodec.encode(JSON.stringify(config)),
+        new Date().toISOString(),
+      )
       .run();
   }
 
   async delete(service: string): Promise<void> {
-    await this.database.prepare("delete from oauth_client_configs where service = ?").bind(service).run();
+    const t = tenantPredicate(this.scope);
+    await this.database
+      .prepare(`delete from oauth_client_configs where service = ? and ${t.sql}`)
+      .bind(service, ...t.values)
+      .run();
   }
 
   async list(): Promise<OAuthClientConfig[]> {
+    const t = tenantPredicate(this.scope);
     const { results } = await this.database
-      .prepare("select value from oauth_client_configs order by service")
+      .prepare(`select value from oauth_client_configs where ${t.sql} order by service`)
+      .bind(...t.values)
       .all<RuntimeRow>();
     return await Promise.all(
       results.map(async (row) => parseJson<OAuthClientConfig>(await this.secretCodec.decode(readString(row, "value")))),
@@ -192,9 +258,11 @@ export class D1OAuthClientConfigStore implements IOAuthClientConfigStore {
 
 export class D1RuntimeTokenStore implements IRuntimeTokenStore {
   private readonly database: D1DatabaseBinding;
+  private readonly scope: TenantScope;
 
-  constructor(database: D1DatabaseBinding) {
+  constructor(database: D1DatabaseBinding, scope: TenantScope) {
     this.database = database;
+    this.scope = scope;
   }
 
   async add(record: RuntimeTokenRecord): Promise<void> {
@@ -202,12 +270,13 @@ export class D1RuntimeTokenStore implements IRuntimeTokenStore {
       .prepare(
         `
         insert into runtime_tokens (
-          ${runtimeTokenColumns}
+          tenant_id, ${runtimeTokenColumns}
         )
-        values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `,
       )
       .bind(
+        tenantForInsert(this.scope),
         record.id,
         record.name,
         record.tokenHash,
@@ -228,15 +297,20 @@ export class D1RuntimeTokenStore implements IRuntimeTokenStore {
         `
         select ${runtimeTokenColumns}
         from runtime_tokens
+        where ${tenantPredicate(this.scope).sql}
         order by created_at desc, id desc
       `,
       )
+      .bind(...tenantPredicate(this.scope).values)
       .all<RuntimeRow>();
     return results.map(readRuntimeTokenRow);
   }
 
   async hasAny(): Promise<boolean> {
-    const row = await this.database.prepare("select 1 from runtime_tokens limit 1").first();
+    const row = await this.database
+      .prepare(`select 1 from runtime_tokens where ${tenantPredicate(this.scope).sql} limit 1`)
+      .bind(...tenantPredicate(this.scope).values)
+      .first();
     return row !== null;
   }
 
@@ -246,10 +320,10 @@ export class D1RuntimeTokenStore implements IRuntimeTokenStore {
         `
         select ${runtimeTokenColumns}
         from runtime_tokens
-        where token_hash = ?
+        where token_hash = ? and ${tenantPredicate(this.scope).sql}
       `,
       )
-      .bind(tokenHash)
+      .bind(tokenHash, ...tenantPredicate(this.scope).values)
       .first<RuntimeRow>();
     return row ? readRuntimeTokenRow(row) : undefined;
   }
@@ -260,10 +334,10 @@ export class D1RuntimeTokenStore implements IRuntimeTokenStore {
         `
         select ${runtimeTokenColumns}
         from runtime_tokens
-        where id = ?
+        where id = ? and ${tenantPredicate(this.scope).sql}
       `,
       )
-      .bind(id)
+      .bind(id, ...tenantPredicate(this.scope).values)
       .first<RuntimeRow>();
     return row ? readRuntimeTokenRow(row) : undefined;
   }
@@ -274,7 +348,7 @@ export class D1RuntimeTokenStore implements IRuntimeTokenStore {
         `
         update runtime_tokens
         set allowed_actions = ?, blocked_actions = ?, allowed_proxies = ?, allowed_connections = ?, allowed_triggers = ?
-        where id = ?
+        where id = ? and ${tenantPredicate(this.scope).sql}
         returning ${runtimeTokenColumns}
       `,
       )
@@ -285,18 +359,27 @@ export class D1RuntimeTokenStore implements IRuntimeTokenStore {
         JSON.stringify(policy.allowedConnections ?? []),
         JSON.stringify(policy.allowedTriggers ?? []),
         id,
+        ...tenantPredicate(this.scope).values,
       )
       .first<RuntimeRow>();
     return row ? readRuntimeTokenRow(row) : undefined;
   }
 
   async revoke(id: string): Promise<boolean> {
-    const result = await this.database.prepare("delete from runtime_tokens where id = ?").bind(id).run();
+    const t = tenantPredicate(this.scope);
+    const result = await this.database
+      .prepare(`delete from runtime_tokens where id = ? and ${t.sql}`)
+      .bind(id, ...t.values)
+      .run();
     return (result.meta.changes ?? 0) > 0;
   }
 
   async markUsed(id: string, usedAt: string): Promise<void> {
-    await this.database.prepare("update runtime_tokens set last_used_at = ? where id = ?").bind(usedAt, id).run();
+    const t = tenantPredicate(this.scope);
+    await this.database
+      .prepare(`update runtime_tokens set last_used_at = ? where id = ? and ${t.sql}`)
+      .bind(usedAt, id, ...t.values)
+      .run();
   }
 }
 
@@ -380,9 +463,11 @@ export class D1OAuthClientStore implements IOAuthClientStore {
 
 export class D1OAuthCodeStore implements IOAuthCodeStore {
   private readonly database: D1DatabaseBinding;
+  private readonly scope: TenantScope;
 
-  constructor(database: D1DatabaseBinding) {
+  constructor(database: D1DatabaseBinding, scope: TenantScope) {
     this.database = database;
+    this.scope = scope;
   }
 
   async add(record: OAuthAuthorizationCodeRecord): Promise<void> {
@@ -390,13 +475,14 @@ export class D1OAuthCodeStore implements IOAuthCodeStore {
       .prepare(
         `
         insert into oauth_authorization_codes (
-          code_hash, client_id, redirect_uri, scope, code_challenge, resource,
+          tenant_id, code_hash, client_id, redirect_uri, scope, code_challenge, resource,
           runtime_token_id, issued_at, expires_at, consumed_at
         )
-        values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `,
       )
       .bind(
+        tenantForInsert(this.scope),
         record.codeHash,
         record.clientId,
         record.redirectUri,
@@ -421,36 +507,47 @@ export class D1OAuthCodeStore implements IOAuthCodeStore {
         where code_hash = ?
           and consumed_at is null
           and expires_at > ?
+          and ${tenantPredicate(this.scope).sql}
         returning *
       `,
       )
-      .bind(Date.now(), codeHash, Date.now())
+      .bind(Date.now(), codeHash, Date.now(), ...tenantPredicate(this.scope).values)
       .first<RuntimeRow>();
     return row ? readOAuthCodeRow(row) : undefined;
   }
 
   async listByClient(clientId: string): Promise<OAuthAuthorizationCodeRecord[]> {
     const { results } = await this.database
-      .prepare("select * from oauth_authorization_codes where client_id = ?")
-      .bind(clientId)
+      .prepare(`select * from oauth_authorization_codes where client_id = ? and ${tenantPredicate(this.scope).sql}`)
+      .bind(clientId, ...tenantPredicate(this.scope).values)
       .all<RuntimeRow>();
     return results.map((row) => readOAuthCodeRow(row));
   }
 
   async deleteByClient(clientId: string): Promise<void> {
-    await this.database.prepare("delete from oauth_authorization_codes where client_id = ?").bind(clientId).run();
+    const t = tenantPredicate(this.scope);
+    await this.database
+      .prepare(`delete from oauth_authorization_codes where client_id = ? and ${t.sql}`)
+      .bind(clientId, ...t.values)
+      .run();
   }
 
   async deleteExpired(nowMs: number): Promise<void> {
-    await this.database.prepare("delete from oauth_authorization_codes where expires_at <= ?").bind(nowMs).run();
+    const t = tenantPredicate(this.scope);
+    await this.database
+      .prepare(`delete from oauth_authorization_codes where expires_at <= ? and ${t.sql}`)
+      .bind(nowMs, ...t.values)
+      .run();
   }
 }
 
 export class D1OAuthTokenStore implements IOAuthTokenStore {
   private readonly database: D1DatabaseBinding;
+  private readonly scope: TenantScope;
 
-  constructor(database: D1DatabaseBinding) {
+  constructor(database: D1DatabaseBinding, scope: TenantScope) {
     this.database = database;
+    this.scope = scope;
   }
 
   async add(record: OAuthAccessTokenRecord): Promise<void> {
@@ -458,13 +555,14 @@ export class D1OAuthTokenStore implements IOAuthTokenStore {
       .prepare(
         `
         insert into oauth_tokens (
-          token_hash, refresh_token_hash, client_id, runtime_token_id, scope, resource,
+          tenant_id, token_hash, refresh_token_hash, client_id, runtime_token_id, scope, resource,
           issued_at, expires_at, refresh_expires_at, revoked_at, refresh_consumed_at
         )
-        values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `,
       )
       .bind(
+        tenantForInsert(this.scope),
         record.tokenHash,
         record.refreshTokenHash ?? null,
         record.clientId,
@@ -482,16 +580,16 @@ export class D1OAuthTokenStore implements IOAuthTokenStore {
 
   async findByAccessTokenHash(tokenHash: string): Promise<OAuthAccessTokenRecord | undefined> {
     const row = await this.database
-      .prepare("select * from oauth_tokens where token_hash = ?")
-      .bind(tokenHash)
+      .prepare(`select * from oauth_tokens where token_hash = ? and ${tenantPredicate(this.scope).sql}`)
+      .bind(tokenHash, ...tenantPredicate(this.scope).values)
       .first<RuntimeRow>();
     return row ? readOAuthTokenRow(row) : undefined;
   }
 
   async findByRefreshTokenHash(tokenHash: string): Promise<OAuthAccessTokenRecord | undefined> {
     const row = await this.database
-      .prepare("select * from oauth_tokens where refresh_token_hash = ?")
-      .bind(tokenHash)
+      .prepare(`select * from oauth_tokens where refresh_token_hash = ? and ${tenantPredicate(this.scope).sql}`)
+      .bind(tokenHash, ...tenantPredicate(this.scope).values)
       .first<RuntimeRow>();
     return row ? readOAuthTokenRow(row) : undefined;
   }
@@ -508,20 +606,19 @@ export class D1OAuthTokenStore implements IOAuthTokenStore {
     // token was already consumed, revoked, or expired, both statements are
     // no-ops, no successor row appears, and the old token is left untouched.
     const now = Date.now();
-    const guard =
-      "revoked_at is null and refresh_consumed_at is null and refresh_expires_at is not null and refresh_expires_at > ?";
+    const guard = `revoked_at is null and refresh_consumed_at is null and refresh_expires_at is not null and refresh_expires_at > ? and ${tenantPredicate(this.scope).sql}`;
     const results = await this.database.batch([
       this.database
         .prepare(`select * from oauth_tokens where refresh_token_hash = ? and ${guard}`)
-        .bind(oldRefreshTokenHash, now),
+        .bind(oldRefreshTokenHash, now, ...tenantPredicate(this.scope).values),
       this.database
         .prepare(
           `
           insert into oauth_tokens (
-            token_hash, refresh_token_hash, client_id, runtime_token_id, scope, resource,
+            tenant_id, token_hash, refresh_token_hash, client_id, runtime_token_id, scope, resource,
             issued_at, expires_at, refresh_expires_at, revoked_at
           )
-          select ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
+          select ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?
           where exists (
             select 1 from oauth_tokens
             where refresh_token_hash = ? and ${guard}
@@ -530,6 +627,7 @@ export class D1OAuthTokenStore implements IOAuthTokenStore {
         `,
         )
         .bind(
+          tenantForInsert(this.scope),
           successor.tokenHash,
           successor.refreshTokenHash ?? null,
           successor.clientId,
@@ -542,10 +640,11 @@ export class D1OAuthTokenStore implements IOAuthTokenStore {
           successor.revokedAt ?? null,
           oldRefreshTokenHash,
           now,
+          ...tenantPredicate(this.scope).values,
         ),
       this.database
         .prepare(`update oauth_tokens set refresh_consumed_at = ? where refresh_token_hash = ? and ${guard}`)
-        .bind(now, oldRefreshTokenHash, now),
+        .bind(now, oldRefreshTokenHash, now, ...tenantPredicate(this.scope).values),
     ]);
     const row = (results[0]?.results ?? [])[0];
     if (!row) {
@@ -558,8 +657,10 @@ export class D1OAuthTokenStore implements IOAuthTokenStore {
 
   async listByClient(clientId: string): Promise<OAuthAccessTokenRecord[]> {
     const { results } = await this.database
-      .prepare("select * from oauth_tokens where client_id = ? order by issued_at, token_hash")
-      .bind(clientId)
+      .prepare(
+        `select * from oauth_tokens where client_id = ? and ${tenantPredicate(this.scope).sql} order by issued_at, token_hash`,
+      )
+      .bind(clientId, ...tenantPredicate(this.scope).values)
       .all<RuntimeRow>();
     return results.map(readOAuthTokenRow);
   }
@@ -570,10 +671,10 @@ export class D1OAuthTokenStore implements IOAuthTokenStore {
         `
         update oauth_tokens
         set revoked_at = ?
-        where client_id = ? and runtime_token_id = ? and revoked_at is null
+        where client_id = ? and runtime_token_id = ? and revoked_at is null and ${tenantPredicate(this.scope).sql}
       `,
       )
-      .bind(Date.now(), clientId, runtimeTokenId)
+      .bind(Date.now(), clientId, runtimeTokenId, ...tenantPredicate(this.scope).values)
       .run();
     return result.meta.changes ?? 0;
   }
@@ -585,9 +686,10 @@ export class D1OAuthTokenStore implements IOAuthTokenStore {
         delete from oauth_tokens
         where expires_at <= ?
           and (refresh_expires_at is null or refresh_expires_at <= ?)
+          and ${tenantPredicate(this.scope).sql}
       `,
       )
-      .bind(nowMs, nowMs)
+      .bind(nowMs, nowMs, ...tenantPredicate(this.scope).values)
       .run();
   }
 }
@@ -773,10 +875,12 @@ export class D1RuntimePolicyStore implements IRuntimePolicyStore {
 export class D1IdempotencyStore implements IIdempotencyStore {
   private readonly database: D1DatabaseBinding;
   private readonly secretCodec: ISecretCodec;
+  private readonly scope: TenantScope;
 
-  constructor(database: D1DatabaseBinding, secretCodec: ISecretCodec) {
+  constructor(database: D1DatabaseBinding, secretCodec: ISecretCodec, scope: TenantScope) {
     this.database = database;
     this.secretCodec = secretCodec;
+    this.scope = scope;
   }
 
   async claim(input: IdempotencyClaimInput): Promise<IdempotencyClaimResult> {
@@ -786,23 +890,26 @@ export class D1IdempotencyStore implements IIdempotencyStore {
     // expiry sweep can remove the competing row between the insert conflict and
     // the select, and the claim failed with an internal error instead of the
     // stored in_progress, conflict, or completed result.
+    const t = tenantPredicate(this.scope);
     const results = await this.database.batch([
-      this.database.prepare("delete from idempotency_records where expires_at <= ?").bind(input.now),
+      this.database
+        .prepare(`delete from idempotency_records where expires_at <= ? and ${t.sql}`)
+        .bind(input.now, ...t.values),
       this.database
         .prepare(
           `
           insert into idempotency_records (
-            key_hash, claim_id, request_hash, state, response_value, created_at, expires_at
+            tenant_id, key_hash, claim_id, request_hash, state, response_value, created_at, expires_at
           )
-          values (?, ?, ?, 'in_progress', null, ?, ?)
+          values (?, ?, ?, ?, 'in_progress', null, ?, ?)
           on conflict(tenant_id, key_hash) do nothing
           returning claim_id
         `,
         )
-        .bind(input.keyHash, input.claimId, input.requestHash, input.now, input.expiresAt),
+        .bind(tenantForInsert(this.scope), input.keyHash, input.claimId, input.requestHash, input.now, input.expiresAt),
       this.database
-        .prepare("select request_hash, state, response_value from idempotency_records where key_hash = ?")
-        .bind(input.keyHash),
+        .prepare(`select request_hash, state, response_value from idempotency_records where key_hash = ? and ${t.sql}`)
+        .bind(input.keyHash, ...t.values),
     ]);
 
     // Only this claim's insert returns a row; a conflicting insert returns none
@@ -838,6 +945,7 @@ export class D1IdempotencyStore implements IIdempotencyStore {
           and claim_id = ?
           and request_hash = ?
           and state = 'in_progress'
+          and ${tenantPredicate(this.scope).sql}
       `,
       )
       .bind(
@@ -846,6 +954,7 @@ export class D1IdempotencyStore implements IIdempotencyStore {
         input.keyHash,
         input.claimId,
         input.requestHash,
+        ...tenantPredicate(this.scope).values,
       )
       .run();
     return (result.meta.changes ?? 0) > 0;
@@ -855,18 +964,20 @@ export class D1IdempotencyStore implements IIdempotencyStore {
 export class D1RunLogStore implements IRunLogStore {
   private readonly database: D1DatabaseBinding;
   private readonly limit: number;
+  private readonly scope: TenantScope;
 
-  constructor(database: D1DatabaseBinding, limit: number) {
+  constructor(database: D1DatabaseBinding, limit: number, scope: TenantScope) {
     this.database = database;
     this.limit = limit;
+    this.scope = scope;
   }
 
   async add(run: RunLog): Promise<RunLogWriteResult> {
     await this.database
       .prepare(
         `
-        insert into runs (id, service, action_id, caller, started_at, completed_at, ok, value)
-        values (?, ?, ?, ?, ?, ?, ?, ?)
+        insert into runs (id, tenant_id, service, action_id, caller, started_at, completed_at, ok, value)
+        values (?, ?, ?, ?, ?, ?, ?, ?, ?)
         on conflict(id) do update set
           service = excluded.service,
           action_id = excluded.action_id,
@@ -879,6 +990,7 @@ export class D1RunLogStore implements IRunLogStore {
       )
       .bind(
         run.id,
+        tenantForInsert(this.scope),
         run.service,
         run.actionId,
         run.caller,
@@ -895,13 +1007,13 @@ export class D1RunLogStore implements IRunLogStore {
           `
           delete from runs
           where id in (
-            select id from runs
+            select id from runs where ${tenantPredicate(this.scope).sql}
             order by started_at desc, id desc
             limit -1 offset ?
           )
         `,
         )
-        .bind(this.limit)
+        .bind(...tenantPredicate(this.scope).values, this.limit)
         .run();
       return { retentionApplied: true };
     } catch {
@@ -911,8 +1023,8 @@ export class D1RunLogStore implements IRunLogStore {
 
   async get(id: string): Promise<RunLog | undefined> {
     const row = await this.database
-      .prepare("select service, value from runs where id = ?")
-      .bind(id)
+      .prepare(`select service, value from runs where id = ? and ${tenantPredicate(this.scope).sql}`)
+      .bind(id, ...tenantPredicate(this.scope).values)
       .first<RuntimeRow>();
     return row ? readRunLogRow(row) : undefined;
   }
@@ -921,6 +1033,7 @@ export class D1RunLogStore implements IRunLogStore {
     return listRunLogs(
       input,
       this.limit,
+      this.scope,
       () => "?",
       async (sql, values) => {
         const { results } = await this.database
@@ -931,14 +1044,4 @@ export class D1RunLogStore implements IRunLogStore {
       },
     );
   }
-}
-
-async function getSecretJson<T>(
-  database: D1DatabaseBinding,
-  secretCodec: ISecretCodec,
-  table: SecretJsonTable,
-  service: string,
-): Promise<T | undefined> {
-  const row = await database.prepare(`select value from ${table} where service = ?`).bind(service).first<RuntimeRow>();
-  return row ? parseJson<T>(await secretCodec.decode(readString(row, "value"))) : undefined;
 }

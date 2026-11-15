@@ -1,7 +1,10 @@
 import type { StoredSaasConnection } from "../../connection-store.ts";
+import type { TenantScope } from "../../tenant/tenant-scope.ts";
 import type { ISecretCodec } from "../secrets/secret-codec-core.ts";
 import type { RequestStatement, RequestTransaction } from "./connection-request-store.ts";
 import type { RuntimeRow } from "./runtime-sql.ts";
+
+import { tenantPredicate } from "../../tenant/tenant-scope.ts";
 
 export interface ManagedProject {
   id: string;
@@ -45,28 +48,38 @@ export interface ResetInstanceInput {
 }
 
 /** Queue references before removing their owning rows in the same transaction. */
-export function queueSaasConnections(where: string, values: RequestStatement["values"]): RequestStatement {
+export function queueSaasConnections(
+  scope: TenantScope,
+  where: string,
+  values: RequestStatement["values"],
+): RequestStatement {
+  const t = tenantPredicate(scope);
   return {
     sql: `insert into saas_cleanup
-      (id, managed_project_id, provider_config_id, external_user_id, remote_account_id, created_at, service)
+      (id, managed_project_id, provider_config_id, external_user_id, remote_account_id, created_at, service, tenant_id)
       select 'account:' || managed_project_id || ':' || remote_account_id,
-        managed_project_id, provider_config_id, external_user_id, remote_account_id, ?, service
-      from connections where source = 'saas' and (${where})
+        managed_project_id, provider_config_id, external_user_id, remote_account_id, ?, service, tenant_id
+      from connections where source = 'saas' and (${where} and ${t.sql})
       on conflict (id) do nothing`,
-    values: [Date.now(), ...values],
+    values: [Date.now(), ...values, ...t.values],
   };
 }
 
-export function queueSaasRequests(where: string, values: RequestStatement["values"]): RequestStatement {
+export function queueSaasRequests(
+  scope: TenantScope,
+  where: string,
+  values: RequestStatement["values"],
+): RequestStatement {
+  const t = tenantPredicate(scope);
   return {
     sql: `insert into saas_cleanup
-      (id, managed_project_id, provider_config_id, external_user_id, remote_request_id, remote_account_id, status, created_at, service, request_expires_at)
+      (id, managed_project_id, provider_config_id, external_user_id, remote_request_id, remote_account_id, status, created_at, service, request_expires_at, tenant_id)
       select 'request:' || id, managed_project_id, provider_config_id, external_user_id,
         remote_request_id, remote_account_id,
-        case when remote_request_id is null and remote_account_id is null then 'manual' else 'pending' end, ?, service, expires_at
-      from connection_requests where kind = 'saas' and phase <> 'completed' and (${where})
+        case when remote_request_id is null and remote_account_id is null then 'manual' else 'pending' end, ?, service, expires_at, tenant_id
+      from connection_requests where kind = 'saas' and phase <> 'completed' and (${where} and ${t.sql})
       on conflict (id) do nothing`,
-    values: [Date.now(), ...values],
+    values: [Date.now(), ...values, ...t.values],
   };
 }
 

@@ -13,6 +13,7 @@ import { customMcpStoreTests } from "../custom-mcp-store.cases.ts";
 import { createDirectoryMigrationSource, defaultMigrationSource } from "../migration-source.ts";
 import { RuntimeTokenService } from "../runtime-token-service.ts";
 import { saasProjectStoreTests, saasMaintenanceTests } from "../saas-project-store.cases.ts";
+import { tenantScopeTests } from "../tenant-scope.cases.ts";
 import { triggerStoreTests } from "../trigger-store.cases.ts";
 import { SqliteRunLogStore, SqliteRuntimeDatabase } from "./runtime-store.ts";
 
@@ -93,6 +94,7 @@ describe("SqliteRuntimeDatabase", () => {
       "0021_oauth_refresh_replay.sql",
       "0022_custom_mcp.sql",
       "0023_tenant.sql",
+      "0024_trigger_source_tenant_pk.sql",
     ];
     expect(entries.filter((entry) => entry.message === "sqlite migration started")).toEqual(
       migrations.map((migration) => ({ fields: { migration }, message: "sqlite migration started" })),
@@ -576,7 +578,8 @@ describe("SqliteRuntimeDatabase", () => {
     ]) {
       raw.exec(readFileSync(new URL(`../../../../migrations/${migration}`, import.meta.url), "utf8"));
     }
-    const store = new SqliteRunLogStore(raw, 1);
+    raw.exec("alter table runs add column tenant_id text not null default 'local'");
+    const store = new SqliteRunLogStore(raw, 1, "local");
     await store.add(createRun("run-1", "2026-06-30T00:00:00.000Z"));
     raw.exec(`
       create trigger fail_run_retention before delete on runs begin
@@ -1126,6 +1129,41 @@ describe("SqliteRuntimeDatabase", () => {
     });
     withNewKey.close();
   });
+
+  it("rotates secrets for same-id rows in different tenants independently", async () => {
+    const databasePath = await createDatabasePath();
+    const database = new SqliteRuntimeDatabase(databasePath, {
+      secretCodec: new AesGcmSecretCodec("old-key"),
+    });
+    const digestId = "shared-digest-across-tenants";
+    const alpha = database.forTenant("tenant-alpha");
+    const beta = database.forTenant("tenant-beta");
+    await alpha.triggerStore.saveSourceApplication("owner", digestId, null, {
+      secrets: { marker: "alpha-secret" },
+      state: {},
+      sources: {},
+    });
+    await beta.triggerStore.saveSourceApplication("owner", digestId, null, {
+      secrets: { marker: "beta-secret" },
+      state: {},
+      sources: {},
+    });
+
+    await database.rotateSecretCodec(new AesGcmSecretCodec("new-key"));
+    database.close();
+
+    const rotated = new SqliteRuntimeDatabase(databasePath, {
+      secretCodec: new AesGcmSecretCodec("new-key"),
+    });
+    // Without tenant pairing in rotation, both rows would hold whichever value was written last.
+    await expect(
+      rotated.forTenant("tenant-alpha").triggerStore.getSourceApplication("owner", digestId),
+    ).resolves.toMatchObject({ application: { secrets: { marker: "alpha-secret" } } });
+    await expect(
+      rotated.forTenant("tenant-beta").triggerStore.getSourceApplication("owner", digestId),
+    ).resolves.toMatchObject({ application: { secrets: { marker: "beta-secret" } } });
+    rotated.close();
+  });
 });
 
 async function createDatabasePath(): Promise<string> {
@@ -1181,6 +1219,7 @@ describe("SQLite connection requests", () => {
   customMcpStoreTests(() => database);
   triggerStoreTests(() => database);
   saasProjectStoreTests(() => database);
+  tenantScopeTests(() => database);
 });
 
 it("rolls back credential writes when the request success update fails and recovers after restart", async () => {

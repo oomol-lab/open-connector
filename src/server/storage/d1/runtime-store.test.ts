@@ -8,6 +8,7 @@ import { connectionStoreTests } from "../connection-store.cases.ts";
 import { customMcpStoreTests } from "../custom-mcp-store.cases.ts";
 import { RuntimeTokenService } from "../runtime-token-service.ts";
 import { saasProjectStoreTests } from "../saas-project-store.cases.ts";
+import { tenantScopeTests } from "../tenant-scope.cases.ts";
 import { triggerStoreTests } from "../trigger-store.cases.ts";
 import { D1RuntimeDatabase } from "./runtime-store.ts";
 import { SqliteD1Database } from "./test-database.ts";
@@ -739,6 +740,7 @@ describe("D1 connection requests", () => {
   customMcpStoreTests(() => database);
   triggerStoreTests(() => database);
   saasProjectStoreTests(() => database);
+  tenantScopeTests(() => database);
 });
 
 /**

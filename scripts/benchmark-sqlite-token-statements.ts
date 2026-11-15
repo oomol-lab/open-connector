@@ -14,7 +14,7 @@ class PreparePerCallTokenStore extends SqliteRuntimeTokenStore {
   private readonly connection: DatabaseSync;
 
   constructor(database: DatabaseSync) {
-    super(database);
+    super(database, "local");
     this.connection = database;
   }
 
@@ -56,7 +56,7 @@ async function benchmark(filename: string, iterations: number, schema?: string):
     // Match the runtime's WAL setting; in-memory SQLite reports "memory" instead.
     database.exec("pragma journal_mode = wal;");
     const baseline = new PreparePerCallTokenStore(database);
-    const reused = new SqliteRuntimeTokenStore(database);
+    const reused = new SqliteRuntimeTokenStore(database, "local");
     for (let index = 0; index < tokenCount; index++) {
       await reused.add({
         id: `token-${index}`,
