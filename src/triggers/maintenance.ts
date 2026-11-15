@@ -32,6 +32,12 @@ interface TriggerMaintenanceOptions extends RuntimeExecutionOptions {
   /** Instance-scoped stores for the background sweep; defaults to the scoped stores. */
   maintenanceStore?: TriggerStore;
   maintenanceTokens?: IRuntimeTokenStore;
+  /**
+   * Per-tenant runner resolution for the instance-wide sweep: each candidate
+   * carries its `tenantId`, and cleanup must run inside that tenant's graph.
+   * When omitted the bound `runner` is used (single-tenant wiring).
+   */
+  runnerFor?: (tenantId: string) => Promise<TriggerRunner | undefined>;
 }
 
 export class TriggerMaintenance {
@@ -140,10 +146,15 @@ export class TriggerMaintenance {
             await save();
             return;
           }
+          const runner =
+            record.tenantId !== undefined && this.options.runnerFor !== undefined
+              ? await this.options.runnerFor(record.tenantId)
+              : this.options.runner;
+          if (!runner) throw new Error(`No trigger runner for tenant ${record.tenantId}.`);
           record.status = "deleting";
           await save();
           try {
-            await this.options.runner.cleanup(record, save, signal);
+            await runner.cleanup(record, save, signal);
           } catch (error) {
             if (!signal.aborted) await save();
             throw error;

@@ -707,6 +707,7 @@ describe("PostgresRuntimeDatabase with PGlite", () => {
     const connection = await database.connectionStore.set("github", "default", githubCredential("github-token"));
     const token = await new RuntimeTokenService(database.runtimeTokenStore).createToken("trigger-owner");
     const triggerRecord = {
+      tenantId: "local",
       id: "rotation-trigger",
       mode: "webhook" as const,
       tokenId: token.record.id,

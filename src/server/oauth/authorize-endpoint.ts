@@ -1,9 +1,4 @@
-import type {
-  OAuthClientRecord,
-  IOAuthClientStore,
-  IOAuthCodeStore,
-  IOAuthSigningKeyStore,
-} from "../storage/oauth-as-stores.ts";
+import type { OAuthClientRecord, IOAuthClientStore, IOAuthSigningKeyStore } from "../storage/oauth-as-stores.ts";
 import type { RuntimeDatabase } from "../storage/runtime-database.ts";
 import type { CimdClient } from "./cimd-client.ts";
 import type { OAuthServerConfig } from "./config.ts";
@@ -41,9 +36,7 @@ export interface AuthorizeDependencies {
   config: OAuthServerConfig;
   adminToken?: string;
   clients: IOAuthClientStore;
-  codes: IOAuthCodeStore;
   keys: IOAuthSigningKeyStore;
-  runtimeTokens: RuntimeTokenService;
   cimd?: CimdClient;
   /** Codes and backing grants are minted under the request's tenant. */
   runtimeDatabase: RuntimeDatabase;

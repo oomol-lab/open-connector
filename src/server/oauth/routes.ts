@@ -5,7 +5,7 @@ import type {
   IOAuthSigningKeyStore,
 } from "../storage/oauth-as-stores.ts";
 import type { RuntimeDatabase } from "../storage/runtime-database.ts";
-import type { RuntimeTokenService, IRuntimeTokenStore } from "../storage/runtime-token-service.ts";
+import type { IRuntimeTokenStore } from "../storage/runtime-token-service.ts";
 import type { AuthorizeDependencies } from "./authorize-endpoint.ts";
 import type { CimdClient } from "./cimd-client.ts";
 import type { OAuthServerConfig } from "./config.ts";
@@ -35,7 +35,6 @@ export interface OAuthRoutesOptions {
   codes: IOAuthCodeStore;
   tokens: IOAuthTokenStore;
   keys: IOAuthSigningKeyStore;
-  runtimeTokens: RuntimeTokenService;
   runtimeTokenStore: IRuntimeTokenStore;
   runtimeDatabase: RuntimeDatabase;
   cimd?: CimdClient;

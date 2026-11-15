@@ -7,7 +7,7 @@ import type {
   IOAuthSigningKeyStore,
 } from "../storage/oauth-as-stores.ts";
 import type { RuntimeDatabase } from "../storage/runtime-database.ts";
-import type { RuntimeGrant, RuntimeTokenService, IRuntimeTokenStore } from "../storage/runtime-token-service.ts";
+import type { RuntimeGrant, IRuntimeTokenStore } from "../storage/runtime-token-service.ts";
 import type { OAuthServerConfig } from "./config.ts";
 
 import { constantTimeEqual } from "../api/auth-utils.ts";
@@ -36,9 +36,8 @@ export interface TokenDependencies {
   codes: IOAuthCodeStore;
   tokens: IOAuthTokenStore;
   keys: IOAuthSigningKeyStore;
-  runtimeTokens: RuntimeTokenService;
   runtimeTokenStore: IRuntimeTokenStore;
-  /** Tenant-scoped write access for token issuance and rotation. */
+  /** Tenant-scoped write access for token issuance, rotation and revocation. */
   runtimeDatabase: RuntimeDatabase;
 }
 
@@ -106,7 +105,9 @@ async function revokeToken(token: string, client: OAuthClientRecord, deps: Token
 
 async function revokeGrant(record: OAuthAccessTokenRecord, deps: TokenDependencies): Promise<void> {
   await deps.tokens.revokeByGrant(record.clientId, record.runtimeTokenId);
-  await deps.runtimeTokens.revokeToken(record.runtimeTokenId);
+  // The backing grant lives under the tenant that approved it; revoke
+  // through that scope or a non-local grant silently survives.
+  await deps.runtimeDatabase.forTenant(record.tenantId).runtimeTokenStore.revoke(record.runtimeTokenId);
 }
 
 /** Client authentication per the registered token_endpoint_auth_method. */

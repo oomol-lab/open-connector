@@ -44,6 +44,7 @@ export function triggerStoreTests(getDatabase: () => RuntimeDatabase): void {
       allowedTriggers: ["github.on_repo_event"],
     });
     const record: TriggerSubscription = {
+      tenantId: "local",
       id: `subscription-${crypto.randomUUID()}`,
       mode: "webhook",
       tokenId: token.id,

@@ -101,7 +101,18 @@ configs, provider preferences, and the `forInstance()` escape hatch.
   hash lookups run instance-wide (hashes are globally unique), and
   `oauth_authorization_codes`/`oauth_tokens` rows are written under the
   tenant that approved the grant — exchange and rotation rebind to
-  `record.tenantId` before inserting successors.
+  `record.tenantId` before inserting successors, and grant revocation
+  (token endpoint + client deletion) revokes each backing runtime token
+  through its own tenant scope.
+- Two public surfaces stay `local`-only by design for now: the browser
+  consent form (`POST /oauth/mcp/authorize`) authenticates with the admin
+  token in the form body rather than a bearer, so it always mints in
+  `local`; channel event verification carries only the dedicated verify
+  token (no grant), so it resolves `local` credentials. Tenant-bound
+  channels need a tenant claim on the webhook credential path — later work.
+- The instance-wide trigger sweep (`TriggerMaintenance.runBatch`) resolves
+  each candidate's own service graph via `runnerFor(record.tenantId)`; the
+  record carries `tenantId` decoded from the row.
 - JWT-authenticated callers and browser sessions share the `service:admin`
   subject; only runtime-token (`service:<tokenId>`) and explicit
   `?subject=` (admin bearer) requests carry distinct owners. Admin can read a

@@ -8,7 +8,6 @@ import { ProviderLoader } from "../../providers/provider-loader.ts";
 import { createConnectApp } from "../connect-app.ts";
 import { TransitFileService } from "../files/transit-files.ts";
 import { AesGcmSecretCodec } from "../secrets/secret-codec.ts";
-import { RuntimeTokenService } from "../storage/runtime-token-service.ts";
 import { SqliteRuntimeDatabase } from "../storage/sqlite/runtime-store.ts";
 import { resolveOAuthServerConfig } from "./config.ts";
 import { signAccessToken, verifyAccessToken } from "./jwks.ts";
@@ -296,7 +295,6 @@ describe("rate-limit client keying", () => {
       codes: database.oauthCodeStore,
       tokens: database.oauthTokenStore,
       keys: database.oauthSigningKeyStore,
-      runtimeTokens: new RuntimeTokenService(database.runtimeTokenStore),
       runtimeTokenStore: database.runtimeTokenStore,
       runtimeDatabase: database,
       ...options,

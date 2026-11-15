@@ -60,13 +60,15 @@ export class SqlTriggerStore implements TriggerStore {
   }
 
   private async read(row: RuntimeRow): Promise<TriggerSubscription> {
-    return JSON.parse(await this.codec.decode(row.value as string)) as TriggerSubscription;
+    const record = JSON.parse(await this.codec.decode(row.value as string)) as TriggerSubscription;
+    if (row.tenant_id !== undefined) record.tenantId = row.tenant_id as string;
+    return record;
   }
 
   async list(): Promise<TriggerSubscription[]> {
     const t = tenantPredicate(this.scope);
     const [rows] = await this.transaction([
-      { sql: `select value from trigger_subscriptions where ${t.sql} order by id`, values: [...t.values] },
+      { sql: `select tenant_id, value from trigger_subscriptions where ${t.sql} order by id`, values: [...t.values] },
     ]);
     return Promise.all(rows.map((row) => this.read(row)));
   }
@@ -75,7 +77,7 @@ export class SqlTriggerStore implements TriggerStore {
     const t = tenantPredicate(this.scope);
     const [rows] = await this.transaction([
       {
-        sql: `select value from trigger_subscriptions where mode <> 'resource-set'
+        sql: `select tenant_id, value from trigger_subscriptions where mode <> 'resource-set'
       and status in ('active', 'deleting') and maintenance_at <= ? and (lease_until is null or lease_until <= ?)
       and ${t.sql}
       order by maintenance_at, id limit ?`,
@@ -88,7 +90,10 @@ export class SqlTriggerStore implements TriggerStore {
   async getFlowTrigger(id: string): Promise<TriggerSubscription | null> {
     const t = tenantPredicate(this.scope);
     const [[row]] = await this.transaction([
-      { sql: `select value from trigger_subscriptions where id = ? and ${t.sql}`, values: [id, ...t.values] },
+      {
+        sql: `select tenant_id, value from trigger_subscriptions where id = ? and ${t.sql}`,
+        values: [id, ...t.values],
+      },
     ]);
     return row ? this.read(row) : null;
   }

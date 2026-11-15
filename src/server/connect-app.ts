@@ -180,6 +180,9 @@ export async function createConnectApp(options: ConnectAppOptions): Promise<Conn
       // surface (list/cancel/abandon) keeps the request-scoped stores.
       maintenanceStore: instanceDatabase.triggerStore,
       maintenanceTokens: instanceDatabase.runtimeTokenStore,
+      // The sweep walks every tenant; cleanup must resolve the candidate's
+      // own service graph or a non-local subscription can never be swept.
+      runnerFor: async (tenantId) => (await services.forTenant(tenantId)).triggers,
       runtimePolicy: instanceDatabase.runtimePolicyStore,
       deploymentPolicy: options.actionPolicy ?? new ExecutionPolicyService(),
       logger: options.logger,

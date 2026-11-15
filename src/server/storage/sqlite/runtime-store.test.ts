@@ -1044,6 +1044,7 @@ describe("SqliteRuntimeDatabase", () => {
       metadata: {},
     });
     const triggerRecord = {
+      tenantId: "local",
       id: "rotation-trigger",
       mode: "webhook" as const,
       tokenId: token.record.id,

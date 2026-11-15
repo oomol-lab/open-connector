@@ -4,7 +4,7 @@ import type {
   IOAuthCodeStore,
   IOAuthTokenStore,
 } from "../storage/oauth-as-stores.ts";
-import type { RuntimeTokenService } from "../storage/runtime-token-service.ts";
+import type { RuntimeDatabase } from "../storage/runtime-database.ts";
 
 import { Hono } from "hono";
 import { optionalString } from "../../core/cast.ts";
@@ -36,7 +36,8 @@ export interface OAuthClientSummary {
 export interface OAuthClientRoutesOptions {
   clients: IOAuthClientStore;
   tokens: IOAuthTokenStore;
-  runtimeTokens: RuntimeTokenService;
+  /** Tenant-scoped access for revoking each grant's backing runtime token. */
+  runtimeDatabase: RuntimeDatabase;
   codes: IOAuthCodeStore;
 }
 
@@ -57,7 +58,7 @@ export function toClientSummary(record: OAuthClientRecord): OAuthClientSummary {
   };
 }
 
-export function createOAuthClientRoutes({ clients, codes, tokens, runtimeTokens }: OAuthClientRoutesOptions): Hono {
+export function createOAuthClientRoutes({ clients, codes, tokens, runtimeDatabase }: OAuthClientRoutesOptions): Hono {
   const app = new Hono();
 
   app.get("/oauth-clients", async (context) => context.json((await clients.list()).map(toClientSummary)));
@@ -146,16 +147,20 @@ export function createOAuthClientRoutes({ clients, codes, tokens, runtimeTokens 
       }
       // Revoking every token anchored to this client's grants is the point of
       // deletion: a removed client must not keep working access tokens.
-      const runtimeTokenIds = new Set((await tokens.listByClient(clientId)).map((record) => record.runtimeTokenId));
+      const grants = new Map<string, string>();
+      for (const record of await tokens.listByClient(clientId)) {
+        grants.set(record.runtimeTokenId, record.tenantId);
+      }
       // Pending authorization codes mint their backing runtime grant at consent
       // time, before redemption — revoke those grants too, or a re-registered
       // client could redeem a still-valid code without renewed consent.
       for (const code of await codes.listByClient(clientId)) {
-        runtimeTokenIds.add(code.runtimeTokenId);
+        grants.set(code.runtimeTokenId, code.tenantId);
       }
-      for (const runtimeTokenId of runtimeTokenIds) {
+      for (const [runtimeTokenId, tenantId] of grants) {
         await tokens.revokeByGrant(clientId, runtimeTokenId);
-        await runtimeTokens.revokeToken(runtimeTokenId);
+        // Each backing grant lives under the tenant that approved it.
+        await runtimeDatabase.forTenant(tenantId).runtimeTokenStore.revoke(runtimeTokenId);
       }
       await codes.deleteByClient(clientId);
       await clients.delete(clientId);

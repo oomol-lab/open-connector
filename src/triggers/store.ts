@@ -1,6 +1,8 @@
 import type { JsonValue } from "./common/types.ts";
 import type { SourceApplicationStore } from "./sources/persistent.ts";
 export interface TriggerSubscription {
+  /** Owning tenant, decoded from the row; not set by write-path constructors. */
+  tenantId?: string;
   mode: "webhook" | "resource" | "resource-set";
   id: string;
   tokenId: string;

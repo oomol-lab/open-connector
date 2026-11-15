@@ -351,7 +351,7 @@ export class ConnectServer {
         clients: this.options.oauthClients,
         codes: this.options.runtimeDatabase.forInstance().oauthCodeStore,
         tokens: this.options.runtimeDatabase.forInstance().oauthTokenStore,
-        runtimeTokens: this.options.runtimeTokens,
+        runtimeDatabase: this.options.runtimeDatabase,
       }),
     );
     if (this.options.oauth?.enabled) {
@@ -373,7 +373,6 @@ export class ConnectServer {
           codes: this.options.runtimeDatabase.forInstance().oauthCodeStore,
           tokens: this.options.runtimeDatabase.forInstance().oauthTokenStore,
           keys: this.options.oauthKeys,
-          runtimeTokens: this.options.runtimeTokens,
           runtimeTokenStore: this.options.runtimeDatabase.forInstance().runtimeTokenStore,
           runtimeDatabase: this.options.runtimeDatabase,
           trustProxyHeaders: this.options.trustProxyHeaders,
