@@ -185,7 +185,7 @@ export function createMcpOAuthHandler(origin: string, runtime: RuntimeHandler): 
 }
 
 function runtimeTokens(env: CloudflareEnv): RuntimeTokenService {
-  return new RuntimeTokenService(new D1RuntimeDatabase(env.DB).runtimeTokenStore);
+  return new RuntimeTokenService(new D1RuntimeDatabase(env.DB).forInstance().runtimeTokenStore);
 }
 
 async function validRuntimeToken(env: CloudflareEnv, token: string): Promise<boolean> {

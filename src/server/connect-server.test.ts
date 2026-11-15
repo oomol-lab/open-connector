@@ -4869,6 +4869,7 @@ function createTestServer(providers: ProviderDefinition[], options: CreateTestSe
     oauthTokens: requestDatabase.oauthTokenStore,
     oauthKeys: requestDatabase.oauthSigningKeyStore,
     runtimeTokenStore: requestDatabase.runtimeTokenStore,
+    runtimeDatabase: requestDatabase,
     runtimePolicyStore: options.runtimePolicyStore ?? new MemoryRuntimePolicyStore(),
     registerStaticRoutes: staticRoot ? (app) => registerStaticRoutes(app, { root: staticRoot }) : undefined,
     auth: {

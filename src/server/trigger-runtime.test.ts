@@ -269,6 +269,7 @@ describe("Trigger runtime HTTP boundary", () => {
         policy: new ActionPolicyService().createSnapshot(),
         grant: {
           tokenId,
+          tenantId: "local",
           allowedActions: [],
           blockedActions: [],
           allowedProxies: [],

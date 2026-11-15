@@ -4,6 +4,8 @@ import type { Context, MiddlewareHandler } from "hono";
 
 import { deleteCookie, getCookie, setCookie } from "hono/cookie";
 import { measureExecutionPhase } from "../../core/execution-timing.ts";
+import { TenantError } from "../../tenant/tenant-error.ts";
+import { DEFAULT_TENANT_ID, requireTenantId } from "../../tenant/tenant-id.ts";
 import { isChannelEventVerifyRequest } from "../event-verification/registry.ts";
 import { constantTimeEqual } from "./auth-utils.ts";
 import { isConsoleShellRequest } from "./console-paths.ts";
@@ -57,6 +59,40 @@ const runtimeGrants = new WeakMap<Request, RuntimeGrant>();
 
 export function readRuntimeGrant(context: Context): RuntimeGrant | undefined {
   return runtimeGrants.get(context.req.raw);
+}
+
+/**
+ * The tenant a request acts under. Runtime-token callers are bound to the
+ * tenant stamped on their grant; an admin bearer may select a tenant with
+ * `?tenant=` or `x-connect-tenant` (the admin session cookie deliberately
+ * stays read-only, so cookie sessions cannot select); anything else falls
+ * back to `local`.
+ */
+export function readTenantId(context: Context): string {
+  const queryTenant = context.req.query("tenant");
+  const headerTenant = context.req.header("x-connect-tenant");
+  if (queryTenant !== undefined && headerTenant !== undefined && queryTenant !== headerTenant) {
+    throw new TenantError("tenant_conflict", "The ?tenant= query parameter and x-connect-tenant header disagree.", 403);
+  }
+  const requested = queryTenant ?? headerTenant ?? undefined;
+  const grantTenant = runtimeGrants.get(context.req.raw)?.tenantId;
+  if (grantTenant) {
+    if (requested !== undefined && requested !== grantTenant) {
+      throw new TenantError(
+        "tenant_conflict",
+        `Request tenant "${requested}" does not match the tenant the credential is bound to.`,
+        403,
+      );
+    }
+    return grantTenant;
+  }
+  if (requested === undefined) {
+    return DEFAULT_TENANT_ID;
+  }
+  if (!hasAdminBearer(context)) {
+    throw new TenantError("tenant_forbidden", "Only admin credentials may select a tenant.", 403);
+  }
+  return requireTenantId(requested);
 }
 
 export function createLocalAuthMiddleware(options: LocalAuthOptions): MiddlewareHandler {
@@ -348,6 +384,12 @@ async function hasValidRuntimeToken(context: Context, options: LocalAuthOptions)
   if (options.authMode !== "oauth") {
     const grant = await options.resolveRuntimeToken?.(token);
     if (grant) {
+      // Runtime stores are still bound to the local tenant until scoped
+      // views reach the execution boundary; reject rather than silently
+      // serving another tenant's data under this credential.
+      if (grant.tenantId !== DEFAULT_TENANT_ID) {
+        return false;
+      }
       runtimeGrants.set(context.req.raw, grant);
       return true;
     }
@@ -358,6 +400,9 @@ async function hasValidRuntimeToken(context: Context, options: LocalAuthOptions)
   if (options.authMode === "oauth" || options.authMode === "mixed") {
     const grant = await options.resolveOAuthToken?.(token);
     if (grant) {
+      if (grant.tenantId !== DEFAULT_TENANT_ID) {
+        return false;
+      }
       runtimeGrants.set(context.req.raw, grant);
       return true;
     }

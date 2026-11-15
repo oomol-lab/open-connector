@@ -46,11 +46,11 @@ export default {
         trustedHosts: parseEgressTrustedHosts(env.OOMOL_CONNECT_EGRESS_TRUSTED_HOSTS),
       },
       store: database.saasProjectStore,
-      requests: database.connectionRequestStore,
+      requests: database.forInstance().connectionRequestStore,
       logger: workerLogger,
     });
     const triggerCleanup = async () => {
-      if (!(await database.triggerStore.listFlowTriggersForMaintenance(Date.now(), 1)).length) return;
+      if (!(await database.forInstance().triggerStore.listFlowTriggersForMaintenance(Date.now(), 1)).length) return;
       const origin = env.OOMOL_CONNECT_ORIGIN ?? "https://connector.invalid";
       const { triggerMaintenance } = await appCache.get(createCacheKey(env, origin), () =>
         createCloudflareApp(env, origin),

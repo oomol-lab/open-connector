@@ -104,6 +104,7 @@ export function tenantScopeTests(getDatabase: () => RuntimeDatabase): void {
     await alpha.runtimeTokenStore.add({
       id: "alpha-token",
       name: "Alpha token",
+      tenantId: ALPHA,
       tokenHash: "alpha-hash",
       allowedActions: ["github.*"],
       blockedActions: [],
@@ -117,7 +118,11 @@ export function tenantScopeTests(getDatabase: () => RuntimeDatabase): void {
     await expect(beta.runtimeTokenStore.findById("alpha-token")).resolves.toBeUndefined();
     expect(await beta.runtimeTokenStore.list()).toHaveLength(0);
     await expect(beta.runtimeTokenStore.revoke("alpha-token")).resolves.toBe(false);
-    await expect(alpha.runtimeTokenStore.findByHash("alpha-hash")).resolves.toBeDefined();
+    await expect(alpha.runtimeTokenStore.findByHash("alpha-hash")).resolves.toMatchObject({ tenantId: ALPHA });
+    // Token authentication resolves the hash across tenants, then binds the request via tenantId.
+    await expect(getDatabase().forInstance().runtimeTokenStore.findByHash("alpha-hash")).resolves.toMatchObject({
+      tenantId: ALPHA,
+    });
   });
 
   it("scopes run logs per tenant", async () => {

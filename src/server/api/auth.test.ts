@@ -1,6 +1,7 @@
 import { Hono } from "hono";
 import { describe, expect, it, vi } from "vitest";
-import { createLocalAuthMiddleware } from "./auth.ts";
+import { TenantError } from "../../tenant/tenant-error.ts";
+import { createLocalAuthMiddleware, readTenantId } from "./auth.ts";
 
 describe("createLocalAuthMiddleware", () => {
   it.each(["required", "jwt", "oauth", "mixed"])(
@@ -9,7 +10,13 @@ describe("createLocalAuthMiddleware", () => {
       const hasRuntimeTokens = vi.fn(async (): Promise<boolean> => {
         throw new Error("Unexpected existence query.");
       });
-      const grant = { tokenId: "fixture", allowedActions: [], blockedActions: [], allowedProxies: [] };
+      const grant = {
+        tokenId: "fixture",
+        tenantId: "local",
+        allowedActions: [],
+        blockedActions: [],
+        allowedProxies: [],
+      };
       const app = new Hono();
       app.use(
         "*",
@@ -59,7 +66,7 @@ describe("createLocalAuthMiddleware", () => {
         hasRuntimeTokens: async () => active,
         resolveRuntimeToken: async (token) =>
           active && token === "oct_valid"
-            ? { tokenId: "token-1", allowedActions: [], blockedActions: [], allowedProxies: [] }
+            ? { tokenId: "token-1", tenantId: "local", allowedActions: [], blockedActions: [], allowedProxies: [] }
             : undefined,
       }),
     );
@@ -80,7 +87,7 @@ describe("createLocalAuthMiddleware", () => {
       createLocalAuthMiddleware({
         resolveRuntimeToken: async (token) =>
           token === "runtime-token"
-            ? { tokenId: "token-1", allowedActions: [], blockedActions: [], allowedProxies: [] }
+            ? { tokenId: "token-1", tenantId: "local", allowedActions: [], blockedActions: [], allowedProxies: [] }
             : undefined,
       }),
     );
@@ -108,7 +115,7 @@ describe("createLocalAuthMiddleware", () => {
         hasRuntimeTokens: async () => true,
         resolveRuntimeToken: async (token) =>
           token === "oct_valid"
-            ? { tokenId: "token-1", allowedActions: [], blockedActions: [], allowedProxies: [] }
+            ? { tokenId: "token-1", tenantId: "local", allowedActions: [], blockedActions: [], allowedProxies: [] }
             : undefined,
       }),
     );
@@ -181,7 +188,7 @@ describe("createLocalAuthMiddleware", () => {
   it("resolves dynamic runtime tokens for a lowercase bearer scheme", async () => {
     const resolveRuntimeToken = vi.fn(async (token: string) =>
       token === "oct_valid"
-        ? { tokenId: "token-1", allowedActions: [], blockedActions: [], allowedProxies: [] }
+        ? { tokenId: "token-1", tenantId: "local", allowedActions: [], blockedActions: [], allowedProxies: [] }
         : undefined,
     );
     const app = new Hono();
@@ -343,4 +350,86 @@ it("closes anonymous administration when the first stored runtime token appears"
   expect((await app.request("/api/runtime-tokens", { method: "POST" })).status).toBe(200);
   active = true;
   expect((await app.request("/api/runtime-tokens", { method: "POST" })).status).toBe(403);
+});
+
+describe("readTenantId", () => {
+  const grant = {
+    tokenId: "fixture",
+    tenantId: "local",
+    allowedActions: [],
+    blockedActions: [],
+    allowedProxies: [],
+  };
+
+  function tenantApp() {
+    const app = new Hono();
+    app.use(
+      "*",
+      createLocalAuthMiddleware({
+        adminToken: "admin-secret",
+        requireRuntimeAuth: true,
+        resolveRuntimeToken: async (token) => (token === "valid" ? grant : undefined),
+      }),
+    );
+    app.onError((error, context) => {
+      if (error instanceof TenantError) {
+        return context.json({ error: { code: error.code, message: error.message } }, error.status as 400);
+      }
+      return context.json({ error: { code: "internal", message: "failed" } }, 500);
+    });
+    app.get("/api/tenant", (context) => context.json({ tenantId: readTenantId(context) }));
+    app.get("/v1/tenant", (context) => context.json({ tenantId: readTenantId(context) }));
+    return app;
+  }
+
+  it("lets admin credentials select a tenant", async () => {
+    const app = tenantApp();
+    const response = await app.request("/api/tenant?tenant=alpha", { headers: authorize("Bearer", "admin-secret") });
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual({ tenantId: "alpha" });
+  });
+
+  it("rejects invalid and reserved admin tenant selectors", async () => {
+    const app = tenantApp();
+    for (const tenant of ["all", "bad tenant", ""].filter((value) => value !== "")) {
+      const response = await app.request(`/api/tenant?tenant=${encodeURIComponent(tenant)}`, {
+        headers: authorize("Bearer", "admin-secret"),
+      });
+      expect(response.status).toBe(400);
+    }
+  });
+
+  it("binds runtime-token callers to the grant tenant", async () => {
+    const app = tenantApp();
+    const response = await app.request("/v1/tenant", { headers: authorize("Bearer", "valid") });
+    expect(await response.json()).toEqual({ tenantId: "local" });
+  });
+
+  it("rejects a grant bound to a non-local tenant until execution stores are scoped", async () => {
+    const app = new Hono();
+    app.use(
+      "*",
+      createLocalAuthMiddleware({
+        requireRuntimeAuth: true,
+        resolveRuntimeToken: async () => ({ ...grant, tenantId: "tenant-a" }),
+      }),
+    );
+    app.get("/v1/tenant", (context) => context.json({ tenantId: readTenantId(context) }));
+
+    const response = await app.request("/v1/tenant", { headers: authorize("Bearer", "valid") });
+    expect(response.status).toBe(401);
+  });
+
+  it("rejects a runtime-token caller selecting another tenant", async () => {
+    const app = tenantApp();
+    const response = await app.request("/v1/tenant?tenant=beta", { headers: authorize("Bearer", "valid") });
+    expect(response.status).toBe(403);
+    expect((await response.json()).error.code).toBe("tenant_conflict");
+  });
+
+  it("defaults to the local tenant without a selector", async () => {
+    const app = tenantApp();
+    const response = await app.request("/api/tenant", { headers: authorize("Bearer", "admin-secret") });
+    expect(await response.json()).toEqual({ tenantId: "local" });
+  });
 });

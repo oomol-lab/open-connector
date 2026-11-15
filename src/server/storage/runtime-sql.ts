@@ -46,6 +46,7 @@ export function readRuntimeTokenRow(row: RuntimeRow): RuntimeTokenRecord {
   return {
     id: readString(row, "id"),
     name: readString(row, "name"),
+    tenantId: readString(row, "tenant_id"),
     tokenHash: readString(row, "token_hash"),
     allowedActions: parseJson(readString(row, "allowed_actions")),
     blockedActions: parseJson(readString(row, "blocked_actions")),

@@ -2,10 +2,13 @@ import type { TokenPolicy } from "../../core/action-policy.ts";
 import type { RuntimeLogger } from "../../core/types.ts";
 
 import { createHash, randomBytes, randomUUID, timingSafeEqual } from "node:crypto";
+import { DEFAULT_TENANT_ID } from "../../tenant/tenant-id.ts";
 
 export interface RuntimeTokenRecord {
   id: string;
   name: string;
+  /** Tenant the token grants runtime access to; `local` for pre-OC-1 rows. */
+  tenantId: string;
   tokenHash: string;
   allowedActions: string[];
   blockedActions: string[];
@@ -19,6 +22,7 @@ export interface RuntimeTokenRecord {
 export interface RuntimeTokenSummary {
   id: string;
   name: string;
+  tenantId: string;
   allowedActions: string[];
   blockedActions: string[];
   allowedProxies: string[];
@@ -48,15 +52,19 @@ const tokenPrefix = "oct_";
 
 export interface RuntimeGrant extends TokenPolicy {
   tokenId: string;
+  /** Tenant the grant is bound to; every runtime store lookup must run under `forTenant(grant.tenantId)`. */
+  tenantId: string;
 }
 
 export class RuntimeTokenService {
   private readonly store: IRuntimeTokenStore;
   private readonly logger?: RuntimeLogger;
+  private readonly tenantId: string;
 
-  constructor(store: IRuntimeTokenStore, logger?: RuntimeLogger) {
+  constructor(store: IRuntimeTokenStore, logger?: RuntimeLogger, tenantId: string = DEFAULT_TENANT_ID) {
     this.store = store;
     this.logger = logger;
+    this.tenantId = tenantId;
   }
 
   async createToken(
@@ -73,6 +81,7 @@ export class RuntimeTokenService {
     const record: RuntimeTokenRecord = {
       id: randomUUID(),
       name: name.trim(),
+      tenantId: this.tenantId,
       tokenHash: hashRuntimeToken(token),
       allowedActions: policy.allowedActions,
       blockedActions: policy.blockedActions,
@@ -111,6 +120,7 @@ export class RuntimeTokenService {
     await this.recordLastUsed(matched.id);
     return {
       tokenId: matched.id,
+      tenantId: matched.tenantId,
       allowedActions: matched.allowedActions,
       blockedActions: matched.blockedActions,
       allowedProxies: matched.allowedProxies,
@@ -144,6 +154,7 @@ export function summarizeRuntimeToken(record: RuntimeTokenRecord): RuntimeTokenS
   return {
     id: record.id,
     name: record.name,
+    tenantId: record.tenantId,
     allowedActions: record.allowedActions,
     blockedActions: record.blockedActions,
     allowedProxies: record.allowedProxies,

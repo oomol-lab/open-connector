@@ -295,7 +295,7 @@ export class D1RuntimeTokenStore implements IRuntimeTokenStore {
     const { results } = await this.database
       .prepare(
         `
-        select ${runtimeTokenColumns}
+        select tenant_id, ${runtimeTokenColumns}
         from runtime_tokens
         where ${tenantPredicate(this.scope).sql}
         order by created_at desc, id desc
@@ -318,7 +318,7 @@ export class D1RuntimeTokenStore implements IRuntimeTokenStore {
     const row = await this.database
       .prepare(
         `
-        select ${runtimeTokenColumns}
+        select tenant_id, ${runtimeTokenColumns}
         from runtime_tokens
         where token_hash = ? and ${tenantPredicate(this.scope).sql}
       `,
@@ -332,7 +332,7 @@ export class D1RuntimeTokenStore implements IRuntimeTokenStore {
     const row = await this.database
       .prepare(
         `
-        select ${runtimeTokenColumns}
+        select tenant_id, ${runtimeTokenColumns}
         from runtime_tokens
         where id = ? and ${tenantPredicate(this.scope).sql}
       `,
@@ -349,7 +349,7 @@ export class D1RuntimeTokenStore implements IRuntimeTokenStore {
         update runtime_tokens
         set allowed_actions = ?, blocked_actions = ?, allowed_proxies = ?, allowed_connections = ?, allowed_triggers = ?
         where id = ? and ${tenantPredicate(this.scope).sql}
-        returning ${runtimeTokenColumns}
+        returning tenant_id, ${runtimeTokenColumns}
       `,
       )
       .bind(

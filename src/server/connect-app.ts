@@ -113,8 +113,13 @@ export async function createConnectApp(options: ConnectAppOptions): Promise<Conn
     { operation: "runtime" },
     () => marketplace.initialize(),
   );
+  // Token authentication must find every tenant's tokens: the hash is the
+  // credential boundary, and the resolved grant then binds the request to the
+  // token's tenant. Admin token management keeps the default local scope.
+  const instanceDatabase = options.runtimeDatabase.forInstance();
   const runtimeTokens = new RuntimeTokenService(options.runtimeDatabase.runtimeTokenStore, options.logger);
-  const hasStoredRuntimeTokens = (): Promise<boolean> => options.runtimeDatabase.runtimeTokenStore.hasAny();
+  const authRuntimeTokens = new RuntimeTokenService(instanceDatabase.runtimeTokenStore, options.logger);
+  const hasStoredRuntimeTokens = (): Promise<boolean> => instanceDatabase.runtimeTokenStore.hasAny();
   const oauthConfig = options.oauth?.enabled
     ? resolveOAuthServerConfig({
         issuer: options.oauth.issuer ?? options.publicOrigin,
@@ -130,10 +135,10 @@ export async function createConnectApp(options: ConnectAppOptions): Promise<Conn
     ? (token: string) =>
         resolveOAuthAccessToken(token, {
           config: oauthConfig,
-          tokens: options.runtimeDatabase.oauthTokenStore,
-          keys: options.runtimeDatabase.oauthSigningKeyStore,
-          clients: options.runtimeDatabase.oauthClientStore,
-          runtimeTokenStore: options.runtimeDatabase.runtimeTokenStore,
+          tokens: instanceDatabase.oauthTokenStore,
+          keys: instanceDatabase.oauthSigningKeyStore,
+          clients: instanceDatabase.oauthClientStore,
+          runtimeTokenStore: instanceDatabase.runtimeTokenStore,
         })
     : undefined;
   const allowedCustomOAuth = new Set(options.allowedCustomOAuth);
@@ -244,7 +249,7 @@ export async function createConnectApp(options: ConnectAppOptions): Promise<Conn
         runtimeToken: options.runtimeToken,
         requireRuntimeAuth: options.requireRuntimeAuth,
         hasRuntimeTokens: hasStoredRuntimeTokens,
-        resolveRuntimeToken: (token) => runtimeTokens.resolveToken(token),
+        resolveRuntimeToken: (token) => authRuntimeTokens.resolveToken(token),
         verifyRuntimeJwt: options.verifyRuntimeJwt,
         authMode: options.authMode,
         resolveOAuthToken,
@@ -257,6 +262,7 @@ export async function createConnectApp(options: ConnectAppOptions): Promise<Conn
       oauthTokens: options.runtimeDatabase.oauthTokenStore,
       oauthKeys: options.runtimeDatabase.oauthSigningKeyStore,
       runtimeTokenStore: options.runtimeDatabase.runtimeTokenStore,
+      runtimeDatabase: options.runtimeDatabase,
       actionPolicy: options.actionPolicy,
       logger: options.logger,
       marketplace,

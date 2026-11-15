@@ -468,7 +468,7 @@ export class SqliteRuntimeTokenStore implements IRuntimeTokenStore {
     return this.database
       .prepare(
         `
-        select ${runtimeTokenColumns}
+        select tenant_id, ${runtimeTokenColumns}
         from runtime_tokens
         where ${tenantPredicate(this.scope).sql}
         order by created_at desc, id desc
@@ -488,7 +488,7 @@ export class SqliteRuntimeTokenStore implements IRuntimeTokenStore {
   async findByHash(tokenHash: string): Promise<RuntimeTokenRecord | undefined> {
     // Custom migration sources may omit this table until the store is actually used.
     this.findByHashStatement ??= this.database.prepare(`
-      select ${runtimeTokenColumns}
+      select tenant_id, ${runtimeTokenColumns}
       from runtime_tokens
       where token_hash = ? and ${tenantPredicate(this.scope).sql}
     `);
@@ -500,7 +500,7 @@ export class SqliteRuntimeTokenStore implements IRuntimeTokenStore {
     const row = this.database
       .prepare(
         `
-        select ${runtimeTokenColumns}
+        select tenant_id, ${runtimeTokenColumns}
         from runtime_tokens
         where id = ? and ${tenantPredicate(this.scope).sql}
       `,
@@ -516,7 +516,7 @@ export class SqliteRuntimeTokenStore implements IRuntimeTokenStore {
         update runtime_tokens
         set allowed_actions = ?, blocked_actions = ?, allowed_proxies = ?, allowed_connections = ?, allowed_triggers = ?
         where id = ? and ${tenantPredicate(this.scope).sql}
-        returning ${runtimeTokenColumns}
+        returning tenant_id, ${runtimeTokenColumns}
       `,
       )
       .get(

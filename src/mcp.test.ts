@@ -744,6 +744,7 @@ describe("MCP server", () => {
         getPolicySnapshot: async () => policy,
         runtimeGrant: {
           tokenId: "token-1",
+          tenantId: "local",
           allowedActions: ["example.*"],
           blockedActions: ["example.echo"],
           allowedProxies: [],
@@ -848,6 +849,7 @@ describe("MCP server", () => {
         getPolicySnapshot: async () => policy,
         runtimeGrant: {
           tokenId: "token-1",
+          tenantId: "local",
           allowedActions: [],
           blockedActions: [],
           allowedProxies: [],

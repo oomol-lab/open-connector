@@ -919,7 +919,12 @@ describe("SqliteRuntimeDatabase", () => {
           allowedConnections: ["example:work"],
         };
         await second.runtimeTokenStore.updatePolicy(tokenId, policy);
-        await expect(tokens.resolveToken(token)).resolves.toEqual({ tokenId, ...policy, allowedTriggers: [] });
+        await expect(tokens.resolveToken(token)).resolves.toEqual({
+          tokenId,
+          tenantId: "local",
+          ...policy,
+          allowedTriggers: [],
+        });
       } finally {
         second.close();
       }

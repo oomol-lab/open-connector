@@ -55,6 +55,26 @@ wired into all three backend suites: same-name connections, idempotency-key
 reuse, OAuth state/code/token lookup, runtime tokens, run logs, client
 configs, provider preferences, and the `forInstance()` escape hatch.
 
+## Request boundary (OC-1c)
+
+- `RuntimeTokenRecord`/`RuntimeGrant` carry `tenantId` read back from the
+  `runtime_tokens.tenant_id` column, so a token authenticates **across**
+  tenants (`forInstance()` hash lookup) and then binds the request to the
+  tenant stamped at issuance (`src/server/storage/runtime-token-service.ts`).
+- `readTenantId(context)` (`src/server/api/auth.ts`) resolves the request
+  tenant: the bound grant's `tenantId` wins, admin bearer credentials (not console
+  session cookies — cookie reads stay non-mutating) may select a tenant with `?tenant=` or `x-connect-tenant`, and everything else
+  falls back to `local`. A grant that disagrees with an explicit selector
+  gets `tenant_conflict` (403); a non-admin selector gets
+  `tenant_forbidden`; invalid ids get `invalid_tenant_id` via
+  `requireTenantId`. `TenantError` maps to `status`/`code` in
+  `ConnectServer.onError`.
+- Admin routes resolve scoped stores per request through
+  `options.runtimeDatabase.forTenant(readTenantId(context))` —
+  `/api/runtime-tokens` is the first consumer (`policy-routes.ts`); the
+  `local` tenant keeps using the injected service so single-tenant wiring is
+  unchanged.
+
 ## Invariants for later OC-1 tasks
 
 - Every query against a tenant-scoped table filters `tenant_id`; every write

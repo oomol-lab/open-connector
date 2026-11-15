@@ -28,6 +28,7 @@ describe("RuntimeTokenService", () => {
     const record = {
       id: "token-1",
       name: "Issue bot",
+      tenantId: "local",
       tokenHash: hashRuntimeToken(token),
       allowedActions: ["github.*"],
       blockedActions: ["github.delete_repository"],
@@ -49,6 +50,7 @@ describe("RuntimeTokenService", () => {
     await expect(new RuntimeTokenService(store).resolveToken(token)).resolves.toEqual({
       allowedTriggers: [],
       tokenId: "token-1",
+      tenantId: "local",
       allowedActions: ["github.*"],
       blockedActions: ["github.delete_repository"],
       allowedProxies: ["github"],
@@ -64,6 +66,7 @@ describe("RuntimeTokenService", () => {
     const record = {
       id: "token-1",
       name: "Issue bot",
+      tenantId: "local",
       tokenHash: hashRuntimeToken(token),
       allowedActions: [],
       blockedActions: [],
@@ -88,6 +91,7 @@ describe("RuntimeTokenService", () => {
     await expect(new RuntimeTokenService(store, logger).resolveToken(token)).resolves.toEqual({
       allowedTriggers: [],
       tokenId: "token-1",
+      tenantId: "local",
       allowedActions: [],
       blockedActions: [],
       allowedProxies: [],

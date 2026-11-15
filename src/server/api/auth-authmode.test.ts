@@ -4,7 +4,13 @@ import { Hono } from "hono";
 import { describe, expect, it } from "vitest";
 import { createLocalAuthMiddleware } from "./auth.ts";
 
-const grant: RuntimeGrant = { tokenId: "oauth-token-1", allowedActions: [], blockedActions: [], allowedProxies: [] };
+const grant: RuntimeGrant = {
+  tokenId: "oauth-token-1",
+  tenantId: "local",
+  allowedActions: [],
+  blockedActions: [],
+  allowedProxies: [],
+};
 
 function buildApp(options: Parameters<typeof createLocalAuthMiddleware>[0]): Hono {
   const app = new Hono();
@@ -65,7 +71,7 @@ describe("runtime authMode", () => {
       authMode: "mixed",
       resolveRuntimeToken: async (token) =>
         token === "oct_stored"
-          ? { tokenId: "t", allowedActions: [], blockedActions: [], allowedProxies: [] }
+          ? { tokenId: "t", tenantId: "local", allowedActions: [], blockedActions: [], allowedProxies: [] }
           : undefined,
       resolveOAuthToken: async (token) => (token === "oauth-access" ? grant : undefined),
     });

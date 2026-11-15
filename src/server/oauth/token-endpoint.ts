@@ -434,6 +434,7 @@ export async function resolveOAuthAccessToken(
   }
   return {
     tokenId: backing.id,
+    tenantId: backing.tenantId,
     allowedActions: backing.allowedActions,
     blockedActions: backing.blockedActions,
     allowedProxies: backing.allowedProxies,

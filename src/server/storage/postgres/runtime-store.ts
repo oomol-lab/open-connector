@@ -489,7 +489,7 @@ class PostgresRuntimeTokenStore implements IRuntimeTokenStore {
     const t = tenantPredicatePg(this.scope, 1);
     const result = await this.pool.query<RuntimeRow>(
       `
-      select ${runtimeTokenColumns}
+      select tenant_id, ${runtimeTokenColumns}
       from runtime_tokens
       where ${t.sql}
       order by created_at desc, id desc
@@ -508,7 +508,7 @@ class PostgresRuntimeTokenStore implements IRuntimeTokenStore {
   async findByHash(tokenHash: string): Promise<RuntimeTokenRecord | undefined> {
     const result = await this.pool.query<RuntimeRow>(
       `
-        select ${runtimeTokenColumns}
+        select tenant_id, ${runtimeTokenColumns}
         from runtime_tokens
         where token_hash = $1 and ${tenantPredicatePg(this.scope, 2).sql}
       `,
@@ -521,7 +521,7 @@ class PostgresRuntimeTokenStore implements IRuntimeTokenStore {
   async findById(id: string): Promise<RuntimeTokenRecord | undefined> {
     const result = await this.pool.query<RuntimeRow>(
       `
-        select ${runtimeTokenColumns}
+        select tenant_id, ${runtimeTokenColumns}
         from runtime_tokens
         where id = $1 and ${tenantPredicatePg(this.scope, 2).sql}
       `,
@@ -537,7 +537,7 @@ class PostgresRuntimeTokenStore implements IRuntimeTokenStore {
         update runtime_tokens
         set allowed_actions = $1, blocked_actions = $2, allowed_proxies = $3, allowed_connections = $4, allowed_triggers = $5
         where id = $6 and ${tenantPredicatePg(this.scope, 7).sql}
-        returning ${runtimeTokenColumns}
+        returning tenant_id, ${runtimeTokenColumns}
       `,
       [
         JSON.stringify(policy.allowedActions),

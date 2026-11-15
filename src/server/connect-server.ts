@@ -16,6 +16,7 @@ import type { TriggerMaintenance } from "../triggers/maintenance.ts";
 import type { TriggerRunner } from "../triggers/trigger-runner.ts";
 import type { LocalAuthOptions } from "./api/auth.ts";
 import type { PolicySnapshotProvider } from "./api/policy-snapshot.ts";
+import type { RuntimeStatus } from "./api/runtime-api.ts";
 import type { ITransitFileService } from "./files/transit-file-store.ts";
 import type { McpOutputMode } from "./mcp-settings.ts";
 import type { OAuthServerSettings } from "./oauth/settings.ts";
@@ -26,6 +27,7 @@ import type {
   IOAuthTokenStore,
   IOAuthSigningKeyStore,
 } from "./storage/oauth-as-stores.ts";
+import type { RuntimeDatabase } from "./storage/runtime-database.ts";
 import type { IRuntimePolicyStore } from "./storage/runtime-policy-store.ts";
 import type { RuntimeTokenService, IRuntimeTokenStore } from "./storage/runtime-token-service.ts";
 
@@ -39,6 +41,7 @@ import { getExecutionTimings, withExecutionTimings } from "../core/execution-tim
 import { withRuntimeExecution } from "../core/runtime-execution.ts";
 import { ProviderDispatchRequestError, toProviderExecutionError } from "../providers/provider-runtime.ts";
 import { SaasError } from "../saas/saas-client.ts";
+import { TenantError } from "../tenant/tenant-error.ts";
 import { ActionRunner } from "./actions/action-runner.ts";
 import { clearLocalAuthCookie, createLocalAuthMiddleware, readLocalAuthSession } from "./api/auth.ts";
 import { getResponseCachePolicy } from "./api/cache-policy.ts";
@@ -114,6 +117,8 @@ export interface IConnectServerOptions {
   oauthTokens: IOAuthTokenStore;
   oauthKeys: IOAuthSigningKeyStore;
   runtimeTokenStore: IRuntimeTokenStore;
+  /** Scoped-view factory; request handlers resolve tenant-bound stores through `forTenant`. */
+  runtimeDatabase: RuntimeDatabase;
   /** Dedicated token for inbound provider event verification. */
   eventVerifyToken?: string;
   actionPolicy?: ActionPolicyService;
@@ -332,6 +337,8 @@ export class ConnectServer {
       "/api",
       createPolicyRoutes({
         runtimeTokens: this.options.runtimeTokens,
+        runtimeDatabase: this.options.runtimeDatabase,
+        logger: this.options.logger,
         runtimePolicyStore: this.options.runtimePolicyStore,
         deploymentPolicyRules: this.actionPolicy.rules,
         getPolicySnapshot: this.getPolicySnapshot,
@@ -448,6 +455,9 @@ export class ConnectServer {
           },
           error.status,
         );
+      }
+      if (error instanceof TenantError) {
+        return jsonError(context, error.status as RuntimeStatus, error.code, error.message);
       }
       if (error instanceof HttpRequestError || error instanceof ExecutionError) {
         const status = error instanceof ExecutionError ? executionFailureStatus(error.kind) : error.status;

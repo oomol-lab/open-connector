@@ -349,6 +349,7 @@ class EmptyMarketplaceD1Database implements D1DatabaseBinding {
         "select value from marketplace_config where id = 1",
         "select 1 from runtime_tokens limit 1",
         "select 1 from runtime_tokens where tenant_id = ? limit 1",
+        "select 1 from runtime_tokens where 1 = 1 limit 1",
         "select service, revision from custom_mcp order by service",
         "select service, revision from custom_mcp where tenant_id = ? order by service",
         "select * from custom_mcp order by service",
