@@ -1,13 +1,13 @@
-import type { CatalogStore } from "../../catalog-store.ts";
-import type { ConnectionService } from "../../connection-service.ts";
 import type { ActionPolicySnapshot } from "../../core/action-policy.ts";
-import type { ActionSearchDocument, ActionSearchIndexProvider } from "../../core/action-search.ts";
+import type { ActionSearchDocument } from "../../core/action-search.ts";
+import type { ScopedServices } from "../tenant-services.ts";
 import type { Context } from "hono";
 
 import { Hono } from "hono";
 import { ConnectionError } from "../../connection-error.ts";
 import { searchActions } from "../../core/action-search.ts";
 import { renderActionMarkdown } from "./action-markdown.ts";
+import { readTenantId } from "./auth.ts";
 import { catalogLocale } from "./catalog-locale.ts";
 import { jsonError, notFound, readConnectionName as defaultReadConnectionName } from "./http-utils.ts";
 import { mapConnectionErrorStatus } from "./runtime-api.ts";
@@ -25,30 +25,28 @@ function requestMatchesEtag(ifNoneMatch: string | undefined, etag: string): bool
 }
 
 export interface ConsoleCatalogRoutesOptions {
-  catalog: CatalogStore;
-  connections: ConnectionService;
-  actionSearch: ActionSearchIndexProvider;
+  services: ScopedServices;
   publicOrigin: string;
   getPolicySnapshot: (context: Context) => Promise<ActionPolicySnapshot>;
   readConnectionName?: (context: Context, body?: Record<string, unknown>) => string | undefined;
-  serializeSearchResults?: (results: ActionSearchDocument[]) => Promise<unknown[]>;
+  serializeSearchResults?: (context: Context, results: ActionSearchDocument[]) => Promise<unknown[]>;
 }
 
 /** Console catalog, providers, actions and documentation routes. */
 export function createConsoleCatalogRoutes({
-  catalog,
-  connections,
-  actionSearch,
+  services,
   publicOrigin,
   getPolicySnapshot,
   readConnectionName = defaultReadConnectionName,
   serializeSearchResults: injectedSerializeSearchResults,
 }: ConsoleCatalogRoutesOptions): Hono {
   const app = new Hono();
+  const scoped = (context: Context) => services.forTenant(readTenantId(context));
 
   const serializeSearchResults =
     injectedSerializeSearchResults ??
-    (async (results: ActionSearchDocument[]): Promise<unknown[]> => {
+    (async (context: Context, results: ActionSearchDocument[]): Promise<unknown[]> => {
+      const { catalog, connections } = await scoped(context);
       const authenticated = new Set(
         await connections.listAuthenticatedServices([...new Set(results.map((result) => result.service))]),
       );
@@ -60,7 +58,8 @@ export function createConsoleCatalogRoutes({
       return items;
     });
 
-  app.get("/providers", (context) => {
+  app.get("/providers", async (context) => {
+    const { catalog } = await scoped(context);
     const { providerSummariesJson, providerSummariesEtag } = catalog.getProviderDisplay(catalogLocale(context));
     context.header("ETag", providerSummariesEtag);
     if (requestMatchesEtag(context.req.header("If-None-Match"), providerSummariesEtag)) {
@@ -70,6 +69,7 @@ export function createConsoleCatalogRoutes({
   });
 
   app.get("/providers/:service", async (context) => {
+    const { catalog } = await scoped(context);
     const provider = catalog
       .getProviderDisplay(catalogLocale(context))
       .providers.find((p) => p.service === context.req.param("service"));
@@ -80,9 +80,10 @@ export function createConsoleCatalogRoutes({
     });
   });
 
-  app.get("/actions", async (context) =>
-    context.json(await Promise.all(catalog.actions.map((action) => catalog.getAction(action.id)))),
-  );
+  app.get("/actions", async (context) => {
+    const { catalog } = await scoped(context);
+    return context.json(await Promise.all(catalog.actions.map((action) => catalog.getAction(action.id))));
+  });
 
   app.get("/actions/search", async (context) => {
     const query = readSearchQuery(context);
@@ -90,9 +91,10 @@ export function createConsoleCatalogRoutes({
       return jsonError(context, 400, "invalid_input", query.message);
     }
 
-    const index = await actionSearch.get();
+    const index = await (await scoped(context)).catalog.getSearchIndex();
     return context.json(
       await serializeSearchResults(
+        context,
         searchActions(index, query.q, {
           service: query.service,
           limit: query.limit,
@@ -102,6 +104,7 @@ export function createConsoleCatalogRoutes({
   });
 
   app.get("/actions/:actionId/agent.md", async (context) => {
+    const { catalog, connections } = await scoped(context);
     const actionId = context.req.param("actionId");
     const action = await catalog.getAction(actionId);
     if (!action) return notFound(context);
@@ -129,6 +132,7 @@ export function createConsoleCatalogRoutes({
   });
 
   app.get("/actions/:actionId", async (context) => {
+    const { catalog } = await scoped(context);
     const action = await catalog.getAction(context.req.param("actionId"));
     if (!action) return notFound(context);
     return context.json(action);

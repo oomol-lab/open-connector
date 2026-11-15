@@ -298,6 +298,7 @@ describe("rate-limit client keying", () => {
       keys: database.oauthSigningKeyStore,
       runtimeTokens: new RuntimeTokenService(database.runtimeTokenStore),
       runtimeTokenStore: database.runtimeTokenStore,
+      runtimeDatabase: database,
       ...options,
     });
   }

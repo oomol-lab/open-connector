@@ -24,6 +24,8 @@ export interface OAuthClientRecord {
 }
 
 export interface OAuthAuthorizationCodeRecord {
+  /** Tenant that approved this grant; the row lives under that tenant's scope. */
+  tenantId: string;
   codeHash: string; // sha256-base64url of the code
   clientId: string;
   redirectUri: string;
@@ -37,6 +39,8 @@ export interface OAuthAuthorizationCodeRecord {
 }
 
 export interface OAuthAccessTokenRecord {
+  /** Tenant that approved this grant; the row lives under that tenant's scope. */
+  tenantId: string;
   tokenHash: string; // sha256-base64url of access token
   refreshTokenHash?: string;
   clientId: string;

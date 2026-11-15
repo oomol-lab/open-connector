@@ -1,9 +1,6 @@
-import type { CatalogStore } from "../../catalog-store.ts";
 import type { ActionPolicySnapshot } from "../../core/action-policy.ts";
-import type { ActionRunner } from "../actions/action-runner.ts";
-import type { ProxyRunner } from "../proxy/proxy-runner.ts";
-import type { IIdempotencyStore } from "../storage/idempotency-store.ts";
 import type { RuntimeGrant } from "../storage/runtime-token-service.ts";
+import type { ScopedServices, TenantServices } from "../tenant-services.ts";
 import type { RuntimeActionHttpResult } from "./runtime-api.ts";
 import type { Context } from "hono";
 
@@ -18,7 +15,7 @@ import {
   hashIdempotencyKey,
   readIdempotencyKey,
 } from "../actions/action-idempotency.ts";
-import { readRuntimeGrant } from "./auth.ts";
+import { readRuntimeGrant, readTenantId } from "./auth.ts";
 import { HttpRequestError, readConnectionName, readJsonBody } from "./http-utils.ts";
 import {
   mapConnectionErrorStatus,
@@ -32,24 +29,23 @@ import {
 } from "./runtime-api.ts";
 
 export interface RuntimeExecutionRoutesOptions {
-  catalog: CatalogStore;
-  actions: ActionRunner;
-  idempotency: IIdempotencyStore;
-  proxyRunner: ProxyRunner;
+  services: ScopedServices;
   getPolicySnapshot: (context: Context) => Promise<ActionPolicySnapshot>;
 }
 
 /** Action execution and proxy dispatch routes under /v1. */
-export function createRuntimeExecutionRoutes({
-  catalog,
-  actions,
-  idempotency,
-  proxyRunner,
-  getPolicySnapshot,
-}: RuntimeExecutionRoutesOptions): Hono {
+export function createRuntimeExecutionRoutes({ services, getPolicySnapshot }: RuntimeExecutionRoutesOptions): Hono {
   const app = new Hono();
+  const scoped = async (context: Context): Promise<Required<TenantServices>> => {
+    const bundle = await services.forTenant(readTenantId(context));
+    if (!bundle.actions || !bundle.idempotency || !bundle.proxyRunner) {
+      throw new HttpRequestError("service_unavailable", "Runtime execution is unavailable.", 503);
+    }
+    return bundle as Required<TenantServices>;
+  };
 
   const executeRuntimeAction = async (
+    scopedServices: Required<TenantServices>,
     actionId: string,
     input: unknown,
     connectionName: string | undefined,
@@ -59,7 +55,7 @@ export function createRuntimeExecutionRoutes({
     connectionId?: string,
   ): Promise<RuntimeActionHttpResult> => {
     try {
-      const run = await actions.run({
+      const run = await scopedServices.actions.run({
         actionId,
         input,
         caller: "http",
@@ -97,8 +93,9 @@ export function createRuntimeExecutionRoutes({
   };
 
   app.post("/actions/:actionId", async (context) => {
+    const scopedServices = await scoped(context);
     const actionId = context.req.param("actionId");
-    const action = catalog.actionsById.get(actionId);
+    const action = scopedServices.catalog.actionsById.get(actionId);
     if (!action) {
       return writeRuntimeFailure(context, unknownActionFailure(actionId));
     }
@@ -123,6 +120,7 @@ export function createRuntimeExecutionRoutes({
       return writeRuntimeActionHttpResult(
         context,
         await executeRuntimeAction(
+          scopedServices,
           actionId,
           input,
           connectionName,
@@ -147,6 +145,7 @@ export function createRuntimeExecutionRoutes({
       return writeRuntimeActionHttpResult(
         context,
         await executeRuntimeAction(
+          scopedServices,
           actionId,
           input,
           connectionName,
@@ -181,7 +180,7 @@ export function createRuntimeExecutionRoutes({
       });
     }
     const claimId = crypto.randomUUID();
-    const claim = await idempotency.claim({
+    const claim = await scopedServices.idempotency.claim({
       keyHash,
       requestHash,
       claimId,
@@ -210,6 +209,7 @@ export function createRuntimeExecutionRoutes({
     }
 
     const result = await executeRuntimeAction(
+      scopedServices,
       actionId,
       input,
       connectionName,
@@ -218,7 +218,7 @@ export function createRuntimeExecutionRoutes({
       context.req.raw.signal,
       connectionId,
     );
-    const completed = await idempotency.complete({
+    const completed = await scopedServices.idempotency.complete({
       keyHash,
       requestHash,
       claimId,
@@ -261,7 +261,9 @@ export function createRuntimeExecutionRoutes({
         meta: { service },
       });
     }
-    const result = await proxyRunner.run({
+    const result = await (
+      await scoped(context)
+    ).proxyRunner.run({
       service,
       input: body,
       connectionName: readConnectionName(context, body),

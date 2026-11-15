@@ -1,14 +1,16 @@
 import type { ActionRunner } from "../actions/action-runner.ts";
 import type { RunLogCaller, RunLogListInput } from "../storage/runtime-store.ts";
+import type { ScopedServices } from "../tenant-services.ts";
 import type { Context } from "hono";
 
 import { Hono } from "hono";
 import { optionalString } from "../../core/cast.ts";
 import { decodeRunLogCursor } from "../storage/runtime-store.ts";
-import { jsonError } from "./http-utils.ts";
+import { readTenantId } from "./auth.ts";
+import { HttpRequestError, jsonError } from "./http-utils.ts";
 
 export interface RunLogRoutesOptions {
-  actions: ActionRunner;
+  services: ScopedServices;
 }
 
 type RunLogListQuery =
@@ -75,8 +77,13 @@ function readRunLogListInput(context: Context): RunLogListQuery {
 }
 
 /** Action execution run log query and inspection routes. */
-export function createRunLogRoutes({ actions }: RunLogRoutesOptions): Hono {
+export function createRunLogRoutes({ services }: RunLogRoutesOptions): Hono {
   const app = new Hono();
+  const scoped = async (context: Context): Promise<ActionRunner> => {
+    const { actions } = await services.forTenant(readTenantId(context));
+    if (!actions) throw new HttpRequestError("service_unavailable", "Action runs are unavailable.", 503);
+    return actions;
+  };
 
   app.get("/runs", async (context) => {
     const query = readRunLogListInput(context);
@@ -84,12 +91,12 @@ export function createRunLogRoutes({ actions }: RunLogRoutesOptions): Hono {
       return jsonError(context, 400, "invalid_input", query.message);
     }
 
-    return context.json(await actions.listRuns(query.input));
+    return context.json(await (await scoped(context)).listRuns(query.input));
   });
 
   app.get("/runs/:id", async (context) => {
     const id = context.req.param("id");
-    const run = await actions.getRun(id);
+    const run = await (await scoped(context)).getRun(id);
     return run ? context.json(run) : jsonError(context, 404, "run_not_found", `Run not found: ${id}.`);
   });
 

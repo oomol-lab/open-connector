@@ -51,6 +51,7 @@ import { ActionRunner } from "./actions/action-runner.ts";
 import { registerStaticRoutes } from "./api/static-routes.ts";
 import { ConnectServer } from "./connect-server.ts";
 import { TransitFileService } from "./files/transit-files.ts";
+import { ProxyRunner } from "./proxy/proxy-runner.ts";
 import { AesGcmSecretCodec, PlainTextSecretCodec } from "./secrets/secret-codec.ts";
 import { decodeRunLogCursor, encodeRunLogCursor } from "./storage/runtime-store.ts";
 import { RuntimeTokenService } from "./storage/runtime-token-service.ts";
@@ -4840,6 +4841,12 @@ function createTestServer(providers: ProviderDefinition[], options: CreateTestSe
     transitFiles,
     logger: options.logger,
   });
+  const proxyRunner = new ProxyRunner({
+    catalog,
+    providerLoader,
+    connections,
+    logger: options.logger,
+  });
   const staticRoot = typeof options.staticRoot === "string" ? options.staticRoot : undefined;
   const oauthFlow = new OAuthFlowService({
     clientConfigs,
@@ -4858,6 +4865,7 @@ function createTestServer(providers: ProviderDefinition[], options: CreateTestSe
     customMcp,
     connections,
     actions: actionRunner,
+    proxyRunner,
     oauthFlow,
     idempotency,
     forTenant: () => Promise.resolve(services),

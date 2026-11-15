@@ -6,6 +6,7 @@ import type {
   IOAuthTokenStore,
   IOAuthSigningKeyStore,
 } from "../storage/oauth-as-stores.ts";
+import type { RuntimeDatabase } from "../storage/runtime-database.ts";
 import type { RuntimeGrant, RuntimeTokenService, IRuntimeTokenStore } from "../storage/runtime-token-service.ts";
 import type { OAuthServerConfig } from "./config.ts";
 
@@ -26,11 +27,19 @@ import { verifyPkceS256 } from "./pkce.ts";
 export interface TokenDependencies {
   config: OAuthServerConfig;
   clients: IOAuthClientStore;
+  /**
+   * Instance-scoped (`forInstance`) stores: code and token hashes are globally
+   * unique, so lookups and hash-keyed mutations intentionally span tenants.
+   * Inserts must go through `runtimeDatabase.forTenant(record.tenantId)` so the
+   * row lands under the tenant that approved the grant.
+   */
   codes: IOAuthCodeStore;
   tokens: IOAuthTokenStore;
   keys: IOAuthSigningKeyStore;
   runtimeTokens: RuntimeTokenService;
   runtimeTokenStore: IRuntimeTokenStore;
+  /** Tenant-scoped write access for token issuance and rotation. */
+  runtimeDatabase: RuntimeDatabase;
 }
 
 export interface IssuedTokenResponse {
@@ -217,6 +226,7 @@ async function exchangeAuthorizationCode(
     throw new TokenError("invalid_target", "resource does not match the authorization request.");
   }
   return issueTokens(deps, {
+    tenantId: record.tenantId,
     clientId: client.clientId,
     runtimeTokenId: record.runtimeTokenId,
     scope: record.scope,
@@ -289,6 +299,7 @@ async function refreshGrant(
   // Build and sign the successor BEFORE consuming the old token: if key
   // activation or signing fails, the old token stays redeemable.
   const built = await buildTokens(deps, {
+    tenantId: precheck.tenantId,
     clientId: client.clientId,
     runtimeTokenId: precheck.runtimeTokenId,
     scope: precheck.scope,
@@ -298,7 +309,9 @@ async function refreshGrant(
   // Rotate atomically: the old hash is consumed and the successor inserted in
   // one store operation, so a concurrent redemption or a persistence failure
   // cannot leave the client with neither token.
-  const rotated = await deps.tokens.rotateRefreshToken(tokenHash, built.record);
+  const rotated = await deps.runtimeDatabase
+    .forTenant(precheck.tenantId)
+    .oauthTokenStore.rotateRefreshToken(tokenHash, built.record);
   if (!rotated) {
     // The token vanished between the pre-check and the rotation (a concurrent
     // request won the race, or it was revoked in between). A mere consumption
@@ -340,6 +353,8 @@ function remainingRefreshTtl(record: OAuthAccessTokenRecord, defaultTtl: number)
 }
 
 interface IssueTokensInput {
+  /** Tenant the grant was approved under; the token row is written in its scope. */
+  tenantId: string;
   clientId: string;
   runtimeTokenId: string;
   scope: string;
@@ -376,6 +391,7 @@ async function buildTokens(deps: TokenDependencies, input: IssueTokensInput): Pr
   const refreshToken =
     input.refreshTokenTtl > 0 && input.scope.split(/\s+/).includes(offlineAccessScope) ? randomToken(32) : undefined;
   const record: OAuthAccessTokenRecord = {
+    tenantId: input.tenantId,
     tokenHash: hashToken(token),
     refreshTokenHash: refreshToken === undefined ? undefined : hashToken(refreshToken),
     clientId: input.clientId,
@@ -391,7 +407,7 @@ async function buildTokens(deps: TokenDependencies, input: IssueTokensInput): Pr
 
 async function issueTokens(deps: TokenDependencies, input: IssueTokensInput): Promise<IssuedTokenResponse> {
   const built = await buildTokens(deps, input);
-  await deps.tokens.add(built.record);
+  await deps.runtimeDatabase.forTenant(input.tenantId).oauthTokenStore.add(built.record);
   return {
     access_token: built.accessToken,
     token_type: "Bearer",

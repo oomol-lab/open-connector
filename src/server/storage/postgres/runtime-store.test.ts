@@ -402,6 +402,7 @@ describe("PostgresRuntimeDatabase with PGlite", () => {
   it("rotates OAuth refresh tokens atomically with their successor", async () => {
     const now = Date.now();
     const base = {
+      tenantId: "local",
       clientId: "client-1",
       runtimeTokenId: "grant-1",
       scope: "mcp:access offline_access",
@@ -492,6 +493,7 @@ describe("PostgresRuntimeDatabase with PGlite", () => {
   it("deletes fully expired tokens, including consumed refresh rows", async () => {
     const now = Date.now();
     await database.oauthTokenStore.add({
+      tenantId: "local",
       tokenHash: "gone",
       clientId: "client-1",
       runtimeTokenId: "grant-1",
@@ -500,6 +502,7 @@ describe("PostgresRuntimeDatabase with PGlite", () => {
       expiresAt: now - 60_000,
     });
     await database.oauthTokenStore.add({
+      tenantId: "local",
       tokenHash: "kept",
       refreshTokenHash: "kept-refresh",
       clientId: "client-1",
@@ -512,6 +515,7 @@ describe("PostgresRuntimeDatabase with PGlite", () => {
     // A consumed refresh token is swept on the same refreshExpiresAt clock:
     // once that passes it is cleaned up like any other row.
     await database.oauthTokenStore.add({
+      tenantId: "local",
       tokenHash: "consumed",
       refreshTokenHash: "consumed-refresh",
       clientId: "client-1",

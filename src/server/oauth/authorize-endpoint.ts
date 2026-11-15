@@ -4,13 +4,15 @@ import type {
   IOAuthCodeStore,
   IOAuthSigningKeyStore,
 } from "../storage/oauth-as-stores.ts";
-import type { RuntimeTokenService } from "../storage/runtime-token-service.ts";
+import type { RuntimeDatabase } from "../storage/runtime-database.ts";
 import type { CimdClient } from "./cimd-client.ts";
 import type { OAuthServerConfig } from "./config.ts";
 import type { ConsentDescription } from "@cloudflare/workers-oauth-provider";
 import type { Context } from "hono";
 import type * as JoseModule from "jose";
 
+import { readTenantId } from "../api/auth.ts";
+import { RuntimeTokenService } from "../storage/runtime-token-service.ts";
 import { withClientLock } from "./client-lock.ts";
 
 // `jose` is a lazy-only package (see eager-imports.test.ts): dynamic import only.
@@ -43,6 +45,8 @@ export interface AuthorizeDependencies {
   keys: IOAuthSigningKeyStore;
   runtimeTokens: RuntimeTokenService;
   cimd?: CimdClient;
+  /** Codes and backing grants are minted under the request's tenant. */
+  runtimeDatabase: RuntimeDatabase;
 }
 
 export interface AuthorizeRequest {
@@ -384,7 +388,10 @@ export async function handleAuthorizePost(context: Context, deps: AuthorizeDepen
         error_description: "Requested scope exceeds this client's registered scopes.",
       });
     }
-    const backing = await deps.runtimeTokens.createToken(`MCP OAuth • ${current.clientName.slice(0, 120)}`, {
+    const tenant = readTenantId(context);
+    const scoped = deps.runtimeDatabase.forTenant(tenant);
+    const runtimeTokens = new RuntimeTokenService(scoped.runtimeTokenStore, undefined, tenant);
+    const backing = await runtimeTokens.createToken(`MCP OAuth • ${current.clientName.slice(0, 120)}`, {
       allowedActions: [],
       blockedActions: [],
       allowedProxies: [],
@@ -393,7 +400,8 @@ export async function handleAuthorizePost(context: Context, deps: AuthorizeDepen
     });
     const code = randomToken(32);
     try {
-      await deps.codes.add({
+      await scoped.oauthCodeStore.add({
+        tenantId: tenant,
         codeHash: hashToken(code),
         clientId: current.clientId,
         redirectUri: request.redirectUri,
@@ -405,7 +413,7 @@ export async function handleAuthorizePost(context: Context, deps: AuthorizeDepen
         expiresAt: Date.now() + deps.config.authorizationCodeTtlSeconds * 1000,
       });
     } catch (error) {
-      await deps.runtimeTokens.revokeToken(backing.record.id);
+      await runtimeTokens.revokeToken(backing.record.id);
       throw error;
     }
     return completeRedirect({ code });

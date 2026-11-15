@@ -962,6 +962,7 @@ function readOAuthClientRow(row: RuntimeRow): OAuthClientRecord {
 
 function readOAuthCodeRow(row: RuntimeRow): OAuthAuthorizationCodeRecord {
   return {
+    tenantId: readString(row, "tenant_id"),
     codeHash: readString(row, "code_hash"),
     clientId: readString(row, "client_id"),
     redirectUri: readString(row, "redirect_uri"),
@@ -977,6 +978,7 @@ function readOAuthCodeRow(row: RuntimeRow): OAuthAuthorizationCodeRecord {
 
 function readOAuthTokenRow(row: RuntimeRow): OAuthAccessTokenRecord {
   return {
+    tenantId: readString(row, "tenant_id"),
     tokenHash: readString(row, "token_hash"),
     refreshTokenHash: readOptionalString(row, "refresh_token_hash"),
     clientId: readString(row, "client_id"),

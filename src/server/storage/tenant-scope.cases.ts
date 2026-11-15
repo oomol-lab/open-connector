@@ -183,6 +183,7 @@ export function tenantScopeTests(getDatabase: () => RuntimeDatabase): void {
     const alpha = getDatabase().forTenant(ALPHA);
     const beta = getDatabase().forTenant(BETA);
     await alpha.oauthCodeStore.add({
+      tenantId: "local",
       codeHash: "alpha-code-hash",
       clientId: "client",
       redirectUri: "https://app.example/callback",
@@ -197,6 +198,7 @@ export function tenantScopeTests(getDatabase: () => RuntimeDatabase): void {
     });
 
     await alpha.oauthTokenStore.add({
+      tenantId: "local",
       tokenHash: "alpha-access-hash",
       clientId: "client",
       runtimeTokenId: "token",

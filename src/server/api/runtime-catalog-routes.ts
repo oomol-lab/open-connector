@@ -1,13 +1,12 @@
-import type { CatalogStore, RuntimeActionDefinition } from "../../catalog-store.ts";
-import type { ConnectionService } from "../../connection-service.ts";
-import type { ActionSearchDocument, ActionSearchIndexProvider } from "../../core/action-search.ts";
-import type { OAuthClientConfigService } from "../../oauth/oauth-client-config-service.ts";
-import type { SaasProjectService } from "../../saas/saas-project-service.ts";
+import type { RuntimeActionDefinition } from "../../catalog-store.ts";
+import type { ActionSearchDocument } from "../../core/action-search.ts";
+import type { ScopedServices } from "../tenant-services.ts";
 import type { Context } from "hono";
 
 import { Hono } from "hono";
 import { DEFAULT_ACTION_SEARCH_LIMIT, searchActions } from "../../core/action-search.ts";
 import { optionalString } from "../../core/cast.ts";
+import { readTenantId } from "./auth.ts";
 import { catalogLocale } from "./catalog-locale.ts";
 import {
   serializeRuntimeAction,
@@ -90,24 +89,19 @@ export function readSearchQuery(context: Context, defaultLimit: number = DEFAULT
 }
 
 export interface RuntimeCatalogRoutesOptions {
-  catalog: CatalogStore;
-  connections: ConnectionService;
-  actionSearch: ActionSearchIndexProvider;
-  oauthClientConfigs: OAuthClientConfigService;
-  saasProject?: SaasProjectService;
+  services: ScopedServices;
 }
 
 /** Provider and action discovery, inspection and search routes under /v1. */
-export function createRuntimeCatalogRoutes({
-  catalog,
-  connections,
-  actionSearch,
-  oauthClientConfigs,
-  saasProject,
-}: RuntimeCatalogRoutesOptions): Hono {
+export function createRuntimeCatalogRoutes({ services }: RuntimeCatalogRoutesOptions): Hono {
   const app = new Hono();
+  const scoped = (context: Context) => services.forTenant(readTenantId(context));
 
-  const serializeSearchResults = async (results: ActionSearchDocument[]): Promise<RuntimeActionSearchResult[]> => {
+  const serializeSearchResults = async (
+    context: Context,
+    results: ActionSearchDocument[],
+  ): Promise<RuntimeActionSearchResult[]> => {
+    const { catalog, connections } = await scoped(context);
     const authenticated = new Set(
       await connections.listAuthenticatedServices([...new Set(results.map((result) => result.service))]),
     );
@@ -120,6 +114,7 @@ export function createRuntimeCatalogRoutes({
   };
 
   app.get("/providers/:service/setup", async (context) => {
+    const { catalog, oauthClientConfigs, saasProject } = await scoped(context);
     const service = context.req.param("service");
     const locale = catalogLocale(context);
     const provider = catalog.getProviderDisplay(locale).providers.find((p) => p.service === service);
@@ -146,7 +141,8 @@ export function createRuntimeCatalogRoutes({
     return writeRuntimeSuccess(context, serializeRuntimeProviderSetup(provider, oauth, locale));
   });
 
-  app.get("/providers", (context) => {
+  app.get("/providers", async (context) => {
+    const { catalog } = await scoped(context);
     const services = context.req.queries("service") ?? [];
     const query = optionalString(context.req.query("q"))?.toLowerCase();
     const providers = catalog.getProviderDisplay(catalogLocale(context)).providers.filter((provider) => {
@@ -174,6 +170,7 @@ export function createRuntimeCatalogRoutes({
   });
 
   app.get("/actions", async (context) => {
+    const { catalog } = await scoped(context);
     const service = optionalString(context.req.query("service"));
     if (!service) {
       const services = [...new Set(catalog.actions.map((action) => action.service))];
@@ -200,15 +197,16 @@ export function createRuntimeCatalogRoutes({
       });
     }
 
-    const index = await actionSearch.get();
+    const index = await (await scoped(context)).catalog.getSearchIndex();
     const results = searchActions(index, query.q, {
       service: query.service,
       limit: query.limit,
     });
-    return writeRuntimeSuccess(context, await serializeSearchResults(results));
+    return writeRuntimeSuccess(context, await serializeSearchResults(context, results));
   });
 
   app.get("/actions/:actionId", async (context) => {
+    const { catalog } = await scoped(context);
     const actionId = context.req.param("actionId");
     const action = await catalog.getAction(actionId);
     if (!action) {

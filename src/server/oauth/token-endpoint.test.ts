@@ -57,6 +57,7 @@ async function setup(): Promise<{ app: Hono; database: SqliteRuntimeDatabase; de
     keys: database.oauthSigningKeyStore,
     runtimeTokens: new RuntimeTokenService(database.runtimeTokenStore),
     runtimeTokenStore: database.runtimeTokenStore,
+    runtimeDatabase: database,
   };
   return { app, database, deps };
 }

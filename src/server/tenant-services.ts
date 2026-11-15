@@ -11,6 +11,7 @@ import type { SaasProjectService } from "../saas/saas-project-service.ts";
 import type { TriggerMaintenance } from "../triggers/maintenance.ts";
 import type { TriggerRunner } from "../triggers/trigger-runner.ts";
 import type { ActionRunner } from "./actions/action-runner.ts";
+import type { ProxyRunner } from "./proxy/proxy-runner.ts";
 import type { IIdempotencyStore } from "./storage/idempotency-store.ts";
 
 /**
@@ -29,6 +30,7 @@ export interface TenantServices {
   customMcp?: CustomMcpService;
   connections: ConnectionService;
   actions?: ActionRunner;
+  proxyRunner?: ProxyRunner;
   oauthFlow: OAuthFlowService;
   triggers?: TriggerRunner;
   triggerMaintenance?: TriggerMaintenance;

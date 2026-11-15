@@ -1,9 +1,10 @@
-import type { CatalogStore } from "../../catalog-store.ts";
+import type { ScopedServices } from "../tenant-services.ts";
 import type { MiddlewareHandler } from "hono";
 
 import { Hono } from "hono";
 import { optionalString } from "../../core/cast.ts";
 import { PromiseCache } from "../../core/promise-cache.ts";
+import { readTenantId } from "./auth.ts";
 
 const docsHandler = new PromiseCache<MiddlewareHandler>();
 
@@ -28,18 +29,19 @@ export function loadDocsHandler(openapiUrl = "/openapi.json"): Promise<Middlewar
 }
 
 export interface DocsRoutesOptions {
-  catalog: CatalogStore;
+  services: ScopedServices;
   publicOrigin: string;
   serveDocumentation?: boolean;
 }
 
 /** OpenAPI 3.1 schema and interactive documentation routes. */
-export function createDocsRoutes({ catalog, publicOrigin, serveDocumentation }: DocsRoutesOptions): Hono {
+export function createDocsRoutes({ services, publicOrigin, serveDocumentation }: DocsRoutesOptions): Hono {
   const app = new Hono();
 
   app.get("/openapi.json", async (context) => {
     const { createOpenApiDocument } = await import("./openapi.ts");
     const actionId = optionalString(context.req.query("actionId"));
+    const { catalog } = await services.forTenant(readTenantId(context));
     const action = actionId ? await catalog.getAction(actionId) : undefined;
     return context.json(createOpenApiDocument({ action }));
   });

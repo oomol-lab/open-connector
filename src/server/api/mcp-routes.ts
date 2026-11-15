@@ -1,15 +1,13 @@
-import type { CatalogStore } from "../../catalog-store.ts";
-import type { ConnectionService } from "../../connection-service.ts";
 import type { ActionPolicySnapshot } from "../../core/action-policy.ts";
-import type { ActionSearchIndexProvider } from "../../core/action-search.ts";
 import type * as McpRuntime from "../../mcp.ts";
-import type { ActionRunner } from "../actions/action-runner.ts";
 import type { McpOutputMode } from "../mcp-settings.ts";
+import type { ScopedServices } from "../tenant-services.ts";
 import type { Context } from "hono";
 
 import { Hono } from "hono";
 import { PromiseCache } from "../../core/promise-cache.ts";
-import { readRuntimeGrant } from "./auth.ts";
+import { readRuntimeGrant, readTenantId } from "./auth.ts";
+import { HttpRequestError } from "./http-utils.ts";
 
 export type McpModule = typeof McpRuntime;
 
@@ -34,32 +32,24 @@ function rejectMcpMethod(context: Context): Response {
 }
 
 export interface McpRoutesOptions {
-  catalog: CatalogStore;
-  connections: ConnectionService;
-  actions: ActionRunner;
-  actionSearch: ActionSearchIndexProvider;
+  services: ScopedServices;
   outputMode?: McpOutputMode;
   getPolicySnapshot: (context: Context) => Promise<ActionPolicySnapshot>;
 }
 
 /** MCP transport and tool discovery routes. */
-export function createMcpRoutes({
-  catalog,
-  connections,
-  actions,
-  actionSearch,
-  outputMode,
-  getPolicySnapshot,
-}: McpRoutesOptions): Hono {
+export function createMcpRoutes({ services, outputMode, getPolicySnapshot }: McpRoutesOptions): Hono {
   const app = new Hono();
 
   app.post("/mcp", async (context) => {
+    const { catalog, connections, actions } = await services.forTenant(readTenantId(context));
+    if (!actions) throw new HttpRequestError("service_unavailable", "MCP execution is unavailable.", 503);
     const { handleMcpRequest } = await loadMcpModule();
     return await handleMcpRequest(context.req.raw, {
       catalog,
       connections,
       actions,
-      actionSearch,
+      actionSearch: { get: () => catalog.getSearchIndex() },
       outputMode,
       getPolicySnapshot: () => getPolicySnapshot(context),
       runtimeGrant: readRuntimeGrant(context),

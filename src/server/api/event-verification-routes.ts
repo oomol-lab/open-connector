@@ -1,11 +1,10 @@
-import type { ConnectionService } from "../../connection-service.ts";
-import type { OAuthClientConfigService } from "../../oauth/oauth-client-config-service.ts";
 import type {
   ChannelCredentialScope,
   ChannelCredentialSource,
   ChannelEventRejectionReason,
   ChannelEventVerifier,
 } from "../event-verification/contract.ts";
+import type { ScopedServices, TenantServices } from "../tenant-services.ts";
 import type { RuntimeFailureInput } from "./runtime-api.ts";
 import type { Context } from "hono";
 
@@ -14,12 +13,12 @@ import { ConnectionError } from "../../connection-error.ts";
 import { optionalString } from "../../core/cast.ts";
 import { listChannelEventVerifiers } from "../event-verification/registry.ts";
 import { readEventRequestBody } from "../event-verification/request-body.ts";
+import { readTenantId } from "./auth.ts";
 import { readConnectionName } from "./http-utils.ts";
 import { mapConnectionErrorStatus, writeRuntimeFailure, writeRuntimeSuccess } from "./runtime-api.ts";
 
 export interface EventVerificationRoutesOptions {
-  connections: ConnectionService;
-  oauthClientConfigs: OAuthClientConfigService;
+  services: ScopedServices;
   /** Dedicated OOMOL_CONNECT_EVENT_VERIFY_TOKEN, when configured. */
   eventVerifyToken: string | undefined;
 }
@@ -68,18 +67,18 @@ async function rejectUnauthorizedEventVerification(
  * limit, and maps the verifier's outcome to the runtime envelope. Nothing is
  * stored or scheduled.
  */
-export function createEventVerificationRoutes({
-  connections,
-  oauthClientConfigs,
-  eventVerifyToken,
-}: EventVerificationRoutesOptions): Hono {
+export function createEventVerificationRoutes({ services, eventVerifyToken }: EventVerificationRoutesOptions): Hono {
   const app = new Hono();
+  // The dedicated bearer token authenticates this route; there is no caller
+  // grant, so readTenantId falls back to the request's tenant context.
+  const scoped = (context: Context): Promise<TenantServices> => services.forTenant(readTenantId(context));
 
   async function readCredentialSource(
     context: Context,
     service: string,
     scope: ChannelCredentialScope,
   ): Promise<ChannelCredentialSource> {
+    const { connections, oauthClientConfigs } = await scoped(context);
     if (scope === "application") return { applicationConfig: await oauthClientConfigs.getConfig(service) };
     const connection = await connections.resolveConnection(
       service,

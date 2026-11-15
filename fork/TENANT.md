@@ -79,8 +79,9 @@ configs, provider preferences, and the `forInstance()` escape hatch.
   `connect-app.ts`) returns a sibling bundle where every tenant-scoped
   store is bound to that tenant. `local` resolves to the root bundle itself;
   other tenants build lazily and cache. Connection routes
-  (`connection-routes.ts`, `console-oauth-routes.ts`,
-  `saas-oauth-routes.ts`) consume the bundle per request.
+  (connection, OAuth, SaaS, catalog, execution, MCP, trigger, run-log,
+  marketplace, docs, custom-MCP and event-verification routes) consume the
+  bundle per request.
 - `readSubject(context)` stamps `connection_requests.owner`: runtime-token
   callers own flows as `service:<tokenId>`; every other credential shares
   the tenant's `service:admin` principal (the renamed `local-admin` — the
@@ -89,10 +90,18 @@ configs, provider preferences, and the `forInstance()` escape hatch.
 - The credential-free OAuth callback resolves its tenant from the pending
   `oauth_states` row (`tenantOf`, instance-wide) and completes inside that
   tenant's scoped bundle — a `?tenant=X` flow can finish end-to-end.
-- Runtime auth **fails closed** on grants whose `tenantId` is not `local`
-  until the remaining runtime surfaces (`/v1/actions`, `/mcp`, triggers,
-  idempotency) consume scoped bundles; minting non-`local` runtime tokens is
-  likewise rejected with `tenant_unsupported` until then.
+- Every request-facing route resolves `forTenant(readTenantId(context))` —
+  actions, proxy, idempotency, triggers, MCP, run logs, custom MCP,
+  marketplace preferences and event verification all run inside the grant's
+  or selected tenant. The temporary fail-closed guard on non-`local` grants
+  is lifted: a token minted under `?tenant=X` authenticates and executes in
+  tenant X.
+- The inbound OAuth authorization server binds grants to tenants per record:
+  `oauth_clients`/`oauth_signing_keys` stay instance-global, code and token
+  hash lookups run instance-wide (hashes are globally unique), and
+  `oauth_authorization_codes`/`oauth_tokens` rows are written under the
+  tenant that approved the grant — exchange and rotation rebind to
+  `record.tenantId` before inserting successors.
 - JWT-authenticated callers and browser sessions share the `service:admin`
   subject; only runtime-token (`service:<tokenId>`) and explicit
   `?subject=` (admin bearer) requests carry distinct owners. Admin can read a

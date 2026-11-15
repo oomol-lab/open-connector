@@ -419,12 +419,6 @@ async function hasValidRuntimeToken(context: Context, options: LocalAuthOptions)
   if (options.authMode !== "oauth") {
     const grant = await options.resolveRuntimeToken?.(token);
     if (grant) {
-      // Runtime stores are still bound to the local tenant until scoped
-      // views reach the execution boundary; reject rather than silently
-      // serving another tenant's data under this credential.
-      if (grant.tenantId !== DEFAULT_TENANT_ID) {
-        return false;
-      }
       runtimeGrants.set(context.req.raw, grant);
       return true;
     }
@@ -435,9 +429,6 @@ async function hasValidRuntimeToken(context: Context, options: LocalAuthOptions)
   if (options.authMode === "oauth" || options.authMode === "mixed") {
     const grant = await options.resolveOAuthToken?.(token);
     if (grant) {
-      if (grant.tenantId !== DEFAULT_TENANT_ID) {
-        return false;
-      }
       runtimeGrants.set(context.req.raw, grant);
       return true;
     }

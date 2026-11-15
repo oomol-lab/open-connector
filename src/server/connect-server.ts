@@ -35,7 +35,6 @@ import type { ScopedServices } from "./tenant-services.ts";
 import { Hono } from "hono";
 import { compress } from "hono/compress";
 import { ActionPolicyService } from "../core/action-policy.ts";
-import { createActionSearchIndexProvider } from "../core/action-search.ts";
 import { optionalRecord } from "../core/cast.ts";
 import { ExecutionError } from "../core/execution-error.ts";
 import { getExecutionTimings, withExecutionTimings } from "../core/execution-timing.ts";
@@ -71,7 +70,6 @@ import { createTriggerRoutes } from "./api/trigger-routes.ts";
 import { CimdClient } from "./oauth/cimd-client.ts";
 import { resolveOAuthServerConfig } from "./oauth/config.ts";
 import { createOAuthRoutes } from "./oauth/routes.ts";
-import { ProxyRunner } from "./proxy/proxy-runner.ts";
 
 /**
  * Import and evaluate the modules the /mcp and /docs routes defer to their first request. The Node server never
@@ -148,24 +146,12 @@ export interface IConnectServerOptions {
  */
 export class ConnectServer {
   private readonly options: IConnectServerOptions;
-  private readonly actionSearch: ActionSearchIndexProvider;
   private readonly actionPolicy: ActionPolicyService;
-  private readonly proxyRunner: ProxyRunner;
   private readonly getPolicySnapshot: PolicySnapshotProvider;
 
   constructor(options: IConnectServerOptions) {
     this.options = options;
-    this.actionSearch = options.actionSearch ?? createActionSearchIndexProvider(options.catalog.actions);
     this.actionPolicy = options.actionPolicy ?? new ActionPolicyService();
-    this.proxyRunner = new ProxyRunner({
-      network: options.network,
-      providerHttpDispatch: options.providerHttpDispatch,
-      catalog: options.catalog,
-      providerLoader: options.providerLoader,
-      connections: options.connections,
-      logger: options.logger,
-      saas: options.saas,
-    });
     this.getPolicySnapshot = createPolicySnapshotProvider({
       actionPolicy: this.actionPolicy,
       runtimePolicyStore: options.runtimePolicyStore,
@@ -238,8 +224,7 @@ export class ConnectServer {
       app.route(
         "/api/custom-mcp",
         createCustomMcpRoutes({
-          mcp: this.options.customMcp,
-          connections: this.options.connections,
+          services: this.options.services,
           publicOrigin: this.options.publicOrigin,
         }),
       );
@@ -248,8 +233,7 @@ export class ConnectServer {
     app.route(
       "/v1",
       createEventVerificationRoutes({
-        connections: this.options.connections,
-        oauthClientConfigs: this.options.oauthClientConfigs,
+        services: this.options.services,
         eventVerifyToken: this.options.eventVerifyToken,
       }),
     );
@@ -257,30 +241,18 @@ export class ConnectServer {
     // Health and runtime discovery / execution endpoints
     app.get("/v1/health", (context) => writeRuntimeSuccess(context, { ok: true, runtime: "oomol-connect" }));
 
-    app.route(
-      "/v1",
-      createRuntimeCatalogRoutes({
-        catalog: this.options.catalog,
-        connections: this.options.connections,
-        actionSearch: this.actionSearch,
-        oauthClientConfigs: this.options.oauthClientConfigs,
-        saasProject: this.options.saasProject,
-      }),
-    );
+    app.route("/v1", createRuntimeCatalogRoutes({ services: this.options.services }));
     app.route(
       "/v1",
       createRuntimeAppRoutes({
-        connections: this.options.connections,
+        services: this.options.services,
         getPolicySnapshot: this.getPolicySnapshot,
       }),
     );
     app.route(
       "/v1",
       createRuntimeExecutionRoutes({
-        catalog: this.options.catalog,
-        actions: this.options.actions,
-        idempotency: this.options.idempotency,
-        proxyRunner: this.proxyRunner,
+        services: this.options.services,
         getPolicySnapshot: this.getPolicySnapshot,
       }),
     );
@@ -290,19 +262,14 @@ export class ConnectServer {
     app.route(
       "/",
       createTriggerRoutes({
-        catalog: this.options.catalog,
-        triggers: this.options.triggers,
-        triggerMaintenance: this.options.triggerMaintenance,
+        services: this.options.services,
         getPolicySnapshot: this.getPolicySnapshot,
       }),
     );
     app.route(
       "/",
       createMcpRoutes({
-        catalog: this.options.catalog,
-        connections: this.options.connections,
-        actions: this.options.actions,
-        actionSearch: this.actionSearch,
+        services: this.options.services,
         outputMode: this.options.mcpOutputMode,
         getPolicySnapshot: this.getPolicySnapshot,
       }),
@@ -312,7 +279,7 @@ export class ConnectServer {
     app.route(
       "/",
       createDocsRoutes({
-        catalog: this.options.catalog,
+        services: this.options.services,
         publicOrigin: this.options.publicOrigin,
         serveDocumentation: this.options.serveDocumentation,
       }),
@@ -322,9 +289,7 @@ export class ConnectServer {
     app.route(
       "/api",
       createConsoleCatalogRoutes({
-        catalog: this.options.catalog,
-        connections: this.options.connections,
-        actionSearch: this.actionSearch,
+        services: this.options.services,
         publicOrigin: this.options.publicOrigin,
         getPolicySnapshot: this.getPolicySnapshot,
       }),
@@ -336,9 +301,9 @@ export class ConnectServer {
     });
 
     if (this.options.marketplace) {
-      app.route("/api", createMarketplaceRoutes({ marketplace: this.options.marketplace }));
+      app.route("/api", createMarketplaceRoutes({ services: this.options.services }));
     }
-    app.route("/api", createRunLogRoutes({ actions: this.options.actions }));
+    app.route("/api", createRunLogRoutes({ services: this.options.services }));
     app.route("/api", createTransitFileRoutes(this.options));
     app.route(
       "/api",
@@ -384,8 +349,8 @@ export class ConnectServer {
       "/api",
       createOAuthClientRoutes({
         clients: this.options.oauthClients,
-        codes: this.options.oauthCodes,
-        tokens: this.options.oauthTokens,
+        codes: this.options.runtimeDatabase.forInstance().oauthCodeStore,
+        tokens: this.options.runtimeDatabase.forInstance().oauthTokenStore,
         runtimeTokens: this.options.runtimeTokens,
       }),
     );
@@ -405,11 +370,12 @@ export class ConnectServer {
           config,
           adminToken: auth.adminToken,
           clients: this.options.oauthClients,
-          codes: this.options.oauthCodes,
-          tokens: this.options.oauthTokens,
+          codes: this.options.runtimeDatabase.forInstance().oauthCodeStore,
+          tokens: this.options.runtimeDatabase.forInstance().oauthTokenStore,
           keys: this.options.oauthKeys,
           runtimeTokens: this.options.runtimeTokens,
-          runtimeTokenStore: this.options.runtimeTokenStore,
+          runtimeTokenStore: this.options.runtimeDatabase.forInstance().runtimeTokenStore,
+          runtimeDatabase: this.options.runtimeDatabase,
           trustProxyHeaders: this.options.trustProxyHeaders,
           cimd: new CimdClient({ logger: this.options.logger }),
         }),

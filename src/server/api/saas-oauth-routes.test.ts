@@ -322,6 +322,27 @@ it("scopes SaaS connection requests to the admin-selected tenant", async () => {
   expect(missed.status).toBe(404);
 });
 
+it("authenticates a runtime token minted for a non-local tenant inside that tenant's scope", async () => {
+  const env = await setup();
+  const minted = await env.call("/api/runtime-tokens?tenant=alpha", {
+    method: "POST",
+    body: { name: "alpha-bot" },
+  });
+  expect(minted.status).toBe(200);
+  const { token } = (await minted.json()) as { token: string };
+
+  // The grant binds the request to alpha's scoped service graph.
+  expect((await env.call("/v1/apps", { token })).status).toBe(200);
+  expect((await env.call("/v1/actions", { token })).status).toBe(200);
+  // Runtime tokens carry no admin scope — the admin surface still rejects.
+  expect((await env.call("/api/runtime-tokens", { token })).status).toBe(401);
+
+  // The token row lives under alpha only: instance lookup resolves it, while
+  // the local tenant's listing stays empty.
+  expect(await env.database.forTenant("alpha").runtimeTokenStore.hasAny()).toBe(true);
+  expect(await env.database.runtimeTokenStore.hasAny()).toBe(false);
+});
+
 it("merges concurrent polls and resumes a persisted candidate after restart", async () => {
   const env = await setup();
   const { data } = await env.start();

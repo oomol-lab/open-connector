@@ -405,7 +405,7 @@ describe("readTenantId", () => {
     expect(await response.json()).toEqual({ tenantId: "local" });
   });
 
-  it("rejects a grant bound to a non-local tenant until execution stores are scoped", async () => {
+  it("authenticates a grant bound to a non-local tenant into that tenant's scope", async () => {
     const app = new Hono();
     app.use(
       "*",
@@ -417,7 +417,8 @@ describe("readTenantId", () => {
     app.get("/v1/tenant", (context) => context.json({ tenantId: readTenantId(context) }));
 
     const response = await app.request("/v1/tenant", { headers: authorize("Bearer", "valid") });
-    expect(response.status).toBe(401);
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual({ tenantId: "tenant-a" });
   });
 
   it("rejects a runtime-token caller selecting another tenant", async () => {
