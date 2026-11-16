@@ -99,6 +99,129 @@ const trackingQuerySchema = s.object(
   { optional: ["carrier"] },
 );
 
+const carrierChangeSchema = s.object(
+  "A tracking number with the old and new carrier codes to apply.",
+  {
+    number: trackingNumberSchema,
+    carrier_old: carrierSchema,
+    carrier_new: carrierSchema,
+    final_carrier_old: carrierSchema,
+    final_carrier_new: carrierSchema,
+  },
+  { optional: ["carrier_old", "final_carrier_old", "final_carrier_new"] },
+);
+
+const trackingInfoUpdateSchema = s.object(
+  "A tracking number and the metadata fields to update for it.",
+  {
+    number: trackingNumberSchema,
+    carrier: carrierSchema,
+    items: s.object(
+      "The tracking metadata fields to update.",
+      {
+        tag: s.string("A custom tag attached to the tracking number.", { maxLength: 100 }),
+        origin_country: s.string("The origin ISO 3166-1 alpha-2 country code.", {
+          pattern: "^[A-Za-z]{2}$",
+        }),
+        ship_date: s.nonEmptyString("The shipping date, normally in YYYY/MM/DD format."),
+        destination_postal_code: s.nonEmptyString("The destination postal code."),
+        destination_country: s.string("The destination ISO 3166-1 alpha-2 country code.", {
+          pattern: "^[A-Za-z]{2}$",
+        }),
+        destination_city: s.nonEmptyString("The destination city."),
+        shipper: s.nonEmptyString("The shipper name."),
+        consignee: s.nonEmptyString("The consignee name."),
+        phone_number_last_4: s.nonEmptyString("The last digits of the shipper or recipient phone number."),
+        phone_number: s.nonEmptyString("The shipper or recipient phone number."),
+        cpf_or_cnpj: s.nonEmptyString("The Brazilian CPF or CNPJ identifier."),
+        special_tracking_info: specialTrackingInfoSchema,
+        lang: s.nonEmptyString("The language code used to translate tracking events."),
+        translation_mode: s.stringEnum(
+          "The fallback behavior when the carrier does not support the requested language.",
+          ["Denied", "UseDefaultLang", "UseThirdPartyServices"],
+        ),
+        remark: s.string("A note describing the package.", { maxLength: 1_000 }),
+        order_no: s.string("The merchant order number.", {
+          minLength: 5,
+          maxLength: 50,
+          pattern: "^[A-Za-z0-9-]+$",
+        }),
+        order_time: s.nonEmptyString("The order time accepted by 17TRACK."),
+      },
+      {
+        optional: [
+          "tag",
+          "origin_country",
+          "ship_date",
+          "destination_postal_code",
+          "destination_country",
+          "destination_city",
+          "shipper",
+          "consignee",
+          "phone_number_last_4",
+          "phone_number",
+          "cpf_or_cnpj",
+          "special_tracking_info",
+          "lang",
+          "translation_mode",
+          "remark",
+          "order_no",
+          "order_time",
+        ],
+      },
+    ),
+  },
+  { optional: ["carrier"] },
+);
+
+const realtimeTrackingQuerySchema = s.object(
+  "A tracking number and optional additional tracking parameters queried in real time.",
+  {
+    number: trackingNumberSchema,
+    carrier: carrierSchema,
+    final_carrier: s.positiveInteger("The last-mile carrier code for a UPU shipment."),
+    origin_country: s.string("The origin ISO 3166-1 alpha-2 country code.", {
+      pattern: "^[A-Za-z]{2}$",
+    }),
+    ship_date: s.nonEmptyString("The shipping date, normally in YYYY/MM/DD format."),
+    destination_postal_code: s.nonEmptyString("The destination postal code."),
+    destination_country: s.string("The destination ISO 3166-1 alpha-2 country code.", {
+      pattern: "^[A-Za-z]{2}$",
+    }),
+    destination_city: s.nonEmptyString("The destination city."),
+    shipper: s.nonEmptyString("The shipper name."),
+    consignee: s.nonEmptyString("The consignee name."),
+    phone_number_last_4: s.nonEmptyString("The last digits of the shipper or recipient phone number."),
+    phone_number: s.nonEmptyString("The shipper or recipient phone number."),
+    cpf_or_cnpj: s.nonEmptyString("The Brazilian CPF or CNPJ identifier."),
+    special_tracking_info: specialTrackingInfoSchema,
+    cacheLevel: s.withEnum(
+      s.integer(
+        "The real-time query mode: 0 returns carrier data cached within the last 3 hours (Standard, costs 1 quota), 1 triggers an immediate carrier fetch (Instant, costs 10 quota).",
+      ),
+      [0, 1],
+    ),
+  },
+  {
+    optional: [
+      "carrier",
+      "final_carrier",
+      "origin_country",
+      "ship_date",
+      "destination_postal_code",
+      "destination_country",
+      "destination_city",
+      "shipper",
+      "consignee",
+      "phone_number_last_4",
+      "phone_number",
+      "cpf_or_cnpj",
+      "special_tracking_info",
+      "cacheLevel",
+    ],
+  },
+);
+
 const batchOutputSchema = s.object("A normalized 17TRACK batch response.", {
   accepted: s.array("Items accepted and processed by 17TRACK.", rawObjectSchema),
   rejected: s.array("Items rejected by 17TRACK with error details.", rawObjectSchema),
@@ -222,6 +345,99 @@ export const seventeenTrackActions: ActionDefinition[] = [
       },
     ),
     outputSchema: listOutputSchema,
+  }),
+  defineProviderAction(service, {
+    name: "change_carrier",
+    operationType: "write",
+    description:
+      "Change the carrier of up to 40 registered tracking numbers; each number can be changed up to 5 times.",
+    requiredScopes: [],
+    inputSchema: s.object("The carrier changes to apply.", {
+      carrier_changes: s.array("Carrier changes to apply.", carrierChangeSchema, {
+        minItems: 1,
+        maxItems: 40,
+      }),
+    }),
+    outputSchema: batchOutputSchema,
+  }),
+  defineProviderAction(service, {
+    name: "update_tracking_info",
+    operationType: "write",
+    description:
+      "Update the metadata (tag, addresses, language, remark, order info) of up to 40 registered tracking numbers.",
+    requiredScopes: [],
+    inputSchema: s.object("The tracking metadata updates to apply.", {
+      trackings: s.array("Metadata updates to apply.", trackingInfoUpdateSchema, {
+        minItems: 1,
+        maxItems: 40,
+      }),
+    }),
+    outputSchema: batchOutputSchema,
+  }),
+  defineProviderAction(service, {
+    name: "stop_tracking",
+    operationType: "write",
+    description:
+      "Stop automatic tracking for up to 40 registered tracking numbers; mutually exclusive with restart_tracking.",
+    requiredScopes: [],
+    inputSchema: s.object("The tracking numbers to stop tracking.", {
+      trackings: s.array("Tracking numbers to stop.", trackingQuerySchema, {
+        minItems: 1,
+        maxItems: 40,
+      }),
+    }),
+    outputSchema: batchOutputSchema,
+  }),
+  defineProviderAction(service, {
+    name: "restart_tracking",
+    operationType: "write",
+    description:
+      "Restart automatic tracking for up to 40 stopped tracking numbers; each number can only be restarted once.",
+    requiredScopes: [],
+    inputSchema: s.object("The tracking numbers to restart tracking.", {
+      trackings: s.array("Tracking numbers to restart.", trackingQuerySchema, {
+        minItems: 1,
+        maxItems: 40,
+      }),
+    }),
+    outputSchema: batchOutputSchema,
+  }),
+  defineProviderAction(service, {
+    name: "delete_trackings",
+    operationType: "write",
+    description: "Permanently delete up to 40 registered tracking numbers; deleted shipments cannot be restored.",
+    requiredScopes: [],
+    inputSchema: s.object("The tracking numbers to delete.", {
+      trackings: s.array("Tracking numbers to delete.", trackingQuerySchema, {
+        minItems: 1,
+        maxItems: 40,
+      }),
+    }),
+    outputSchema: batchOutputSchema,
+  }),
+  defineProviderAction(service, {
+    name: "push_trackings",
+    operationType: "write",
+    description: "Queue a webhook push of the latest tracking results for up to 40 registered tracking numbers.",
+    requiredScopes: [],
+    inputSchema: s.object("The tracking numbers to push.", {
+      trackings: s.array("Tracking numbers to push.", trackingQuerySchema, {
+        minItems: 1,
+        maxItems: 40,
+      }),
+    }),
+    outputSchema: batchOutputSchema,
+  }),
+  defineProviderAction(service, {
+    name: "get_realtime_tracking_details",
+    operationType: "read",
+    description:
+      "Query a single tracking number against carriers in real time; Standard mode (cacheLevel 0) returns carrier data from the last 3 hours and costs 1 quota, Instant mode (cacheLevel 1) triggers an immediate carrier fetch and costs 10 quota.",
+    requiredScopes: [],
+    inputSchema: s.object("The tracking number to query in real time.", {
+      tracking: realtimeTrackingQuerySchema,
+    }),
+    outputSchema: batchOutputSchema,
   }),
   defineProviderAction(service, {
     name: "get_quota",
