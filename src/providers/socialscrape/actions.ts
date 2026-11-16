@@ -6,7 +6,7 @@ import { defineProviderAction } from "../../core/provider-definition.ts";
 const service = "socialscrape";
 
 /** Platforms whose profile endpoint is looked up by handle. */
-export const socialscrapeProfilePlatforms = [
+const socialscrapeProfilePlatforms = [
   "instagram",
   "tiktok",
   "twitter",
@@ -18,7 +18,7 @@ export const socialscrapeProfilePlatforms = [
 ] as const;
 
 /** Platforms whose list of a profile's posts is looked up by handle. */
-export const socialscrapeProfilePostPlatforms = ["instagram", "tiktok", "threads", "bluesky", "truthsocial"] as const;
+const socialscrapeProfilePostPlatforms = ["instagram", "tiktok", "threads", "bluesky", "truthsocial"] as const;
 
 const metaSchema = s.object("Request details SocialScrape returns with every answer.", {
   requestId: s.nonEmptyString("The request identifier to quote when asking SocialScrape for support."),

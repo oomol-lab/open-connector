@@ -266,12 +266,17 @@ function socialscrapeRequestError(
   if (status === 401 || status === 403) {
     // SocialScrape also answers 403 for content it cannot return (`private`, `age_restricted`).
     // Only a refused key is a credential problem; a new key cannot fix the rest.
-    if (code !== undefined && !credentialErrorCodes.has(code)) {
+    if (code === "private" || code === "age_restricted") {
       return new ProviderRequestError(status, message, payload, "invalid_input");
     }
-    if (phase === "validate") {
+    if (phase === "validate" && code !== undefined && credentialErrorCodes.has(code)) {
       return new ProviderRequestError(400, message, payload);
     }
   }
-  return new ProviderRequestError(status >= 500 ? 502 : status, message, payload);
+  return new ProviderRequestError(
+    status >= 500 ? 502 : status,
+    message,
+    payload,
+    status === 401 || status === 403 ? "provider_error" : undefined,
+  );
 }

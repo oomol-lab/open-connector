@@ -46,7 +46,12 @@ export async function requestBaobiao(
     });
     if (!response.ok) {
       const text = await readProviderErrorTextBody(response, `${label} error response`, signal);
-      throw new ProviderRequestError(response.status, text || `${label} request failed with HTTP ${response.status}`);
+      throw new ProviderRequestError(
+        response.status,
+        text || `${label} request failed with HTTP ${response.status}`,
+        undefined,
+        "provider_error",
+      );
     }
     const envelope = requiredResponseRecord(
       await readProviderJsonBody(response, { emptyBody: {}, invalidJsonMessage: `${label} returned invalid JSON` }),
@@ -87,7 +92,7 @@ export async function pollBaobiaoSearchQuery(
 
 /** Whether an error is the gateway rejecting the API key itself. */
 export function isBaobiaoInvalidKeyError(error: unknown): boolean {
-  return error instanceof ProviderRequestError && error.status === 401;
+  return error instanceof ProviderRequestError && optionalRecord(error.details)?.subCode === invalidKeySubCode;
 }
 
 /** Whether an error is the gateway recognizing the key but refusing the endpoint for lack of grant or balance. */
@@ -102,7 +107,7 @@ function assertBaobiaoSuccess(envelope: Record<string, unknown>): void {
     return;
   }
   const message = optionalString(envelope.subMsg) ?? optionalString(envelope.msg) ?? `${label} request failed`;
-  throw new ProviderRequestError(baobiaoErrorStatus(envelope), message, envelope);
+  throw new ProviderRequestError(baobiaoErrorStatus(envelope), message, envelope, "provider_error");
 }
 
 function baobiaoErrorStatus(envelope: Record<string, unknown>): number {

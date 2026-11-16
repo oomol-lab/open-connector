@@ -874,7 +874,7 @@ export const firecrawlActions: ActionDefinition[] = [
       {
         query: s.nonEmptyString("The research question or topic."),
         jsonOptions: jsonOptionsSchema,
-        maxCredits: s.integer("The maximum credits the research job may spend."),
+        maxCredits: s.integer("The maximum credits the research job may spend.", { minimum: 1 }),
         systemPrompt: s.string("A system prompt that guides the research agent."),
         analysisPrompt: s.string("A synthesis prompt that guides the final analysis."),
       },
@@ -908,10 +908,11 @@ export const firecrawlActions: ActionDefinition[] = [
       "The input payload for this action.",
       {
         url: s.nonEmptyString("The root URL to turn into LLMs.txt."),
-        maxUrls: s.integer("The maximum URLs to analyze. Defaults to 10."),
+        maxUrls: s.integer("The maximum URLs to analyze. Defaults to 10.", { minimum: 1 }),
+        cache: s.boolean("Whether cached pages may be used. Set false to request fresh scrapes."),
         showFullText: s.boolean("Whether the llms-full.txt content should also be generated."),
       },
-      { optional: ["maxUrls", "showFullText"] },
+      { optional: ["maxUrls", "showFullText", "cache"] },
     ),
     outputSchema: s.requiredObject("The output payload for this action.", {
       success: s.boolean("Whether the job was accepted successfully."),

@@ -284,7 +284,7 @@ function toDeepResearchStatus(payload: unknown): unknown {
     return payload;
   }
   const sources = optionalArray(data.sources);
-  return { ...body, data: { finalAnalysis: data.report, sources, json: data.json }, sources };
+  return { ...body, data: { ...data, finalAnalysis: data.report, sources, json: data.json }, sources };
 }
 
 const llmsTxtSummaryFormat = {
@@ -355,14 +355,18 @@ async function getLlmsTxt(input: Record<string, unknown>, context: FirecrawlActi
 
   // A completed batch pages its results through `next`, which ends after the last page.
   const results = [...(optionalArray(job.data) ?? [])];
+  const visited = new Set<string>();
   for (let next = optionalString(job.next); next !== undefined;) {
     const nextUrl = new URL(next, context.apiBaseUrl);
+    if (visited.has(nextUrl.href))
+      throw new ProviderRequestError(502, "Firecrawl returned a repeated batch result page");
+    visited.add(nextUrl.href);
     const page = optionalRecord(
       await firecrawlRequest({ ...context, path: `${nextUrl.pathname}${nextUrl.search}`, phase: "execute" }),
     );
     results.push(...(optionalArray(page?.data) ?? []));
     const following = optionalString(page?.next);
-    next = following === next ? undefined : following;
+    next = following;
   }
 
   return compactObject({
