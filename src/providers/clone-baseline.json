@@ -176,6 +176,7 @@
       "src/providers/fuxin/executors.ts": 1,
       "src/providers/fxmacrodata/executors.ts": 1,
       "src/providers/gagelist/executors.ts": 1,
+      "src/providers/garmin_connect/executors.ts": 1,
       "src/providers/gong/executors.ts": 1,
       "src/providers/googledocs/executors.ts": 1,
       "src/providers/gorgias/executors.ts": 1,

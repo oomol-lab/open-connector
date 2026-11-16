@@ -21,6 +21,8 @@ import { defineProviderProxy } from "../provider-proxy.ts";
 import {
   createProviderFetch,
   providerInputError,
+  providerResponseError,
+  requiredResponseRecord,
   providerUserAgent,
   ProviderRequestError,
 } from "../provider-runtime.ts";
@@ -344,6 +346,7 @@ async function getLlmsTxt(input: Record<string, unknown>, context: FirecrawlActi
   const path = `/v2/batch/scrape/${String(input.id)}`;
   const job = optionalRecord(await firecrawlRequest({ ...context, path, phase: "execute" })) ?? {};
   const status = optionalString(job.status);
+  if (status === undefined) throw providerResponseError("Firecrawl batch response is missing status");
   const expiresAt = optionalString(job.expiresAt);
   if (status === "scraping") {
     return compactObject({ success: true, status: "processing", expiresAt });
@@ -354,17 +357,25 @@ async function getLlmsTxt(input: Record<string, unknown>, context: FirecrawlActi
   }
 
   // A completed batch pages its results through `next`, which ends after the last page.
-  const results = [...(optionalArray(job.data) ?? [])];
+  const results = readBatchResults(job);
   const visited = new Set<string>();
   for (let next = optionalString(job.next); next !== undefined;) {
     const nextUrl = new URL(next, context.apiBaseUrl);
     if (visited.has(nextUrl.href))
       throw new ProviderRequestError(502, "Firecrawl returned a repeated batch result page");
     visited.add(nextUrl.href);
-    const page = optionalRecord(
-      await firecrawlRequest({ ...context, path: `${nextUrl.pathname}${nextUrl.search}`, phase: "execute" }),
+    const basePathname = new URL(context.apiBaseUrl).pathname;
+    const basePath = basePathname.endsWith("/") ? basePathname.slice(0, -1) : basePathname;
+    const pathname =
+      basePath && nextUrl.pathname.startsWith(`${basePath}/`)
+        ? nextUrl.pathname.slice(basePath.length)
+        : nextUrl.pathname;
+    const pagePath = `${pathname}${nextUrl.search}`;
+    const page = requiredResponseRecord(
+      await firecrawlRequest({ ...context, path: pagePath, phase: "execute" }),
+      "Firecrawl batch result page",
     );
-    results.push(...(optionalArray(page?.data) ?? []));
+    results.push(...readBatchResults(page));
     const following = optionalString(page?.next);
     next = following;
   }
@@ -383,6 +394,11 @@ async function getLlmsTxt(input: Record<string, unknown>, context: FirecrawlActi
  * and the pages follow map order (batch results come back in the order they finish). Without them, the header
  * names the site's origin and the pages keep the order Firecrawl returned them in.
  */
+function readBatchResults(page: Record<string, unknown>): Record<string, unknown>[] {
+  if (!Array.isArray(page.data)) throw providerResponseError("Firecrawl batch result data must be an array of objects");
+  return page.data.map((value) => requiredResponseRecord(value, "Firecrawl batch result item"));
+}
+
 function buildLlmsTxt(results: unknown[], rootUrl?: string, urls?: string[]): Record<string, string> {
   const pages = results.map((result) => optionalRecord(result) ?? {});
   const metadataOf = (page: Record<string, unknown>) => optionalRecord(page.metadata) ?? {};
@@ -393,7 +409,7 @@ function buildLlmsTxt(results: unknown[], rootUrl?: string, urls?: string[]): Re
   if (urls) {
     const mapOrder = new Map(urls.map((pageUrl, index) => [pageUrl, index]));
     const position = (page: Record<string, unknown>) =>
-      mapOrder.get(firstText(metadataOf(page).sourceURL) ?? "") ?? urls.length;
+      mapOrder.get(firstText(metadataOf(page).sourceURL, metadataOf(page).url) ?? "") ?? urls.length;
     kept.sort((a, b) => position(a) - position(b));
   }
 

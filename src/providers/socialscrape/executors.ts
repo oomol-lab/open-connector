@@ -48,6 +48,7 @@ const socialscrapeActionHandlers: ProviderActionHandlers<"socialscrape", Handler
     const { data, meta } = await socialscrapeRequest("/v1/transcript", context, {
       url: requiredInputString(input.url, "url"),
       language: optionalString(input.language),
+      allow_long_transcription: optionalBoolean(input.allow_long_transcription),
     });
     return { transcript: data, meta };
   },
@@ -277,6 +278,8 @@ function socialscrapeRequestError(
     status >= 500 ? 502 : status,
     message,
     payload,
-    status === 401 || status === 403 ? "provider_error" : undefined,
+    (status === 401 || status === 403) && (code === undefined || !credentialErrorCodes.has(code))
+      ? "provider_error"
+      : undefined,
   );
 }
