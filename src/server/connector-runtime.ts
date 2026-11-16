@@ -2,6 +2,7 @@ import type { ActionPolicyConfig } from "../core/action-policy.ts";
 import type { ProviderHttpDispatchOptions } from "../core/provider-http-dispatch.ts";
 import type { ProviderNetworkPolicy } from "../core/provider-network-policy.ts";
 import type { RuntimeLogger } from "../core/types.ts";
+import type { McpOAuthClientMetadata } from "../custom-mcp/definition.ts";
 import type { RuntimeJwtConfig } from "./api/runtime-jwt.ts";
 import type { S3TransitClientOptions } from "./files/s3-transit-files.ts";
 import type { IStagedTransitFileService } from "./files/transit-file-store.ts";
@@ -113,6 +114,8 @@ export interface ConnectorRuntimeOptions {
   oauthCloseDelaySeconds?: number;
   /** Exact origins a provider-refusal callback page may post its result to. Never `*`. */
   oauthResultOrigins?: string[];
+  /** Name and links Connect sends when it registers its own OAuth client with a custom MCP server. */
+  customMcpOAuthClient?: McpOAuthClientMetadata;
 }
 
 /** Standard web requests are the host boundary; credentials, databases and framework objects stay private. */
@@ -238,6 +241,7 @@ export async function createConnectorRuntime(options: ConnectorRuntimeOptions): 
       serveDocumentation: options.apiReference ?? false,
       oauthCloseDelaySeconds,
       oauthResultOrigins,
+      customMcpOAuthClient: options.customMcpOAuthClient,
     });
     saasCleanup.start();
     triggerMaintenance.start();

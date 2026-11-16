@@ -83,6 +83,39 @@ function providerAuth(auth: CustomMcpAuth): ProviderAuthDefinition {
   }
 }
 
+/** Client metadata Connect sends when it registers itself with an MCP authorization server. */
+export interface McpOAuthClientMetadata {
+  clientName: string;
+  logoUri?: string;
+  clientUri?: string;
+}
+
+/** Deployment settings for {@link McpOAuthClientMetadata}; blank values fall back to the defaults. */
+export interface McpOAuthClientSettings {
+  clientName?: string;
+  logoUri?: string;
+  clientUri?: string;
+}
+
+export const DEFAULT_MCP_OAUTH_CLIENT_NAME: string = "OOMOL Connect";
+
+/** Read the client name and the optional public HTTPS links shown on authorization consent screens. */
+export function readMcpOAuthClientMetadata(settings: McpOAuthClientSettings): McpOAuthClientMetadata {
+  return {
+    clientName: settings.clientName?.trim() || DEFAULT_MCP_OAUTH_CLIENT_NAME,
+    logoUri: readHttpsUrl(settings.logoUri, "OOMOL_CONNECT_CUSTOM_MCP_CLIENT_LOGO_URI"),
+    clientUri: readHttpsUrl(settings.clientUri, "OOMOL_CONNECT_CUSTOM_MCP_CLIENT_URI"),
+  };
+}
+
+function readHttpsUrl(value: string | undefined, name: string): string | undefined {
+  const trimmed = value?.trim();
+  if (!trimmed) return undefined;
+  if (!URL.canParse(trimmed) || new URL(trimmed).protocol !== "https:")
+    throw new Error(`${name} must be an https URL.`);
+  return trimmed;
+}
+
 /** Display names share one namespace with built-in providers. */
 export function customMcpNameKey(name: string): string {
   return name.trim().normalize("NFKC").toLowerCase();

@@ -9,6 +9,7 @@ import { join } from "node:path";
 import { defaultLazySchemaCacheFiles } from "../catalog-lazy-schemas.ts";
 import { parseActionPolicyList } from "../core/action-policy.ts";
 import { parseEgressTrustedHosts, parsePrivateNetworkAccessFlag } from "../core/request.ts";
+import { readMcpOAuthClientMetadata } from "../custom-mcp/definition.ts";
 import { isConsoleShellRequest } from "./api/console-paths.ts";
 import { DEFAULT_OAUTH_CLOSE_DELAY_SECONDS, parseOAuthResultOrigins } from "./api/oauth-completion-page.ts";
 import { registerStaticRoutes } from "./api/static-routes.ts";
@@ -102,6 +103,11 @@ async function main(): Promise<void> {
     },
     allowedCustomOAuth: parseActionPolicyList(process.env.OOMOL_CONNECT_ALLOWED_CUSTOM_OAUTH),
     oauthResultOrigins: parseOAuthResultOrigins(process.env.OOMOL_CONNECT_OAUTH_RESULT_ORIGINS),
+    customMcpOAuthClient: readMcpOAuthClientMetadata({
+      clientName: optionalEnv("OOMOL_CONNECT_CUSTOM_MCP_CLIENT_NAME"),
+      logoUri: optionalEnv("OOMOL_CONNECT_CUSTOM_MCP_CLIENT_LOGO_URI"),
+      clientUri: optionalEnv("OOMOL_CONNECT_CUSTOM_MCP_CLIENT_URI"),
+    }),
     postgres: databaseUrl
       ? {
           connectionString: databaseUrl,

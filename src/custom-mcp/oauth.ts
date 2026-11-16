@@ -1,5 +1,6 @@
 import type { OAuth2AuthDefinition } from "../core/types.ts";
 import type { OAuthClientConfigInput } from "../oauth/oauth-client-config-service.ts";
+import type { McpOAuthClientMetadata } from "./definition.ts";
 import type { FetchLike } from "@modelcontextprotocol/client";
 
 import {
@@ -21,6 +22,7 @@ export async function prepareMcpOAuth(
   endpoint: string,
   redirectUri: string,
   client: OAuthClientConfigInput | undefined,
+  clientMetadata: McpOAuthClientMetadata,
   signal?: AbortSignal,
 ): Promise<McpOAuthSetup> {
   return runProviderRequest({ label: "MCP OAuth discovery", signal }, async (signal) => {
@@ -57,7 +59,9 @@ export async function prepareMcpOAuth(
       const registered = await registerClient(info.authorizationServerUrl, {
         metadata,
         clientMetadata: {
-          client_name: "OOMOL Connect",
+          client_name: clientMetadata.clientName,
+          logo_uri: clientMetadata.logoUri,
+          client_uri: clientMetadata.clientUri,
           redirect_uris: [redirectUri],
           grant_types: ["authorization_code", "refresh_token"],
           response_types: ["code"],

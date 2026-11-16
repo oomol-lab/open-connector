@@ -1,5 +1,11 @@
 import type { OAuthClientConfigInput } from "../oauth/oauth-client-config-service.ts";
-import type { CustomMcpAuth, CustomMcpConfig, CustomMcpRegistration, McpHeaderDefinition } from "./definition.ts";
+import type {
+  CustomMcpAuth,
+  CustomMcpConfig,
+  CustomMcpRegistration,
+  McpHeaderDefinition,
+  McpOAuthClientMetadata,
+} from "./definition.ts";
 
 import { assertPublicHttpUrl, isPrivateNetworkAccessAllowed } from "../core/request.ts";
 import { ProviderRequestError } from "../providers/provider-runtime.ts";
@@ -15,6 +21,7 @@ export async function prepareMcpRegistration(
   input: CustomMcpRegistration,
   service: string,
   redirectUri: string,
+  clientMetadata: McpOAuthClientMetadata,
   signal?: AbortSignal,
 ): Promise<PreparedMcpRegistration> {
   const endpoint = assertPublicHttpUrl(input.endpoint, {
@@ -42,7 +49,7 @@ export async function prepareMcpRegistration(
       oauthClient = input.auth.client;
     } else {
       const { prepareMcpOAuth } = await import("./oauth.ts");
-      const setup = await prepareMcpOAuth(endpoint.href, redirectUri, input.auth.client, signal).catch(
+      const setup = await prepareMcpOAuth(endpoint.href, redirectUri, input.auth.client, clientMetadata, signal).catch(
         (error: unknown) => {
           if (error instanceof ProviderRequestError)
             throw new HttpRequestError(

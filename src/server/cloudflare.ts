@@ -9,6 +9,7 @@ import type { ISecretCodec } from "./secrets/secret-codec-core.ts";
 import { ActionPolicyService, parseActionPolicyList } from "../core/action-policy.ts";
 import { PromiseCache } from "../core/promise-cache.ts";
 import { parseEgressTrustedHosts, parsePrivateNetworkAccessFlag } from "../core/request.ts";
+import { readMcpOAuthClientMetadata } from "../custom-mcp/definition.ts";
 import { ProviderLoader } from "../providers/provider-loader.ts";
 import { executorModules } from "../providers/registry.cloudflare.generated.ts";
 import { SaasCleanupService } from "../saas/saas-cleanup-service.ts";
@@ -147,6 +148,11 @@ async function createCloudflareApp(env: CloudflareEnv, publicOrigin: string): Pr
     }),
     allowedCustomOAuth: parseActionPolicyList(env.OOMOL_CONNECT_ALLOWED_CUSTOM_OAUTH),
     oauthResultOrigins: parseOAuthResultOrigins(env.OOMOL_CONNECT_OAUTH_RESULT_ORIGINS),
+    customMcpOAuthClient: readMcpOAuthClientMetadata({
+      clientName: env.OOMOL_CONNECT_CUSTOM_MCP_CLIENT_NAME,
+      logoUri: env.OOMOL_CONNECT_CUSTOM_MCP_CLIENT_LOGO_URI,
+      clientUri: env.OOMOL_CONNECT_CUSTOM_MCP_CLIENT_URI,
+    }),
     logger: workerLogger,
     computeRuntimeAuthConfigured: false,
     // Cloudflare compresses on egress itself: Response defaults to
@@ -217,6 +223,9 @@ function createCacheKey(env: CloudflareEnv, publicOrigin: string): string {
     blockedProxies: env.OOMOL_CONNECT_BLOCKED_PROXIES ?? "",
     allowedCustomOAuth: env.OOMOL_CONNECT_ALLOWED_CUSTOM_OAUTH ?? "",
     oauthResultOrigins: env.OOMOL_CONNECT_OAUTH_RESULT_ORIGINS ?? "",
+    customMcpClientName: env.OOMOL_CONNECT_CUSTOM_MCP_CLIENT_NAME ?? "",
+    customMcpClientLogoUri: env.OOMOL_CONNECT_CUSTOM_MCP_CLIENT_LOGO_URI ?? "",
+    customMcpClientUri: env.OOMOL_CONNECT_CUSTOM_MCP_CLIENT_URI ?? "",
     transitFileTtlSeconds: env.OOMOL_CONNECT_TRANSIT_FILE_TTL_SECONDS ?? "",
     transitFileMaxBytes: env.OOMOL_CONNECT_TRANSIT_FILE_MAX_BYTES ?? "",
     runLimit: env.OOMOL_CONNECT_RUN_LIMIT ?? "",

@@ -1,5 +1,5 @@
 import type { ConnectApp } from "../server/connect-app.ts";
-import type { CustomMcpRecord } from "./definition.ts";
+import type { CustomMcpRecord, McpOAuthClientMetadata } from "./definition.ts";
 
 import { afterEach, beforeEach, expect, it, vi } from "vitest";
 import { createCatalogStore } from "../catalog-store.ts";
@@ -17,7 +17,7 @@ let tools: { name: string; description: string; inputSchema: Record<string, unkn
 let unavailable: boolean;
 let toolCalls: { name: string; authorization: string | null }[];
 
-async function createApp(builtinName?: string): Promise<ConnectApp> {
+async function createApp(builtinName?: string, customMcpOAuthClient?: McpOAuthClientMetadata): Promise<ConnectApp> {
   const app = await createConnectApp({
     catalog: createCatalogStore(
       builtinName
@@ -46,6 +46,7 @@ async function createApp(builtinName?: string): Promise<ConnectApp> {
     adminToken: "admin",
     runtimeToken: "runtime",
     serveDocumentation: false,
+    customMcpOAuthClient,
   });
   apps.push(app);
   return app;
@@ -244,6 +245,48 @@ it("rejects duplicate names, runtime administration and private addresses", asyn
   ).toBe(400);
 });
 
+it("registers the OAuth client with the configured name and links", async () => {
+  const app = await createApp(undefined, {
+    clientName: "Acme Support",
+    logoUri: "https://acme.example/logo.png",
+    clientUri: "https://acme.example",
+  });
+  let registered: Record<string, unknown> | undefined;
+  vi.stubGlobal("fetch", async (url: string | URL | Request, init?: RequestInit) => {
+    const address = String(url);
+    if (address === "https://mcp.example.com/mcp")
+      return new Response(null, {
+        status: 401,
+        headers: { "www-authenticate": 'Bearer resource_metadata="https://mcp.example.com/resource"' },
+      });
+    if (address === "https://mcp.example.com/resource")
+      return Response.json({
+        resource: "https://mcp.example.com/mcp",
+        authorization_servers: ["https://auth.example.com"],
+      });
+    if (address === "https://auth.example.com/.well-known/oauth-authorization-server")
+      return Response.json({
+        issuer: "https://auth.example.com",
+        authorization_endpoint: "https://auth.example.com/authorize",
+        token_endpoint: "https://auth.example.com/token",
+        registration_endpoint: "https://auth.example.com/register",
+        response_types_supported: ["code"],
+        code_challenge_methods_supported: ["S256"],
+      });
+    if (address === "https://auth.example.com/register") {
+      registered = JSON.parse(String(init?.body));
+      return Response.json({ ...registered, client_id: "registered-client" }, { status: 201 });
+    }
+    return new Response(null, { status: 404 });
+  });
+  await add(app, { type: "oauth2" });
+  expect(registered).toMatchObject({
+    client_name: "Acme Support",
+    logo_uri: "https://acme.example/logo.png",
+    client_uri: "https://acme.example",
+  });
+});
+
 it("discovers OAuth, registers once, binds consent and refresh to the resource, and preserves a connection after failed tool discovery", async () => {
   const app = await createApp();
   const mcpFetch = globalThis.fetch;
@@ -277,6 +320,8 @@ it("discovers OAuth, registers once, binds consent and refresh to the resource, 
       registrations++;
       const metadata = JSON.parse(String(init?.body));
       expect(metadata.redirect_uris).toEqual(["https://connector.example/oauth/callback"]);
+      expect(metadata.client_name).toBe("OOMOL Connect");
+      expect(metadata).not.toHaveProperty("logo_uri");
       return Response.json({ ...metadata, client_id: "registered-client" }, { status: 201 });
     }
     if (address === "https://auth.example.com/token") {
