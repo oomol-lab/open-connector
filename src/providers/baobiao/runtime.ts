@@ -52,7 +52,7 @@ export async function requestBaobiao(
       try {
         details = JSON.parse(text);
       } catch {
-        /* 非 JSON 错误保留原文。 */
+        /* Preserve the original text for non-JSON errors. */
       }
       throw new ProviderRequestError(
         response.status,

@@ -106,7 +106,7 @@ function extractPdfResources(payload: Record<string, unknown>) {
           resources.push({ field, url: url.href });
         }
       } catch {
-        /* 忽略上游不可解析的下载地址。 */
+        /* Ignore malformed download URLs returned by the provider. */
       }
     }
   }

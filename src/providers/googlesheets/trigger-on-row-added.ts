@@ -75,7 +75,7 @@ export const googleSheetsRowAdded: PollDefinition = {
     const rows = await values(context, config, sheet, start, end, "row window fetch");
     let last = start + rows.length - 1;
     if (rows.length < end - start + 1) {
-      // API 会省略窗口尾部的空行，确认实际表尾后才能推进游标。
+      // The API omits trailing empty rows; locate the actual sheet tail before advancing the cursor.
       const tail = await lastNonEmptyRow(context, config, sheet);
       if (tail < checkpoint.lastRowNumber) return { checkpoint: { ...checkpoint, lastRowNumber: tail }, events: [] };
       last = Math.min(end, tail);

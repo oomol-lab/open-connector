@@ -18,7 +18,7 @@ export const executors: ProviderExecutors = defineApiKeyProviderExecutors(servic
   skipDnsValidation: true,
 });
 
-// readError 不接收请求上下文，使用每次调用的闭包记录实际发送的 token。
+// readError receives no request context, so capture the token sent in a per-call closure.
 export const proxy: ProviderProxyExecutor = (input, context) => {
   let sentToken: { apiKey: string; value: string } | undefined;
   return defineProviderProxy({

@@ -3,7 +3,7 @@ import type { InvestodayOfficialToolDefinition } from "../official-tool-types.ts
 import { s } from "../../../core/json-schema.ts";
 import { investodayCodeDataOutputSchema } from "../official-tool-types.ts";
 
-// 此文件按 2026-09-21 官方 MCP tools/list 审核。
+// Reviewed against the official MCP tools/list response on 2026-09-21.
 export const hongKongOfficialTools: readonly InvestodayOfficialToolDefinition[] = [
   {
     name: "list_hk_stock_dividends",

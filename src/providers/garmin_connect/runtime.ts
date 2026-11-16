@@ -222,11 +222,7 @@ export async function getGarminConnectAccessToken(
   return waitForSignal(pending, request.signal);
 }
 
-/**
- * Prove a Personal API key works by exchanging it for a token and reading the
- * user settings, and describe the Garmin account it belongs to.
- */
-// 仅移除实际被拒绝且仍在缓存中的 token，不清掉并发请求刚换得的新 token。
+/** Remove only the rejected cached token, preserving tokens renewed by concurrent requests. */
 export async function invalidateGarminConnectAccessToken(apiKey: string, rejectedToken: string): Promise<void> {
   const cacheKey = sha256Hex(apiKey);
   const pending = tokens.get(cacheKey);
@@ -234,6 +230,11 @@ export async function invalidateGarminConnectAccessToken(apiKey: string, rejecte
   const token = await pending.catch(() => undefined);
   if (token?.value === rejectedToken && tokens.get(cacheKey) === pending) tokens.delete(cacheKey);
 }
+
+/**
+ * Prove a Personal API key works by exchanging it for a token and reading the
+ * user settings, and describe the Garmin account it belongs to.
+ */
 export async function validateGarminConnectApiKey(
   apiKey: string,
   fetcher: ProviderFetch,

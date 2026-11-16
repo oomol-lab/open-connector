@@ -252,7 +252,7 @@ export async function refreshShopeeTokenInventory(
         now: input.now,
       });
     } catch {
-      // 单个实体刷新失败时保留其他实体已经轮换成功的新令牌。
+      // Keep tokens already rotated for other entities when one refresh fails.
     }
   }
   for (const [id, token] of merchantEntries) {
@@ -266,7 +266,7 @@ export async function refreshShopeeTokenInventory(
         now: input.now,
       });
     } catch {
-      // 单个实体刷新失败时保留其他实体已经轮换成功的新令牌。
+      // Keep tokens already rotated for other entities when one refresh fails.
     }
   }
   const representative = Object.values(merchants)[0] ?? Object.values(shops)[0];
