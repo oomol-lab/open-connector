@@ -80,7 +80,7 @@ export function createLocalAuthMiddleware(options: LocalAuthOptions): Middleware
   }
 
   const authenticate = async (context: Context): Promise<Response | undefined> => {
-    const scope = readAuthScope(context.req.path);
+    const scope = readAuthScope(context.req.path, context.req.method);
     if (isPublicPath(context.req.path, context.req.method)) {
       return;
     }
@@ -101,9 +101,8 @@ export function createLocalAuthMiddleware(options: LocalAuthOptions): Middleware
       });
     }
 
-    // Admin elevation for action runs is only available when an admin token is
-    // configured. Without that, a missing admin token must not open POST
-    // /v1/actions/* while runtime tokens/JWT are otherwise enforcing auth.
+    // Keep administrator access to action runs and transit cleanup. A missing
+    // administrator credential must not bypass runtime authentication.
     if (
       canUseAdminAuth(context.req.path, context.req.method) &&
       normalizeToken(options.adminToken) &&
@@ -129,7 +128,7 @@ export function createLocalAuthMiddleware(options: LocalAuthOptions): Middleware
     }
     // RFC 9728 discovery: MCP clients learn the authorization server's
     // metadata location from this challenge on the resource's 401.
-    if (options.oauthChallenge && readAuthScope(context.req.path) === "runtime") {
+    if (options.oauthChallenge && scope === "runtime") {
       context.header("WWW-Authenticate", options.oauthChallenge);
     }
     return jsonError(context, 401, "unauthorized", "A valid local bearer token is required.");
@@ -207,13 +206,18 @@ async function installAdminCookieForBearer(context: Context, options: LocalAuthO
 }
 
 async function hasValidToken(context: Context, options: LocalAuthOptions, scope: AuthScope): Promise<boolean> {
+  // File deletion used to require administrator access. Do not turn an
+  // administrator-only installation into anonymous deletion by inheriting the
+  // runtime scope's optional-auth fallback.
+  const protectedTransitDelete =
+    isTransitFileDelete(context.req.path, context.req.method) && normalizeToken(options.adminToken);
   // The authorization server's own endpoints authenticate their callers
   // (admin consent, client credentials); the middleware must let them through.
   if (scope === "oauth") {
     return true;
   }
   if (scope === "runtime" && options.authMode === "none") {
-    return true;
+    return !protectedTransitDelete;
   }
   // In `oauth` mode a configured static runtime token is not accepted: OAuth-only
   // means OAuth-only, so skip straight to runtime-token resolution below.
@@ -222,7 +226,7 @@ async function hasValidToken(context: Context, options: LocalAuthOptions, scope:
   if (!token) {
     const required = await requiresRuntimeAuthentication(options);
     if (scope === "admin") return !required;
-    if (!required) return true;
+    if (!required && !protectedTransitDelete) return true;
     return hasValidRuntimeToken(context, options);
   }
 
@@ -307,9 +311,14 @@ function normalizeToken(token: string | undefined): string | undefined {
   return value ? value : undefined;
 }
 
-function readAuthScope(path: string): AuthScope {
+function isTransitFileDelete(path: string, method: string): boolean {
+  return method === "DELETE" && /^\/api\/files\/[^/]+$/.test(path);
+}
+
+function readAuthScope(path: string, method: string): AuthScope {
   if (isConnectionManagementPath(path)) return "admin";
   if (isOAuthServerPath(path)) return "oauth";
+  if (isTransitFileDelete(path, method)) return "runtime";
   return path === "/mcp" || path.startsWith("/mcp/") || path === "/v1" || path.startsWith("/v1/") ? "runtime" : "admin";
 }
 
@@ -329,7 +338,7 @@ function isOAuthServerPath(path: string): boolean {
 }
 
 function canUseAdminAuth(path: string, method: string): boolean {
-  return method === "POST" && /^\/v1\/actions\/[^/]+$/.test(path);
+  return isTransitFileDelete(path, method) || (method === "POST" && /^\/v1\/actions\/[^/]+$/.test(path));
 }
 
 function tokenForScope(options: LocalAuthOptions, scope: AuthScope): string | undefined {
