@@ -37,6 +37,30 @@ export const seventeenTrackActionHandlers: ProviderActionHandlers<
   },
   get_quota: async (_input, context) =>
     normalizeQuotaResponse(await requestSeventeenTrack("getquota", [], context.apiKey, context, "execute")),
+  change_carrier: async (input, context) =>
+    normalizeBatchResponse(
+      await requestSeventeenTrack("changecarrier", input.carrier_changes, context.apiKey, context, "execute"),
+    ),
+  update_tracking_info: async (input, context) =>
+    normalizeBatchResponse(
+      await requestSeventeenTrack("changeinfo", input.trackings, context.apiKey, context, "execute"),
+    ),
+  stop_tracking: async (input, context) =>
+    normalizeBatchResponse(
+      await requestSeventeenTrack("stoptrack", input.trackings, context.apiKey, context, "execute"),
+    ),
+  restart_tracking: async (input, context) =>
+    normalizeBatchResponse(await requestSeventeenTrack("retrack", input.trackings, context.apiKey, context, "execute")),
+  delete_trackings: async (input, context) =>
+    normalizeBatchResponse(
+      await requestSeventeenTrack("deletetrack", input.trackings, context.apiKey, context, "execute"),
+    ),
+  push_trackings: async (input, context) =>
+    normalizeBatchResponse(await requestSeventeenTrack("push", input.trackings, context.apiKey, context, "execute")),
+  get_realtime_tracking_details: async (input, context) =>
+    normalizeBatchResponse(
+      await requestSeventeenTrack("getRealTimeTrackInfo", [input.tracking], context.apiKey, context, "execute"),
+    ),
 };
 
 export async function validateSeventeenTrackCredential(
