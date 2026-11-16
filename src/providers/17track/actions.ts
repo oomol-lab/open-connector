@@ -37,7 +37,7 @@ const registrationSchema = s.object(
       maxLength: 250,
     }),
     order_no: s.string("The merchant order number.", {
-      minLength: 5,
+      minLength: 3,
       maxLength: 50,
       pattern: "^[A-Za-z0-9-]+$",
     }),
@@ -142,7 +142,7 @@ const trackingInfoUpdateSchema = s.object(
         ),
         remark: s.string("A note describing the package.", { maxLength: 1_000 }),
         order_no: s.string("The merchant order number.", {
-          minLength: 5,
+          minLength: 3,
           maxLength: 50,
           pattern: "^[A-Za-z0-9-]+$",
         }),
