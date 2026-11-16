@@ -6,7 +6,8 @@ import {
   ProviderRequestError,
   providerResponseError,
   readProviderErrorTextBody,
-  readProviderJsonBody,
+  readProviderTextBody,
+  parseProviderJsonBodyText,
   requiredResponseRecord,
   runProviderRequest,
 } from "../provider-runtime.ts";
@@ -26,6 +27,7 @@ interface BaobiaoRequest {
   body: Record<string, unknown>;
   /** Send the body as multipart form fields instead of JSON. */
   form?: boolean;
+  timeoutMs?: number;
 }
 
 /** POST one gateway endpoint and return the envelope after checking its business status. */
@@ -35,7 +37,7 @@ export async function requestBaobiao(
 ): Promise<Record<string, unknown>> {
   const url = new URL(`${baobiaoBaseUrl}${request.path}`);
   url.searchParams.set("key", context.apiKey);
-  return runProviderRequest({ signal: context.signal, label }, async (signal) => {
+  return runProviderRequest({ signal: context.signal, label, timeoutMs: request.timeoutMs }, async (signal) => {
     const response = await context.fetcher(url, {
       method: "POST",
       headers: request.form
@@ -46,10 +48,24 @@ export async function requestBaobiao(
     });
     if (!response.ok) {
       const text = await readProviderErrorTextBody(response, `${label} error response`, signal);
-      throw new ProviderRequestError(response.status, text || `${label} request failed with HTTP ${response.status}`);
+      let details: unknown = text;
+      try {
+        details = JSON.parse(text);
+      } catch {
+        /* 非 JSON 错误保留原文。 */
+      }
+      throw new ProviderRequestError(
+        response.status,
+        text || `${label} request failed with HTTP ${response.status}`,
+        details,
+        "provider_error",
+      );
     }
     const envelope = requiredResponseRecord(
-      await readProviderJsonBody(response, { emptyBody: {}, invalidJsonMessage: `${label} returned invalid JSON` }),
+      parseProviderJsonBodyText(await readProviderTextBody(response, `${label} response`, undefined, signal), {
+        emptyBody: {},
+        invalidJsonMessage: `${label} returned invalid JSON`,
+      }),
       `${label} response`,
     );
     assertBaobiaoSuccess(envelope);
@@ -68,11 +84,29 @@ export async function pollBaobiaoSearchQuery(
 ): Promise<unknown> {
   return runProviderRequest({ signal: context.signal, label }, async (signal) => {
     const deadline = Date.now() + searchQueryBudgetMs;
+    let lastData: Record<string, unknown> | undefined;
     for (;;) {
       const startedAt = Date.now();
-      const envelope = await requestBaobiao({ ...context, signal }, { path, body: { userQuery } });
+      let envelope: Record<string, unknown>;
+      try {
+        envelope = await requestBaobiao(
+          { ...context, signal },
+          { path, body: { userQuery }, timeoutMs: Math.max(1, deadline - Date.now()) },
+        );
+      } catch (error) {
+        if (
+          lastData &&
+          error instanceof ProviderRequestError &&
+          error.status === 504 &&
+          Date.now() >= deadline &&
+          !context.signal?.aborted
+        )
+          return lastData;
+        throw error;
+      }
       const requestMs = Date.now() - startedAt;
       const data = requiredResponseRecord(envelope.data, `${label} search query response`);
+      lastData = data;
       if (data.status === "failed") {
         throw providerResponseError(optionalString(data.errorMsg) ?? `${label} could not build a search query`);
       }
@@ -87,7 +121,7 @@ export async function pollBaobiaoSearchQuery(
 
 /** Whether an error is the gateway rejecting the API key itself. */
 export function isBaobiaoInvalidKeyError(error: unknown): boolean {
-  return error instanceof ProviderRequestError && error.status === 401;
+  return error instanceof ProviderRequestError && optionalRecord(error.details)?.subCode === invalidKeySubCode;
 }
 
 /** Whether an error is the gateway recognizing the key but refusing the endpoint for lack of grant or balance. */
@@ -102,7 +136,7 @@ function assertBaobiaoSuccess(envelope: Record<string, unknown>): void {
     return;
   }
   const message = optionalString(envelope.subMsg) ?? optionalString(envelope.msg) ?? `${label} request failed`;
-  throw new ProviderRequestError(baobiaoErrorStatus(envelope), message, envelope);
+  throw new ProviderRequestError(baobiaoErrorStatus(envelope), message, envelope, "provider_error");
 }
 
 function baobiaoErrorStatus(envelope: Record<string, unknown>): number {

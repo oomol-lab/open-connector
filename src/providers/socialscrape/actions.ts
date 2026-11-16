@@ -6,7 +6,7 @@ import { defineProviderAction } from "../../core/provider-definition.ts";
 const service = "socialscrape";
 
 /** Platforms whose profile endpoint is looked up by handle. */
-export const socialscrapeProfilePlatforms = [
+const socialscrapeProfilePlatforms = [
   "instagram",
   "tiktok",
   "twitter",
@@ -18,7 +18,7 @@ export const socialscrapeProfilePlatforms = [
 ] as const;
 
 /** Platforms whose list of a profile's posts is looked up by handle. */
-export const socialscrapeProfilePostPlatforms = ["instagram", "tiktok", "threads", "bluesky", "truthsocial"] as const;
+const socialscrapeProfilePostPlatforms = ["instagram", "tiktok", "threads", "bluesky", "truthsocial"] as const;
 
 const metaSchema = s.object("Request details SocialScrape returns with every answer.", {
   requestId: s.nonEmptyString("The request identifier to quote when asking SocialScrape for support."),
@@ -92,11 +92,14 @@ const getTranscriptAction = defineProviderAction(service, {
     "The input payload for a SocialScrape transcript.",
     {
       url: s.url("The address of the video."),
+      allow_long_transcription: s.boolean(
+        "Allow AI transcription beyond 2 minutes. Defaults to false; enabling it costs 5 credits per started minute of the whole video.",
+      ),
       language: s.nonEmptyString(
         "The preferred transcript language as a language code such as en or es. Omit it for the video's default.",
       ),
     },
-    { optional: ["language"] },
+    { optional: ["language", "allow_long_transcription"] },
   ),
   outputSchema: s.object("The transcript SocialScrape returned.", {
     transcript: s.looseObject(
@@ -137,7 +140,7 @@ const getProfileAction = defineProviderAction(service, {
   description: "Get a profile by handle: name, biography, links, verification and follower counts.",
   requiredScopes: [],
   followUpActions: [`${service}.list_profile_posts`],
-  inputSchema: s.object("The input payload for a SocialScrape profile lookup.", {
+  inputSchema: s.requiredObject("The input payload for a SocialScrape profile lookup.", {
     platform: s.stringEnum("The platform the profile is on.", socialscrapeProfilePlatforms),
     handle: s.nonWhitespaceString("The account handle, with or without a leading at sign.", { maxLength: 253 }),
   }),

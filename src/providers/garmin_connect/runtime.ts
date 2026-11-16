@@ -226,31 +226,30 @@ export async function getGarminConnectAccessToken(
  * Prove a Personal API key works by exchanging it for a token and reading the
  * user settings, and describe the Garmin account it belongs to.
  */
+// 仅移除实际被拒绝且仍在缓存中的 token，不清掉并发请求刚换得的新 token。
+export async function invalidateGarminConnectAccessToken(apiKey: string, rejectedToken: string): Promise<void> {
+  const cacheKey = sha256Hex(apiKey);
+  const pending = tokens.get(cacheKey);
+  if (!pending) return;
+  const token = await pending.catch(() => undefined);
+  if (token?.value === rejectedToken && tokens.get(cacheKey) === pending) tokens.delete(cacheKey);
+}
 export async function validateGarminConnectApiKey(
   apiKey: string,
   fetcher: ProviderFetch,
   signal?: AbortSignal,
 ): Promise<CredentialValidationResult> {
-  try {
-    const token = await getGarminConnectAccessToken({ apiKey, fetcher, signal, fresh: true });
-    const settings = requiredResponseRecord(
-      await sendGarminConnectGet(new URL(userSettingsPath, garminConnectApiBaseUrl), token.value, { fetcher, signal }),
-      "Garmin Connect user settings",
-    );
-    return {
-      profile: {
-        accountId: token.accountId,
-        displayName: readableDisplayName(settings.displayName),
-      },
-    };
-  } catch (error) {
-    // A rejected key is something the user fixes in the connect form, not a
-    // reason to reconnect an account that was never stored.
-    if (error instanceof ProviderRequestError && (error.status === 401 || error.status === 403)) {
-      throw new ProviderRequestError(400, error.message);
-    }
-    throw error;
-  }
+  const token = await getGarminConnectAccessToken({ apiKey, fetcher, signal, fresh: true });
+  const settings = requiredResponseRecord(
+    await sendGarminConnectGet(new URL(userSettingsPath, garminConnectApiBaseUrl), token.value, { fetcher, signal }),
+    "Garmin Connect user settings",
+  );
+  return {
+    profile: {
+      accountId: token.accountId,
+      displayName: readableDisplayName(settings.displayName),
+    },
+  };
 }
 
 /**
@@ -271,8 +270,9 @@ export async function readGarminConnectError(response: Response, signal?: AbortS
     case 403:
       return new ProviderRequestError(
         response.status,
-        message ??
-          "Garmin Connect rejected the Personal API key. It may have expired or been deleted; create a new key and reconnect.",
+        message ?? "Garmin Connect rejected the request.",
+        body,
+        "provider_error",
       );
     case 404:
       return new ProviderRequestError(404, message ?? "Garmin Connect found no data for this identifier.");
