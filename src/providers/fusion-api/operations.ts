@@ -1,4 +1,6 @@
-import type { ActionDefinition } from "../../core/types.ts";
+import type { ActionDefinition, JsonSchema } from "../../core/types.ts";
+
+import { s } from "../../core/json-schema.ts";
 
 export type FusionApiHttpMethod = "GET" | "POST";
 
@@ -26,6 +28,8 @@ export interface FusionApiOperation {
   successStatuses: number[];
   pathParams: string[];
   inputFields: FusionApiInputField[];
+  inputSchema?: JsonSchema;
+  resultDataSchema?: JsonSchema;
 }
 
 export const fusionApiOperations: FusionApiOperation[] = [
@@ -38,29 +42,29 @@ export const fusionApiOperations: FusionApiOperation[] = [
     description: "Run an FFmpeg command with up to four input URLs and one output. Maximum three minutes per job.",
     successStatuses: [200],
     pathParams: [],
-    inputFields: [
+    inputFields: [],
+    inputSchema: s.object(
+      "FFmpeg command and input files.",
       {
-        name: "inputURLs",
-        kind: "array",
-        required: true,
-        description:
-          "Ordered HTTPS input URLs. Command filename in0.mp4 selects inputURLs[0]; in1.wav selects inputURLs[1]. Maximum 100 MiB per file and 200 MiB total.",
+        inputURLs: s.array(s.url("Input file URL."), {
+          description:
+            "Ordered HTTPS input URLs. in0.mp4 selects the first URL. Maximum 100 MiB per file and 200 MiB total.",
+          minItems: 1,
+          maxItems: 4,
+        }),
+        args: s.array(s.string("One FFmpeg argument."), {
+          description:
+            "Arguments without the executable or shell syntax. Reference inputs as in<index>.<ext> and put the output filename last. Maximum 16 KiB of text.",
+          minItems: 3,
+          maxItems: 128,
+        }),
+        outputFilename: s.stringEnum(
+          ["out.mp4", "out.webm", "out.mkv", "out.mp3", "out.wav", "out.gif", "out.png", "out.jpg"],
+          { description: "Single output filename. Maximum 200 MiB." },
+        ),
       },
-      {
-        name: "args",
-        kind: "array",
-        required: true,
-        description:
-          "FFmpeg arguments without the executable, shell syntax, or remote paths. Reference uploaded files as in<index>.<ext>. End with the output filename. Maximum 16 KiB of argument text.",
-      },
-      {
-        name: "outputFilename",
-        kind: "string",
-        required: true,
-        description: "The single output filename, matching the final argument. Maximum output size is 200 MiB.",
-        enumValues: ["out.mp4", "out.webm", "out.mkv", "out.mp3", "out.wav", "out.gif", "out.png", "out.jpg"],
-      },
-    ],
+      { required: ["inputURLs", "args", "outputFilename"], additionalProperties: false },
+    ),
   },
   {
     actionName: "ffmpeg_result",
@@ -71,6 +75,19 @@ export const fusionApiOperations: FusionApiOperation[] = [
     description: "Get the FFmpeg task result.",
     successStatuses: [200, 202, 404],
     pathParams: ["sessionID"],
+    resultDataSchema: s.object(
+      "Output file and media metadata.",
+      {
+        downloadURL: s.url("Output download URL for reuse in subsequent actions."),
+        filename: s.string("Output filename."),
+        mimeType: s.string("Output MIME type."),
+        bytes: s.integer("Output size in bytes."),
+        duration: s.number("Media duration in seconds when available."),
+        width: s.number("Video or image width in pixels when available."),
+        height: s.number("Video or image height in pixels when available."),
+      },
+      { required: ["downloadURL", "filename", "mimeType", "bytes"] },
+    ),
     inputFields: [
       {
         name: "sessionID",

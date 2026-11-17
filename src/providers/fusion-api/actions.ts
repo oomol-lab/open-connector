@@ -60,30 +60,7 @@ export const fusionApiActions: ProviderActionDefinition<string>[] = [
 ];
 
 function buildInputSchema(operation: FusionApiOperation): JsonSchema {
-  if (operation.actionName === "ffmpeg_submit") {
-    return s.object(
-      "FFmpeg command and input files.",
-      {
-        inputURLs: s.array(s.url("Input file URL."), {
-          description:
-            "Ordered HTTPS input URLs. in0.mp4 selects the first URL. Maximum 100 MiB per file and 200 MiB total.",
-          minItems: 1,
-          maxItems: 4,
-        }),
-        args: s.array(s.string("One FFmpeg argument."), {
-          description:
-            "Arguments without the executable or shell syntax. Reference inputs as in<index>.<ext> and put the output filename last. Maximum 16 KiB of text.",
-          minItems: 3,
-          maxItems: 128,
-        }),
-        outputFilename: s.stringEnum(
-          ["out.mp4", "out.webm", "out.mkv", "out.mp3", "out.wav", "out.gif", "out.png", "out.jpg"],
-          { description: "Single output filename. Maximum 200 MiB." },
-        ),
-      },
-      { required: ["inputURLs", "args", "outputFilename"], additionalProperties: false },
-    );
-  }
+  if (operation.inputSchema) return operation.inputSchema;
   const properties = Object.fromEntries(
     operation.inputFields.map((field) => [field.name, buildFieldSchema(field)] as const),
   );
@@ -154,40 +131,22 @@ function fieldNameLooksLikeUrls(name: string): boolean {
 }
 
 function buildOutputSchema(operation: FusionApiOperation): JsonSchema {
-  if (operation.actionName === "ffmpeg_result") {
-    return s.union(
-      [
-        s.object(
-          "The FFmpeg task completed.",
-          {
-            state: s.literal("completed", { description: "Task state." }),
-            data: s.object(
-              "Output file and media metadata.",
-              {
-                downloadURL: s.url("Output download URL for reuse in subsequent actions."),
-                filename: s.string("Output filename."),
-                mimeType: s.string("Output MIME type."),
-                bytes: s.integer("Output size in bytes."),
-                duration: s.number("Media duration in seconds when available."),
-                width: s.number("Video or image width in pixels when available."),
-                height: s.number("Video or image height in pixels when available."),
-              },
-              { required: ["downloadURL", "filename", "mimeType", "bytes"] },
-            ),
-          },
-          { required: ["state", "data"] },
-        ),
-        processingStateSchema,
-        missingStateSchema,
-      ],
-      { description: "FFmpeg task result." },
-    );
-  }
   if (operation.actionName.endsWith("_submit")) {
     return submitOutputSchema;
   }
   if (operation.actionName.endsWith("_result")) {
-    return taskResultSchema;
+    if (!operation.resultDataSchema) return taskResultSchema;
+    return s.union(
+      [
+        s.object("The Fusion API task completed with result data.", {
+          state: s.literal("completed", { description: "Task state." }),
+          data: operation.resultDataSchema,
+        }),
+        processingStateSchema,
+        missingStateSchema,
+      ],
+      { description: "The normalized Fusion API task result." },
+    );
   }
   if (operation.actionName.endsWith("_state")) {
     return taskStateSchema;
