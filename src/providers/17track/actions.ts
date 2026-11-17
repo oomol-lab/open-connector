@@ -2,18 +2,14 @@ import type { ActionDefinition } from "../../core/types.ts";
 
 import { s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
-
 const service = "17track";
 const rawObjectSchema = s.unknownObject("A JSON object returned by 17TRACK.");
-
 const trackingNumberSchema = s.string("A 17TRACK-compatible tracking number.", {
   minLength: 5,
   maxLength: 50,
   pattern: "^[A-Za-z0-9-]+$",
 });
-
 const carrierSchema = s.positiveInteger("The numeric 17TRACK carrier code.");
-
 const specialTrackingInfoSchema = s.object(
   "Carrier-specific information required to retrieve tracking events.",
   {
@@ -22,7 +18,6 @@ const specialTrackingInfoSchema = s.object(
   },
   { optional: ["number_type", "parameter"] },
 );
-
 const registrationSchema = s.object(
   "A tracking number and its optional registration metadata.",
   {
@@ -61,7 +56,7 @@ const registrationSchema = s.object(
     cpf_or_cnpj: s.nonEmptyString("The Brazilian CPF or CNPJ identifier."),
     special_tracking_info: specialTrackingInfoSchema,
     tag: s.string("A custom tag attached to the tracking number.", { maxLength: 100 }),
-    remark: s.string("A note describing the package.", { maxLength: 1_000 }),
+    remark: s.string("A note describing the package.", { maxLength: 1000 }),
   },
   {
     optional: [
@@ -89,7 +84,6 @@ const registrationSchema = s.object(
     ],
   },
 );
-
 const trackingQuerySchema = s.object(
   "A tracking number and optional carrier used to retrieve its details.",
   {
@@ -98,7 +92,6 @@ const trackingQuerySchema = s.object(
   },
   { optional: ["carrier"] },
 );
-
 const carrierChangeSchema = s.object(
   "A tracking number with the old and new carrier codes to apply.",
   {
@@ -110,7 +103,6 @@ const carrierChangeSchema = s.object(
   },
   { optional: ["carrier_old", "final_carrier_old", "final_carrier_new"] },
 );
-
 const trackingInfoUpdateSchema = s.object(
   "A tracking number and the metadata fields to update for it.",
   {
@@ -140,7 +132,7 @@ const trackingInfoUpdateSchema = s.object(
           "The fallback behavior when the carrier does not support the requested language.",
           ["Denied", "UseDefaultLang", "UseThirdPartyServices"],
         ),
-        remark: s.string("A note describing the package.", { maxLength: 1_000 }),
+        remark: s.string("A note describing the package.", { maxLength: 1000 }),
         order_no: s.string("The merchant order number.", {
           minLength: 3,
           maxLength: 50,
@@ -173,7 +165,6 @@ const trackingInfoUpdateSchema = s.object(
   },
   { optional: ["carrier"] },
 );
-
 const realtimeTrackingQuerySchema = s.object(
   "A tracking number and optional additional tracking parameters queried in real time.",
   {
@@ -221,23 +212,20 @@ const realtimeTrackingQuerySchema = s.object(
     ],
   },
 );
-
-const batchOutputSchema = s.object("A normalized 17TRACK batch response.", {
+const batchOutputSchema = s.requiredObject("A normalized 17TRACK batch response.", {
   accepted: s.array("Items accepted and processed by 17TRACK.", rawObjectSchema),
   rejected: s.array("Items rejected by 17TRACK with error details.", rawObjectSchema),
 });
-
-const listOutputSchema = s.object("A normalized 17TRACK tracking list response.", {
+const listOutputSchema = s.requiredObject("A normalized 17TRACK tracking list response.", {
   trackings: s.array("Tracking records returned by 17TRACK.", rawObjectSchema),
-  pagination: s.object("Pagination information returned by 17TRACK.", {
+  pagination: s.requiredObject("Pagination information returned by 17TRACK.", {
     totalItems: s.nonNegativeInteger("The total number of matching tracking records."),
     totalPages: s.nonNegativeInteger("The total number of result pages."),
     pageNumber: s.nonNegativeInteger("The current page number."),
     pageSize: s.nonNegativeInteger("The number of records in a page."),
   }),
 });
-
-const quotaOutputSchema = s.object("The normalized quota counters for the 17TRACK account.", {
+const quotaOutputSchema = s.requiredObject("The normalized quota counters for the 17TRACK account.", {
   total: s.nonNegativeInteger("The total tracking quota."),
   used: s.nonNegativeInteger("The tracking quota already used."),
   remaining: s.nonNegativeInteger("The tracking quota still available."),
@@ -246,14 +234,13 @@ const quotaOutputSchema = s.object("The normalized quota counters for the 17TRAC
   freeEmailQuota: s.nonNegativeInteger("The free email notification quota."),
   freeEmailQuotaUsed: s.nonNegativeInteger("The free email notification quota already used."),
 });
-
 export const seventeenTrackActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "register_trackings",
     operationType: "write",
     description: "Register up to 40 tracking numbers for automatic tracking by 17TRACK.",
     requiredScopes: [],
-    inputSchema: s.object("The tracking numbers to register with 17TRACK.", {
+    inputSchema: s.requiredObject("The tracking numbers to register with 17TRACK.", {
       trackings: s.array("Tracking numbers to register.", registrationSchema, {
         minItems: 1,
         maxItems: 40,
@@ -266,7 +253,7 @@ export const seventeenTrackActions: ActionDefinition[] = [
     operationType: "read",
     description: "Get current tracking details for up to 40 registered tracking numbers.",
     requiredScopes: [],
-    inputSchema: s.object("The tracking numbers whose details should be retrieved.", {
+    inputSchema: s.requiredObject("The tracking numbers whose details should be retrieved.", {
       trackings: s.array("Tracking numbers to retrieve.", trackingQuerySchema, {
         minItems: 1,
         maxItems: 40,
@@ -352,7 +339,7 @@ export const seventeenTrackActions: ActionDefinition[] = [
     description:
       "Change the carrier of up to 40 registered tracking numbers; each number can be changed up to 5 times.",
     requiredScopes: [],
-    inputSchema: s.object("The carrier changes to apply.", {
+    inputSchema: s.requiredObject("The carrier changes to apply.", {
       carrier_changes: s.array("Carrier changes to apply.", carrierChangeSchema, {
         minItems: 1,
         maxItems: 40,
@@ -366,7 +353,7 @@ export const seventeenTrackActions: ActionDefinition[] = [
     description:
       "Update the metadata (tag, addresses, language, remark, order info) of up to 40 registered tracking numbers.",
     requiredScopes: [],
-    inputSchema: s.object("The tracking metadata updates to apply.", {
+    inputSchema: s.requiredObject("The tracking metadata updates to apply.", {
       trackings: s.array("Metadata updates to apply.", trackingInfoUpdateSchema, {
         minItems: 1,
         maxItems: 40,
@@ -380,7 +367,7 @@ export const seventeenTrackActions: ActionDefinition[] = [
     description:
       "Stop automatic tracking for up to 40 registered tracking numbers; mutually exclusive with restart_tracking.",
     requiredScopes: [],
-    inputSchema: s.object("The tracking numbers to stop tracking.", {
+    inputSchema: s.requiredObject("The tracking numbers to stop tracking.", {
       trackings: s.array("Tracking numbers to stop.", trackingQuerySchema, {
         minItems: 1,
         maxItems: 40,
@@ -394,7 +381,7 @@ export const seventeenTrackActions: ActionDefinition[] = [
     description:
       "Restart automatic tracking for up to 40 stopped tracking numbers; each number can only be restarted once.",
     requiredScopes: [],
-    inputSchema: s.object("The tracking numbers to restart tracking.", {
+    inputSchema: s.requiredObject("The tracking numbers to restart tracking.", {
       trackings: s.array("Tracking numbers to restart.", trackingQuerySchema, {
         minItems: 1,
         maxItems: 40,
@@ -407,7 +394,7 @@ export const seventeenTrackActions: ActionDefinition[] = [
     operationType: "write",
     description: "Permanently delete up to 40 registered tracking numbers; deleted shipments cannot be restored.",
     requiredScopes: [],
-    inputSchema: s.object("The tracking numbers to delete.", {
+    inputSchema: s.requiredObject("The tracking numbers to delete.", {
       trackings: s.array("Tracking numbers to delete.", trackingQuerySchema, {
         minItems: 1,
         maxItems: 40,
@@ -420,7 +407,7 @@ export const seventeenTrackActions: ActionDefinition[] = [
     operationType: "write",
     description: "Queue a webhook push of the latest tracking results for up to 40 registered tracking numbers.",
     requiredScopes: [],
-    inputSchema: s.object("The tracking numbers to push.", {
+    inputSchema: s.requiredObject("The tracking numbers to push.", {
       trackings: s.array("Tracking numbers to push.", trackingQuerySchema, {
         minItems: 1,
         maxItems: 40,
@@ -434,7 +421,7 @@ export const seventeenTrackActions: ActionDefinition[] = [
     description:
       "Query a single tracking number against carriers in real time; Standard mode (cacheLevel 0) returns carrier data from the last 3 hours and costs 1 quota, Instant mode (cacheLevel 1) triggers an immediate carrier fetch and costs 10 quota.",
     requiredScopes: [],
-    inputSchema: s.object("The tracking number to query in real time.", {
+    inputSchema: s.requiredObject("The tracking number to query in real time.", {
       tracking: realtimeTrackingQuerySchema,
     }),
     outputSchema: batchOutputSchema,
@@ -444,7 +431,7 @@ export const seventeenTrackActions: ActionDefinition[] = [
     operationType: "read",
     description: "Get the current tracking and email quota counters for the 17TRACK account.",
     requiredScopes: [],
-    inputSchema: s.object("No input is required to retrieve quota counters.", {}),
+    inputSchema: s.requiredObject("No input is required to retrieve quota counters.", {}),
     outputSchema: quotaOutputSchema,
   }),
 ];

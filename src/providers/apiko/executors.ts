@@ -3,7 +3,7 @@ import type { ApiKeyProviderContext, ProviderActionHandlers } from "../provider-
 
 import { optionalRecord, optionalString } from "../../core/cast.ts";
 import { defineApiKeyProviderExecutors } from "../provider-executors.ts";
-import { defineProviderProxy } from "../provider-proxy.ts";
+import { defineProviderProxy, readProviderProxyErrorMessage } from "../provider-proxy.ts";
 import {
   providerInputError,
   ProviderRequestError,
@@ -49,6 +49,14 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
   timeoutMs: inferenceTimeoutMs,
   auth: { type: "api_key_authorization", prefix: "Bearer " },
   skipDnsValidation: true,
+  async readError(response) {
+    return new ProviderRequestError(
+      response.status,
+      await readProviderProxyErrorMessage(response, "apiko proxy request failed"),
+      undefined,
+      "provider_error",
+    );
+  },
 });
 
 export const credentialValidators: CredentialValidators = {
@@ -92,7 +100,12 @@ function requestApiko(input: ApikoRequest, context: ApiKeyProviderContext): Prom
           optionalString(error?.error) ??
           optionalString(error?.message) ??
           `APIKO request failed with HTTP ${response.status}`;
-        throw new ProviderRequestError(response.status, message, withRetryAfterSeconds(response, payload));
+        throw new ProviderRequestError(
+          response.status,
+          message,
+          withRetryAfterSeconds(response, payload),
+          response.status === 429 ? "rate_limited" : "provider_error",
+        );
       }
       const result = requiredResponseRecord(payload, "APIKO response");
       if (input.path === "/models" && !Array.isArray(result.data)) {

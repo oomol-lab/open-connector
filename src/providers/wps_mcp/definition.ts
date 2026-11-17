@@ -11,10 +11,10 @@ export const provider: ProviderDefinition = {
   auth: [
     {
       type: "api_key",
-      label: "WPS Access Token",
-      placeholder: "Paste your WPS MCP access token",
+      label: "Token",
+      placeholder: "Paste your Token",
       description:
-        "Access Token sent to WPS MCP as an Authorization bearer token. Sign in and copy the Token from https://account.wps.cn/usercenter/agent-identity?isclient=false.",
+        "Sign in at https://www.kdocs.cn/latest, open the menu in the upper-right corner, select Kingsoft Docs Skill, then choose Copy token only in the dialog. Paste the Token here without the Bearer prefix.",
     },
   ],
   homepageUrl: "https://www.wps.cn",

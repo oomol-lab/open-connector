@@ -3,10 +3,7 @@ import type { ActionDefinition } from "../../core/types.ts";
 import { s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
 
-const service = "wps_mcp";
-
 const fileTypeSchema = s.stringEnum("The kind of file system entry to include.", ["file", "folder", "shortcut"]);
-
 const orderSchema = s.stringEnum("The result sort direction.", ["asc", "desc"]);
 
 const listFilterTypeSchema = s.object(
@@ -21,7 +18,9 @@ const fileSelectorProperties = {
   url: s.url("A WPS document URL used to select the document."),
 };
 
-const dynamicToolOutputSchema = s.unknown("The normalized result returned by the current WPS MCP tool.");
+const dynamicToolOutputSchema = s.unknown(
+  "The WPS tool result. A single JSON object text is decoded; upstream fields are preserved. Other content envelopes remain intact.",
+);
 
 const toolAnnotationsSchema = s.looseObject("MCP hints supplied by WPS about a tool's behavior.", {
   title: s.optional(s.string("A human-readable title for the tool.")),
@@ -45,12 +44,13 @@ const mcpToolSummarySchema = s.object(
 );
 
 export const wpsMcpActions: ActionDefinition[] = [
-  defineProviderAction(service, {
+  defineProviderAction("wps_mcp", {
     name: "search_files",
     operationType: "read",
     description:
       "Search WPS cloud documents and folders across drives by file name, content, creator, location, type, or time.",
     requiredScopes: [],
+    followUpActions: ["wps_mcp.read_file", "wps_mcp.get_file_info"],
     inputSchema: s.object(
       "Filters and pagination for searching WPS cloud documents.",
       {
@@ -129,12 +129,13 @@ export const wpsMcpActions: ActionDefinition[] = [
     ),
     outputSchema: dynamicToolOutputSchema,
   }),
-  defineProviderAction(service, {
+  defineProviderAction("wps_mcp", {
     name: "list_my_files",
     operationType: "read",
     description:
       "List entries in the root of the connected user's WPS cloud documents with filtering, sorting, and pagination.",
     requiredScopes: [],
+    followUpActions: ["wps_mcp.list_files", "wps_mcp.read_file"],
     inputSchema: s.object(
       "Filters and pagination for the WPS cloud document root.",
       {
@@ -162,16 +163,19 @@ export const wpsMcpActions: ActionDefinition[] = [
     ),
     outputSchema: dynamicToolOutputSchema,
   }),
-  defineProviderAction(service, {
+  defineProviderAction("wps_mcp", {
     name: "list_files",
     operationType: "read",
     description: "List entries in a known WPS drive folder with filtering, sorting, and pagination.",
     requiredScopes: [],
+    followUpActions: ["wps_mcp.read_file"],
     inputSchema: s.object(
       "The WPS drive folder and optional listing controls.",
       {
-        drive_id: s.nonEmptyString("The WPS drive ID."),
-        parent_id: s.nonEmptyString("The folder ID. Use 0 for the drive root."),
+        drive_id: s.nonEmptyString("The WPS drive ID. Required for parent_id 0; optional for a specific folder ID."),
+        parent_id: s.nonEmptyString(
+          "The folder ID. Use 0 only with an explicit drive_id; use list_my_files for the personal cloud root.",
+        ),
         filter_exts: s.string("Comma-separated lowercase file extensions to include."),
         filter_type: listFilterTypeSchema,
         order: orderSchema,
@@ -183,6 +187,7 @@ export const wpsMcpActions: ActionDefinition[] = [
       },
       {
         optional: [
+          "drive_id",
           "filter_exts",
           "filter_type",
           "order",
@@ -196,80 +201,146 @@ export const wpsMcpActions: ActionDefinition[] = [
     ),
     outputSchema: dynamicToolOutputSchema,
   }),
-  defineProviderAction(service, {
+  defineProviderAction("wps_mcp", {
+    name: "list_latest_items",
+    operationType: "read",
+    description: "List recently accessed WPS documents with creator and file extension filters.",
+    requiredScopes: [],
+    inputSchema: s.object(
+      "Filters and pagination for recently accessed documents.",
+      {
+        include_creators: s.string("Comma-separated creator IDs to include."),
+        exclude_creators: s.string("Comma-separated creator IDs to exclude."),
+        include_exts: s.string("Comma-separated file extensions to include."),
+        exclude_exts: s.string("Comma-separated file extensions to exclude."),
+        page_size: s.number("The page size from 1 to 500. Defaults to 20.", {
+          minimum: 1,
+          maximum: 500,
+        }),
+        page_token: s.string("The pagination token returned by the previous request."),
+        with_link: s.boolean("Whether to include share link information."),
+        with_permission: s.boolean("Whether to include file operation permissions."),
+      },
+      {
+        optional: [
+          "include_creators",
+          "exclude_creators",
+          "include_exts",
+          "exclude_exts",
+          "page_size",
+          "page_token",
+          "with_link",
+          "with_permission",
+        ],
+      },
+    ),
+    outputSchema: dynamicToolOutputSchema,
+  }),
+  defineProviderAction("wps_mcp", {
+    name: "get_file_link",
+    operationType: "read",
+    description: "Get the online access link for a WPS cloud document.",
+    requiredScopes: [],
+    inputSchema: s.object("At least one selector for the document link.", fileSelectorProperties, {
+      optional: ["file_id", "link_id", "url"],
+    }),
+    outputSchema: dynamicToolOutputSchema,
+  }),
+  defineProviderAction("wps_mcp", {
+    name: "download_file",
+    operationType: "read",
+    description:
+      "Get download information for a binary WPS file such as DOCX, XLSX, PDF, PPTX, or an image. Online OTL, DBT, and KSHEET documents are unsupported; use read_file for their content.",
+    requiredScopes: [],
+    inputSchema: s.object(
+      "A file selector and optional download settings.",
+      {
+        ...fileSelectorProperties,
+        drive_id: s.nonEmptyString("The source drive ID. Optional when a file selector is provided."),
+        internal: s.boolean("Whether to request an internal-network download URL."),
+        storage_base_domain: s.stringEnum("The storage domain for download URLs.", [
+          "wps.cn",
+          "kdocs.cn",
+          "wps365.com",
+        ]),
+        with_hash: s.boolean("Whether to include file checksum hashes."),
+      },
+      {
+        optional: ["file_id", "link_id", "url", "drive_id", "internal", "storage_base_domain", "with_hash"],
+      },
+    ),
+    outputSchema: dynamicToolOutputSchema,
+  }),
+  defineProviderAction("wps_mcp", {
     name: "get_file_info",
     operationType: "read",
     description: "Get metadata, drive details, extended attributes, or permissions for a WPS file.",
     requiredScopes: [],
-    inputSchema: {
-      ...s.object(
-        "At least one WPS file selector and optional metadata expansions.",
-        {
-          ...fileSelectorProperties,
-          with_drive: s.boolean("Whether the response should include the containing drive."),
-          with_ext_attrs: s.boolean("Whether the response should include extended attributes."),
-          with_permission: s.boolean("Whether the response should include operation permissions."),
-        },
-        {
-          optional: ["file_id", "link_id", "url", "with_drive", "with_ext_attrs", "with_permission"],
-        },
-      ),
-      anyOf: [{ required: ["file_id"] }, { required: ["link_id"] }, { required: ["url"] }],
-    },
+    followUpActions: ["wps_mcp.read_file"],
+    inputSchema: s.object(
+      "At least one WPS file selector and optional metadata expansions.",
+      {
+        ...fileSelectorProperties,
+        with_drive: s.boolean("Whether the response should include the containing drive."),
+        with_ext_attrs: s.boolean("Whether the response should include extended attributes."),
+        with_permission: s.boolean("Whether the response should include operation permissions."),
+      },
+      {
+        optional: ["file_id", "link_id", "url", "with_drive", "with_ext_attrs", "with_permission"],
+      },
+    ),
     outputSchema: dynamicToolOutputSchema,
   }),
-  defineProviderAction(service, {
+  defineProviderAction("wps_mcp", {
     name: "read_file",
     operationType: "read",
     description:
       "Read a WPS cloud document as Markdown, plain text, structured KDC data, or spreadsheet cells according to its format.",
     requiredScopes: [],
-    inputSchema: {
-      ...s.object(
-        "At least one WPS file selector and format-specific reading options. When several selectors are supplied, WPS prioritizes url, then link_id, then file_id.",
-        {
-          ...fileSelectorProperties,
-          format: s.stringEnum("The output format for supported text documents.", ["markdown", "plain", "kdc"]),
-          enable_upload_medias: s.boolean(
-            "Whether extracted media should be uploaded and returned as temporary download URLs.",
-          ),
-          sheet_id: s.number("The numeric spreadsheet sheet ID. It takes priority over sheet_name."),
-          sheet_name: s.string("The spreadsheet sheet name."),
-          sheet_range: s.object(
-            "A zero-based inclusive spreadsheet cell range.",
-            {
-              row_from: s.number("The zero-based first row."),
-              row_to: s.number("The zero-based last row, inclusive."),
-              col_from: s.number("The zero-based first column."),
-              col_to: s.number("The zero-based last column, inclusive."),
-            },
-            { optional: ["row_from", "row_to", "col_from", "col_to"] },
-          ),
-          task_id: s.string("The task ID returned by a previous incomplete read request."),
-        },
-        {
-          optional: [
-            "file_id",
-            "link_id",
-            "url",
-            "format",
-            "enable_upload_medias",
-            "sheet_id",
-            "sheet_name",
-            "sheet_range",
-            "task_id",
-          ],
-        },
-      ),
-      anyOf: [{ required: ["file_id"] }, { required: ["link_id"] }, { required: ["url"] }],
-    },
+    inputSchema: s.object(
+      "At least one WPS file selector and format-specific reading options. When several selectors are supplied, WPS prioritizes url, then link_id, then file_id.",
+      {
+        ...fileSelectorProperties,
+        format: s.stringEnum("The output format for supported text documents.", ["markdown", "plain", "kdc"]),
+        enable_upload_medias: s.boolean(
+          "Whether extracted media should be uploaded and returned as temporary download URLs.",
+        ),
+        sheet_id: s.number("The numeric spreadsheet sheet ID. It takes priority over sheet_name."),
+        sheet_name: s.string("The spreadsheet sheet name."),
+        sheet_range: s.object(
+          "A zero-based inclusive spreadsheet cell range.",
+          {
+            row_from: s.number("The zero-based first row."),
+            row_to: s.number("The zero-based last row, inclusive."),
+            col_from: s.number("The zero-based first column."),
+            col_to: s.number("The zero-based last column, inclusive."),
+          },
+          { optional: ["row_from", "row_to", "col_from", "col_to"] },
+        ),
+        task_id: s.string("The task ID returned by a previous incomplete read request."),
+      },
+      {
+        optional: [
+          "file_id",
+          "link_id",
+          "url",
+          "format",
+          "enable_upload_medias",
+          "sheet_id",
+          "sheet_name",
+          "sheet_range",
+          "task_id",
+        ],
+      },
+    ),
     outputSchema: dynamicToolOutputSchema,
   }),
-  defineProviderAction(service, {
+  defineProviderAction("wps_mcp", {
     name: "create_file_with_content",
     operationType: "write",
     description: "Create a WPS document, PDF, spreadsheet, or smart sheet and populate it with JSON-friendly content.",
     requiredScopes: [],
+    followUpActions: ["wps_mcp.read_file"],
     inputSchema: s.object(
       "The new WPS file name, type, location, and format-specific content.",
       {
@@ -277,13 +348,14 @@ export const wpsMcpActions: ActionDefinition[] = [
         file_extension: s.stringEnum("The file extension without a leading dot.", [
           "otl",
           "docx",
+          "md",
           "pdf",
           "xls",
           "xlsx",
           "ksheet",
           "dbt",
         ]),
-        content: s.string("UTF-8 Markdown content for OTL, DOCX, or PDF files."),
+        content: s.string("UTF-8 Markdown content for OTL, DOCX, MD, or PDF files."),
         drive_id: s.nonEmptyString("The destination WPS drive ID. Defaults to the personal drive."),
         parent_id: s.nonEmptyString("The destination folder ID. Defaults to the root folder 0."),
         rangeData: s.array(
@@ -303,44 +375,52 @@ export const wpsMcpActions: ActionDefinition[] = [
     ),
     outputSchema: dynamicToolOutputSchema,
   }),
-  defineProviderAction(service, {
+  defineProviderAction("wps_mcp", {
     name: "create_folder",
     operationType: "write",
-    description: "Create a folder in a known WPS drive and parent folder.",
+    description: "Create a folder in WPS, defaulting to the personal cloud document root.",
     requiredScopes: [],
+    followUpActions: ["wps_mcp.list_files"],
     inputSchema: s.object(
       "The destination and name for a new WPS folder.",
       {
-        drive_id: s.nonEmptyString("The destination WPS drive ID."),
-        parent_id: s.nonEmptyString("The parent folder ID. Use 0 for the drive root."),
+        drive_id: s.nonEmptyString("The destination WPS drive ID. Defaults to the personal drive."),
+        parent_id: s.nonEmptyString(
+          "The parent folder ID. Omit for the personal cloud root; 0 refers to the root of the specified drive.",
+        ),
         name: s.nonEmptyString("The folder name without a file extension."),
-        on_name_conflict: s.stringEnum("How WPS should handle an existing name.", ["fail", "rename"]),
+        on_name_conflict: s.stringEnum(
+          "How WPS should handle an existing name. Defaults to rename; reuse returns the existing folder.",
+          ["fail", "rename", "reuse"],
+        ),
         parent_path: s.array(
           "Relative folder path segments that WPS should create when missing.",
           s.nonEmptyString("A folder name in the relative path."),
         ),
       },
-      { optional: ["on_name_conflict", "parent_path"] },
+      { optional: ["drive_id", "parent_id", "on_name_conflict", "parent_path"] },
     ),
     outputSchema: dynamicToolOutputSchema,
   }),
-  defineProviderAction(service, {
+  defineProviderAction("wps_mcp", {
     name: "list_tools",
     operationType: "read",
     description:
       "Discover the current WPS document, spreadsheet, presentation, PDF, and workspace MCP tools with their live input schemas.",
     requiredScopes: [],
-    inputSchema: s.object("No input is required.", {}),
-    outputSchema: s.object("The current WPS MCP tool catalog.", {
+    followUpActions: ["wps_mcp.call_tool"],
+    inputSchema: s.requiredObject("No input is required.", {}),
+    outputSchema: s.requiredObject("The current WPS MCP tool catalog.", {
       tools: s.array("Tools currently exposed to the connected WPS MCP account.", mcpToolSummarySchema),
     }),
   }),
-  defineProviderAction(service, {
+  defineProviderAction("wps_mcp", {
     name: "call_tool",
     operationType: "destructive",
     description:
       "Call a current WPS MCP tool with JSON arguments after checking its live schema and behavior annotations.",
     requiredScopes: [],
+    followUpActions: ["wps_mcp.list_tools"],
     inputSchema: s.object(
       "Input for invoking one current WPS MCP tool.",
       {
@@ -349,9 +429,9 @@ export const wpsMcpActions: ActionDefinition[] = [
       },
       { optional: ["arguments"] },
     ),
-    outputSchema: s.object("The normalized result returned by the WPS MCP tool.", {
+    outputSchema: s.requiredObject("The normalized result returned by the WPS MCP tool.", {
       result: s.unknown(
-        "The tool result. Structured MCP content is returned directly; otherwise the MCP content envelope is preserved.",
+        "The tool result. Structured content or a single JSON object text is returned as an object; other content envelopes remain intact.",
       ),
     }),
   }),

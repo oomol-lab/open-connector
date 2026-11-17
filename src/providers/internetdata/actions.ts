@@ -9,9 +9,13 @@ function ipv4OrIpv6(description: string) {
   return s.anyOf(description, [s.string({ format: "ipv4", description }), s.string({ format: "ipv6", description })]);
 }
 
-const ipInputSchema = s.object("The input payload for one IP lookup.", {
-  ip: ipv4OrIpv6("The IPv4 or IPv6 address to query."),
-});
+const ipInputSchema = s.object(
+  "The input payload for one IP lookup.",
+  {
+    ip: ipv4OrIpv6("The IPv4 or IPv6 address to query."),
+  },
+  { required: ["ip"] },
+);
 
 const ipLookupOutputSchema = s.looseObject("The IP data payload returned by InternetData.", {
   ip: s.string("The queried IP address."),
