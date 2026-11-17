@@ -87,11 +87,11 @@ export const trading212ActionHandlers: ProviderActionHandlers<"trading_212", Han
       context,
       trading212Url(context, `${equityPath}/positions`, { ticker: optionalString(input.ticker) }),
     );
-    return { positions: responseList(positions, "positions") };
+    return { positions: requiredArray(positions, "Trading 212 positions response", providerResponseError) };
   },
   async list_pending_orders(_input, context) {
     const orders = await getTrading212(context, trading212Url(context, `${equityPath}/orders`));
-    return { orders: responseList(orders, "pending orders") };
+    return { orders: requiredArray(orders, "Trading 212 pending orders response", providerResponseError) };
   },
   async get_pending_order(input, context) {
     const orderId = optionalInteger(input.orderId);
@@ -124,17 +124,20 @@ export const trading212ActionHandlers: ProviderActionHandlers<"trading_212", Han
   },
   async search_instruments(input, context) {
     const instruments = await getTrading212(context, trading212Url(context, `${equityPath}/metadata/instruments`));
-    const matches = searchInstruments(responseList(instruments, "instruments"), {
-      query: optionalString(input.query),
-      type: optionalString(input.type),
-      currency: optionalString(input.currency),
-    });
+    const matches = searchInstruments(
+      requiredArray(instruments, "Trading 212 instruments response", providerResponseError),
+      {
+        query: optionalString(input.query),
+        type: optionalString(input.type),
+        currency: optionalString(input.currency),
+      },
+    );
     const limit = optionalInteger(input.limit) ?? trading212DefaultInstrumentLimit;
     return { instruments: matches.slice(0, limit), totalMatches: matches.length };
   },
   async list_exchanges(_input, context) {
     const exchanges = await getTrading212(context, trading212Url(context, `${equityPath}/metadata/exchanges`));
-    return { exchanges: responseList(exchanges, "exchanges") };
+    return { exchanges: requiredArray(exchanges, "Trading 212 exchanges response", providerResponseError) };
   },
 };
 
@@ -349,9 +352,4 @@ async function getTrading212(context: Trading212Context, url: URL): Promise<unkn
       invalidJsonMessage: "Trading 212 returned invalid JSON",
     });
   });
-}
-
-/** A list response, where an empty body means an empty list; any other shape is a provider error. */
-function responseList(response: unknown, label: string): unknown[] {
-  return response === null ? [] : requiredArray(response, `Trading 212 ${label} response`, providerResponseError);
 }

@@ -129,38 +129,73 @@ describe("Trading 212 actions", () => {
       error: { code: "rate_limited", details: { status: 429, details: { retryAfterSeconds: 5 } } },
     });
   });
+
+  it("reports an empty or non-list body as a provider error instead of an empty account", async () => {
+    stubResponses([
+      new Response("", { status: 200 }),
+      Response.json({ items: [] }),
+      Response.json(null),
+      Response.json({ exchanges: [] }),
+    ]);
+
+    const results = [
+      await executors["trading_212.list_positions"]!({}, contextWithKey("demo")),
+      await executors["trading_212.list_pending_orders"]!({}, contextWithKey("demo")),
+      await executors["trading_212.search_instruments"]!({ query: "AAPL" }, contextWithKey("demo")),
+      await executors["trading_212.list_exchanges"]!({}, contextWithKey("demo")),
+    ];
+
+    for (const result of results) {
+      expect(result).toMatchObject({ ok: false, error: { code: "provider_error", details: { status: 502 } } });
+    }
+  });
 });
 
 describe("Trading 212 proxy", () => {
-  it("sends only GET requests under the API path of the chosen environment, outside the CSV reports", async () => {
-    const requests = stubResponses([Response.json([])]);
+  it("sends only GET requests for the read paths of the chosen environment", async () => {
+    const requests = stubResponses([Response.json([]), Response.json({ items: [], nextPagePath: null })]);
 
-    const allowed = await proxy({ method: "GET", endpoint: "/api/v0/equity/pies" }, contextWithKey("live"));
+    const pies = await proxy({ method: "GET", endpoint: "/api/v0/equity/pies" }, contextWithKey("live"));
+    const history = await proxy(
+      { method: "GET", endpoint: "/api/v0/equity/history/orders?limit=1" },
+      contextWithKey("live"),
+    );
     const writes = await Promise.all(
-      ["POST", "post", "PUT", "PATCH", "DELETE"].map((method) =>
+      ["POST", "post", "PUT", "PATCH", "DELETE", "HEAD"].map((method) =>
         proxy(
           { method, endpoint: "/api/v0/equity/orders/market", body: { ticker: "AAPL_US_EQ", quantity: 1 } },
           contextWithKey("live"),
         ),
       ),
     );
-    const reports = await proxy({ method: "GET", endpoint: "/api/v0/equity/history/exports" }, contextWithKey("live"));
-    const outside = await proxy({ method: "GET", endpoint: "/legal" }, contextWithKey("live"));
+    const notRead = await Promise.all(
+      [
+        "/api/v0/equity/history/exports",
+        "/api/v0/equity/history/exports?limit=1",
+        "/api/v0/equity/history/exports#x",
+        "/api/v0/equity/history/%65xports",
+        "/api/v0/other",
+        "/legal",
+      ].map((endpoint) => proxy({ method: "GET", endpoint }, contextWithKey("live"))),
+    );
 
-    expect(allowed).toMatchObject({ ok: true });
+    expect([pies, history]).toMatchObject([{ ok: true }, { ok: true }]);
     for (const refused of writes) {
       expect(refused).toMatchObject({
         ok: false,
         error: { code: "invalid_input", message: "Trading 212 proxy only supports GET requests." },
       });
     }
-    for (const refused of [reports, outside]) {
+    for (const refused of notRead) {
       expect(refused).toMatchObject({
         ok: false,
         error: { code: "invalid_input", message: "endpoint is not supported for this provider" },
       });
     }
-    expect(requests).toEqual([{ method: "GET", url: `${liveApiUrl}/equity/pies`, authorization: basicKeyPair }]);
+    expect(requests).toEqual([
+      { method: "GET", url: `${liveApiUrl}/equity/pies`, authorization: basicKeyPair },
+      { method: "GET", url: `${liveApiUrl}/equity/history/orders?limit=1`, authorization: basicKeyPair },
+    ]);
   });
 });
 

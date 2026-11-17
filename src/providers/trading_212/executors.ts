@@ -21,8 +21,20 @@ import {
 } from "./runtime.ts";
 
 const service = "trading_212";
-const isTrading212ApiEndpoint = providerProxyEndpointPrefixes(trading212ApiPathPrefix);
-const isTrading212ReportEndpoint = providerProxyEndpointPrefixes(`${trading212ApiPathPrefix}/equity/history/exports`);
+
+/** The read endpoints the proxy serves: everything the actions read, plus pies. CSV reports are left out. */
+const isTrading212ReadPath = providerProxyEndpointPrefixes(
+  ...[
+    "account",
+    "positions",
+    "orders",
+    "history/orders",
+    "history/dividends",
+    "history/transactions",
+    "metadata",
+    "pies",
+  ].map((path) => `${trading212ApiPathPrefix}/equity/${path}`),
+);
 
 export const executors: ProviderExecutors = defineProviderExecutors<Trading212Context>({
   service,
@@ -35,9 +47,11 @@ export const executors: ProviderExecutors = defineProviderExecutors<Trading212Co
 
 // The Basic header is set in customizeRequest because its user name comes from
 // an extra field. The base URL resolver only picks one of the two literal
-// Trading 212 origins. GET only, and no CSV reports, so the proxy stays within
-// the actions' read-only scope: it must never place, change or cancel an
-// order, whatever permissions the key has.
+// Trading 212 origins. GET only, and only the read paths, so the proxy stays
+// within the actions' read-only scope: it must never place, change or cancel
+// an order, whatever permissions the key has. The path is checked on the URL
+// about to be sent, after URL parsing, so another spelling of a path cannot
+// pass for an allowed one.
 export const proxy: ProviderProxyExecutor = defineProviderProxy({
   service,
   async baseUrl(context) {
@@ -45,10 +59,12 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
   },
   auth: { type: "none" },
   skipDnsValidation: true,
-  allowedEndpoint: (endpoint) => isTrading212ApiEndpoint(endpoint) && !isTrading212ReportEndpoint(endpoint),
-  async customizeRequest({ context, method, headers }) {
+  async customizeRequest({ context, method, url, headers }) {
     if (method.toUpperCase() !== "GET") {
       throw new ProviderRequestError(400, "Trading 212 proxy only supports GET requests.");
+    }
+    if (!isTrading212ReadPath(url.pathname)) {
+      throw new ProviderRequestError(400, "endpoint is not supported for this provider");
     }
     headers.set("authorization", trading212Authorization(await resolveTrading212Credential(context)));
   },
