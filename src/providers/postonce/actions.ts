@@ -165,6 +165,8 @@ export const postonceActions: ActionDefinition[] = [
         {
           id: postIdSchema,
           ...postEditFields,
+          external_id: s.nullableString("Your own reference for the post. Set null to clear it."),
+          publish_at: s.nullable(s.dateTime("The UTC publish time. Set null to clear the scheduled time.")),
           targets: s.array("The connected accounts to publish to.", targetInputSchema, { minItems: 1 }),
         },
         { optional: ["content", "media", "publish_at", "external_id", "targets"] },

@@ -13,6 +13,7 @@ import {
   ProviderRequestError,
   readProviderJsonBody,
   requiredInputString,
+  requiredResponseRecord,
   runProviderRequest,
 } from "../provider-runtime.ts";
 
@@ -20,7 +21,6 @@ const service = "postonce";
 const apiBaseUrl = "https://postonce.to/api/public";
 
 type Handler = ProviderRuntimeHandler<ApiKeyProviderContext>;
-type RequestPhase = "validate" | "execute";
 type PostonceContext = Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
 
 interface PostonceRequest {
@@ -69,11 +69,11 @@ const postonceActionHandlers: ProviderActionHandlers<"postonce", Handler> = {
       },
       context,
     );
-    return { post: recordData(data, "create_post") };
+    return { post: requiredResponseRecord(data, "PostOnce create_post") };
   },
   async get_post(input, context) {
     const { data } = await postonceRequest({ path: postPath(input) }, context);
-    return { post: recordData(data, "get_post") };
+    return { post: requiredResponseRecord(data, "PostOnce get_post") };
   },
   async update_post(input, context) {
     const body = compactObject({
@@ -87,11 +87,11 @@ const postonceActionHandlers: ProviderActionHandlers<"postonce", Handler> = {
       throw new ProviderRequestError(400, "update_post requires at least one field to update");
     }
     const { data } = await postonceRequest({ method: "PATCH", path: postPath(input), body }, context);
-    return { post: recordData(data, "update_post") };
+    return { post: requiredResponseRecord(data, "PostOnce update_post") };
   },
   async cancel_post(input, context) {
     const { data } = await postonceRequest({ method: "POST", path: `${postPath(input)}/cancel` }, context);
-    return { post: recordData(data, "cancel_post") };
+    return { post: requiredResponseRecord(data, "PostOnce cancel_post") };
   },
   async retry_post_target(input, context) {
     const targetId = encodePathSegment(requiredInputString(input.target_post_id, "target_post_id"));
@@ -99,11 +99,11 @@ const postonceActionHandlers: ProviderActionHandlers<"postonce", Handler> = {
       { method: "POST", path: `${postPath(input)}/targets/${targetId}/retry` },
       context,
     );
-    return { post: recordData(data, "retry_post_target") };
+    return { post: requiredResponseRecord(data, "PostOnce retry_post_target") };
   },
   async get_post_analytics(input, context) {
     const { data } = await postonceRequest({ path: `${postPath(input)}/analytics` }, context);
-    return { analytics: recordData(data, "get_post_analytics") };
+    return { analytics: requiredResponseRecord(data, "PostOnce get_post_analytics") };
   },
 };
 
@@ -120,11 +120,7 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
 
 export const credentialValidators: CredentialValidators = {
   async apiKey(input, { fetcher, signal }) {
-    const { data } = await postonceRequest(
-      { path: "/v1/accounts" },
-      { apiKey: input.apiKey, fetcher, signal },
-      "validate",
-    );
+    const { data } = await postonceRequest({ path: "/v1/accounts" }, { apiKey: input.apiKey, fetcher, signal });
     return {
       profile: { displayName: "PostOnce" },
       metadata: { apiBaseUrl, connectedAccounts: listData(data, "validate").length },
@@ -143,20 +139,8 @@ function listData(data: unknown, action: string): unknown[] {
   return data;
 }
 
-function recordData(data: unknown, action: string): Record<string, unknown> {
-  const record = optionalRecord(data);
-  if (!record) {
-    throw providerResponseError(`PostOnce ${action} returned no object`);
-  }
-  return record;
-}
-
 /** Send one request and unwrap PostOnce's `{ data, meta }` envelope. */
-async function postonceRequest(
-  request: PostonceRequest,
-  context: PostonceContext,
-  phase: RequestPhase = "execute",
-): Promise<PostonceAnswer> {
+async function postonceRequest(request: PostonceRequest, context: PostonceContext): Promise<PostonceAnswer> {
   // IDs are caller input, so a `.` or `..` segment must not move the request to another endpoint.
   if (hasPathTraversalSegment(request.path)) {
     throw providerInputError("PostOnce IDs must not be . or ..");
@@ -183,7 +167,7 @@ async function postonceRequest(
       invalidJsonFallback: response.ok ? undefined : (text) => text.slice(0, 500),
     });
     if (!response.ok) {
-      throw postonceRequestError(response.status, payload, phase);
+      throw postonceRequestError(response.status, payload);
     }
     const envelope = optionalRecord(payload);
     if (!envelope || !("data" in envelope)) {
@@ -196,13 +180,10 @@ async function postonceRequest(
 /**
  * Turn a PostOnce error answer, `{ error: { code, message, hint } }`, into the execution error the runtime can express.
  */
-function postonceRequestError(status: number, payload: unknown, phase: RequestPhase): ProviderRequestError {
+function postonceRequestError(status: number, payload: unknown): ProviderRequestError {
   const error = optionalRecord(optionalRecord(payload)?.error);
   const message = optionalString(error?.message) ?? `PostOnce request failed with HTTP ${status}`;
   const hint = optionalString(error?.hint);
   const text = hint ? `${message} ${hint}` : message;
-  if (phase === "validate" && (status === 401 || status === 403)) {
-    return new ProviderRequestError(400, text, payload);
-  }
   return new ProviderRequestError(status >= 500 ? 502 : status, text, payload);
 }

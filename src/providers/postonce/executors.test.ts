@@ -1,6 +1,8 @@
 import type { ExecutionContext, ResolvedCredential } from "../../core/types.ts";
 
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { validateActionInput } from "../../core/validation.ts";
+import { postonceActions } from "./actions.ts";
 import { credentialValidators, executors } from "./executors.ts";
 
 const postId = "5b0c8f62-4d1e-4a39-9a51-0f4f3c3c9d10";
@@ -49,7 +51,7 @@ describe("PostOnce credentials", () => {
     expect(result).toMatchObject({ profile: { displayName: "PostOnce" }, metadata: { connectedAccounts: 1 } });
   });
 
-  it("reports a rejected key as a field error", async () => {
+  it("preserves the rejected key error message", async () => {
     await expect(
       credentialValidators.apiKey!(
         { apiKey: "bad", values: {} },
@@ -58,7 +60,7 @@ describe("PostOnce credentials", () => {
             Response.json({ error: { code: "invalid_api_key", message: "Invalid API key." } }, { status: 401 }),
         },
       ),
-    ).rejects.toMatchObject({ status: 400, message: "Invalid API key." });
+    ).rejects.toMatchObject({ message: "Invalid API key." });
   });
 });
 
@@ -91,6 +93,21 @@ describe("PostOnce actions", () => {
     );
 
     expect(result).toMatchObject({ ok: true, output: { post: { id: postId, status: "scheduled" } } });
+    expect(fetch).toHaveBeenCalledOnce();
+  });
+
+  it.each(["external_id", "publish_at"])("clears %s with an explicit null update", async (field) => {
+    const input = { id: postId, [field]: null };
+    const action = postonceActions.find((action) => action.id === "postonce.update_post")!;
+    expect(validateActionInput(action, input).valid).toBe(true);
+    const fetch = stubFetch((url, init) => {
+      expect(url.pathname).toBe(`/api/public/v1/posts/${postId}`);
+      expect(init?.method).toBe("PATCH");
+      expect(JSON.parse(String(init?.body))).toEqual({ [field]: null });
+      return Response.json({ data: { ...post, [field]: null } });
+    });
+    const result = await executors["postonce.update_post"]!(input, context);
+    expect(result).toMatchObject({ ok: true, output: { post: { [field]: null } } });
     expect(fetch).toHaveBeenCalledOnce();
   });
 
