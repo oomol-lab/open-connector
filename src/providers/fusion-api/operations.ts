@@ -30,6 +30,75 @@ export interface FusionApiOperation {
 
 export const fusionApiOperations: FusionApiOperation[] = [
   {
+    actionName: "ffmpeg_submit",
+    operationType: "write",
+    method: "POST",
+    path: "/v1/ffmpeg/submit",
+    tag: "ffmpeg",
+    description: "Run an FFmpeg command with up to four input URLs and one output. Maximum three minutes per job.",
+    successStatuses: [200],
+    pathParams: [],
+    inputFields: [
+      {
+        name: "inputURLs",
+        kind: "array",
+        required: true,
+        description:
+          "Ordered HTTPS input URLs. Command filename in0.mp4 selects inputURLs[0]; in1.wav selects inputURLs[1]. Maximum 100 MiB per file and 200 MiB total.",
+      },
+      {
+        name: "args",
+        kind: "array",
+        required: true,
+        description:
+          "FFmpeg arguments without the executable, shell syntax, or remote paths. Reference uploaded files as in<index>.<ext>. End with the output filename. Maximum 16 KiB of argument text.",
+      },
+      {
+        name: "outputFilename",
+        kind: "string",
+        required: true,
+        description: "The single output filename, matching the final argument. Maximum output size is 200 MiB.",
+        enumValues: ["out.mp4", "out.webm", "out.mkv", "out.mp3", "out.wav", "out.gif", "out.png", "out.jpg"],
+      },
+    ],
+  },
+  {
+    actionName: "ffmpeg_result",
+    operationType: "read",
+    method: "GET",
+    path: "/v1/ffmpeg/result/{sessionID}",
+    tag: "ffmpeg",
+    description: "Get the FFmpeg task result.",
+    successStatuses: [200, 202, 404],
+    pathParams: ["sessionID"],
+    inputFields: [
+      {
+        name: "sessionID",
+        kind: "string",
+        required: true,
+        description: "Task session ID.",
+      },
+    ],
+  },
+  {
+    actionName: "ffmpeg_state",
+    operationType: "read",
+    method: "GET",
+    path: "/v1/ffmpeg/state/{sessionID}",
+    tag: "ffmpeg",
+    description: "Get the FFmpeg task state.",
+    successStatuses: [200, 202, 404],
+    pathParams: ["sessionID"],
+    inputFields: [
+      {
+        name: "sessionID",
+        kind: "string",
+        required: true,
+        description: "Task session ID.",
+      },
+    ],
+  },
+  {
     actionName: "oomol_ocr_submit",
     operationType: "write",
     method: "POST",
