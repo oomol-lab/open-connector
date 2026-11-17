@@ -131,22 +131,12 @@ function fieldNameLooksLikeUrls(name: string): boolean {
 }
 
 function buildOutputSchema(operation: FusionApiOperation): JsonSchema {
+  if (operation.outputSchema) return operation.outputSchema;
   if (operation.actionName.endsWith("_submit")) {
     return submitOutputSchema;
   }
   if (operation.actionName.endsWith("_result")) {
-    if (!operation.resultDataSchema) return taskResultSchema;
-    return s.union(
-      [
-        s.object("The Fusion API task completed with result data.", {
-          state: s.literal("completed", { description: "Task state." }),
-          data: operation.resultDataSchema,
-        }),
-        processingStateSchema,
-        missingStateSchema,
-      ],
-      { description: "The normalized Fusion API task result." },
-    );
+    return taskResultSchema;
   }
   if (operation.actionName.endsWith("_state")) {
     return taskStateSchema;

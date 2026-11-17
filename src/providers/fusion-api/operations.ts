@@ -29,7 +29,7 @@ export interface FusionApiOperation {
   pathParams: string[];
   inputFields: FusionApiInputField[];
   inputSchema?: JsonSchema;
-  resultDataSchema?: JsonSchema;
+  outputSchema?: JsonSchema;
 }
 
 export const fusionApiOperations: FusionApiOperation[] = [
@@ -75,18 +75,34 @@ export const fusionApiOperations: FusionApiOperation[] = [
     description: "Get the FFmpeg task result.",
     successStatuses: [200, 202, 404],
     pathParams: ["sessionID"],
-    resultDataSchema: s.object(
-      "Output file and media metadata.",
-      {
-        downloadURL: s.url("Output download URL for reuse in subsequent actions."),
-        filename: s.string("Output filename."),
-        mimeType: s.string("Output MIME type."),
-        bytes: s.integer("Output size in bytes."),
-        duration: s.number("Media duration in seconds when available."),
-        width: s.number("Video or image width in pixels when available."),
-        height: s.number("Video or image height in pixels when available."),
-      },
-      { required: ["downloadURL", "filename", "mimeType", "bytes"] },
+    outputSchema: s.union(
+      [
+        s.object("The Fusion API task completed with result data.", {
+          state: s.literal("completed", { description: "Task state." }),
+          data: s.object(
+            "Output file and media metadata.",
+            {
+              downloadURL: s.url("Output download URL for reuse in subsequent actions."),
+              filename: s.string("Output filename."),
+              mimeType: s.string("Output MIME type."),
+              bytes: s.integer("Output size in bytes."),
+              duration: s.number("Media duration in seconds when available."),
+              width: s.number("Video or image width in pixels when available."),
+              height: s.number("Video or image height in pixels when available."),
+            },
+            { required: ["downloadURL", "filename", "mimeType", "bytes"] },
+          ),
+        }),
+        s.object("The Fusion API task is still processing.", {
+          state: s.literal("processing", { description: "Task state." }),
+          progress: s.number("Task progress reported by Fusion API."),
+        }),
+        s.object("The Fusion API task failed or was not found.", {
+          state: s.stringEnum(["failed", "not_found"], { description: "Task state." }),
+          error: s.string("Error message returned by Fusion API."),
+        }),
+      ],
+      { description: "The normalized Fusion API task result." },
     ),
     inputFields: [
       {
