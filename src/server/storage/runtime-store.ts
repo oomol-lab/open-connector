@@ -21,6 +21,8 @@ export interface RunLog {
   connectionId?: string;
   connectionProfile?: CredentialProfile;
   runtimeTokenId?: string;
+  /** Isolation scope of the token that made the run; absent for operator and unscoped runs. */
+  scope?: string;
   policy?: ActionPolicyDecision;
   inputSummary?: unknown;
   outputSummary?: unknown;
@@ -35,6 +37,8 @@ export interface RunLogListInput {
   actionId?: string;
   caller?: RunLogCaller;
   ok?: boolean;
+  /** Only runs of this scope; omit for every run (operator view). */
+  scope?: string;
 }
 
 export interface RunLogPage {
@@ -78,4 +82,6 @@ export interface IRunLogStore {
   add(run: RunLog): Promise<RunLogWriteResult>;
   get(id: string): Promise<RunLog | undefined>;
   list(input?: RunLogListInput): Promise<RunLogPage>;
+  /** Delete every run recorded for the scope, for example when a tenant is offboarded. Returns the count removed. */
+  deleteByScope(scope: string): Promise<number>;
 }

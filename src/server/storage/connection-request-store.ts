@@ -69,6 +69,11 @@ export interface SaasCandidate {
 export type RequestTransaction = (statements: RequestStatement[]) => Promise<RuntimeRow[][]>;
 
 /** Shared SQL lifecycle for SQLite, PostgreSQL and D1. Secrets use the runtime's codec. */
+/** The owner of connection requests started for a scope, by its tenant token or by the admin. */
+export function scopeOwner(scope: string): string {
+  return `scope:${scope}`;
+}
+
 export class ConnectionRequestStore {
   private readonly transaction: RequestTransaction;
   private readonly secretCodec: ISecretCodec;
@@ -105,12 +110,12 @@ export class ConnectionRequestStore {
     ]);
   }
 
-  async get(id: string, owner: string): Promise<ConnectionRequest | undefined> {
+  async get(id: string, owner?: string): Promise<ConnectionRequest | undefined> {
     const now = Date.now();
     const [[row]] = await this.transaction([
       {
-        sql: "select id, service, status, app_id, error_code, error_message, expires_at, created_at, updated_at from connection_requests where id = ? and owner = ? and expires_at > ?",
-        values: [id, owner, new Date(now - 86_400_000).toISOString()],
+        sql: `select id, service, status, app_id, error_code, error_message, expires_at, created_at, updated_at from connection_requests where id = ? and ${owner === undefined ? "1 = 1" : "owner = ?"} and expires_at > ?`,
+        values: [id, ...(owner === undefined ? [] : [owner]), new Date(now - 86_400_000).toISOString()],
       },
     ]);
     if (!row) return undefined;
@@ -140,6 +145,17 @@ export class ConnectionRequestStore {
     return row
       ? (JSON.parse(await this.secretCodec.decode(row.value as string)) as PendingConnectionRequest)
       : undefined;
+  }
+
+  async cancelPending(owner: string): Promise<number> {
+    const [rows] = await this.transaction([
+      {
+        sql: `update connection_requests set phase = 'completed', status = 'failed', error_code = 'scope_deleted', error_message = 'The scope was deleted.', value = null, updated_at = ?
+        where kind = 'local' and owner = ? and phase = 'pending' returning id`,
+        values: [Date.now(), owner],
+      },
+    ]);
+    return rows.length;
   }
 
   async fail(id: string, errorCode: string, errorMessage: string): Promise<void> {
@@ -187,8 +203,8 @@ export class ConnectionRequestStore {
           ],
         }
       : {
-          sql: `insert into connections (id, revision, service, connection_name, value, updated_at, provider_account_id)
-        select ?, ?, ?, ?, ?, ?, ? where ${active} returning id`,
+          sql: `insert into connections (id, revision, service, connection_name, value, updated_at, provider_account_id, scope)
+        select ?, ?, ?, ?, ?, ?, ?, ? where ${active} returning id`,
           values: [
             id,
             revision,
@@ -197,6 +213,7 @@ export class ConnectionRequestStore {
             value,
             now.toISOString(),
             accountId,
+            pending.scope ?? null,
             pending.connectionRequestId,
             ...fence.values,
           ],

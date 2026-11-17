@@ -2,6 +2,7 @@ import type { ActionDefinition, JsonSchema } from "../../core/types.ts";
 
 import { z } from "zod";
 import { jsonSchema } from "../../core/json-schema.ts";
+import { scopePattern } from "../../core/scope.ts";
 import { triggerOperationSchema } from "../../triggers/request.ts";
 import {
   actionInputMaxDepth,
@@ -16,6 +17,8 @@ import {
 } from "./connection-input.ts";
 import { customMcpCreateInput, customMcpUpdateInput, customMcpSyncInput } from "./custom-mcp-input.ts";
 import { policyRequestMaxBytes, policyRuleListMaxItems, policyRuleMaxBytes } from "./policy-input.ts";
+
+const scopeSchema = { type: "string", pattern: scopePattern.source } as const;
 
 /**
  * Minimal OpenAPI document shape returned by the local runtime.
@@ -1717,9 +1720,33 @@ function createRunsPath(): Record<string, unknown> {
           schema: { type: "boolean" },
           description: "Only return successful or failed runs.",
         },
+        {
+          name: "scope",
+          in: "query",
+          required: false,
+          schema: scopeSchema,
+          description: "Only return runs made with a runtime token of this scope.",
+        },
       ],
       responses: {
         200: jsonResponse({ $ref: "#/components/schemas/RunLogPage" }),
+      },
+    },
+    delete: {
+      tags: ["Runs"],
+      summary: "Delete every run recorded for one scope.",
+      parameters: [
+        {
+          name: "scope",
+          in: "query",
+          required: true,
+          schema: scopeSchema,
+          description: "The scope whose run history is removed, for example when a tenant is offboarded.",
+        },
+      ],
+      responses: {
+        200: jsonResponse(jsonSchema.object({ scope: jsonSchema.string(), deleted: jsonSchema.integer() })),
+        400: jsonResponse({ $ref: "#/components/schemas/ErrorResponse" }),
       },
     },
   };

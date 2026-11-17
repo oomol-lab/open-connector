@@ -84,6 +84,7 @@ export function createConnectionRoutes({ connections, oauthFlow, saasOAuth }: Co
         await oauthFlow.startConnectionRequest({
           ...input,
           service: target?.service ?? context.req.param("service")!,
+          scope: target?.source === "saas" ? undefined : (target?.scope ?? input.scope),
           owner,
           signal: context.req.raw.signal,
           target,
@@ -115,6 +116,7 @@ export function createConnectionRoutes({ connections, oauthFlow, saasOAuth }: Co
             ...options,
             values: { ...input.extra, apiKey: input.apiKey },
             comment: input.comment,
+            scope: input.scope,
           });
         } else {
           const input = parseBody(customConnectionInput, body);
@@ -122,6 +124,7 @@ export function createConnectionRoutes({ connections, oauthFlow, saasOAuth }: Co
             ...options,
             values: input.values,
             comment: input.comment,
+            scope: input.scope,
           });
         }
         return writeRuntimeSuccess(

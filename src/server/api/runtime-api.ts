@@ -85,6 +85,8 @@ export interface RuntimeConnectedApp {
   scopes: string[];
   marketplace?: ConnectionSummary["marketplace"];
   notion?: ConnectionSummary["notion"];
+  /** Isolation scope of the connection; absent when unscoped. */
+  scope?: string;
 }
 
 export interface RuntimeFailureInput {
@@ -164,6 +166,7 @@ export function serializeRuntimeConnectedApp(connection: ConnectionSummary): Run
     scopes: connection.profile.grantedScopes,
     marketplace: connection.marketplace,
     notion: connection.notion,
+    ...(connection.scope === undefined ? {} : { scope: connection.scope }),
   };
 }
 
@@ -391,7 +394,12 @@ export function connectionManagementFailure(error: { code: string; message: stri
           ? "request_key_conflict"
           : error.code;
   return {
-    status: errorCode === "app_not_found" ? 404 : errorCode === "request_key_conflict" ? 409 : 400,
+    status:
+      errorCode === "app_not_found"
+        ? 404
+        : errorCode === "request_key_conflict" || errorCode === "connection_scope_conflict"
+          ? 409
+          : 400,
     errorCode,
     message: error.message,
   };

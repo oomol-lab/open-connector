@@ -1,3 +1,4 @@
+import type { ConnectionService } from "../connection-service.ts";
 import type { ActionPolicyService } from "../core/action-policy.ts";
 import type { RuntimeExecutionOptions } from "../core/runtime-execution.ts";
 import type { RuntimeLogger } from "../core/types.ts";
@@ -25,6 +26,7 @@ export interface TriggerSubscriptionSummary {
 interface TriggerMaintenanceOptions extends RuntimeExecutionOptions {
   store: TriggerStore;
   runner: TriggerRunner;
+  connections: Pick<ConnectionService, "getConnectionGrantTarget">;
   tokens: IRuntimeTokenStore;
   runtimePolicy: IRuntimePolicyStore;
   deploymentPolicy: ActionPolicyService;
@@ -130,7 +132,8 @@ export class TriggerMaintenance {
             record.status === "active" &&
             token &&
             policy.evaluateTrigger(record.triggerId).allowed &&
-            policy.evaluateConnection(record.connectionId).allowed
+            policy.evaluateConnection(await this.options.connections.getConnectionGrantTarget(record.connectionId))
+              .allowed
           ) {
             await save();
             return;

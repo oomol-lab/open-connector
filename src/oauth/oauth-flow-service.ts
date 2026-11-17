@@ -38,6 +38,8 @@ export type OAuthAuthorizationStart = {
 export interface OAuthAuthorizationStartInput {
   service: string;
   connectionName?: string;
+  /** Stored with the pending state, so the callback can never choose or change the scope of the connection. */
+  scope?: string;
   clientConfig?: OAuthClientConfigInput;
   authorizationOptionIds?: string[];
 }
@@ -56,6 +58,8 @@ export interface OAuthAuthorizationCompleteInput {
 export interface OAuthAuthorizationState {
   service: string;
   connectionName?: string;
+  /** Isolation scope the saved connection will carry; fixed when authorization starts. */
+  scope?: string;
   retirementGeneration: string;
   state: string;
   createdAt: string;
@@ -151,6 +155,7 @@ export class OAuthFlowService {
       {
         service: input.service,
         connectionName,
+        scope: input.scope,
       },
       config,
     );
@@ -174,8 +179,14 @@ export class OAuthFlowService {
     };
   }
 
-  async getConnectionRequest(id: string, owner: string): Promise<ConnectionRequest | undefined> {
+  /** Omit `owner` for the operator view of every request. */
+  async getConnectionRequest(id: string, owner?: string): Promise<ConnectionRequest | undefined> {
     return this.requests.get(id, owner);
+  }
+
+  /** Fail every pending request of one owner, so a late callback cannot store its connection. */
+  async cancelPendingRequests(owner: string): Promise<number> {
+    return this.requests.cancelPending(owner);
   }
 
   async rejectAuthorization(state: string, denied: boolean, issuer?: string): Promise<string | undefined> {
@@ -244,6 +255,7 @@ export class OAuthFlowService {
     const pending: OAuthAuthorizationState = {
       service,
       connectionName,
+      ...(input.scope === undefined ? {} : { scope: input.scope }),
       retirementGeneration,
       state,
       createdAt: now.toISOString(),
@@ -423,6 +435,7 @@ export class OAuthFlowService {
           pending.connectionName,
           input.signal,
           pending.retirementGeneration,
+          pending.scope,
         );
       }
       return {
@@ -548,6 +561,8 @@ export interface OAuthConnectionRequestInput {
   connectionName?: string;
   service: string;
   owner: string;
+  /** Isolation scope for the new connection. A reconnect keeps the scope of its target. */
+  scope?: string;
   signal?: AbortSignal;
   target?: StoredConnection;
   returnUri?: string;

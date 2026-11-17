@@ -43,6 +43,8 @@ export interface RunActionInput {
   connectionId?: string;
   policy: ActionPolicySnapshot;
   runtimeTokenId?: string;
+  /** Scope of the calling runtime token; stored with the run so it can be listed and purged per scope. */
+  scope?: string;
   signal?: AbortSignal;
 }
 
@@ -225,6 +227,7 @@ export class ActionRunner {
       connectionId: connection?.summary?.id,
       connectionProfile: connection?.summary?.profile,
       runtimeTokenId: input.runtimeTokenId,
+      ...(input.scope === undefined ? {} : { scope: input.scope }),
       policy,
       inputSummary: summarizeForRunLog(input.input),
       outputSummary: result.ok ? summarizeForRunLog(result.output) : undefined,
@@ -277,6 +280,10 @@ export class ActionRunner {
 
   getRun(id: string): Promise<RunLog | undefined> {
     return this.options.runs.get(id);
+  }
+
+  deleteRunsByScope(scope: string): Promise<number> {
+    return this.options.runs.deleteByScope(scope);
   }
 
   private createExecutionContext(

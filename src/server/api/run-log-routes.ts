@@ -4,6 +4,7 @@ import type { Context } from "hono";
 
 import { Hono } from "hono";
 import { optionalString } from "../../core/cast.ts";
+import { isScope } from "../../core/scope.ts";
 import { decodeRunLogCursor } from "../storage/runtime-store.ts";
 import { jsonError } from "./http-utils.ts";
 
@@ -63,6 +64,13 @@ function readRunLogListInput(context: Context): RunLogListQuery {
     }
     input.caller = caller;
   }
+  const scope = optionalString(context.req.query("scope"));
+  if (scope !== undefined) {
+    if (!isScope(scope)) {
+      return { ok: false, message: "scope is invalid." };
+    }
+    input.scope = scope;
+  }
   const ok = optionalString(context.req.query("ok"));
   if (ok !== undefined) {
     if (ok !== "true" && ok !== "false") {
@@ -85,6 +93,15 @@ export function createRunLogRoutes({ actions }: RunLogRoutesOptions): Hono {
     }
 
     return context.json(await actions.listRuns(query.input));
+  });
+
+  /** Remove every run of one scope, for example when a tenant is offboarded. A scope is required. */
+  app.delete("/runs", async (context) => {
+    const scope = context.req.query("scope");
+    if (!isScope(scope)) {
+      return jsonError(context, 400, "invalid_input", "scope is required.");
+    }
+    return context.json({ scope, deleted: await actions.deleteRunsByScope(scope) });
   });
 
   app.get("/runs/:id", async (context) => {

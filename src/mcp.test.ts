@@ -193,7 +193,7 @@ describe("MCP server", () => {
         async (client) => {
           const result = await client.callTool({ name: "search_actions", arguments: { query: "account" } });
           expect(result.structuredContent).toMatchObject({ data: [expect.anything(), expect.anything()] });
-          expect(list).toHaveBeenCalledExactlyOnceWith(new Set(["example_auth"]));
+          expect(list).toHaveBeenCalledExactlyOnceWith(new Set(["example_auth"]), { scope: undefined });
           expect(getAction).not.toHaveBeenCalled();
         },
         { catalog },
@@ -1074,5 +1074,9 @@ class MemoryRunLogStore implements IRunLogStore {
 
   async list(): Promise<RunLogPage> {
     return { items: this.runs };
+  }
+
+  async deleteByScope(): Promise<number> {
+    return 0;
   }
 }

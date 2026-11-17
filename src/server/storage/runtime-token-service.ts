@@ -14,6 +14,8 @@ export interface RuntimeTokenRecord {
   allowedTriggers?: string[];
   createdAt: string;
   lastUsedAt?: string;
+  /** Immutable isolation scope. A token without one only sees unscoped connections, or nothing when scopes are required. */
+  scope?: string;
 }
 
 export interface RuntimeTokenSummary {
@@ -26,6 +28,7 @@ export interface RuntimeTokenSummary {
   allowedTriggers?: string[];
   createdAt: string;
   lastUsedAt?: string;
+  scope?: string;
 }
 
 export interface RuntimeTokenCreation {
@@ -50,6 +53,11 @@ export interface RuntimeGrant extends TokenPolicy {
   tokenId: string;
 }
 
+export interface CreateTokenOptions {
+  /** Fixed for the life of the token; rotate the token to change it. */
+  scope?: string;
+}
+
 export class RuntimeTokenService {
   private readonly store: IRuntimeTokenStore;
   private readonly logger?: RuntimeLogger;
@@ -67,6 +75,7 @@ export class RuntimeTokenService {
       allowedProxies: [],
       allowedConnections: [],
     },
+    options: CreateTokenOptions = {},
   ): Promise<RuntimeTokenCreation> {
     const token = `${tokenPrefix}${randomBytes(32).toString("base64url")}`;
     const now = new Date().toISOString();
@@ -80,6 +89,7 @@ export class RuntimeTokenService {
       allowedConnections: policy.allowedConnections ?? [],
       allowedTriggers: policy.allowedTriggers ?? [],
       createdAt: now,
+      scope: options.scope,
     };
     await this.store.add(record);
     return { token, record };
@@ -116,6 +126,7 @@ export class RuntimeTokenService {
       allowedProxies: matched.allowedProxies,
       allowedConnections: matched.allowedConnections ?? [],
       allowedTriggers: matched.allowedTriggers ?? [],
+      scope: matched.scope,
     };
   }
 
@@ -151,6 +162,7 @@ export function summarizeRuntimeToken(record: RuntimeTokenRecord): RuntimeTokenS
     allowedTriggers: record.allowedTriggers ?? [],
     createdAt: record.createdAt,
     lastUsedAt: record.lastUsedAt,
+    scope: record.scope,
   };
 }
 

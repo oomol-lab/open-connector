@@ -6,7 +6,9 @@ import type {
   StoredSaasConnection,
   SaasConnectionReference,
 } from "./connection-store.ts";
+import type { ConnectionGrantTarget } from "./core/action-policy.ts";
 import type { ProviderHttpDispatchOptions } from "./core/provider-http-dispatch.ts";
+import type { ScopeFilter } from "./core/scope.ts";
 import type {
   ApiKeyAuthDefinition,
   AuthType,
@@ -52,6 +54,8 @@ export interface ConnectionSummary {
   virtual: boolean;
   default: boolean;
   profile: CredentialProfile;
+  /** Opaque isolation scope the connection was stored with; absent for an unscoped connection. */
+  scope?: string;
   /** Completed OAuth consent state; absent for legacy and non-OAuth connections. */
   oauthAuthorizationId?: string;
   notion?: { duplicatedTemplateId: string };
@@ -71,6 +75,8 @@ export interface ConnectWithCredentialInput {
   signal?: AbortSignal;
   expectedConnection?: StoredConnection;
   comment?: string | null;
+  /** Stores the connection in this isolation scope. Reusing a name that belongs to another scope is rejected. */
+  scope?: string;
 }
 
 export interface ConnectWithoutAuthInput {
@@ -178,8 +184,9 @@ export class ConnectionService {
     this.onConnected = input.onConnected;
   }
 
-  async listConnections(services?: ReadonlySet<string>): Promise<ConnectionSummary[]> {
-    const configured = await this.store.list();
+  /** `within` limits every lookup to one scope; omit it only for operator views. */
+  async listConnections(services?: ReadonlySet<string>, within?: ScopeFilter): Promise<ConnectionSummary[]> {
+    const configured = await this.store.list(within);
     const configuredByService = new Map<string, StoredConnection[]>();
     for (const connection of configured) {
       if (services && !services.has(connection.service)) continue;
@@ -196,9 +203,9 @@ export class ConnectionService {
     );
   }
 
-  async listConnectionsByService(service: string): Promise<ConnectionSummary[]> {
+  async listConnectionsByService(service: string, within?: ScopeFilter): Promise<ConnectionSummary[]> {
     const provider = this.getProvider(service);
-    const connections = (await this.store.list()).filter((connection) => connection.service === service);
+    const connections = (await this.store.list(within)).filter((connection) => connection.service === service);
     return this.summarizeProviderConnections(provider, connections, await this.loadProviderPreferences());
   }
 
@@ -221,6 +228,7 @@ export class ConnectionService {
               connection.id,
               connection.connectionName,
               connection.credential,
+              connection.scope,
             ),
       );
       const marketplace = this.createMarketplaceConnectionSummary(provider, preferences);
@@ -243,8 +251,8 @@ export class ConnectionService {
     );
   }
 
-  async listAuthenticatedServices(services: string[]): Promise<string[]> {
-    const configured = await this.store.list();
+  async listAuthenticatedServices(services: string[], within?: ScopeFilter): Promise<string[]> {
+    const configured = await this.store.list(within);
     const authenticated = new Set(
       configured
         .filter((connection) => connection.source === "saas" || connection.credential.authType !== "no_auth")
@@ -261,9 +269,10 @@ export class ConnectionService {
     service: string,
     connectionName?: string,
     connectionId?: string,
+    within?: ScopeFilter,
   ): Promise<ConnectionSummary | undefined> {
     const provider = this.getProvider(service);
-    const stored = await this.selectStoredConnection(service, connectionName, connectionId);
+    const stored = await this.selectStoredConnection(service, connectionName, connectionId, within);
     const name = stored?.connectionName ?? normalizeConnectionName(connectionName);
     const marketplace = connectionId
       ? undefined
@@ -275,7 +284,7 @@ export class ConnectionService {
 
     if (stored?.source === "saas") return this.createManagedConnectionSummary(stored);
     return stored
-      ? this.createConfiguredConnectionSummary(provider, stored.id, name, stored.credential)
+      ? this.createConfiguredConnectionSummary(provider, stored.id, name, stored.credential, stored.scope)
       : this.supportsAuth(provider, "no_auth")
         ? this.createNoAuthConnectionSummary(provider, name)
         : undefined;
@@ -285,9 +294,10 @@ export class ConnectionService {
     service: string,
     connectionName?: string,
     connectionId?: string,
+    within?: ScopeFilter,
   ): Promise<ResolvedConnection> {
     const provider = this.getProvider(service);
-    const stored = await this.selectStoredConnection(service, connectionName, connectionId);
+    const stored = await this.selectStoredConnection(service, connectionName, connectionId, within);
     const name = stored?.connectionName ?? normalizeConnectionName(connectionName);
     const marketplace = connectionId
       ? undefined
@@ -302,7 +312,7 @@ export class ConnectionService {
     let credential = stored ? await this.credentials.resolve(stored) : undefined;
     credential ??= this.supportsAuth(provider, "no_auth") ? { authType: "no_auth" } : undefined;
     const summary = stored
-      ? this.createConfiguredConnectionSummary(provider, stored.id, name, credential!)
+      ? this.createConfiguredConnectionSummary(provider, stored.id, name, credential!, stored.scope)
       : credential
         ? this.createNoAuthConnectionSummary(provider, name)
         : undefined;
@@ -425,11 +435,19 @@ export class ConnectionService {
     connectionNameInput?: string,
     signal?: AbortSignal,
     retirementGeneration?: string,
+    scope?: string,
   ): Promise<ConnectionSummary> {
     const connectionName = normalizeConnectionName(connectionNameInput);
     const generation = retirementGeneration ?? (await this.store.getRetirementGeneration(service, connectionName));
     const storedCredential = await this.prepareOAuthCredential(service, credential, signal);
-    const stored = await this.store.setIfCurrentGeneration(service, connectionName, storedCredential, generation);
+    await this.assertScopeCompatible(service, connectionName, scope);
+    const stored = await this.store.setIfCurrentGeneration(
+      service,
+      connectionName,
+      storedCredential,
+      generation,
+      scope,
+    );
     if (!stored)
       throw new ConnectionError("connection_retired", "The connection was disconnected during authorization.");
     await this.connectionSaved(stored.id);
@@ -438,7 +456,25 @@ export class ConnectionService {
       stored.id,
       connectionName,
       storedCredential,
+      scope,
     );
+  }
+
+  /** The facts a runtime grant is checked against, for callers that only hold a connection id. */
+  async getConnectionGrantTarget(id: string): Promise<ConnectionGrantTarget> {
+    const stored = await this.store.getById(id);
+    return stored && stored.source !== "saas" && stored.scope !== undefined ? { id, scope: stored.scope } : { id };
+  }
+
+  /** A name that already exists keeps its scope: another scope may neither overwrite nor adopt the connection. */
+  private async assertScopeCompatible(service: string, connectionName: string, scope?: string): Promise<void> {
+    const existing = await this.store.get(service, connectionName);
+    if (existing && existing.source !== "saas" && existing.scope !== scope) {
+      throw new ConnectionError(
+        "connection_scope_conflict",
+        `${service} connection ${connectionName} already exists in a different scope.`,
+      );
+    }
   }
 
   /** Capture the durable disconnect fence before sending the user to the provider. */
@@ -468,9 +504,10 @@ export class ConnectionService {
     service: string,
     name: string | undefined,
     id: string | undefined,
+    within: ScopeFilter | undefined,
   ): Promise<StoredConnection | undefined> {
-    if (!id) return this.store.get(service, normalizeConnectionName(name));
-    const connection = await this.getStoredConnection(id);
+    if (!id) return this.store.get(service, normalizeConnectionName(name), within);
+    const connection = await this.getStoredConnection(id, within);
     if (
       connection.service !== service ||
       (name !== undefined && connection.connectionName !== normalizeConnectionName(name))
@@ -482,18 +519,18 @@ export class ConnectionService {
     return connection;
   }
 
-  async getStoredConnection(id: string): Promise<StoredConnection> {
-    const connection = await this.store.getById(id);
+  async getStoredConnection(id: string, within?: ScopeFilter): Promise<StoredConnection> {
+    const connection = await this.store.getById(id, within);
     if (!connection) throw new ConnectionError("connection_not_found", "Connection not found.");
     return connection;
   }
 
-  async listManagedConnections(): Promise<ManagedConnectionSummary[]> {
-    return (await this.store.list()).map((stored) => this.createManagedConnectionSummary(stored));
+  async listManagedConnections(within?: ScopeFilter): Promise<ManagedConnectionSummary[]> {
+    return (await this.store.list(within)).map((stored) => this.createManagedConnectionSummary(stored));
   }
 
-  async getManagedConnection(id: string): Promise<ManagedConnectionSummary> {
-    return this.createManagedConnectionSummary(await this.getStoredConnection(id));
+  async getManagedConnection(id: string, within?: ScopeFilter): Promise<ManagedConnectionSummary> {
+    return this.createManagedConnectionSummary(await this.getStoredConnection(id, within));
   }
 
   private createManagedConnectionSummary(stored: StoredConnection): ManagedConnectionSummary {
@@ -519,6 +556,7 @@ export class ConnectionService {
         stored.id,
         stored.connectionName,
         credential,
+        stored.scope,
       ),
       comment:
         credential.authType !== "no_auth" && typeof credential.metadata.connectionComment === "string"
@@ -544,11 +582,13 @@ export class ConnectionService {
       credential.metadata.connectionComment = input.comment === undefined ? previousComment : input.comment;
     }
     this.assertNotCancelled(input.signal);
+    const connectionName = normalizeConnectionName(input.connectionName);
+    if (!expected) await this.assertScopeCompatible(provider.service, connectionName, input.scope);
     const stored = expected
       ? await this.replaceCredential(expected, credential)
-      : await this.store.set(provider.service, normalizeConnectionName(input.connectionName), credential);
+      : await this.store.set(provider.service, connectionName, credential, input.scope);
     await this.connectionSaved(stored.id);
-    return this.createStoredConnectionSummary(provider, stored.id, stored.connectionName, credential);
+    return this.createStoredConnectionSummary(provider, stored.id, stored.connectionName, credential, stored.scope);
   }
 
   /** Notify integrations only after a local connection has been durably saved. */
@@ -667,16 +707,18 @@ export class ConnectionService {
     id: string,
     connectionName: string,
     credential: ResolvedCredential,
+    scope?: string,
   ): ConnectionSummary {
     if (credential.authType === "no_auth") {
       return {
         ...this.createNoAuthConnectionSummary(provider, connectionName),
         id,
         virtual: false,
+        ...(scope === undefined ? {} : { scope }),
       };
     }
 
-    return this.createStoredConnectionSummary(provider, id, connectionName, credential);
+    return this.createStoredConnectionSummary(provider, id, connectionName, credential, scope);
   }
 
   private createStoredConnectionSummary(
@@ -684,6 +726,7 @@ export class ConnectionService {
     id: string,
     connectionName: string,
     credential: Exclude<ResolvedCredential, { authType: "no_auth" }>,
+    scope?: string,
   ): ConnectionSummary {
     const summary: ConnectionSummary = {
       id,
@@ -700,6 +743,7 @@ export class ConnectionService {
       virtual: false,
       default: connectionName === defaultConnectionName,
       profile: credential.profile,
+      ...(scope === undefined ? {} : { scope }),
     };
     // Credential metadata also contains client secrets. Expose only explicitly allowed fields.
     if (credential.authType === "oauth2" && typeof credential.metadata.oauthAuthorizationId === "string") {

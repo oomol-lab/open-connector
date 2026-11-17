@@ -12,7 +12,7 @@ export type RuntimeRow = Record<string, unknown>;
 
 /** The `runtime_tokens` columns every token query reads back, in the order `readRuntimeTokenRow` decodes. */
 export const runtimeTokenColumns =
-  "id, name, token_hash, allowed_actions, blocked_actions, allowed_proxies, allowed_connections, allowed_triggers, created_at, last_used_at";
+  "id, name, token_hash, allowed_actions, blocked_actions, allowed_proxies, allowed_connections, allowed_triggers, created_at, last_used_at, scope";
 
 /** Read a column the query selected as a string, rejecting anything the schema cannot produce. */
 export function readString(row: RuntimeRow, key: string): string {
@@ -53,6 +53,7 @@ export function readRuntimeTokenRow(row: RuntimeRow): RuntimeTokenRecord {
     allowedTriggers: parseJson(readString(row, "allowed_triggers")),
     createdAt: readString(row, "created_at"),
     lastUsedAt: readOptionalString(row, "last_used_at"),
+    scope: readOptionalString(row, "scope"),
   };
 }
 
@@ -99,6 +100,9 @@ export async function listRunLogs(
   }
   if (input.ok !== undefined) {
     conditions.push(`ok = ${bind(input.ok ? 1 : 0)}`);
+  }
+  if (input.scope !== undefined) {
+    conditions.push(`scope = ${bind(input.scope)}`);
   }
   const where = conditions.length > 0 ? `where ${conditions.join(" and ")}` : "";
   const sql = `select service, value from runs ${where} order by started_at desc, id desc limit ${bind(limit + 1)}`;

@@ -661,6 +661,10 @@ class MemoryRunLogStore implements IRunLogStore {
   async list(_input?: RunLogListInput): Promise<RunLogPage> {
     return { items: this.items };
   }
+
+  async deleteByScope(): Promise<number> {
+    return 0;
+  }
 }
 
 type TestLogEntry = {

@@ -75,6 +75,12 @@ export class TriggerRunner {
         "forbidden",
       );
     const definition = await this.definition(input.service, input.triggerId);
+    const authorizeConnection = async (connectionId: string): Promise<void> => {
+      const target = await this.options.connections.getConnectionGrantTarget(connectionId);
+      const connectionDecision = input.policy.evaluateConnection(target);
+      if (!connectionDecision.allowed)
+        throw new ExecutionError(connectionDecision.code, connectionDecision.message, "forbidden");
+    };
     if (input.request.operation === "sourceReference" && input.request.request.action === "route") {
       if (!("source" in definition) || !definition.source)
         throw new ExecutionError("invalid_input", "This Trigger has no shared Source protocol.");
@@ -84,10 +90,7 @@ export class TriggerRunner {
         definition,
         input.grant!.tokenId,
         input.request.request,
-        (connectionId) => {
-          const decision = input.policy.evaluateConnection(connectionId);
-          if (!decision.allowed) throw new ExecutionError(decision.code, decision.message, "forbidden");
-        },
+        authorizeConnection,
         input.signal,
       );
     }
@@ -101,11 +104,10 @@ export class TriggerRunner {
         input.grant!.tokenId,
         input.connectionId,
         input.request.request,
-        (connectionId) => {
+        async (connectionId) => {
           if (input.connectionId !== connectionId)
             throw new ExecutionError("trigger_not_found", "Select the Source connection by ID.", "not_found");
-          const decision = input.policy.evaluateConnection(connectionId);
-          if (!decision.allowed) throw new ExecutionError(decision.code, decision.message, "forbidden");
+          await authorizeConnection(connectionId);
         },
         input.signal,
       );

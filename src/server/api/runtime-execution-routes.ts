@@ -67,6 +67,7 @@ export function createRuntimeExecutionRoutes({
         connectionId,
         policy,
         runtimeTokenId: runtimeGrant?.tokenId,
+        scope: runtimeGrant?.scope,
         signal,
       });
       if (!run) {
