@@ -60,6 +60,7 @@ export const fusionApiActions: ProviderActionDefinition<string>[] = [
 ];
 
 function buildInputSchema(operation: FusionApiOperation): JsonSchema {
+  if (operation.inputSchema) return operation.inputSchema;
   const properties = Object.fromEntries(
     operation.inputFields.map((field) => [field.name, buildFieldSchema(field)] as const),
   );
@@ -130,6 +131,7 @@ function fieldNameLooksLikeUrls(name: string): boolean {
 }
 
 function buildOutputSchema(operation: FusionApiOperation): JsonSchema {
+  if (operation.outputSchema) return operation.outputSchema;
   if (operation.actionName.endsWith("_submit")) {
     return submitOutputSchema;
   }

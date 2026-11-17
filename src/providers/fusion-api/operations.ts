@@ -1,4 +1,6 @@
-import type { ActionDefinition } from "../../core/types.ts";
+import type { ActionDefinition, JsonSchema } from "../../core/types.ts";
+
+import { s } from "../../core/json-schema.ts";
 
 export type FusionApiHttpMethod = "GET" | "POST";
 
@@ -26,9 +28,109 @@ export interface FusionApiOperation {
   successStatuses: number[];
   pathParams: string[];
   inputFields: FusionApiInputField[];
+  inputSchema?: JsonSchema;
+  outputSchema?: JsonSchema;
 }
 
 export const fusionApiOperations: FusionApiOperation[] = [
+  {
+    actionName: "ffmpeg_submit",
+    operationType: "write",
+    method: "POST",
+    path: "/v1/ffmpeg/submit",
+    tag: "ffmpeg",
+    description: "Run an FFmpeg command with up to four input URLs and one output. Maximum three minutes per job.",
+    successStatuses: [200],
+    pathParams: [],
+    inputFields: [],
+    inputSchema: s.object(
+      "FFmpeg command and input files.",
+      {
+        inputURLs: s.array(s.url("Input file URL."), {
+          description:
+            "Ordered HTTPS input URLs. in0.mp4 selects the first URL. Maximum 100 MiB per file and 200 MiB total.",
+          minItems: 1,
+          maxItems: 4,
+        }),
+        args: s.array(s.string("One FFmpeg argument."), {
+          description:
+            "Arguments without the executable or shell syntax. Reference inputs as in<index>.<ext> and put the output filename last. Maximum 16 KiB of text.",
+          minItems: 3,
+          maxItems: 128,
+        }),
+        outputFilename: s.stringEnum(
+          ["out.mp4", "out.webm", "out.mkv", "out.mp3", "out.wav", "out.gif", "out.png", "out.jpg"],
+          { description: "Single output filename. Maximum 200 MiB." },
+        ),
+      },
+      { required: ["inputURLs", "args", "outputFilename"], additionalProperties: false },
+    ),
+  },
+  {
+    actionName: "ffmpeg_result",
+    operationType: "read",
+    method: "GET",
+    path: "/v1/ffmpeg/result/{sessionID}",
+    tag: "ffmpeg",
+    description: "Get the FFmpeg task result.",
+    successStatuses: [200, 202, 404],
+    pathParams: ["sessionID"],
+    outputSchema: s.union(
+      [
+        s.object("The Fusion API task completed with result data.", {
+          state: s.literal("completed", { description: "Task state." }),
+          data: s.object(
+            "Output file and media metadata.",
+            {
+              downloadURL: s.url("Output download URL for reuse in subsequent actions."),
+              filename: s.string("Output filename."),
+              mimeType: s.string("Output MIME type."),
+              bytes: s.integer("Output size in bytes."),
+              duration: s.number("Media duration in seconds when available."),
+              width: s.number("Video or image width in pixels when available."),
+              height: s.number("Video or image height in pixels when available."),
+            },
+            { required: ["downloadURL", "filename", "mimeType", "bytes"] },
+          ),
+        }),
+        s.object("The Fusion API task is still processing.", {
+          state: s.literal("processing", { description: "Task state." }),
+          progress: s.number("Task progress reported by Fusion API."),
+        }),
+        s.object("The Fusion API task failed or was not found.", {
+          state: s.stringEnum(["failed", "not_found"], { description: "Task state." }),
+          error: s.string("Error message returned by Fusion API."),
+        }),
+      ],
+      { description: "The normalized Fusion API task result." },
+    ),
+    inputFields: [
+      {
+        name: "sessionID",
+        kind: "string",
+        required: true,
+        description: "Task session ID.",
+      },
+    ],
+  },
+  {
+    actionName: "ffmpeg_state",
+    operationType: "read",
+    method: "GET",
+    path: "/v1/ffmpeg/state/{sessionID}",
+    tag: "ffmpeg",
+    description: "Get the FFmpeg task state.",
+    successStatuses: [200, 202, 404],
+    pathParams: ["sessionID"],
+    inputFields: [
+      {
+        name: "sessionID",
+        kind: "string",
+        required: true,
+        description: "Task session ID.",
+      },
+    ],
+  },
   {
     actionName: "oomol_ocr_submit",
     operationType: "write",
