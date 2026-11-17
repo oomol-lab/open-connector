@@ -204,9 +204,11 @@ function createHttpError(response: Response, payload: unknown, phase: "validate"
   if (response.status === 429) {
     return new ProviderRequestError(429, message);
   }
-  if (response.status === 401 || response.status === 403) {
-    return new ProviderRequestError(phase === "validate" ? 400 : response.status, message);
-  }
+  const data = optionalRecord(optionalRecord(payload)?.data);
+  const firstError = optionalRecord(Array.isArray(data?.errors) ? data.errors[0] : undefined);
+  if (optionalNumber(firstError?.code) === -18010002) return createEmbeddedError(-18010002, message, phase);
+  if (response.status === 401 || response.status === 403)
+    return new ProviderRequestError(response.status, message, undefined, "provider_error");
   if (response.status === 400 || response.status === 422) {
     return new ProviderRequestError(response.status, message);
   }
@@ -215,13 +217,13 @@ function createHttpError(response: Response, payload: unknown, phase: "validate"
 
 function createEmbeddedError(code: number, message: string | undefined, phase: "validate" | "execute") {
   const detail = message ?? `17TRACK API returned error ${code}`;
-  if ([-18010001, -18010002, -18010004, -18010005].includes(code)) {
+  if (code === -18010002) {
     return new ProviderRequestError(phase === "validate" ? 400 : 401, detail);
   }
   if (code === -18019907 || code === -18019908) {
     return new ProviderRequestError(429, detail);
   }
-  if (code === -18010003 || [-18019815, -18019816, -18019817].includes(code)) {
+  if ([-18010001, -18010003, -18010004, -18010005, -18019815, -18019816, -18019817].includes(code)) {
     return providerResponseError(detail);
   }
   return providerInputError(detail);

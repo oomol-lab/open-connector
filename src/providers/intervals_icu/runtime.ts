@@ -172,13 +172,7 @@ export async function readIntervalsIcuError(response: Response, signal?: AbortSi
   const body = await readProviderErrorBody(response, "Intervals.icu", signal);
   switch (response.status) {
     case 401:
-      // An API key is the only credential, so a 401 means the key is wrong or
-      // was cleared or regenerated in the Intervals.icu settings.
-      return new ProviderRequestError(
-        401,
-        "Intervals.icu rejected the API key. Check that it is the current key from Developer Settings in the Intervals.icu settings; a cleared or regenerated key stops working.",
-        body,
-      );
+      return new ProviderRequestError(401, "Intervals.icu request was not authorized.", body, "provider_error");
     case 403:
       return new ProviderRequestError(403, "Intervals.icu refused access to this resource.", body, "provider_error");
     case 404:
