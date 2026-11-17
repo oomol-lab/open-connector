@@ -94,6 +94,15 @@ describe("Trello OAuth authentication", () => {
     );
   });
 
+  it.each([401, 403, 500, 503])("keeps HTTP %i from Trello so callers can tell auth from outage", async (status) => {
+    const fetcher = vi.fn<typeof fetch>(async () => new Response("failed", { status }));
+
+    await expect(credentialValidators.oauth2!(oauthCredential, { fetcher })).rejects.toMatchObject({
+      status,
+      message: `Trello validate request failed (HTTP ${status} from trello.com): failed`,
+    });
+  });
+
   it("asks for a connection when no credential is stored", async () => {
     const result = await executors["trello.get_member"]!({}, { getCredential: async () => undefined });
 

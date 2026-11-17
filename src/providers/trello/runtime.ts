@@ -9,7 +9,7 @@ import {
   requiredResponseRecord,
 } from "../provider-runtime.ts";
 
-export const trelloApiBaseUrl: string = "https://api.trello.com/1";
+const trelloApiBaseUrl = "https://api.trello.com/1";
 const trelloOAuthApiBaseUrl = "https://trello.com/1";
 
 export type TrelloAuth =
@@ -521,9 +521,7 @@ async function validateTrelloAuth(
   };
 }
 
-function resolveTrelloCredential(
-  input: Record<string, string | undefined>,
-): Pick<TrelloActionContext, "auth"> {
+function resolveTrelloCredential(input: Record<string, string | undefined>): Pick<TrelloActionContext, "auth"> {
   return {
     auth: {
       type: "key",
@@ -579,21 +577,16 @@ async function trelloRequest<T>(input: TrelloRequestInput): Promise<T> {
   }
 
   const message = await readTrelloError(response);
-  if (auth.type === "bearer") {
-    throw new ProviderRequestError(
-      response.status === 429 ? 429 : 400,
-      `Trello ${input.phase} request failed (HTTP ${response.status} from ${url.host}): ${message}`,
-    );
-  }
-  if (response.status === 401 || response.status === 403) {
+  if (auth.type === "key" && (response.status === 401 || response.status === 403)) {
     throw new ProviderRequestError(400, normalizeTrelloAuthError(message));
   }
   if (response.status === 429) {
     throw new ProviderRequestError(429, message);
   }
+  const failure = auth.type === "bearer" ? `failed (HTTP ${response.status} from ${url.host})` : "failed";
   throw new ProviderRequestError(
     response.status >= 400 && response.status < 600 ? response.status : 502,
-    `Trello ${input.phase} request failed: ${message}`,
+    `Trello ${input.phase} request ${failure}: ${message}`,
   );
 }
 
