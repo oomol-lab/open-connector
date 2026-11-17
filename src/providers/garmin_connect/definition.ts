@@ -12,7 +12,7 @@ export const provider: ProviderDefinition = {
   service,
   displayName: "Garmin Connect",
   description:
-    "Read your own Garmin Connect activities, sleep, HRV, Body Battery, heart rate, daily wellness summaries and weight through the Garmin Connect Personal API.",
+    "Read your own Garmin Connect activities, sleep, HRV, Body Battery, heart rate, VO2 max, daily wellness summaries and weight through the Garmin Connect Personal API.",
   categories: ["Data"],
   authTypes: ["api_key"],
   auth: [
