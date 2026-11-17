@@ -242,6 +242,7 @@ export const wpsMcpActions: ActionDefinition[] = [
     description: "Get the online access link for a WPS cloud document.",
     requiredScopes: [],
     inputSchema: s.object("At least one selector for the document link.", fileSelectorProperties, {
+      anyOf: [{ required: ["file_id"] }, { required: ["link_id"] }, { required: ["url"] }],
       optional: ["file_id", "link_id", "url"],
     }),
     outputSchema: dynamicToolOutputSchema,
@@ -266,6 +267,7 @@ export const wpsMcpActions: ActionDefinition[] = [
         with_hash: s.boolean("Whether to include file checksum hashes."),
       },
       {
+        anyOf: [{ required: ["file_id"] }, { required: ["link_id"] }, { required: ["url"] }],
         optional: ["file_id", "link_id", "url", "drive_id", "internal", "storage_base_domain", "with_hash"],
       },
     ),
@@ -286,6 +288,7 @@ export const wpsMcpActions: ActionDefinition[] = [
         with_permission: s.boolean("Whether the response should include operation permissions."),
       },
       {
+        anyOf: [{ required: ["file_id"] }, { required: ["link_id"] }, { required: ["url"] }],
         optional: ["file_id", "link_id", "url", "with_drive", "with_ext_attrs", "with_permission"],
       },
     ),
@@ -320,6 +323,7 @@ export const wpsMcpActions: ActionDefinition[] = [
         task_id: s.string("The task ID returned by a previous incomplete read request."),
       },
       {
+        anyOf: [{ required: ["file_id"] }, { required: ["link_id"] }, { required: ["url"] }],
         optional: [
           "file_id",
           "link_id",

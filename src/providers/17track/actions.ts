@@ -101,7 +101,10 @@ const carrierChangeSchema = s.object(
     final_carrier_old: carrierSchema,
     final_carrier_new: carrierSchema,
   },
-  { optional: ["carrier_old", "final_carrier_old", "final_carrier_new"] },
+  {
+    optional: ["carrier_old", "carrier_new", "final_carrier_old", "final_carrier_new"],
+    anyOf: [{ required: ["carrier_new"] }, { required: ["final_carrier_new"] }],
+  },
 );
 const trackingInfoUpdateSchema = s.object(
   "A tracking number and the metadata fields to update for it.",

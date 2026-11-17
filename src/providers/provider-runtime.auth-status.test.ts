@@ -19,6 +19,7 @@ import { executors as figmaExecutors } from "./figma/executors.ts";
 import { executors as helpdeskExecutors } from "./helpdesk/executors.ts";
 import { executors as mondayExecutors } from "./monday/executors.ts";
 import { ProviderRequestError, toProviderExecutionError } from "./provider-runtime.ts";
+import { proxy as rendiProxy } from "./rendi/executors.ts";
 import {
   credentialValidators as roxyapiValidators,
   executors as roxyapiExecutors,
@@ -387,4 +388,18 @@ it.each([401, 403])("preserves ambiguous Figma HTTP %s errors without requesting
     status,
   );
   expect(result).toMatchObject({ ok: false, error: { code: "provider_error" } });
+});
+
+it.each([
+  [401, { detail: "Invalid authorization key" }, "authorization_failed"],
+  [401, { detail: "Plan unavailable" }, "provider_error"],
+  [403, { detail: "Invalid authorization key" }, "provider_error"],
+])("Rendi proxy maps only its documented invalid-key response: %i %j", async (status, payload, code) => {
+  vi.stubGlobal("fetch", async () => Response.json(payload, { status: Number(status) }));
+  const context: ExecutionContext = { getCredential: async () => apiKeyCredential };
+
+  expect(await rendiProxy({ endpoint: "/v1/commands", method: "GET" }, context)).toMatchObject({
+    ok: false,
+    error: { code },
+  });
 });

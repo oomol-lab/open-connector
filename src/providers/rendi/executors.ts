@@ -171,12 +171,21 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
   auth: { type: "api_key_header", name: "X-API-KEY" },
   skipDnsValidation: true,
   async readError(response) {
-    return new ProviderRequestError(
-      response.status,
-      await readProviderProxyErrorMessage(response, "rendi proxy request failed"),
-      undefined,
-      "provider_error",
-    );
+    const message = await readProviderProxyErrorMessage(response, "rendi proxy request failed");
+    if (response.status === 401) {
+      let payload: unknown;
+      try {
+        payload = JSON.parse(message);
+      } catch {
+        // Preserve unstructured upstream errors without inferring credential failure.
+      }
+
+      if (optionalRecord(payload)?.detail === "Invalid authorization key") {
+        return new ProviderRequestError(401, message, undefined, "authorization_failed");
+      }
+    }
+
+    return new ProviderRequestError(response.status, message, undefined, "provider_error");
   },
   customizeRequest({ headers }) {
     headers.set("accept", "application/json");
