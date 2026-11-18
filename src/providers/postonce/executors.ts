@@ -7,10 +7,12 @@ import { encodePathSegment, hasPathTraversalSegment, queryParams } from "../../c
 import { defineApiKeyProviderExecutors } from "../provider-executors.ts";
 import { defineProviderProxy } from "../provider-proxy.ts";
 import {
+  parseProviderJsonBodyText,
   providerInputError,
   providerResponseError,
   providerUserAgent,
   ProviderRequestError,
+  readProviderErrorTextBody,
   readProviderJsonBody,
   requiredInputString,
   requiredResponseRecord,
@@ -114,14 +116,7 @@ export const executors: ProviderExecutors = defineApiKeyProviderExecutors(servic
 export const proxy: ProviderProxyExecutor = defineProviderProxy({
   service,
   baseUrl: apiBaseUrl,
-  async readError(response) {
-    const payload = await readProviderJsonBody(response, {
-      emptyBody: null,
-      invalidJsonMessage: "PostOnce returned invalid JSON",
-      invalidJsonFallback: (text) => text.slice(0, 500),
-    });
-    return postonceRequestError(response.status, payload);
-  },
+  readError: readPostonceResponseError,
   auth: { type: "api_key_authorization", prefix: "Bearer " },
   skipDnsValidation: true,
 });
@@ -169,20 +164,29 @@ async function postonceRequest(request: PostonceRequest, context: PostonceContex
       body: request.body ? JSON.stringify(request.body) : undefined,
       signal,
     });
+    if (!response.ok) {
+      throw await readPostonceResponseError(response, signal);
+    }
     const payload = await readProviderJsonBody(response, {
       emptyBody: null,
       invalidJsonMessage: "PostOnce returned invalid JSON",
-      invalidJsonFallback: response.ok ? undefined : (text) => text.slice(0, 500),
     });
-    if (!response.ok) {
-      throw postonceRequestError(response.status, payload);
-    }
     const envelope = optionalRecord(payload);
     if (!envelope || !("data" in envelope)) {
       throw providerResponseError("PostOnce returned an answer without data");
     }
     return { data: envelope.data, meta: recordOrEmpty(envelope.meta) };
   });
+}
+
+async function readPostonceResponseError(response: Response, signal?: AbortSignal): Promise<ProviderRequestError> {
+  const text = await readProviderErrorTextBody(response, "PostOnce error response", signal);
+  const payload = parseProviderJsonBodyText(text, {
+    emptyBody: null,
+    invalidJsonMessage: "PostOnce returned invalid JSON",
+    invalidJsonFallback: () => null,
+  });
+  return postonceRequestError(response.status, payload);
 }
 
 /**

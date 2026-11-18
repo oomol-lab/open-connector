@@ -126,6 +126,7 @@ describe("Trello proxy authentication", () => {
     [400, "invalid id", "invalid_input"],
     [404, "not found", "invalid_input"],
     [401, "invalid token", "authorization_failed"],
+    [401, "invalid key", "authorization_failed"],
   ])("maps an upstream %i with %s to %s", async (status, message, code) => {
     vi.stubGlobal(
       "fetch",

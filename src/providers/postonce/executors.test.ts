@@ -3,7 +3,7 @@ import type { ExecutionContext, ResolvedCredential } from "../../core/types.ts";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { validateActionInput } from "../../core/validation.ts";
 import { postonceActions } from "./actions.ts";
-import { credentialValidators, executors } from "./executors.ts";
+import { credentialValidators, executors, proxy } from "./executors.ts";
 
 const postId = "5b0c8f62-4d1e-4a39-9a51-0f4f3c3c9d10";
 
@@ -61,6 +61,28 @@ describe("PostOnce credentials", () => {
         },
       ),
     ).rejects.toMatchObject({ message: "Invalid API key." });
+  });
+});
+
+it("preserves the rate limit when an error response body fails to read", async () => {
+  stubFetch(
+    () =>
+      new Response(
+        new ReadableStream({
+          start(controller) {
+            controller.error(new Error("connection closed while reading body"));
+          },
+        }),
+        { status: 429 },
+      ),
+  );
+  await expect(executors["postonce.list_posts"]!({}, context)).resolves.toMatchObject({
+    ok: false,
+    error: { code: "rate_limited" },
+  });
+  await expect(proxy({ method: "GET", endpoint: "/v1/posts" }, context)).resolves.toMatchObject({
+    ok: false,
+    error: { code: "rate_limited", details: { status: 429 } },
   });
 });
 

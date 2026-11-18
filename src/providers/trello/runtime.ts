@@ -602,7 +602,8 @@ export function trelloResponseErrorCode(
   status: number,
   message: string,
 ): "authorization_failed" | "provider_error" | undefined {
-  if (status === 401 && auth.type === "key" && message.trim() === "invalid token") {
+  const text = message.trim();
+  if (status === 401 && auth.type === "key" && (text === "invalid key" || text === "invalid token")) {
     return "authorization_failed";
   }
   return status === 401 || status === 403 ? "provider_error" : undefined;
