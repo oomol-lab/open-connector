@@ -8,8 +8,30 @@ export const provider: ProviderDefinition = {
   service,
   displayName: "Trello",
   categories: ["Productivity"],
-  authTypes: ["custom_credential"],
+  authTypes: ["oauth2", "custom_credential"],
   auth: [
+    {
+      type: "oauth2",
+      requiredScopes: ["read:member:trello", "offline_access"],
+      authorizationUrl: "https://auth.atlassian.com/authorize",
+      tokenUrl: "https://auth.atlassian.com/oauth/token",
+      scopes: [
+        "read:board:trello",
+        "read:enterprise:trello",
+        "read:member:trello",
+        "read:organization:trello",
+        "write:board:membership:trello",
+        "write:board:trello",
+        "write:enterprise:trello",
+        "write:member:trello",
+        "write:organization:membership:trello",
+        "write:organization:trello",
+      ],
+      tokenEndpointAuthMethod: "client_secret_post",
+      tokenRequestFormat: "json",
+      pkce: { method: "S256" },
+      authorizationParams: { prompt: "consent" },
+    },
     {
       type: "custom_credential",
       fields: [
