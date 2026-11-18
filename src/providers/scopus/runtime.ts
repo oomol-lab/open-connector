@@ -293,7 +293,7 @@ function buildScopusUrl(path: string, query: Record<string, string | undefined>)
   return url;
 }
 
-function buildScopusHeaders(context: Pick<ScopusContext, "apiKey" | "institutionToken">): Record<string, string> {
+function buildScopusHeaders(context: ScopusContext): Record<string, string> {
   const headers: Record<string, string> = {
     accept: "application/json",
     "user-agent": providerUserAgent,

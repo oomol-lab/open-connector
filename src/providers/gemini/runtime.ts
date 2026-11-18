@@ -700,7 +700,7 @@ function isGoogleHost(hostname: string): boolean {
 }
 
 async function createTransitDownloadableFile(
-  context: Pick<GeminiRuntimeContext, "transitFiles">,
+  context: GeminiRuntimeContext,
   prefix: string,
   mimeType: string,
   bytes: Uint8Array,

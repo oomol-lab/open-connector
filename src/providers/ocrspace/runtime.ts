@@ -251,14 +251,14 @@ function normalizeOptionalMessage(value: unknown): string | null {
   return optionalString(value) ?? null;
 }
 
-function joinParsedText(pages: Array<Pick<OcrspacePage, "parsedText" | "fileParseExitCode">>): string {
+function joinParsedText(pages: OcrspacePage[]): string {
   return pages
     .filter((page) => page.fileParseExitCode === 1 && page.parsedText.length > 0)
     .map((page) => page.parsedText)
     .join("\n\n");
 }
 
-function hasSuccessfulPage(pages: Array<Pick<OcrspacePage, "fileParseExitCode">>): boolean {
+function hasSuccessfulPage(pages: OcrspacePage[]): boolean {
   return pages.some((page) => page.fileParseExitCode === 1);
 }
 

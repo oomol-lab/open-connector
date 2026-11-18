@@ -230,10 +230,7 @@ async function requestAdobeCommerce(options: AdobeCommerceRequestOptions): Promi
   }
 }
 
-function buildAdobeCommerceUrl(
-  context: Pick<AdobeCommerceContext, "baseUrl" | "storeCode">,
-  pathSegments: readonly string[],
-): URL {
+function buildAdobeCommerceUrl(context: AdobeCommerceContext, pathSegments: readonly string[]): URL {
   const url = new URL(context.baseUrl);
   const segments = [
     ...splitPathSegments(url.pathname),

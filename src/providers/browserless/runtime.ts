@@ -219,7 +219,7 @@ async function requestBrowserless(input: BrowserlessRequestInput): Promise<Brows
 }
 
 function requireBrowserlessTransitFiles(
-  context: Pick<ApiKeyProviderContext, "transitFiles">,
+  context: ApiKeyProviderContext,
   actionName: BrowserlessBinaryActionName,
 ): TransitFileWriter {
   if (!context.transitFiles) {

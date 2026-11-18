@@ -488,14 +488,14 @@ export async function validatePaperlessCredential(
   };
 }
 
-export function requirePaperlessFileTransit(context: Pick<PaperlessExecutionContext, "transitFiles">): void {
+export function requirePaperlessFileTransit(context: PaperlessExecutionContext): void {
   if (!context.transitFiles) {
     throw new ProviderRequestError(500, "Paperless-ngx transit file storage is not configured");
   }
 }
 
 export async function transitPaperlessResponse(
-  connection: Pick<PaperlessExecutionContext, "transitFiles">,
+  connection: PaperlessExecutionContext,
   input: PaperlessTransitInput,
 ): Promise<PaperlessTransitResult> {
   const body = input.response.body;

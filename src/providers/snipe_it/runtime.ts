@@ -20,7 +20,7 @@ export interface SnipeItContext extends ApiKeyProviderContext {
 }
 
 interface SnipeItRequestOptions {
-  context: Pick<SnipeItContext, "apiKey" | "apiBaseUrl" | "fetcher" | "signal">;
+  context: SnipeItContext;
   path: string;
   mode: SnipeItRequestMode;
   query?: Record<string, QueryValue>;

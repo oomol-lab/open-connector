@@ -381,7 +381,7 @@ async function requestQuentnJson(input: {
 }
 
 function buildQuentnUrl(input: {
-  context: Pick<QuentnActionContext, "apiBaseUrl">;
+  context: QuentnActionContext;
   path: string;
   query?: Record<string, QuentnQueryValue>;
 }): URL {

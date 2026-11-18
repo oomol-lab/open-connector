@@ -206,7 +206,7 @@ async function requestWebscraperIoJson(
 }
 
 async function requestWebscraperIoText(
-  input: Pick<WebscraperIoRequestInput, "path" | "query" | "phase">,
+  input: WebscraperIoRequestInput,
   context: ApiKeyProviderContext,
 ): Promise<string> {
   const timeout = createProviderTimeout(context.signal);

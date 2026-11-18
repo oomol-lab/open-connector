@@ -708,7 +708,7 @@ async function amaraSendMessage(input: JsonRecord, context: AmaraActionContext) 
 }
 
 async function amaraListResponse(
-  input: Pick<AmaraRequestInput, "path" | "query">,
+  input: AmaraRequestInput,
   context: AmaraActionContext,
   outputKey: string,
   normalizeItem: (value: JsonRecord) => unknown,

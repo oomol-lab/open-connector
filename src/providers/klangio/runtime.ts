@@ -253,7 +253,7 @@ async function createFileFormData(value: unknown, context: ApiKeyProviderContext
 
 async function resolveKlangioUploadSource(
   value: unknown,
-  context: Pick<ApiKeyProviderContext, "signal">,
+  context: ApiKeyProviderContext,
 ): Promise<KlangioUploadSource> {
   const file = requireInputObject(value, "file");
   const fileUrl = optionalString(file.url);

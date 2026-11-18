@@ -178,7 +178,7 @@ async function requestAmbientWeatherJson(
 
 function buildAmbientWeatherUrl(
   path: string,
-  context: Pick<AmbientWeatherContext, "apiKey" | "applicationKey">,
+  context: AmbientWeatherContext,
   query?: Record<string, string | number | undefined>,
 ) {
   const url = new URL(path, ambientWeatherApiBaseUrl);

@@ -30,7 +30,6 @@ const credentialErrorCodes = new Set(["unauthorized", "forbidden"]);
 
 type Handler = ProviderRuntimeHandler<ApiKeyProviderContext>;
 type RequestPhase = "validate" | "execute";
-type SocialscrapeContext = Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
 
 /** A successful SocialScrape answer: the `data` object and the request details around it. */
 interface SocialscrapeAnswer {
@@ -129,7 +128,7 @@ function bareHandle(value: unknown): string {
  */
 async function socialscrapeRequest(
   path: string,
-  context: SocialscrapeContext,
+  context: ApiKeyProviderContext,
   query: Record<string, QueryValue> = {},
   phase: RequestPhase = "execute",
 ): Promise<SocialscrapeAnswer> {
@@ -203,7 +202,7 @@ function sleep(ms: number, signal?: AbortSignal): Promise<void> {
 /** Send one request and read its envelope. */
 async function socialscrapeFetch(
   path: string,
-  context: SocialscrapeContext,
+  context: ApiKeyProviderContext,
   query: Record<string, QueryValue>,
   phase: RequestPhase,
   timeoutMs?: number,

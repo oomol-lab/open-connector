@@ -256,6 +256,6 @@ function readPathId(value: unknown, fieldName: string): string {
   return encodeURIComponent(requiredString(value, fieldName, (message) => new ProviderRequestError(400, message)));
 }
 
-function readActionLocationId(context: Pick<HighLevelContext, "locationId">, override: unknown): string {
+function readActionLocationId(context: HighLevelContext, override: unknown): string {
   return optionalString(override) ?? context.locationId;
 }

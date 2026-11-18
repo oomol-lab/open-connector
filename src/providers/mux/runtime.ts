@@ -320,7 +320,7 @@ function muxErrorMessage(payload: unknown, status: number): string {
   );
 }
 
-function createMuxAuthorization(context: Pick<MuxContext, "tokenId" | "tokenSecret">): string {
+function createMuxAuthorization(context: MuxContext): string {
   return `Basic ${Buffer.from(`${context.tokenId}:${context.tokenSecret}`, "utf8").toString("base64")}`;
 }
 

@@ -182,7 +182,7 @@ function buildHiggsfieldAiUrl(path: string, query?: Record<string, unknown>): UR
   return url;
 }
 
-function buildHiggsfieldAiHeaders(context: Pick<HiggsfieldAiContext, "apiKey" | "apiSecret">): Record<string, string> {
+function buildHiggsfieldAiHeaders(context: HiggsfieldAiContext): Record<string, string> {
   return {
     accept: "application/json",
     "content-type": "application/json",

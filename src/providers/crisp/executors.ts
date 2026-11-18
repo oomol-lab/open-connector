@@ -334,7 +334,7 @@ function readArray(value: unknown): unknown[] {
   return value;
 }
 
-function normalizeCrispWebsite(value: unknown, context: Pick<CrispCredential, "websiteId">): Record<string, unknown> {
+function normalizeCrispWebsite(value: unknown, context: CrispCredential): Record<string, unknown> {
   const website = requireCrispResponseObject(value, "Crisp website response must be an object");
   return compactObject({
     websiteId: optionalString(website.website_id) ?? context.websiteId,

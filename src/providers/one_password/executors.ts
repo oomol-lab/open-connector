@@ -224,7 +224,7 @@ async function requestOnePasswordJson(input: OnePasswordRequestInput): Promise<u
 }
 
 function buildOnePasswordUrl(input: {
-  context: Pick<OnePasswordContext, "baseUrl">;
+  context: OnePasswordContext;
   path: string;
   query?: Record<string, string | number | boolean | undefined>;
 }): URL {

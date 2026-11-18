@@ -365,7 +365,7 @@ function extractKrakenMessage(payload: unknown): string | undefined {
 async function downloadKrakenFile(
   krakedUrl: string,
   fileName: string,
-  context: Pick<KrakenIoActionContext, "fetcher" | "signal" | "transitFiles">,
+  context: KrakenIoActionContext,
 ): Promise<{ bytes: Uint8Array; contentType: string }> {
   if (!context.transitFiles) {
     throw new ProviderRequestError(400, "Transit file storage is not enabled.");

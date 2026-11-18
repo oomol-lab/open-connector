@@ -197,7 +197,7 @@ async function requestGosquaredJson(options: GosquaredRequestOptions): Promise<R
   });
 }
 
-function buildGosquaredUrl(options: Pick<GosquaredRequestOptions, "path" | "apiKey" | "siteToken" | "query">): URL {
+function buildGosquaredUrl(options: GosquaredRequestOptions): URL {
   const normalizedPath = options.path.startsWith("/") ? options.path.slice(1) : options.path;
   const url = new URL(normalizedPath, `${gosquaredApiBaseUrl}/`);
   url.searchParams.set("api_key", options.apiKey);

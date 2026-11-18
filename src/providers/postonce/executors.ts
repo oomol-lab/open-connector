@@ -23,7 +23,6 @@ const service = "postonce";
 const apiBaseUrl = "https://postonce.to/api/public";
 
 type Handler = ProviderRuntimeHandler<ApiKeyProviderContext>;
-type PostonceContext = Pick<ApiKeyProviderContext, "apiKey" | "fetcher" | "signal">;
 
 interface PostonceRequest {
   method?: "GET" | "PATCH" | "POST";
@@ -143,7 +142,7 @@ function listData(data: unknown, action: string): unknown[] {
 }
 
 /** Send one request and unwrap PostOnce's `{ data, meta }` envelope. */
-async function postonceRequest(request: PostonceRequest, context: PostonceContext): Promise<PostonceAnswer> {
+async function postonceRequest(request: PostonceRequest, context: ApiKeyProviderContext): Promise<PostonceAnswer> {
   // IDs are caller input, so a `.` or `..` segment must not move the request to another endpoint.
   if (hasPathTraversalSegment(request.path)) {
     throw providerInputError("PostOnce IDs must not be . or ..");

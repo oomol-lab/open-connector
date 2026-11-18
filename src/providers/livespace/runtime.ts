@@ -404,11 +404,7 @@ async function postLivespaceForm(
   return payload;
 }
 
-function signLivespaceData(
-  credentials: Pick<LivespaceCredentials, "apiKey" | "apiSecret">,
-  token: LivespaceToken,
-  data: Record<string, unknown>,
-) {
+function signLivespaceData(credentials: LivespaceCredentials, token: LivespaceToken, data: Record<string, unknown>) {
   return {
     ...data,
     _api_auth: "key",
