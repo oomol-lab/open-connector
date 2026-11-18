@@ -3,7 +3,13 @@ import type { TransitFileWriter } from "../../core/types.ts";
 import { posix } from "node:path";
 import { compactObject, optionalInteger, optionalString, requiredRawString, requiredString } from "../../core/cast.ts";
 import { storeResponseInTransit } from "../../core/request.ts";
-import { providerFetch, ProviderRequestError, readProviderTextBody, runProviderRequest } from "../provider-runtime.ts";
+import {
+  isAbortLikeError,
+  providerFetch,
+  ProviderRequestError,
+  readProviderTextBody,
+  runProviderRequest,
+} from "../provider-runtime.ts";
 
 export const baiduPanBaseUrl = "https://pan.baidu.com";
 const losslessIntegerKeys = new Set(["fs_id", "fsid", "pid", "uk", "request_id", "cursor"]);
@@ -162,8 +168,12 @@ export async function downloadBaiduNetdiskFile(
         signal,
       });
       if (!response.ok) {
-        const message = await readProviderTextBody(response, "Baidu Netdisk download error", 1024 * 1024).catch(
-          () => "",
+        const message = await readProviderTextBody(response, "Baidu Netdisk download error", 1024 * 1024, signal).catch(
+          (error: unknown) => {
+            if (isAbortLikeError(error)) throw error;
+            signal.throwIfAborted();
+            return "";
+          },
         );
         throw new ProviderRequestError(
           response.status >= 500 ? 502 : response.status,

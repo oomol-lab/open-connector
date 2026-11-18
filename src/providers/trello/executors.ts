@@ -19,6 +19,7 @@ import { createProviderFetch, ProviderRequestError, providerUserAgent } from "..
 import {
   trelloActionHandlers,
   trelloBaseUrl,
+  trelloResponseErrorCode,
   trelloBearerAuth,
   validateTrelloCredential,
   validateTrelloOAuthCredential,
@@ -83,7 +84,7 @@ export const proxy: ProviderProxyExecutor = async (input, context) => {
         response.status,
         text || `Trello request failed with HTTP ${response.status}`,
         undefined,
-        response.status === 429 ? "rate_limited" : "provider_error",
+        trelloResponseErrorCode(auth, response.status, text),
       );
     }
     return { ok: true, response: await readProviderProxyResponse(response) };

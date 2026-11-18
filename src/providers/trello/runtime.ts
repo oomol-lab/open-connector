@@ -593,8 +593,19 @@ async function trelloRequest<T>(input: TrelloRequestInput): Promise<T> {
     response.status >= 400 && response.status < 600 ? response.status : 502,
     `Trello ${input.phase} request ${failure}: ${message}`,
     undefined,
-    "provider_error",
+    trelloResponseErrorCode(auth, response.status, message),
   );
+}
+
+export function trelloResponseErrorCode(
+  auth: TrelloAuth,
+  status: number,
+  message: string,
+): "authorization_failed" | "provider_error" | undefined {
+  if (status === 401 && auth.type === "key" && message.trim() === "invalid token") {
+    return "authorization_failed";
+  }
+  return status === 401 || status === 403 ? "provider_error" : undefined;
 }
 
 function normalizeTrelloAuthError(message: string) {

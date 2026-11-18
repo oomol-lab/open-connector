@@ -122,6 +122,21 @@ describe("Trello proxy authentication", () => {
     });
   });
 
+  it.each([
+    [400, "invalid id", "invalid_input"],
+    [404, "not found", "invalid_input"],
+    [401, "invalid token", "authorization_failed"],
+  ])("maps an upstream %i with %s to %s", async (status, message, code) => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn<typeof fetch>(async () => new Response(message, { status })),
+    );
+    await expect(proxy({ method: "GET", endpoint: originalEndpoint }, context)).resolves.toMatchObject({
+      ok: false,
+      error: { code, details: { status } },
+    });
+  });
+
   it("preserves ambiguous upstream failures without requesting reauthorization", async () => {
     vi.stubGlobal(
       "fetch",
