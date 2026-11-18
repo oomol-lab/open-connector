@@ -107,6 +107,24 @@ const bodyBatteryDaySchema = s.looseObject("One day of Body Battery.", {
   ),
 });
 
+function vo2MaxEstimateSchema(description: string): JsonSchema {
+  return s.nullable(
+    s.looseObject(description, {
+      calendarDate: s.date("The calendar date of the estimate."),
+      vo2MaxValue: s.nullableNumber("VO2 max in mL/kg/min, rounded to a whole number as Garmin Connect shows it."),
+      vo2MaxPreciseValue: s.nullableNumber("VO2 max in mL/kg/min before rounding."),
+      sport: s.nullableString("The sport of the activity the estimate came from, such as RUNNING or CYCLING."),
+      subSport: s.nullableString("The sub-sport of that activity, such as GENERIC or INDOOR_CYCLING."),
+    }),
+  );
+}
+
+const vo2MaxDaySchema = s.looseObject("The VO2 max estimates Garmin holds for one day.", {
+  generic: vo2MaxEstimateSchema("The general VO2 max estimate. Null when Garmin has none for the day."),
+  cycling: vo2MaxEstimateSchema("The cycling VO2 max estimate. Null when Garmin has none for the day."),
+  rowing: vo2MaxEstimateSchema("The rowing VO2 max estimate. Null or absent when Garmin has none for the day."),
+});
+
 const heartRateDaySchema = s.looseObject("One day of heart rate.", {
   calendarDate: s.date("The calendar date of the day."),
   restingHeartRate: s.nullableInteger("The resting heart rate in beats per minute."),
@@ -279,6 +297,27 @@ export const garminConnectActions: ActionDefinition[] = [
     ),
     outputSchema: s.object("The Body Battery reports returned by Garmin Connect.", {
       days: s.array("One report per day.", bodyBatteryDaySchema),
+    }),
+  }),
+  defineProviderAction(service, {
+    name: "list_vo2_max",
+    operationType: "read",
+    description: `List the user's VO2 max estimates for a range of days: the general estimate and the cycling and rowing estimates, each with the sport of the activity it came from. Garmin lists only days that have an estimate. The range may span at most ${garminConnectMaxRangeDays.vo2Max} days.`,
+    inputSchema: s.object(
+      "The inclusive range of days to read.",
+      {
+        startDate: s.date("The first calendar date to include, in YYYY-MM-DD, on the user's local calendar."),
+        endDate: s.date(
+          `The last calendar date to include, in YYYY-MM-DD. It must not be before startDate. The range may span at most ${garminConnectMaxRangeDays.vo2Max} days, both ends included.`,
+        ),
+        sport: s.string(
+          "Only estimates from activities of this sport, such as RUNNING or CYCLING, as named in the Garmin FIT SDK. One sport per request.",
+        ),
+      },
+      { required: ["startDate", "endDate"] },
+    ),
+    outputSchema: s.object("The VO2 max estimates returned by Garmin Connect.", {
+      days: s.array("One entry per day that has an estimate; each estimate carries its calendarDate.", vo2MaxDaySchema),
     }),
   }),
   defineProviderAction(service, {

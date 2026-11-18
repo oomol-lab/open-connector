@@ -158,6 +158,14 @@ export const garminConnectActionHandlers: ProviderActionHandlers<"garmin_connect
     });
     return { days: responseList(response, "Body Battery reports") };
   },
+  async list_vo2_max(input, context) {
+    const range = readDateRange(input, garminConnectMaxRangeDays.vo2Max);
+    const response = await getGarminConnect(context, {
+      path: `/metrics-service/metrics/maxmet/daily/${encodePathSegment(range.startDate)}/${encodePathSegment(range.endDate)}`,
+      query: { sport: optionalString(input.sport) },
+    });
+    return { days: responseList(response, "VO2 max estimates") };
+  },
   async get_heart_rate(input, context) {
     const date = requiredInputString(input.date, "date");
     const heartRate = await getGarminConnect(context, {
