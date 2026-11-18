@@ -3,7 +3,13 @@ import type { TransitFileWriter } from "../../core/types.ts";
 import { posix } from "node:path";
 import { compactObject, optionalInteger, optionalString, requiredRawString, requiredString } from "../../core/cast.ts";
 import { storeResponseInTransit } from "../../core/request.ts";
-import { providerFetch, ProviderRequestError, readProviderTextBody } from "../provider-runtime.ts";
+import {
+  isAbortLikeError,
+  providerFetch,
+  ProviderRequestError,
+  readProviderTextBody,
+  runProviderRequest,
+} from "../provider-runtime.ts";
 
 export const baiduPanBaseUrl = "https://pan.baidu.com";
 const losslessIntegerKeys = new Set(["fs_id", "fsid", "pid", "uk", "request_id", "cursor"]);
@@ -124,7 +130,8 @@ export async function downloadBaiduNetdiskFile(
   input: Record<string, unknown>,
   context: BaiduNetdiskDownloadContext,
 ): Promise<Record<string, unknown>> {
-  if (!context.transitFiles) {
+  const transitFiles = context.transitFiles;
+  if (!transitFiles) {
     throw new ProviderRequestError(400, "baidu_netdisk download_file requires local transit file storage");
   }
 
@@ -141,46 +148,57 @@ export async function downloadBaiduNetdiskFile(
     signal: context.signal,
   });
   const metadata = readDownloadMetadata(metadataPayload, requestedFsId);
-  if (metadata.sizeBytes > context.transitFiles.maxBytes) {
+  if (metadata.sizeBytes > transitFiles.maxBytes) {
     throw new ProviderRequestError(
       413,
-      `Baidu Netdisk file exceeds local transit limit of ${context.transitFiles.maxBytes} bytes`,
+      `Baidu Netdisk file exceeds local transit limit of ${transitFiles.maxBytes} bytes`,
     );
   }
 
   const downloadUrl = readBaiduDownloadUrl(metadata.downloadUrl);
   downloadUrl.searchParams.set("access_token", context.accessToken);
-  const response = await providerFetch(downloadUrl, {
-    headers: {
-      accept: "*/*",
-      "user-agent": "pan.baidu.com",
+  return runProviderRequest(
+    { label: "baidu_netdisk download", timeoutMs: 300_000, signal: context.signal },
+    async (signal) => {
+      const response = await providerFetch(downloadUrl, {
+        headers: {
+          accept: "*/*",
+          "user-agent": "pan.baidu.com",
+        },
+        signal,
+      });
+      if (!response.ok) {
+        const message = await readProviderTextBody(response, "Baidu Netdisk download error", 1024 * 1024, signal).catch(
+          (error: unknown) => {
+            if (isAbortLikeError(error)) throw error;
+            signal.throwIfAborted();
+            return "";
+          },
+        );
+        throw new ProviderRequestError(
+          response.status >= 500 ? 502 : response.status,
+          message || `baidu_netdisk download failed with HTTP ${response.status}`,
+        );
+      }
+
+      const mimeType = optionalString(response.headers.get("content-type")) ?? "application/octet-stream";
+      const file = await storeResponseInTransit(response, transitFiles, {
+        name: metadata.name,
+        mimeType,
+        fieldName: "Baidu Netdisk download",
+        createError: (message) => new ProviderRequestError(413, message),
+        signal,
+      });
+
+      return {
+        fileId: metadata.fileId,
+        name: metadata.name,
+        mimeType,
+        sizeBytes: file.sizeBytes,
+        file,
+      };
     },
-    signal: context.signal,
-  });
-  if (!response.ok) {
-    const message = await readProviderTextBody(response, "Baidu Netdisk download error", 1024 * 1024).catch(() => "");
-    throw new ProviderRequestError(
-      response.status >= 500 ? 502 : response.status,
-      message || `baidu_netdisk download failed with HTTP ${response.status}`,
-    );
-  }
-
-  const mimeType = optionalString(response.headers.get("content-type")) ?? "application/octet-stream";
-  const file = await storeResponseInTransit(response, context.transitFiles, {
-    name: metadata.name,
-    mimeType,
-    fieldName: "Baidu Netdisk download",
-    createError: (message) => new ProviderRequestError(413, message),
-    signal: context.signal,
-  });
-
-  return {
-    fileId: metadata.fileId,
-    name: metadata.name,
-    mimeType,
-    sizeBytes: file.sizeBytes,
-    file,
-  };
+  );
 }
 
 interface BaiduDownloadMetadata {

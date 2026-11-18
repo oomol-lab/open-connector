@@ -476,7 +476,7 @@ export const cloudflareWorkerActions: ActionDefinition[] = [
         page: s.positiveInteger("The result page number."),
         perPage: s.positiveInteger("The page size."),
         order: s.stringEnum("The sort direction.", ["asc", "desc"]),
-        orderBy: s.nonEmptyString("The field to order by."),
+        orderBy: s.stringEnum("The field to order by.", ["deployed_on", "updated_on", "created_on", "name"]),
       },
       { optional: ["accountId", "page", "perPage", "order", "orderBy"] },
     ),
