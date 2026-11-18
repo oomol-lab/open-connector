@@ -53,8 +53,9 @@ export function readIdempotencyKey(value: string | undefined): IdempotencyKeyRes
 /**
  * Hash an idempotency key before it crosses the runtime storage boundary.
  */
-export function hashIdempotencyKey(key: string): string {
-  return sha256(key);
+export function hashIdempotencyKey(key: string, scope?: string): string {
+  // Keys are namespaced per isolation scope so one scope can never observe or replay another's key.
+  return sha256(scope === undefined ? key : `${scope}\u0000${key}`);
 }
 
 /**

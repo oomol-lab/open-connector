@@ -160,7 +160,7 @@ export function createRuntimeExecutionRoutes({
     }
 
     const now = new Date();
-    const keyHash = hashIdempotencyKey(idempotencyKey.key);
+    const keyHash = hashIdempotencyKey(idempotencyKey.key, runtimeGrant?.scope);
     let requestHash: string;
     try {
       requestHash = hashActionRequest({

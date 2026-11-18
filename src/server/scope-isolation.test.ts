@@ -127,6 +127,22 @@ describe("scope isolation", () => {
     expect((await reconnect.json()).data.scope).toBe("tenant-a");
   });
 
+  it("namespaces idempotency keys per scope so one tenant cannot collide with or replay another's key", async () => {
+    const fetcher = stubProvider();
+    runtime = await createConnectorRuntime(await fixture());
+    const a = await tenant("tenant-a", "key-a");
+    const b = await tenant("tenant-b", "key-b");
+    const base = fetcher.mock.calls.length;
+    const key = { "idempotency-key": "shared-key" };
+    expect((await execute(a.token, a.alias, undefined, key)).status).toBe(200);
+    // Same key from another scope is a fresh request: no 409 oracle, no replayed response.
+    expect((await execute(b.token, b.alias, undefined, key)).status).toBe(200);
+    expect(fetcher).toHaveBeenCalledTimes(base + 2);
+    // Within one scope the key still replays.
+    expect((await execute(a.token, a.alias, undefined, key)).status).toBe(200);
+    expect(fetcher).toHaveBeenCalledTimes(base + 2);
+  });
+
   it("records the scope on runs, lists them per scope, and purges one scope without touching another", async () => {
     stubProvider();
     runtime = await createConnectorRuntime(await fixture());
@@ -180,7 +196,12 @@ async function tenant(scope: string, apiKey: string): Promise<Tenant> {
   return { token: await createToken(scope), alias: body.alias, connectionId: body.id, apiKey };
 }
 
-function execute(token: string, alias?: string, connectionId?: string): Promise<Response> {
+function execute(
+  token: string,
+  alias?: string,
+  connectionId?: string,
+  headers: Record<string, string> = {},
+): Promise<Response> {
   return runtime!.fetch(
     new Request(`${publicOrigin}/v1/actions/ninjapear.get_credit_balance`, {
       method: "POST",
@@ -189,6 +210,7 @@ function execute(token: string, alias?: string, connectionId?: string): Promise<
         "content-type": "application/json",
         ...(alias ? { "x-oo-connector-alias": alias } : {}),
         ...(connectionId ? { "x-oo-connector-app-id": connectionId } : {}),
+        ...headers,
       },
       body: JSON.stringify({ input: {} }),
     }),

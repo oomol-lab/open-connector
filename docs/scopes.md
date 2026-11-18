@@ -30,4 +30,8 @@ count-based `runLimit`.
 
 - Connection names are unique per service across scopes rather than per scope.
 - Proxy calls are not recorded as runs, and runs carry no trace id.
-- Idempotency records, trigger subscriptions and the console are not scope-filtered beyond the connection check.
+- Idempotency keys are namespaced by the token's scope, so one scope cannot collide with or replay another's key.
+  Trigger subscriptions can be listed per scope (`GET /api/trigger-subscriptions?scope=`) through their connection;
+  cancel them before deleting a scope's connections.
+- Transit files are addressed by an unguessable id and expire, but are not bound to a scope: any runtime caller that
+  holds the id can read it. The console is not scope-filtered beyond the connection check.

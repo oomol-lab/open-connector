@@ -42,8 +42,8 @@ export class TriggerMaintenance {
     this.options = options;
   }
 
-  async list(): Promise<TriggerSubscriptionSummary[]> {
-    return (await this.options.store.list())
+  async list(scope?: string): Promise<TriggerSubscriptionSummary[]> {
+    return (await this.options.store.list(scope))
       .filter((record) => record.mode !== "resource-set")
       .map((record) => ({
         id: record.id,

@@ -53,7 +53,9 @@ export function createTriggerRoutes({
     return writeRuntimeSuccess(context, result);
   });
 
-  app.get("/api/trigger-subscriptions", async (context) => context.json((await triggerMaintenance?.list()) ?? []));
+  app.get("/api/trigger-subscriptions", async (context) =>
+    context.json((await triggerMaintenance?.list(optionalString(context.req.query("scope")))) ?? []),
+  );
 
   app.post("/api/trigger-subscriptions/:id/cancel", async (context) => {
     if (!triggerMaintenance)

@@ -65,6 +65,25 @@ export function triggerStoreTests(getDatabase: () => RuntimeDatabase): void {
     return { database, connection, token, record };
   }
 
+  it("lists subscriptions per connection scope", async () => {
+    const { database, token, record } = await fixture();
+    const store = database.triggerStore;
+    const other = await database.connectionStore.set("github", "scoped-account", credential("scoped"), "tenant-a");
+    await store.insertFlowTrigger(record);
+    const scopedRecord = {
+      ...record,
+      id: `subscription-${crypto.randomUUID()}`,
+      connectionId: other.id,
+      connectionRevision: other.revision,
+      providerAccountId: "scoped",
+      tokenId: token.id,
+    };
+    await store.insertFlowTrigger(scopedRecord);
+    expect((await store.list()).map((item) => item.id)).toEqual(expect.arrayContaining([record.id, scopedRecord.id]));
+    expect((await store.list("tenant-a")).map((item) => item.id)).toEqual([scopedRecord.id]);
+    expect(await store.list("tenant-b")).toEqual([]);
+  });
+
   it("persists ownership and enforces lease expiry and stale saves", async () => {
     const { database, record } = await fixture();
     const store = database.triggerStore;
