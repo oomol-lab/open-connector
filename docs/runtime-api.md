@@ -60,6 +60,8 @@ The unrestricted token can omit a connection name or send `work`. The work-only 
 with `x-oo-connector-alias: work`, MCP `connectionName: "work"`, or the equivalent proxy alias; an
 omitted name or `default` returns `connection_not_allowed`.
 
+To serve several tenants from one runtime, see [Scopes](scopes.md).
+
 The Node server accepts JWT access tokens when `OOMOL_CONNECT_JWKS_URI`,
 `OOMOL_CONNECT_JWT_ISSUER`, and `OOMOL_CONNECT_JWT_AUDIENCE` are configured together. JWT
 authentication coexists with existing runtime tokens and does not apply to admin endpoints. See
