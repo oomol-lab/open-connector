@@ -26,12 +26,26 @@ Runs record the scope of the token that made them. `GET /api/runs?scope=...` lis
 `DELETE /api/runs?scope=...` deletes it, so a tenant's history can be removed on offboarding independently of the
 count-based `runLimit`.
 
+## Transit files
+
+Files that an action creates carry the scope of the token that ran it, on all four backends (local disk, S3, R2, KV),
+and the executor can read back only files of that scope. A runtime token that has no scope sees only unscoped files.
+`POST /api/files?scope=...` (admin) uploads a file into a scope.
+
+`GET /api/files/:id` stays open for files that belong to no scope. A scoped file is served only to a bearer of the same
+scope or to the admin token, and to anyone else it is `404 file_not_found`, the same answer as a missing file. A host
+that hands a scoped `downloadUrl` to a browser must therefore proxy the download with the scoped token.
+`DELETE /api/files/:id` follows the same rule.
+
+## Deleting a scope
+
+`DELETE /api/scopes/:scope` (admin) revokes the scope's runtime tokens, cancels its trigger subscriptions, disconnects
+its connections (revoking OAuth grants), purges its runs and deletes its transit files. It answers `200` with the
+counts, or `207` with a `failures` list when a step failed; call it again to finish. Nothing outside the scope is touched.
+
 ## Not covered yet
 
 - Connection names are unique per service across scopes rather than per scope.
 - Proxy calls are not recorded as runs, and runs carry no trace id.
-- Idempotency keys are namespaced by the token's scope, so one scope cannot collide with or replay another's key.
-  Trigger subscriptions can be listed per scope (`GET /api/trigger-subscriptions?scope=`) through their connection;
-  cancel them before deleting a scope's connections.
-- Transit files are addressed by an unguessable id and expire, but are not bound to a scope: any runtime caller that
-  holds the id can read it. The console is not scope-filtered beyond the connection check.
+- Deleting a scope leaves its idempotency records, which expire on their own.
+- The console is an operator view and is not filtered by scope.

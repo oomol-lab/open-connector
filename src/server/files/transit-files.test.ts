@@ -6,6 +6,7 @@ import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { setImmediate } from "node:timers/promises";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { expectScopeIsolation } from "./transit-file-scope.cases.ts";
 import { TransitFileError } from "./transit-file-store.ts";
 import { TransitFileService } from "./transit-files.ts";
 
@@ -28,6 +29,10 @@ afterEach(async () => {
 });
 
 describe("TransitFileService", () => {
+  it("binds files to a scope", async () => {
+    await expectScopeIsolation((await createService()).service);
+  });
+
   it("rejects a locked source without opening a destination", async () => {
     const { rootDir, service } = await createService();
     const body = new ReadableStream<Uint8Array>();

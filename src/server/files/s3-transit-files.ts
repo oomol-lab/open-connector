@@ -1,19 +1,23 @@
-import type { TransitFileRead, TransitFileUpload } from "../../core/types.ts";
+import type { TransitFileAccess, TransitFileRead, TransitFileUpload } from "../../core/types.ts";
 import type { IStagedTransitFileService, StagedTransitFile, TransitFileInfo } from "./transit-file-store.ts";
-import type { GetObjectCommandOutput } from "@aws-sdk/client-s3";
+import type { GetObjectCommandOutput, HeadObjectCommandOutput } from "@aws-sdk/client-s3";
 
 import {
   DeleteObjectCommand,
   GetObjectCommand,
   HeadObjectCommand,
+  ListObjectsV2Command,
   PutObjectCommand,
   S3Client,
   S3ServiceException,
 } from "@aws-sdk/client-s3";
 import { createReadStream } from "node:fs";
 import {
+  assertFileAccess,
+  canAccessFile,
   assertFileSize,
   assertSafeFileId,
+  isSafeFileId,
   contentTypeFromFileId,
   normalizeDescriptor,
   objectKey,
@@ -78,13 +82,14 @@ export class S3TransitFileService implements IStagedTransitFileService {
     this.maxBytes = options.maxBytes;
   }
 
-  async create(file: File): Promise<TransitFileUpload> {
+  async create(file: File, options?: TransitFileAccess): Promise<TransitFileUpload> {
     assertFileSize(file.size, this.maxBytes);
     const fileId = `${randomHex(16)}${safeExtension(file.name)}`;
     const metadata = {
       ...normalizeDescriptor({ name: file.name || fileId, mimeType: file.type || contentTypeFromFileId(fileId) }),
       sizeBytes: file.size,
     };
+    const scope = options?.scope;
 
     await this.client.send(
       new PutObjectCommand({
@@ -93,7 +98,7 @@ export class S3TransitFileService implements IStagedTransitFileService {
         Body: new Uint8Array(await file.arrayBuffer()),
         ContentLength: file.size,
         ContentType: metadata.mimeType,
-        Metadata: { filename: encodeFileName(metadata.name) },
+        Metadata: objectMetadata(metadata.name, scope),
       }),
     );
 
@@ -115,33 +120,57 @@ export class S3TransitFileService implements IStagedTransitFileService {
         Body: createReadStream(file.path),
         ContentLength: file.sizeBytes,
         ContentType: metadata.mimeType,
-        Metadata: { filename: encodeFileName(metadata.name) },
+        Metadata: objectMetadata(metadata.name, file.scope),
       }),
     );
 
     return uploadResult(this.publicOrigin, fileId, metadata);
   }
 
-  async read(fileId: string): Promise<TransitFileRead> {
-    const { object, metadata } = await this.readObject(fileId);
+  async read(fileId: string, access?: TransitFileAccess): Promise<TransitFileRead> {
+    const { object, metadata } = await this.readObject(fileId, access);
     return transitFileRead(Uint8Array.from(await object.Body!.transformToByteArray()), metadata);
   }
 
-  async response(fileId: string): Promise<Response> {
-    const { object, metadata } = await this.readObject(fileId);
+  async response(fileId: string, access?: TransitFileAccess): Promise<Response> {
+    const { object, metadata } = await this.readObject(fileId, access);
     return transitFileResponse(object.Body!.transformToWebStream(), metadata);
   }
 
-  async delete(fileId: string): Promise<boolean> {
+  async delete(fileId: string, access?: TransitFileAccess): Promise<boolean> {
     assertSafeFileId(fileId);
-    const existing = await this.objectExists(fileId);
+    const head = await this.headObject(fileId);
+    const existing = head !== undefined;
+    if (access !== undefined && (!head || !canAccessFile(head.Metadata?.scope, access))) return false;
     await this.client.send(new DeleteObjectCommand({ Bucket: this.bucket, Key: objectKey(fileId) }));
     return existing;
   }
 
+  async deleteByScope(scope: string): Promise<number> {
+    let deleted = 0;
+    let token: string | undefined;
+    do {
+      const page = await this.client.send(
+        new ListObjectsV2Command({ Bucket: this.bucket, Prefix: "transit/", ContinuationToken: token }),
+      );
+      for (const item of page.Contents ?? []) {
+        const fileId = item.Key?.slice("transit/".length);
+        if (!fileId || !isSafeFileId(fileId)) continue;
+        if ((await this.headObject(fileId))?.Metadata?.scope !== scope) continue;
+        await this.client.send(new DeleteObjectCommand({ Bucket: this.bucket, Key: objectKey(fileId) }));
+        deleted += 1;
+      }
+      token = page.IsTruncated ? page.NextContinuationToken : undefined;
+    } while (token);
+    return deleted;
+  }
+
   async cleanupExpired(): Promise<void> {}
 
-  private async readObject(fileId: string): Promise<{
+  private async readObject(
+    fileId: string,
+    access?: TransitFileAccess,
+  ): Promise<{
     object: GetObjectCommandOutput;
     metadata: TransitFileInfo;
   }> {
@@ -152,6 +181,7 @@ export class S3TransitFileService implements IStagedTransitFileService {
       throw new TransitFileError(404, "file_not_found", "Transit file was not found.");
     }
 
+    assertFileAccess(object.Metadata?.scope, access);
     return {
       object,
       metadata: {
@@ -175,13 +205,12 @@ export class S3TransitFileService implements IStagedTransitFileService {
     }
   }
 
-  private async objectExists(fileId: string): Promise<boolean> {
+  private async headObject(fileId: string): Promise<HeadObjectCommandOutput | undefined> {
     try {
-      await this.client.send(new HeadObjectCommand({ Bucket: this.bucket, Key: objectKey(fileId) }));
-      return true;
+      return await this.client.send(new HeadObjectCommand({ Bucket: this.bucket, Key: objectKey(fileId) }));
     } catch (error) {
       if (isNotFound(error)) {
-        return false;
+        return undefined;
       }
       throw error;
     }
@@ -190,6 +219,10 @@ export class S3TransitFileService implements IStagedTransitFileService {
   private isExpired(lastModified: Date): boolean {
     return Date.now() - lastModified.getTime() > this.ttlMs;
   }
+}
+
+function objectMetadata(name: string, scope: string | undefined): Record<string, string> {
+  return { filename: encodeFileName(name), ...(scope === undefined ? {} : { scope }) };
 }
 
 function encodeFileName(name: string): string {

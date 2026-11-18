@@ -163,7 +163,99 @@ describe("scope isolation", () => {
     expect((await (await call("/api/runs?scope=tenant-a", undefined, "admin-token")).json()).items).toEqual([]);
     expect((await (await call("/api/runs?scope=tenant-b", undefined, "admin-token")).json()).items).toHaveLength(1);
   });
+  it("serves a scoped transit file only to its own scope, and keeps unscoped files downloadable", async () => {
+    stubProvider();
+    runtime = await createConnectorRuntime(await fixture());
+    const a = await tenant("tenant-a", "key-a");
+    const b = await tenant("tenant-b", "key-b");
+    const scoped = await upload("a.txt", "alpha", "tenant-a");
+    const plain = await upload("p.txt", "plain");
+
+    const download = async (fileId: string, token?: string) =>
+      runtime!.fetch(
+        new Request(
+          `${publicOrigin}/api/files/${fileId}`,
+          token ? { headers: { authorization: `Bearer ${token}` } } : {},
+        ),
+      );
+    expect((await download(scoped)).status).toBe(404);
+    expect((await download(scoped, b.token)).status).toBe(404);
+    expect((await download(scoped, "runtime-token")).status).toBe(404);
+    expect(await (await download(scoped, a.token)).text()).toBe("alpha");
+    expect(await (await download(scoped, "admin-token")).text()).toBe("alpha");
+    // An unscoped file keeps its public, unguessable-id download.
+    expect(await (await download(plain)).text()).toBe("plain");
+    expect((await download(plain, a.token)).status).toBe(404);
+
+    // Another scope cannot delete it; its own scope can.
+    const remove = (token: string) =>
+      runtime!.fetch(
+        new Request(`${publicOrigin}/api/files/${scoped}`, {
+          method: "DELETE",
+          headers: { authorization: `Bearer ${token}` },
+        }),
+      );
+    expect(await (await remove(b.token)).json()).toMatchObject({ deleted: false });
+    expect(await (await remove(a.token)).json()).toMatchObject({ deleted: true });
+  });
+
+  it("deletes a scope: tokens, connections, runs and files go, other scopes stay", async () => {
+    stubProvider();
+    runtime = await createConnectorRuntime(await fixture());
+    const a = await tenant("tenant-a", "key-a");
+    const b = await tenant("tenant-b", "key-b");
+    await execute(a.token, a.alias);
+    await execute(b.token, b.alias);
+    const fileA = await upload("a.txt", "alpha", "tenant-a");
+    const fileB = await upload("b.txt", "beta", "tenant-b");
+
+    expect((await call("/api/scopes/has space", undefined, "admin-token", "DELETE")).status).toBe(400);
+    const removed = await call("/api/scopes/tenant-a", undefined, "admin-token", "DELETE");
+    expect(removed.status).toBe(200);
+    expect(await removed.json()).toEqual({
+      scope: "tenant-a",
+      complete: true,
+      deleted: {
+        runtimeTokens: 1,
+        connectionRequests: 0,
+        triggerSubscriptions: 0,
+        connections: 1,
+        runs: 1,
+        transitFiles: 1,
+      },
+      failures: [],
+    });
+
+    expect((await execute(a.token, a.alias)).status).toBe(401);
+    const connections = (await (await call("/v1/connections", undefined, "admin-token")).json()).data as Array<{
+      scope?: string;
+    }>;
+    expect(connections.some((connection) => connection.scope === "tenant-a")).toBe(false);
+    expect((await (await call("/api/runs?scope=tenant-a", undefined, "admin-token")).json()).items).toEqual([]);
+    const fetchFile = (id: string) =>
+      runtime!.fetch(
+        new Request(`${publicOrigin}/api/files/${id}`, { headers: { authorization: "Bearer admin-token" } }),
+      );
+    expect((await fetchFile(fileA)).status).toBe(404);
+    // The other scope is untouched.
+    expect((await execute(b.token, b.alias)).status).toBe(200);
+    expect(await (await fetchFile(fileB)).text()).toBe("beta");
+  });
 });
+
+async function upload(name: string, content: string, scope?: string): Promise<string> {
+  const form = new FormData();
+  form.set("file", new File([content], name, { type: "text/plain" }));
+  const response = await runtime!.fetch(
+    new Request(`${publicOrigin}/api/files${scope ? `?scope=${scope}` : ""}`, {
+      method: "POST",
+      headers: { authorization: "Bearer admin-token" },
+      body: form,
+    }),
+  );
+  expect(response.status).toBe(200);
+  return (await response.json()).fileId;
+}
 
 function stubProvider(): ReturnType<typeof vi.fn<typeof fetch>> {
   const fetcher = vi.fn<typeof fetch>(async () => Response.json({ credit_balance: 100 }));

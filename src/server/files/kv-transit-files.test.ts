@@ -2,9 +2,14 @@ import type { KVNamespaceBinding } from "../cloudflare/cloudflare-bindings.ts";
 
 import { describe, expect, it } from "vitest";
 import { KVTransitFileService } from "./kv-transit-files.ts";
+import { expectScopeIsolation } from "./transit-file-scope.cases.ts";
 import { TransitFileError } from "./transit-file-store.ts";
 
 describe("KVTransitFileService", () => {
+  it("binds files to a scope", async () => {
+    await expectScopeIsolation(createService(new MemoryKVNamespace()));
+  });
+
   it("uploads, reads, and deletes transit files", async () => {
     const namespace = new MemoryKVNamespace();
     const service = createService(namespace);
@@ -202,6 +207,13 @@ class MemoryKVNamespace implements KVNamespaceBinding {
 
   async delete(key: string): Promise<void> {
     this.store.delete(key);
+  }
+
+  async list(options?: { prefix?: string; cursor?: string }) {
+    return {
+      keys: [...this.store.keys()].filter((name) => name.startsWith(options?.prefix ?? "")).map((name) => ({ name })),
+      list_complete: true,
+    };
   }
 
   has(key: string): boolean {

@@ -360,17 +360,28 @@ export interface TransitFileStream {
   name: string;
   mimeType: string;
   signal?: AbortSignal;
+  /** Opaque scope the file is bound to; omitted for a file that belongs to no scope. */
+  scope?: string;
+}
+
+/**
+ * The scope a transit file is created in or read from. Omit it for operator access, which sees every file. Pass
+ * `{ scope }` to see only files bound to that scope, and `{}` to see only files bound to no scope. Any other file
+ * reads as not found.
+ */
+export interface TransitFileAccess {
+  scope?: string;
 }
 
 export interface TransitFileStore {
   readonly maxBytes: number;
-  create(file: File): Promise<TransitFileUpload>;
+  create(file: File, options?: TransitFileAccess): Promise<TransitFileUpload>;
   /** Available only on backends that can store unknown-length streams without buffering the file. */
   createFromStream?(file: TransitFileStream): Promise<TransitFileUpload>;
-  read(fileId: string): Promise<TransitFileRead>;
+  read(fileId: string, access?: TransitFileAccess): Promise<TransitFileRead>;
   /** Stream a stored file for provider uploads without materializing its bytes. */
-  response?(fileId: string): Promise<Response>;
-  delete(fileId: string): Promise<boolean>;
+  response?(fileId: string, access?: TransitFileAccess): Promise<Response>;
+  delete(fileId: string, access?: TransitFileAccess): Promise<boolean>;
 }
 
 export type TransitFileWriter = TransitFileStore;

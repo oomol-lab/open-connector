@@ -22,6 +22,7 @@ import {
   withProviderHttpDispatchResult,
 } from "../../providers/provider-runtime.ts";
 import { SaasError, saasExecutionFailureKind } from "../../saas/saas-client.ts";
+import { bindTransitFilesToScope } from "../files/transit-file-store.ts";
 import { safeRunLogError, summarizeForRunLog } from "./run-log-summary.ts";
 
 export interface ActionRunnerOptions extends RuntimeExecutionOptions {
@@ -181,6 +182,7 @@ export class ActionRunner {
           this.createExecutionContext(
             async (service) => (connection?.kind === "local" ? connection.getCredential(service) : undefined),
             input.signal,
+            input.scope,
           ),
         );
         if (input.signal?.aborted) {
@@ -289,6 +291,7 @@ export class ActionRunner {
   private createExecutionContext(
     getCredential: ExecutionContext["getCredential"],
     signal: AbortSignal | undefined,
+    scope: string | undefined,
   ): ExecutionContext {
     const context: ExecutionContext = {
       getCredential,
@@ -296,7 +299,8 @@ export class ActionRunner {
       logger: this.options.logger,
     };
     if (this.options.transitFiles) {
-      context.transitFiles = this.options.transitFiles;
+      // Files an executor creates carry the caller's scope, and it can read back only files of that scope.
+      context.transitFiles = bindTransitFilesToScope(this.options.transitFiles, scope);
     }
     return context;
   }

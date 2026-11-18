@@ -1,4 +1,4 @@
-import type { TransitFileUpload } from "../../core/types.ts";
+import type { TransitFileAccess, TransitFileUpload } from "../../core/types.ts";
 import type { IStagedTransitFileService, StagedTransitFile } from "./transit-file-store.ts";
 
 import Busboy from "busboy";
@@ -16,14 +16,15 @@ export interface NodeTransitFileUploadOptions {
 
 export function createNodeTransitFileUpload(
   options: NodeTransitFileUploadOptions,
-): (request: Request) => Promise<TransitFileUpload> {
-  return async (request) => {
+): (request: Request, uploadOptions?: TransitFileAccess) => Promise<TransitFileUpload> {
+  return async (request, uploadOptions) => {
     await mkdir(options.tempDir, { recursive: true });
     const path = join(options.tempDir, `${randomHex(16)}.tmp`);
     try {
-      return await options.transitFiles.createFromPath(
-        await stageMultipartFile(request, path, options.transitFiles.maxBytes),
-      );
+      return await options.transitFiles.createFromPath({
+        ...(await stageMultipartFile(request, path, options.transitFiles.maxBytes)),
+        ...(uploadOptions?.scope === undefined ? {} : { scope: uploadOptions.scope }),
+      });
     } finally {
       await unlink(path).catch(() => undefined);
     }

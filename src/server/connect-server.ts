@@ -62,6 +62,7 @@ import { createRuntimeCatalogRoutes } from "./api/runtime-catalog-routes.ts";
 import { createRuntimeExecutionRoutes } from "./api/runtime-execution-routes.ts";
 import { createSaasOAuthRoutes } from "./api/saas-oauth-routes.ts";
 import { createSaasProjectRoutes } from "./api/saas-project-routes.ts";
+import { createScopeRoutes } from "./api/scope-routes.ts";
 import { createTransitFileRoutes } from "./api/transit-file-routes.ts";
 import { createTriggerRoutes } from "./api/trigger-routes.ts";
 import { CimdClient } from "./oauth/cimd-client.ts";
@@ -328,6 +329,7 @@ export class ConnectServer {
     }
     app.route("/api", createRunLogRoutes({ actions: this.options.actions }));
     app.route("/api", createTransitFileRoutes(this.options));
+    app.route("/api", createScopeRoutes(this.options));
     app.route(
       "/api",
       createPolicyRoutes({

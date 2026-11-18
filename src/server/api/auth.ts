@@ -81,11 +81,17 @@ export function createLocalAuthMiddleware(options: LocalAuthOptions): Middleware
 
   const authenticate = async (context: Context): Promise<Response | undefined> => {
     const scope = readAuthScope(context.req.path, context.req.method);
+    if (adminToken && matchesConfiguredToken(context, adminToken)) adminBearerRequests.add(context.req.raw);
     if (isPublicPath(context.req.path, context.req.method)) {
+      // A download stays open for unscoped files, but a bearer identifies the caller so scoped files can be served.
+      if (
+        isTransitFileDownload(context.req.path, context.req.method) &&
+        readBearerToken(context) &&
+        !hasAdminBearer(context)
+      )
+        await hasValidRuntimeToken(context, options);
       return;
     }
-
-    if (adminToken && matchesConfiguredToken(context, adminToken)) adminBearerRequests.add(context.req.raw);
     if (await hasValidToken(context, options, scope)) {
       if (scope === "admin") {
         await installAdminCookieForBearer(context, options);
@@ -309,6 +315,10 @@ function matchesConfiguredToken(context: Context, token: string): boolean {
 function normalizeToken(token: string | undefined): string | undefined {
   const value = token?.trim();
   return value ? value : undefined;
+}
+
+function isTransitFileDownload(path: string, method: string): boolean {
+  return method === "GET" && path.startsWith("/api/files/");
 }
 
 function isTransitFileDelete(path: string, method: string): boolean {

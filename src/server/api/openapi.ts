@@ -751,6 +751,35 @@ export function createOpenApiDocument(options: OpenApiDocumentOptions = {}): Ope
         },
       },
     },
+    "/api/scopes/{scope}": {
+      delete: {
+        tags: ["Access"],
+        summary: "Delete a scope: revoke its tokens, cancel its triggers, remove its connections, runs and files.",
+        parameters: [
+          {
+            name: "scope",
+            in: "path",
+            required: true,
+            schema: { type: "string", pattern: "^[A-Za-z0-9._:-]{1,128}$" },
+            description: "The scope to offboard. Other scopes are not touched.",
+          },
+        ],
+        responses: {
+          200: jsonResponse({
+            type: "object",
+            properties: {
+              scope: { type: "string" },
+              complete: { type: "boolean" },
+              deleted: { type: "object", additionalProperties: { type: "integer" } },
+              failures: { type: "array", items: { type: "object", additionalProperties: true } },
+            },
+            required: ["scope", "complete", "deleted", "failures"],
+          }),
+          207: jsonResponse({ type: "object", additionalProperties: true }),
+          400: jsonResponse({ $ref: "#/components/schemas/ErrorResponse" }),
+        },
+      },
+    },
     "/api/runs": createRunsPath(),
     "/api/runs/{id}": createRunDetailPath(),
     "/mcp": createMcpPath(),

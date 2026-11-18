@@ -177,6 +177,7 @@ async function benchmark(directory: string, scenario: Scenario, concurrency: num
         delete: unexpectedFileOperation,
         response: unexpectedFileOperation,
         cleanupExpired: unexpectedFileOperation,
+        deleteByScope: unexpectedFileOperation,
       },
       secretCodec,
       publicOrigin: origin,

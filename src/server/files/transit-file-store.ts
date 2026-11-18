@@ -1,4 +1,4 @@
-import type { TransitFileRead, TransitFileStore, TransitFileUpload } from "../../core/types.ts";
+import type { TransitFileAccess, TransitFileRead, TransitFileStore, TransitFileUpload } from "../../core/types.ts";
 
 import { extname } from "node:path";
 
@@ -16,6 +16,8 @@ export interface TransitFileInfo extends TransitFileDescriptor {
 /** Stored side-car metadata for one transit file. */
 export interface TransitFileMetadata extends TransitFileInfo {
   createdAt: string;
+  /** Scope the file is bound to, absent for an unscoped file. */
+  scope?: string;
 }
 
 export interface StagedTransitFile {
@@ -23,11 +25,14 @@ export interface StagedTransitFile {
   sizeBytes: number;
   name: string;
   mimeType: string;
+  scope?: string;
 }
 
 export interface ITransitFileService extends TransitFileStore {
-  response(fileId: string): Promise<Response>;
+  response(fileId: string, access?: TransitFileAccess): Promise<Response>;
   cleanupExpired(): Promise<void>;
+  /** Delete every file bound to `scope` and report how many were removed. */
+  deleteByScope(scope: string): Promise<number>;
 }
 
 export interface IStagedTransitFileService extends ITransitFileService {
@@ -43,6 +48,39 @@ export class TransitFileError extends Error {
     this.status = status;
     this.code = code;
   }
+}
+
+/** Operator access (no `access`) sees every file; any other caller sees only files of its own scope. */
+export function canAccessFile(fileScope: string | undefined, access: TransitFileAccess | undefined): boolean {
+  return access === undefined || (fileScope || undefined) === access.scope;
+}
+
+/** Report a file the caller may not see as missing, with the same error as a file that does not exist. */
+export function assertFileAccess(fileScope: string | undefined, access: TransitFileAccess | undefined): void {
+  if (!canAccessFile(fileScope, access))
+    throw new TransitFileError(404, "file_not_found", "Transit file was not found.");
+}
+
+/** Wrap a store so every call is bound to one scope: new files carry it and reads only see files of that scope. */
+export function bindTransitFilesToScope(store: TransitFileStore, scope: string | undefined): TransitFileStore {
+  const access: TransitFileAccess = scope === undefined ? {} : { scope };
+  const bound: TransitFileStore = {
+    get maxBytes() {
+      return store.maxBytes;
+    },
+    create: (file) => store.create(file, scope === undefined ? undefined : { scope }),
+    read: (fileId) => store.read(fileId, access),
+    delete: (fileId) => store.delete(fileId, access),
+  };
+  if (store.createFromStream) {
+    const createFromStream = store.createFromStream.bind(store);
+    bound.createFromStream = (file) => createFromStream(scope === undefined ? file : { ...file, scope });
+  }
+  if (store.response) {
+    const response = store.response.bind(store);
+    bound.response = (fileId) => response(fileId, access);
+  }
+  return bound;
 }
 
 /** Reject a payload larger than the backend's configured upload limit. */
@@ -218,5 +256,32 @@ export function normalizeMetadata(input: Partial<TransitFileMetadata>): TransitF
     ...normalizeDescriptor(input),
     createdAt: typeof input.createdAt === "string" && input.createdAt ? input.createdAt : new Date().toISOString(),
     sizeBytes: typeof input.sizeBytes === "number" && Number.isFinite(input.sizeBytes) ? input.sizeBytes : 0,
+    ...(typeof input.scope === "string" && input.scope ? { scope: input.scope } : {}),
   };
+}
+
+/**
+ * Delete every file of one scope from a store that keeps metadata in `transit/<id>.meta.json` sidecars (KV, R2).
+ * `listPage` returns one page of keys under `transit/` and the cursor of the next page.
+ */
+export async function deleteScopedSidecarFiles(
+  scope: string,
+  listPage: (cursor: string | undefined) => Promise<{ keys: string[]; cursor?: string }>,
+  readScope: (fileId: string) => Promise<string | undefined>,
+  remove: (fileId: string) => Promise<unknown>,
+): Promise<number> {
+  let deleted = 0;
+  let cursor: string | undefined;
+  do {
+    const page = await listPage(cursor);
+    for (const key of page.keys) {
+      if (!key.endsWith(".meta.json")) continue;
+      const fileId = key.slice("transit/".length, -".meta.json".length);
+      if (!isSafeFileId(fileId) || (await readScope(fileId)) !== scope) continue;
+      await remove(fileId);
+      deleted += 1;
+    }
+    cursor = page.cursor;
+  } while (cursor);
+  return deleted;
 }
