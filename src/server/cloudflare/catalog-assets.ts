@@ -2,7 +2,7 @@ import type { CatalogStore, ExecutableActionOptions } from "../../catalog-store.
 import type { ProviderDefinition } from "../../core/types.ts";
 import type { AssetsBinding } from "./cloudflare-bindings.ts";
 
-import { createCatalogStore, resolveExecutableActionIds } from "../../catalog-store.ts";
+import { createCatalogStore, mergeCustomProviders, resolveExecutableActionIds } from "../../catalog-store.ts";
 
 const catalogIndexPath = "/catalog/index.json";
 const chunkNamePattern = /^apps-\d{4}\.json$/;
@@ -16,7 +16,7 @@ interface CatalogAssetIndex {
 
 export async function loadCatalogFromAssets(
   assets: AssetsBinding,
-  options: ExecutableActionOptions = {},
+  options: ExecutableActionOptions & { customProviders?: readonly ProviderDefinition[] } = {},
 ): Promise<CatalogStore> {
   const index = parseCatalogIndex(await readJsonAsset(assets, catalogIndexPath), catalogIndexPath);
   const chunks = await Promise.all(index.chunks.map((chunk) => requireProviderArrayAsset(assets, `/catalog/${chunk}`)));
@@ -27,7 +27,7 @@ export async function loadCatalogFromAssets(
     );
   }
 
-  return createCatalog(providers, options);
+  return createCatalog(mergeCustomProviders(providers, options.customProviders ?? []), options);
 }
 
 function createCatalog(providers: ProviderDefinition[], options: ExecutableActionOptions): CatalogStore {

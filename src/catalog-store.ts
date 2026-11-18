@@ -117,6 +117,11 @@ export interface LoadCatalogOptions extends ExecutableActionOptions {
    * provider file; ignored otherwise.
    */
   lazySchemaIndexFile?: string;
+  /**
+   * Providers supplied by the host instead of `catalogDir`, already validated by `registerCustomProviders`, merged
+   * into the loaded catalog. A service that is already in `catalogDir` is rejected rather than shadowed.
+   */
+  customProviders?: readonly ProviderDefinition[];
 }
 
 export function createCatalogStore(
@@ -242,17 +247,56 @@ export async function loadCatalog(catalogDir: string, options: LoadCatalogOption
     .filter((entry) => entry.isFile() && entry.name.endsWith(".json"))
     .map((entry) => entry.name);
   const filePaths = fileNames.map((name) => join(catalogDir, name));
+  const extra = prepareExtraProviders(options.customProviders ?? []);
   if (options.lazySchemas) {
     const indexed = options.lazySchemaIndexFile
       ? await readCatalogIndex({ indexFile: options.lazySchemaIndexFile, catalogDir, fileNames })
       : undefined;
     const source = await loadFileCatalog(filePaths, indexed, options.lazySchemaCacheFiles);
-    return createCatalogFromMetadata(source.providers, source.readAction, {
-      executableActionIds: resolveExecutableActionIds(source.providers, options),
+    assertNoServiceOverlap(source.providers, extra.metadata);
+    const providers = [...source.providers, ...extra.metadata];
+    return createCatalogFromMetadata(providers, async (id) => extra.actions.get(id) ?? source.readAction(id), {
+      executableActionIds: resolveExecutableActionIds(providers, options),
     });
   }
-  const providers = await readProviderFiles(filePaths);
+  const loaded = await readProviderFiles(filePaths);
+  assertNoServiceOverlap(loaded, extra.metadata);
+  const providers = [...loaded, ...extra.definitions];
   return createCatalogStore(providers, { executableActionIds: resolveExecutableActionIds(providers, options) });
+}
+
+interface ExtraProviders {
+  definitions: ProviderDefinition[];
+  metadata: CatalogProviderMetadata[];
+  actions: Map<string, ActionDefinition>;
+}
+
+/** Split host-supplied providers, already validated by `registerCustomProviders`, into schema-free metadata plus an action-schema lookup. */
+function prepareExtraProviders(definitions: readonly ProviderDefinition[]): ExtraProviders {
+  const actions = new Map(definitions.flatMap((definition) => definition.actions.map((action) => [action.id, action])));
+  const metadata = definitions.map((provider) => ({
+    ...provider,
+    actions: provider.actions.map(({ inputSchema: _input, outputSchema: _output, ...action }) => action),
+  }));
+  return { definitions: [...definitions], metadata, actions };
+}
+
+/** Append host-supplied providers to an eagerly loaded catalog, rejecting a service id the catalog already has. */
+export function mergeCustomProviders(
+  loaded: readonly ProviderDefinition[],
+  extras: readonly ProviderDefinition[],
+): ProviderDefinition[] {
+  const extra = prepareExtraProviders(extras);
+  assertNoServiceOverlap(loaded, extra.metadata);
+  return [...loaded, ...extra.definitions];
+}
+
+function assertNoServiceOverlap(loaded: readonly { service: string }[], extra: readonly { service: string }[]): void {
+  const existing = new Set(loaded.map((provider) => provider.service));
+  for (const provider of extra) {
+    if (existing.has(provider.service))
+      throw new Error(`Provider service already exists in the catalog: ${provider.service}`);
+  }
 }
 
 /** Resolve provider-level executable services into the exact action ids present in a loaded catalog. */

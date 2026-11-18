@@ -4,6 +4,7 @@ import type { ProviderNetworkPolicy } from "../core/provider-network-policy.ts";
 import type { RuntimeLogger } from "../core/types.ts";
 import type { McpOAuthClientMetadata } from "../custom-mcp/definition.ts";
 import type { RuntimeJwtConfig } from "./api/runtime-jwt.ts";
+import type { CustomProvider } from "./custom-providers.ts";
 import type { S3TransitClientOptions } from "./files/s3-transit-files.ts";
 import type { IStagedTransitFileService } from "./files/transit-file-store.ts";
 import type { McpOutputMode } from "./mcp-settings.ts";
@@ -19,6 +20,7 @@ import { DEFAULT_OAUTH_CLOSE_DELAY_SECONDS, normalizeOAuthResultOrigins } from "
 import { createRuntimeJwtVerifier } from "./api/runtime-jwt.ts";
 import { createConnectApp } from "./connect-app.ts";
 import { getConnectorAssetDirectory } from "./connector-assets.ts";
+import { registerCustomProviders } from "./custom-providers.ts";
 import { cleanupStagedTransitFiles, createNodeTransitFileUpload } from "./files/node-transit-file-upload.ts";
 import { TransitFileService } from "./files/transit-files.ts";
 import { parseMcpOutputMode } from "./mcp-settings.ts";
@@ -103,6 +105,8 @@ export interface ConnectorRuntimeOptions {
   lazySchemas?: boolean;
   /** Provider files whose action schemas stay cached while `lazySchemas` is on. */
   schemaCacheFiles?: number;
+  /** Custom providers registered at startup next to the bundled ones. An invalid definition or a bundled or repeated service id fails startup. */
+  customProviders?: readonly CustomProvider[];
   /** Override the bundled catalog and migrations. */
   assets?: ConnectorAssets;
   /** Receives startup and request diagnostics. Omit for silence. */
@@ -163,6 +167,12 @@ export async function createConnectorRuntime(options: ConnectorRuntimeOptions): 
     catalogIndexFile: join(assetDirectory, "catalog/apps-index.json"),
     migrationDirectory: join(assetDirectory, "migrations"),
   };
+  const customProviders = options.customProviders ?? [];
+  const modules = registerCustomProviders({
+    bundledModules: executorModules,
+    bundledServices: Object.keys(executorModules),
+    customProviders,
+  });
   const secretCodec = createSecretCodec(options.encryptionKey);
   const verifyRuntimeJwt = await createRuntimeJwtVerifier(options.jwt ?? {});
   const lazySchemas = options.lazySchemas ?? true;
@@ -173,7 +183,8 @@ export async function createConnectorRuntime(options: ConnectorRuntimeOptions): 
     );
   }
   const catalog = await loadCatalog(assets.catalogDir, {
-    executableServices: Object.keys(executorModules),
+    executableServices: Object.keys(modules),
+    customProviders: customProviders.map((provider) => provider.definition),
     lazySchemas,
     lazySchemaCacheFiles: options.schemaCacheFiles,
     lazySchemaIndexFile: assets.catalogIndexFile,
@@ -220,8 +231,9 @@ export async function createConnectorRuntime(options: ConnectorRuntimeOptions): 
     await cleanupStagedTransitFiles(tempDir, ttlSeconds * 1000);
     const { app, runtimeAuthConfigured, saasCleanup, triggerMaintenance } = await createConnectApp({
       catalog,
+      customProviderServices: customProviders.map((provider) => provider.definition.service),
       network: options.network,
-      providerLoader: new ProviderLoader(executorModules),
+      providerLoader: new ProviderLoader(modules),
       providerHttpDispatch: options.providerHttpDispatch,
       runtimeDatabase: database,
       transitFiles,
@@ -332,4 +344,7 @@ export async function createConnectorRuntime(options: ConnectorRuntimeOptions): 
   }
 }
 
+export type { ProviderDefinition } from "../core/types.ts";
+export type { ExecutorModule } from "../providers/provider-loader.ts";
+export type { CustomProvider } from "./custom-providers.ts";
 export type { RuntimeProviderSetup } from "./api/runtime-api.ts";

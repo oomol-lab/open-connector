@@ -187,6 +187,23 @@ cleaned up automatically. Workers KV applies the configured TTL when each file i
 deletes it automatically. KV clamps `OOMOL_CONNECT_TRANSIT_FILE_TTL_SECONDS` to a minimum of 60
 seconds and `OOMOL_CONNECT_TRANSIT_FILE_MAX_BYTES` to a maximum of 25 MiB.
 
+## Custom providers
+
+The Worker can register the same `customProviders` entries as the
+[headless runtime](headless.md#custom-providers). The npm package has no Workers entry, so this needs a checkout of this
+repository: write your own entry file next to `src/` and import `createCloudflareWorker` from it.
+
+```ts
+import { customCrm } from "./providers/custom-crm.ts";
+import { createCloudflareWorker } from "./src/server/cloudflare.ts";
+
+export default createCloudflareWorker({ customProviders: [customCrm] });
+```
+
+Point `main` in `wrangler.local.jsonc` at that file. `createCloudflareWorker()` with no options is the stock Worker.
+Provider modules on Workers must not import Node built-ins. `createCloudflareWorker` throws when a definition is
+invalid or its `service` id is bundled, including the Node-only providers, or repeated.
+
 ## Response Compression
 
 Cloudflare negotiates and applies response compression on egress, so the Worker leaves compression

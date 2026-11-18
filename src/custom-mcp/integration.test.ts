@@ -551,3 +551,19 @@ it("keeps a saved connection successful when publishing its first tools fails", 
   const sync = await request(app, `/api/custom-mcp/${record.service}/sync`, "POST", { connectionId: connection.id });
   expect((await sync.json()).actions).toHaveLength(1);
 });
+
+it("never merges a stored record whose service the base catalog already has", async () => {
+  await database.customMcpStore.create({
+    service: "builtin",
+    displayName: "Stored MCP",
+    endpoint: "https://mcp.example.com/mcp",
+    transport: "streamable_http",
+    auth: { type: "none" },
+    enabled: true,
+    revision: "stored",
+  });
+  const app = await createApp("Built In");
+  const providers = (await (await request(app, "/api/providers")).json()) as { service: string; displayName: string }[];
+  expect(providers.map((provider) => [provider.service, provider.displayName])).toEqual([["builtin", "Built In"]]);
+  expect(await (await request(app, "/api/custom-mcp")).json()).toEqual([]);
+});

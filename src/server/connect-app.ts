@@ -33,6 +33,7 @@ import { TriggerRunner } from "../triggers/trigger-runner.ts";
 import { ActionRunner } from "./actions/action-runner.ts";
 import { normalizeOAuthResultOrigins } from "./api/oauth-completion-page.ts";
 import { ConnectServer } from "./connect-server.ts";
+import { assertNoCustomMcpOverlap } from "./custom-providers.ts";
 import { protectedResourceChallenge } from "./oauth/as-metadata.ts";
 import { resolveOAuthServerConfig } from "./oauth/config.ts";
 import { resolveOAuthAccessToken } from "./oauth/token-endpoint.ts";
@@ -41,6 +42,8 @@ import { RuntimeTokenService } from "./storage/runtime-token-service.ts";
 export interface ConnectAppOptions {
   network?: ProviderNetworkPolicy;
   catalog: CatalogStore;
+  /** Services registered through `customProviders`; a stored custom MCP provider must not reuse one. */
+  customProviderServices?: readonly string[];
   providerLoader: IProviderLoader;
   providerHttpDispatch?: ProviderHttpDispatchOptions;
   runtimeDatabase: RuntimeDatabase;
@@ -85,6 +88,7 @@ export interface ConnectApp {
 }
 
 export async function createConnectApp(options: ConnectAppOptions): Promise<ConnectApp> {
+  await assertNoCustomMcpOverlap(options.runtimeDatabase.customMcpStore, options.customProviderServices ?? []);
   const catalog = new CustomMcpCatalog(options.catalog, options.runtimeDatabase.customMcpStore);
   await catalog.refresh();
   const providerLoader = new CustomMcpLoader(options.providerLoader, catalog);
