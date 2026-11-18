@@ -120,7 +120,7 @@ export const fusionApiOperations: FusionApiOperation[] = [
     path: "/v1/ffmpeg/state/{sessionID}",
     tag: "ffmpeg",
     description: "Get the FFmpeg task state.",
-    successStatuses: [200, 202, 404],
+    successStatuses: [200, 404],
     pathParams: ["sessionID"],
     inputFields: [
       {

@@ -114,6 +114,14 @@ export const executors: ProviderExecutors = defineApiKeyProviderExecutors(servic
 export const proxy: ProviderProxyExecutor = defineProviderProxy({
   service,
   baseUrl: apiBaseUrl,
+  async readError(response) {
+    const payload = await readProviderJsonBody(response, {
+      emptyBody: null,
+      invalidJsonMessage: "PostOnce returned invalid JSON",
+      invalidJsonFallback: (text) => text.slice(0, 500),
+    });
+    return postonceRequestError(response.status, payload);
+  },
   auth: { type: "api_key_authorization", prefix: "Bearer " },
   skipDnsValidation: true,
 });
@@ -185,5 +193,15 @@ function postonceRequestError(status: number, payload: unknown): ProviderRequest
   const message = optionalString(error?.message) ?? `PostOnce request failed with HTTP ${status}`;
   const hint = optionalString(error?.hint);
   const text = hint ? `${message} ${hint}` : message;
-  return new ProviderRequestError(status >= 500 ? 502 : status, text, payload);
+  const code = optionalString(error?.code);
+  return new ProviderRequestError(
+    status >= 500 ? 502 : status,
+    text,
+    payload,
+    code === "invalid_api_key" || code === "missing_scope"
+      ? "authorization_failed"
+      : status === 401 || status === 403
+        ? "provider_error"
+        : undefined,
+  );
 }

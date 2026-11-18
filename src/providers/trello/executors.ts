@@ -79,7 +79,12 @@ export const proxy: ProviderProxyExecutor = async (input, context) => {
     const response = await trelloFetch(url, init);
     if (!response.ok) {
       const text = await readProviderProxyErrorMessage(response, "");
-      throw new ProviderRequestError(response.status, text || `Trello request failed with HTTP ${response.status}`);
+      throw new ProviderRequestError(
+        response.status,
+        text || `Trello request failed with HTTP ${response.status}`,
+        undefined,
+        response.status === 429 ? "rate_limited" : "provider_error",
+      );
     }
     return { ok: true, response: await readProviderProxyResponse(response) };
   } catch (error) {

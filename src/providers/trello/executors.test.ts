@@ -122,7 +122,7 @@ describe("Trello proxy authentication", () => {
     });
   });
 
-  it("preserves upstream authorization failures", async () => {
+  it("preserves ambiguous upstream failures without requesting reauthorization", async () => {
     vi.stubGlobal(
       "fetch",
       vi.fn<typeof fetch>(async () => new Response("unauthorized permission requested", { status: 401 })),
@@ -130,7 +130,7 @@ describe("Trello proxy authentication", () => {
 
     await expect(proxy({ method: "GET", endpoint: originalEndpoint }, context)).resolves.toMatchObject({
       ok: false,
-      error: { code: "authorization_failed", message: "unauthorized permission requested", details: { status: 401 } },
+      error: { code: "provider_error", message: "unauthorized permission requested", details: { status: 401 } },
     });
   });
 });

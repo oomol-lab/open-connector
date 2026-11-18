@@ -577,7 +577,12 @@ async function trelloRequest<T>(input: TrelloRequestInput): Promise<T> {
   }
 
   const message = await readTrelloError(response);
-  if (auth.type === "key" && (response.status === 401 || response.status === 403)) {
+  if (
+    auth.type === "key" &&
+    input.phase === "validate" &&
+    (response.status === 401 || response.status === 403) &&
+    (message === "invalid key" || message === "invalid token")
+  ) {
     throw new ProviderRequestError(400, normalizeTrelloAuthError(message));
   }
   if (response.status === 429) {
@@ -587,6 +592,8 @@ async function trelloRequest<T>(input: TrelloRequestInput): Promise<T> {
   throw new ProviderRequestError(
     response.status >= 400 && response.status < 600 ? response.status : 502,
     `Trello ${input.phase} request ${failure}: ${message}`,
+    undefined,
+    "provider_error",
   );
 }
 

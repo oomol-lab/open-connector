@@ -23,6 +23,7 @@ import {
   ProviderRequestError,
   providerUserAgent,
   providerInputError,
+  runProviderRequest,
 } from "../provider-runtime.ts";
 import { jiraIssueEvents } from "./trigger-on-issue-event.ts";
 
@@ -527,11 +528,6 @@ async function jiraJsonRequest<T>(input: JiraRequestInput) {
 }
 
 async function jiraJsonValueRequest(input: JiraRequestInput): Promise<unknown> {
-  const response = await jiraRequest(input);
-  return readJsonValue(response);
-}
-
-async function jiraRequest(input: JiraRequestInput) {
   const url = buildJiraUrl(input.providerMetadata, input.path, input.query);
   const method = input.method ?? (input.body ? "POST" : "GET");
   const headers: Record<string, string> = {
@@ -542,19 +538,19 @@ async function jiraRequest(input: JiraRequestInput) {
     headers["content-type"] = "application/json";
   }
 
-  const response = await input.fetcher(url, {
-    method,
-    headers,
-    ...(input.body ? { body: JSON.stringify(input.body) } : {}),
-    signal: input.signal,
-  });
-
-  if (!response.ok) {
+  return runProviderRequest({ label: "jira", signal: input.signal }, async (signal) => {
+    const response = await input.fetcher(url, {
+      method,
+      headers,
+      body: input.body ? JSON.stringify(input.body) : undefined,
+      signal,
+    });
     const payload = await readJsonValue(response);
-    throw mapJiraResponseError(response.status, payload, "execute", Boolean(input.notFoundAsInvalidInput));
-  }
-
-  return response;
+    if (!response.ok) {
+      throw mapJiraResponseError(response.status, payload, "execute", Boolean(input.notFoundAsInvalidInput));
+    }
+    return payload;
+  });
 }
 
 function buildAuthorizationHeaders(accessToken: string) {
