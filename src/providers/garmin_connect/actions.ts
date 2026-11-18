@@ -135,12 +135,16 @@ const heartRateZoneSchema = s.looseObject("The heart rate zones for one sport.",
 });
 
 const fitnessAgeComponentSchema = s.looseObject("One input to the fitness age.", {
-  value: s.nullableNumber("The user's current value."),
+  value: s.nullableNumber("The user's current value. Absent when the input is stale."),
   targetValue: s.nullableNumber("The value that would give the best possible fitness age."),
   improvementValue: s.nullableNumber("The difference between the current value and the target."),
   potentialAge: s.nullableNumber("The fitness age the user would have on reaching the target for this input."),
   priority: s.nullableNumber("The relative priority Garmin gives this input."),
-  stale: s.nullableBoolean("Whether the value is out of date and may not reflect the user's current state."),
+  stale: s.nullableBoolean("Whether the input is out of date and may not reflect the user's current state."),
+  staleInputs: s.array(
+    "The measurements that are out of date, such as RHR or WEIGHT. Present only when the input is stale.",
+    s.string("One stale measurement."),
+  ),
   lastMeasurementDate: s.nullableString("The last date the input was measured, when Garmin reports it."),
   numOfWeeksForIm: s.nullableInteger("The number of weeks of intensity minutes behind a vigorous activity input."),
 });
