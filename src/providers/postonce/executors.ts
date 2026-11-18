@@ -184,7 +184,7 @@ async function readPostonceResponseError(response: Response, signal?: AbortSigna
   const payload = parseProviderJsonBodyText(text, {
     emptyBody: null,
     invalidJsonMessage: "PostOnce returned invalid JSON",
-    invalidJsonFallback: () => null,
+    invalidJsonFallback: (text) => text.slice(0, 500),
   });
   return postonceRequestError(response.status, payload);
 }
