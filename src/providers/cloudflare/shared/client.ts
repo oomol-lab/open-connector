@@ -20,11 +20,10 @@ export interface CloudflareRequestInput {
   query?: Record<string, QueryValue>;
   body?: Record<string, unknown> | FormData | Blob;
   headers?: Record<string, string>;
-  authHeaders?: Record<string, string>;
 }
 
 export async function cloudflareRequestEnvelope(
-  apiToken: string,
+  authHeaders: Record<string, string>,
   request: CloudflareRequestInput,
   fetcher: typeof fetch,
   phase: "validate" | "execute",
@@ -32,10 +31,9 @@ export async function cloudflareRequestEnvelope(
 ): Promise<CloudflareEnvelope> {
   const response = await fetcher(buildCloudflareUrl(request.path, request.query), {
     method: request.method ?? "GET",
-    headers: cloudflareHeaders(apiToken, {
+    headers: cloudflareHeaders(authHeaders, {
       hasBody: request.body != null,
       extraHeaders: request.headers,
-      authHeaders: request.authHeaders,
       useJsonContentType: !(request.body instanceof FormData || request.body instanceof Blob),
     }),
     body: buildCloudflareRequestBody(request.body),
@@ -75,16 +73,15 @@ export function buildCloudflareUrl(path: string, query?: Record<string, QueryVal
 }
 
 function cloudflareHeaders(
-  apiToken: string,
+  authHeaders: Record<string, string>,
   input: {
     hasBody: boolean;
     extraHeaders?: Record<string, string>;
-    authHeaders?: Record<string, string>;
     useJsonContentType?: boolean;
   },
 ): Record<string, string> {
   const headers: Record<string, string> = {
-    ...(input.authHeaders ?? { authorization: `Bearer ${apiToken}` }),
+    ...authHeaders,
     "user-agent": providerUserAgent,
   };
 

@@ -1,7 +1,4 @@
-import type { AuthType, OAuthAuthorizationOption } from "../../core/types.ts";
-
-export const cloudflareTokenAuthTypes: AuthType[] = ["api_key", "oauth2"];
-export const cloudflareAuthTypes: AuthType[] = [...cloudflareTokenAuthTypes, "custom_credential"];
+import type { OAuthAuthorizationOption } from "../../core/types.ts";
 
 const permissions: Array<readonly [string, string, string]> = [
   ["account-settings.read", "Read accounts", "List accounts and read account settings."],

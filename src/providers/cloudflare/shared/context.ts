@@ -7,7 +7,7 @@ import { requestCloudflareAccounts } from "./accounts.ts";
 
 export interface CloudflareContext {
   authType: "api_key" | "oauth2" | "custom_credential";
-  authHeaders?: Record<string, string>;
+  authHeaders: Record<string, string>;
   zoneId?: string;
   accessToken: string;
   accountId?: string;
@@ -29,7 +29,7 @@ export async function resolveActionAccount(
 ): Promise<Record<string, unknown>> {
   const explicit = optionalString(input.accountId) ?? context.accountId;
   if (explicit) return { ...input, accountId: explicit };
-  const result = await requestCloudflareAccounts(context.accessToken, context.fetcher, context.signal, {
+  const result = await requestCloudflareAccounts(context.authHeaders, context.fetcher, context.signal, {
     page: 1,
     perPage: 5,
   });

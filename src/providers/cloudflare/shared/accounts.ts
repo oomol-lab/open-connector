@@ -14,14 +14,14 @@ interface CloudflareAccount {
 }
 
 export async function requestCloudflareAccounts(
-  apiToken: string,
+  authHeaders: Record<string, string>,
   fetcher: typeof fetch,
   signal: AbortSignal | undefined,
   input: { page?: number; perPage?: number } = {},
 ): Promise<{ accounts: CloudflareAccount[]; resultInfo?: Record<string, unknown> }> {
   const envelope = await runProviderRequest({ label: "Cloudflare accounts", signal }, (requestSignal) =>
     cloudflareRequestEnvelope(
-      apiToken,
+      authHeaders,
       {
         path: "/accounts",
         query: {

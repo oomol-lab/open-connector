@@ -32,7 +32,7 @@ function buildQueuePath(input: Record<string, unknown>, context: CloudflareConte
 
 async function listEventNotificationRules(input: Record<string, unknown>, context: CloudflareContext) {
   const envelope = await requestEnvelope(
-    context.accessToken,
+    context.authHeaders,
     {
       path: buildEventNotificationPath(input, context),
       headers: buildR2JurisdictionHeaders(input),
@@ -50,7 +50,7 @@ async function listEventNotificationRules(input: Record<string, unknown>, contex
 
 async function getEventNotificationRules(input: Record<string, unknown>, context: CloudflareContext) {
   const envelope = await requestEnvelope(
-    context.accessToken,
+    context.authHeaders,
     {
       path: buildQueuePath(input, context),
       headers: buildR2JurisdictionHeaders(input),
@@ -66,7 +66,7 @@ async function createEventNotificationRules(input: Record<string, unknown>, cont
   const bucketName = String(input.bucketName);
   const queueId = String(input.queueId);
   await requestEnvelope(
-    context.accessToken,
+    context.authHeaders,
     {
       method: "PUT",
       path: buildQueuePath(input, context),
@@ -85,7 +85,7 @@ async function deleteEventNotificationRules(input: Record<string, unknown>, cont
   const queueId = String(input.queueId);
   const ruleIds = readOptionalStringArray(input.ruleIds);
   await requestEnvelope(
-    context.accessToken,
+    context.authHeaders,
     {
       method: "DELETE",
       path: buildQueuePath(input, context),

@@ -2,7 +2,6 @@ import type { ActionDefinition } from "../../../core/types.ts";
 
 import { s } from "../../../core/json-schema.ts";
 import { defineProviderAction } from "../../../core/provider-definition.ts";
-import { cloudflareTokenAuthTypes } from "../authorization.ts";
 import { bucketNameSchema, readPermissions, writePermissions } from "./schemas.ts";
 
 const service = "cloudflare";
@@ -28,7 +27,6 @@ const classMetricsSchema = s.object(
 
 export const actions: ActionDefinition[] = [
   defineProviderAction(service, {
-    authTypes: cloudflareTokenAuthTypes,
     name: "get_account_metrics",
     operationType: "read",
     description:
@@ -48,7 +46,6 @@ export const actions: ActionDefinition[] = [
     ),
   }),
   defineProviderAction(service, {
-    authTypes: cloudflareTokenAuthTypes,
     name: "create_temporary_access_credentials",
     operationType: "write",
     description:

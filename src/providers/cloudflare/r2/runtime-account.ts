@@ -22,7 +22,7 @@ export const handlers: Record<string, ProviderRuntimeHandler<CloudflareContext>>
 async function getAccountMetrics(input: Record<string, unknown>, context: CloudflareContext) {
   const accountId = resolveAccountId(input, context);
   const envelope = await requestEnvelope(
-    context.accessToken,
+    context.authHeaders,
     { path: `/accounts/${encodeURIComponent(accountId)}/r2/metrics` },
     { fetcher: context.fetcher, signal: context.signal },
     "execute",
@@ -45,7 +45,7 @@ async function createTemporaryAccessCredentials(input: Record<string, unknown>, 
   const ttlSeconds = optionalInteger(input.ttlSeconds) ?? defaultTemporaryCredentialTtlSeconds;
   const requestedAt = Date.now();
   const envelope = await requestEnvelope(
-    context.accessToken,
+    context.authHeaders,
     {
       method: "POST",
       path: `/accounts/${encodeURIComponent(accountId)}/r2/temp-access-credentials`,

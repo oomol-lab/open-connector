@@ -115,7 +115,7 @@ async function downloadObject(input: Record<string, unknown>, context: Cloudflar
   );
   const headers: Record<string, string> = {
     accept: "*/*",
-    authorization: `Bearer ${context.accessToken}`,
+    ...context.authHeaders,
     "user-agent": providerUserAgent,
   };
   const jurisdiction = optionalString(input.jurisdiction);
@@ -300,7 +300,7 @@ async function putObject(input: Record<string, unknown>, context: CloudflareCont
       method: "PUT",
       headers: compactObject({
         accept: "application/json",
-        authorization: `Bearer ${context.accessToken}`,
+        ...context.authHeaders,
         "user-agent": providerUserAgent,
         ...headers,
       }),
@@ -359,18 +359,6 @@ async function downloadSourceFile(
 }
 
 async function generatePresignedUrl(input: Record<string, unknown>, context: CloudflareContext): Promise<unknown> {
-  if (context.authType !== "api_key") {
-    throw new ProviderRequestError(
-      400,
-      "cloudflare.generate_presigned_url requires a custom API token credential. OAuth connections cannot mint R2 S3 signatures.",
-      {
-        action: "cloudflare.generate_presigned_url",
-        authType: context.authType,
-        requiredAuthType: "api_key",
-      },
-    );
-  }
-
   const accountId = resolveAccountId(input, context);
   const bucketName = requiredString(input.bucketName, "bucketName", providerInputError);
   const objectKey = readObjectKey(input);
@@ -441,7 +429,7 @@ async function requestEnvelope(
   request: CloudflareR2RequestInput,
   phase: "validate" | "execute",
 ): Promise<CloudflareEnvelope> {
-  return requestR2Envelope(context.accessToken, request, context, phase);
+  return requestR2Envelope(context.authHeaders, request, context, phase);
 }
 
 function normalizeR2BucketList(value: unknown): Array<Record<string, unknown>> {

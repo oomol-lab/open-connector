@@ -34,7 +34,7 @@ export const handlers: Record<string, ProviderRuntimeHandler<CloudflareContext>>
 
 async function listObjects(input: Record<string, unknown>, context: CloudflareContext) {
   const envelope = await requestEnvelope(
-    context.accessToken,
+    context.authHeaders,
     {
       path: `${buildCloudflareR2BucketPath(input, context)}/objects`,
       query: compactObject({
@@ -63,7 +63,7 @@ async function deleteObject(input: Record<string, unknown>, context: CloudflareC
   const bucketName = String(input.bucketName);
   const objectKey = requireObjectKey(input.objectKey);
   await requestEnvelope(
-    context.accessToken,
+    context.authHeaders,
     {
       method: "DELETE",
       path: `${buildCloudflareR2BucketPath(input, context)}/objects/${encodeS3ObjectKey(objectKey)}`,
@@ -80,7 +80,7 @@ async function deleteObjects(input: Record<string, unknown>, context: Cloudflare
   const bucketName = String(input.bucketName);
   const objectKeys = looseArray(input.objectKeys).map((key) => requireObjectKey(key));
   const envelope = await requestEnvelope(
-    context.accessToken,
+    context.authHeaders,
     {
       method: "DELETE",
       path: `${buildCloudflareR2BucketPath(input, context)}/objects`,
@@ -107,7 +107,7 @@ async function deleteObjectsByPrefix(input: Record<string, unknown>, context: Cl
     throw new ProviderRequestError(400, "prefix must end with /");
   }
   const envelope = await requestEnvelope(
-    context.accessToken,
+    context.authHeaders,
     {
       method: "DELETE",
       path: `${buildCloudflareR2BucketPath(input, context)}/objects`,
@@ -129,7 +129,7 @@ async function listBucketJobs(input: Record<string, unknown>, context: Cloudflar
     throw new ProviderRequestError(400, "jobType is required when status is set");
   }
   const envelope = await requestEnvelope(
-    context.accessToken,
+    context.authHeaders,
     {
       path: `${buildCloudflareR2BucketPath(input, context)}/jobs`,
       query: compactObject({
@@ -154,7 +154,7 @@ async function listBucketJobs(input: Record<string, unknown>, context: Cloudflar
 async function getBucketJob(input: Record<string, unknown>, context: CloudflareContext) {
   const jobId = String(input.jobId);
   const envelope = await requestEnvelope(
-    context.accessToken,
+    context.authHeaders,
     {
       path: `${buildCloudflareR2BucketPath(input, context)}/jobs/${encodeURIComponent(jobId)}`,
       headers: buildR2JurisdictionHeaders(input),

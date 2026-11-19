@@ -2,7 +2,6 @@ import type { ActionDefinition, JsonSchema } from "../../../core/types.ts";
 
 import { s } from "../../../core/json-schema.ts";
 import { defineProviderAction } from "../../../core/provider-definition.ts";
-import { cloudflareAuthTypes } from "../authorization.ts";
 
 const service = "cloudflare";
 const rulesRead = "Email Routing Rules Read";
@@ -115,7 +114,6 @@ const listRulesInput: JsonSchema = {
 export const actions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_routing_rules",
-    authTypes: cloudflareAuthTypes,
     operationType: "read",
     description: "List Cloudflare Email Routing rules for a zone or account.",
     requiredScopes: ["email-routing-rule.read"],
@@ -129,7 +127,6 @@ export const actions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_routing_rule",
-    authTypes: cloudflareAuthTypes,
     operationType: "write",
     description:
       "Create a Cloudflare Email Routing rule in a zone. Forward actions require verified destination addresses.",
@@ -140,7 +137,6 @@ export const actions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_routing_rule",
-    authTypes: cloudflareAuthTypes,
     operationType: "destructive",
     description: "Replace a Cloudflare Email Routing rule in a zone.",
     requiredScopes: ["email-routing-rule.write"],
@@ -150,7 +146,6 @@ export const actions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_routing_rule",
-    authTypes: cloudflareAuthTypes,
     operationType: "destructive",
     description: "Delete a Cloudflare Email Routing rule from a zone.",
     requiredScopes: ["email-routing-rule.write"],
@@ -167,7 +162,6 @@ export const actions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_destination_addresses",
-    authTypes: cloudflareAuthTypes,
     operationType: "read",
     description:
       "List Cloudflare Email Routing destination addresses. Use addresses with a non-null verified timestamp for forward actions.",

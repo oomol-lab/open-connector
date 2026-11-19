@@ -8,7 +8,7 @@ import { archiveMaximumBytes, readPagesArchive } from "./archive.ts";
 import { normalizeDeployment, projectPath } from "./deployment.ts";
 
 export async function deployPagesSite(client: CloudflareClient): Promise<unknown> {
-  const { input, apiToken, fetcher: requestFetch } = client;
+  const { input, authHeaders, fetcher: requestFetch } = client;
   const source = await downloadUploadSource({
     url: requiredInputString(input.archiveUrl, "archiveUrl"),
     fieldName: "archiveUrl",
@@ -18,7 +18,7 @@ export async function deployPagesSite(client: CloudflareClient): Promise<unknown
   });
   const { assets, special } = readPagesArchive(source.bytes);
   const tokenEnvelope = await cloudflareRequestEnvelope(
-    apiToken,
+    authHeaders,
     { path: `${projectPath(client)}/upload-token` },
     requestFetch,
     "execute",
@@ -27,7 +27,7 @@ export async function deployPagesSite(client: CloudflareClient): Promise<unknown
   if (!jwt) throw new ProviderRequestError(502, "Pages upload token is missing jwt");
   const hashes = [...new Set(assets.map((asset) => asset.hash))];
   const missingEnvelope = await cloudflareRequestEnvelope(
-    jwt,
+    { authorization: `Bearer ${jwt}` },
     { path: "/pages/assets/check-missing", method: "POST", body: { hashes } },
     requestFetch,
     "execute",
@@ -41,7 +41,7 @@ export async function deployPagesSite(client: CloudflareClient): Promise<unknown
   async function flush() {
     if (!batch.length) return;
     await cloudflareRequestEnvelope(
-      jwt!,
+      { authorization: `Bearer ${jwt}` },
       {
         path: "/pages/assets/upload",
         method: "POST",
@@ -70,7 +70,7 @@ export async function deployPagesSite(client: CloudflareClient): Promise<unknown
   }
   await flush();
   await cloudflareRequestEnvelope(
-    jwt,
+    { authorization: `Bearer ${jwt}` },
     { path: "/pages/assets/upsert-hashes", method: "POST", body: { hashes } },
     requestFetch,
     "execute",
@@ -89,7 +89,7 @@ export async function deployPagesSite(client: CloudflareClient): Promise<unknown
     if (input[field!] !== undefined) form.set(keyName!, String(input[field!]));
   for (const [fileName, bytes] of Object.entries(special)) form.set(fileName, new File([Buffer.from(bytes)], fileName));
   const envelope = await cloudflareRequestEnvelope(
-    apiToken,
+    authHeaders,
     { path: `${projectPath(client)}/deployments`, method: "POST", body: form },
     requestFetch,
     "execute",

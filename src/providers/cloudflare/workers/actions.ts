@@ -2,7 +2,6 @@ import type { ActionDefinition, JsonSchema } from "../../../core/types.ts";
 
 import { s } from "../../../core/json-schema.ts";
 import { defineProviderAction } from "../../../core/provider-definition.ts";
-import { cloudflareTokenAuthTypes } from "../authorization.ts";
 
 const service = "cloudflare";
 const accountId = s.string("The account ID. Defaults to the connection account, or the only accessible account.");
@@ -453,7 +452,6 @@ const patchWorkerScriptSettingsInputSchema = s.object(
 
 export const actions: ActionDefinition[] = [
   defineProviderAction(service, {
-    authTypes: cloudflareTokenAuthTypes,
     name: "list_workers",
     operationType: "read",
     description: "List Workers in a Cloudflare account using the Workers beta API.",
@@ -476,7 +474,6 @@ export const actions: ActionDefinition[] = [
     }),
   }),
   defineProviderAction(service, {
-    authTypes: cloudflareTokenAuthTypes,
     name: "get_worker",
     operationType: "read",
     description: "Get one Worker by Worker ID using the Workers beta API.",
@@ -493,7 +490,6 @@ export const actions: ActionDefinition[] = [
     outputSchema: s.object("The output payload for this action.", { worker: workerSchema }),
   }),
   defineProviderAction(service, {
-    authTypes: cloudflareTokenAuthTypes,
     name: "create_worker",
     operationType: "write",
     description: "Create a Cloudflare Worker using the Workers beta API.",
@@ -510,7 +506,6 @@ export const actions: ActionDefinition[] = [
     outputSchema: s.object("The output payload for this action.", { worker: workerSchema }),
   }),
   defineProviderAction(service, {
-    authTypes: cloudflareTokenAuthTypes,
     name: "update_worker",
     operationType: "destructive",
     description: "Replace a Cloudflare Worker using the Workers beta API, setting omitted fields to API defaults.",
@@ -531,7 +526,6 @@ export const actions: ActionDefinition[] = [
     outputSchema: s.object("The output payload for this action.", { worker: workerSchema }),
   }),
   defineProviderAction(service, {
-    authTypes: cloudflareTokenAuthTypes,
     name: "edit_worker",
     operationType: "write",
     description:
@@ -542,7 +536,6 @@ export const actions: ActionDefinition[] = [
     outputSchema: s.object("The output payload for this action.", { worker: workerSchema }),
   }),
   defineProviderAction(service, {
-    authTypes: cloudflareTokenAuthTypes,
     name: "delete_worker",
     operationType: "destructive",
     description: "Delete a Cloudflare Worker and its associated resources using the Workers beta API.",
@@ -562,7 +555,6 @@ export const actions: ActionDefinition[] = [
     }),
   }),
   defineProviderAction(service, {
-    authTypes: cloudflareTokenAuthTypes,
     name: "list_worker_scripts",
     operationType: "read",
     description: "List Worker scripts in a Cloudflare account.",
@@ -587,7 +579,6 @@ export const actions: ActionDefinition[] = [
     ),
   }),
   defineProviderAction(service, {
-    authTypes: cloudflareTokenAuthTypes,
     name: "search_worker_scripts",
     operationType: "read",
     description: "Search Worker scripts in a Cloudflare account by name or script tag.",
@@ -604,7 +595,6 @@ export const actions: ActionDefinition[] = [
     ),
   }),
   defineProviderAction(service, {
-    authTypes: cloudflareTokenAuthTypes,
     name: "list_build_triggers",
     operationType: "read",
     description: "List Workers Builds triggers configured for one Worker script tag.",
@@ -623,7 +613,6 @@ export const actions: ActionDefinition[] = [
     }),
   }),
   defineProviderAction(service, {
-    authTypes: cloudflareTokenAuthTypes,
     name: "create_manual_build",
     operationType: "write",
     description: "Start a Workers Builds job from a configured trigger and branch or commit.",
@@ -657,7 +646,6 @@ export const actions: ActionDefinition[] = [
     ),
   }),
   defineProviderAction(service, {
-    authTypes: cloudflareTokenAuthTypes,
     name: "list_builds",
     operationType: "read",
     description: "List Workers Builds jobs for one Worker script tag.",
@@ -683,7 +671,6 @@ export const actions: ActionDefinition[] = [
     ),
   }),
   defineProviderAction(service, {
-    authTypes: cloudflareTokenAuthTypes,
     name: "get_build",
     operationType: "read",
     description: "Get the current status and outcome of one Workers Builds job.",
@@ -702,7 +689,6 @@ export const actions: ActionDefinition[] = [
     outputSchema: s.object("The output payload for this action.", { build: workerBuildSchema }),
   }),
   defineProviderAction(service, {
-    authTypes: cloudflareTokenAuthTypes,
     name: "get_build_logs",
     operationType: "read",
     description: "Get one page of log lines for a Workers Builds job.",
@@ -728,7 +714,6 @@ export const actions: ActionDefinition[] = [
     ),
   }),
   defineProviderAction(service, {
-    authTypes: cloudflareTokenAuthTypes,
     name: "cancel_build",
     operationType: "destructive",
     description: "Cancel a queued or running Workers Builds job.",
@@ -750,7 +735,6 @@ export const actions: ActionDefinition[] = [
     ),
   }),
   defineProviderAction(service, {
-    authTypes: cloudflareTokenAuthTypes,
     name: "upload_worker_script",
     operationType: "destructive",
     description: "Create or replace a Cloudflare Worker script by uploading a module bundle as multipart/form-data.",
@@ -799,7 +783,6 @@ export const actions: ActionDefinition[] = [
     outputSchema: s.object("The output payload for this action.", { script: workerScriptSchema }),
   }),
   defineProviderAction(service, {
-    authTypes: cloudflareTokenAuthTypes,
     name: "put_worker_script_content",
     operationType: "destructive",
     description: "Replace only the content of a Cloudflare Worker script without changing metadata.",
@@ -823,7 +806,6 @@ export const actions: ActionDefinition[] = [
     outputSchema: s.object("The output payload for this action.", { script: workerScriptSchema }),
   }),
   defineProviderAction(service, {
-    authTypes: cloudflareTokenAuthTypes,
     name: "get_worker_script_content",
     operationType: "read",
     description: "Fetch the raw source content for a Cloudflare Worker script.",
@@ -843,7 +825,6 @@ export const actions: ActionDefinition[] = [
     }),
   }),
   defineProviderAction(service, {
-    authTypes: cloudflareTokenAuthTypes,
     name: "get_worker_script_settings",
     operationType: "read",
     description: "Get Worker metadata and configuration for a Cloudflare Worker script.",
@@ -860,7 +841,6 @@ export const actions: ActionDefinition[] = [
     outputSchema: s.object("The output payload for this action.", { settings: workerScriptSettingsSchema }),
   }),
   defineProviderAction(service, {
-    authTypes: cloudflareTokenAuthTypes,
     name: "patch_worker_script_settings",
     operationType: "write",
     description: "Patch Worker metadata and configuration for a Cloudflare Worker script.",
@@ -870,7 +850,6 @@ export const actions: ActionDefinition[] = [
     outputSchema: s.object("The output payload for this action.", { settings: workerScriptSettingsSchema }),
   }),
   defineProviderAction(service, {
-    authTypes: cloudflareTokenAuthTypes,
     name: "list_worker_script_secrets",
     operationType: "read",
     description: "List secret bindings attached to a Cloudflare Worker script.",
@@ -894,7 +873,6 @@ export const actions: ActionDefinition[] = [
     ),
   }),
   defineProviderAction(service, {
-    authTypes: cloudflareTokenAuthTypes,
     name: "get_worker_script_secret",
     operationType: "read",
     description: "Get one secret binding attached to a Cloudflare Worker script.",
@@ -912,7 +890,6 @@ export const actions: ActionDefinition[] = [
     outputSchema: s.object("The output payload for this action.", { secret: workerSecretSchema }),
   }),
   defineProviderAction(service, {
-    authTypes: cloudflareTokenAuthTypes,
     name: "put_worker_script_secret",
     operationType: "destructive",
     description: "Add or replace a secret_text binding on a Cloudflare Worker script.",
@@ -932,7 +909,6 @@ export const actions: ActionDefinition[] = [
     outputSchema: s.object("The output payload for this action.", { secret: workerSecretSchema }),
   }),
   defineProviderAction(service, {
-    authTypes: cloudflareTokenAuthTypes,
     name: "delete_worker_script_secret",
     operationType: "destructive",
     description: "Delete a secret binding from a Cloudflare Worker script.",
@@ -953,7 +929,6 @@ export const actions: ActionDefinition[] = [
     }),
   }),
   defineProviderAction(service, {
-    authTypes: cloudflareTokenAuthTypes,
     name: "delete_worker_script",
     operationType: "destructive",
     description: "Delete a Cloudflare Worker script.",
@@ -976,7 +951,6 @@ export const actions: ActionDefinition[] = [
     }),
   }),
   defineProviderAction(service, {
-    authTypes: cloudflareTokenAuthTypes,
     name: "list_worker_routes",
     description: "List Worker routes for a zone.",
     operationType: "read",
@@ -986,7 +960,6 @@ export const actions: ActionDefinition[] = [
     outputSchema: s.requiredObject("The action result.", listOutput),
   }),
   defineProviderAction(service, {
-    authTypes: cloudflareTokenAuthTypes,
     name: "create_worker_route",
     description: "Attach a Worker to a zone route pattern, or create an exclusion route by omitting scriptName.",
     operationType: "write",
@@ -1004,7 +977,6 @@ export const actions: ActionDefinition[] = [
     outputSchema: s.requiredObject("The action result.", resultOutput),
   }),
   defineProviderAction(service, {
-    authTypes: cloudflareTokenAuthTypes,
     name: "update_worker_route",
     description: "Update the pattern and Worker for a zone route.",
     operationType: "write",
@@ -1023,7 +995,6 @@ export const actions: ActionDefinition[] = [
     outputSchema: s.requiredObject("The action result.", resultOutput),
   }),
   defineProviderAction(service, {
-    authTypes: cloudflareTokenAuthTypes,
     name: "delete_worker_route",
     description: "Delete a Worker route from a zone.",
     operationType: "destructive",
@@ -1040,7 +1011,6 @@ export const actions: ActionDefinition[] = [
     outputSchema: s.requiredObject("The action result.", resultOutput),
   }),
   defineProviderAction(service, {
-    authTypes: cloudflareTokenAuthTypes,
     name: "list_worker_domains",
     description: "List Worker custom domains in an account.",
     operationType: "read",
@@ -1059,7 +1029,6 @@ export const actions: ActionDefinition[] = [
     outputSchema: s.requiredObject("The action result.", listOutput),
   }),
   defineProviderAction(service, {
-    authTypes: cloudflareTokenAuthTypes,
     name: "attach_worker_domain",
     description: "Attach a custom domain to a Worker service.",
     operationType: "write",
@@ -1081,7 +1050,6 @@ export const actions: ActionDefinition[] = [
     outputSchema: s.requiredObject("The action result.", resultOutput),
   }),
   defineProviderAction(service, {
-    authTypes: cloudflareTokenAuthTypes,
     name: "delete_worker_domain",
     description: "Detach a Worker custom domain.",
     operationType: "destructive",

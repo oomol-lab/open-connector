@@ -664,18 +664,18 @@ async function requestEnvelope(
   request: CloudflareRequestInput,
   phase: "validate" | "execute",
 ): Promise<CloudflareEnvelope> {
-  return cloudflareRequestEnvelope(context.accessToken, request, context, phase);
+  return cloudflareRequestEnvelope(context.authHeaders, request, context, phase);
 }
 
 async function cloudflareRequestEnvelope(
-  accessToken: string,
+  authHeaders: Record<string, string>,
   request: CloudflareRequestInput,
   context: { fetcher: typeof fetch; signal?: AbortSignal },
   phase: "validate" | "execute",
 ): Promise<CloudflareEnvelope> {
   const response = await context.fetcher(buildCloudflareUrl(request.path, request.query), {
     method: request.method ?? "GET",
-    headers: cloudflareHeaders(accessToken, {
+    headers: cloudflareHeaders(authHeaders, {
       hasBody: request.body !== undefined,
       useJsonContentType: !(request.body instanceof FormData || request.body instanceof Blob),
       extraHeaders: request.headers,
@@ -707,7 +707,7 @@ async function requestText(
 ): Promise<{ content: string; contentType: string | null }> {
   const response = await context.fetcher(buildCloudflareUrl(request.path, request.query), {
     method: request.method ?? "GET",
-    headers: cloudflareHeaders(context.accessToken, { hasBody: false, extraHeaders: request.headers }),
+    headers: cloudflareHeaders(context.authHeaders, { hasBody: false, extraHeaders: request.headers }),
     signal: context.signal,
   });
   if (!response.ok) {
@@ -726,12 +726,12 @@ function buildCloudflareUrl(path: string, query?: Record<string, string | number
 }
 
 function cloudflareHeaders(
-  accessToken: string,
+  authHeaders: Record<string, string>,
   input: { hasBody: boolean; useJsonContentType?: boolean; extraHeaders?: Record<string, string> },
 ): Record<string, string> {
   const headers: Record<string, string> = {
     accept: "application/json",
-    authorization: `Bearer ${accessToken}`,
+    ...authHeaders,
     "user-agent": providerUserAgent,
   };
   if (input.hasBody && input.useJsonContentType !== false) {

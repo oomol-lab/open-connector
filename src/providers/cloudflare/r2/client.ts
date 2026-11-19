@@ -17,6 +17,10 @@ export interface CloudflareR2RequestInput {
 }
 
 export async function resolveR2S3AccessKeyId(accountId: string, context: CloudflareContext): Promise<string> {
+  if (context.authType === "oauth2" || !context.authHeaders.authorization)
+    throw providerInputError(
+      "R2 S3 signing requires an API token. OAuth tokens and Global API Keys cannot derive S3 signing credentials.",
+    );
   const existing = optionalString(context.metadata.tokenId);
   if (existing) {
     return existing;
@@ -69,7 +73,7 @@ async function verifyCloudflareR2ApiTokenAt(
 ): Promise<CloudflareR2TokenVerification> {
   // The "validate" phase is deliberate: normalizeCloudflareR2Error collapses 400/401/403/404
   // to 400 only there, which is what lets the user-token to account-token fallback fire.
-  const envelope = await requestEnvelope(apiToken, { path }, context, "validate");
+  const envelope = await requestEnvelope({ authorization: `Bearer ${apiToken}` }, { path }, context, "validate");
   const verification = readObject(envelope.result, "cloudflare token verification");
   return {
     tokenId: optionalString(verification.id),
@@ -102,14 +106,14 @@ export function buildR2JurisdictionHeaders(input: Record<string, unknown>): Reco
 }
 
 export async function requestEnvelope(
-  apiToken: string,
+  authHeaders: Record<string, string>,
   request: CloudflareR2RequestInput,
   context: { fetcher: typeof fetch; signal?: AbortSignal },
   phase: "validate" | "execute",
 ): Promise<CloudflareEnvelope> {
   const response = await context.fetcher(buildCloudflareR2Url(request.path, request.query), {
     method: request.method ?? "GET",
-    headers: headers(apiToken, request),
+    headers: headers(authHeaders, request),
     body: request.body !== undefined ? JSON.stringify(request.body) : undefined,
     signal: context.signal,
   });
@@ -120,10 +124,10 @@ export async function requestEnvelope(
   return envelope;
 }
 
-function headers(apiToken: string, request: CloudflareR2RequestInput): Record<string, string> {
+function headers(authHeaders: Record<string, string>, request: CloudflareR2RequestInput): Record<string, string> {
   const headers: Record<string, string> = {
     accept: "application/json",
-    authorization: `Bearer ${apiToken}`,
+    ...authHeaders,
     "user-agent": providerUserAgent,
   };
   if (request.body !== undefined) {

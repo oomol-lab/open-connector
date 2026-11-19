@@ -7,12 +7,17 @@ import { cloudflareRequestEnvelope } from "./client.ts";
 
 export class CloudflareClient {
   readonly input: Record<string, unknown>;
-  readonly apiToken: string;
+  readonly authHeaders: Record<string, string>;
   readonly fetcher: typeof fetch;
   readonly signal?: AbortSignal;
-  constructor(input: Record<string, unknown>, apiToken: string, fetcher: typeof fetch, signal?: AbortSignal) {
+  constructor(
+    input: Record<string, unknown>,
+    authHeaders: Record<string, string>,
+    fetcher: typeof fetch,
+    signal?: AbortSignal,
+  ) {
     this.input = input;
-    this.apiToken = apiToken;
+    this.authHeaders = authHeaders;
     this.fetcher = fetcher;
     this.signal = signal;
   }
@@ -39,7 +44,7 @@ export class CloudflareClient {
   }
 
   request(request: CloudflareRequestInput): Promise<CloudflareEnvelope> {
-    return cloudflareRequestEnvelope(this.apiToken, request, this.fetcher, "execute");
+    return cloudflareRequestEnvelope(this.authHeaders, request, this.fetcher, "execute");
   }
 
   async resource(request: CloudflareRequestInput): Promise<{ result: unknown }> {
@@ -64,6 +69,6 @@ export function withCloudflareClient(
           ...init,
           signal: init?.signal && signal ? AbortSignal.any([signal, init.signal]) : (init?.signal ?? signal),
         })) as typeof fetch;
-      return handler(new CloudflareClient(input, context.accessToken, requestFetch, signal));
+      return handler(new CloudflareClient(input, context.authHeaders, requestFetch, signal));
     });
 }

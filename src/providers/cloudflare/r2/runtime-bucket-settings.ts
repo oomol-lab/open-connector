@@ -40,7 +40,7 @@ async function readBucketRules(
   subresource: "lifecycle" | "lock",
 ) {
   const envelope = await requestEnvelope(
-    context.accessToken,
+    context.authHeaders,
     {
       path: `${buildCloudflareR2BucketPath(input, context)}/${subresource}`,
       headers: buildR2JurisdictionHeaders(input),
@@ -60,7 +60,7 @@ async function writeBucketRules(
 ) {
   const bucketName = String(input.bucketName);
   await requestEnvelope(
-    context.accessToken,
+    context.authHeaders,
     {
       method: "PUT",
       path: `${buildCloudflareR2BucketPath(input, context)}/${subresource}`,
@@ -92,7 +92,7 @@ function updateBucketLock(input: Record<string, unknown>, context: CloudflareCon
 
 async function getBucketLocalUploads(input: Record<string, unknown>, context: CloudflareContext) {
   const envelope = await requestEnvelope(
-    context.accessToken,
+    context.authHeaders,
     { path: `${buildCloudflareR2BucketPath(input, context)}/local-uploads` },
     { fetcher: context.fetcher, signal: context.signal },
     "execute",
@@ -106,7 +106,7 @@ async function updateBucketLocalUploads(input: Record<string, unknown>, context:
   const bucketName = String(input.bucketName);
   const enabled = optionalBoolean(input.enabled) === true;
   await requestEnvelope(
-    context.accessToken,
+    context.authHeaders,
     {
       method: "PUT",
       path: `${buildCloudflareR2BucketPath(input, context)}/local-uploads`,
@@ -121,7 +121,7 @@ async function updateBucketLocalUploads(input: Record<string, unknown>, context:
 
 async function getSippyConfig(input: Record<string, unknown>, context: CloudflareContext) {
   const envelope = await requestEnvelope(
-    context.accessToken,
+    context.authHeaders,
     {
       path: `${buildCloudflareR2BucketPath(input, context)}/sippy`,
       headers: buildR2JurisdictionHeaders(input),
@@ -144,7 +144,7 @@ async function enableSippy(input: Record<string, unknown>, context: CloudflareCo
   }
   const destination = await resolveSippyDestination(input, context);
   const envelope = await requestEnvelope(
-    context.accessToken,
+    context.authHeaders,
     {
       method: "PUT",
       path: `${buildCloudflareR2BucketPath(input, context)}/sippy`,
@@ -164,7 +164,7 @@ async function enableSippy(input: Record<string, unknown>, context: CloudflareCo
 async function disableSippy(input: Record<string, unknown>, context: CloudflareContext) {
   const bucketName = String(input.bucketName);
   await requestEnvelope(
-    context.accessToken,
+    context.authHeaders,
     {
       method: "DELETE",
       path: `${buildCloudflareR2BucketPath(input, context)}/sippy`,

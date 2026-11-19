@@ -27,7 +27,7 @@ const handlers: Record<string, ProviderRuntimeHandler<CloudflareContext>> = {
   ...kvHandlers,
   ...pagesHandlers,
   list_accounts(input, context) {
-    return requestCloudflareAccounts(context.accessToken, context.fetcher, context.signal, {
+    return requestCloudflareAccounts(context.authHeaders, context.fetcher, context.signal, {
       page: optionalInteger(input.page),
       perPage: optionalInteger(input.perPage),
     });

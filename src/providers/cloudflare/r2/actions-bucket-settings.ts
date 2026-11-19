@@ -2,7 +2,6 @@ import type { ActionDefinition } from "../../../core/types.ts";
 
 import { s } from "../../../core/json-schema.ts";
 import { defineProviderAction } from "../../../core/provider-definition.ts";
-import { cloudflareTokenAuthTypes } from "../authorization.ts";
 import { bucketNameSchema, jurisdictionSchema, readPermissions, writePermissions } from "./schemas.ts";
 
 const service = "cloudflare";
@@ -179,7 +178,6 @@ function bucketScopedInputSchema(description: string) {
 
 export const actions: ActionDefinition[] = [
   defineProviderAction(service, {
-    authTypes: cloudflareTokenAuthTypes,
     name: "get_bucket_lifecycle",
     operationType: "read",
     description: "Get the object lifecycle rules of an R2 bucket.",
@@ -191,7 +189,6 @@ export const actions: ActionDefinition[] = [
     }),
   }),
   defineProviderAction(service, {
-    authTypes: cloudflareTokenAuthTypes,
     name: "update_bucket_lifecycle",
     operationType: "destructive",
     description: "Replace the object lifecycle rules of an R2 bucket with the given rule set.",
@@ -213,7 +210,6 @@ export const actions: ActionDefinition[] = [
     }),
   }),
   defineProviderAction(service, {
-    authTypes: cloudflareTokenAuthTypes,
     name: "get_bucket_lock",
     operationType: "read",
     description: "Get the object lock rules of an R2 bucket.",
@@ -225,7 +221,6 @@ export const actions: ActionDefinition[] = [
     }),
   }),
   defineProviderAction(service, {
-    authTypes: cloudflareTokenAuthTypes,
     name: "update_bucket_lock",
     operationType: "destructive",
     description: "Replace the object lock rules of an R2 bucket with the given rule set.",
@@ -247,7 +242,6 @@ export const actions: ActionDefinition[] = [
     }),
   }),
   defineProviderAction(service, {
-    authTypes: cloudflareTokenAuthTypes,
     name: "get_bucket_local_uploads",
     operationType: "read",
     description:
@@ -263,7 +257,6 @@ export const actions: ActionDefinition[] = [
     }),
   }),
   defineProviderAction(service, {
-    authTypes: cloudflareTokenAuthTypes,
     name: "update_bucket_local_uploads",
     operationType: "destructive",
     description: "Enable or disable local uploads for an R2 bucket.",
@@ -280,7 +273,6 @@ export const actions: ActionDefinition[] = [
     }),
   }),
   defineProviderAction(service, {
-    authTypes: cloudflareTokenAuthTypes,
     name: "get_sippy_config",
     operationType: "read",
     description: "Get the Sippy incremental migration configuration of an R2 bucket.",
@@ -290,7 +282,6 @@ export const actions: ActionDefinition[] = [
     outputSchema: sippyConfigSchema,
   }),
   defineProviderAction(service, {
-    authTypes: cloudflareTokenAuthTypes,
     name: "enable_sippy",
     operationType: "write",
     description:
@@ -311,7 +302,6 @@ export const actions: ActionDefinition[] = [
     outputSchema: sippyConfigSchema,
   }),
   defineProviderAction(service, {
-    authTypes: cloudflareTokenAuthTypes,
     name: "disable_sippy",
     operationType: "destructive",
     description: "Disable Sippy on an R2 bucket.",

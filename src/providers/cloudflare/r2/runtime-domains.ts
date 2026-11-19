@@ -32,7 +32,7 @@ function buildCustomDomainPath(input: Record<string, unknown>, context: Cloudfla
 
 async function listCustomDomains(input: Record<string, unknown>, context: CloudflareContext) {
   const envelope = await requestEnvelope(
-    context.accessToken,
+    context.authHeaders,
     {
       path: `${buildCloudflareR2BucketPath(input, context)}/domains/custom`,
       headers: buildR2JurisdictionHeaders(input),
@@ -49,7 +49,7 @@ async function listCustomDomains(input: Record<string, unknown>, context: Cloudf
 
 async function getCustomDomain(input: Record<string, unknown>, context: CloudflareContext) {
   const envelope = await requestEnvelope(
-    context.accessToken,
+    context.authHeaders,
     {
       path: buildCustomDomainPath(input, context),
       headers: buildR2JurisdictionHeaders(input),
@@ -65,7 +65,7 @@ async function getCustomDomain(input: Record<string, unknown>, context: Cloudfla
 
 async function addCustomDomain(input: Record<string, unknown>, context: CloudflareContext) {
   const envelope = await requestEnvelope(
-    context.accessToken,
+    context.authHeaders,
     {
       method: "POST",
       path: `${buildCloudflareR2BucketPath(input, context)}/domains/custom`,
@@ -92,7 +92,7 @@ async function updateCustomDomain(input: Record<string, unknown>, context: Cloud
     throw new ProviderRequestError(400, "enabled, minTLS, or ciphers is required");
   }
   const envelope = await requestEnvelope(
-    context.accessToken,
+    context.authHeaders,
     {
       method: "PUT",
       path: buildCustomDomainPath(input, context),
@@ -115,7 +115,7 @@ async function updateCustomDomain(input: Record<string, unknown>, context: Cloud
 async function deleteCustomDomain(input: Record<string, unknown>, context: CloudflareContext) {
   const domain = String(input.domain);
   await requestEnvelope(
-    context.accessToken,
+    context.authHeaders,
     {
       method: "DELETE",
       path: buildCustomDomainPath(input, context),
@@ -130,7 +130,7 @@ async function deleteCustomDomain(input: Record<string, unknown>, context: Cloud
 
 async function getManagedDomain(input: Record<string, unknown>, context: CloudflareContext) {
   const envelope = await requestEnvelope(
-    context.accessToken,
+    context.authHeaders,
     {
       path: `${buildCloudflareR2BucketPath(input, context)}/domains/managed`,
       headers: buildR2JurisdictionHeaders(input),
@@ -144,7 +144,7 @@ async function getManagedDomain(input: Record<string, unknown>, context: Cloudfl
 
 async function updateManagedDomain(input: Record<string, unknown>, context: CloudflareContext) {
   const envelope = await requestEnvelope(
-    context.accessToken,
+    context.authHeaders,
     {
       method: "PUT",
       path: `${buildCloudflareR2BucketPath(input, context)}/domains/managed`,

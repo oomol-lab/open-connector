@@ -1,7 +1,7 @@
 import type { ProviderDefinition } from "../../core/types.ts";
 
 import { actions } from "./actions.ts";
-import { cloudflareAuthorizationOptions, cloudflareDefaultScopes, cloudflareAuthTypes } from "./authorization.ts";
+import { cloudflareAuthorizationOptions, cloudflareDefaultScopes } from "./authorization.ts";
 
 export const provider: ProviderDefinition = {
   service: "cloudflare",
@@ -9,11 +9,11 @@ export const provider: ProviderDefinition = {
   description: "Deploy websites and Workers, manage DNS, KV, R2, email routing, and browser rendering.",
   categories: ["Developer Tools", "Storage"],
   homepageUrl: "https://www.cloudflare.com",
-  authTypes: cloudflareAuthTypes,
+  authTypes: ["api_key", "oauth2", "custom_credential"],
   auth: [
     {
       type: "custom_credential",
-      label: "Email Routing API Credential",
+      label: "Global API Key or API Token",
       fields: [
         {
           key: "email",
@@ -22,8 +22,7 @@ export const provider: ProviderDefinition = {
           required: false,
           secret: false,
           placeholder: "you@example.com",
-          description:
-            "Email address for legacy Global API Key authentication. Leave blank when using a cfut_ User API Token with Email Routing permissions.",
+          description: "Account email for Global API Key authentication. Leave blank when using an API token.",
         },
         {
           key: "apiKey",
@@ -33,23 +32,22 @@ export const provider: ProviderDefinition = {
           secret: true,
           placeholder: "cloudflare_global_api_key",
           description:
-            "Use a cfut_ User API Token with Email Routing Rules/Addresses permissions, or a Global API Key (cfk_ or legacy format) with the account email. Cloudflare cfat_ Account API Tokens are not accepted by the Email Routing API: https://developers.cloudflare.com/fundamentals/api/reference/permissions/.",
+            "Use a Global API Key with the account email, or a prefixed API token. Obtain credentials at https://dash.cloudflare.com/profile/api-tokens. Supported operations and permissions are checked by Cloudflare.",
         },
         {
           key: "accountId",
           label: "Cloudflare Account ID",
           inputType: "text",
-          required: true,
+          required: false,
           secret: false,
           placeholder: "32-character Cloudflare account ID",
-          description:
-            "Default account ID for destination addresses and account rule listings. Action inputs may override it.",
+          description: "Default account ID for account-scoped actions. Action inputs may override it.",
         },
         {
           key: "zoneId",
           label: "Cloudflare Zone ID",
           inputType: "text",
-          required: true,
+          required: false,
           secret: false,
           placeholder: "32-character Cloudflare zone ID",
           description: "Default zone ID for routing rule actions. Action inputs may override it.",

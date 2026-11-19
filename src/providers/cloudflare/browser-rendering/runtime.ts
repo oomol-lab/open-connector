@@ -127,7 +127,7 @@ async function runQuickAction(
   // Cover navigation (60s), selector/fixed waits (120s each), action (5min), and 30s transport.
   return runProviderRequest({ label: "cloudflare browser run", timeoutMs: 630_000, signal: context.signal }, (signal) =>
     cloudflareRequestEnvelope(
-      context.accessToken,
+      context.authHeaders,
       {
         method: "POST",
         path: `/accounts/${encodeURIComponent(accountId)}/browser-rendering/${endpoint}`,

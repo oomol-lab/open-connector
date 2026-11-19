@@ -142,3 +142,63 @@ it("rejects a Global API Key without email before making a request", async () =>
   ).rejects.toMatchObject({ status: 400 });
   expect(fetcher).not.toHaveBeenCalled();
 });
+
+it.each([
+  { action: "list_accounts", input: {} },
+  { action: "list_zones", input: {} },
+  { action: "list_workers", input: {} },
+  { action: "list_buckets", input: {} },
+  { action: "list_kv_keys", input: { namespaceId: "namespace" } },
+  { action: "list_pages_projects", input: {} },
+  { action: "get_markdown", input: { url: "https://example.com" } },
+])(
+  "sends Global API Key authentication for $action and preserves upstream rejection details",
+  async ({ action, input }) => {
+    const fetcher = vi.fn(async (_url: RequestInfo | URL, init?: RequestInit) => {
+      const headers = new Headers(init?.headers);
+      expect(headers.get("x-auth-key")).toBe(values.apiKey);
+      expect(headers.get("x-auth-email")).toBe(values.email);
+      expect(headers.has("authorization")).toBe(false);
+      return Response.json(
+        { success: false, errors: [{ code: 10000, message: "Permission denied for this resource" }] },
+        { status: 403 },
+      );
+    });
+    vi.stubGlobal("fetch", fetcher);
+    const result = await executors[`cloudflare.${action}`]!(input, context);
+    expect(fetcher).toHaveBeenCalledTimes(1);
+    expect(result).toMatchObject({
+      ok: false,
+      error: {
+        code: "provider_error",
+        message: "10000: Permission denied for this resource",
+        details: { status: 403 },
+      },
+    });
+  },
+);
+
+it("validates account API tokens from the custom credential form without an Email Routing gate", async () => {
+  const fetcher: typeof fetch = async (url, init) => {
+    expect(String(url)).toBe("https://api.cloudflare.com/client/v4/accounts/account/tokens/verify");
+    expect(new Headers(init?.headers).get("authorization")).toBe("Bearer cfat_token");
+    return Response.json({ success: true, result: { id: "token", status: "active" } });
+  };
+  await expect(
+    credentialValidators.customCredential!({ values: { apiKey: "cfat_token", accountId: "account" } }, { fetcher }),
+  ).resolves.toMatchObject({ profile: { accountId: "token" } });
+});
+
+it("can derive R2 signatures from a user token regardless of the credential form", async () => {
+  const token: ResolvedCredential = {
+    ...credential,
+    values: { ...values, apiKey: "cfut_token" },
+    metadata: { tokenId: "token-id" },
+  };
+  await expect(
+    executors["cloudflare.generate_presigned_url"]!(
+      { bucketName: "bucket", objectKey: "file.txt", method: "GET" },
+      { getCredential: async () => token },
+    ),
+  ).resolves.toMatchObject({ ok: true });
+});

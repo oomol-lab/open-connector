@@ -2,7 +2,6 @@ import type { ActionDefinition } from "../../../core/types.ts";
 
 import { s } from "../../../core/json-schema.ts";
 import { defineProviderAction } from "../../../core/provider-definition.ts";
-import { cloudflareTokenAuthTypes } from "../authorization.ts";
 
 const service = "cloudflare";
 const accountId = s.string("The account ID. Defaults to the connection account, or the only accessible account.");
@@ -32,7 +31,6 @@ const deploymentOutput = {
 
 export const actions: ActionDefinition[] = [
   defineProviderAction(service, {
-    authTypes: cloudflareTokenAuthTypes,
     name: "list_pages_projects",
     description: "List Cloudflare Pages projects.",
     operationType: "read",
@@ -46,7 +44,6 @@ export const actions: ActionDefinition[] = [
     outputSchema: s.requiredObject("The action result.", listOutput),
   }),
   defineProviderAction(service, {
-    authTypes: cloudflareTokenAuthTypes,
     name: "create_pages_project",
     description:
       "Create a Pages project. Omit source for Direct Upload; use official project configuration fields for Git integration and Functions bindings.",
@@ -68,7 +65,6 @@ export const actions: ActionDefinition[] = [
     outputSchema: s.requiredObject("The action result.", resultOutput),
   }),
   defineProviderAction(service, {
-    authTypes: cloudflareTokenAuthTypes,
     name: "get_pages_project",
     description: "Read a Pages project and its deployment configuration.",
     operationType: "read",
@@ -78,7 +74,6 @@ export const actions: ActionDefinition[] = [
     outputSchema: s.requiredObject("The action result.", resultOutput),
   }),
   defineProviderAction(service, {
-    authTypes: cloudflareTokenAuthTypes,
     name: "update_pages_project",
     description:
       "Update Pages project configuration using official API fields, including deployment_configs for environment variables and bindings.",
@@ -99,7 +94,6 @@ export const actions: ActionDefinition[] = [
     outputSchema: s.requiredObject("The action result.", resultOutput),
   }),
   defineProviderAction(service, {
-    authTypes: cloudflareTokenAuthTypes,
     name: "delete_pages_project",
     description: "Delete a Pages project.",
     operationType: "destructive",
@@ -109,7 +103,6 @@ export const actions: ActionDefinition[] = [
     outputSchema: s.requiredObject("The action result.", resultOutput),
   }),
   defineProviderAction(service, {
-    authTypes: cloudflareTokenAuthTypes,
     name: "list_pages_deployments",
     description: "List deployments for a Pages project.",
     operationType: "read",
@@ -128,7 +121,6 @@ export const actions: ActionDefinition[] = [
     outputSchema: s.requiredObject("The action result.", listOutput),
   }),
   defineProviderAction(service, {
-    authTypes: cloudflareTokenAuthTypes,
     name: "list_pages_domains",
     description: "List custom domains attached to a Pages project.",
     operationType: "read",
@@ -142,7 +134,6 @@ export const actions: ActionDefinition[] = [
     outputSchema: s.requiredObject("The action result.", listOutput),
   }),
   defineProviderAction(service, {
-    authTypes: cloudflareTokenAuthTypes,
     name: "create_pages_domain",
     description:
       "Attach a custom domain to a Pages project. Inspect its validation status and configure the required DNS records separately.",
@@ -157,7 +148,6 @@ export const actions: ActionDefinition[] = [
     outputSchema: s.requiredObject("The action result.", resultOutput),
   }),
   defineProviderAction(service, {
-    authTypes: cloudflareTokenAuthTypes,
     name: "get_pages_domain",
     description: "Read Pages custom domain validation and certificate status.",
     operationType: "read",
@@ -171,7 +161,6 @@ export const actions: ActionDefinition[] = [
     outputSchema: s.requiredObject("The action result.", resultOutput),
   }),
   defineProviderAction(service, {
-    authTypes: cloudflareTokenAuthTypes,
     name: "delete_pages_domain",
     description: "Detach a Pages custom domain.",
     operationType: "destructive",
@@ -185,7 +174,6 @@ export const actions: ActionDefinition[] = [
     outputSchema: s.requiredObject("The action result.", resultOutput),
   }),
   defineProviderAction(service, {
-    authTypes: cloudflareTokenAuthTypes,
     name: "delete_pages_deployment",
     description: "Delete a Pages deployment.",
     operationType: "destructive",
@@ -204,7 +192,6 @@ export const actions: ActionDefinition[] = [
     outputSchema: s.requiredObject("The action result.", resultOutput),
   }),
   defineProviderAction(service, {
-    authTypes: cloudflareTokenAuthTypes,
     name: "rollback_pages_deployment",
     description: "Roll back a Pages project to a previous production deployment.",
     operationType: "write",
@@ -218,7 +205,6 @@ export const actions: ActionDefinition[] = [
     outputSchema: s.requiredObject("The action result.", resultOutput),
   }),
   defineProviderAction(service, {
-    authTypes: cloudflareTokenAuthTypes,
     name: "deploy_pages_site",
     description:
       "Deploy a prebuilt Pages site from a public ZIP URL. The archive root is the site root. Uploads assets in batches and submits the deployment; use get_pages_deployment to wait for completion. Connector limits: 512 MiB compressed and expanded, 20,000 files, 25 MiB per file. Include compiled _worker.js or _worker.bundle for Pages Functions.",
@@ -245,7 +231,6 @@ export const actions: ActionDefinition[] = [
     outputSchema: s.requiredObject("The submitted deployment.", deploymentOutput),
   }),
   defineProviderAction(service, {
-    authTypes: cloudflareTokenAuthTypes,
     name: "get_pages_deployment",
     description: "Get a Pages deployment and its current processing status.",
     operationType: "read",

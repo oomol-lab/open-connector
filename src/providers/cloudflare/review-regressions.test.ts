@@ -7,7 +7,14 @@ import { requestCloudflareAccounts } from "./shared/accounts.ts";
 import { cloudflareResponseError } from "./shared/errors.ts";
 
 function context(fetcher: typeof fetch): CloudflareContext {
-  return { authType: "api_key", accessToken: "token", accountId: "account", metadata: {}, fetcher };
+  return {
+    authType: "api_key",
+    accessToken: "token",
+    authHeaders: { authorization: "Bearer token" },
+    accountId: "account",
+    metadata: {},
+    fetcher,
+  };
 }
 
 it.each(["get_kv_value", "put_kv_value", "delete_kv_value"])("preserves whitespace in %s keys", async (action) => {
@@ -60,7 +67,9 @@ it("bounds account discovery through response body consumption", async () => {
         });
       return response;
     };
-    const assertion = expect(requestCloudflareAccounts("token", fetcher, undefined)).rejects.toMatchObject({
+    const assertion = expect(
+      requestCloudflareAccounts({ authorization: "Bearer token" }, fetcher, undefined),
+    ).rejects.toMatchObject({
       status: 504,
     });
     await vi.advanceTimersByTimeAsync(30_001);
@@ -78,9 +87,22 @@ it.each([false, true])("keeps Pages cache updates optional while preserving canc
   const controller = new AbortController();
   let deployed = false;
   const failure = new Error("cache unavailable");
-  const fetcher: typeof fetch = async (url) => {
+  const fetcher: typeof fetch = async (url, init) => {
     const pathname = new URL(String(url)).pathname;
-    if (pathname === "/site.zip") return new Response(archive);
+    const headers = new Headers(init?.headers);
+    if (pathname === "/site.zip") {
+      expect(headers.has("x-auth-key")).toBe(false);
+      expect(headers.has("authorization")).toBe(false);
+      return new Response(archive);
+    }
+    if (pathname.includes("/pages/assets/")) {
+      expect(headers.get("authorization")).toBe("Bearer jwt");
+      expect(headers.has("x-auth-key")).toBe(false);
+    } else {
+      expect(headers.get("x-auth-key")).toBe("global-key");
+      expect(headers.get("x-auth-email")).toBe("owner@example.com");
+      expect(headers.has("authorization")).toBe(false);
+    }
     if (pathname.endsWith("/upsert-hashes")) {
       if (cancel) controller.abort(failure);
       throw failure;
@@ -96,7 +118,7 @@ it.each([false, true])("keeps Pages cache updates optional while preserving canc
   };
   const client = new CloudflareClient(
     { accountId: "account", projectName: "site", archiveUrl: "https://example.com/site.zip" },
-    "token",
+    { "x-auth-key": "global-key", "x-auth-email": "owner@example.com" },
     fetcher,
     controller.signal,
   );

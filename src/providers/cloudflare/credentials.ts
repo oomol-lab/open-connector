@@ -18,12 +18,8 @@ export function credentialHeaders(credential: ResolvedCredential | undefined): R
 
 function customCredentialHeaders(values: Record<string, string>): Record<string, string> {
   const apiKey = requiredInputString(values.apiKey, "apiKey");
-  if (apiKey.startsWith("cfat_") || apiKey.startsWith("cfpat_"))
-    throw new ProviderRequestError(
-      400,
-      "Email Routing requires a user API token or a Global API Key with account email",
-    );
-  if (apiKey.startsWith("cfut_")) return { authorization: `Bearer ${apiKey}` };
+  if (["cfut_", "cfat_", "cfpat_"].some((prefix) => apiKey.startsWith(prefix)))
+    return { authorization: `Bearer ${apiKey}` };
   return { "x-auth-key": apiKey, "x-auth-email": requiredInputString(values.email, "email") };
 }
 
@@ -34,13 +30,7 @@ export const validateCustomCredential: NonNullable<CredentialValidators["customC
   const headers = customCredentialHeaders(input.values);
   if (headers.authorization) return validateApiKey({ apiKey: input.values.apiKey!, values: input.values }, context);
   return runProviderRequest({ label: "Cloudflare", signal: context.signal }, async (signal) => {
-    const envelope = await cloudflareRequestEnvelope(
-      input.values.apiKey!,
-      { path: "/user", authHeaders: headers },
-      context.fetcher,
-      "execute",
-      signal,
-    );
+    const envelope = await cloudflareRequestEnvelope(headers, { path: "/user" }, context.fetcher, "execute", signal);
     const user = requiredResponseRecord(envelope.result, "Cloudflare user");
     return {
       profile: {
@@ -60,7 +50,8 @@ export const validateApiKey: NonNullable<CredentialValidators["apiKey"]> = async
     if (owned && !accountId)
       throw new ProviderRequestError(400, "accountId is required to verify an account-owned API token");
     const requestFetch: typeof fetch = (url, init) => fetcher(url, { ...init, signal: requestSignal });
-    const verify = (path: string) => cloudflareRequestEnvelope(token, { path }, requestFetch, "execute");
+    const verify = (path: string) =>
+      cloudflareRequestEnvelope({ authorization: `Bearer ${token}` }, { path }, requestFetch, "execute");
     const accountEndpoint = `/accounts/${encodeURIComponent(accountId ?? "")}/tokens/verify`;
     const envelope = await verify(owned ? accountEndpoint : "/user/tokens/verify").catch((error: unknown) => {
       if (

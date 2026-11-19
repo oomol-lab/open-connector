@@ -2,7 +2,6 @@ import type { ActionDefinition } from "../../../core/types.ts";
 
 import { s } from "../../../core/json-schema.ts";
 import { defineProviderAction } from "../../../core/provider-definition.ts";
-import { cloudflareTokenAuthTypes } from "../authorization.ts";
 import { bucketNameSchema, jurisdictionSchema, readPermissions, writePermissions } from "./schemas.ts";
 
 const service = "cloudflare";
@@ -59,7 +58,6 @@ const managedDomainSchema = s.requiredObject("The r2.dev managed domain of a buc
 
 export const actions: ActionDefinition[] = [
   defineProviderAction(service, {
-    authTypes: cloudflareTokenAuthTypes,
     name: "list_custom_domains",
     operationType: "read",
     description: "List the custom domains attached to an R2 bucket.",
@@ -79,7 +77,6 @@ export const actions: ActionDefinition[] = [
     }),
   }),
   defineProviderAction(service, {
-    authTypes: cloudflareTokenAuthTypes,
     name: "get_custom_domain",
     operationType: "read",
     description: "Get the settings of one custom domain attached to an R2 bucket.",
@@ -100,7 +97,6 @@ export const actions: ActionDefinition[] = [
     }),
   }),
   defineProviderAction(service, {
-    authTypes: cloudflareTokenAuthTypes,
     name: "add_custom_domain",
     operationType: "write",
     description: "Attach a custom domain from a Cloudflare zone to an R2 bucket.",
@@ -127,7 +123,6 @@ export const actions: ActionDefinition[] = [
     }),
   }),
   defineProviderAction(service, {
-    authTypes: cloudflareTokenAuthTypes,
     name: "update_custom_domain",
     operationType: "write",
     description: "Update the public access, TLS version, or cipher settings of a custom domain.",
@@ -151,7 +146,6 @@ export const actions: ActionDefinition[] = [
     }),
   }),
   defineProviderAction(service, {
-    authTypes: cloudflareTokenAuthTypes,
     name: "delete_custom_domain",
     operationType: "destructive",
     description: "Detach a custom domain from an R2 bucket.",
@@ -173,7 +167,6 @@ export const actions: ActionDefinition[] = [
     }),
   }),
   defineProviderAction(service, {
-    authTypes: cloudflareTokenAuthTypes,
     name: "get_managed_domain",
     operationType: "read",
     description: "Get the r2.dev managed domain and its public access state for an R2 bucket.",
@@ -191,7 +184,6 @@ export const actions: ActionDefinition[] = [
     outputSchema: managedDomainSchema,
   }),
   defineProviderAction(service, {
-    authTypes: cloudflareTokenAuthTypes,
     name: "update_managed_domain",
     operationType: "destructive",
     description: "Enable or disable public access to an R2 bucket through its r2.dev domain.",

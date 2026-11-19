@@ -8,7 +8,7 @@ import { valuePath } from "./paths.ts";
 
 export async function getKvValue(client: CloudflareClient): Promise<unknown> {
   const response = await client.fetcher(buildCloudflareUrl(valuePath(client)), {
-    headers: { authorization: `Bearer ${client.apiToken}` },
+    headers: client.authHeaders,
   });
   if (!response.ok) throw cloudflareResponseError(response, await readCloudflareEnvelope(response), "execute");
   return {
