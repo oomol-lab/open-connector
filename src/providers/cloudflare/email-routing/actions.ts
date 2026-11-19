@@ -88,8 +88,8 @@ const createInput = s.object(
   "The input payload for this action.",
   { zoneId, ...ruleFields },
   {
-    required: ["zoneId", "actions", "matchers"],
-    optional: ["enabled", "name", "priority", "source", "ownerWorkerTag"],
+    required: ["actions", "matchers"],
+    optional: ["zoneId", "enabled", "name", "priority", "source", "ownerWorkerTag"],
   },
 );
 
@@ -97,8 +97,8 @@ const updateInput = s.object(
   "The input payload for this action.",
   { zoneId, ruleId, ...ruleFields },
   {
-    required: ["zoneId", "ruleId", "actions", "matchers"],
-    optional: ["enabled", "name", "priority", "source", "ownerWorkerTag"],
+    required: ["ruleId", "actions", "matchers"],
+    optional: ["zoneId", "enabled", "name", "priority", "source", "ownerWorkerTag"],
   },
 );
 
@@ -114,6 +114,7 @@ const listRulesInput: JsonSchema = {
 export const actions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_routing_rules",
+    authTypes: ["api_key", "oauth2", "custom_credential"],
     operationType: "read",
     description: "List Cloudflare Email Routing rules for a zone or account.",
     requiredScopes: ["email-routing-rule.read"],
@@ -127,6 +128,7 @@ export const actions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "create_routing_rule",
+    authTypes: ["api_key", "oauth2", "custom_credential"],
     operationType: "write",
     description:
       "Create a Cloudflare Email Routing rule in a zone. Forward actions require verified destination addresses.",
@@ -137,6 +139,7 @@ export const actions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "update_routing_rule",
+    authTypes: ["api_key", "oauth2", "custom_credential"],
     operationType: "destructive",
     description: "Replace a Cloudflare Email Routing rule in a zone.",
     requiredScopes: ["email-routing-rule.write"],
@@ -146,11 +149,16 @@ export const actions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "delete_routing_rule",
+    authTypes: ["api_key", "oauth2", "custom_credential"],
     operationType: "destructive",
     description: "Delete a Cloudflare Email Routing rule from a zone.",
     requiredScopes: ["email-routing-rule.write"],
     providerPermissions: [rulesWrite],
-    inputSchema: s.object("The input payload for this action.", { zoneId, ruleId }, { required: ["ruleId", "zoneId"] }),
+    inputSchema: s.object(
+      "The input payload for this action.",
+      { zoneId, ruleId },
+      { required: ["ruleId"], optional: ["zoneId"] },
+    ),
     outputSchema: s.object("The output payload for this action.", {
       id: ruleId,
       deleted: s.boolean("Whether deletion completed."),
@@ -158,6 +166,7 @@ export const actions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "list_destination_addresses",
+    authTypes: ["api_key", "oauth2", "custom_credential"],
     operationType: "read",
     description:
       "List Cloudflare Email Routing destination addresses. Use addresses with a non-null verified timestamp for forward actions.",

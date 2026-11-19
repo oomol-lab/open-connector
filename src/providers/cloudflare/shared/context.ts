@@ -6,7 +6,9 @@ import { providerInputError, ProviderRequestError } from "../../provider-runtime
 import { requestCloudflareAccounts } from "./accounts.ts";
 
 export interface CloudflareContext {
-  authType: "api_key" | "oauth2";
+  authType: "api_key" | "oauth2" | "custom_credential";
+  authHeaders?: Record<string, string>;
+  zoneId?: string;
   accessToken: string;
   accountId?: string;
   metadata: Record<string, unknown>;

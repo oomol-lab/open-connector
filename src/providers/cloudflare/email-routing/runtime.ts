@@ -37,6 +37,7 @@ export const handlers: Record<string, ProviderRuntimeHandler<CloudflareContext>>
 
 async function listRoutingRules(input: Record<string, unknown>, context: CloudflareContext): Promise<unknown> {
   if (input.zoneId !== undefined) requiredInputString(input.zoneId, "zoneId");
+  else if (!optionalString(input.accountId) && context.zoneId) input = { ...input, zoneId: context.zoneId };
   else input = await resolveActionAccount(input, context);
   const explicitAccount = optionalString(input.accountId);
   const explicitZone = optionalString(input.zoneId);
@@ -73,7 +74,7 @@ async function mutateRoutingRule(
   input: Record<string, unknown>,
   context: CloudflareContext,
 ): Promise<unknown> {
-  const zone = encodeURIComponent(requiredInputString(input.zoneId, "zoneId"));
+  const zone = encodeURIComponent(requiredInputString(input.zoneId ?? context.zoneId, "zoneId"));
   const suffix = method === "PUT" ? `/${encodeURIComponent(requiredInputString(input.ruleId, "ruleId"))}` : "";
   const bodyInput =
     method === "PUT"
@@ -96,7 +97,7 @@ async function mutateRoutingRule(
 }
 
 async function deleteRoutingRule(input: Record<string, unknown>, context: CloudflareContext): Promise<unknown> {
-  const zoneId = requiredInputString(input.zoneId, "zoneId");
+  const zoneId = requiredInputString(input.zoneId ?? context.zoneId, "zoneId");
   const id = requiredInputString(input.ruleId, "ruleId");
   await requestCloudflare(
     context,
@@ -165,7 +166,7 @@ async function requestCloudflare(
 function buildHeaders(context: CloudflareContext, hasBody: boolean): Record<string, string> {
   const headers: Record<string, string> = {
     accept: "application/json",
-    authorization: `Bearer ${context.accessToken}`,
+    ...(context.authHeaders ?? { authorization: `Bearer ${context.accessToken}` }),
     "user-agent": providerUserAgent,
   };
   if (hasBody) headers["content-type"] = "application/json";

@@ -20,6 +20,7 @@ export interface CloudflareRequestInput {
   query?: Record<string, QueryValue>;
   body?: Record<string, unknown> | FormData | Blob;
   headers?: Record<string, string>;
+  authHeaders?: Record<string, string>;
 }
 
 export async function cloudflareRequestEnvelope(
@@ -34,6 +35,7 @@ export async function cloudflareRequestEnvelope(
     headers: cloudflareHeaders(apiToken, {
       hasBody: request.body != null,
       extraHeaders: request.headers,
+      authHeaders: request.authHeaders,
       useJsonContentType: !(request.body instanceof FormData || request.body instanceof Blob),
     }),
     body: buildCloudflareRequestBody(request.body),
@@ -74,10 +76,15 @@ export function buildCloudflareUrl(path: string, query?: Record<string, QueryVal
 
 function cloudflareHeaders(
   apiToken: string,
-  input: { hasBody: boolean; extraHeaders?: Record<string, string>; useJsonContentType?: boolean },
+  input: {
+    hasBody: boolean;
+    extraHeaders?: Record<string, string>;
+    authHeaders?: Record<string, string>;
+    useJsonContentType?: boolean;
+  },
 ): Record<string, string> {
   const headers: Record<string, string> = {
-    authorization: `Bearer ${apiToken}`,
+    ...(input.authHeaders ?? { authorization: `Bearer ${apiToken}` }),
     "user-agent": providerUserAgent,
   };
 
@@ -85,10 +92,7 @@ function cloudflareHeaders(
     headers["content-type"] = "application/json";
   }
 
-  return {
-    ...headers,
-    ...input.extraHeaders,
-  };
+  return { ...headers, ...input.extraHeaders };
 }
 
 export async function readCloudflareEnvelope(response: Response): Promise<CloudflareEnvelope> {

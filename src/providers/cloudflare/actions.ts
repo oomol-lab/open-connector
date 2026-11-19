@@ -12,7 +12,7 @@ import { actions as workersActions } from "./workers/actions.ts";
 
 const service = "cloudflare";
 
-export const actions: ActionDefinition[] = [
+const combinedActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_accounts",
     operationType: "read",
@@ -46,3 +46,8 @@ export const actions: ActionDefinition[] = [
   ...kvActions,
   ...pagesActions,
 ];
+
+export const actions: ActionDefinition[] = combinedActions.map((action) => ({
+  ...action,
+  authTypes: action.authTypes ?? ["api_key", "oauth2"],
+}));
