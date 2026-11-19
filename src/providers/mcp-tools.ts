@@ -12,7 +12,7 @@ import {
   SseError,
   UnauthorizedError,
 } from "@modelcontextprotocol/client";
-import { withMcpClient } from "./mcp-client.ts";
+import { withMcpClient, createMcpDiagnosticFetch } from "./mcp-client.ts";
 import {
   createProviderTimeout,
   isAbortLikeError,
@@ -61,7 +61,7 @@ export async function withMcpToolClient<T>(input: McpToolOptions, run: (client: 
       signal: input.signal,
       headers: { "user-agent": providerUserAgent, ...input.headers },
       redirect: input.redirect,
-      fetcher: limitedFetcher,
+      fetcher: createMcpDiagnosticFetch(limitedFetcher, input.transport ?? "streamable_http", input.service),
       mapError: (error) => mapMcpError(input.service, error),
       terminateSession: input.terminateSession,
     },
@@ -307,13 +307,6 @@ function mapMcpError(service: string, error: unknown) {
 
   if (isAbortLikeError(error)) {
     return new ProviderRequestError(504, `${service} MCP request timed out`, undefined, "provider_error");
-  }
-
-  if (error instanceof SdkError && typeof error.data === "object" && error.data !== null) {
-    const cause = "cause" in error.data ? error.data.cause : undefined;
-    if (cause instanceof ProviderRequestError) {
-      return cause;
-    }
   }
 
   if (error instanceof UnauthorizedError) {
