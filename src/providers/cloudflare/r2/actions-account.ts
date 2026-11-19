@@ -4,6 +4,8 @@ import { s } from "../../../core/json-schema.ts";
 import { defineProviderAction } from "../../../core/provider-definition.ts";
 import { bucketNameSchema, readPermissions, writePermissions } from "./schemas.ts";
 
+const service = "cloudflare";
+
 const sizeMetricsSchema = s.object(
   "Object count and storage usage for one object state.",
   {
@@ -24,7 +26,7 @@ const classMetricsSchema = s.object(
 );
 
 export const actions: ActionDefinition[] = [
-  defineProviderAction("cloudflare", {
+  defineProviderAction(service, {
     name: "get_account_metrics",
     operationType: "read",
     description:
@@ -43,7 +45,7 @@ export const actions: ActionDefinition[] = [
       { optional: ["standard", "infrequentAccess"] },
     ),
   }),
-  defineProviderAction("cloudflare", {
+  defineProviderAction(service, {
     name: "create_temporary_access_credentials",
     operationType: "write",
     description:

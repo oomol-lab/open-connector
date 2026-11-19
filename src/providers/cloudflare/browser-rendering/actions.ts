@@ -3,6 +3,8 @@ import type { ActionDefinition, JsonSchema } from "../../../core/types.ts";
 import { s } from "../../../core/json-schema.ts";
 import { defineProviderAction } from "../../../core/provider-definition.ts";
 
+const service = "cloudflare";
+
 const waitUntilEventSchema = s.stringEnum("One Puppeteer page load event to wait for.", [
   "load",
   "domcontentloaded",
@@ -114,7 +116,7 @@ const scrapeResultSchema = s.requiredObject("One Cloudflare Browser Run scrape s
 });
 
 export const actions: ActionDefinition[] = [
-  defineProviderAction("cloudflare", {
+  defineProviderAction(service, {
     name: "get_html_content",
     operationType: "read",
     description: "Render a URL or raw HTML with Cloudflare Browser Run and return the fully rendered HTML content.",
@@ -128,7 +130,7 @@ export const actions: ActionDefinition[] = [
       { required: ["content"] },
     ),
   }),
-  defineProviderAction("cloudflare", {
+  defineProviderAction(service, {
     name: "get_markdown",
     operationType: "read",
     description: "Render a URL or raw HTML with Cloudflare Browser Run and return the page content as Markdown.",
@@ -140,7 +142,7 @@ export const actions: ActionDefinition[] = [
       "The Markdown content returned by Cloudflare Browser Run.",
     ),
   }),
-  defineProviderAction("cloudflare", {
+  defineProviderAction(service, {
     name: "get_links",
     operationType: "read",
     description: "Render a URL or raw HTML with Cloudflare Browser Run and return links discovered on the page.",
@@ -159,7 +161,7 @@ export const actions: ActionDefinition[] = [
       "The links returned by Cloudflare Browser Run.",
     ),
   }),
-  defineProviderAction("cloudflare", {
+  defineProviderAction(service, {
     name: "get_json",
     operationType: "read",
     description: "Render a URL or raw HTML with Cloudflare Browser Run and extract structured JSON from the page.",
@@ -171,7 +173,7 @@ export const actions: ActionDefinition[] = [
       "The structured JSON data returned by Cloudflare Browser Run.",
     ),
   }),
-  defineProviderAction("cloudflare", {
+  defineProviderAction(service, {
     name: "scrape_elements",
     operationType: "read",
     description: "Render a URL or raw HTML with Cloudflare Browser Run and scrape selected HTML elements.",

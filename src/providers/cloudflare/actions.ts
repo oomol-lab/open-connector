@@ -10,8 +10,10 @@ import { actions as pagesActions } from "./pages/actions.ts";
 import { actions as r2Actions } from "./r2/actions.ts";
 import { actions as workersActions } from "./workers/actions.ts";
 
+const service = "cloudflare";
+
 export const actions: ActionDefinition[] = [
-  defineProviderAction("cloudflare", {
+  defineProviderAction(service, {
     name: "list_accounts",
     operationType: "read",
     description: "List accessible Cloudflare accounts and pagination metadata.",

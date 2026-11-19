@@ -13,6 +13,8 @@ import {
   writePermissions,
 } from "./schemas.ts";
 
+const service = "cloudflare";
+
 const objectHttpMetadataSchema = s.object(
   "HTTP metadata stored with an R2 object.",
   {
@@ -57,7 +59,7 @@ const objectSchema = s.object(
 const bucketJobTypeSchema = s.stringEnum("The bucket job kind.", ["prefixDelete"]);
 
 export const actions: ActionDefinition[] = [
-  defineProviderAction("cloudflare", {
+  defineProviderAction(service, {
     name: "list_objects",
     operationType: "read",
     description: "List objects in an R2 bucket with optional prefix, delimiter grouping, and cursor pagination.",
@@ -101,7 +103,7 @@ export const actions: ActionDefinition[] = [
       { optional: ["cursor"] },
     ),
   }),
-  defineProviderAction("cloudflare", {
+  defineProviderAction(service, {
     name: "delete_object",
     operationType: "destructive",
     description: "Delete one R2 object by key.",
@@ -123,7 +125,7 @@ export const actions: ActionDefinition[] = [
       deleted: s.boolean("Whether the delete request succeeded."),
     }),
   }),
-  defineProviderAction("cloudflare", {
+  defineProviderAction(service, {
     name: "delete_objects",
     operationType: "destructive",
     description: "Delete a list of R2 objects by key in one request.",
@@ -151,7 +153,7 @@ export const actions: ActionDefinition[] = [
       ),
     }),
   }),
-  defineProviderAction("cloudflare", {
+  defineProviderAction(service, {
     name: "delete_objects_by_prefix",
     operationType: "destructive",
     description: "Start a background job that deletes every object under a key prefix, or empties the whole bucket.",
@@ -181,7 +183,7 @@ export const actions: ActionDefinition[] = [
     ),
     outputSchema: s.describe(bucketJobSchema, "The background job created for the delete request."),
   }),
-  defineProviderAction("cloudflare", {
+  defineProviderAction(service, {
     name: "list_bucket_jobs",
     operationType: "read",
     description: "List background jobs for an R2 bucket, such as prefix delete jobs.",
@@ -211,7 +213,7 @@ export const actions: ActionDefinition[] = [
       { optional: ["nextContinuationToken"] },
     ),
   }),
-  defineProviderAction("cloudflare", {
+  defineProviderAction(service, {
     name: "get_bucket_job",
     operationType: "read",
     description: "Get the current status of one R2 bucket background job.",

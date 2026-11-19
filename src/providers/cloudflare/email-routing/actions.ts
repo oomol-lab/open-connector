@@ -3,6 +3,8 @@ import type { ActionDefinition, JsonSchema } from "../../../core/types.ts";
 import { s } from "../../../core/json-schema.ts";
 import { defineProviderAction } from "../../../core/provider-definition.ts";
 
+const service = "cloudflare";
+
 const rulesRead = "Email Routing Rules Read";
 
 const rulesWrite = "Email Routing Rules Write";
@@ -116,7 +118,7 @@ const listRulesInput: JsonSchema = {
 };
 
 export const actions: ActionDefinition[] = [
-  defineProviderAction("cloudflare", {
+  defineProviderAction(service, {
     name: "list_routing_rules",
     operationType: "read",
     description: "List Cloudflare Email Routing rules for a zone or account.",
@@ -129,7 +131,7 @@ export const actions: ActionDefinition[] = [
       { optional: ["resultInfo"] },
     ),
   }),
-  defineProviderAction("cloudflare", {
+  defineProviderAction(service, {
     name: "create_routing_rule",
     operationType: "write",
     description:
@@ -139,7 +141,7 @@ export const actions: ActionDefinition[] = [
     inputSchema: createInput,
     outputSchema: s.object("The output payload for this action.", { rule: ruleSchema }),
   }),
-  defineProviderAction("cloudflare", {
+  defineProviderAction(service, {
     name: "update_routing_rule",
     operationType: "destructive",
     description: "Replace a Cloudflare Email Routing rule in a zone.",
@@ -148,7 +150,7 @@ export const actions: ActionDefinition[] = [
     inputSchema: updateInput,
     outputSchema: s.object("The output payload for this action.", { rule: ruleSchema }),
   }),
-  defineProviderAction("cloudflare", {
+  defineProviderAction(service, {
     name: "delete_routing_rule",
     operationType: "destructive",
     description: "Delete a Cloudflare Email Routing rule from a zone.",
@@ -160,7 +162,7 @@ export const actions: ActionDefinition[] = [
       deleted: s.boolean("Whether deletion completed."),
     }),
   }),
-  defineProviderAction("cloudflare", {
+  defineProviderAction(service, {
     name: "list_destination_addresses",
     operationType: "read",
     description:

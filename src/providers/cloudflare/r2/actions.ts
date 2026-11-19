@@ -9,6 +9,8 @@ import { actions as r2EventNotificationActions } from "./actions-event-notificat
 import { actions as r2ObjectActions } from "./actions-objects.ts";
 import { jurisdictions } from "./schemas.ts";
 
+const service = "cloudflare";
+
 const r2ReadScope = "workers-r2.read";
 
 const r2WriteScope = "workers-r2.write";
@@ -95,13 +97,15 @@ const updateBucketInputSchema = s.object(
     storageClass: storageClassSchema,
     jurisdiction: jurisdictionSchema,
   },
-  { required: ["bucketName"], optional: ["accountId", "storageClass", "jurisdiction"] },
-) as JsonSchema;
-
-updateBucketInputSchema.anyOf = [{ required: ["storageClass"] }, { required: ["jurisdiction"] }];
+  {
+    required: ["bucketName"],
+    optional: ["accountId", "storageClass", "jurisdiction"],
+    anyOf: [{ required: ["storageClass"] }, { required: ["jurisdiction"] }],
+  },
+);
 
 const coreActions: ActionDefinition[] = [
-  defineProviderAction("cloudflare", {
+  defineProviderAction(service, {
     name: "list_buckets",
     operationType: "read",
     description: "List the R2 buckets in a Cloudflare account.",
@@ -128,7 +132,7 @@ const coreActions: ActionDefinition[] = [
       { optional: ["cursor"] },
     ),
   }),
-  defineProviderAction("cloudflare", {
+  defineProviderAction(service, {
     name: "get_bucket",
     operationType: "read",
     description: "Get one R2 bucket by name.",
@@ -145,7 +149,7 @@ const coreActions: ActionDefinition[] = [
     ),
     outputSchema: s.object("The output payload for this action.", { bucket: bucketSchema }),
   }),
-  defineProviderAction("cloudflare", {
+  defineProviderAction(service, {
     name: "download_object",
     operationType: "read",
     description: "Download one R2 object into local transit file storage.",
@@ -164,7 +168,7 @@ const coreActions: ActionDefinition[] = [
     ),
     outputSchema: downloadedObjectSchema,
   }),
-  defineProviderAction("cloudflare", {
+  defineProviderAction(service, {
     name: "create_bucket",
     operationType: "write",
     description: "Create an R2 bucket in a Cloudflare account.",
@@ -183,7 +187,7 @@ const coreActions: ActionDefinition[] = [
     ),
     outputSchema: s.object("The output payload for this action.", { bucket: bucketSchema }),
   }),
-  defineProviderAction("cloudflare", {
+  defineProviderAction(service, {
     name: "update_bucket",
     operationType: "write",
     description: "Update mutable R2 bucket properties such as default storage class or jurisdiction.",
@@ -192,7 +196,7 @@ const coreActions: ActionDefinition[] = [
     inputSchema: updateBucketInputSchema,
     outputSchema: s.object("The output payload for this action.", { bucket: bucketSchema }),
   }),
-  defineProviderAction("cloudflare", {
+  defineProviderAction(service, {
     name: "delete_bucket",
     operationType: "destructive",
     description: "Delete an R2 bucket by name.",
@@ -212,7 +216,7 @@ const coreActions: ActionDefinition[] = [
       deleted: s.boolean("Whether the bucket delete request succeeded."),
     }),
   }),
-  defineProviderAction("cloudflare", {
+  defineProviderAction(service, {
     name: "get_bucket_cors_policy",
     operationType: "read",
     description: "Fetch the bucket-level CORS policy for an R2 bucket.",
@@ -235,7 +239,7 @@ const coreActions: ActionDefinition[] = [
       { optional: ["rules"] },
     ),
   }),
-  defineProviderAction("cloudflare", {
+  defineProviderAction(service, {
     name: "update_bucket_cors_policy",
     operationType: "destructive",
     description: "Replace the bucket-level CORS policy for an R2 bucket.",
@@ -256,7 +260,7 @@ const coreActions: ActionDefinition[] = [
       updated: s.boolean("Whether the update request succeeded."),
     }),
   }),
-  defineProviderAction("cloudflare", {
+  defineProviderAction(service, {
     name: "delete_bucket_cors_policy",
     operationType: "destructive",
     description: "Delete the bucket-level CORS policy for an R2 bucket.",
@@ -276,46 +280,44 @@ const coreActions: ActionDefinition[] = [
       deleted: s.boolean("Whether the delete request succeeded."),
     }),
   }),
-  defineProviderAction("cloudflare", {
+  defineProviderAction(service, {
     name: "put_object",
     operationType: "destructive",
     description:
       "Upload one R2 object by relaying a public URL, plain text, or base64-encoded content through the connector. This is the fallback for OAuth connections and callers that cannot PUT directly; custom API token connections should prefer generate_presigned_url with method PUT so the bytes go straight to R2 without the connector size cap.",
     requiredScopes: [r2WriteScope],
     providerPermissions: [r2WritePermission],
-    inputSchema: {
-      ...s.object(
-        "The input payload for this action.",
-        {
-          accountId: accountIdSchema,
-          bucketName: bucketNameSchema,
-          objectKey: s.nonEmptyString("The complete R2 object key. Slashes are preserved as key delimiters."),
-          jurisdiction: jurisdictionSchema,
-          sourceUrl: s.url(
-            "A public URL that the connector can fetch and upload to R2. Provide exactly one of sourceUrl, contentText, or contentBase64.",
-          ),
-          contentText: s.string(
-            "The plain-text content to upload. Provide exactly one of sourceUrl, contentText, or contentBase64.",
-          ),
-          contentBase64: s.string(
-            "Base64-encoded binary content to upload. Provide exactly one of sourceUrl, contentText, or contentBase64.",
-          ),
-          contentType: s.string("The Content-Type header to store on the object."),
-        },
-        {
-          required: ["bucketName", "objectKey"],
-          optional: ["accountId", "jurisdiction", "sourceUrl", "contentText", "contentBase64", "contentType"],
-        },
-      ),
-      oneOf: [{ required: ["sourceUrl"] }, { required: ["contentText"] }, { required: ["contentBase64"] }],
-    } as JsonSchema,
+    inputSchema: s.object(
+      "The input payload for this action.",
+      {
+        accountId: accountIdSchema,
+        bucketName: bucketNameSchema,
+        objectKey: s.nonEmptyString("The complete R2 object key. Slashes are preserved as key delimiters."),
+        jurisdiction: jurisdictionSchema,
+        sourceUrl: s.url(
+          "A public URL that the connector can fetch and upload to R2. Provide exactly one of sourceUrl, contentText, or contentBase64.",
+        ),
+        contentText: s.string(
+          "The plain-text content to upload. Provide exactly one of sourceUrl, contentText, or contentBase64.",
+        ),
+        contentBase64: s.string(
+          "Base64-encoded binary content to upload. Provide exactly one of sourceUrl, contentText, or contentBase64.",
+        ),
+        contentType: s.string("The Content-Type header to store on the object."),
+      },
+      {
+        required: ["bucketName", "objectKey"],
+        optional: ["accountId", "jurisdiction", "sourceUrl", "contentText", "contentBase64", "contentType"],
+        oneOf: [{ required: ["sourceUrl"] }, { required: ["contentText"] }, { required: ["contentBase64"] }],
+      },
+    ),
     outputSchema: s.object("The output payload for this action.", {
       bucketName: s.string("The bucket that received the object."),
       objectKey: s.string("The uploaded object key."),
       etag: s.nullable(s.string("The uploaded object ETag, or null when R2 did not return it.")),
     }),
   }),
-  defineProviderAction("cloudflare", {
+  defineProviderAction(service, {
     name: "generate_presigned_url",
     operationType: "read",
     description:

@@ -4,6 +4,8 @@ import { s } from "../../../core/json-schema.ts";
 import { defineProviderAction } from "../../../core/provider-definition.ts";
 import { bucketNameSchema, jurisdictionSchema, readPermissions, writePermissions } from "./schemas.ts";
 
+const service = "cloudflare";
+
 const lifecycleAgeConditionSchema = s.requiredObject("Apply the transition once an object reaches an age in seconds.", {
   type: s.literal("Age", { description: "The condition type." }),
   maxAge: s.nonNegativeInteger("The object age in seconds after which the transition applies."),
@@ -175,7 +177,7 @@ function bucketScopedInputSchema(description: string) {
 }
 
 export const actions: ActionDefinition[] = [
-  defineProviderAction("cloudflare", {
+  defineProviderAction(service, {
     name: "get_bucket_lifecycle",
     operationType: "read",
     description: "Get the object lifecycle rules of an R2 bucket.",
@@ -186,7 +188,7 @@ export const actions: ActionDefinition[] = [
       rules: s.array("The configured lifecycle rules.", lifecycleRuleSchema),
     }),
   }),
-  defineProviderAction("cloudflare", {
+  defineProviderAction(service, {
     name: "update_bucket_lifecycle",
     operationType: "destructive",
     description: "Replace the object lifecycle rules of an R2 bucket with the given rule set.",
@@ -207,7 +209,7 @@ export const actions: ActionDefinition[] = [
       updated: s.boolean("Whether the update request succeeded."),
     }),
   }),
-  defineProviderAction("cloudflare", {
+  defineProviderAction(service, {
     name: "get_bucket_lock",
     operationType: "read",
     description: "Get the object lock rules of an R2 bucket.",
@@ -218,7 +220,7 @@ export const actions: ActionDefinition[] = [
       rules: s.array("The configured lock rules.", lockRuleSchema),
     }),
   }),
-  defineProviderAction("cloudflare", {
+  defineProviderAction(service, {
     name: "update_bucket_lock",
     operationType: "destructive",
     description: "Replace the object lock rules of an R2 bucket with the given rule set.",
@@ -239,7 +241,7 @@ export const actions: ActionDefinition[] = [
       updated: s.boolean("Whether the update request succeeded."),
     }),
   }),
-  defineProviderAction("cloudflare", {
+  defineProviderAction(service, {
     name: "get_bucket_local_uploads",
     operationType: "read",
     description:
@@ -254,7 +256,7 @@ export const actions: ActionDefinition[] = [
       enabled: s.boolean("Whether local uploads are enabled for the bucket."),
     }),
   }),
-  defineProviderAction("cloudflare", {
+  defineProviderAction(service, {
     name: "update_bucket_local_uploads",
     operationType: "destructive",
     description: "Enable or disable local uploads for an R2 bucket.",
@@ -270,7 +272,7 @@ export const actions: ActionDefinition[] = [
       enabled: s.boolean("The stored local uploads setting."),
     }),
   }),
-  defineProviderAction("cloudflare", {
+  defineProviderAction(service, {
     name: "get_sippy_config",
     operationType: "read",
     description: "Get the Sippy incremental migration configuration of an R2 bucket.",
@@ -279,7 +281,7 @@ export const actions: ActionDefinition[] = [
     inputSchema: bucketScopedInputSchema("Input for reading the Sippy configuration."),
     outputSchema: sippyConfigSchema,
   }),
-  defineProviderAction("cloudflare", {
+  defineProviderAction(service, {
     name: "enable_sippy",
     operationType: "write",
     description:
@@ -299,7 +301,7 @@ export const actions: ActionDefinition[] = [
     ),
     outputSchema: sippyConfigSchema,
   }),
-  defineProviderAction("cloudflare", {
+  defineProviderAction(service, {
     name: "disable_sippy",
     operationType: "destructive",
     description: "Disable Sippy on an R2 bucket.",

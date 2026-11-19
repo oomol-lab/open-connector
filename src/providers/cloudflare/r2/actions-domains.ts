@@ -4,6 +4,8 @@ import { s } from "../../../core/json-schema.ts";
 import { defineProviderAction } from "../../../core/provider-definition.ts";
 import { bucketNameSchema, jurisdictionSchema, readPermissions, writePermissions } from "./schemas.ts";
 
+const service = "cloudflare";
+
 const minTlsSchema = s.stringEnum("The minimum TLS version accepted for incoming connections.", [
   "1.0",
   "1.1",
@@ -56,7 +58,7 @@ const managedDomainSchema = s.requiredObject("The r2.dev managed domain of a buc
 });
 
 export const actions: ActionDefinition[] = [
-  defineProviderAction("cloudflare", {
+  defineProviderAction(service, {
     name: "list_custom_domains",
     operationType: "read",
     description: "List the custom domains attached to an R2 bucket.",
@@ -75,7 +77,7 @@ export const actions: ActionDefinition[] = [
       domains: s.array("The attached custom domains.", customDomainSchema),
     }),
   }),
-  defineProviderAction("cloudflare", {
+  defineProviderAction(service, {
     name: "get_custom_domain",
     operationType: "read",
     description: "Get the settings of one custom domain attached to an R2 bucket.",
@@ -95,7 +97,7 @@ export const actions: ActionDefinition[] = [
       domain: customDomainSchema,
     }),
   }),
-  defineProviderAction("cloudflare", {
+  defineProviderAction(service, {
     name: "add_custom_domain",
     operationType: "write",
     description: "Attach a custom domain from a Cloudflare zone to an R2 bucket.",
@@ -121,7 +123,7 @@ export const actions: ActionDefinition[] = [
       domain: customDomainSchema,
     }),
   }),
-  defineProviderAction("cloudflare", {
+  defineProviderAction(service, {
     name: "update_custom_domain",
     operationType: "write",
     description: "Update the public access, TLS version, or cipher settings of a custom domain.",
@@ -144,7 +146,7 @@ export const actions: ActionDefinition[] = [
       domain: updatedCustomDomainSchema,
     }),
   }),
-  defineProviderAction("cloudflare", {
+  defineProviderAction(service, {
     name: "delete_custom_domain",
     operationType: "destructive",
     description: "Detach a custom domain from an R2 bucket.",
@@ -165,7 +167,7 @@ export const actions: ActionDefinition[] = [
       deleted: s.boolean("Whether the detach request succeeded."),
     }),
   }),
-  defineProviderAction("cloudflare", {
+  defineProviderAction(service, {
     name: "get_managed_domain",
     operationType: "read",
     description: "Get the r2.dev managed domain and its public access state for an R2 bucket.",
@@ -182,7 +184,7 @@ export const actions: ActionDefinition[] = [
     ),
     outputSchema: managedDomainSchema,
   }),
-  defineProviderAction("cloudflare", {
+  defineProviderAction(service, {
     name: "update_managed_domain",
     operationType: "destructive",
     description: "Enable or disable public access to an R2 bucket through its r2.dev domain.",

@@ -3,6 +3,8 @@ import type { ActionDefinition } from "../../../core/types.ts";
 import { s } from "../../../core/json-schema.ts";
 import { defineProviderAction } from "../../../core/provider-definition.ts";
 
+const service = "cloudflare";
+
 const accountId = s.string("The account ID. Defaults to the connection account, or the only accessible account.");
 
 const namespaceId = s.nonEmptyString("The KV namespace ID.");
@@ -25,7 +27,7 @@ const listOutput = {
 const resultOutput = { result: record };
 
 export const actions: ActionDefinition[] = [
-  defineProviderAction("cloudflare", {
+  defineProviderAction(service, {
     name: "list_kv_namespaces",
     description: "List Workers KV namespaces in an account.",
     operationType: "read",
@@ -38,7 +40,7 @@ export const actions: ActionDefinition[] = [
     ),
     outputSchema: s.requiredObject("The action result.", listOutput),
   }),
-  defineProviderAction("cloudflare", {
+  defineProviderAction(service, {
     name: "create_kv_namespace",
     description: "Create a Workers KV namespace for application data.",
     operationType: "write",
@@ -58,7 +60,7 @@ export const actions: ActionDefinition[] = [
     ),
     outputSchema: s.requiredObject("The action result.", resultOutput),
   }),
-  defineProviderAction("cloudflare", {
+  defineProviderAction(service, {
     name: "rename_kv_namespace",
     description: "Rename a Workers KV namespace.",
     operationType: "write",
@@ -71,7 +73,7 @@ export const actions: ActionDefinition[] = [
     ),
     outputSchema: s.requiredObject("The action result.", resultOutput),
   }),
-  defineProviderAction("cloudflare", {
+  defineProviderAction(service, {
     name: "delete_kv_namespace",
     description: "Delete a Workers KV namespace and all its keys.",
     operationType: "destructive",
@@ -80,7 +82,7 @@ export const actions: ActionDefinition[] = [
     inputSchema: s.object("The action parameters.", { accountId, namespaceId }, { optional: ["accountId"] }),
     outputSchema: s.requiredObject("The action result.", resultOutput),
   }),
-  defineProviderAction("cloudflare", {
+  defineProviderAction(service, {
     name: "list_kv_keys",
     description: "List keys and metadata in a Workers KV namespace.",
     operationType: "read",
@@ -99,7 +101,7 @@ export const actions: ActionDefinition[] = [
     ),
     outputSchema: s.requiredObject("The action result.", listOutput),
   }),
-  defineProviderAction("cloudflare", {
+  defineProviderAction(service, {
     name: "get_kv_value",
     description: "Read a Workers KV value as text or base64 for binary data.",
     operationType: "read",
@@ -117,7 +119,7 @@ export const actions: ActionDefinition[] = [
     ),
     outputSchema: s.requiredObject("The action result.", { value: s.string("The stored value encoded as requested.") }),
   }),
-  defineProviderAction("cloudflare", {
+  defineProviderAction(service, {
     name: "put_kv_value",
     description: "Write a Workers KV value with optional expiration and metadata.",
     operationType: "write",
@@ -139,7 +141,7 @@ export const actions: ActionDefinition[] = [
     ),
     outputSchema: s.requiredObject("The action result.", resultOutput),
   }),
-  defineProviderAction("cloudflare", {
+  defineProviderAction(service, {
     name: "delete_kv_value",
     description: "Delete one key from a Workers KV namespace.",
     operationType: "destructive",
