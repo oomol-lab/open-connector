@@ -152,6 +152,41 @@ const heartRateZoneSchema = s.looseObject("The heart rate zones for one sport.",
   lactateThresholdHeartRateUsed: s.nullableInteger("The lactate threshold heart rate the zones are built on."),
 });
 
+const fitnessAgeComponentSchema = s.looseObject("One input to the fitness age.", {
+  value: s.nullableNumber("The user's current value. Absent when the input is stale."),
+  targetValue: s.nullableNumber("The value that would give the best possible fitness age."),
+  improvementValue: s.nullableNumber("The difference between the current value and the target."),
+  potentialAge: s.nullableNumber("The fitness age the user would have on reaching the target for this input."),
+  priority: s.nullableNumber("The relative priority Garmin gives this input."),
+  stale: s.nullableBoolean("Whether the input is out of date and may not reflect the user's current state."),
+  staleInputs: s.array(
+    "The measurements that are out of date, such as RHR or WEIGHT. Present only when the input is stale.",
+    s.string("One stale measurement."),
+  ),
+  lastMeasurementDate: s.nullableString("The last date the input was measured, when Garmin reports it."),
+  numOfWeeksForIm: s.nullableInteger("The number of weeks of intensity minutes behind a vigorous activity input."),
+});
+
+const fitnessAgeSchema = s.looseObject(
+  "The latest fitness age Garmin holds as of the requested date. Without one, Garmin returns only chronologicalAge, components and lastUpdated, or only invalidReason.",
+  {
+    fitnessAge: s.nullableNumber("The fitness age in years. Absent when Garmin holds no fitness age as of the date."),
+    chronologicalAge: s.nullableInteger("The user's age in years on the lastUpdated date."),
+    achievableFitnessAge: s.nullableNumber("The best fitness age the user can reach, as Garmin estimates it."),
+    previousFitnessAge: s.nullableNumber("The fitness age before the latest update."),
+    components: s.record(
+      "The inputs the fitness age is based on, keyed by name, such as vigorousDaysAvg, vigorousMinutesAvg, rhr (resting heart rate) and bmi.",
+      fitnessAgeComponentSchema,
+    ),
+    lastUpdated: s.nullableString(
+      "When Garmin last calculated the fitness age, such as 2026-11-09T00:00:00.0; the requested date when there is no fitness age.",
+    ),
+    invalidReason: s.nullableString(
+      "Why Garmin cannot give the user a fitness age, such as USER_UNDER_AGE or USER_EMPTY_AGE. Present only then.",
+    ),
+  },
+);
+
 /**
  * Public Garmin Connect action catalog. Every action reads the authenticated
  * user's own data; the Personal API has no write endpoints.
@@ -355,6 +390,16 @@ export const garminConnectActions: ActionDefinition[] = [
     inputSchema: s.object("No input parameters are required for this action.", {}),
     outputSchema: s.object("The heart rate zones returned by Garmin Connect.", {
       zones: s.array("One zone set per sport.", heartRateZoneSchema),
+    }),
+  }),
+  defineProviderAction(service, {
+    name: "get_fitness_age",
+    operationType: "read",
+    description:
+      "Get the latest Garmin fitness age calculated on or before a date: the fitness age, the best fitness age within reach, the user's age when it was calculated, and the inputs it is based on (vigorous activity, resting heart rate, and BMI or body fat), each with its current value and, where Garmin sets one, a target.",
+    inputSchema: calendarDateInputSchema,
+    outputSchema: s.object("The fitness age returned by Garmin Connect.", {
+      fitnessAge: fitnessAgeSchema,
     }),
   }),
 ];

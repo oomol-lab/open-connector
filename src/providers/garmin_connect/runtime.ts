@@ -186,6 +186,14 @@ export const garminConnectActionHandlers: ProviderActionHandlers<"garmin_connect
     const zones = await getGarminConnect(context, { path: "/biometric-service/heartRateZones/v2" });
     return { zones: responseList(zones, "heart rate zones") };
   },
+  async get_fitness_age(input, context) {
+    const date = requiredInputString(input.date, "date");
+    // Garmin's spec types this response as a list, but the API answers one object.
+    const fitnessAge = await getGarminConnect(context, {
+      path: `/fitnessage-service/fitnessage/v2/${encodePathSegment(date)}`,
+    });
+    return { fitnessAge: requiredResponseRecord(fitnessAge, "Garmin Connect fitness age") };
+  },
 };
 
 /**
