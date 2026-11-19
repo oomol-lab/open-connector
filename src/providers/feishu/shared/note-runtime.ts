@@ -1,7 +1,7 @@
 import type { TransitFileWriter } from "../../../core/types.ts";
 import type { FeishuJsonRequest } from "./client.ts";
 
-import { ProviderRequestError } from "../../provider-runtime.ts";
+import { ProviderRequestError, requiredResponseRecord } from "../../provider-runtime.ts";
 import { storeFeishuTransitBytes } from "./media.ts";
 import { FeishuPagination } from "./pagination.ts";
 
@@ -25,8 +25,7 @@ export function createFeishuNoteActionHandlers(deps: FeishuNoteRuntimeDeps): Rec
 
 async function getNote(input: Record<string, unknown>, request: FeishuJsonRequest) {
   const noteId = requiredString(input.noteId, "noteId");
-  const data = await request({ path: `/vc/v1/notes/${encodeURIComponent(noteId)}` });
-  return normalizeNote(noteId, recordValue(data.note));
+  return fetchFeishuNote(noteId, request);
 }
 
 async function getMeetingNote(input: Record<string, unknown>, request: FeishuJsonRequest) {
@@ -37,11 +36,12 @@ async function getMeetingNote(input: Record<string, unknown>, request: FeishuJso
   });
   const meeting = recordValue(meetingData.meeting);
   const noteId = requiredString(meeting.note_id, "meeting.note_id");
-  const noteData = await request({ path: `/vc/v1/notes/${encodeURIComponent(noteId)}` });
-  return {
-    meetingId,
-    note: normalizeNote(noteId, recordValue(noteData.note)),
-  };
+  return { meetingId, note: await fetchFeishuNote(noteId, request) };
+}
+
+export async function fetchFeishuNote(noteId: string, request: FeishuJsonRequest): Promise<FeishuNote> {
+  const data = await request({ path: `/vc/v1/notes/${encodeURIComponent(noteId)}` });
+  return normalizeNote(noteId, requiredResponseRecord(data.note, "Feishu note"));
 }
 
 async function downloadTranscript(input: Record<string, unknown>, deps: FeishuNoteRuntimeDeps) {
@@ -96,7 +96,18 @@ async function downloadTranscript(input: Record<string, unknown>, deps: FeishuNo
   };
 }
 
-function normalizeNote(noteId: string, note: Record<string, unknown>) {
+interface FeishuNote {
+  noteId: string;
+  displayType: "normal" | "unified" | "unknown";
+  creatorId: string;
+  createTime: string;
+  noteDocumentToken: string;
+  verbatimDocumentToken: string;
+  sharedDocumentTokens: string[];
+  raw: Record<string, unknown>;
+}
+
+function normalizeNote(noteId: string, note: Record<string, unknown>): FeishuNote {
   let noteDocumentToken = "";
   let verbatimDocumentToken = "";
   for (const artifact of recordArray(note.artifacts)) {

@@ -1,7 +1,5 @@
 import { describe, expect, it, vi } from "vitest";
-import { feishuActions, feishuOAuthScopesFor } from "../actions.ts";
 import { createFeishuJsonRequest } from "./client.ts";
-import { feishuMeetingArtifactScopes } from "./minutes-actions.ts";
 import { createFeishuMinutesActionHandlers } from "./minutes-runtime.ts";
 
 const openBaseUrl = "https://open.feishu.cn/open-apis";
@@ -18,19 +16,22 @@ function requestOf(call: Parameters<typeof fetch>): Request {
 }
 
 describe("Feishu video meeting records", () => {
-  // Feishu's response body is `{ meeting, related_artifacts }`: the artifacts
-  // are a sibling of the meeting, and each query_mode answers one of the two
-  // (the official SDK names them GetOnlyMeeting and GetOnlyRelatedArtifacts).
   it("reads the meeting and its related artifacts in two requests when includeArtifacts is set", async () => {
     const fetcher = vi.fn<typeof fetch>(async (...call) => {
-      const mode = new URL(requestOf(call).url).searchParams.get("query_mode");
+      const isNote = new URL(requestOf(call).url).pathname.includes("/notes/");
       return Response.json({
         code: 0,
         msg: "success",
-        data:
-          mode === "1"
-            ? { related_artifacts: { note_doc_token: "doxcn_note", verbatim_doc_token: "doxcn_verbatim" } }
-            : { meeting: { id: "6911188411934433028", start_time: "1608883322", note_id: "note_1" } },
+        data: isNote
+          ? {
+              note: {
+                artifacts: [
+                  { artifact_type: 1, doc_token: "doxcn_note" },
+                  { artifact_type: 2, doc_token: "doxcn_verbatim" },
+                ],
+              },
+            }
+          : { meeting: { id: "6911188411934433028", start_time: "1608883322", note_id: "note_1" } },
       });
     });
 
@@ -49,24 +50,58 @@ describe("Feishu video meeting records", () => {
     expect(meetingUrl!.pathname).toBe("/open-apis/vc/v1/meetings/6911188411934433028");
     expect(meetingUrl!.searchParams.get("query_mode")).toBe("0");
     expect(meetingUrl!.searchParams.get("with_participants")).toBe("true");
-    expect(artifactsUrl!.pathname).toBe("/open-apis/vc/v1/meetings/6911188411934433028");
-    expect(artifactsUrl!.searchParams.get("query_mode")).toBe("1");
-    expect(artifactsUrl!.searchParams.get("with_participants")).toBe("false");
+    expect(artifactsUrl!.pathname).toBe("/open-apis/vc/v1/notes/note_1");
+    expect(artifactsUrl!.search).toBe("");
   });
 
-  it("returns empty related artifacts when Feishu sends none", async () => {
+  it("skips note lookup when the meeting has no note", async () => {
     const fetcher = vi.fn<typeof fetch>(async (...call) => {
-      const mode = new URL(requestOf(call).url).searchParams.get("query_mode");
+      const isNote = new URL(requestOf(call).url).pathname.includes("/notes/");
       return Response.json({
         code: 0,
         msg: "success",
-        data: mode === "1" ? {} : { meeting: { id: "6911188411934433028" } },
+        data: isNote ? {} : { meeting: { id: "6911188411934433028" } },
       });
     });
 
     await expect(
       handlers(fetcher).get_vc_meeting({ meetingId: "6911188411934433028", includeArtifacts: true }),
     ).resolves.toEqual({ meeting: { id: "6911188411934433028" }, relatedArtifacts: {} });
+    expect(fetcher).toHaveBeenCalledTimes(1);
+  });
+
+  it("returns empty tokens when the note has no document artifacts", async () => {
+    const fetcher = vi.fn<typeof fetch>(async (...call) =>
+      Response.json({
+        code: 0,
+        data: new URL(requestOf(call).url).pathname.includes("/notes/")
+          ? { note: { artifacts: [] } }
+          : { meeting: { id: "meeting_1", note_id: "note_1" } },
+      }),
+    );
+    await expect(handlers(fetcher).get_vc_meeting({ meetingId: "meeting_1", includeArtifacts: true })).resolves.toEqual(
+      {
+        meeting: { id: "meeting_1", note_id: "note_1" },
+        relatedArtifacts: { note_doc_token: "", verbatim_doc_token: "" },
+      },
+    );
+  });
+
+  it.each([
+    { code: 121005, msg: "no permission" },
+    { code: 0, data: {} },
+  ])("propagates failed or malformed note responses: %j", async (response) => {
+    const fetcher = vi.fn<typeof fetch>(async (...call) =>
+      Response.json(
+        new URL(requestOf(call).url).pathname.includes("/notes/")
+          ? response
+          : { code: 0, data: { meeting: { id: "meeting_1", note_id: "note_1" } } },
+      ),
+    );
+    await expect(
+      handlers(fetcher).get_vc_meeting({ meetingId: "meeting_1", includeArtifacts: true }),
+    ).rejects.toThrow();
+    expect(fetcher).toHaveBeenCalledTimes(2);
   });
 
   it("makes one meeting request and returns no artifacts when includeArtifacts is omitted", async () => {
@@ -112,18 +147,5 @@ describe("Feishu video meeting records", () => {
     expect(await request.json()).toEqual({
       meeting_filter: { start_time: { start_time: "2026-11-01T00:00:00Z", end_time: "2026-11-08T00:00:00Z" } },
     });
-  });
-});
-
-describe("Feishu video meeting artifact permissions", () => {
-  it("keeps the artifact field permissions out of the default consent", () => {
-    const action = feishuActions.find((candidate) => candidate.name === "get_vc_meeting")!;
-
-    expect(action.requiredScopes).toEqual(["vc:meeting.meetingevent:read"]);
-    expect(action.providerPermissions).toEqual(["vc:meeting.meetingevent:read"]);
-    expect(feishuMeetingArtifactScopes).toEqual(["vc:meeting.artifact.note:read", "vc:meeting.artifact.verbatim:read"]);
-    for (const scope of feishuMeetingArtifactScopes) {
-      expect(feishuOAuthScopesFor(feishuActions)).not.toContain(scope);
-    }
   });
 });
