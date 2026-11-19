@@ -12,10 +12,8 @@ import { handlers as emailRoutingHandlers } from "./email-routing/runtime.ts";
 import { handlers as kvHandlers } from "./kv/runtime.ts";
 import { handlers as pagesHandlers } from "./pages/runtime.ts";
 import { handlers as r2Handlers } from "./r2/runtime.ts";
-import { accountActionNames } from "./shared/account-actions.ts";
 import { requestCloudflareAccounts } from "./shared/accounts.ts";
 import { cloudflareApiBaseUrl, cloudflareRequestEnvelope, readCloudflareEnvelope } from "./shared/client.ts";
-import { resolveActionAccount } from "./shared/context.ts";
 import { cloudflareResponseError, parseCloudflareResponseText } from "./shared/errors.ts";
 import { handlers as workersHandlers } from "./workers/runtime.ts";
 
@@ -37,18 +35,7 @@ const handlers: Record<string, ProviderRuntimeHandler<CloudflareContext>> = {
 
 export const executors: ProviderExecutors = defineProviderExecutors<CloudflareContext>({
   service: "cloudflare",
-  handlers: Object.fromEntries(
-    Object.entries(handlers).map(([name, handler]) => [
-      name,
-      async (input: Record<string, unknown>, context: CloudflareContext) => {
-        const resolved =
-          accountActionNames.has(name) || (name === "list_routing_rules" && !input.zoneId)
-            ? await resolveActionAccount(input, context)
-            : input;
-        return handler(resolved, context);
-      },
-    ]),
-  ),
+  handlers,
   async createContext(context, fetcher) {
     const credential = await context.getCredential("cloudflare");
     if (credential?.authType !== "api_key" && credential?.authType !== "oauth2")

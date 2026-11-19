@@ -14,7 +14,7 @@ import { queryParams } from "../../../core/request.ts";
 import { ProviderRequestError, providerUserAgent, providerInputError } from "../../provider-runtime.ts";
 import { withCloudflareClient } from "../shared/action-client.ts";
 import { cloudflareApiBaseUrl } from "../shared/client.ts";
-import { resolveAccountId } from "../shared/context.ts";
+import { withAccount, resolveAccountId } from "../shared/context.ts";
 import { cloudflareResponseError, parseCloudflareResponseText } from "../shared/errors.ts";
 
 interface CloudflareRequestInput {
@@ -26,82 +26,33 @@ interface CloudflareRequestInput {
 }
 
 const defaultModuleName = "main.js";
-
 const defaultModuleContentType = "application/javascript+module";
 
 export const handlers: Record<string, ProviderRuntimeHandler<CloudflareContext>> = {
-  list_workers(input, context) {
-    return listWorkers(input, context);
-  },
-  get_worker(input, context) {
-    return getWorker(input, context);
-  },
-  create_worker(input, context) {
-    return createWorker(input, context);
-  },
-  update_worker(input, context) {
-    return updateWorker(input, context);
-  },
-  edit_worker(input, context) {
-    return editWorker(input, context);
-  },
-  delete_worker(input, context) {
-    return deleteWorker(input, context);
-  },
-  list_worker_scripts(input, context) {
-    return listWorkerScripts(input, context);
-  },
-  search_worker_scripts(input, context) {
-    return searchWorkerScripts(input, context);
-  },
-  list_build_triggers(input, context) {
-    return listBuildTriggers(input, context);
-  },
-  create_manual_build(input, context) {
-    return createManualBuild(input, context);
-  },
-  list_builds(input, context) {
-    return listBuilds(input, context);
-  },
-  get_build(input, context) {
-    return getBuild(input, context);
-  },
-  get_build_logs(input, context) {
-    return getBuildLogs(input, context);
-  },
-  cancel_build(input, context) {
-    return cancelBuild(input, context);
-  },
-  upload_worker_script(input, context) {
-    return uploadWorkerScript(input, context);
-  },
-  put_worker_script_content(input, context) {
-    return putWorkerScriptContent(input, context);
-  },
-  get_worker_script_content(input, context) {
-    return getWorkerScriptContent(input, context);
-  },
-  get_worker_script_settings(input, context) {
-    return getWorkerScriptSettings(input, context);
-  },
-  patch_worker_script_settings(input, context) {
-    return patchWorkerScriptSettings(input, context);
-  },
-  list_worker_script_secrets(input, context) {
-    return listWorkerScriptSecrets(input, context);
-  },
-  get_worker_script_secret(input, context) {
-    return getWorkerScriptSecret(input, context);
-  },
-  put_worker_script_secret(input, context) {
-    return putWorkerScriptSecret(input, context);
-  },
-  delete_worker_script_secret(input, context) {
-    return deleteWorkerScriptSecret(input, context);
-  },
-  delete_worker_script(input, context) {
-    return deleteWorkerScript(input, context);
-  },
+  list_workers: withAccount(listWorkers),
+  get_worker: withAccount(getWorker),
+  create_worker: withAccount(createWorker),
+  update_worker: withAccount(updateWorker),
+  edit_worker: withAccount(editWorker),
+  delete_worker: withAccount(deleteWorker),
+  list_worker_scripts: withAccount(listWorkerScripts),
+  search_worker_scripts: withAccount(searchWorkerScripts),
+  list_build_triggers: withAccount(listBuildTriggers),
+  create_manual_build: withAccount(createManualBuild),
+  list_builds: withAccount(listBuilds),
+  get_build: withAccount(getBuild),
+  get_build_logs: withAccount(getBuildLogs),
+  cancel_build: withAccount(cancelBuild),
+  upload_worker_script: withAccount(uploadWorkerScript),
+  put_worker_script_content: withAccount(putWorkerScriptContent),
+  get_worker_script_content: withAccount(getWorkerScriptContent),
+  get_worker_script_settings: withAccount(getWorkerScriptSettings),
+  patch_worker_script_settings: withAccount(patchWorkerScriptSettings),
+  list_worker_script_secrets: withAccount(listWorkerScriptSecrets),
+  get_worker_script_secret: withAccount(getWorkerScriptSecret),
+  put_worker_script_secret: withAccount(putWorkerScriptSecret),
+  delete_worker_script_secret: withAccount(deleteWorkerScriptSecret),
+  delete_worker_script: withAccount(deleteWorkerScript),
   list_worker_routes: withCloudflareClient((client) => client.list({ path: `${client.zonePath()}/workers/routes` })),
   create_worker_route: withCloudflareClient((client) =>
     client.resource({
@@ -123,33 +74,39 @@ export const handlers: Record<string, ProviderRuntimeHandler<CloudflareContext>>
       method: "DELETE",
     }),
   ),
-  list_worker_domains: withCloudflareClient((client) =>
-    client.list({
-      path: `${client.accountPath()}/workers/domains`,
-      query: {
-        zone_id: optionalString(client.input.zoneId),
-        hostname: optionalString(client.input.hostname),
-        service: optionalString(client.input.service),
-      },
-    }),
+  list_worker_domains: withAccount(
+    withCloudflareClient((client) =>
+      client.list({
+        path: `${client.accountPath()}/workers/domains`,
+        query: {
+          zone_id: optionalString(client.input.zoneId),
+          hostname: optionalString(client.input.hostname),
+          service: optionalString(client.input.service),
+        },
+      }),
+    ),
   ),
-  attach_worker_domain: withCloudflareClient((client) =>
-    client.resource({
-      path: `${client.accountPath()}/workers/domains`,
-      method: "PUT",
-      body: {
-        zone_id: client.input.zoneId,
-        hostname: client.input.hostname,
-        service: client.input.service,
-        environment: client.input.environment ?? "production",
-      },
-    }),
+  attach_worker_domain: withAccount(
+    withCloudflareClient((client) =>
+      client.resource({
+        path: `${client.accountPath()}/workers/domains`,
+        method: "PUT",
+        body: {
+          zone_id: client.input.zoneId,
+          hostname: client.input.hostname,
+          service: client.input.service,
+          environment: client.input.environment ?? "production",
+        },
+      }),
+    ),
   ),
-  delete_worker_domain: withCloudflareClient((client) =>
-    client.resource({
-      path: `${client.accountPath()}/workers/domains/${client.id("domainId")}`,
-      method: "DELETE",
-    }),
+  delete_worker_domain: withAccount(
+    withCloudflareClient((client) =>
+      client.resource({
+        path: `${client.accountPath()}/workers/domains/${client.id("domainId")}`,
+        method: "DELETE",
+      }),
+    ),
   ),
 };
 

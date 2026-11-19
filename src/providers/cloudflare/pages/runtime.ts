@@ -3,10 +3,11 @@ import type { CloudflareContext } from "../shared/context.ts";
 
 import { optionalRecord, optionalString, optionalBoolean } from "../../../core/cast.ts";
 import { withCloudflareClient } from "../shared/action-client.ts";
+import { withAccountHandlers } from "../shared/context.ts";
 import { projectPath, normalizeDeployment } from "./deployment.ts";
 import { deployPagesSite } from "./upload.ts";
 
-export const handlers: Record<string, ProviderRuntimeHandler<CloudflareContext>> = {
+export const handlers: Record<string, ProviderRuntimeHandler<CloudflareContext>> = withAccountHandlers({
   list_pages_projects: withCloudflareClient((client) =>
     client.list({
       path: `${client.accountPath()}/pages/projects`,
@@ -80,4 +81,4 @@ export const handlers: Record<string, ProviderRuntimeHandler<CloudflareContext>>
     }),
   ),
   deploy_pages_site: withCloudflareClient(deployPagesSite, 600_000),
-};
+});

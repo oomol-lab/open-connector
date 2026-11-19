@@ -13,6 +13,7 @@ import {
 import { queryParams } from "../../../core/request.ts";
 import { requiredInputString, ProviderRequestError, providerUserAgent } from "../../provider-runtime.ts";
 import { cloudflareApiBaseUrl } from "../shared/client.ts";
+import { resolveActionAccount, withAccount } from "../shared/context.ts";
 import { cloudflareResponseError, parseCloudflareResponseText } from "../shared/errors.ts";
 
 interface CloudflareRequest {
@@ -23,24 +24,19 @@ interface CloudflareRequest {
 }
 
 export const handlers: Record<string, ProviderRuntimeHandler<CloudflareContext>> = {
-  list_routing_rules(input, context) {
-    return listRoutingRules(input, context);
-  },
+  list_routing_rules: listRoutingRules,
   create_routing_rule(input, context) {
     return mutateRoutingRule("POST", input, context);
   },
   update_routing_rule(input, context) {
     return mutateRoutingRule("PUT", input, context);
   },
-  delete_routing_rule(input, context) {
-    return deleteRoutingRule(input, context);
-  },
-  list_destination_addresses(input, context) {
-    return listDestinationAddresses(input, context);
-  },
+  delete_routing_rule: deleteRoutingRule,
+  list_destination_addresses: withAccount(listDestinationAddresses),
 };
 
 async function listRoutingRules(input: Record<string, unknown>, context: CloudflareContext): Promise<unknown> {
+  if (!input.zoneId) input = await resolveActionAccount(input, context);
   const explicitAccount = optionalString(input.accountId);
   const explicitZone = optionalString(input.zoneId);
   if (explicitAccount && explicitZone) {

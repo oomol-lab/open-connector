@@ -11,6 +11,7 @@ import {
   optionalBoolean,
 } from "../../../core/cast.ts";
 import { ProviderRequestError } from "../../provider-runtime.ts";
+import { withAccountHandlers } from "../shared/context.ts";
 import {
   buildCloudflareR2BucketPath,
   buildR2JurisdictionHeaders,
@@ -21,7 +22,7 @@ import {
 } from "./client.ts";
 import { deriveCloudflareR2S3SecretAccessKey } from "./s3-presign.ts";
 
-export const handlers: Record<string, ProviderRuntimeHandler<CloudflareContext>> = {
+export const handlers: Record<string, ProviderRuntimeHandler<CloudflareContext>> = withAccountHandlers({
   get_bucket_lifecycle: getBucketLifecycle,
   update_bucket_lifecycle: updateBucketLifecycle,
   get_bucket_lock: getBucketLock,
@@ -31,7 +32,7 @@ export const handlers: Record<string, ProviderRuntimeHandler<CloudflareContext>>
   get_sippy_config: getSippyConfig,
   enable_sippy: enableSippy,
   disable_sippy: disableSippy,
-};
+});
 
 async function readBucketRules(
   input: Record<string, unknown>,

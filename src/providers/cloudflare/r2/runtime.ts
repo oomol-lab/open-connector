@@ -22,7 +22,7 @@ import {
   runProviderRequest,
   providerResponseError,
 } from "../../provider-runtime.ts";
-import { resolveAccountId } from "../shared/context.ts";
+import { withAccount, resolveAccountId } from "../shared/context.ts";
 import { cloudflareResponseError } from "../shared/errors.ts";
 import {
   readObject,
@@ -50,39 +50,17 @@ export const handlers: Record<string, ProviderRuntimeHandler<CloudflareContext>>
   ...r2EventNotificationHandlers,
   ...r2AccountHandlers,
 
-  list_buckets(input, context) {
-    return listBuckets(input, context);
-  },
-  get_bucket(input, context) {
-    return getBucket(input, context);
-  },
-  download_object(input, context) {
-    return downloadObject(input, context);
-  },
-  create_bucket(input, context) {
-    return createBucket(input, context);
-  },
-  update_bucket(input, context) {
-    return updateBucket(input, context);
-  },
-  delete_bucket(input, context) {
-    return deleteBucket(input, context);
-  },
-  get_bucket_cors_policy(input, context) {
-    return getBucketCorsPolicy(input, context);
-  },
-  update_bucket_cors_policy(input, context) {
-    return updateBucketCorsPolicy(input, context);
-  },
-  delete_bucket_cors_policy(input, context) {
-    return deleteBucketCorsPolicy(input, context);
-  },
-  put_object(input, context) {
-    return putObject(input, context);
-  },
-  generate_presigned_url(input, context) {
-    return generatePresignedUrl(input, context);
-  },
+  list_buckets: withAccount(listBuckets),
+  get_bucket: withAccount(getBucket),
+  download_object: withAccount(downloadObject),
+  create_bucket: withAccount(createBucket),
+  update_bucket: withAccount(updateBucket),
+  delete_bucket: withAccount(deleteBucket),
+  get_bucket_cors_policy: withAccount(getBucketCorsPolicy),
+  update_bucket_cors_policy: withAccount(updateBucketCorsPolicy),
+  delete_bucket_cors_policy: withAccount(deleteBucketCorsPolicy),
+  put_object: withAccount(putObject),
+  generate_presigned_url: withAccount(generatePresignedUrl),
 };
 
 async function listBuckets(input: Record<string, unknown>, context: CloudflareContext): Promise<unknown> {
@@ -293,11 +271,8 @@ async function deleteBucketCorsPolicy(input: Record<string, unknown>, context: C
 }
 
 const defaultPresignExpiresSeconds = 3600;
-
 const maxPresignExpiresSeconds = 604800;
-
 const maxSourceBytes = 20 * 1024 * 1024;
-
 const sourceFetchTimeoutMs = 15_000;
 
 async function putObject(input: Record<string, unknown>, context: CloudflareContext): Promise<unknown> {

@@ -4,7 +4,6 @@ import { ProviderRequestError } from "../../provider-runtime.ts";
 import { jurisdictions } from "./schemas.ts";
 
 const r2S3Region = "auto";
-
 const r2S3Service = "s3";
 
 export type CloudflareR2PresignedMethod = "GET" | "PUT" | "HEAD" | "DELETE";

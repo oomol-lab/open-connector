@@ -3,10 +3,11 @@ import type { CloudflareContext } from "../shared/context.ts";
 
 import { optionalString, optionalInteger } from "../../../core/cast.ts";
 import { withCloudflareClient } from "../shared/action-client.ts";
+import { withAccountHandlers } from "../shared/context.ts";
 import { namespacePath, valuePath } from "./paths.ts";
 import { getKvValue, putKvValue } from "./values.ts";
 
-export const handlers: Record<string, ProviderRuntimeHandler<CloudflareContext>> = {
+export const handlers: Record<string, ProviderRuntimeHandler<CloudflareContext>> = withAccountHandlers({
   list_kv_namespaces: withCloudflareClient((client) =>
     client.list({
       path: `${client.accountPath()}/storage/kv/namespaces`,
@@ -47,4 +48,4 @@ export const handlers: Record<string, ProviderRuntimeHandler<CloudflareContext>>
   get_kv_value: withCloudflareClient(getKvValue),
   put_kv_value: withCloudflareClient(putKvValue),
   delete_kv_value: withCloudflareClient((client) => client.resource({ path: valuePath(client), method: "DELETE" })),
-};
+});

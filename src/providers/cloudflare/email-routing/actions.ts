@@ -4,17 +4,11 @@ import { s } from "../../../core/json-schema.ts";
 import { defineProviderAction } from "../../../core/provider-definition.ts";
 
 const service = "cloudflare";
-
 const rulesRead = "Email Routing Rules Read";
-
 const rulesWrite = "Email Routing Rules Write";
-
 const addressesRead = "Email Routing Addresses Read";
-
 const ruleId = s.nonEmptyString("The Cloudflare routing rule ID.");
-
 const zoneId = s.nonEmptyString("The Cloudflare zone ID.");
-
 const accountId = s.nonEmptyString("The Cloudflare account ID.");
 
 const actionSchema = s.object(

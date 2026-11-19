@@ -14,7 +14,6 @@ const minTlsSchema = s.stringEnum("The minimum TLS version accepted for incoming
 ]);
 
 const ciphersSchema = s.array("An allowlist of TLS ciphers in BoringSSL format.", s.string("A cipher name."));
-
 const domainNameSchema = s.nonEmptyString("The custom domain name.");
 
 const customDomainSchema = s.object(

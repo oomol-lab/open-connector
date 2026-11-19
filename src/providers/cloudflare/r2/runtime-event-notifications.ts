@@ -2,7 +2,7 @@ import type { ProviderRuntimeHandler } from "../../provider-executors.ts";
 import type { CloudflareContext } from "../shared/context.ts";
 
 import { looseArray, optionalString, compactObject } from "../../../core/cast.ts";
-import { resolveAccountId } from "../shared/context.ts";
+import { withAccountHandlers, resolveAccountId } from "../shared/context.ts";
 import {
   buildR2JurisdictionHeaders,
   requestEnvelope,
@@ -12,12 +12,12 @@ import {
   readRequiredString,
 } from "./client.ts";
 
-export const handlers: Record<string, ProviderRuntimeHandler<CloudflareContext>> = {
+export const handlers: Record<string, ProviderRuntimeHandler<CloudflareContext>> = withAccountHandlers({
   list_event_notification_rules: listEventNotificationRules,
   get_event_notification_rules: getEventNotificationRules,
   create_event_notification_rules: createEventNotificationRules,
   delete_event_notification_rules: deleteEventNotificationRules,
-};
+});
 
 function buildEventNotificationPath(input: Record<string, unknown>, context: CloudflareContext) {
   const accountId = resolveAccountId(input, context);

@@ -3,7 +3,7 @@ import type { CloudflareContext } from "../shared/context.ts";
 
 import { optionalInteger, optionalNumber, optionalRecord, optionalString, compactObject } from "../../../core/cast.ts";
 import { ProviderRequestError } from "../../provider-runtime.ts";
-import { resolveAccountId } from "../shared/context.ts";
+import { withAccountHandlers, resolveAccountId } from "../shared/context.ts";
 import {
   requestEnvelope,
   readObject,
@@ -14,10 +14,10 @@ import {
 
 const defaultTemporaryCredentialTtlSeconds = 900;
 
-export const handlers: Record<string, ProviderRuntimeHandler<CloudflareContext>> = {
+export const handlers: Record<string, ProviderRuntimeHandler<CloudflareContext>> = withAccountHandlers({
   get_account_metrics: getAccountMetrics,
   create_temporary_access_credentials: createTemporaryAccessCredentials,
-};
+});
 
 async function getAccountMetrics(input: Record<string, unknown>, context: CloudflareContext) {
   const accountId = resolveAccountId(input, context);

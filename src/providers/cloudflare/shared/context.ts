@@ -1,4 +1,5 @@
 import type { TransitFileWriter } from "../../../core/types.ts";
+import type { ProviderRuntimeHandler } from "../../provider-executors.ts";
 
 import { optionalString } from "../../../core/cast.ts";
 import { providerInputError, ProviderRequestError } from "../../provider-runtime.ts";
@@ -37,4 +38,16 @@ export async function resolveActionAccount(
       "Specify accountId; the response does not prove exactly one accessible account",
     );
   return { ...input, accountId: result.accounts[0]!.id };
+}
+
+export function withAccount(
+  handler: ProviderRuntimeHandler<CloudflareContext>,
+): ProviderRuntimeHandler<CloudflareContext> {
+  return async (input, context) => handler(await resolveActionAccount(input, context), context);
+}
+
+export function withAccountHandlers(
+  handlers: Record<string, ProviderRuntimeHandler<CloudflareContext>>,
+): Record<string, ProviderRuntimeHandler<CloudflareContext>> {
+  return Object.fromEntries(Object.entries(handlers).map(([name, handler]) => [name, withAccount(handler)]));
 }

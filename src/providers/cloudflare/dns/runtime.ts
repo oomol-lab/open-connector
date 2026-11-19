@@ -8,6 +8,7 @@ import { ProviderRequestError, providerUserAgent } from "../../provider-runtime.
 import { normalizeResultInfo } from "../shared/accounts.ts";
 import { withCloudflareClient } from "../shared/action-client.ts";
 import { cloudflareApiBaseUrl } from "../shared/client.ts";
+import { withAccount } from "../shared/context.ts";
 import { cloudflareResponseError, parseCloudflareResponseText } from "../shared/errors.ts";
 
 interface CloudflareRequestInput {
@@ -18,38 +19,26 @@ interface CloudflareRequestInput {
 }
 
 export const handlers: Record<string, ProviderRuntimeHandler<CloudflareContext>> = {
-  list_zones(input, context) {
-    return listZones(input, context);
-  },
-  get_zone(input, context) {
-    return getZone(input, context);
-  },
-  list_dns_records(input, context) {
-    return listDnsRecords(input, context);
-  },
-  get_dns_record(input, context) {
-    return getDnsRecord(input, context);
-  },
-  create_dns_record(input, context) {
-    return createDnsRecord(input, context);
-  },
-  update_dns_record(input, context) {
-    return updateDnsRecord(input, context);
-  },
-  delete_dns_record(input, context) {
-    return deleteDnsRecord(input, context);
-  },
-  create_zone: withCloudflareClient((client) =>
-    client.resource({
-      path: "/zones",
-      method: "POST",
-      body: {
-        account: { id: client.input.accountId },
-        name: client.input.name,
-        type: client.input.type ?? "full",
-        jump_start: client.input.jumpStart,
-      },
-    }),
+  list_zones: listZones,
+  get_zone: getZone,
+  list_dns_records: listDnsRecords,
+  get_dns_record: getDnsRecord,
+  create_dns_record: createDnsRecord,
+  update_dns_record: updateDnsRecord,
+  delete_dns_record: deleteDnsRecord,
+  create_zone: withAccount(
+    withCloudflareClient((client) =>
+      client.resource({
+        path: "/zones",
+        method: "POST",
+        body: {
+          account: { id: client.input.accountId },
+          name: client.input.name,
+          type: client.input.type ?? "full",
+          jump_start: client.input.jumpStart,
+        },
+      }),
+    ),
   ),
   get_zone_setting: withCloudflareClient((client) =>
     client.resource({ path: `${client.zonePath()}/settings/${client.id("settingId")}` }),

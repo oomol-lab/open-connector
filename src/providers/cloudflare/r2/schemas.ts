@@ -4,9 +4,7 @@ import { s } from "../../../core/json-schema.ts";
 
 /** The jurisdictions R2 accepts in the `cf-r2-jurisdiction` header and in the S3 endpoint host. */
 export const jurisdictions: readonly string[] = ["default", "eu", "fedramp", "us"];
-
 export const readPermissions: readonly string[] = ["Workers R2 Storage Read"];
-
 export const writePermissions: readonly string[] = ["Workers R2 Storage Write"];
 
 export const bucketNameSchema: JsonSchema = s.string("The R2 bucket name.", {

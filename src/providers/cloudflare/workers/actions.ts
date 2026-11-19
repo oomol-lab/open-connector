@@ -4,17 +4,11 @@ import { s } from "../../../core/json-schema.ts";
 import { defineProviderAction } from "../../../core/provider-definition.ts";
 
 const service = "cloudflare";
-
 const accountId = s.string("The account ID. Defaults to the connection account, or the only accessible account.");
-
 const zoneId = s.nonEmptyString("The zone ID.");
-
 const record = s.looseObject("The Cloudflare resource, including additional upstream fields.");
-
 const domainName = s.nonEmptyString("The custom domain hostname.");
-
 const routeId = s.nonEmptyString("The Worker route ID.");
-
 const domainId = s.nonEmptyString("The Worker custom domain ID.");
 
 const listOutput = {
@@ -23,21 +17,13 @@ const listOutput = {
 };
 
 const resultOutput = { result: record };
-
 const workersReadScope = "workers-scripts.read";
-
 const workersWriteScope = "workers-scripts.write";
-
 const workersCiReadScope = "workers-ci.read";
-
 const workersCiWriteScope = "workers-ci.write";
-
 const workersReadPermission = "Workers Scripts Read";
-
 const workersWritePermission = "Workers Scripts Write";
-
 const workersCiReadPermission = "Workers CI Read";
-
 const workersCiWritePermission = "Workers CI Write";
 
 const accountIdSchema = s.nonEmptyString(
@@ -45,15 +31,10 @@ const accountIdSchema = s.nonEmptyString(
 );
 
 const workerIdSchema = s.nonEmptyString("The Cloudflare Worker ID.");
-
 const workerNameSchema = s.nonEmptyString("The Worker name.");
-
 const scriptNameSchema = s.nonEmptyString("The Cloudflare Worker script name.");
-
 const secretNameSchema = s.nonEmptyString("The Cloudflare Worker secret name.");
-
 const looseObjectSchema = s.looseObject("A free-form object accepted by the Cloudflare API.");
-
 const looseObjectArraySchema = (description: string): JsonSchema => s.array(description, looseObjectSchema);
 
 const resultInfoSchema = s.object(
@@ -143,7 +124,6 @@ const workerScriptSchema = s.object(
 );
 
 const workerBuildIdSchema = s.uuid("The Workers Builds job UUID.");
-
 const workerBuildTriggerIdSchema = s.uuid("The Workers Builds trigger UUID.");
 
 const workerBuildRepoConnectionSchema = s.object(

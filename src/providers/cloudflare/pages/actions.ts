@@ -4,21 +4,13 @@ import { s } from "../../../core/json-schema.ts";
 import { defineProviderAction } from "../../../core/provider-definition.ts";
 
 const service = "cloudflare";
-
 const accountId = s.string("The account ID. Defaults to the connection account, or the only accessible account.");
-
 const projectName = s.nonEmptyString("The Pages project name.");
-
 const deploymentId = s.nonEmptyString("The Pages deployment ID.");
-
 const record = s.looseObject("The Cloudflare resource, including additional upstream fields.");
-
 const page = s.integer("The result page number.", { minimum: 1 });
-
 const perPage = s.integer("The number of results per page.", { minimum: 1 });
-
 const domainName = s.nonEmptyString("The custom domain hostname.");
-
 const queryFields = { page, perPage };
 
 const listOutput = {

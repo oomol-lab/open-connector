@@ -10,6 +10,7 @@ import {
   optionalBoolean,
 } from "../../../core/cast.ts";
 import { ProviderRequestError } from "../../provider-runtime.ts";
+import { withAccountHandlers } from "../shared/context.ts";
 import {
   buildCloudflareR2BucketPath,
   buildR2JurisdictionHeaders,
@@ -22,14 +23,14 @@ import {
   requireObjectKey,
 } from "./client.ts";
 
-export const handlers: Record<string, ProviderRuntimeHandler<CloudflareContext>> = {
+export const handlers: Record<string, ProviderRuntimeHandler<CloudflareContext>> = withAccountHandlers({
   list_objects: listObjects,
   delete_object: deleteObject,
   delete_objects: deleteObjects,
   delete_objects_by_prefix: deleteObjectsByPrefix,
   list_bucket_jobs: listBucketJobs,
   get_bucket_job: getBucketJob,
-};
+});
 
 async function listObjects(input: Record<string, unknown>, context: CloudflareContext) {
   const envelope = await requestEnvelope(

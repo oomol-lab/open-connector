@@ -4,25 +4,15 @@ import { s } from "../../../core/json-schema.ts";
 import { defineProviderAction } from "../../../core/provider-definition.ts";
 
 const service = "cloudflare";
-
 const accountId = s.string("The account ID. Defaults to the connection account, or the only accessible account.");
-
 const zoneId = s.nonEmptyString("The zone ID.");
-
 const record = s.looseObject("The Cloudflare resource, including additional upstream fields.");
-
 const resultOutput = { result: record };
-
 const zoneReadScope = "zone.read";
-
 const dnsReadScope = "dns.read";
-
 const dnsWriteScope = "dns.write";
-
 const zoneReadPermission = "Zone Read";
-
 const dnsReadPermission = "DNS Read";
-
 const dnsWritePermission = "DNS Write";
 
 const dnsRecordTypes = [
@@ -50,11 +40,8 @@ const dnsRecordTypes = [
 ] as const;
 
 const zoneIdSchema = s.nonEmptyString("The Cloudflare zone ID.");
-
 const dnsRecordIdSchema = s.nonEmptyString("The Cloudflare DNS record ID.");
-
 const dnsRecordTypeSchema = s.stringEnum([...dnsRecordTypes], { description: "The DNS record type." });
-
 const looseObjectSchema = s.looseObject("A free-form object accepted by the Cloudflare API.");
 
 const resultInfoSchema = s.object(

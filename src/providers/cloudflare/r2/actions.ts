@@ -10,13 +10,9 @@ import { actions as r2ObjectActions } from "./actions-objects.ts";
 import { jurisdictions } from "./schemas.ts";
 
 const service = "cloudflare";
-
 const r2ReadScope = "workers-r2.read";
-
 const r2WriteScope = "workers-r2.write";
-
 const r2ReadPermission = "Workers R2 Storage Read";
-
 const r2WritePermission = "Workers R2 Storage Write";
 
 const accountIdSchema = s.nonEmptyString(

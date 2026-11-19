@@ -15,30 +15,24 @@ import {
 } from "../../../core/cast.ts";
 import { ProviderRequestError, providerUserAgent } from "../../provider-runtime.ts";
 import { cloudflareApiBaseUrl } from "../shared/client.ts";
-import { resolveAccountId } from "../shared/context.ts";
+import { withAccountHandlers, resolveAccountId } from "../shared/context.ts";
 import { cloudflareResponseError, parseCloudflareResponseText } from "../shared/errors.ts";
 
 type CloudflareRequestPhase = "validate" | "execute";
 
 type QueryValue = string | number | boolean | undefined;
 
-export const handlers: Record<string, ProviderRuntimeHandler<CloudflareContext>> = {
+export const handlers: Record<string, ProviderRuntimeHandler<CloudflareContext>> = withAccountHandlers({
   get_html_content(input, context) {
     return runTextQuickAction("content", input, context, "content");
   },
   get_markdown(input, context) {
     return runTextQuickAction("markdown", input, context, "markdown");
   },
-  get_links(input, context) {
-    return getLinks(input, context);
-  },
-  get_json(input, context) {
-    return getJson(input, context);
-  },
-  scrape_elements(input, context) {
-    return scrapeElements(input, context);
-  },
-};
+  get_links: getLinks,
+  get_json: getJson,
+  scrape_elements: scrapeElements,
+});
 
 async function runTextQuickAction(
   endpoint: "content" | "markdown",

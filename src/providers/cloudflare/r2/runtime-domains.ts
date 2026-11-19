@@ -3,6 +3,7 @@ import type { CloudflareContext } from "../shared/context.ts";
 
 import { optionalRecord, optionalString, compactObject, optionalBoolean } from "../../../core/cast.ts";
 import { ProviderRequestError } from "../../provider-runtime.ts";
+import { withAccountHandlers } from "../shared/context.ts";
 import {
   buildCloudflareR2BucketPath,
   buildR2JurisdictionHeaders,
@@ -14,7 +15,7 @@ import {
   readRequiredString,
 } from "./client.ts";
 
-export const handlers: Record<string, ProviderRuntimeHandler<CloudflareContext>> = {
+export const handlers: Record<string, ProviderRuntimeHandler<CloudflareContext>> = withAccountHandlers({
   list_custom_domains: listCustomDomains,
   get_custom_domain: getCustomDomain,
   add_custom_domain: addCustomDomain,
@@ -22,7 +23,7 @@ export const handlers: Record<string, ProviderRuntimeHandler<CloudflareContext>>
   delete_custom_domain: deleteCustomDomain,
   get_managed_domain: getManagedDomain,
   update_managed_domain: updateManagedDomain,
-};
+});
 
 function buildCustomDomainPath(input: Record<string, unknown>, context: CloudflareContext) {
   const domain = String(input.domain);

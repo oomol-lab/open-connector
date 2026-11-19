@@ -5,9 +5,7 @@ import { defineProviderAction } from "../../../core/provider-definition.ts";
 import { bucketNameSchema, jurisdictionSchema, readPermissions, writePermissions } from "./schemas.ts";
 
 const service = "cloudflare";
-
 const queuesReadPermissions = ["Queues Read"];
-
 const queuesWritePermissions = ["Queues Write"];
 
 const eventActionSchema = s.stringEnum("An R2 object action that triggers a notification.", [
