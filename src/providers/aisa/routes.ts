@@ -14,7 +14,6 @@ import { aisaFirecrawlFamilies } from "./firecrawl-actions.ts";
 import { macroResearchRoutes } from "./macro-research-actions.ts";
 import { pinterestResearchRoutes } from "./pinterest-research-actions.ts";
 import { polymarketResearchRoutes } from "./polymarket-research-actions.ts";
-import { publicUtilityRoutes } from "./public-utility-actions.ts";
 import { regionalResearchRoutes } from "./regional-research-actions.ts";
 import { researchTaskRoutes } from "./research-task-actions.ts";
 import { searchResearchRoutes } from "./search-research-actions.ts";
@@ -97,7 +96,6 @@ export const aisaActionRoutes: Record<string, AisaActionRoute> = {
   ...dataForSeoTaskRoutes,
   ...dataForSeoOnPageRoutes,
   ...dataForSeoInstantRoutes,
-  ...publicUtilityRoutes,
   ...nativeSocialRoutes,
   ...braveRichRoutes,
   ...regionalResearchRoutes,
@@ -315,7 +313,7 @@ export const aisaActionRoutes: Record<string, AisaActionRoute> = {
         bodyArray: true,
         timeoutMs: contract.path.includes("/ai_optimization/llm_mentions/") ? 180000 : undefined,
         body: Object.fromEntries(
-          Object.keys(contract.inputSchema.properties).map((key) => [key, camelToSnakeCase(key)]),
+          Object.keys(readSchemaProperties(contract.inputSchema)).map((key) => [key, camelToSnakeCase(key)]),
         ),
       },
     ]),

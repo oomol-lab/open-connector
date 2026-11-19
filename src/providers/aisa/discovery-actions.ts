@@ -42,6 +42,49 @@ const scholarOutput = s.looseObject(
 );
 
 export const discoveryActions: ActionDefinition[] = [
+  defineProviderAction("aisa", {
+    name: "generate_parallel_findall_spec",
+    description:
+      "Convert a natural-language research objective into a suggested FindAll specification without starting a run.",
+    operationType: "read",
+    requiredScopes: [],
+    inputSchema: s.object(
+      "The objective to convert into a structured research specification.",
+      {
+        objective: s.string("Natural language objective to create a FindAll run specification.", {
+          minLength: 1,
+        }),
+        parallelBeta: s.optional(
+          s.string("Optional Parallel beta feature header; deprecated upstream and normally omitted."),
+        ),
+      },
+      { optional: [] },
+    ),
+    outputSchema: s.looseObject(
+      "The suggested FindAll specification, which can be customized before a run.",
+      {
+        objective: s.string("The generated natural-language research objective."),
+        entity_type: s.string("The type of entities to find."),
+        match_conditions: s.array(
+          "Conditions each matching entity should satisfy.",
+          s.looseObject(
+            "One named matching condition.",
+            {
+              name: s.optional(s.string("The condition name.")),
+              description: s.optional(s.string("The condition to evaluate.")),
+            },
+            { required: [] },
+          ),
+        ),
+        generator: s.optional(s.string("The suggested FindAll generator.")),
+        match_limit: s.optional(s.nullableInteger("Maximum number of candidates to evaluate.")),
+        enrichments: s.optional(
+          s.nullable(s.array("Suggested enrichment inputs.", s.looseObject("One enrichment specification."))),
+        ),
+      },
+      { required: [] },
+    ),
+  }),
   ...[
     [
       "search_scholar_articles",
@@ -298,6 +341,13 @@ export const discoveryActions: ActionDefinition[] = [
 ];
 
 export const discoveryRoutes: Record<string, AisaActionRoute> = {
+  generate_parallel_findall_spec: {
+    method: "POST",
+    path: "/apis/v1/parallel/findall/ingest",
+    query: {},
+    body: { objective: "objective" },
+    headers: { parallelBeta: "parallel-beta" },
+  },
   search_scholar_articles: {
     path: "/apis/v1/scholar/search/scholar",
     method: "POST",
