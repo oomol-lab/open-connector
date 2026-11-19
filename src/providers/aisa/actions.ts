@@ -24,7 +24,6 @@ import { fredActions } from "./fred-actions.ts";
 import { macroResearchActions } from "./macro-research-actions.ts";
 import { pinterestResearchActions } from "./pinterest-research-actions.ts";
 import { polymarketResearchActions } from "./polymarket-research-actions.ts";
-import { publicUtilityActions } from "./public-utility-actions.ts";
 import { redditActions } from "./reddit-actions.ts";
 import { regionalResearchActions } from "./regional-research-actions.ts";
 import { researchTaskActions } from "./research-task-actions.ts";
@@ -300,7 +299,6 @@ export const aisaActions: readonly ActionDefinition[] = [
   ...dataForSeoTaskActions,
   ...dataForSeoOnPageActions,
   ...dataForSeoInstantActions,
-  ...publicUtilityActions,
   ...nativeSocialActions,
   ...braveRichActions,
   ...regionalResearchActions,

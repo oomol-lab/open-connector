@@ -10,11 +10,10 @@ import { dataForSeoOnPageRoutes } from "./dataforseo-onpage-actions.ts";
 import { dataForSeoResearchContracts } from "./dataforseo-research-actions.ts";
 import { dataForSeoTaskRoutes } from "./dataforseo-task-actions.ts";
 import { discoveryRoutes } from "./discovery-actions.ts";
-import { aisaFirecrawlFamilies } from "./firecrawl-actions.ts";
+import { aisaFirecrawlRoutes } from "./firecrawl-actions.ts";
 import { macroResearchRoutes } from "./macro-research-actions.ts";
 import { pinterestResearchRoutes } from "./pinterest-research-actions.ts";
 import { polymarketResearchRoutes } from "./polymarket-research-actions.ts";
-import { publicUtilityRoutes } from "./public-utility-actions.ts";
 import { regionalResearchRoutes } from "./regional-research-actions.ts";
 import { researchTaskRoutes } from "./research-task-actions.ts";
 import { searchResearchRoutes } from "./search-research-actions.ts";
@@ -97,7 +96,6 @@ export const aisaActionRoutes: Record<string, AisaActionRoute> = {
   ...dataForSeoTaskRoutes,
   ...dataForSeoOnPageRoutes,
   ...dataForSeoInstantRoutes,
-  ...publicUtilityRoutes,
   ...nativeSocialRoutes,
   ...braveRichRoutes,
   ...regionalResearchRoutes,
@@ -315,51 +313,12 @@ export const aisaActionRoutes: Record<string, AisaActionRoute> = {
         bodyArray: true,
         timeoutMs: contract.path.includes("/ai_optimization/llm_mentions/") ? 180000 : undefined,
         body: Object.fromEntries(
-          Object.keys(contract.inputSchema.properties).map((key) => [key, camelToSnakeCase(key)]),
+          Object.keys(readSchemaProperties(contract.inputSchema)).map((key) => [key, camelToSnakeCase(key)]),
         ),
       },
     ]),
   ),
-  ...Object.fromEntries(
-    aisaFirecrawlFamilies.flatMap((family) => {
-      const base = `/apis/v1/firecrawl/${family.path}`;
-      return [
-        [
-          `submit_firecrawl_${family.name}`,
-          {
-            path: base,
-            method: "POST",
-            query: {},
-            asyncJob: "submit",
-            body: Object.fromEntries(
-              Object.keys(readSchemaProperties(family.inputSchema))
-                .filter((key) => key !== "maxPriceUsd")
-                .map((key) => [key, key]),
-            ),
-          },
-        ],
-        [
-          `get_firecrawl_${family.name}`,
-          {
-            path: `${base}/{taskId}`,
-            query: {},
-            pathParams: { taskId: "taskId" },
-            asyncJob: "get",
-          },
-        ],
-        [
-          `cancel_firecrawl_${family.name}`,
-          {
-            path: `${base}/{taskId}/cancel`,
-            method: "POST",
-            query: {},
-            pathParams: { taskId: "taskId" },
-            asyncJob: "cancel",
-          },
-        ],
-      ] as Array<[string, AisaActionRoute]>;
-    }),
-  ),
+  ...aisaFirecrawlRoutes,
   search_exa: {
     path: "/apis/v1/exa/search",
     method: "POST",

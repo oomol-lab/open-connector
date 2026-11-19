@@ -41,29 +41,72 @@ const scholarOutput = s.looseObject(
   { required: [] },
 );
 
+function scholarSearch(name: string, description: string): ActionDefinition {
+  return defineProviderAction("aisa", {
+    name,
+    description,
+    operationType: "read",
+    requiredScopes: [],
+    inputSchema: scholarInput,
+    outputSchema: scholarOutput,
+  });
+}
+
 export const discoveryActions: ActionDefinition[] = [
-  ...[
-    [
-      "search_scholar_articles",
-      "Search academic papers with source links, abstracts, authors, and citation counts when available.",
-    ],
-    [
-      "search_scholar_mixed",
-      "Search academic literature and the web together; author and citation data are optional for mixed sources.",
-    ],
-    [
-      "search_scholar_web",
-      "Search web sources with titles, links, and snippets; this does not retrieve full page text.",
-    ],
-  ].map(([name, description]) =>
-    defineProviderAction("aisa", {
-      name: name!,
-      description: description!,
-      operationType: "read",
-      requiredScopes: [],
-      inputSchema: scholarInput,
-      outputSchema: scholarOutput,
-    }),
+  defineProviderAction("aisa", {
+    name: "generate_parallel_findall_spec",
+    description:
+      "Convert a natural-language research objective into a suggested FindAll specification without starting a run.",
+    operationType: "read",
+    requiredScopes: [],
+    inputSchema: s.object(
+      "The objective to convert into a structured research specification.",
+      {
+        objective: s.string("Natural language objective to create a FindAll run specification.", {
+          minLength: 1,
+        }),
+        parallelBeta: s.optional(
+          s.string("Optional Parallel beta feature header; deprecated upstream and normally omitted."),
+        ),
+      },
+      { optional: [] },
+    ),
+    outputSchema: s.looseObject(
+      "The suggested FindAll specification, which can be customized before a run.",
+      {
+        objective: s.string("The generated natural-language research objective."),
+        entity_type: s.string("The type of entities to find."),
+        match_conditions: s.array(
+          "Conditions each matching entity should satisfy.",
+          s.looseObject(
+            "One named matching condition.",
+            {
+              name: s.optional(s.string("The condition name.")),
+              description: s.optional(s.string("The condition to evaluate.")),
+            },
+            { required: [] },
+          ),
+        ),
+        generator: s.optional(s.string("The suggested FindAll generator.")),
+        match_limit: s.optional(s.nullableInteger("Maximum number of candidates to evaluate.")),
+        enrichments: s.optional(
+          s.nullable(s.array("Suggested enrichment inputs.", s.looseObject("One enrichment specification."))),
+        ),
+      },
+      { required: [] },
+    ),
+  }),
+  scholarSearch(
+    "search_scholar_articles",
+    "Search academic papers with source links, abstracts, authors, and citation counts when available.",
+  ),
+  scholarSearch(
+    "search_scholar_mixed",
+    "Search academic literature and the web together; author and citation data are optional for mixed sources.",
+  ),
+  scholarSearch(
+    "search_scholar_web",
+    "Search web sources with titles, links, and snippets; this does not retrieve full page text.",
   ),
   defineProviderAction("aisa", {
     name: "search_polymarket",
@@ -297,21 +340,30 @@ export const discoveryActions: ActionDefinition[] = [
   }),
 ];
 
+const scholarQuery = { query: "query", maxResults: "max_num_results", minYear: "as_ylo", maxYear: "as_yhi" };
+
 export const discoveryRoutes: Record<string, AisaActionRoute> = {
+  generate_parallel_findall_spec: {
+    method: "POST",
+    path: "/apis/v1/parallel/findall/ingest",
+    query: {},
+    body: { objective: "objective" },
+    headers: { parallelBeta: "parallel-beta" },
+  },
   search_scholar_articles: {
     path: "/apis/v1/scholar/search/scholar",
     method: "POST",
-    query: { query: "query", maxResults: "max_num_results", minYear: "as_ylo", maxYear: "as_yhi" },
+    query: scholarQuery,
   },
   search_scholar_mixed: {
     path: "/apis/v1/scholar/search/mixed",
     method: "POST",
-    query: { query: "query", maxResults: "max_num_results", minYear: "as_ylo", maxYear: "as_yhi" },
+    query: scholarQuery,
   },
   search_scholar_web: {
     path: "/apis/v1/scholar/search/web",
     method: "POST",
-    query: { query: "query", maxResults: "max_num_results", minYear: "as_ylo", maxYear: "as_yhi" },
+    query: scholarQuery,
   },
   search_polymarket: {
     path: "/apis/v1/polymarket/public-search",

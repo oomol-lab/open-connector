@@ -2,18 +2,7934 @@ import type { ActionDefinition, JsonSchema } from "../../core/types.ts";
 
 import { s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
-import contracts from "./dataforseo-research-contracts.json" with { type: "json" };
 
 interface ResearchContract {
   name: string;
   path: string;
   description: string;
-  inputSchema: JsonSchema & {
-    properties: Record<string, unknown>;
+  inputSchema: JsonSchema;
+}
+
+function requireAtLeastOne(fields: readonly string[], nonempty: readonly string[] = []): JsonSchema {
+  return {
+    anyOf: fields.map((field) => ({
+      required: [field],
+      properties: {
+        [field]: nonempty.includes(field) ? { not: { type: "null" }, minLength: 1 } : { not: { type: "null" } },
+      },
+    })),
   };
 }
 
-export const dataForSeoResearchContracts: readonly ResearchContract[] = contracts;
+const languageRequired = requireAtLeastOne(["languageCode", "languageName"]);
+const nonemptyLanguageRequired = requireAtLeastOne(["languageCode", "languageName"], ["languageCode", "languageName"]);
+const locationRequired = requireAtLeastOne(["locationCode", "locationName"]);
+const nonemptyLocationRequired = requireAtLeastOne(["locationCode", "locationName"], ["locationName"]);
+const locationOrCoordinatesRequired = requireAtLeastOne(["locationCode", "locationName", "locationCoordinate"]);
+
+const keywordsItemSchema = s.string("The keywords value value.");
+
+const languageCodeSchema = {
+  description:
+    "language code\nrequired field if don't specify language_name\nyou can receive the list of available languages with their language_code by making a separate request to the \nhttps://api.dataforseo.com/v3/dataforseo_labs/locations_and_languages\nexample:\nen",
+  type: ["string", "null"],
+};
+
+const languageNameSchema = s.string(
+  "full name of the language\nrequired field if don't specify language_code\nyou can receive the list of available languages with their language_name by making a separate request to the \nhttps://api.dataforseo.com/v3/dataforseo_labs/locations_and_languages\nexample:\nEnglish",
+);
+
+const tagSchema = {
+  description:
+    "user-defined task identifier\noptional field\nthe character limit is 255\nyou can use this parameter to identify the task and match it with the result\nyou will find the specified tag value in the data object of the response",
+  type: ["string", "null"],
+  maxLength: 255,
+};
+
+const filtersItemVariantSchema = s.string("The filters value variant value.");
+
+const getLabsCompetitorsDomainFiltersItemVariantSchema = s.number("The filters value variant value.");
+
+const filtersItemVariantItemSchema = {
+  description: "A JSON filter operand. Nested expressions and field compatibility are validated by DataForSEO.",
+};
+
+const filtersItemSchema = {
+  anyOf: [
+    filtersItemVariantSchema,
+    getLabsCompetitorsDomainFiltersItemVariantSchema,
+    s.boolean("The filters value variant value."),
+    {
+      additionalProperties: filtersItemVariantItemSchema,
+      type: ["object", "null"],
+      description: "The filters value variant value.",
+    },
+    s.array("The filters value variant value.", filtersItemVariantItemSchema),
+  ],
+  description:
+    "JSON representation of filter values and nested expressions. Field names, operators, condition counts and operand compatibility remain provider-validated as documented for each endpoint; this is not a complete filter-language validator.",
+};
+
+const includeClickstreamDataSchema = {
+  description:
+    "include or exclude data from clickstream-based metrics in the result\noptional field\nif the parameter is set to_true, you will receive clickstream_etv, clickstream_gender_distribution, and_clickstream_age_distribution_fields with clickstream data in the response\ndefault value: false\nwith this parameter enabled, you will be charged double the price for the request\nlearn more about how clickstream-based metrics are calculated in this help center articlen",
+  type: ["boolean", "null"],
+};
+
+const itemTypesItemSchema = s.string("The item types value value.");
+
+const limitSchema = {
+  description: "the maximum number of returned domains\noptional field\ndefault value: 100\nmaximum value: 1000",
+  type: ["integer", "null"],
+};
+
+const locationCodeSchema = s.integer(
+  "location code\nrequired field if you don't specify location_name\nNote: it is required to specify either location_name or location_code\nyou can receive the list of available locations with their location_code by making a separate request to the \nhttps://api.dataforseo.com/v3/dataforseo_labs/locations_and_languages\nexample:\n2840",
+);
+
+const locationNameSchema = s.string(
+  "full name of the location\nrequired field if you don't specify location_code\nNote: it is required to specify either location_name or location_code\nyou can receive the list of available locations with their location_name by making a separate request to the \nhttps://api.dataforseo.com/v3/dataforseo_labs/locations_and_languages\nexample:\nUnited Kingdom",
+);
+
+const orderByItemSchema = s.string("The order by value value.");
+
+const categoryCodesItemSchema = s.string("The category codes value value.");
+
+const ignoreSynonymsSchema = {
+  description:
+    "ignore highly similar keywords\noptional field\nif set to_true only core keywords will be returned, all highly similar keywords will be excluded;  \ndefault value: falsen",
+  type: ["boolean", "null"],
+};
+
+const getLabsKeywordIdeasIncludeClickstreamDataSchema = {
+  description:
+    "include or exclude data from clickstream-based metrics in the result\noptional field\nif the parameter is set to true, you will receive clickstream_keyword_info, keyword_info_normalized_with_clickstream, and keyword_info_normalized_with_bing fields in the response\ndefault value: false\nwith this parameter enabled, you will be charged double the price for the request\nlearn more about how clickstream-based metrics are calculated in this help center article",
+  type: ["boolean", "null"],
+};
+
+const includeSerpInfoSchema = {
+  description:
+    "include data from SERP for each keyword\noptional field\nif set to true, we will return a serp_info array containing SERP data (number of search results, relevant URL, and SERP features) for every keyword in the response\ndefault value: false",
+  type: ["boolean", "null"],
+};
+
+const getLabsKeywordIdeasLanguageCodeSchema = {
+  description:
+    "language code\noptional field\nif you use this field, you don't need to specify language_name\nyou can receive the list of available languages with their language_code by making a separate request to the\nhttps://api.dataforseo.com/v3/dataforseo_labs/locations_and_languages\nexample:\nen\nNote: if omitted, results default to the language with the most keyword records in the specified location;\nrefer to the available_languages.keywords field of the Locations and Languages endpoint to determine the default language",
+  type: ["string", "null"],
+};
+
+const getLabsKeywordIdeasLanguageNameSchema = {
+  description:
+    "full name of the language\noptional field\nif you use this field, you don't need to specify language_code\nyou can receive the list of available languages with their language_name by making a separate request to the\nhttps://api.dataforseo.com/v3/dataforseo_labs/locations_and_languages\nexample:\nEnglish\nNote: if omitted, results default to the language with the most keyword records in the specified location;\nrefer to the available_languages.keywords field of the Locations and Languages endpoint to determine the default language",
+  type: ["string", "null"],
+};
+
+const getLabsKeywordIdeasLocationNameSchema = s.string(
+  "full name of the location\nrequired field if you don't specify location_code\nNote: it is required to specify either location_name or location_code\nyou can receive the list of available locations with their location_name by making a separate request to the\nhttps://api.dataforseo.com/v3/dataforseo_labs/locations_and_languages\nexample:\nUnited Kingdom",
+);
+
+const offsetSchema = {
+  description:
+    "offset in the results array of returned keywords\noptional field\ndefault value: 0\nif you specify the 10 value, the first ten keywords in the results array will be omitted and the data will be provided for the successive keywords\nNote: we recommend using this parameter only when retrieving up to 10,000 results\nfor retrieving over 10,000 results, use the offset_token instead.",
+  type: ["integer", "null"],
+};
+
+const getLabsKeywordsForCategoriesIgnoreSynonymsSchema = {
+  description:
+    "ignore highly similar keywords\noptional field\nif set to true only core keywords will be returned, all highly similar keywords will be excluded;\ndefault value: false",
+  type: ["boolean", "null"],
+};
+
+const getLabsKeywordsForCategoriesLanguageNameSchema = s.string(
+  "full name of the language\nrequired field if you don't specify language_code\nNote: it is required to specify either language_name or language_code\nyou can receive the list of available languages with their language_name by making a separate request to the\nhttps://api.dataforseo.com/v3/dataforseo_labs/locations_and_languages\nexample:\nEnglish",
+);
+
+const getLabsKeywordsForCategoriesLocationCodeSchema = s.integer(
+  "unique location identifier\nrequired field if you don't specify location_name\nNote: it is required to specify either location_name or location_code\nyou can receive the list of available locations with their location_code by making a separate request to the\nhttps://api.dataforseo.com/v3/dataforseo_labs/locations_and_languages\nexample:\n2840",
+);
+
+const offsetTokenSchema = {
+  description:
+    "offset token for subsequent requests\noptional field\nprovided in the identical filed of the response to each request;\nuse this parameter to avoid timeouts while trying to obtain over 10,000 results in a single request;\nby specifying the unique offset_token value from the response array, you will get the subsequent results of the initial task;\noffset_token values are unique for each subsequent task\nNote: if the offset_token is specified in the request, all other parameters except limit will not be taken into account when processing a task.\nlearn more about this parameter on our Help Center",
+  type: ["string", "null"],
+};
+
+const asinSchema = s.string(
+  "product ID\nrequired field\nunique product identifier (ASIN) on Amazon;\nyou can receive the asin parameter by making a separate request to the Amazon Products endpoint",
+  { minLength: 1 },
+);
+
+const getLabsAmazonProductCompetitorsLimitSchema = {
+  description:
+    "the maximum number of products in the results array\noptional field\ndefault value: 100;\nmaximum value: 1000",
+  type: ["integer", "null"],
+};
+
+const getLabsAmazonProductCompetitorsLocationCodeSchema = s.integer(
+  "location code\nrequired field if don't specify location_name\nyou can receive the list of available locations with their location_code by making a separate request to \nhttps://api.dataforseo.com/v3/dataforseo_labs/locations_and_languages;\nNote: this endpoint currently supports the US, Egypt, Saudi Arabia, and the United Arab Emirates locations only;\nexample:\n2840",
+);
+
+const getLabsAmazonProductCompetitorsLocationNameSchema = s.string(
+  "full name of the location\nrequired field if don't specify location_code\nyou can receive the list of available locations with their location_name by making a separate request to \nhttps://api.dataforseo.com/v3/dataforseo_labs/locations_and_languages;\nNote: this endpoint currently supports the US, Egypt, Saudi Arabia, and the United Arab Emirates locations only;\nexample:\nUnited States",
+);
+
+const getLabsAmazonProductKeywordIntersectionsOffsetSchema = {
+  description:
+    "offset in the results array of returned keywords\noptional field\ndefault value: 0\nif you specify the 10 value, the first ten keywords in the results array will be omitted and the data will be provided for the successive keywords",
+  type: ["integer", "null"],
+};
+
+const includeSeedKeywordSchema = {
+  description:
+    "include data for the seed keyword\noptional field\nif set to true, data for the seed keyword specified in the keyword field will be provided in the seed_keyword_data array of the response\ndefault value: false",
+  type: ["boolean", "null"],
+};
+
+const getLabsAmazonRelatedKeywordsLimitSchema = {
+  description: "the maximum number of returned keywords\noptional field\ndefault value: 100\nmaximum value: 1000",
+  type: ["integer", "null"],
+};
+
+const appIdSchema = s.string(
+  "id of the app\nrequired field\nID of the mobile application on App Store;\nyou can find the ID in the URL of every app listed on App Store;\nexample:\nin the URL https://apps.apple.com/us/app/id835599320\nthe id is 835599320",
+  { minLength: 1 },
+);
+
+const getLabsAppStoreAppCompetitorsLanguageCodeSchema = {
+  description:
+    "language code\nrequired field if you don't specify language_name\nNote: it is required to specify either language_name or language_code\nyou can receive the list of available languages with their language_code by making a separate request to the \nhttps://api.dataforseo.com/v3/dataforseo_labs/locations_and_languages;\nNote: this endpoint currently supports the English language only\nexample:\nen",
+  type: ["string", "null"],
+};
+
+const getLabsAppStoreAppCompetitorsLanguageNameSchema = s.string(
+  "full name of the language\nrequired field if you don't specify language_code\nNote: it is required to specify either language_name or language_code\nyou can receive the list of available languages with their language_name by making a separate request to the \nhttps://api.dataforseo.com/v3/dataforseo_labs/locations_and_languages;\nNote: this endpoint currently supports the English language only;\nexample:\nEnglish",
+);
+
+const getLabsAppStoreAppCompetitorsLimitSchema = {
+  description: "the maximum number of returned apps\noptional field\ndefault value: 100\nmaximum value: 1000",
+  type: ["integer", "null"],
+};
+
+const getLabsAppStoreAppCompetitorsLocationCodeSchema = s.integer(
+  "location code\nrequired field if you don't specify location_name\nNote: it is required to specify either location_name or location_code\nyou can receive the list of available locations with their location_code by making a separate request to \nhttps://api.dataforseo.com/v3/dataforseo_labs/locations_and_languages;\nNote: this endpoint currently supports the US location only;\nexample:\n2840",
+);
+
+const getLabsAppStoreAppCompetitorsLocationNameSchema = s.string(
+  "full name of the location\nrequired field if you don't specify location_code\nNote: it is required to specify either location_name or location_code\nyou can receive the list of available locations with their location_name by making a separate request to \nhttps://api.dataforseo.com/v3/dataforseo_labs/locations_and_languages;\nNote: this endpoint currently supports the US location only;\nexample:\nUnited States",
+);
+
+const getLabsAppStoreAppCompetitorsOffsetSchema = {
+  description:
+    "offset in the results array of returned apps\noptional field\ndefault value: 0\nif you specify the 10 value, the first ten apps in the results array will be omitted and the data will be provided for the successive keywords",
+  type: ["integer", "null"],
+};
+
+const orderBySchema = {
+  description:
+    'results sorting rules\noptional field\nyou can use the same values as in the filters array to sort the results;\npossible sorting types:\nasc - results will be sorted in the ascending order;\ndesc - results will be sorted in the descending order;\nyou should use a comma to specify a sorting type;\nexample:\n["intersections,asc"]\nNote: you can set no more than three sorting rules in a single request;\nyou should use a comma to separate several sorting rules;\nexample:\n["intersections,desc","sum_position,asc"]\ndefault rule:\n["intersections,desc"]\nNote: if the item_types array contains item types that are different from organic, the results will be ordered by the first item type in the array',
+  items: orderByItemSchema,
+  type: ["array", "null"],
+};
+
+const backlinksFiltersItemVariantSchema = s.string("The backlinks filters value variant value.");
+
+const getBacklinksDomainPagesSummaryBacklinksFiltersItemVariantSchema = s.number(
+  "The backlinks filters value variant value.",
+);
+
+const backlinksFiltersItemSchema = {
+  anyOf: [
+    backlinksFiltersItemVariantSchema,
+    getBacklinksDomainPagesSummaryBacklinksFiltersItemVariantSchema,
+    s.boolean("The backlinks filters value variant value."),
+    {
+      additionalProperties: filtersItemVariantItemSchema,
+      type: ["object", "null"],
+      description: "The backlinks filters value variant value.",
+    },
+    s.array("The backlinks filters value variant value.", filtersItemVariantItemSchema),
+  ],
+  description:
+    "JSON representation of filter values and nested expressions. Field names, operators, condition counts and operand compatibility remain provider-validated as documented for each endpoint; this is not a complete filter-language validator.",
+};
+
+const backlinksStatusTypeSchema = {
+  description:
+    "set what backlinks to return and count\noptional field\nyou can use this field to choose what backlinks will be returned and used for aggregated metrics for your target;\npossible values: \nall - all backlinks will be returned and counted;\nlive - backlinks found during the last check will be returned and counted;\nlost - lost backlinks will be returned and counted;\ndefault value: live",
+  type: ["string", "null"],
+};
+
+const includeIndirectLinksSchema = {
+  description:
+    "indicates if indirect links to the target will be included in the results\noptional field\nif set to true, the results will include data on indirect links pointing to a page that either redirects to the target, or points to a canonical page\nif set to false, indirect links will be ignored\ndefault value: true",
+  type: ["boolean", "null"],
+};
+
+const internalListLimitSchema = {
+  description:
+    "maximum number of elements within internal arrays\noptional field\nyou can use this field to limit the number of elements within the following arrays:\nreferring_links_tld\nreferring_links_types\nreferring_links_attributes\nreferring_links_platform_types\nreferring_links_semantic_locations\ndefault value: 10\nmaximum value: 1000",
+  type: ["integer", "null"],
+};
+
+const getBacklinksDomainPagesSummaryOrderBySchema = {
+  description:
+    'results sorting rules\noptional field\nyou can use the same values as in the filters array to sort the results\npossible sorting types:\nasc - results will be sorted in the ascending order\ndesc - results will be sorted in the descending order\nyou should use a comma to set up a sorting type\nexample:\n["backlinks,desc"]\nnote that you can set no more than three sorting rules in a single request\nyou should use a comma to separate several sorting rules\nexample:\n["backlinks,desc","rank,asc"]',
+  items: orderByItemSchema,
+  type: ["array", "null"],
+};
+
+const rankScaleSchema = {
+  description:
+    "defines the scale used for calculating and displaying the rank, domain_from_rank, and page_from_rank values\noptional field\nyou can use this parameter to choose whether rank values are presented on a 0–100 or 0–1000 scale\npossible values:\none_hundred — rank values are displayed on a 0–100 scale\none_thousand — rank values are displayed on a 0–1000 scale\ndefault value: one_thousand\nlearn more about how this parameter works and how ranking metrics are calculated in this Help Center article",
+  type: ["string", "null"],
+};
+
+const excludeTargetsItemSchema = s.string("The exclude targets value value.");
+
+const excludeInternalBacklinksSchema = {
+  description:
+    "indicates whether the backlinks from subdomains of the target are excluded\noptional field\nif set to false, the backlinks from subdomains of the target will be ommited and you won't receive the same domain in the response;\ndefault value: true",
+  type: ["boolean", "null"],
+};
+
+const includeSubdomainsSchema = {
+  description:
+    "indicates if the subdomains of the target will be included in the search\noptional field\nif set to false, the subdomains will be ignored\ndefault value: true",
+  type: ["boolean", "null"],
+};
+
+const dateGroupSchema = {
+  description:
+    "time range which will be used to group the results\noptional field\ndefault value: month\npossible values: day, week, month",
+  type: ["string", "null"],
+};
+
+const dateToSchema = {
+  description:
+    'ending date of the time range\noptional field\nif you don\'t specify this field, today\'s date will be used by default\ndate format: "yyyy-mm-dd"\nexample:\n"2019-01-15"',
+  type: ["string", "null"],
+  format: "date",
+};
+
+const initialDatasetFiltersItemVariantSchema = s.string("The initial dataset filters value variant value.");
+
+const getContentCategoryTrendsInitialDatasetFiltersItemVariantSchema = s.number(
+  "The initial dataset filters value variant value.",
+);
+
+const initialDatasetFiltersItemSchema = {
+  anyOf: [
+    initialDatasetFiltersItemVariantSchema,
+    getContentCategoryTrendsInitialDatasetFiltersItemVariantSchema,
+    s.boolean("The initial dataset filters value variant value."),
+    {
+      additionalProperties: filtersItemVariantItemSchema,
+      type: ["object", "null"],
+      description: "The initial dataset filters value variant value.",
+    },
+    s.array("The initial dataset filters value variant value.", filtersItemVariantItemSchema),
+  ],
+  description:
+    "JSON representation of filter values and nested expressions. Field names, operators, condition counts and operand compatibility remain provider-validated as documented for each endpoint; this is not a complete filter-language validator.",
+};
+
+const getContentCategoryTrendsInternalListLimitSchema = {
+  description:
+    "maximum number of elements within internal arrays\noptional field\nyou can use this field to limit the number of elements within the following arrays:\ntop_domains\ntext_categories\npage_categories\ncountries\nlanguages\ndefault value: 1\nmaximum value: 20",
+  type: ["integer", "null"],
+};
+
+const pageTypeItemSchema = s.string("The page type value value.");
+
+const pageTypeSchema = {
+  description:
+    'target page types\noptional field\nuse this parameter to filter the dataset by page types\npossible values: \n"ecommerce", "news", "blogs", "message-boards", "organization"',
+  items: pageTypeItemSchema,
+  type: ["array", "null"],
+};
+
+const getContentCategoryTrendsRankScaleSchema = {
+  description:
+    "defines the scale used for calculating and displaying the rank values\noptional field\nyou can use this parameter to choose whether rank values are presented on a 0–100 or 0–1000 scale\npossible values:\none_hundred — rank values are displayed on a 0–100 scale\none_thousand — rank values are displayed on a 0–1000 scale\ndefault value: one_thousand\nlearn more about how this parameter works in this Help Center article",
+  type: ["string", "null"],
+};
+
+const keywordSchema = s.string(
+  'target keyword\nrequired field\nUTF-8 encoding\nthe keywords will be converted to a lowercase format;\nNote: to match an exact phrase instead of a stand-alone keyword, use double quotes and backslashes;\nexample:\n"keyword": "\\"tesla palo alto\\""\nlearn more about rules and limitations of keyword and keywords fields in DataForSEO APIs in this Help Center article',
+  { minLength: 1 },
+);
+
+const positiveConnotationThresholdSchema = {
+  description:
+    "positive connotation threshold\noptional field\nspecified as the probability index threshold for positive sentiment related to the citation content\nif you specify this field, connotation_types object in the response will only contain data on citations with positive sentiment probability more than or equal to the specified value\npossible values: from 0 to 1\ndefault value: 0.4",
+  type: ["number", "null"],
+};
+
+const sentimentsConnotationThresholdSchema = {
+  description:
+    "sentiment connotation threshold\noptional field\nspecified as the probability index threshold for sentiment connotations related to the citation content\nif you specify this field, sentiment_connotations object in the response will only contain data on citations where the probability per each sentiment is more than or equal to the specified value\npossible values: from 0 to 1\ndefault value: 0.4",
+  type: ["number", "null"],
+};
+
+const browserScreenHeightSchema = {
+  description:
+    "browser screen height\noptional field\nyou can set a custom browser screen height to calculate pixel rankings for a particular device;\ncan be specified within the following range: 240-9999;\nby default, the parameter is set to:\n1080 for desktop;\n640 for mobile on android;\n812 for mobile on iOS;\nNote: to use this parameter, set calculate_rectangles to true",
+  type: ["integer", "null"],
+};
+
+const browserScreenResolutionRatioSchema = {
+  description:
+    "browser screen resolution ratio\noptional field\nyou can set a custom browser screen resolution ratio to calculate pixel rankings for a particular device;\ncan be specified within the following range: 0.5-3;\nby default, the parameter is set to:\n1 for desktop;\n3 for mobile on android;\n3 for mobile on iOS;\nNote: to use this parameter, set calculate_rectangles to true",
+  type: ["integer", "null"],
+};
+
+const calculateRectanglesSchema = {
+  description:
+    "calculate pixel rankings for SERP elements in advanced results\noptional field\npixel ranking refers to the distance between the result snippet and top left corner of the screen;\nVisit Help Center to learn more>>\nby default, the parameter is set to false\nNote: if set to true, the charge per task will be multiplied by 2",
+  type: ["boolean", "null"],
+};
+
+const deviceSchema = {
+  description:
+    "device type\noptional field\nreturn results for a specific device type\ncan take the values:desktop, mobile\ndefault value: desktop",
+  type: ["string", "null"],
+};
+
+const getSerpGoogleAiModeKeywordSchema = s.string(
+  "keyword\nrequired field\nyou can specify up to 700 characters in the keyword field\nall %## will be decoded (plus character ‘+’ will be decoded to a space character)\nif you need to use the “%” character for your keyword, please specify it as “%25”;\nif you need to use the “+” character for your keyword, please specify it as “%2B”\nlearn more about rules and limitations of keyword and keywords fields in DataForSEO APIs in this Help Center article",
+  { minLength: 1 },
+);
+
+const osSchema = {
+  description:
+    "device operating system\noptional field\nif you specify desktop in the device field, choose from the following values: windows, macos\ndefault value: windows\nif you specify mobile in the device field, choose from the following values: android, ios\ndefault value: android",
+  type: ["string", "null"],
+};
+
+const getSerpGoogleFinanceMarketsDeviceSchema = {
+  description: "device type\noptional field\nreturn results for a specific device type\npossible value: desktop",
+  type: ["string", "null"],
+};
+
+const getSerpGoogleFinanceMarketsLanguageCodeSchema = s.string(
+  "search engine language code\nrequired field if you don't specify language_name\nif you use this field, you don't need to specify language_name\nyou can receive the list of available languages of the search engine with their language_code by making a separate request to the https://api.dataforseo.com/v3/serp/google/languages\nexample:\nen",
+);
+
+const getSerpGoogleFinanceMarketsLanguageNameSchema = s.string(
+  "full name of search engine language\nrequired field if you don't specify language_code \nif you use this field, you don't need to specify language_code\nyou can receive the list of available languages of the search engine with their language_name by making a separate request to the https://api.dataforseo.com/v3/serp/google/languages\nexample:\nEnglish",
+);
+
+const getSerpGoogleFinanceMarketsLocationCodeSchema = s.integer(
+  "search engine location code\nrequired field if you don't specify location_name\nif you use this field, you don't need to specify location_name\nyou can receive the list of available locations of the search engines with their location_code by making a separate request to https://api.dataforseo.com/v3/serp/google/locations\nexample:\n2840",
+);
+
+const getSerpGoogleFinanceMarketsLocationNameSchema = s.string(
+  "full name of search engine location\nrequired field if you don't specify location_code\nif you use this field, you don't need to specify location_code\nyou can receive the list of available locations of the search engine with their location_name by making a separate request to  https://api.dataforseo.com/v3/serp/google/locations\nexample:\nLondon,England,United Kingdom",
+);
+
+const getSerpGoogleFinanceMarketsOsSchema = {
+  description: "device operating system\noptional field\npossible values: windows",
+  type: ["string", "null"],
+};
+
+const getSerpGoogleImagesKeywordSchema = s.string(
+  "keyword\nrequired field\nyou can specify up to 700 characters in the keyword field\nall %## will be decoded (plus character '+' will be decoded to a space character)\nif you need to use the \"%\" character for your keyword, please specify it as \"%25\";\nif you need to use the “+” character for your keyword, please specify it as “%2B”;\nif this field contains such parameters as 'allinanchor:', 'allintext:', 'allintitle:', 'allinurl:', 'define:', 'filetype:', 'id:', 'inanchor:', 'info:', 'intext:', 'intitle:', 'inurl:', 'link:', 'related:', 'site:', the charge per task will be multiplied by 5\nNote: queries containing the ‘cache:’ parameter are not supported and will return a validation error\nlearn more about rules and limitations of keyword and keywords fields in DataForSEO APIs in this Help Center article",
+);
+
+const getSerpGoogleImagesLanguageNameSchema = s.string(
+  "full name of search engine language\nrequired field if you don't specify language_code\nif you use this field, you don't need to specify language_code\nyou can receive the list of available languages of the search engine with their language_name by making a separate request to the https://api.dataforseo.com/v3/serp/google/languages\nexample:\nEnglish",
+);
+
+const getSerpGoogleImagesLocationCodeSchema = s.integer(
+  "search engine location code\nrequired field if you don't specify location_name or location_coordinate\nif you use this field, you don't need to specify location_name or location_coordinate\nyou can receive the list of available locations of the search engines with their location_code by making a separate request to the https://api.dataforseo.com/v3/serp/google/locations\nexample:\n2840",
+);
+
+const locationCoordinateSchema = s.string(
+  'GPS coordinates of a location\nrequired field if you don\'t specify location_name or location_code\nif you use this field, you don\'t need to specify location_name or location_code\nlocation_coordinate parameter should be specified in the "latitude,longitude,radius" format\nthe maximum number of decimal digits for "latitude" and "longitude": 7\nthe minimum value for "radius": 199.9 (mm)\nthe maximum value for "radius": 199999 (mm)\nexample:\n53.476225,-2.243572,200',
+);
+
+const getSerpGoogleImagesLocationNameSchema = s.string(
+  "full name of search engine location\nrequired field if you don't specify location_code or location_coordinate\nif you use this field, you don't need to specify location_code or location_coordinate\nyou can receive the list of available locations of the search engine with their location_name by making a separate request to the https://api.dataforseo.com/v3/serp/google/locations\nexample:\nLondon,England,United Kingdom",
+);
+
+const maxCrawlPagesSchema = {
+  description:
+    "page crawl limit\noptional field\nnumber of search results pages to crawl\nmax value: 100\nNote: the max_crawl_pages and depth parameters complement each other;\nlearn more at our help center",
+  type: ["integer", "null"],
+};
+
+const getSerpGoogleImagesOsSchema = {
+  description:
+    "device operating system\noptional field\nnote that this API provides results for desktop only\nchoose from the following values: windows, macos\ndefault value: windows",
+  type: ["string", "null"],
+};
+
+const searchParamSchema = {
+  description:
+    "additional parameters of the search query\noptional field\nGet the list of available parameters and additional details here.",
+  type: ["string", "null"],
+};
+
+const urlSchema = {
+  description:
+    "direct URL of the search query\noptional field\nyou can specify a direct URL and we will sort it out to the necessary fields. Note that this method is the most difficult for our API to process and also requires you to specify the exact language and location in the URL. In most cases, we wouldn’t recommend using this method.\nexample:\nhttps://www.google.co.uk/search?q=%20rank%20tracker%20api&hl=en&gl=GB&uule=w+CAIQIFISCXXeIa8LoNhHEZkq1d1aOpZS",
+  type: ["string", "null"],
+};
+
+const getSerpGoogleLocalFinderLanguageNameSchema = s.string(
+  "full name of search engine language\nrequired field if you don't specify language_code\nif you use this field, you don't need to specify language_code\nyou can receive the list of available languages of the search engine with their language_name by making a separate request to the https://api.dataforseo.com/v3/serp/{{low_se_name}}/languages\nexample:\nEnglish",
+);
+
+const getSerpGoogleLocalFinderLocationCodeSchema = s.integer(
+  "search engine location code\nrequired field if you don't specify location_name or location_coordinate\nif you use this field, you don't need to specify location_name or location_coordinate\nyou can receive the list of available locations of the search engines with their location_code by making a separate request to the https://api.dataforseo.com/v3/serp/{{low_se_name}}/locations\nexample:\n2840",
+);
+
+const getSerpGoogleLocalFinderLocationNameSchema = s.string(
+  "full name of search engine location\nrequired field if you don't specify location_code or location_coordinate\nif you use this field, you don't need to specify location_code or location_coordinate\nyou can receive the list of available locations of the search engine with their location_name by making a separate request to the https://api.dataforseo.com/v3/serp/{{low_se_name}}/locations\nexample:\nLondon,England,United Kingdom",
+);
+
+const getSerpGoogleNewsLanguageCodeSchema = s.string(
+  "search engine language code\nrequired field if you don't specify language_name\nif you use this field, you don't need to specify language_name\nyou can receive the list of available languages of the search engine with their language_code by making a separate request to the https://api.dataforseo.com/v3/serp/{{low_se_name}}/languages\nexample:\nen",
+);
+
+const seDomainSchema = {
+  description:
+    "search engine domain\noptional field\nwe choose the relevant search engine domain automatically according to the location and language you specify\nhowever, you can set a custom search engine domain in this field\nexample:\ngoogle.co.uk, google.com.au, google.de, etc.",
+  type: ["string", "null"],
+};
+
+const getSerpYoutubeCommentsDeviceSchema = {
+  description: "device type\noptional field\nonly value: desktop",
+  type: ["string", "null"],
+};
+
+const videoIdSchema = s.string(
+  "ID of the video\nrequired field\nyou can find video ID in the URL or 'youtube_video' item of YouTube Organic result\nexample:\nvQXvyV0zIP4",
+  { minLength: 1 },
+);
+
+const getSerpYoutubeOrganicLanguageCodeSchema = {
+  description:
+    "search engine language code\nrequired field if you don't specify language_name\nif you use this field, you don't need to specify language_name\nyou can receive the list of available languages of the search engine with their language_code by making a separate request to the https://api.dataforseo.com/v3/serp/youtube/languages\nexample:\nen",
+  type: ["string", "null"],
+};
+
+const getSerpYoutubeOrganicLanguageNameSchema = {
+  description:
+    "full name of search engine language\nrequired field if you don't specify language_code\nif you use this field, you don't need to specify language_code\nyou can receive the list of available languages of the search engine with their language_name by making a separate request to the https://api.dataforseo.com/v3/serp/youtube/languages\nexample:\nEnglish",
+  type: ["string", "null"],
+};
+
+const getSerpYoutubeOrganicLocationCodeSchema = {
+  description:
+    "search engine location code\nrequired field if you don't specify location_name \nif you use this field, you don't need to specify location_name\nyou can receive the list of available locations of the search engines with their location_code by making a separate request to the https://api.dataforseo.com/v3/serp/youtube/locations\nexample:\n2840",
+  type: ["integer", "null"],
+};
+
+const getSerpYoutubeOrganicLocationNameSchema = {
+  description:
+    "full name of search engine location\nrequired field if you don't specify location_code\nif you use this field, you don't need to specify location_code\nyou can receive the list of available locations of the search engine with their location_name by making a separate request to the https://api.dataforseo.com/v3/serp/youtube/locations\nexample:\nUnited States",
+  type: ["string", "null"],
+};
+
+const getSerpYoutubeSubtitlesOsSchema = {
+  description:
+    "device operating system\noptional field\nchoose from the following values: windows, macos\ndefault value: windows",
+  type: ["string", "null"],
+};
+
+const getAmazonAsinLanguageCodeSchema = s.string(
+  "search engine language code\nrequired field if you don't specify language_name\nif you use this field, you don't need to specify language_name\nyou can receive the list of available languages with their language_code parameters by making a separate request to the https://api.dataforseo.com/v3/merchant/amazon/languages\nexample:\nen_GB",
+);
+
+const getAmazonAsinLanguageNameSchema = s.string(
+  "full name of search engine language\nrequired field if you don't specify language_code\nif you use this field, you don't need to specify language_code\nyou can receive the list of available languages with their language_name parameters by making a separate request to the\nhttps://api.dataforseo.com/v3/merchant/amazon/languages\nexample:\nEnglish (United Kingdom)",
+);
+
+const getAmazonAsinLocationCodeSchema = s.integer(
+  "search engine location code\nrequired field if you don't specify location_name or location_coordinate\nif you use this field, you don't need to specify location_name or location_coordinate\nyou can receive the list of available locations with their location_code parameters by making a separate request to the\nhttps://api.dataforseo.com/v3/merchant/amazon/locations\nexample:\n9045969",
+);
+
+const getAmazonAsinLocationCoordinateSchema = s.string(
+  'GPS coordinates of a location\nrequired field if you don\'t specify location_name or location_code\nif you use this field, you don\'t need to specify location_name or location_code\nlocation_coordinate parameter should be specified in the "latitude,longitude,radius" format\nthe maximum number of decimal digits for "latitude" and "longitude": 7\nthe minimum value for "radius": 199.9\nexample:\n53.476225,-2.243572,200',
+);
+
+const getAmazonAsinLocationNameSchema = s.string(
+  "full name of search engine location\nrequired field if you don't specify location_code or location_coordinate\nif you use this field, you don't need to specify location_code or location_coordinate\nyou can receive the list of available locations with their location_name parameters by making a separate request to the https://api.dataforseo.com/v3/merchant/amazon/locations\nexample:\nHA1,England,United Kingdom",
+);
+
+const getAmazonAsinSeDomainSchema = {
+  description:
+    "search engine domain\noptional field\nwe choose the relevant search engine domain automatically according to the location and language you specify\nhowever, you can set a custom search engine domain in this field\nexample:\namazon.com, amazon.co.uk, amazon.fr, etc.",
+  type: ["string", "null"],
+};
+
+const getGoogleBusinessInfoKeywordSchema = s.string(
+  "keyword\nrequired field\nthe keyword you specify should indicate the name of the local establishment\nyou can specify up to 700 characters in the keyword filed\nall %## will be decoded (plus character ‘+’ will be decoded to a space character)\nif you need to use the “%” character for your keyword, please specify it as “%25”; \nthis field can also be used to pass the following parameters:\ncid - a unique, google-defined id of the business entity;\nplace_id - an identifier of the business entity in Google Maps;\nexample:\ncid:194604053573767737\nplace_id:GhIJQWDl0CIeQUARxks3icF8U8A\nlearn more about the cid and place_id identifiers in this help center article\nlearn more about rules and limitations of keyword and keywords fields in DataForSEO APIs in this Help Center article",
+  { minLength: 1 },
+);
+
+const getGoogleBusinessInfoLanguageCodeSchema = s.string(
+  "search engine language code\nrequired field if you don't specify language_name\nif you use this field, you don't need to specify language_name\nyou can receive the list of available languages with their language_code_by making a separate request to https://api.dataforseo.com/v3/business_data/google/languages\nexample:\nenn",
+);
+
+const getGoogleBusinessInfoLanguageNameSchema = s.string(
+  "full name of search engine language\nrequired field if you don't specify language_code\nif you use this field, you don't need to specify language_code\nyou can receive the list of available languages with language_name by making a separate request to https://api.dataforseo.com/v3/business_data/google/languages\nexample:\nEnglish",
+);
+
+const getGoogleBusinessInfoLocationCodeSchema = s.integer(
+  "search engine location code\nrequired field if you don't specify location_name_or location_coordinate\nif you use this field, you don't need to specify location_name or location_coordinate\nyou can receive the list of available locations with location_code by making a separate request to the https://api.dataforseo.com/v3/business_data/google/locations\nexample:\n2840n",
+);
+
+const getGoogleBusinessInfoLocationCoordinateSchema = s.string(
+  'GPS coordinates of a location\nrequired field if you don\'t specify location_name_or location_code\nif you use this field, you don\'t need to specify location_name or location_code\nlocation_coordinate parameter should be specified in the "latitude,longitude,radius" format\nthe maximum number of decimal digits for "latitude" and "longitude": 7\nthe minimum value for "radius": 199.9 (mm)\nthe maximum value for "radius": 199999 (mm)\nexample:\n53.476225,-2.243572,200n',
+);
+
+const getGoogleBusinessInfoLocationNameSchema = s.string(
+  "full name of search engine location\nrequired field if you don't specify location_code or location_coordinate\nif you use this field, you don't need to specify location_code or location_coordinate\nyou can receive the list of available locations with location_name by making a separate request to https://api.dataforseo.com/v3/business_data/google/locations\nexample:\nLondon,England,United Kingdom",
+);
+
+const categoriesItemSchema = s.string("The categories value value.");
+
+const getAiMentionsTopBrandsLanguageCodeSchema = {
+  description:
+    "search language code\noptional field\nif you use this field, you don't need to specify language_name;\nyou can receive the list of available languages of the search engine with their language_code by making a separate request to the https://api.dataforseo.com/v3/ai_optimization/llm_mentions/locations_and_languages\ndefault value: en\nNote: chat_gpt data is available for en only",
+  type: ["string", "null"],
+};
+
+const getAiMentionsTopBrandsLanguageNameSchema = {
+  description:
+    "full name of search language\noptional field\nif you use this field, you don't need to specify language_code;\nif you don't specify this field, the language_code with en value will be used by default;\nyou can receive the list of available languages of the search engine with their language_name by making a separate request to the https://api.dataforseo.com/v3/ai_optimization/llm_mentions/locations_and_languages\nNote: chat_gpt data is available for English only",
+  type: ["string", "null"],
+};
+
+const getAiMentionsTopBrandsLocationCodeSchema = {
+  description:
+    "search location code\noptional field\nif you use this field, you don't need to specify location_name\nyou can receive the list of available locations of the search engine with their location_code by making a separate request to the https://api.dataforseo.com/v3/ai_optimization/llm_mentions/locations_and_languages\ndefault value: 2840\nNote: chat_gpt data is available for 2840 only",
+  type: ["integer", "null"],
+};
+
+const getAiMentionsTopBrandsLocationNameSchema = {
+  description:
+    "full name of search location\noptional field\nif you use this field, you don't need to specify location_code\nif you don't specify this field, the location_code with 2840 value will be used by default;\nyou can receive the list of available locations of the search engine with their location_name by making a separate request to the https://api.dataforseo.com/v3/ai_optimization/llm_mentions/locations_and_languages\nNote: chat_gpt data is available for United States only",
+  type: ["string", "null"],
+};
+
+const platformSchema = {
+  description:
+    "target platform\noptional field\npossible values:\nchat_gpt, google\nNote: data specific to brand entities is available for chat_gpt only;\nNote #2:chat_gpt data is available for the United States and English only",
+  type: ["string", "null"],
+};
+
+const searchFilterSchema = {
+  description:
+    "target domain search filter\noptional field\npossible values:\ninclude, exclude\ndefault value: include",
+  type: ["string", "null"],
+};
+
+const getAiMentionsTopPagesInitialDatasetFiltersItemSchema = {
+  description: "The initial dataset filters value value.",
+};
+
+const initialDatasetFiltersSchema = s.array(
+  'array of filter expressions applied before aggregation optional field you can use this array to filter expressions applied to the raw mentions database before aggregation to limit the rows contributing to the result;you can add several filters at once (8 filters maximum) you should set a logical operator and, or between the conditions the following operators are supported: =, , in, not_in, like, not_like, ilike, not_ilike, match, not_match you can use the % operator with like and not_like to match any string of zero or more characters example: ["ai_search_volume",">","1000"]the full list of possible filters is available here. learn more about the initial dataset filters in this help center article.',
+  getAiMentionsTopPagesInitialDatasetFiltersItemSchema,
+);
+
+const getAiMentionsTopPagesLanguageCodeSchema = s.string(
+  "search language code optional field if you use this field, you don't need to specify language_name; you can receive the list of available languages of the search engine with their language_code_by making a separate request to the https://api.dataforseo.com/v3/ai_optimization/llm_mentions/locations_and_languages default value: en Note: chat_gpt data is available for en onlyn",
+);
+
+const getAiMentionsTopPagesLanguageNameSchema = s.string(
+  "full name of search language optional field if you use this field, you don't need to specify language_code; if you don't specify this field, the language_code with en value will be used by default; you can receive the list of available languages of the search engine with their language_name by making a separate request to the https://api.dataforseo.com/v3/ai_optimization/llm_mentions/locations_and_languages Note: chat_gpt data is available for English only",
+);
+
+const getAiMentionsTopPagesLocationCodeSchema = s.integer(
+  "search location code optional field if you use this field, you don't need to specify location_name you can receive the list of available locations of the search engine with their location_code by making a separate request to the https://api.dataforseo.com/v3/ai_optimization/llm_mentions/locations_and_languages default value: 2840 Note: chat_gpt data is available for 2840 only",
+);
+
+const getAiMentionsTopPagesLocationNameSchema = s.string(
+  "full name of search location optional field if you use this field, you don't need to specify location_code if you don't specify this field, the location_code with 2840 value will be used by default; you can receive the list of available locations of the search engine with their location_name by making a separate request to the https://api.dataforseo.com/v3/ai_optimization/llm_mentions/locations_and_languages Note: chat_gpt data is available for United States only",
+);
+
+const getAiMentionsTopPagesPlatformSchema = s.string(
+  "target platform optional field possible values: chat_gpt, google default value: google Note: the data returned depends on the selected platform Note #2:chat_gpt data is available for the United States and English only",
+);
+
+const getAiMentionsTopPagesTagSchema = s.string(
+  "user-defined task identifier optional field the character limit is 255 you can use this parameter to identify the task and match it with the result you will find the specified tag value in the data object of the response",
+  { maxLength: 255 },
+);
+
+const domainSchema = s.string(
+  "target domain required field if you don't specify keyword you can specify up to 63 characters in the domain field; a domain should be specified without https:// and www.",
+);
+
+const getAiMentionsTopPagesIncludeSubdomainsSchema = s.boolean(
+  "indicates if the subdomains of the target domain will be included in the search optional field if set to true, the subdomains will be included in the search default value: false",
+);
+
+const getAiMentionsTopPagesKeywordSchema = s.string(
+  "target keyword required field if you don't specify domain you can specify up to 250 characters in the keyword field all %## will be decoded (plus character ‘+’ will be decoded to a space character) if you need to use the “%” character for your keyword, please specify it as “%25”; if you need to use the “+” character for your keyword, please specify it as “%2B”learn more about rules and limitations of keyword and keywords fields in DataForSEO APIs in this Help Center article",
+);
+
+const matchTypeSchema = s.string(
+  "target keyword match type optional field possible values: word_match, partial_match word_match - full-text search for terms that match the specified seed keyword with additional words included before, after, or within the seed key phrase. partial_match - searches for any occurrence of the keyword or its parts within the content default value: word_match",
+);
+
+const getAiMentionsTopPagesSearchFilterSchema = s.string(
+  "Entity search filter: include or exclude; defaults to include.",
+);
+
+const searchScopeItemSchema = s.string("The search scope value value.");
+
+const searchScopeSchema = s.array(
+  "Search scope. Domain entities: any, sources, search_results. Keyword entities: any, question, answer, brand_entities, fan_out_queries. Default: any.",
+  searchScopeItemSchema,
+);
+
+const dateFromSchema = {
+  description:
+    'starting date of the time range\noptional field\nminimal value: 24 months from today\'s date;\nif you don\'t specify this field, data will be provided for the last 12 months;\nif Status endpoint returns false in the actual_data field, date_from can be set to the month before last and prior;\nif Status endpoint returns true in the actual_data field, date_from can be set to the last month and prior;\ndate format: "yyyy-mm-dd"\nexample:\n"2020-01-01"\nNote: we do not recommend using a custom time range for the past year\'s dates',
+  type: ["string", "null"],
+  format: "date",
+};
+
+const getKeywordsBingKeywordsForSiteLanguageCodeSchema = s.string(
+  "search engine language code\nrequired field if you don't specify language_name\nif you use this field, you don't need to specify language_name\nsupported languages:\nen, fr, de",
+);
+
+const getKeywordsBingKeywordsForSiteLanguageNameSchema = s.string(
+  "full name of search engine language\nrequired field if you don't specify language_code\nif you use this field, you don't need to specify language_code\nsupported languages:\nEnglish, French, German",
+);
+
+const getKeywordsBingKeywordsForSiteLocationCodeSchema = s.integer(
+  "search engine location code\nrequired field if you don't specify location_name or location_coordinate\nif you use this field, you don't need to specify location_name or location_coordinate\nyou can receive the list of available locations of the search engines with their location_code by making a separate request to https://api.dataforseo.com/v3/keywords_data/bing/locations\nexample:\n2840",
+);
+
+const getKeywordsBingKeywordsForSiteLocationCoordinateSchema = s.string(
+  "GPS coordinates of a location\nrequired field if you don't specify location_name or location_code\nif you use this field, you don't need to specify location_name or location_code\nlocation_coordinate parameter should be specified in the \"latitude,longitude\" format\nthe data will be provided for the country the specified coordinates belong to\nexample:\n52.6178549,-155.352142",
+);
+
+const getKeywordsBingKeywordsForSiteLocationNameSchema = s.string(
+  "full name of search engine location\nrequired field if you don't specify location_code or location_coordinate\nif you use this field, you don't need to specify location_code or location_coordinate\nyou can receive the list of available locations of the search engine with their location_name by making a separate request to https://api.dataforseo.com/v3/keywords_data/bing/locations\nexample:\nLondon,England,United Kingdom",
+);
+
+const searchPartnersSchema = {
+  description:
+    "Bing search partners type\noptional field\nif you specify true, the results will be delivered for owned, operated, and syndicated networks across Bing, Yahoo, AOL and partner sites that host Bing, AOL, and Yahoo search.\ndefault value: false - results are returned for Bing, AOL, and Yahoo search networks",
+  type: ["boolean", "null"],
+};
+
+const sortBySchema = {
+  description:
+    "results sorting parameters\noptional field\nUse these parameters to sort the results by search_volume, cpc, competition or relevance in the descending order\ndefault value: relevance",
+  type: ["string", "null"],
+};
+
+const getAiMentionsHistoryLanguageCodeSchema = {
+  description:
+    "search language code optional field if you use this field, you don't need to specify language_name ; you can receive the list of available languages of the search engine with their language_code by making a separate request to the https://api.dataforseo.com/v3/ai_optimization/llm_mentions/locations_and_languages default value: en Note: chat_gpt data is available for en only",
+  type: ["string", "null"],
+};
+
+const getAiMentionsHistoryLanguageNameSchema = {
+  description:
+    "full name of search language optional field if you use this field, you don't need to specify language_code ; if you don't specify this field, the language_code with en value will be used by default; you can receive the list of available languages of the search engine with their language_name by making a separate request to the https://api.dataforseo.com/v3/ai_optimization/llm_mentions/locations_and_languages Note: chat_gpt data is available for English only",
+  type: ["string", "null"],
+};
+
+const getAiMentionsHistoryLocationCodeSchema = {
+  description:
+    "search location code optional field if you use this field, you don't need to specify location_name you can receive the list of available locations of the search engine with their location_code by making a separate request to the https://api.dataforseo.com/v3/ai_optimization/llm_mentions/locations_and_languages default value: 2840 Note: chat_gpt data is available for 2840 only",
+  type: ["integer", "null"],
+};
+
+const getAiMentionsHistoryLocationNameSchema = {
+  description:
+    "full name of search location optional field if you use this field, you don't need to specify location_code if you don't specify this field, the location_code with 2840 value will be used by default; you can receive the list of available locations of the search engine with their location_name by making a separate request to the https://api.dataforseo.com/v3/ai_optimization/llm_mentions/locations_and_languages Note: chat_gpt data is available for United States only",
+  type: ["string", "null"],
+};
+
+const getAiMentionsHistoryTagSchema = {
+  description:
+    "user-defined task identifier optional field the character limit is 255 you can use this parameter to identify the task and match it with the result you will find the specified tag value in the data object of the response",
+  type: ["string", "null"],
+};
+
+const getAiMentionsHistoryMatchTypeSchema = s.string(
+  "target keyword match type optional field word_match - full-text search for terms that match the specified seed keyword with additional words included before, after, or within the key phrase (e.g., search for “light” will return results with “light bulb”, “light switch”); partial_match - substring search that finds all instances containing the specified sequence of characters, even if it appears inside a longer word (e.g., search for “light” will return results with “lighting”, “highlight”); possible values: word_match, partial_match default value: word_match",
+);
+
+const targetItemSchema = s.object(
+  "The target value value.",
+  {
+    domain: domainSchema,
+    include_subdomains: getAiMentionsTopPagesIncludeSubdomainsSchema,
+    keyword: getAiMentionsTopPagesKeywordSchema,
+    match_type: getAiMentionsHistoryMatchTypeSchema,
+    search_filter: getAiMentionsTopPagesSearchFilterSchema,
+    search_scope: searchScopeSchema,
+  },
+  { oneOf: [{ required: ["domain"] }, { required: ["keyword"] }], required: [] },
+);
+
+const targetSchema = s.array(
+  "array of objects containing target entities required field you can specify up to 10 entities (objects) in the target field one target entity can contain either one domain or one keyword and related parameters examples: target array with a domain entity",
+  targetItemSchema,
+  { minItems: 1, maxItems: 10 },
+);
+
+const getAiMentionsDeltaDateFromSchema = s.string(
+  'start date of the time range required field minimal value: 2025-08-01 date format: "yyyy-mm-dd"',
+  { format: "date" },
+);
+
+const getAiMentionsDeltaDateToSchema = s.string(
+  'end date of the time range required field Note: the value specified in date_from cannot exceed the value in date_to date format: "yyyy-mm-dd"',
+  { format: "date" },
+);
+
+const getAiMentionsDeltaPlatformSchema = {
+  description:
+    "target platform optional field possible values: chat_gpt , google default value: google Note: if the platform is not specified, the data is returned for both platforms Note #2: chat_gpt data is available for the United States and English only",
+  type: ["string", "null"],
+};
+
+const compareAiMentionsFiltersItemVariantSchema = s.string("The filters value value.");
+
+const compareAiMentionsFiltersItemVariantItemSchema = {
+  description: "A provider filter operand; nested JSON values retain their original keys.",
+};
+
+const compareAiMentionsFiltersItemSchema = {
+  anyOf: [
+    compareAiMentionsFiltersItemVariantSchema,
+    s.number("The filters value value."),
+    s.boolean("The filters value value."),
+    {
+      additionalProperties: compareAiMentionsFiltersItemVariantItemSchema,
+      type: ["object", "null"],
+      description: "The filters value value.",
+    },
+    s.array("The filters value value.", compareAiMentionsFiltersItemVariantItemSchema),
+  ],
+  description:
+    "JSON representation of filter values and nested expressions. Field names, operators, condition counts and operand compatibility remain provider-validated as documented for each endpoint; this is not a complete filter-language validator.",
+};
+
+const compareAiMentionsTargetSchema = s.array(
+  'array of objects containing target entities required field you can specify up to 10 entities (objects) in the target field one target entity can contain either one domain or one keyword and related parametersexamples: target array with a domain entity [{"domain": "en.wikipedia.org", "search_filter": "exclude"}] target array with a keyword entity [{"keyword": "bmw", "search_scope": ["question"], "match_type ": "partial_match"}] target array with multiple entities [{"domain": "en.wikipedia.org", "search_filter": "exclude"}, {"keyword": "bmw", "match_type ": "partial_match", "search_scope": ["answer"]}]',
+  targetItemSchema,
+  { minItems: 1, maxItems: 10 },
+);
+
+const getBacklinkGapIncludeSubdomainsSchema = {
+  description:
+    "indicates if the subdomains of the target will be included in the search optional field if set to false , the subdomains will be ignored default value: true",
+  type: ["boolean", "null"],
+};
+
+const getBacklinkGapRankScaleSchema = {
+  description:
+    "defines the scale used for calculating and displaying the rank , domain_from_rank , and page_from_rank values optional field you can use this parameter to choose whether rank values are presented on a 0–100 or 0–1000 scale possible values: one_hundred — rank values are displayed on a 0–100 scale one_thousand — rank values are displayed on a 0–1000 scale default value: one_thousand learn more about how this parameter works and how ranking metrics are calculated in this Help Center article",
+  type: ["string", "null"],
+};
+
+const getLlmMentionMetricsTagSchema = s.string(
+  "user-defined task identifier optional field the character limit is 255 you can use this parameter to identify the task and match it with the result you will find the specified tag value in the data object of the response",
+);
+
+const searchLlmMentionsMatchTypeSchema = s.string(
+  'target keyword match type defines how the specified keyword is matched optional field possible values: word_match - full-text search for terms that match the specified seed keyword with additional words included before, after, or within the key phrase (e.g., search for "light" will return results with "light bulb", "light switch"); partial_match - substring search that finds all instances containing the specified sequence of characters, even if it appears inside a longer word (e.g., search for "light" will return results with "lighting", "highlight"); default value: word_match',
+);
+
+const getLlmMentionTopDomainsInternalListLimitSchema = s.integer(
+  "maximum number of elements within internal arrays optional field you can use this field to limit the number of elements within the following arrays: sources_domain search_results_domain minimum value: 1 maximum value: 10 default value: 5",
+  { minimum: 1, maximum: 10 },
+);
+
+const getAiLlmMentionsSearchMentionsFiltersItemVariantSchema = s.string("The filters item option value.");
+
+const getAiLlmMentionsSearchMentionsFiltersItemVariantItemSchema = {
+  description: "An arbitrary JSON filter value; nested field names are preserved.",
+};
+
+const getAiLlmMentionsSearchMentionsFiltersItemSchema = {
+  anyOf: [
+    getAiLlmMentionsSearchMentionsFiltersItemVariantSchema,
+    s.number("The filters item option value."),
+    s.boolean("The filters item option value."),
+    {
+      additionalProperties: getAiLlmMentionsSearchMentionsFiltersItemVariantItemSchema,
+      type: ["object", "null"],
+      description: "The filters item option value.",
+    },
+    s.array("The filters item option value.", getAiLlmMentionsSearchMentionsFiltersItemVariantItemSchema),
+  ],
+  description:
+    "JSON representation of filter values and nested expressions. Field names, operators, condition counts and operand compatibility remain provider-validated as documented for each endpoint; this is not a complete filter-language validator.",
+};
+
+const filtersSchema = {
+  description:
+    'array of results filtering parameters\noptional field\nyou can add several filters at once (8 filters maximum)\nyou should set a logical operator and, or between the conditions\nthe following operators are supported:\n=, <>, in, not_in, like, not_like, ilike, not_ilike, match, not_match\nyou can use the % operator with like and not_like to match any string of zero or more characters\nexample:\n["ai_search_volume",">",1000]\nThe full list of possible filters is available here.',
+  items: getAiLlmMentionsSearchMentionsFiltersItemSchema,
+  type: ["array", "null"],
+};
+
+const getAiLlmMentionsSearchMentionsOrderByItemSchema = s.string("The order by item value.");
+
+const getAiLlmMentionsSearchMentionsOrderBySchema = {
+  description:
+    'results sorting rules\noptional field\nyou can use the same values as in the filters array to sort the results\npossible sorting types:\nasc - results will be sorted in the ascending order\ndesc - results will be sorted in the descending order\nyou should use a comma to set up a sorting type\nexample:\n["ai_search_volume,desc"]\nNote: you can set no more than three sorting rules in a single request\nyou should use a comma to separate several sorting rules',
+  items: getAiLlmMentionsSearchMentionsOrderByItemSchema,
+  type: ["array", "null"],
+};
+
+const getAiLlmMentionsSearchMentionsPlatformSchema = {
+  description:
+    "target platform\noptional field\npossible values:\nchat_gpt, google\nNote: if the platform is not specified, the data is returned for both platforms\nNote #2:chat_gpt data is available for the United States and English only",
+  type: ["string", "null"],
+};
+
+const getAiLlmMentionsSearchMentionsDomainSchema = s.string(
+  "target domain\nrequired field if you don’t specify keyword\na domain should be specified without https:// and www.",
+  { minLength: 1 },
+);
+
+const getAiLlmMentionsSearchMentionsIncludeSubdomainsSchema = {
+  description:
+    "indicates if the subdomains of the target domain will be included in the search\noptional field\nif set to true, the subdomains will be included in the search\ndefault value: false",
+  type: ["boolean", "null"],
+};
+
+const getAiLlmMentionsSearchMentionsKeywordSchema = s.string(
+  "target keyword\nrequired field if you don’t specify domain\nyou can specify up to 2000 characters in the keyword field\nall %## will be decoded (plus character ‘+’ will be decoded to a space character)\nif you need to use the “%” character for your keyword, please specify it as “%25”;\nif you need to use the “+” character for your keyword, please specify it as “%2B”\nlearn more about rules and limitations of keyword and keywords fields in",
+  { minLength: 1, maxLength: 2000 },
+);
+
+const getAiLlmMentionsSearchMentionsMatchTypeSchema = {
+  description:
+    "target keyword match type\ndefines how the specified keyword is matched\noptional field\npossible values:\nword_match – full-text search for terms that match the specified seed keyword with additional words included before, after, or within the key phrase (e.g., search for “light” will return results with “light bulb”, “light switch”);\npartial_match – substring search that finds all instances containing the specified sequence of characters, even if it appears inside a longer word (e.g., search for “light” will return results with “lighting”, “highlight”);\ndefault value: word_match",
+  type: ["string", "null"],
+};
+
+const getAiLlmMentionsSearchMentionsSearchScopeItemSchema = {
+  type: ["string", "null"],
+  description: "The search scope item value.",
+};
+
+const getAiLlmMentionsSearchMentionsSearchScopeSchema = {
+  description:
+    "target domain search scope\noptional field\npossible values:\nany, sources, search_results\ndefault value: any",
+  items: getAiLlmMentionsSearchMentionsSearchScopeItemSchema,
+  type: ["array", "null"],
+};
+
+const getAiLlmMentionsSearchMentionsTargetItemSchema = s.object(
+  "A domain or keyword entity. Nested names follow the upstream contract.",
+  {
+    domain: getAiLlmMentionsSearchMentionsDomainSchema,
+    include_subdomains: getAiLlmMentionsSearchMentionsIncludeSubdomainsSchema,
+    keyword: getAiLlmMentionsSearchMentionsKeywordSchema,
+    match_type: getAiLlmMentionsSearchMentionsMatchTypeSchema,
+    search_filter: searchFilterSchema,
+    search_scope: getAiLlmMentionsSearchMentionsSearchScopeSchema,
+  },
+  { oneOf: [{ required: ["domain"] }, { required: ["keyword"] }], required: [] },
+);
+
+const getAiLlmMentionsSearchMentionsTargetSchema = s.array(
+  "array of objects containing target entities\nrequired field\nyou can specify up to 10 entities (objects) in the target field\none target entity can contain either one domain or one keyword and related parameters\nexamples:\ntarget array with a domain entity",
+  getAiLlmMentionsSearchMentionsTargetItemSchema,
+  { maxItems: 10, minItems: 1 },
+);
+
+const getAiLlmMentionsTargetMetricsInitialDatasetFiltersItemVariantSchema = s.string(
+  "The initial dataset filters item option value.",
+);
+
+const getAiLlmMentionsTargetMetricsInitialDatasetFiltersItemSchema = {
+  anyOf: [
+    getAiLlmMentionsTargetMetricsInitialDatasetFiltersItemVariantSchema,
+    s.number("The initial dataset filters item option value."),
+    s.boolean("The initial dataset filters item option value."),
+    {
+      additionalProperties: getAiLlmMentionsSearchMentionsFiltersItemVariantItemSchema,
+      type: ["object", "null"],
+      description: "The initial dataset filters item option value.",
+    },
+    s.array(
+      "The initial dataset filters item option value.",
+      getAiLlmMentionsSearchMentionsFiltersItemVariantItemSchema,
+    ),
+  ],
+  description:
+    "JSON representation of filter values and nested expressions. Field names, operators, condition counts and operand compatibility remain provider-validated as documented for each endpoint; this is not a complete filter-language validator.",
+};
+
+const getAiLlmMentionsTargetMetricsInitialDatasetFiltersSchema = {
+  description:
+    'array of filter expressions applied before aggregation\noptional field\nyou can use this array to filter expressions applied to the raw mentions database before aggregation to limit the rows contributing to the result;\nyou can add several filters at once (8 filters maximum)\nyou should set a logical operator and, or between the conditions\nthe following operators are supported:\n=, <>, in, not_in, like, not_like, ilike, not_ilike, match, not_match\nyou can use the % operator with like and not_like to match any string of zero or more characters\nexample:\n["ai_search_volume",">",1000]\nthe full list of possible filters is available here.\nlearn more about the initial dataset filters in this help center article.',
+  items: getAiLlmMentionsTargetMetricsInitialDatasetFiltersItemSchema,
+  type: ["array", "null"],
+};
+
+const getAiLlmMentionsTargetMetricsLiteLimitSchema = {
+  description:
+    "maximum number of results in the items array\noptional field\nyou can use this parameter to limit the number of data objects you receive in the items array\nminimum value: 1\nmaximum value: 1000\ndefault value: 100",
+  type: ["integer", "null"],
+  minimum: 1,
+  maximum: 1000,
+};
+
+const getAiLlmMentionsTargetMetricsLiteOffsetSchema = {
+  description:
+    "offset in the results array of the returned mentions data\noptional field\ndefault value: 0\nexample: if you specify the 10 value, the first ten mentions objects in the results array will be omitted and the data will be provided for the successive objects;\nNote: the maximum value is 1000000",
+  type: ["integer", "null"],
+  maximum: 1000000,
+  minimum: 0,
+};
+
+const excludeBrandCategoriesItemSchema = s.string("The exclude brand categories item value.");
+
+const includeBrandCategoriesItemSchema = s.string("The include brand categories item value.");
+
+const getAiLlmMentionsTopMentionedBrandCategoriesInternalListLimitSchema = {
+  description:
+    "maximum number of elements within internal arrays\noptional field\nyou can use this field to limit the number of elements within the following arrays:\nsources_domain, search_results_domain, brand_entities_title, brand_entities_category\nminimum value: 1\nmaximum value: 10\ndefault value: 5",
+  type: ["integer", "null"],
+  minimum: 1,
+  maximum: 10,
+};
+
+const getAiLlmMentionsTopMentionedBrandCategoriesLitePlatformSchema = {
+  description:
+    "target platform\noptional field\npossible values:\nchat_gpt, google\ndefault value: google\nNote: data specific to brand entities is available for chat_gpt only;\nNote #2:chat_gpt data is available for the United States and English only",
+  type: ["string", "null"],
+};
+
+const excludeDomainsItemSchema = s.string("The exclude domains item value.");
+
+const includeDomainsItemSchema = s.string("The include domains item value.");
+
+const getAiLlmMentionsTopMentionedDomainsLitePlatformSchema = {
+  description:
+    "target platform\noptional field\npossible values:\nchat_gpt, google\ndefault value: google\nNote: if the platform is not specified, the data is returned for both platforms\nNote #2:chat_gpt data is available for the United States and English only",
+  type: ["string", "null"],
+};
+
+const excludePagesItemSchema = s.string("The exclude pages item value.");
+
+const includePagesItemSchema = s.string("The include pages item value.");
+
+const getAppDataGoogleAppListingsSearchCategoriesItemSchema = s.string("The categories item value.");
+
+const getAppDataGoogleAppListingsSearchOffsetTokenSchema = {
+  description:
+    "token for subsequent requests\noptional field\nprovided in the identical filed of the response to each request;\nuse this parameter to avoid timeouts while trying to obtain over 100,000 results in a single request;\nby specifying the unique offset_token value from the response array, you will get the subsequent results of the initial task;\noffset_token values are unique for each subsequent task\nNote: if the offset_token is specified in the request, all other parameters should be identical to the previous request\nlearn more about this parameter on our Help Center",
+  type: ["string", "null"],
+};
+
+const getBacklinksAnchorsBacklinksFiltersItemVariantSchema = s.string("The backlinks filters item option value.");
+
+const getBacklinksAnchorsBacklinksFiltersItemSchema = {
+  anyOf: [
+    getBacklinksAnchorsBacklinksFiltersItemVariantSchema,
+    s.number("The backlinks filters item option value."),
+    s.boolean("The backlinks filters item option value."),
+    {
+      additionalProperties: getAiLlmMentionsSearchMentionsFiltersItemVariantItemSchema,
+      type: ["object", "null"],
+      description: "The backlinks filters item option value.",
+    },
+    s.array("The backlinks filters item option value.", getAiLlmMentionsSearchMentionsFiltersItemVariantItemSchema),
+  ],
+  description:
+    "JSON representation of filter values and nested expressions. Field names, operators, condition counts and operand compatibility remain provider-validated as documented for each endpoint; this is not a complete filter-language validator.",
+};
+
+const backlinksFiltersSchema = {
+  description:
+    'filter the backlinks of your target\noptional field\nyou can use this field to filter the initial backlinks that will be included in the dataset for aggregated metrics for your target\nyou can filter the backlinks by all fields available in the response of this endpoint\nusing this parameter, you can include only dofollow backlinks in the response and create a flexible backlinks dataset to calculate the metrics for\nexample:\n"backlinks_filters": [["dofollow", "=", true]]',
+  items: getBacklinksAnchorsBacklinksFiltersItemSchema,
+  type: ["array", "null"],
+};
+
+const getBacklinksAnchorsBacklinksStatusTypeSchema = {
+  description:
+    "set what backlinks to return and count\noptional field\nyou can use this field to choose what backlinks will be returned and used for aggregated metrics for your target;\npossible values:\nall - all backlinks will be returned and counted;\nlive - backlinks found during the last check will be returned and counted;\nlost - lost backlinks will be returned and counted;\ndefault value: live",
+  type: ["string", "null"],
+};
+
+const getBacklinksAnchorsInternalListLimitSchema = {
+  description:
+    "maximum number of elements within internal arrays\noptional field\nyou can use this field to limit the number of elements within the following arrays:\nreferring_links_tld\nreferring_links_types\nreferring_links_attributes\nreferring_links_platform_types\nreferring_links_semantic_locations\ndefault value: 10\nmaximum value: 1000",
+  type: ["integer", "null"],
+  maximum: 1000,
+};
+
+const getBacklinksAnchorsOrderBySchema = {
+  description:
+    'results sorting rules\noptional field\nyou can use the same values as in the filters array to sort the results\npossible sorting types:\nasc - results will be sorted in the ascending order\ndesc - results will be sorted in the descending order\nyou should use a comma to set up a sorting type\nexample:\n["backlinks,desc"]\nnote that you can set no more than three sorting rules in a single request\nyou should use a comma to separate several sorting rules\nexample:\n["backlinks,desc","rank,asc"]',
+  items: getAiLlmMentionsSearchMentionsOrderByItemSchema,
+  type: ["array", "null"],
+};
+
+const targetsItemSchema = s.string("The targets item value.");
+
+const getBacklinksCompetitorsExcludeInternalBacklinksSchema = {
+  description:
+    "indicates if internal backlinks from subdomains to the target will be excluded from the results\noptional field\nif set to true, the results will not include data on internal backlinks from subdomains of the same domain as target\nif set to false, internal links will be included in the results\ndefault value: true",
+  type: ["boolean", "null"],
+};
+
+const getBacklinksCompetitorsLimitSchema = {
+  description: "the maximum number of returned domains\noptional field\ndefault value: 100\nmaximum value: 1000",
+  type: ["integer", "null"],
+  maximum: 1000,
+};
+
+const getBacklinksDomainPagesBacklinksFiltersSchema = {
+  description:
+    'filter the backlinks of your target\noptional field\nyou can use this field to filter the initial backlinks that will be included in the dataset for aggregated metrics for your target\nyou can filter the backlinks by all fields available in the response of this endpoint\nusing this parameter, you can include only dofollow backlinks in the response and create a flexible backlinks dataset to calculate the metrics for\nexample:\n"backlinks_filters": ["dofollow", "=", true]',
+  items: getBacklinksAnchorsBacklinksFiltersItemSchema,
+  type: ["array", "null"],
+};
+
+const getBacklinksDomainPagesLimitSchema = {
+  description: "the maximum number of returned pages\noptional field\ndefault value: 100\nmaximum value: 1000",
+  type: ["integer", "null"],
+  maximum: 1000,
+};
+
+const getBacklinksDomainPagesOffsetSchema = {
+  description:
+    "offset in the results array of returned pages\noptional field\ndefault value: 0\nif you specify the 10 value, the first ten pages in the results array will be omitted and the data will be provided for the successive pages",
+  type: ["integer", "null"],
+  minimum: 0,
+};
+
+const childrenItemSchema = s.string("The children item value.");
+
+const currencySchema = { description: 'currency\noptional field\nexample:\n"USD"', type: ["string", "null"] };
+
+const getContentAnalysisRatingDistributionInternalListLimitSchema = {
+  description:
+    "maximum number of elements within internal arrays\noptional field\nyou can use this field to limit the number of elements within the following arrays:\ntop_domains\ntext_categories\npage_categories\ncountries\nlanguages\ndefault value: 1\nmaximum value: 20",
+  type: ["integer", "null"],
+  maximum: 20,
+};
+
+const getContentAnalysisRatingDistributionPageTypeItemSchema = s.string("The page type item value.");
+
+const getContentAnalysisRatingDistributionPageTypeSchema = {
+  description:
+    'target page types\noptional field\nuse this parameter to filter the dataset by page types\npossible values:\n"ecommerce", "news", "blogs", "message-boards", "organization"',
+  items: getContentAnalysisRatingDistributionPageTypeItemSchema,
+  type: ["array", "null"],
+};
+
+const searchModeSchema = {
+  description:
+    "results grouping type\noptional field\npossible grouping types:\nas_is - returns all citations for the target keyword\none_per_domain - returns one citation of the keyword per domain\ndefault value: as_is",
+  type: ["string", "null"],
+};
+
+const getLabsAppleAppIntersectionLanguageCodeSchema = {
+  description:
+    "language code\nrequired field if you don't specify language_name\nNote: it is required to specify either language_name or language_code\nyou can receive the list of available languages with their language_code by making a separate request to the\nhttps://api.dataforseo.com/v3/dataforseo_labs/locations_and_languages;\nNote: this endpoint currently supports the English language only\nexample:\nen",
+  type: ["string", "null"],
+};
+
+const getLabsAppleAppIntersectionLanguageNameSchema = s.string(
+  "full name of the language\nrequired field if you don't specify language_code\nNote: it is required to specify either language_name or language_code\nyou can receive the list of available languages with their language_name by making a separate request to the\nhttps://api.dataforseo.com/v3/dataforseo_labs/locations_and_languages;\nNote: this endpoint currently supports the English language only;\nexample:\nEnglish",
+);
+
+const getLabsAppleAppIntersectionLimitSchema = {
+  description: "the maximum number of returned keywords\noptional field\ndefault value: 100\nmaximum value: 1000",
+  type: ["integer", "null"],
+  maximum: 1000,
+};
+
+const getLabsAppleAppIntersectionLocationCodeSchema = s.integer(
+  "location code\nrequired field if you don't specify location_name\nNote: it is required to specify either location_name or location_code\nyou can receive the list of available locations with their location_code by making a separate request to\nhttps://api.dataforseo.com/v3/dataforseo_labs/locations_and_languages;\nNote: this endpoint currently supports the US location only;\nexample:\n2840",
+);
+
+const getLabsAppleAppIntersectionLocationNameSchema = s.string(
+  "full name of the location\nrequired field if you don't specify location_code\nNote: it is required to specify either location_name or location_code\nyou can receive the list of available locations with their location_name by making a separate request to\nhttps://api.dataforseo.com/v3/dataforseo_labs/locations_and_languages;\nNote: this endpoint currently supports the US location only;\nexample:\nUnited States",
+);
+
+const getLabsAppleAppIntersectionOffsetSchema = {
+  description:
+    "offset in the results array of returned keywords\noptional field\ndefault value: 0\nif you specify the 10 value, the first ten keywords in the results array will be omitted and the data will be provided for the successive keywords",
+  type: ["integer", "null"],
+  minimum: 0,
+};
+
+const getLabsGoogleBulkTrafficEstimationItemTypesItemSchema = s.string("The item types item value.");
+
+const getLabsGoogleBulkTrafficEstimationLanguageCodeSchema = {
+  description:
+    "language code\nif you use this field, you don’t need to specify language_name\nyou can receive the list of available languages with their language_code by making a separate request to the\nhttps://api.dataforseo.com/v3/dataforseo_labs/locations_and_languages\nignore this field to get the results for all available languages\nexample:\nen",
+  type: ["string", "null"],
+};
+
+const getLabsGoogleBulkTrafficEstimationLanguageNameSchema = {
+  description:
+    "full name of the language\nif you use this field, you don’t need to specify language_code\nyou can receive the list of available languages with their language_name by making a separate request to the\nhttps://api.dataforseo.com/v3/dataforseo_labs/locations_and_languages\nignore this field to get the results for all available languages\nexample:\nEnglish",
+  type: ["string", "null"],
+};
+
+const getLabsGoogleBulkTrafficEstimationLocationCodeSchema = {
+  description:
+    "location code\nif you use this field, you don't have to specify location_name\nyou can receive the list of available locations with their location_code by making a separate request to the\nhttps://api.dataforseo.com/v3/dataforseo_labs/locations_and_languages\nignore this field to get the results for all available locations\nexample:\n2840",
+  type: ["integer", "null"],
+};
+
+const getLabsGoogleBulkTrafficEstimationLocationNameSchema = {
+  description:
+    "full name of the location\nif you use this field, you don't have to specify location_code\nyou can receive the list of available locations with their location_name by making a separate request to the\nhttps://api.dataforseo.com/v3/dataforseo_labs/locations_and_languages\nignore this field to get the results for all available locations\nexample:\nUnited Kingdom",
+  type: ["string", "null"],
+};
+
+const historicalSerpModeSchema = {
+  description:
+    "data collection mode\noptional field\nyou can use this field to filter the results;\npossible types of filtering:\nlive — return metrics for SERPs in which the specified target currently has ranking results;\nlost — return metrics for SERPs in which the specified target had previously had ranking results, but didn't have them during the last check;\nall — return metrics for both types of SERPs.\ndefault value: live",
+  type: ["string", "null"],
+};
+
+const getLabsGoogleCategoriesForDomainLocationCodeSchema = s.integer(
+  "location code\nrequired field if you don't specify location_name\nNote: it is required to specify either location_name or location_code\nyou can receive the list of available locations with their location_code by making a separate request to the\nhttps://api.dataforseo.com/v3/dataforseo_labs/locations_and_languages\nexample:\n2840",
+);
+
+const getLabsGoogleCategoriesForKeywordsKeywordsItemSchema = s.string("The keywords item value.");
+
+const getLabsGoogleDomainRankOverviewLanguageCodeSchema = {
+  description:
+    "language code\noptional field\nif you use this field, you don't need to specify language_name\nyou can receive the list of available languages with their language_code by making a separate request to the\nhttps://api.dataforseo.com/v3/dataforseo_labs/locations_and_languages\nignore this field to get the results for all available languages\nexample:\nen",
+  type: ["string", "null"],
+};
+
+const getLabsGoogleDomainRankOverviewLanguageNameSchema = {
+  description:
+    "full name of the language\noptional field\nif you use this field, you don't need to specify language_code\nyou can receive the list of available languages with their language_name by making a separate request to the\nhttps://api.dataforseo.com/v3/dataforseo_labs/locations_and_languages\nignore this field to get the results for all available languages\nexample:\nEnglish",
+  type: ["string", "null"],
+};
+
+const getLabsGoogleDomainRankOverviewLocationCodeSchema = {
+  description:
+    "location code\noptional field\nif you use this field, you don't need to specify location_name\nyou can receive the list of available locations with their location_code by making a separate request to the\nhttps://api.dataforseo.com/v3/dataforseo_labs/locations_and_languages\nignore this field to get the results for all available locations\nexample:\n2840",
+  type: ["integer", "null"],
+};
+
+const getLabsGoogleDomainRankOverviewLocationNameSchema = {
+  description:
+    "full name of the location\noptional field\nif you use this field, you don't need to specify location_code\nyou can receive the list of available locations with their location_name by making a separate request to the\nhttps://api.dataforseo.com/v3/dataforseo_labs/locations_and_languages\nignore this field to get the results for all available locations\nexample:\nUnited Kingdom",
+  type: ["string", "null"],
+};
+
+const getLabsGoogleDomainRankOverviewTargetSchema = s.string(
+  "domain\nrequired field\nthe domain name of the target website\nthe domain should be specified without https:// and www.",
+  { minLength: 1 },
+);
+
+const getLabsGoogleHistoricalKeywordDataLanguageCodeSchema = {
+  description:
+    "language code\nrequired field if you don't specify language_name\nNote: it is required to specify either language_name or language_code\nyou can receive the list of available locations with their language_code by making a separate request to the\nhttps://api.dataforseo.com/v3/dataforseo_labs/locations_and_languages\nexample:\nen",
+  type: ["string", "null"],
+};
+
+const getLabsGoogleHistoricalKeywordDataLanguageNameSchema = s.string(
+  "full name of the language\nrequired field if you don't specify language_code\nNote: it is required to specify either language_name or language_code\nyou can receive the list of available locations with their language_name by making a separate request to the\nhttps://api.dataforseo.com/v3/dataforseo_labs/locations_and_languages\nexample:\nEnglish",
+);
+
+const getLabsGoogleHistoricalSerpsLanguageCodeSchema = {
+  description:
+    "unique language identifier\nrequired field if you don't specify language_name\nNote: it is required to specify either language_name or language_code\nyou can receive the list of available languages with their language_code parameters by making a separate request to the\nhttps://api.dataforseo.com/v3/dataforseo_labs/locations_and_languages\nexample:\nen",
+  type: ["string", "null"],
+};
+
+const getLabsGoogleHistoricalSerpsLanguageNameSchema = s.string(
+  "full name of the language\nrequired field if you don't specify language_code\nNote: it is required to specify either language_name or language_code\nyou can receive the list of available languages with their language_name parameters by making a separate request to the\nhttps://api.dataforseo.com/v3/dataforseo_labs/locations_and_languages\nexample:\nEnglish",
+);
+
+const getLabsGoogleKeywordSuggestionsOffsetSchema = {
+  description:
+    "offset in the results array of returned keywords\noptional field\ndefault value: 0\nif you specify the 10 value, the first ten keywords in the results array will be omitted and the data will be provided for the successive keywords\nNote: we recommend using this parameter only when retrieving up to 10,000 results\nfor retrieving over 10,000 results, use the offset_token instead.",
+  type: ["integer", "null"],
+  minimum: 0,
+};
+
+const getLabsGoogleKeywordsForSiteIncludeSubdomainsSchema = {
+  description:
+    "indicates if the subdomains will be included in the search\noptional field\nif set to false, the subdomains will be ignored\ndefault value: true",
+  type: ["boolean", "null"],
+};
+
+const getLabsGoogleKeywordsForSiteTargetSchema = s.string(
+  "domain name or page url\nrequired field\nthe domain name of the target website, subdomain or URL of the target webpage;\nthe domain name must be specified without https:// or www.;\nthe subdomain must be specified without https://;\nthe webpage URL must be specified with https:// or www.\nNote: if you specify the webpage URL without https:// or www., the result will be returned for the entire domain rather than the specific page",
+  { minLength: 1 },
+);
+
+const getLabsGooglePageIntersectionTagSchema = {
+  description:
+    "user-defined task identifieroptional fieldthe character limit is 255you can use this parameter to identify the task and match it with the resultyou will find the specified tag value in the data object of the response",
+  type: ["string", "null"],
+  maxLength: 255,
+};
+
+const getLabsGoogleRelevantPagesIgnoreSynonymsSchema = {
+  description:
+    "ignore highly similar keywords\noptional field\nif set to true, only core keywords will be returned, all highly similar keywords will be excluded;\ndefault value: false",
+  type: ["boolean", "null"],
+};
+
+const getLabsGoogleRelevantPagesIncludeClickstreamDataSchema = {
+  description:
+    "include or exclude data from clickstream-based metrics in the result\noptional field\nif the parameter is set to true, you will receive clickstream_etv, clickstream_gender_distribution, and clickstream_age_distribution fields with clickstream data in the response\ndefault value: false\nwith this parameter enabled, you will be charged double the price for the request\nlearn more about how clickstream-based metrics are calculated in this help center article",
+  type: ["boolean", "null"],
+};
+
+const itemTypesSchema = {
+  description:
+    'display results by item type\noptional field\nindicates the type of search results included in the response\nNote: if the item_types array contains item types that are different from organic, the results will be ordered by the first item type in the array; you will not be able to sort and filter results by the types of search results not included in the response;\npossible values:\n["organic", "paid", "featured_snippet", "local_pack"]\ndefault value:\n["organic", "paid"]',
+  items: getLabsGoogleBulkTrafficEstimationItemTypesItemSchema,
+  type: ["array", "null"],
+};
+
+const getLabsGoogleRelevantPagesOrderBySchema = {
+  description:
+    'results sorting rules\noptional field\nyou can use the same values as in the filters array to sort the results\npossible sorting types:\nasc - results will be sorted in the ascending order\ndesc - results will be sorted in the descending order\nyou should use a comma to specify a sorting type\nexample:\n["metrics.paid.etv,asc"]\nNote: you can set no more than three sorting rules in a single request\nyou should use a comma to separate several sorting rules\nexample:\n["metrics.organic.etv,desc","metrics.paid.count,asc"]\ndefault rule:\n["metrics.organic.count,desc"]\nNote: if the item_types array contains item types that are different from organic, the results will be ordered by the first item type in the array',
+  items: getAiLlmMentionsSearchMentionsOrderByItemSchema,
+  type: ["array", "null"],
+};
+
+const modeSchema = {
+  description:
+    "search mode\noptional field\npossible search mode types:\nas_is - search for results exactly matching the specified group ids, category ids, or technology names\nentry - search for results matching a part of the specified group ids, category ids, or technology names\ndefault value: as_is",
+  type: ["string", "null"],
+};
+
+const getDomainTechnologiesDomainsByHtmlTermsLimitSchema = {
+  description: "the maximum number of returned domains\noptional field\ndefault value: 100\nmaximum value: 10000",
+  type: ["integer", "null"],
+  maximum: 10000,
+};
+
+const getDomainTechnologiesDomainsByHtmlTermsOffsetSchema = {
+  description:
+    "offset in the results array of returned domains\noptional field\ndefault value: 0\nif you specify the 10 value, the first ten domains in the results array will be omitted and the data will be provided for the successive domains;\nNote: the maximum value is 9999, the sum of limit and offset must not exceed 10000;\nuse the offset_token if you would like to offset more results",
+  type: ["integer", "null"],
+  maximum: 9999,
+  minimum: 0,
+};
+
+const getDomainTechnologiesDomainsByHtmlTermsOrderBySchema = {
+  description:
+    'results sorting rules\noptional field\navailable fields:\ndomain_rank, domain, last_visited, country_iso_code, language_code, content_language_code\npossible sorting types:\nasc - results will be sorted in the ascending order\ndesc - results will be sorted in the descending order\nyou should use a comma to set up a sorting type\nexample:\n["last_visited,desc"]\ndefault rule:\n["domain_rank,desc"]\nnote that you can set no more than three sorting rules in a single request\nyou should use a comma to separate several sorting rules\nexample:\n["last_visited,desc","domain_rank,desc"]',
+  items: getAiLlmMentionsSearchMentionsOrderByItemSchema,
+  type: ["array", "null"],
+};
+
+const groupsItemSchema = s.string("The groups item value.");
+
+const technologiesItemSchema = s.string("The technologies item value.");
+
+const technologyPathsItemSchema = s.string("The technology paths item value.");
+
+const getKeywordsBingKeywordsForKeywordsDeviceSchema = {
+  description:
+    "device type\noptional field\nspecify this field if you want to get the data for a particular device type;\npossible values: all, mobile, desktop, tablet\ndefault value: all",
+  type: ["string", "null"],
+};
+
+const keywordsSchema = s.array(
+  "keywords\nrequired field\nThe maximum number of keywords you can specify: 1000\nThe maximum number of characters for each keyword: 100\nthe specified keywords will be converted to lowercase, data will be provided in a separate arraylearn more about rules and limitations of keyword and keywords fields in DataForSEO APIs in this Help Center article",
+  getLabsGoogleCategoriesForKeywordsKeywordsItemSchema,
+  { maxItems: 1000, minItems: 1 },
+);
+
+const getKeywordsClickstreamDataBulkSearchVolumeKeywordsSchema = s.array(
+  "target keywords\nrequired field\nUTF-8 encoding\nmaximum number of keywords you can specify in this array: 1000;\neach keyword should be at least 3 characters long;\nthe keywords will be converted to lowercase format;\nNote: certain symbols and characters (e.g., UTF symbols, emojis) are not allowed\nto learn more about which symbols and characters can be used, please refer to this article\nlearn more about rules and limitations of keyword and keywords fields in DataForSEO APIs in this Help Center article",
+  getLabsGoogleCategoriesForKeywordsKeywordsItemSchema,
+  { maxItems: 1000, minItems: 1 },
+);
+
+const getKeywordsTrendsDemographyDateFromSchema = {
+  description:
+    'starting date of the time range\noptional field\nif you don\'t specify this field, the current day and month of the preceding year will be used by default\nminimal value for the web type: 2004-01-01\nminimal value for other types: 2008-01-01\ndate format: "yyyy-mm-dd"\nexample:\n"2019-01-15"',
+  type: ["string", "null"],
+  format: "date",
+};
+
+const getKeywordsTrendsDemographyDateToSchema = {
+  description:
+    'ending date of the time range\noptional field\nif you don\'t specify this field, the today\'s date will be used by default\ndate format: "yyyy-mm-dd"\nexample:\n"2019-01-15"',
+  type: ["string", "null"],
+  format: "date",
+};
+
+const getKeywordsTrendsDemographyKeywordsSchema = s.array(
+  "keywords\nrequired field\nthe maximum number of keywords you can specify: 5\navoid symbols and special characters (e.g., UTF symbols, emojis);\nspecifying non-Latin characters, you’ll get data for the countries where they are used\nlearn more about rules and limitations of keyword and keywords fields in DataForSEO APIs in this Help Center article",
+  getLabsGoogleCategoriesForKeywordsKeywordsItemSchema,
+  { maxItems: 5, minItems: 1 },
+);
+
+const getKeywordsTrendsDemographyLocationCodeSchema = {
+  description:
+    "search engine location code\noptional field\nif you don't use this field, you will recieve global results\nif you use this field, you don't need to specify location_name\nyou can receive the list of available locations of the search engines with their location_code by making a separate request to https://api.dataforseo.com/v3/keywords_data/dataforseo_trends/locations\nnote that the data will be provided for the country the specified location_code belongs to;\nexample:\n2840",
+  type: ["integer", "null"],
+};
+
+const getKeywordsTrendsDemographyLocationNameSchema = {
+  description:
+    "full name of search engine location\noptional field\nif you don't use this field, you will recieve global results\nif you use this field, you don't need to specify location_code\nyou can receive the list of available locations of the search engine with their location_name by making a separate request to https://api.dataforseo.com/v3/keywords_data/dataforseo_trends/locations\nnote that the data will be provided for the country the specified location_name belongs to;\nexample:\nUnited Kingdom",
+  type: ["string", "null"],
+};
+
+const timeRangeSchema = {
+  description:
+    "preset time ranges\noptional field\nif you specify date_from or date_to parameters, this field will be ignored when setting a task\npossible values for all type parameters:\npast_4_hours, past_day, past_7_days, past_30_days, past_90_days, past_12_months, past_5_years",
+  type: ["string", "null"],
+};
+
+const typeSchema = { description: "type of element", type: ["string", "null"] };
+
+const getKeywordsGoogleAdsAdTrafficByKeywordsLanguageCodeSchema = {
+  description:
+    "search engine language code\noptional field\nyou can receive the list of available languages of the search engine with their language_code by making a separate request to https://api.dataforseo.com/v3/keywords_data/google_ads/languages\nexample:\nen",
+  type: ["string", "null"],
+};
+
+const getKeywordsGoogleAdsAdTrafficByKeywordsLanguageNameSchema = {
+  description:
+    "full name of search engine language\noptional field\nyou can receive the list of available languages of the search engine with their language_name by making a separate request to https://api.dataforseo.com/v3/keywords_data/google_ads/languages\nexample:\nEnglish",
+  type: ["string", "null"],
+};
+
+const getKeywordsGoogleAdsAdTrafficByKeywordsLocationCodeSchema = {
+  description:
+    "search engine location code\noptional field\nif you do not indicate the location, you will receive worldwide results, i.e., for all available locations;\nif you use this field, you don't need to specify location_name or location_coordinate;\nyou can receive the list of available locations of the search engines with their location_code by making a separate request to https://api.dataforseo.com/v3/keywords_data/google_ads/locations\nexample:\n2840",
+  type: ["integer", "null"],
+};
+
+const getKeywordsGoogleAdsAdTrafficByKeywordsLocationCoordinateSchema = {
+  description:
+    'GPS coordinates of a location\noptional field\nif you do not indicate the location, you will receive worldwide results, i.e., for all available locations;\nif you use this field, you don\'t need to specify location_name or location_code;\nlocation_coordinate parameter should be specified in the "latitude,longitude" format;\nthe data will be provided for the country the specified coordinates belong to;\nexample:\n52.6178549,-155.352142',
+  type: ["string", "null"],
+};
+
+const getKeywordsGoogleAdsAdTrafficByKeywordsLocationNameSchema = {
+  description:
+    "full name of search engine location\noptional field\nif you do not indicate the location, you will receive worldwide results, i.e., for all available locations;\nif you use this field, you don't need to specify location_code or location_coordinate\nyou can receive the list of available locations of the search engine with their location_name by making a separate request to https://api.dataforseo.com/v3/keywords_data/google_ads/locations\nexample:\nLondon,England,United Kingdom",
+  type: ["string", "null"],
+};
+
+const getKeywordsGoogleAdsKeywordsForKeywordsDateFromSchema = {
+  description:
+    'starting date of the time range\noptional field\ndate format: "yyyy-mm-dd"\nminimal value: 4 years from the current date\nby default, data is returned for the past 12 months;\nNote: the indicated date cannot be greater than that specified in date_to and/or yesterday\'s date;if Status endpoint returns false in the actual_data field, date_from can be set to the month before last and prior;\nif Status endpoint returns true in the actual_data field, date_from can be set to the last month and prior',
+  type: ["string", "null"],
+  format: "date",
+};
+
+const getKeywordsGoogleAdsKeywordsForKeywordsDateToSchema = {
+  description:
+    'ending date of the time range\noptional field\nNote: the indicated date cannot be greater than yesterday\'s date;\nif you don\'t specify this field, yesterday\'s date will be used by default\ndate format: "yyyy-mm-dd"\nexample:\n"2022-11-30"',
+  type: ["string", "null"],
+  format: "date",
+};
+
+const includeAdultKeywordsSchema = {
+  description:
+    "include keywords associated with adult content\noptional field\nif set to true, adult keywords will be included in the response\ndefault value: false\nnote that the API may return no data for such keywords due to Google Ads restrictions",
+  type: ["boolean", "null"],
+};
+
+const getKeywordsGoogleAdsKeywordsForKeywordsSearchPartnersSchema = {
+  description:
+    "include Google search partners\noptional field\nif you specify true, the results will be delivered for owned, operated, and syndicated networks across Google and partner sites that host Google search;\ndefault value: false - results are returned for Google search sites",
+  type: ["boolean", "null"],
+};
+
+const getKeywordsGoogleAdsKeywordsForKeywordsSortBySchema = {
+  description:
+    "results sorting parameters\noptional field\nUse these parameters to sort the results by relevance, search_volume, competition_index, low_top_of_page_bid, or high_top_of_page_bid in descending order\ndefault value: relevance",
+  type: ["string", "null"],
+};
+
+const locationCodeVariantSchema = { type: "null", description: "No location restriction." };
+
+const getSerpBingOrganicKeywordSchema = s.string(
+  'keyword\nrequired field\nyou can specify up to 700 characters in the keyword field\nall %## will be decoded (plus character \'+\' will be decoded to a space character)\nif you need to use the "%" character for your keyword, please specify it as "%25";\nif you need to use the “+” character for your keyword, please specify it as “%2B”;\nlearn more about rules and limitations of keyword and keywords fields in DataForSEO APIs in this Help Center article',
+  { maxLength: 700, minLength: 1 },
+);
+
+const getSerpBingOrganicMaxCrawlPagesSchema = {
+  description:
+    "page crawl limit\noptional field\nnumber of search results pages to crawl\ndefault value: 1\nmax value: 100\nNote: the max_crawl_pages and depth parameters complement each other;\nlearn more at our help center",
+  type: ["integer", "null"],
+  maximum: 100,
+};
+
+const getSerpBingOrganicSearchParamSchema = {
+  description:
+    "additional parameters of the search query\noptional field\nget the list of available parameters and additional details here",
+  type: ["string", "null"],
+};
+
+const getSerpBingOrganicMatchTypeSchema = {
+  description:
+    "target match type\nrequired field if stop_crawl_on_match is specified;\ntype of match for the match_value\npossible values: domain, with_subdomains, wildcard",
+  type: "string",
+  minLength: 1,
+  enum: ["domain", "with_subdomains", "wildcard"],
+};
+
+const matchValueSchema = s.string(
+  "arget domain or wildcard value\nrequired field if stop_crawl_on_match is specified;\nspecify a target domain or wildcard value;\nNote: domain name must be specified without a request protocol;\nexample: dataforseo.com",
+  { minLength: 1 },
+);
+
+const stopCrawlOnMatchItemSchema = {
+  type: "object",
+  properties: { match_type: getSerpBingOrganicMatchTypeSchema, match_value: matchValueSchema },
+  description: "The stop crawl on match item value.",
+  required: ["match_type", "match_value"],
+};
+
+const stopCrawlOnMatchSchema = {
+  description:
+    'array of targets to stop crawling\noptional field\nif specified, the response will contain SERP results up to and including the specified match_value;\nyou can specify up to 10 target values in this array\nexample:\n"stop_crawl_on_match":[{"match_value":"dataforseo.com","match_type":"with_subdomains"}]\nlearn more about this parameter on our Help Center - https://dataforseo.com/help-center/using-the-stop_crawl_on_match-parameter-in-serp-api\nYour account will be billed per each SERP crawled through the specified targets',
+  items: stopCrawlOnMatchItemSchema,
+  type: ["array", "null"],
+  maxItems: 10,
+  minItems: 1,
+};
+
+const getSerpBingOrganicTargetSchema = {
+  description:
+    "target domain, subdomain, or webpage to get results for\noptional field\na domain or a subdomain should be specified without https:// and www.\nnote that the results of target-specific tasks will only include SERP elements that contain a url string;\nyou can also use a wildcard (‘*’) character to specify the search pattern in SERP and narrow down the results;\nexamples:\nexample.com - returns results for the website's home page with URLs, such as https://example.com, or https://www.example.com/, or https://example.com/;\nexample.com* - returns results for the domain, including all its pages;\n*example.com* - returns results for the entire domain, including all its pages and subdomains;\n*example.com - returns results for the home page regardless of the subdomain, such as https://en.example.com;\nexample.com/example-page - returns results for the exact URL;\nexample.com/example-page* - returns results for all domain's URLs that start with the specified string",
+  type: ["string", "null"],
+};
+
+const getSerpGoogleAdsAdvertisersLocationCodeSchema = s.integer("Search engine location code");
+
+const getSerpGoogleAdsAdvertisersLocationNameSchema = s.string("Full name of search engine location");
+
+const getSerpGoogleAdsSearchLocationCoordinateSchema = s.string("GPS coordinates of a location");
+
+const getSerpGoogleAutocompleteKeywordSchema = s.string(
+  "keyword\nrequired field\nyou can specify up to 700 characters in the keyword field\nall %## will be decoded (plus character ‘+’ will be decoded to a space character)\nif you need to use the “%” character for your keyword, please specify it as “%25”;\nif you need to use the “+” character for your keyword, please specify it as “%2B”;\nlearn more about rules and limitations of keyword and keywords fields in DataForSEO APIs in this Help Center article",
+  { maxLength: 700, minLength: 1 },
+);
+
+const getSerpGoogleDatasetInfoLanguageNameSchema = {
+  description:
+    "full name of search engine language\noptional field\nif you use this field, you don't need to specify language_code\npossible value:\nEnglish",
+  type: ["string", "null"],
+};
+
+const getSerpGoogleFinanceExploreLocationNameSchema = s.string(
+  "full name of search engine location\nrequired field if you don't specify location_code\nif you use this field, you don't need to specify location_code\nyou can receive the list of available locations of the search engine with their location_name by making a separate request to https://api.dataforseo.com/v3/serp/google/locations\nexample:\nLondon,England,United Kingdom",
+);
+
+export const dataForSeoResearchContracts: readonly ResearchContract[] = [
+  {
+    name: "get_dataforseo_labs_bulk_keyword_difficulty",
+    path: "/apis/v1/dataforseo/dataforseo_labs/google/bulk_keyword_difficulty/live",
+    description: "Get Google keyword difficulty through DataForSEO.",
+    inputSchema: s.object(
+      "Parameters for Google keyword difficulty. Descriptions refer to upstream snake_case field names; supply the corresponding camelCase properties shown here. Nested filter fields retain upstream names.",
+      {
+        keywords: s.array(
+          "target keywords\nrequired field\nUTF-8 encoding\nmaximum number of keywords you can specify in this array: 1000\nthe keywords will be converted to lowercase format\nlearn more about rules and limitations of keyword and keywords fields in DataForSEO APIs in this Help Center article",
+          keywordsItemSchema,
+          { minItems: 1, maxItems: 1000 },
+        ),
+        languageCode: languageCodeSchema,
+        languageName: languageNameSchema,
+        locationCode: s.integer(
+          "location code\nrequired field if don't specify location_name\nyou can receive the list of available locations with their location_code by making a separate request to the \nhttps://api.dataforseo.com/v3/dataforseo_labs/locations_and_languages\nexample:\n2840",
+        ),
+        locationName: s.string(
+          "full name of the location\nrequired field if don't specify location_code\nyou can receive the list of available locations with their location_name by making a separate request to the \nhttps://api.dataforseo.com/v3/dataforseo_labs/locations_and_languages\nexample:\nUnited Kingdom",
+        ),
+        tag: tagSchema,
+      },
+      {
+        required: ["keywords"],
+        allOf: [locationRequired, languageRequired],
+      },
+    ),
+  },
+  {
+    name: "get_dataforseo_labs_competitors_domain",
+    path: "/apis/v1/dataforseo/dataforseo_labs/google/competitors_domain/live",
+    description: "Get Google domain competitors through DataForSEO.",
+    inputSchema: s.object(
+      "Parameters for Google domain competitors. Descriptions refer to upstream snake_case field names; supply the corresponding camelCase properties shown here. Nested filter fields retain upstream names.",
+      {
+        excludeDomains: {
+          description:
+            'exclude domains from the results\noptional field\nuse this parameter to exclude specific domains from the results\nNote: you can specify up to 1000 domains in this array\nexample:\n"exclude_domains": [\n"reddit.com",\n"youtube.com"\n]',
+          items: s.string("The exclude domains value value."),
+          type: ["array", "null"],
+        },
+        excludeTopDomains: {
+          description:
+            "indicates whether to exclude world's largest websites\noptional field\ndefault value: false\nset to true if you want to get highly-relevant competitors excluding the websites listed below:\nwikipedia.org\npinterest.com\namazon.com\ngoogle.com\nfacebook.com\nwordpress.com\nmedium.com\nquora.com\nreddit.com\nyoutube.com\nebay.com\nuol.com.br\ninstagram.com\nolx.com\ntwitter.com\nlinkedin.com\nslideshare.net",
+          type: ["boolean", "null"],
+        },
+        filters: {
+          description:
+            'array of results filtering parameters\noptional field\nyou can add several filters at once (8 filters maximum)\nyou should set a logical operator and, or between the conditions\nthe following operators are supported:\nregex, not_regex, <, <=, >, >=, =, <>, in, not_in\nexample:\n["metrics.organic.count",">",50]\n[[["metrics.organic.count",">=",50],"and",["metrics.organic.pos_1","in",[1,5]]],\n"or",\n["metrics.organic.etv",">=","100"]]\nfor more information about filters, please refer to Dataforseo Labs - Filters or this help center guide',
+          items: filtersItemSchema,
+          type: ["array", "null"],
+        },
+        ignoreSynonyms: {
+          description:
+            "ignore highly similar keywords\noptional field\nif set to_true, only core keywords will be returned, all highly similar keywords will be excluded;  \ndefault value: falsen",
+          type: ["boolean", "null"],
+        },
+        includeClickstreamData: includeClickstreamDataSchema,
+        intersectingDomains: {
+          description:
+            "additional domains for improving results accuracy\noptional field\nto improve the accuracy of the result, you can specify domains that are known to intersect with the target in SERPs;\nif you use this array, metrics in the result will be based on SERPs where both target website and intersecting_domains appear;\nNote: you can specify up to 20 domains in this array",
+          items: s.string("The intersecting domains value value."),
+          type: ["array", "null"],
+        },
+        itemTypes: {
+          description:
+            'display results by item type\noptional field\nindicates the type of search results included in the response\nNote: if the item_types array contains item types that are different from organic, the results will be ordered by the first item type in the array; you will not be able to sort and filter results by the types of search results not included in the response;\npossible values: \n["organic", "paid", "featured_snippet", "local_pack"]\ndefault value: \n["organic", "paid"]',
+          items: itemTypesItemSchema,
+          type: ["array", "null"],
+        },
+        languageCode: {
+          description:
+            "language code\nrequired field if you don't specify language_name\nNote: it is required to specify either language_name or language_code\nyou can receive the list of available languages with their language_code by making a separate request to the \nhttps://api.dataforseo.com/v3/dataforseo_labs/locations_and_languages\nexample:\nen",
+          type: ["string", "null"],
+        },
+        languageName: s.string(
+          "full name of the language\nrequired field if you don't specify language_code\nNote: it is required to specify either language_name or language_code\nyou can receive the list of available languages with their language_name by making a separate request to the \nhttps://api.dataforseo.com/v3/dataforseo_labs/locations_and_languages\nexample:\nEnglish",
+        ),
+        limit: limitSchema,
+        locationCode: locationCodeSchema,
+        locationName: locationNameSchema,
+        maxRankGroup: {
+          description:
+            "maximum rank up to which competitors will be considered\noptional field\ndefault value: 100\nif you specify 10 here, we will extract competitors from the top 10 Google search results only",
+          type: ["integer", "null"],
+        },
+        offset: {
+          description:
+            "offset in the results array of returned domains\noptional field\ndefault value: 0\nif you specify the 10 value, the first ten keywords in the results array will be omitted and the data will be provided for the successive keywords",
+          type: ["integer", "null"],
+        },
+        orderBy: {
+          description:
+            'results sorting rules\noptional field\nyou can use the same values as in the filters array to sort the results\npossible sorting types:\nasc - results will be sorted in the ascending order\ndesc - results will be sorted in the descending order\nyou should use a comma to specify a sorting type\nexample:\n["metrics.paid.etv,asc"]\nNote: you can set no more than three sorting rules in a single request\nyou should use a comma to separate several sorting rules\nexample:\n["metrics.organic.etv,desc","metrics.paid.count,asc"]\ndefault rule:\n["metrics.organic.count,desc"]\nNote: if the item_types array contains item types that are different from organic, the results will be ordered by the first item type in the array',
+          items: orderByItemSchema,
+          type: ["array", "null"],
+        },
+        tag: tagSchema,
+        target: s.string(
+          "domain\nrequired field\nthe domain name of the target website\nthe domain should be specified without https:// and www.\nyou can specify page URL, but the results will be specific to the domain in the specified URL",
+          { minLength: 1 },
+        ),
+      },
+      {
+        required: ["target"],
+        allOf: [locationRequired, languageRequired],
+      },
+    ),
+  },
+  {
+    name: "get_dataforseo_labs_domain_metrics_by_categories",
+    path: "/apis/v1/dataforseo/dataforseo_labs/google/domain_metrics_by_categories/live",
+    description: "Get Google domain metrics by category through DataForSEO.",
+    inputSchema: s.object(
+      "Parameters for Google domain metrics by category. Descriptions refer to upstream snake_case field names; supply the corresponding camelCase properties shown here. Nested filter fields retain upstream names.",
+      {
+        categoryCodes: s.array(
+          "product and service categories\nrequired field\nThe maximum number of categories you can specify: 5\nyou can download the full list of possible categories",
+          categoryCodesItemSchema,
+          { minItems: 1, maxItems: 5 },
+        ),
+        correlate: {
+          description:
+            "correlate data with previously obtained datasets\noptional field\ndefault value: true;\nif you use this parameter, our system will correlate data you obtain now with previously obtained datasets;\nthis parameter is intended to mitigate any inconsistencies that may result from changes to our database;\nNote: we do not recommend setting correlate to false",
+          type: ["boolean", "null"],
+        },
+        etvMax: {
+          description:
+            "maximum current organic ETV of the domain\noptional field\nif specified, the API will return only domains with organic_etv lesser than the specified value",
+          type: ["integer", "null"],
+        },
+        etvMin: {
+          description:
+            "minimum current organic ETV of the domain\noptional field\nif specified, the API will return only domains with organic_etv greater than the specified value",
+          type: ["integer", "null"],
+        },
+        filters: {
+          description:
+            'array of results filtering parameters\noptional field\nyou can add several filters at once (8 filters maximum);\nyou should set a logical operator and, or between the conditions\nthe following operators are supported:\nregex, not_regex, <, <=, >, >=, =, <>, in, not_in, match, not_match, ilike, not_ilike, like, not_like;\nyou can use the % operator with like and not_like, as well as ilike and not_ilike to match any string of zero or more characters;\nexample:\n["metrics_history.202110.organic.pos_1", ">", 15];\nfor more information about filters, please refer to Dataforseo Labs - Filters or this help center guide',
+          items: filtersItemSchema,
+          type: ["array", "null"],
+        },
+        firstDate: s.string(
+          'first date of comparison period\nrequired field\nfirst date for which domain metrics will be provided;\ndate format: "yyyy-mm-dd";\nexample: "2021-06-01";\nthe list available dates is available through the available history endpoint;\nNote: first_date cannot be greater than today\'s date;\nAlso note: the dates specified in first_date and second_date cannot point to the same month of the same year;\nyou can specify the dates in any order: first_date can be greater than second_date and vice versa;\nminimum date: "2020-10-01"',
+          { minLength: 1, format: "date" },
+        ),
+        includeSubdomains: {
+          description:
+            "return subdomains in the API response\noptional field\nif false, the API response will contain main_domain only;\nif true, the API will return main_domain plus its subdomains (if available);\ndefault value: true",
+          type: ["boolean", "null"],
+        },
+        itemTypes: {
+          description:
+            'display results by item type\noptional field\nindicates the type of search results included in the response;\nNote: if the item_types array contains item types that are different from the organic object, the results will be ordered by the first item type in the array; you will not be able to sort and filter results by the types of search results not included in the response;\npossible values: \n["organic", "paid", "featured_snippet", "local_pack"];\ndefault value: \n["organic", "paid"]',
+          items: itemTypesItemSchema,
+          type: ["array", "null"],
+        },
+        languageCode: {
+          description:
+            "unique language identifier\nrequired field if you don't specify language_name\nNote: it is required to specify either language_name or language_code;\nyou can receive the list of available languages with their language_code by making a separate request to https://api.dataforseo.com/v3/dataforseo_labs/locations_and_languages;\nexample:\nen",
+          type: ["string", "null"],
+        },
+        languageName: s.string(
+          "full name of the language\nrequired field if you don't specify language_code\nNote: it is required to specify either language_name or language_code;\nyou can receive the list of available languages with their language_name by making a separate request to\nhttps://api.dataforseo.com/v3/dataforseo_labs/locations_and_languages;\nexample:\nEnglish",
+        ),
+        limit: {
+          description:
+            "the maximum number of domains in the results array\noptional field\ndefault value: 100;\nmaximum value: 1000",
+          type: ["integer", "null"],
+        },
+        locationCode: s.integer(
+          "unique location identifier\nrequired field if you don't specify location_name\nNote: it is required to specify either location_name or location_code;\nyou can receive the list of available locations with their location_code by making a separate request to\nhttps://api.dataforseo.com/v3/dataforseo_labs/locations_and_languages;\nexample:\n2840",
+        ),
+        locationName: s.string(
+          "full name of the location\nrequired field if you don't specify location_code\nNote: it is required to specify either location_name or location_code;\nyou can receive the list of available locations with their location_name by making a separate request to\nhttps://api.dataforseo.com/v3/dataforseo_labs/locations_and_languages;\nexample:\nUnited Kingdom",
+        ),
+        offset: {
+          description:
+            "offset in the results array of returned domains\noptional field\ndefault value: 0;\nif you specify the 10 value, the first ten domains in the results array will be omitted and the data will be provided for the successive domains",
+          type: ["integer", "null"],
+        },
+        orderBy: {
+          description:
+            'results sorting rules\noptional field\nyou can use the same values as in the filters array to sort the results;\ndefault rule: ["organic_etv,desc"];\npossible sorting types:\nasc - results will be sorted in ascending order\ndesc - results will be sorted in descending order;\nyou should use a comma to set up a sorting type;\nexample:\n["organic_count,desc"];\nnote that you can set no more than three sorting rules in a single request;\nyou should use a comma to separate several sorting rules;\nexample:\n["organic_etv,desc","organic_count,asc"]',
+          items: orderByItemSchema,
+          type: ["array", "null"],
+        },
+        secondDate: s.string(
+          'second date of comparison period\nrequired field\nsecond date for which domain metrics will be provided;\ndate format: "yyyy-mm-dd";\nexample: "2021-10-01";\nthe list available dates is available through the available history endpoint;\nNote: second_date cannot be greater than today\'s date;\nAlso note: the dates specified in first_date and second_date cannot point to the same month of the same year;\nyou can specify the dates in any order: second_date can be greater than first_date and vice versa;\nminimum date: "2020-10-01"',
+          { minLength: 1, format: "date" },
+        ),
+        tag: {
+          description:
+            "user-defined task identifier\noptional field\nthe character limit is 255;\nyou can use this parameter to identify the task and match it with the result;\nyou will find the specified tag value in the data object of the response",
+          type: ["string", "null"],
+          maxLength: 255,
+        },
+        topCategoriesCount: {
+          description:
+            "number of additional domain categories\noptional field\nby using this parameter, you can receive domains relevant to additional categories that are not specified in category_codes above;\nto learn more about the parameter, please refer to this help center article;\nby default, top_categories_count is equal to the number of categories specified in the category_codes array;\nNote: top_categories_count cannot be less than the number of categories in the category_codes array;\nmaximum value: 5",
+          format: "int64",
+          type: ["integer", "null"],
+        },
+      },
+      {
+        required: ["categoryCodes", "firstDate", "secondDate"],
+        allOf: [locationRequired, languageRequired],
+      },
+    ),
+  },
+  {
+    name: "get_dataforseo_labs_keyword_ideas",
+    path: "/apis/v1/dataforseo/dataforseo_labs/google/keyword_ideas/live",
+    description: "Get Google keyword ideas through DataForSEO.",
+    inputSchema: s.object(
+      "Parameters for Google keyword ideas. Descriptions refer to upstream snake_case field names; supply the corresponding camelCase properties shown here. Nested filter fields retain upstream names.",
+      {
+        closelyVariants: {
+          description:
+            "search mode\noptional field\nif set to_true the results will be based on the phrase-match search algorithm\nif set to false the results will be based on the broad-match search algorithm\ndefault value: falsen",
+          type: ["boolean", "null"],
+        },
+        filters: {
+          description:
+            'array of results filtering parameters\noptional field\nyou can add several filters at once (8 filters maximum)\nyou should set a logical operator and, or between the conditions\nthe following operators are supported:\nregex, not_regex, <, <=, >, >=, =, <>, in, not_in, match, not_match, ilike, not_ilike, like, not_like\nyou can use the % operator with like and not_like,as well as ilike, not_ilike to match any string of zero or more characters\nnote that you can not filter the results by relevance\nexample:\n["keyword_info.search_volume",">",0]\n[["keyword_info.search_volume","in",[0,1000]],\n"and",\n["keyword_info.competition_level","=","LOW"]]\n[["keyword_info.search_volume",">",100],\n"and",\n[["keyword_info.cpc","<",0.5],\n"or",\n["keyword_info.high_top_of_page_bid","<=",0.5]]]\nfor more information about filters, please refer to Dataforseo Labs - Filters or this help center guide',
+          items: filtersItemSchema,
+          type: ["array", "null"],
+        },
+        ignoreSynonyms: ignoreSynonymsSchema,
+        includeClickstreamData: getLabsKeywordIdeasIncludeClickstreamDataSchema,
+        includeSerpInfo: includeSerpInfoSchema,
+        keywords: s.array(
+          "keywords\nrequired field\nUTF-8 encoding\nThe maximum number of keywords you can specify: 200.\nThe keywords will be converted to lowercase format\nlearn more about rules and limitations of keyword and keywords fields in DataForSEO APIs in this Help Center article",
+          keywordsItemSchema,
+          { minItems: 1, maxItems: 200 },
+        ),
+        languageCode: getLabsKeywordIdeasLanguageCodeSchema,
+        languageName: getLabsKeywordIdeasLanguageNameSchema,
+        limit: {
+          description:
+            "the maximum number of keywords in the results array\noptional field\ndefault value: 700\nmaximum value: 1000",
+          type: ["integer", "null"],
+        },
+        locationCode: s.integer(
+          "unique location identifier\nrequired field if you don't specify location_name\nNote: it is required to specify either location_name or location_code\nyou can receive the list of available locations with their location_code by making a separate request to the \nhttps://api.dataforseo.com/v3/dataforseo_labs/locations_and_languages\nexample:\n2840",
+        ),
+        locationName: getLabsKeywordIdeasLocationNameSchema,
+        offset: offsetSchema,
+        offsetToken: {
+          description:
+            "offset token for subsequent requests\noptional field\nprovided in the identical filed of the response to each request;\nuse this parameter to avoid timeouts while trying to obtain over 10,000 results in a single request;\nby specifying the unique offset_token value from the response array, you will get the subsequent results of the initial task;\noffset_token values are unique for each subsequent task \nNote: if the offset_token is specified in the request, all other parameters except limit will not be taken into account when processing a task.\nlearn more about this parameter on our Help Center",
+          type: ["string", "null"],
+        },
+        orderBy: {
+          description:
+            'results sorting rules\noptional field\nyou can use the same values as in the filters array to sort the results\npossible sorting types:\nasc - results will be sorted in the ascending order\ndesc - results will be sorted in the descending order\nyou should use a comma to set up a sorting parameter\ndefault rule:\n["relevance,desc"]\nrelevance is used as the default sorting rule to provide you with the closest keyword ideas. We recommend using this sorting rule to get highly-relevant search terms. Note that relevance is only our internal system identifier, so it can not be used as a filter, and you will not find this field in the result array. The relevance score is based on a similar principle as used in the Keywords For Keywords endpoint.\nnote that you can set no more than three sorting rules in a single request\nyou should use a comma to separate several sorting rules\nexample:\n["relevance,desc","keyword_info.search_volume,desc"]',
+          items: orderByItemSchema,
+          type: ["array", "null"],
+        },
+        tag: tagSchema,
+      },
+      { required: ["keywords"], allOf: [locationRequired] },
+    ),
+  },
+  {
+    name: "get_dataforseo_labs_keyword_overview",
+    path: "/apis/v1/dataforseo/dataforseo_labs/google/keyword_overview/live",
+    description: "Get Google keyword overview through DataForSEO.",
+    inputSchema: s.object(
+      "Parameters for Google keyword overview. Descriptions refer to upstream snake_case field names; supply the corresponding camelCase properties shown here. Nested filter fields retain upstream names.",
+      {
+        includeClickstreamData: getLabsKeywordIdeasIncludeClickstreamDataSchema,
+        includeSerpInfo: includeSerpInfoSchema,
+        keywords: s.array(
+          "keywords\nrequired field\nThe maximum number of keywords you can specify: 700\nThe maximum number of characters for each keyword: 80\nThe maximum number of words for each keyword phrase: 10\nthe specified keywords will be converted to lowercase format, data will be provided in a separate array\nnote that if some of the keywords specified in this array are omitted in the results you receive, then our database doesn't contain such keywords and cannot return data on them\nyou will not be charged for the keywords omitted in the results\nlearn more about rules and limitations of keyword and keywords fields in DataForSEO APIs in this Help Center article",
+          s.string("The keywords value value.", { maxLength: 80 }),
+          { minItems: 1, maxItems: 700 },
+        ),
+        languageCode: {
+          description:
+            "language code\nrequired field if you don't specify language_name\nNote: it is required to specify either language_name or language_code\nyou can receive the list of available locations with their language_code by making a separate request to the \nhttps://api.dataforseo.com/v3/dataforseo_labs/locations_and_languages\nexample:\nen",
+          type: ["string", "null"],
+        },
+        languageName: s.string(
+          "full name of the language\nrequired field if you don't specify language_code\nNote: it is required to specify either language_name or language_code\nyou can receive the list of available locations with their language_name by making a separate request to the \nhttps://api.dataforseo.com/v3/dataforseo_labs/locations_and_languages\nexample:\nEnglish",
+        ),
+        locationCode: locationCodeSchema,
+        locationName: locationNameSchema,
+        tag: tagSchema,
+      },
+      {
+        required: ["keywords"],
+        allOf: [locationRequired, languageRequired],
+      },
+    ),
+  },
+  {
+    name: "get_dataforseo_labs_keywords_for_categories",
+    path: "/apis/v1/dataforseo/dataforseo_labs/google/keywords_for_categories/live",
+    description: "Get Google category keywords through DataForSEO.",
+    inputSchema: s.object(
+      "Parameters for Google category keywords. Descriptions refer to upstream snake_case field names; supply the corresponding camelCase properties shown here. Nested filter fields retain upstream names.",
+      {
+        categoryCodes: s.array(
+          "product and service categories\nrequired field\nThe maximum number of categories you can specify: 20\nyou can download the full list of possible categories",
+          categoryCodesItemSchema,
+          { minItems: 1, maxItems: 20 },
+        ),
+        categoryIntersection: {
+          description:
+            "category intersections\noptional field\nif set to true, you will get keywords featured in all specified categories;\nif set to false, you will keywords that are specified in any of the specified categories;\ndefault value: true",
+          type: ["boolean", "null"],
+        },
+        filters: {
+          description:
+            'array of results filtering parameters\noptional field\nyou can add several filters at once (8 filters maximum)\nyou should set a logical operator and, or between the conditions\nthe following operators are supported:\nregex, not_regex, <, <=, >, >=, =, <>, in, not_in, match, not_match, ilike, not_ilike, like, not_like\nyou can use the % operator with like and not_like,as well as ilike, not_ilike to match any string of zero or more characters\nexample:\n["keyword_info.search_volume",">",0]\n[["keyword_info.search_volume","in",[0,1000]],\n"and",\n["keyword_info.competition_level","=","LOW"]]\n[["keyword_info.search_volume",">",100],\n"and",\n[["keyword_info.cpc","<",0.5],\n"or",\n["keyword_info.high_top_of_page_bid","<=",0.5]]]\nfor more information about filters, please refer to Dataforseo Labs - Filters or this help center guide',
+          items: filtersItemSchema,
+          type: ["array", "null"],
+        },
+        ignoreSynonyms: getLabsKeywordsForCategoriesIgnoreSynonymsSchema,
+        includeClickstreamData: getLabsKeywordIdeasIncludeClickstreamDataSchema,
+        includeSerpInfo: includeSerpInfoSchema,
+        languageCode: {
+          description:
+            "unique language identifier\nrequired field if you don't specify language_name\nNote: it is required to specify either language_name or language_code\nyou can receive the list of available languages with their language_code by making a separate request to the\nhttps://api.dataforseo.com/v3/dataforseo_labs/locations_and_languages\nexample:\nen",
+          type: ["string", "null"],
+        },
+        languageName: getLabsKeywordsForCategoriesLanguageNameSchema,
+        limit: {
+          description:
+            "the maximum number of keywords in the results array\noptional field\ndefault value: 100\nmaximum value: 1000",
+          type: ["integer", "null"],
+        },
+        locationCode: getLabsKeywordsForCategoriesLocationCodeSchema,
+        locationName: getLabsKeywordIdeasLocationNameSchema,
+        offset: offsetSchema,
+        offsetToken: offsetTokenSchema,
+        orderBy: {
+          description:
+            'results sorting rules\noptional field\nyou can use the same values as in the filters array to sort the results\npossible sorting types:\nasc - results will be sorted in the ascending order\ndesc - results will be sorted in the descending order\nyou should use a comma to set up a sorting type\nexample:\n["keyword_info.competition,desc"]\ndefault rule:\n["keyword_info.search_volume,desc"]\nnote that you can set no more than three sorting rules in a single request\nyou should use a comma to separate several sorting rules\nexample:\n["keyword_info.search_volume,desc","keyword_info.competition,asc"]',
+          items: orderByItemSchema,
+          type: ["array", "null"],
+        },
+        tag: tagSchema,
+      },
+      {
+        required: ["categoryCodes"],
+        allOf: [locationRequired, languageRequired],
+      },
+    ),
+  },
+  {
+    name: "get_dataforseo_labs_amazon_bulk_search_volume",
+    path: "/apis/v1/dataforseo/dataforseo_labs/amazon/bulk_search_volume/live",
+    description: "Get Amazon search volumes through DataForSEO.",
+    inputSchema: s.object(
+      "Parameters for Amazon search volumes. Descriptions refer to upstream snake_case field names; supply the corresponding camelCase properties shown here. Nested filter fields retain upstream names.",
+      {
+        keywords: s.array(
+          "target keywords\nrequired field\nUTF-8 encoding\nmaximum number of keywords you can specify in this array: 1000;\nthe keywords will be converted to lowercase format\nlearn more about rules and limitations of keyword and keywords fields in DataForSEO APIs in this Help Center article",
+          keywordsItemSchema,
+          { minItems: 1, maxItems: 1000 },
+        ),
+        languageCode: {
+          description:
+            "language code\nrequired field if don't specify language_name\nyou can receive the list of available languages with their language_code by making a separate request to https://api.dataforseo.com/v3/dataforseo_labs/locations_and_languages\nNote: this endpoint currently supports these locations and languages only;\nexample:\nen",
+          type: ["string", "null"],
+        },
+        languageName: s.string(
+          "full name of the language\nrequired field if don't specify language_code\nyou can receive the list of available languages with their language_name by making a separate request to https://api.dataforseo.com/v3/dataforseo_labs/locations_and_languages\nNote: this endpoint currently supports these locations and languages only;\nexample:\nEnglish",
+        ),
+        locationCode: s.integer(
+          "location code\nrequired field if don't specify location_name\nyou can receive the list of available locations with their location_code by making a separate request to \nhttps://api.dataforseo.com/v3/dataforseo_labs/locations_and_languages;\nNote: this endpoint currently supports these locations and languages only;\nexample:\n2840",
+        ),
+        locationName: s.string(
+          "full name of the location\nrequired field if don't specify location_code\nyou can receive the list of available locations with their location_name by making a separate request to \nhttps://api.dataforseo.com/v3/dataforseo_labs/locations_and_languages;\nNote: this endpoint currently supports the following locations and languages only:\nAustralia - 2036, en\nAustria - 2040, de\nCanada - 2124, en\nEgypt - 2818, ar\nFrance - 2250, fr\nGermany - 2276, de\nIndia - 2356, en\nItaly - 2380, it\nMexico - 2484, es\nNetherlands - 2528, nl\nSaudi Arabia - 2682, ar\nSingapore - 2702, en\nSpain - 2724, es\nUnited Arab Emirates - 2784, ar\nUnited Kingdom - 2826, en\nUnited States - 2840, en\nexample:\nUnited States",
+        ),
+        tag: tagSchema,
+      },
+      {
+        required: ["keywords"],
+        allOf: [locationRequired, languageRequired],
+      },
+    ),
+  },
+  {
+    name: "get_dataforseo_labs_amazon_product_competitors",
+    path: "/apis/v1/dataforseo/dataforseo_labs/amazon/product_competitors/live",
+    description: "Get Amazon product competitors through DataForSEO.",
+    inputSchema: s.object(
+      "Parameters for Amazon product competitors. Descriptions refer to upstream snake_case field names; supply the corresponding camelCase properties shown here. Nested filter fields retain upstream names.",
+      {
+        asin: asinSchema,
+        filters: {
+          description:
+            'array of results filtering parameters\noptional field\nyou can add several filters at once (8 filters maximum)\nyou should set a logical operator and, or between the conditions\nthe following operators are supported:\nregex, not_regex, <, <=, >, >=, =, <>, in, not_in, ilike, not_ilike, like, not_like, match, not_match\nyou can use the % operator with like and not_like, as well as ilike and not_ilike to match any string of zero or more characters\nexample:\n["full_metrics.amazon_serp.pos_1",">", 20]\nfor more information about filters, please refer to Dataforseo Labs - Filters or this help center guide',
+          items: filtersItemSchema,
+          type: ["array", "null"],
+        },
+        languageCode: languageCodeSchema,
+        languageName: languageNameSchema,
+        limit: getLabsAmazonProductCompetitorsLimitSchema,
+        locationCode: getLabsAmazonProductCompetitorsLocationCodeSchema,
+        locationName: getLabsAmazonProductCompetitorsLocationNameSchema,
+        offset: {
+          description:
+            "offset in the results array of returned product competitors\noptional field\ndefault value: 0\nif you specify the 10 value, the first ten product competitors in the results array will be omitted and the data will be provided for the successive product competitors",
+          type: ["integer", "null"],
+        },
+        orderBy: {
+          description:
+            'results sorting rules\noptional field\nyou can use the same values as in the filters array to sort the results\npossible sorting types:\nasc - results will be sorted in the ascending order\ndesc - results will be sorted in the descending order\nyou should use a comma to set up a sorting parameter\nexample:\n["full_metrics.amazon_serp.pos_1,desc"]\nnote that you can set no more than three sorting rules in a single request\nyou should use a comma to separate several sorting rules\nexample:\n["full_metrics.amazon_serp.pos_1,desc","avg_position,desc"]\ndefault rule:\n["ranked_serp_element.serp_item.rank_group,asc"]',
+          items: orderByItemSchema,
+          type: ["array", "null"],
+        },
+        tag: tagSchema,
+      },
+      {
+        required: ["asin"],
+        allOf: [locationRequired, languageRequired],
+      },
+    ),
+  },
+  {
+    name: "get_dataforseo_labs_amazon_product_keyword_intersections",
+    path: "/apis/v1/dataforseo/dataforseo_labs/amazon/product_keyword_intersections/live",
+    description: "Get Amazon keyword intersections through DataForSEO.",
+    inputSchema: s.object(
+      "Parameters for Amazon keyword intersections. Descriptions refer to upstream snake_case field names; supply the corresponding camelCase properties shown here. Nested filter fields retain upstream names.",
+      {
+        asins: {
+          additionalProperties: { type: ["string", "null"], description: "The asins value value." },
+          description:
+            'asins of target products\nrequired field\nproduct IDs of the products for which you need to find keyword intersections;\nspecify the ASINs as in the following example:\n"asins": {\n"1": "019005476X",\n"2": "0190074442"\n}\nthe maximum number of ASINs you can specify in this object is 20;\nlearn more about the parameter on this help center page',
+          type: "object",
+          minProperties: 1,
+          maxProperties: 20,
+        },
+        filters: {
+          description:
+            'array of results filtering parameters\noptional field\nyou can add several filters at once (8 filters maximum)\nyou should set a logical operator and, or between the conditions\nthe following operators are supported:\nregex, not_regex, <, <=, >, >=, =, <>, in, not_in, ilike, not_ilike, like, not_like, match, not_match\nyou can use the % operator with like and not_like, as well as ilike and not_ilike to match any string of zero or more characters\nexample:\n["avg_position","<", 10]\nfor more information about filters, please refer to Dataforseo Labs - Filters or this help center guide',
+          items: filtersItemSchema,
+          type: ["array", "null"],
+        },
+        intersectionMode: {
+          description:
+            "mode for finding asin intersections\noptional field\npossible values: union, intersect;\ndefault value: intersect;\nlearn more about the parameter in this help center guide",
+          type: ["string", "null"],
+        },
+        languageCode: languageCodeSchema,
+        languageName: languageNameSchema,
+        limit: getLabsAmazonProductCompetitorsLimitSchema,
+        locationCode: s.integer(
+          "location code\nrequired field if don't specify location_name\nyou can receive the list of available locations with their location_code by making a separate request to\nhttps://api.dataforseo.com/v3/dataforseo_labs/locations_and_languages;\nNote: this endpoint currently supports the US, Egypt, Saudi Arabia, and the United Arab Emirates locations only;\nexample:\n2840",
+        ),
+        locationName: s.string(
+          "full name of the location\nrequired field if don't specify location_code\nyou can receive the list of available locations with their location_name by making a separate request to \nhttps://api.dataforseo.com/v3/dataforseo_labs/locations_and_languages;\nNote: this endpoint currently supports the US, Egypt, Saudi Arabia, and the United Arab Emirates locations only;\nexample:\nUnited Kingdom",
+        ),
+        offset: getLabsAmazonProductKeywordIntersectionsOffsetSchema,
+        orderBy: {
+          description:
+            'results sorting rules\noptional field\nyou can use the same values as in the filters array to sort the results\npossible sorting types:\nasc - results will be sorted in the ascending order\ndesc - results will be sorted in the descending order\nyou should use a comma to set up a sorting parameter\nexample:\n["sum_position,desc"]\nnote that you can set no more than three sorting rules in a single request\nyou should use a comma to separate several sorting rules\nexample:\n["intersections,desc","avg_position,asc"]\ndefault rule:\n["intersections,desc"]',
+          items: orderByItemSchema,
+          type: ["array", "null"],
+        },
+        tag: tagSchema,
+      },
+      {
+        required: ["asins"],
+        allOf: [locationRequired, languageRequired],
+      },
+    ),
+  },
+  {
+    name: "get_dataforseo_labs_amazon_product_rank_overview",
+    path: "/apis/v1/dataforseo/dataforseo_labs/amazon/product_rank_overview/live",
+    description: "Get Amazon product rank overview through DataForSEO.",
+    inputSchema: s.object(
+      "Parameters for Amazon product rank overview. Descriptions refer to upstream snake_case field names; supply the corresponding camelCase properties shown here. Nested filter fields retain upstream names.",
+      {
+        asins: s.array(
+          "product IDs to compare\nrequired field\nproduct IDs to receive ranking data for;\nthe maximum number of ASINs you can specify in this array is 1000;\nyou can receive the asin parameter by making a separate request to the Amazon Products endpoint\nNote: all letters in ASIN code must be specified in uppercase format;\nexample:\nB01LW2SL7R",
+          s.string("The asins value value."),
+          { minItems: 1, maxItems: 1000 },
+        ),
+        languageCode: languageCodeSchema,
+        languageName: languageNameSchema,
+        locationCode: getLabsAmazonProductCompetitorsLocationCodeSchema,
+        locationName: getLabsAmazonProductCompetitorsLocationNameSchema,
+        tag: tagSchema,
+      },
+      {
+        required: ["asins"],
+        allOf: [locationRequired, languageRequired],
+      },
+    ),
+  },
+  {
+    name: "get_dataforseo_labs_amazon_ranked_keywords",
+    path: "/apis/v1/dataforseo/dataforseo_labs/amazon/ranked_keywords/live",
+    description: "Get Amazon ranked keywords through DataForSEO.",
+    inputSchema: s.object(
+      "Parameters for Amazon ranked keywords. Descriptions refer to upstream snake_case field names; supply the corresponding camelCase properties shown here. Nested filter fields retain upstream names.",
+      {
+        asin: asinSchema,
+        filters: {
+          description:
+            'array of results filtering parameters\noptional field\nyou can add several filters at once (8 filters maximum)\nyou should set a logical operator and, or between the conditions\nthe following operators are supported:\nregex, not_regex, <, <=, >, >=, =, <>, in, not_in, like, not_like, match, not_match\nyou can use the % operator with like and not_like to match any string of zero or more characters\nexample:\n["keyword_data.keyword_info.search_volume","in",[100,1000]];\nfor more information about filters, please refer to Dataforseo Labs - Filters or this help center guide',
+          items: filtersItemSchema,
+          type: ["array", "null"],
+        },
+        ignoreSynonyms: {
+          description:
+            "ignore highly similar keywords\noptional field\nif set to true only core keywords will be returned, all highly similar keywords will be excluded;  \ndefault value: false",
+          type: ["boolean", "null"],
+        },
+        languageCode: languageCodeSchema,
+        languageName: languageNameSchema,
+        limit: getLabsAmazonProductCompetitorsLimitSchema,
+        locationCode: getLabsAmazonProductCompetitorsLocationCodeSchema,
+        locationName: s.string(
+          "full name of the location\nrequired field if don't specify location_code\nyou can receive the list of available locations with their location_name by making a separate request to\nhttps://api.dataforseo.com/v3/dataforseo_labs/locations_and_languages;\nNote: this endpoint currently supports the US, Egypt, Saudi Arabia, and the United Arab Emirates locations only;\nexample:\nUnited States",
+        ),
+        offset: getLabsAmazonProductKeywordIntersectionsOffsetSchema,
+        orderBy: {
+          description:
+            'results sorting rules\noptional field\nyou can use the same values as in the filters array to sort the results\npossible sorting types:\nasc - results will be sorted in the ascending order\ndesc - results will be sorted in the descending order\nyou should use a comma to set up a sorting parameter\nexample:\n["keyword_data.keyword_info.competition,desc"]\ndefault rule:\n["ranked_serp_element.serp_item.rank_group,asc"]\nnote that you can set no more than three sorting rules in a single request\nyou should use a comma to separate several sorting rules\nexample:\n["keyword_data.keyword_info.search_volume,desc","keyword_data.keyword_info.cpc,desc"]',
+          items: orderByItemSchema,
+          type: ["array", "null"],
+        },
+        tag: tagSchema,
+      },
+      {
+        required: ["asin"],
+        allOf: [locationRequired, languageRequired],
+      },
+    ),
+  },
+  {
+    name: "get_dataforseo_labs_amazon_related_keywords",
+    path: "/apis/v1/dataforseo/dataforseo_labs/amazon/related_keywords/live",
+    description: "Get Amazon related keywords through DataForSEO.",
+    inputSchema: s.object(
+      "Parameters for Amazon related keywords. Descriptions refer to upstream snake_case field names; supply the corresponding camelCase properties shown here. Nested filter fields retain upstream names.",
+      {
+        depth: {
+          description:
+            "keyword search depth\noptional field\ndefault value: 1;\nnumber of the returned results depends on the value you set in this field;\nyou can specify a level from 0 to 4;\nestimated number of keywords for each level (maximum):\n0 - the keyword set in the keyword field\n1 – 6 keywords\n2 – 42 keywords\n3 – 258 keywords\n4 – 1554 keywords",
+          type: ["integer", "null"],
+        },
+        ignoreSynonyms: ignoreSynonymsSchema,
+        includeSeedKeyword: includeSeedKeywordSchema,
+        keyword: s.string(
+          "keyword\nrequired field\nUTF-8 encoding\nthe keywords should be specified in the lowercase format\nlearn more about rules and limitations of keyword and keywords fields in DataForSEO APIs in this Help Center article",
+          { minLength: 1 },
+        ),
+        languageCode: {
+          description:
+            "language code\nrequired field if you don't specify language_name\nNote: it is required to specify either language_name or language_code\nyou can receive the list of available locations with their language_code by making a separate request to https://api.dataforseo.com/v3/dataforseo_labs/locations_and_languages\nexample:\nen",
+          type: ["string", "null"],
+        },
+        languageName: s.string(
+          "full name of the language\nrequired field if you don't specify language_code\nNote: it is required to specify either language_name or language_code\nyou can receive the list of available locations with their language_name by making a separate request to https://api.dataforseo.com/v3/dataforseo_labs/locations_and_languages\nexample:\nEnglish",
+        ),
+        limit: getLabsAmazonRelatedKeywordsLimitSchema,
+        locationCode: s.integer(
+          "location code\nrequired field if you don't specify location_name\nNote: it is required to specify either location_name or location_code\nyou can receive the list of available locations with their location_code by making a separate request to \nhttps://api.dataforseo.com/v3/dataforseo_labs/locations_and_languages;\nNote: this endpoint currently supports the US, Egypt, Saudi Arabia, and the United Arab Emirates locations only;\nexample:\n2840",
+        ),
+        locationName: s.string(
+          "full name of the location\nrequired field if you don't specify location_code\nNote: it is required to specify either location_name or location_code\nyou can receive the list of available locations with their location_name by making a separate request to \nhttps://api.dataforseo.com/v3/dataforseo_labs/locations_and_languages;\nNote: this endpoint currently supports the US, Egypt, Saudi Arabia, and the United Arab Emirates locations only;\nexample:\nUnited States",
+        ),
+        offset: getLabsAmazonProductKeywordIntersectionsOffsetSchema,
+        tag: tagSchema,
+      },
+      {
+        required: ["keyword"],
+        allOf: [locationRequired, languageRequired],
+      },
+    ),
+  },
+  {
+    name: "get_dataforseo_labs_app_store_app_competitors",
+    path: "/apis/v1/dataforseo/dataforseo_labs/apple/app_competitors/live",
+    description: "Get App Store competitors through DataForSEO.",
+    inputSchema: s.object(
+      "Parameters for App Store competitors. Descriptions refer to upstream snake_case field names; supply the corresponding camelCase properties shown here. Nested filter fields retain upstream names.",
+      {
+        appId: appIdSchema,
+        filters: {
+          description:
+            'array of results filtering parameters\noptional field\nyou can add several filters at once (8 filters maximum)\nyou should set a logical operator and, or between the conditions\nthe following operators are supported:\n<, <=, >, >=, =, <>, in, not_in\nexample:\n["intersections",">",500]\n[["competitor_metrics.app_store_search_organic.pos_1","<>",10],"and",["avg_position",">=","10"]]\n[[["intersections",">=",50],"and",["competitor_metrics.app_store_search_organic.pos_1","in",[1,5]]],\n"or",\n["sum_position",">=","10000"]]\nfor more information about filters, please refer to Dataforseo Labs - Filters or this help center guide',
+          items: filtersItemSchema,
+          type: ["array", "null"],
+        },
+        languageCode: getLabsAppStoreAppCompetitorsLanguageCodeSchema,
+        languageName: getLabsAppStoreAppCompetitorsLanguageNameSchema,
+        limit: getLabsAppStoreAppCompetitorsLimitSchema,
+        locationCode: getLabsAppStoreAppCompetitorsLocationCodeSchema,
+        locationName: getLabsAppStoreAppCompetitorsLocationNameSchema,
+        offset: getLabsAppStoreAppCompetitorsOffsetSchema,
+        orderBy: orderBySchema,
+        tag: tagSchema,
+      },
+      {
+        required: ["appId"],
+        allOf: [locationRequired, languageRequired],
+      },
+    ),
+  },
+  {
+    name: "get_dataforseo_labs_app_store_bulk_app_metrics",
+    path: "/apis/v1/dataforseo/dataforseo_labs/apple/bulk_app_metrics/live",
+    description: "Get App Store app metrics through DataForSEO.",
+    inputSchema: s.object(
+      "Parameters for App Store app metrics. Descriptions refer to upstream snake_case field names; supply the corresponding camelCase properties shown here. Nested filter fields retain upstream names.",
+      {
+        appIds: s.array(
+          "ids of the apps\nrequired field\nIDs of mobile applications on App Store;\nyou can find the ID in the URL of every app listed on App Store;\nexample:\nin the URL https://apps.apple.com/us/app/id835599320\nthe id is 835599320;\nthe maximum number of IDs you can specify in this field is 1000",
+          s.string("The app ids value value."),
+          { minItems: 1, maxItems: 1000 },
+        ),
+        languageCode: getLabsAppStoreAppCompetitorsLanguageCodeSchema,
+        languageName: getLabsAppStoreAppCompetitorsLanguageNameSchema,
+        locationCode: getLabsAppStoreAppCompetitorsLocationCodeSchema,
+        locationName: getLabsAppStoreAppCompetitorsLocationNameSchema,
+        tag: tagSchema,
+      },
+      {
+        required: ["appIds"],
+        allOf: [locationRequired, languageRequired],
+      },
+    ),
+  },
+  {
+    name: "get_dataforseo_labs_app_store_keywords_for_app",
+    path: "/apis/v1/dataforseo/dataforseo_labs/apple/keywords_for_app/live",
+    description: "Get App Store app keywords through DataForSEO.",
+    inputSchema: s.object(
+      "Parameters for App Store app keywords. Descriptions refer to upstream snake_case field names; supply the corresponding camelCase properties shown here. Nested filter fields retain upstream names.",
+      {
+        appId: appIdSchema,
+        filters: {
+          description:
+            'array of results filtering parameters\noptional field\nyou can add several filters at once (8 filters maximum)\nyou should set a logical operator and, or between the conditions\nthe following operators are supported:\n<, <=, >, >=, =, <>, in, not_in\nexample:\n["keyword_data.keyword_info.search_volume",">",500]\n[["keyword_data.keyword_info.search_volume","<>",500],"and",["ranked_serp_element.serp_item.rank_group",">=","10"]]\nfor more information about filters, please refer to Dataforseo Labs - Filters or this help center guide',
+          items: filtersItemSchema,
+          type: ["array", "null"],
+        },
+        languageCode: getLabsAppStoreAppCompetitorsLanguageCodeSchema,
+        languageName: getLabsAppStoreAppCompetitorsLanguageNameSchema,
+        limit: getLabsAmazonRelatedKeywordsLimitSchema,
+        locationCode: getLabsAppStoreAppCompetitorsLocationCodeSchema,
+        locationName: getLabsAppStoreAppCompetitorsLocationNameSchema,
+        offset: getLabsAmazonProductKeywordIntersectionsOffsetSchema,
+        orderBy: {
+          description:
+            'results sorting rules\noptional field\nyou can use the same values as in the filters array to sort the results;\npossible sorting types:\nasc - results will be sorted in the ascending order;\ndesc - results will be sorted in the descending order;\nyou should use a comma to specify a sorting type;\nexample:\n["ranked_serp_element.serp_item.rank_group,asc"]\nNote: you can set no more than three sorting rules in a single request;\nyou should use a comma to separate several sorting rules;\nexample:\n["ranked_serp_element.serp_item.rank_group,desc","keyword_data.keyword_info.search_volume,asc"]\ndefault rule:\n["keyword_data.keyword_info.search_volume,desc"]\nNote: if the item_types array contains item types that are different from organic, the results will be ordered by the first item type in the array',
+          items: orderByItemSchema,
+          type: ["array", "null"],
+        },
+        tag: tagSchema,
+      },
+      {
+        required: ["appId"],
+        allOf: [locationRequired, languageRequired],
+      },
+    ),
+  },
+  {
+    name: "get_dataforseo_labs_google_play_app_competitors",
+    path: "/apis/v1/dataforseo/dataforseo_labs/google/app_competitors/live",
+    description: "Get Google Play competitors through DataForSEO.",
+    inputSchema: s.object(
+      "Parameters for Google Play competitors. Descriptions refer to upstream snake_case field names; supply the corresponding camelCase properties shown here. Nested filter fields retain upstream names.",
+      {
+        appId: s.string(
+          "id of the app\nrequired field\nID of the mobile application on Google Play;\nyou can find the ID in the URL of every app listed on Google Play;\nexample:\nin the URL https://play.google.com/store/apps/details?id=org.telegram.messenger\nthe id is org.telegram.messenger",
+          { minLength: 1 },
+        ),
+        filters: {
+          description:
+            'array of results filtering parameters\noptional field\nyou can add several filters at once (8 filters maximum)\nyou should set a logical operator and, or between the conditions\nthe following operators are supported:\n<, <=, >, >=, =, <>, in, not_in\nexample:\n["intersections",">",500]\n[["competitor_metrics.google_play_search_organic.pos_1","<>",10],"and",["avg_position",">=","10"]]\n[[["intersections",">=",50],"and",["competitor_metrics.google_play_search_organic.pos_1","in",[1,5]]],\n"or",\n["sum_position",">=","10000"]]\nfor more information about filters, please refer to Dataforseo Labs - Filters or this help center guide',
+          items: filtersItemSchema,
+          type: ["array", "null"],
+        },
+        languageCode: getLabsAppStoreAppCompetitorsLanguageCodeSchema,
+        languageName: getLabsAppStoreAppCompetitorsLanguageNameSchema,
+        limit: getLabsAppStoreAppCompetitorsLimitSchema,
+        locationCode: getLabsAppStoreAppCompetitorsLocationCodeSchema,
+        locationName: getLabsAppStoreAppCompetitorsLocationNameSchema,
+        offset: getLabsAppStoreAppCompetitorsOffsetSchema,
+        orderBy: orderBySchema,
+        tag: tagSchema,
+      },
+      {
+        required: ["appId"],
+        allOf: [locationRequired, languageRequired],
+      },
+    ),
+  },
+  {
+    name: "get_dataforseo_labs_google_play_app_intersection",
+    path: "/apis/v1/dataforseo/dataforseo_labs/google/app_intersection/live",
+    description: "Get Google Play keyword intersections through DataForSEO.",
+    inputSchema: s.object(
+      "Parameters for Google Play keyword intersections. Descriptions refer to upstream snake_case field names; supply the corresponding camelCase properties shown here. Nested filter fields retain upstream names.",
+      {
+        appIds: {
+          additionalProperties: { type: ["string", "null"], description: "The app ids value value." },
+          description:
+            'ids of the target apps\nrequired field\nIDs of the target mobile applications on Google Play;\nyou can find the ID in the URL of every app listed on Google Play;\nexample:\nin the URL https://play.google.com/store/apps/details?id=org.telegram.messenger\nthe id is org.telegram.messenger;;\nthe ids should be specified the following way:\n"app_ids": {\n"1": "org.telegram.messenger",\n"2": "com.zhiliaoapp.musically"\n}\nif you specify a single ID here, the API will return results only for one application;\nthe maximum number of app IDs you can specify in this object is 20',
+          type: "object",
+          minProperties: 1,
+          maxProperties: 20,
+        },
+        filters: {
+          description:
+            'array of results filtering parameters\noptional field\nyou can add several filters at once (8 filters maximum)\nyou should set a logical operator and, or between the conditions\nthe following operators are supported:\n<, <=, >, >=, =, <>, in, not_in\nexample:\n["keyword_data.keyword_info.search_volume",">",500]\n[["keyword_data.keyword_info.search_volume","<>",500],"and",[intersection_result.382617920.rank_group",">=","10"]]\nfor more information about filters, please refer to Dataforseo Labs - Filters or this help center guide',
+          items: filtersItemSchema,
+          type: ["array", "null"],
+        },
+        languageCode: getLabsAppStoreAppCompetitorsLanguageCodeSchema,
+        languageName: getLabsAppStoreAppCompetitorsLanguageNameSchema,
+        limit: getLabsAmazonRelatedKeywordsLimitSchema,
+        locationCode: getLabsAppStoreAppCompetitorsLocationCodeSchema,
+        locationName: getLabsAppStoreAppCompetitorsLocationNameSchema,
+        offset: getLabsAmazonProductKeywordIntersectionsOffsetSchema,
+        orderBy: {
+          description:
+            'results sorting rules\noptional field\nyou can use the same values as in the filters array to sort the results;\npossible sorting types:\nasc - results will be sorted in the ascending order;\ndesc - results will be sorted in the descending order;\nyou should use a comma to specify a sorting type;\nexample:\n["intersection_result.382617920.rank_absolute,asc"]\nNote: you can set no more than three sorting rules in a single request;\nyou should use a comma to separate several sorting rules;\nexample:\n["intersection_result.382617920.rank_absolute,desc","keyword_data.keyword_info.search_volume,asc"]\ndefault rule:\n["keyword_data.keyword_info.search_volume,desc"]\nNote: if the item_types array contains item types that are different from organic, the results will be ordered by the first item type in the array',
+          items: orderByItemSchema,
+          type: ["array", "null"],
+        },
+        tag: tagSchema,
+      },
+      {
+        required: ["appIds"],
+        allOf: [locationRequired, languageRequired],
+      },
+    ),
+  },
+  {
+    name: "get_dataforseo_backlinks_bulk_spam_score",
+    path: "/apis/v1/dataforseo/backlinks/bulk_spam_score/live",
+    description: "Get bulk backlink spam scores through DataForSEO.",
+    inputSchema: s.object(
+      "Parameters for bulk backlink spam scores. Descriptions refer to upstream snake_case field names; supply the corresponding camelCase properties shown here. Nested filter fields retain upstream names.",
+      {
+        tag: tagSchema,
+        targets: s.array(
+          'domains, subdomains or webpages to get rank for\nrequired field\nyou can set up to 1000 domains, subdomains or webpages\nthe domain or subdomain should be specified without https:// and www.\nthe page should be specified with absolute URL (including http:// or https://)\nexample:\n`"targets": [\n  "forbes.com",\n  "cnn.com",\n  "bbc.com",\n  "yelp.com",\n  "https://www.apple.com/iphone/",\n  "https://ahrefs.com/blog/",\n  "ibm.com",\n  "https://variety.com/",\n  "https://stackoverflow.com/",\n  "www.trustpilot.com"\n]`',
+          s.string("The targets value value."),
+          { minItems: 1, maxItems: 1000 },
+        ),
+      },
+      { required: ["targets"] },
+    ),
+  },
+  {
+    name: "get_dataforseo_backlinks_domain_pages_summary",
+    path: "/apis/v1/dataforseo/backlinks/domain_pages_summary/live",
+    description: "Get page backlink summaries through DataForSEO.",
+    inputSchema: s.object(
+      "Parameters for page backlink summaries. Descriptions refer to upstream snake_case field names; supply the corresponding camelCase properties shown here. Nested filter fields retain upstream names.",
+      {
+        backlinksFilters: {
+          description:
+            'filter the backlinks of your target\noptional field\nyou can use this field to filter the initial backlinks that will be included in the dataset for aggregated metrics for your target\nyou can filter the backlinks by all fields available in the response of this endpoint\nusing this parameter, you can include only dofollow backlinks in the response and create a flexible backlinks dataset to calculate the metrics for\nexample:\n"backlinks_filters": [["dofollow", "=", true]]',
+          items: backlinksFiltersItemSchema,
+          type: ["array", "null"],
+        },
+        backlinksStatusType: backlinksStatusTypeSchema,
+        excludeInternalBacklinks: {
+          description:
+            "indicates whether the backlinks from subdomains of the target are excluded\noptional field\nif set to false, backlinks from the subdomains of the target domain will be ommited and you won't receive the same domain in the response;\ndefault value: true",
+          type: ["boolean", "null"],
+        },
+        filters: {
+          description:
+            'array of results filtering parameters\noptional field\nyou can add several filters at once (8 filters maximum)\nyou should set a logical operator and, or between the conditions\nthe following operators are supported:\nregex, not_regex, =, <>, in, not_in, like, not_like, ilike, not_ilike, match, not_match\nyou can use the % operator with like and not_like to match any string of zero or more characters\nexample:\n["referring_links_types.anchors",">","1"]\n[["broken_pages",">","2"],\n"and",\n["backlinks",">","10"]]\n[["first_seen",">","2017-10-23 11:31:45 +00:00"],\n"and",\n[["anchor","like","%seo%"],"or",["referring_domains",">","10"]]]\nThe full list of possible filters is available here.',
+          items: filtersItemSchema,
+          type: ["array", "null"],
+        },
+        includeIndirectLinks: includeIndirectLinksSchema,
+        includeSubdomains: {
+          description:
+            "indicates if the subdomains of the target domain will be included in the search\noptional field\nif set to false, the subdomains will be ignored\ndefault value: true",
+          type: ["boolean", "null"],
+        },
+        internalListLimit: internalListLimitSchema,
+        limit: {
+          description:
+            "the maximum number of returned anchors\noptional field\ndefault value: 100\nmaximum value: 1000",
+          type: ["integer", "null"],
+        },
+        offset: {
+          description:
+            "offset in the results array of returned anchors\noptional field\ndefault value: 0\nif you specify the 10 value, the first ten anchors in the results array will be omitted and the data will be provided for the successive anchors",
+          type: ["integer", "null"],
+        },
+        orderBy: getBacklinksDomainPagesSummaryOrderBySchema,
+        rankScale: rankScaleSchema,
+        tag: tagSchema,
+        target: s.string(
+          "domain, subdomain or webpage to get summary data for\nrequired field\na domain or a subdomain should be specified without https:// and www.\na page should be specified with absolute URL (including http:// or https://)",
+          { minLength: 1 },
+        ),
+      },
+      { required: ["target"] },
+    ),
+  },
+  {
+    name: "get_dataforseo_backlinks_page_intersection",
+    path: "/apis/v1/dataforseo/backlinks/page_intersection/live",
+    description: "Get referring page intersections through DataForSEO.",
+    inputSchema: s.object(
+      "Parameters for referring page intersections. Descriptions refer to upstream snake_case field names; supply the corresponding camelCase properties shown here. Nested filter fields retain upstream names.",
+      {
+        backlinksStatusType: {
+          description:
+            "set what backlinks to return and count\noptional field\nyou can use this field to choose what backlinks will be returned and used for aggregated metrics for your targets;\npossible values: \nall - all backlinks will be returned and counted;\nlive - backlinks found during the last check will be returned and counted;\nlost - lost backlinks will be returned and counted;\ndefault value: live",
+          type: ["string", "null"],
+        },
+        excludeInternalBacklinks: {
+          description:
+            "indicates if internal backlinks from subdomains to the target will be excluded from the results\noptional field\nif set to true, the results will not include data on internal backlinks from subdomains of the same domain as target\nif set to false, internal links will be included in the result\ndefault value: true",
+          type: ["boolean", "null"],
+        },
+        excludeTargets: {
+          description:
+            'domains, subdomains or webpages you want to exclude\noptional field\nyou can set up to 10 domains, subdomains or webpages\nif you use this array, results will contain the referring pages that link to targets but don\'t link to exclude_targets\nexample:\n`"exclude_targets": [\n"bbc.com",\n"https://www.apple.com/iphone/*",\n"https://dataforseo.com/apis/*"]`',
+          items: excludeTargetsItemSchema,
+          type: ["array", "null"],
+        },
+        filters: {
+          description:
+            'array of results filtering parameters\noptional field\nyou can add several filters at once (8 filters maximum)\nyou should set a logical operator and, or between the conditions\nthe following operators are supported:\nregex, not_regex, =, <>, in, not_in, like, not_like, ilike, not_ilike, match, not_match\nyou can use the % operator with like and not_like to match any string of zero or more characters\nexample:\n["1.rank",">","80"]\n[["2.page_from_rank",">","55"],\n"and",\n["1.original","=","true"]]\n[["1.first_seen",">","2017-10-23 11:31:45 +00:00"],\n"and",\n[["1.acnhor","like","%seo%"],"or",["1.text_pre","not_like","%seo%"]]]\nThe full list of possible filters is available here.',
+          items: filtersItemSchema,
+          type: ["array", "null"],
+        },
+        includeIndirectLinks: {
+          description:
+            "indicates if indirect links to the targets will be included in the results\noptional field\nif set to true, the results will include data on indirect links pointing to a page that either redirects to a target, or points to a canonical page\nif set to false, indirect links will be ignored\ndefault value: true",
+          type: ["boolean", "null"],
+        },
+        includeSubdomains: {
+          description:
+            "indicates if the subdomains of the targets will be included in the search\noptional field\nif set to false, the subdomains will be ignored\ndefault value: true",
+          type: ["boolean", "null"],
+        },
+        internalListLimit: {
+          description:
+            "maximum number of elements within internal arrays\noptional field\nyou can use this field to limit the number of elements within the following arrays:\nattributes\ndomain_from_platform_type\ndefault value: 10\nmaximum value: 1000",
+          type: ["integer", "null"],
+        },
+        intersectionMode: {
+          description:
+            "indicates whether to intersect backlinks\noptional field\nuse this field to intersect or merge results for the specified URLs\npossible values: all, partial\nall - results are based on all backlinks;\npartial - results are based on the intersecting backlinks only;\ndefault value: all",
+          type: ["string", "null"],
+        },
+        limit: {
+          description:
+            "the maximum number of returned backlinks\noptional field\ndefault value: 100\nmaximum value: 1000",
+          type: ["integer", "null"],
+        },
+        offset: {
+          description:
+            "offset in the results array of the returned backlinks\noptional field\ndefault value: 0\nif you specify the 10 value, the first ten backlinks in the results array will be omitted and the data will be provided for the successive backlinks",
+          type: ["integer", "null"],
+        },
+        orderBy: {
+          description:
+            'results sorting rules\noptional field\nyou can use the same values as in the filters array to sort the results\npossible sorting types:\nasc - results will be sorted in the ascending order\ndesc - results will be sorted in the descending order\nyou should use a comma to set up a sorting type\nexample:\n["rank,desc"]\nnote that you can set no more than three sorting rules in a single request\nyou should use a comma to separate several sorting rules\nexample:\n["domain_from_rank,desc","page_from_rank,asc"]',
+          items: orderByItemSchema,
+          type: ["array", "null"],
+        },
+        rankScale: rankScaleSchema,
+        tag: tagSchema,
+        targets: {
+          additionalProperties: { type: ["string", "null"], description: "The targets value value." },
+          description:
+            'domains, subdomains or webpages to get links for\nrequired field\nyou can set up to 20 domains, subdomains or webpages\na domain or a subdomain should be specified without https:// and www.\na page should be specified with absolute URL (including http:// or https://)\nexample:\n`"targets": {\n"1": "http://planet.postgresql.org/",\n"2": "http://gborg.postgresql.org/"\n}`',
+          type: "object",
+          minProperties: 1,
+          maxProperties: 20,
+        },
+      },
+      { required: ["targets"] },
+    ),
+  },
+  {
+    name: "get_dataforseo_backlinks_referring_domains",
+    path: "/apis/v1/dataforseo/backlinks/referring_domains/live",
+    description: "Get referring domains through DataForSEO.",
+    inputSchema: s.object(
+      "Parameters for referring domains. Descriptions refer to upstream snake_case field names; supply the corresponding camelCase properties shown here. Nested filter fields retain upstream names.",
+      {
+        backlinksFilters: {
+          description:
+            'filter the backlinks of your target\noptional field\nyou can use this field to filter the initial backlinks that will be included in the dataset for aggregated metrics for your target\nyou can filter the backlinks by all fields available in the response of this endpoint\nusing this parameter, you can include only dofollow backlinks in the response and create a flexible backlinks dataset to calculate the metrics for\nexample:\n"backlinks_filters": ["dofollow", "=", true]',
+          items: backlinksFiltersItemSchema,
+          type: ["array", "null"],
+        },
+        backlinksStatusType: backlinksStatusTypeSchema,
+        excludeInternalBacklinks: excludeInternalBacklinksSchema,
+        filters: {
+          description:
+            'array of results filtering parameters\noptional field\nyou can add several filters at once (8 filters maximum)\nyou should set a logical operator and, or between the conditions\nthe following operators are supported:\nregex, not_regex, =, <>, in, not_in, like, not_like, match, not_match\nyou can use the % operator with like and not_like to match any string of zero or more characters\nexample:\n["referring_pages",">","1"]\n[["referring_pages",">","2"],\n"and",\n["backlinks",">","10"]]\n[["first_seen",">","2017-10-23 11:31:45 +00:00"],\n"and",\n[["domain","like","%dataforseo.com%"],"or",["referring_domains",">","10"]]]\nThe full list of possible filters is available here.',
+          items: filtersItemSchema,
+          type: ["array", "null"],
+        },
+        includeIndirectLinks: includeIndirectLinksSchema,
+        includeSubdomains: includeSubdomainsSchema,
+        internalListLimit: internalListLimitSchema,
+        limit: limitSchema,
+        offset: {
+          description:
+            "offset in the results array of returned domains\noptional field\ndefault value: 0\nif you specify the 10 value, the first ten domains in the results array will be omitted and the data will be provided for the successive pages",
+          type: ["integer", "null"],
+        },
+        orderBy: getBacklinksDomainPagesSummaryOrderBySchema,
+        rankScale: rankScaleSchema,
+        tag: tagSchema,
+        target: s.string(
+          "domain, subdomain or webpage to get referring domains for\nrequired field\na domain or a subdomain should be specified without https:// and www.\na page should be specified with absolute URL (including http:// or https://)",
+          { minLength: 1 },
+        ),
+      },
+      { required: ["target"] },
+    ),
+  },
+  {
+    name: "get_dataforseo_content_category_trends",
+    path: "/apis/v1/dataforseo/content_analysis/category_trends/live",
+    description: "Get content category trends through DataForSEO.",
+    inputSchema: s.object(
+      "Parameters for content category trends. Descriptions refer to upstream snake_case field names; supply the corresponding camelCase properties shown here. Nested filter fields retain upstream names.",
+      {
+        categoryCode: s.integer(
+          "target category code\nrequired field\nto obtain a full list of available categories, refer to the Categories endpoint",
+        ),
+        dateFrom: s.string(
+          'starting date of the time range\nrequired field\nminimum value: 2022-10-31\ndate format: "yyyy-mm-dd"\nexample:\n"2019-01-15"',
+          { minLength: 1, format: "date" },
+        ),
+        dateGroup: dateGroupSchema,
+        dateTo: dateToSchema,
+        initialDatasetFilters: {
+          description:
+            'initial dataset filtering parameters\noptional field\ninitial filtering parameters that apply to fields in the Search endpoint;\nyou can add several filters at once (8 filters maximum)\nyou should set a logical operator and, or between the conditions\nthe following operators are supported:\nregex, not_regex, <, <=, >, >=, =, <>, in, not_in, like,not_like, has, has_not, match, not_match\nyou can use the % operator with like and not_like to match any string of zero or more characters\nexample:\n["domain","<>", "logitech.com"]\n[["domain","<>","logitech.com"],"and",["content_info.connotation_types.negative",">",1000]]\n[["domain","<&gt","logitech.com"]],\n"and",\n[["content_info.connotation_types.negative",">",1000],\n"or",\n["content_info.text_category","has",10994]]]\nfor more information about filters, please refer to Content Analysis API - Filters\nlearn more about the initial dataset filters in this help center article.',
+          items: initialDatasetFiltersItemSchema,
+          type: ["array", "null"],
+        },
+        internalListLimit: getContentCategoryTrendsInternalListLimitSchema,
+        pageType: pageTypeSchema,
+        rankScale: getContentCategoryTrendsRankScaleSchema,
+        searchMode: {
+          description:
+            "results grouping type\noptional field\npossible grouping types:\nas_is - returns data on all citations for the target category_code\none_per_domain - returns data on one citation of the category_code per domain\ndefault value: as_is",
+          type: ["string", "null"],
+        },
+        tag: tagSchema,
+      },
+      { required: ["categoryCode", "dateFrom"] },
+    ),
+  },
+  {
+    name: "get_dataforseo_content_phrase_trends",
+    path: "/apis/v1/dataforseo/content_analysis/phrase_trends/live",
+    description: "Get content mention trends through DataForSEO.",
+    inputSchema: s.object(
+      "Parameters for content mention trends. Descriptions refer to upstream snake_case field names; supply the corresponding camelCase properties shown here. Nested filter fields retain upstream names.",
+      {
+        dateFrom: s.string(
+          'starting date of the time range\nrequired field\ndate format: "yyyy-mm-dd"\nexample:\n"2019-01-15"',
+          { minLength: 1, format: "date" },
+        ),
+        dateGroup: dateGroupSchema,
+        dateTo: dateToSchema,
+        initialDatasetFilters: {
+          description:
+            'initial dataset filtering parameters\noptional field\ninitial filtering parameters that apply to fields in the Search endpoint;\nyou can add several filters at once (8 filters maximum);\nyou should set a logical operator and, or between the conditions;\nthe following operators are supported:\nregex, not_regex, <, <=, >, >=, =, <>, in, not_in, like,not_like, has, has_not, match, not_match\nyou can use the % operator with like and not_like to match any string of zero or more characters;\nexample:\n["domain","<>", "logitech.com"]\n[["domain","<>","logitech.com"],"and",["content_info.connotation_types.negative",">",1000]]\n[["domain","<&gt","logitech.com"]],\n"and",\n[["content_info.connotation_types.negative",">",1000],\n"or",\n["content_info.text_category","has",10994]]]\nfor more information about filters, please refer to Content Analysis API - Filters\nlearn more about the initial dataset filters in this help center article.',
+          items: initialDatasetFiltersItemSchema,
+          type: ["array", "null"],
+        },
+        internalListLimit: getContentCategoryTrendsInternalListLimitSchema,
+        keyword: s.string(
+          'target keyword\nrequired field\nUTF-8 encoding\nthe keywords will be converted to a lowercase format;\nNote: to match an exact phrase instead of a stand-alone keyword, use double quotes and backslashes; \nexample: \n"keyword": "\\"tesla palo alto\\""\nlearn more about rules and limitations of keyword and keywords fields in DataForSEO APIs in this Help Center article',
+          { minLength: 1 },
+        ),
+        keywordFields: {
+          additionalProperties: { type: ["string", "null"], description: "The keyword fields value value." },
+          description:
+            'target keyword fields and target keywords\noptional field\nuse this parameter to filter the dataset by keywords that certain fields should contain;\nfields you can specify: title, main_title, previous_title, snippet\nyou can indicate several fields;\nNote: to match an exact phrase instead of a stand-alone keyword, use double quotes and backslashes; \nexample:\n`"keyword_fields": {\n"snippet": "\\"logitech mouse\\"",\n"main_title": "sale"\n}`',
+          type: ["object", "null"],
+        },
+        pageType: pageTypeSchema,
+        rankScale: getContentCategoryTrendsRankScaleSchema,
+        searchMode: {
+          description:
+            "results grouping type\noptional field\npossible grouping types:\nas_is - returns data on all citations for the target keyword\none_per_domain - returns data on one citation of the keyword per domain\ndefault value: as_is",
+          type: ["string", "null"],
+        },
+        tag: tagSchema,
+      },
+      { required: ["dateFrom", "keyword"] },
+    ),
+  },
+  {
+    name: "get_dataforseo_content_sentiment",
+    path: "/apis/v1/dataforseo/content_analysis/sentiment_analysis/live",
+    description: "Get content sentiment through DataForSEO.",
+    inputSchema: s.object(
+      "Parameters for content sentiment. Descriptions refer to upstream snake_case field names; supply the corresponding camelCase properties shown here. Nested filter fields retain upstream names.",
+      {
+        initialDatasetFilters: {
+          description:
+            'initial dataset filtering parameters\noptional field\ninitial filtering parameters that apply to fields in the Search endpoint\nyou can add several filters at once (8 filters maximum)\nyou should set a logical operator and, or between the conditions\nthe following operators are supported:\nregex, not_regex, , >=, =, , in, not_in, like,not_like, has, has_not, match, not_match\nyou can use the % operator with like and not_like to match any string of zero or more characters\nexample:\n["domain","", "logitech.com"]\n[["domain","","logitech.com"],"and",["content_info.connotation_types.negative",">",1000]]\n[["domain","","logitech.com"]],\n"and",\n[["content_info.connotation_types.negative",">",1000],\n"or",\n["content_info.text_category","has",10994]]]\nfor more information about filters, please refer to Content Analysis API – Filters\nlearn more about the initial dataset filters in this help center article.',
+          items: initialDatasetFiltersItemSchema,
+          type: ["array", "null"],
+        },
+        internalListLimit: getContentCategoryTrendsInternalListLimitSchema,
+        keyword: keywordSchema,
+        keywordFields: {
+          additionalProperties: { type: ["string", "null"], description: "The keyword fields value value." },
+          description:
+            'target keyword fields and target keywords\noptional field\nuse this parameter to filter the dataset by keywords that certain fields should contain;\nfields you can specify: title, main_title, previous_title, snippet\nyou can indicate several fields;\nNote: to match an exact phrase instead of a stand-alone keyword, use double quotes and backslashes;\nexample:\n"keyword_fields": {\n    "snippet": "\\"logitech mouse\\"",\n    "main_title": "sale"\n}',
+          type: ["object", "null"],
+        },
+        pageType: {
+          description:
+            'target page types\noptional field\nuse this parameter to filter the dataset by page types\npossible values:\n"ecommerce", "news", "blogs", "message-boards", "organization"',
+          items: pageTypeItemSchema,
+          type: ["array", "null"],
+        },
+        positiveConnotationThreshold: positiveConnotationThresholdSchema,
+        rankScale: getContentCategoryTrendsRankScaleSchema,
+        sentimentsConnotationThreshold: sentimentsConnotationThresholdSchema,
+        tag: tagSchema,
+      },
+      { required: ["keyword"] },
+    ),
+  },
+  {
+    name: "get_dataforseo_serp_google_ai_mode",
+    path: "/apis/v1/dataforseo/serp/google/ai_mode/live/advanced",
+    description: "Get Google AI Mode answers through DataForSEO.",
+    inputSchema: s.object(
+      "Parameters for Google AI Mode answers. Descriptions refer to upstream snake_case field names; supply the corresponding camelCase properties shown here. Nested filter fields retain upstream names.",
+      {
+        browserScreenHeight: browserScreenHeightSchema,
+        browserScreenResolutionRatio: browserScreenResolutionRatioSchema,
+        browserScreenWidth: {
+          description:
+            "browser screen width\noptional field\nyou can set a custom browser screen width to calculate pixel rankings for a particular device;\ncan be specified within the following range: 240-9999;\nby default, the parameter is set to:\n1920 for desktop;\n360 for mobile on android;\n375 for mobile on iOS;\nNote: to use this parameter, set calculate_rectangles to true",
+          format: "int64",
+          type: ["integer", "null"],
+        },
+        calculateRectangles: calculateRectanglesSchema,
+        device: deviceSchema,
+        keyword: getSerpGoogleAiModeKeywordSchema,
+        languageCode: s.string(
+          "search engine language code\nrequired field if you don't specify language_name;\nif you use this field, you don't need to specify language_name;\nyou can receive the list of available languages of the search engine with their language_code by making a separate request to the https://api.dataforseo.com/v3/serp/google/ai_mode/languages",
+        ),
+        languageName: s.string(
+          "full name of search engine language\nrequired field if you don't specify language_code;\nif you use this field, you don't need to specify language_code;\nyou can receive the list of available languages of the search engine with their language_name by making a separate request to the https://api.dataforseo.com/v3/serp/google/ai_mode/languages;",
+        ),
+        locationCode: s.integer(
+          "search engine location code\nrequired field if you don't specify location_name or location_coordinate\nif you use this field, you don't need to specify location_name or location_coordinate\nyou can receive the list of available locations of the search engines with their location_code by making a separate request to the https://api.dataforseo.com/v3/serp/google/locations\nNote: check  Google Search Help for the list of countries where AI Mode is currently available",
+        ),
+        locationCoordinate: s.string(
+          'GPS coordinates of a location\nrequired field if you don\'t specify location_name or location_code\nif you use this field, you don\'t need to specify location_name or location_code\nlocation_coordinate parameter should be specified in the "latitude,longitude,zoom" format\nif "zoom" is not specified, 9z will be applied as a default value\nthe maximum number of decimal digits for "latitude" and "longitude": 7\nthe minimum value for "zoom": 4z\nthe maximum value for "zoom": 18z\nexample:\n52.6178549,-155.352142,18z',
+        ),
+        locationName: s.string(
+          "full name of search engine location\nrequired field if you don't specify location_code or location_coordinate\nif you use this field, you don't need to specify location_code or location_coordinate\nyou can receive the list of available locations of the search engine with their location_name by making a separate request to the https://api.dataforseo.com/v3/serp/google/locations\nNote: check  Google Search Help for the list of countries where AI Mode is currently available",
+        ),
+        os: osSchema,
+        tag: tagSchema,
+      },
+      {
+        required: ["keyword"],
+        allOf: [locationOrCoordinatesRequired, languageRequired],
+      },
+    ),
+  },
+  {
+    name: "get_dataforseo_serp_google_finance_markets",
+    path: "/apis/v1/dataforseo/serp/google/finance_markets/live/advanced",
+    description: "Get Google Finance markets through DataForSEO.",
+    inputSchema: s.object(
+      "Parameters for Google Finance markets. Descriptions refer to upstream snake_case field names; supply the corresponding camelCase properties shown here. Nested filter fields retain upstream names.",
+      {
+        device: getSerpGoogleFinanceMarketsDeviceSchema,
+        languageCode: getSerpGoogleFinanceMarketsLanguageCodeSchema,
+        languageName: getSerpGoogleFinanceMarketsLanguageNameSchema,
+        locationCode: getSerpGoogleFinanceMarketsLocationCodeSchema,
+        locationName: getSerpGoogleFinanceMarketsLocationNameSchema,
+        marketType: {
+          description:
+            "type of google finance market\noptional field\npossible values: most-active, indexes, indexes/americas, indexes/europe-middle-east-africa, indexes/asia-pacific, gainers, losers, climate-leaders, cryptocurrencies, currencies\ndefault value: most-active",
+          type: ["string", "null"],
+        },
+        os: getSerpGoogleFinanceMarketsOsSchema,
+        tag: tagSchema,
+      },
+      {
+        allOf: [locationRequired, languageRequired],
+        required: [],
+      },
+    ),
+  },
+  {
+    name: "get_dataforseo_serp_google_finance_quote",
+    path: "/apis/v1/dataforseo/serp/google/finance_quote/live/advanced",
+    description: "Get Google Finance quotes through DataForSEO.",
+    inputSchema: s.object(
+      "Parameters for Google Finance quotes. Descriptions refer to upstream snake_case field names; supply the corresponding camelCase properties shown here. Nested filter fields retain upstream names.",
+      {
+        device: getSerpGoogleFinanceMarketsDeviceSchema,
+        keyword: s.string(
+          "ticker or stock symbol\nrequired field\nin this field you can pass the ticker symbol of publicly traded shares of a particular stock or security on a particular stock exchange;\nyou can specify up to 700 characters in the keyword field;\nall %## will be decoded (plus character ‘+’ will be decoded to a space character)\nif you need to use the “%” character for your keyword, please specify it as “%25”;\nif you need to use the “+” character for your keyword, please specify it as “%2B”;\nlearn more about rules and limitations of keyword and keywords fields in DataForSEO APIs in this Help Center article",
+          { minLength: 1 },
+        ),
+        languageCode: getSerpGoogleFinanceMarketsLanguageCodeSchema,
+        languageName: getSerpGoogleFinanceMarketsLanguageNameSchema,
+        locationCode: getSerpGoogleFinanceMarketsLocationCodeSchema,
+        locationName: getSerpGoogleFinanceMarketsLocationNameSchema,
+        os: getSerpGoogleFinanceMarketsOsSchema,
+        tag: tagSchema,
+        window: {
+          description:
+            "time window for google_finance_quote graph\noptional field\npossible values: 1D, 5D, 1M, 6M, YTD, 1Y, 5Y, MAX\ndefault value: 1D\nNote: if you specify a value that is different from 1D, the charge per task will be multiplied by 2",
+          type: ["string", "null"],
+        },
+      },
+      {
+        required: ["keyword"],
+        allOf: [locationRequired, languageRequired],
+      },
+    ),
+  },
+  {
+    name: "get_dataforseo_serp_google_images",
+    path: "/apis/v1/dataforseo/serp/google/images/live/advanced",
+    description: "Get Google image search results through DataForSEO.",
+    inputSchema: {
+      type: "object",
+      description:
+        "Parameters for Google image search results. Descriptions refer to upstream snake_case field names; supply the corresponding camelCase properties shown here. Nested filter fields retain upstream names.",
+      properties: {
+        depth: {
+          description:
+            "parsing depth\noptional field\nnumber of results in SERP\ndefault value: 100\nmax value: 200\nYour account will be billed per each SERP containing up to 100 results;\nSetting depth above 100 may result in additional charges if the search engine returns more than 100 results;\nIf the specified depth is higher than the number of results in the response, the difference will be refunded to your account balance automatically;\nThe cost can be calculated on the Pricing page.",
+          type: ["integer", "null"],
+        },
+        keyword: getSerpGoogleImagesKeywordSchema,
+        languageCode: getSerpGoogleFinanceMarketsLanguageCodeSchema,
+        languageName: getSerpGoogleImagesLanguageNameSchema,
+        locationCode: getSerpGoogleImagesLocationCodeSchema,
+        locationCoordinate: locationCoordinateSchema,
+        locationName: getSerpGoogleImagesLocationNameSchema,
+        maxCrawlPages: maxCrawlPagesSchema,
+        os: getSerpGoogleImagesOsSchema,
+        seDomain: {
+          description:
+            "search engine domain\noptional field\nWe choose the relevant search engine domain automatically according to the location and language you specify. However, you can set a custom search engine domain in this field\nexample:\ngoogle.co.uk, google.com.au, google.de, etc.",
+          type: ["string", "null"],
+        },
+        searchParam: searchParamSchema,
+        tag: tagSchema,
+        url: urlSchema,
+      },
+      additionalProperties: false,
+      required: [],
+      allOf: [
+        {
+          anyOf: [
+            { required: ["locationCode"], properties: { locationCode: { not: { type: "null" } } } },
+            { required: ["locationName"], properties: { locationName: { not: { type: "null" } } } },
+            { required: ["locationCoordinate"], properties: { locationCoordinate: { not: { type: "null" } } } },
+            { required: ["url"], properties: { url: { type: "string", minLength: 1 } } },
+          ],
+        },
+        {
+          anyOf: [
+            { required: ["languageCode"], properties: { languageCode: { not: { type: "null" } } } },
+            { required: ["languageName"], properties: { languageName: { not: { type: "null" } } } },
+            { required: ["url"], properties: { url: { type: "string", minLength: 1 } } },
+          ],
+        },
+        {
+          anyOf: [
+            { required: ["keyword"] },
+            { required: ["url"], properties: { url: { type: "string", minLength: 1 } } },
+          ],
+        },
+      ],
+    },
+  },
+  {
+    name: "get_dataforseo_serp_google_local_finder",
+    path: "/apis/v1/dataforseo/serp/google/local_finder/live/advanced",
+    description: "Get Google local search results through DataForSEO.",
+    inputSchema: s.object(
+      "Parameters for Google local search results. Descriptions refer to upstream snake_case field names; supply the corresponding camelCase properties shown here. Nested filter fields retain upstream names.",
+      {
+        depth: {
+          description:
+            "parsing depth\noptional field\nnumber of results in SERP\ndefault value: 10\nmax value: 100\nYour account will be billed per each SERP containing up to 10 results;\nSetting depth above 10 may result in additional charges if the search engine returns more than 10 results respectively;\nIf the specified depth is higher than the number of results in the response, the difference will be refunded to your account balance automatically\nThe cost can be calculated on the Pricing page.",
+          type: ["integer", "null"],
+        },
+        device: deviceSchema,
+        keyword: getSerpGoogleAiModeKeywordSchema,
+        languageCode: s.string(
+          "search engine language code\nrequired field if you don't specify language_name\nif you use this field, you don't need to specify language_name\nyou can receive the list of available languages of the search engine with their language_code by making a separate request to the https://api.dataforseo.com/v3/serp/{{low_se_name}}/languages\nexample:en",
+        ),
+        languageName: getSerpGoogleLocalFinderLanguageNameSchema,
+        locationCode: getSerpGoogleLocalFinderLocationCodeSchema,
+        locationCoordinate: s.string(
+          'GPS coordinates of a location\nrequired field if you don\'t specify location_name or location_code\nif you use this field, you don\'t need to specify location_name or location_code\nlocation_coordinate parameter should be specified in the "latitude,longitude,zoom" format\nif "zoom" is not specified, 9z will be applied as a default value\nthe maximum number of decimal digits for "latitude" and "longitude": 7\nthe minimum value for "zoom": 4z\nthe maximum value for "zoom": 18z\nexample:\n52.6178549,-155.352142,20z',
+        ),
+        locationName: getSerpGoogleLocalFinderLocationNameSchema,
+        os: osSchema,
+        priority: {
+          description:
+            "task priority\noptional field\ncan take the following values:\n1 – normal execution priority (set by default)\n2 – high execution priority\nYou will be additionally charged for the tasks with high execution priority.\nThe cost can be calculated on the Pricing page.",
+          type: ["integer", "null"],
+        },
+        tag: tagSchema,
+      },
+      {
+        required: ["keyword"],
+        allOf: [locationOrCoordinatesRequired, languageRequired],
+      },
+    ),
+  },
+  {
+    name: "get_dataforseo_serp_google_news",
+    path: "/apis/v1/dataforseo/serp/google/news/live/advanced",
+    description: "Get Google news results through DataForSEO.",
+    inputSchema: {
+      type: "object",
+      description:
+        "Parameters for Google news results. Descriptions refer to upstream snake_case field names; supply the corresponding camelCase properties shown here. Nested filter fields retain upstream names.",
+      properties: {
+        browserScreenHeight: {
+          description:
+            "browser screen height\noptional field\nyou can set a custom browser screen height to calculate pixel rankings for a particular device;\nby default, the parameter is set to 1080;\nNote: to use this parameter, set calculate_rectangles to true",
+          type: ["integer", "null"],
+        },
+        browserScreenResolutionRatio: {
+          description:
+            "browser screen resolution ratio\noptional field\nyou can set a custom browser screen resolution ratio to calculate pixel rankings for a particular device;\nby default, the parameter is set to 1;\nNote: to use this parameter, set calculate_rectangles to true",
+          type: ["integer", "null"],
+        },
+        browserScreenWidth: {
+          description:
+            "browser screen width\noptional field\nyou can set a custom browser screen width to calculate pixel rankings for a particular device;\nby default, the parameter is set to 1920;\nNote: to use this parameter, set calculate_rectangles to true",
+          format: "int64",
+          type: ["integer", "null"],
+        },
+        calculateRectangles: calculateRectanglesSchema,
+        depth: {
+          description:
+            "parsing depth\noptional field\nnumber of results in SERP\ndefault value: 10\nmax value: 200\nYour account will be billed per each SERP containing up to 10 results;\nSetting depth above 10 may result in additional charges if the search engine returns more than 10 results;\nIf the specified depth is higher than the number of results in the response, the difference will be refunded to your account balance automatically\nThe cost can be calculated on the Pricing page.",
+          type: ["integer", "null"],
+        },
+        keyword: getSerpGoogleImagesKeywordSchema,
+        languageCode: getSerpGoogleNewsLanguageCodeSchema,
+        languageName: getSerpGoogleLocalFinderLanguageNameSchema,
+        locationCode: getSerpGoogleLocalFinderLocationCodeSchema,
+        locationCoordinate: locationCoordinateSchema,
+        locationName: getSerpGoogleLocalFinderLocationNameSchema,
+        maxCrawlPages: maxCrawlPagesSchema,
+        os: getSerpGoogleImagesOsSchema,
+        seDomain: seDomainSchema,
+        searchParam: searchParamSchema,
+        url: urlSchema,
+      },
+      additionalProperties: false,
+      required: [],
+      allOf: [
+        {
+          anyOf: [
+            { required: ["locationCode"], properties: { locationCode: { not: { type: "null" } } } },
+            { required: ["locationName"], properties: { locationName: { not: { type: "null" } } } },
+            { required: ["locationCoordinate"], properties: { locationCoordinate: { not: { type: "null" } } } },
+            { required: ["url"], properties: { url: { type: "string", minLength: 1 } } },
+          ],
+        },
+        {
+          anyOf: [
+            { required: ["languageCode"], properties: { languageCode: { not: { type: "null" } } } },
+            { required: ["languageName"], properties: { languageName: { not: { type: "null" } } } },
+            { required: ["url"], properties: { url: { type: "string", minLength: 1 } } },
+          ],
+        },
+        {
+          anyOf: [
+            { required: ["keyword"] },
+            { required: ["url"], properties: { url: { type: "string", minLength: 1 } } },
+          ],
+        },
+      ],
+    },
+  },
+  {
+    name: "get_dataforseo_serp_youtube_comments",
+    path: "/apis/v1/dataforseo/serp/youtube/video_comments/live/advanced",
+    description: "Get YouTube comments through DataForSEO.",
+    inputSchema: s.object(
+      "Parameters for YouTube comments. Descriptions refer to upstream snake_case field names; supply the corresponding camelCase properties shown here. Nested filter fields retain upstream names.",
+      {
+        depth: {
+          description:
+            "parsing depth\noptional field\nnumber of results in SERP\ndefault value: 20\nmax value: 200\nNote: your account will be billed per each SERP containing up to 20 results;\nthus, setting a depth above 20 may result in additional charges if the search engine returns more than 20 results;\nif the specified depth is higher than the number of results in the response, the difference will be refunded automatically to your account balance",
+          type: ["integer", "null"],
+        },
+        device: getSerpYoutubeCommentsDeviceSchema,
+        languageCode: s.string(
+          "search engine language code\nrequired field if you don't specify language_name\nif you use this field, you don't need to specify language_name\nyou can receive the list of available languages of the search engine with their language_code_by making a separate request to the https://api.dataforseo.com/v3/serp/youtube/languages\nexample:\nenn",
+        ),
+        languageName: s.string(
+          "full name of search engine language\nrequired field if you don't specify language_code\nif you use this field, you don't need to specify language_code\nyou can receive the list of available languages of the search engine with their language_name by making a separate request to the https://api.dataforseo.com/v3/serp/youtube/languages\nexample:\nEnglish",
+        ),
+        locationCode: s.integer(
+          "search engine location code\nrequired field if you don't specify location_name_\nif you use this field, you don't need to specify location_name\nyou can receive the list of available locations of the search engines with their location_code by making a separate request to the https://api.dataforseo.com/v3/serp/youtube/locations\nexample:\n2840n",
+        ),
+        locationName: s.string(
+          "full name of search engine location\nrequired field if you don't specify location_code\nif you use this field, you don't need to specify location_code\nyou can receive the list of available locations of the search engine with their location_name by making a separate request to the https://api.dataforseo.com/v3/serp/youtube/locations\nexample:\nUnited States",
+        ),
+        os: { type: ["string", "null"], description: "The os value." },
+        tag: tagSchema,
+        videoId: videoIdSchema,
+      },
+      {
+        required: ["videoId"],
+        allOf: [locationRequired, languageRequired],
+      },
+    ),
+  },
+  {
+    name: "get_dataforseo_serp_youtube_organic",
+    path: "/apis/v1/dataforseo/serp/youtube/organic/live/advanced",
+    description: "Get YouTube search results through DataForSEO.",
+    inputSchema: s.object(
+      "Parameters for YouTube search results. Descriptions refer to upstream snake_case field names; supply the corresponding camelCase properties shown here. Nested filter fields retain upstream names.",
+      {
+        blockDepth: {
+          description:
+            "parsing depth\noptional field\nnumber of blocks of results in SERP\ndefault value: 20\nmax value: 200\nNote: your account will be billed per each SERP containing up to 20 results;\nthus, setting a block depth above 20 may result in additional charges if the search engine returns more than 20 results;\nif the specified block depth is higher than the number of results in the response, the difference will be refunded automatically to your account balance",
+          type: ["integer", "null"],
+        },
+        device: {
+          description:
+            "device type\noptional field\nreturn results for a specific device type\navailable values: desktop, mobile",
+          type: ["string", "null"],
+        },
+        keyword: s.string(
+          "keyword\nrequired field\nyou can specify up to 700 characters in the keyword field\nall %## will be decoded (plus character ‘+’ will be decoded to a space character)\nif you need to use the “%” character for your keyword, please specify it as “%25”;\nif you need to use the “+” character for your keyword, please specify it as “%2B”;\nlearn more about rules and limitations of keyword and keywords fields in DataForSEO APIs in this Help Center article",
+          { minLength: 1 },
+        ),
+        languageCode: getSerpYoutubeOrganicLanguageCodeSchema,
+        languageName: getSerpYoutubeOrganicLanguageNameSchema,
+        locationCode: getSerpYoutubeOrganicLocationCodeSchema,
+        locationName: getSerpYoutubeOrganicLocationNameSchema,
+        os: osSchema,
+        searchParam: {
+          description: "additional parameters of the search query\noptional field\nexample:\nsp=EgIQAg%253D%253D",
+          type: ["string", "null"],
+        },
+        tag: tagSchema,
+      },
+      {
+        required: ["keyword"],
+        allOf: [locationRequired, languageRequired],
+      },
+    ),
+  },
+  {
+    name: "get_dataforseo_serp_youtube_subtitles",
+    path: "/apis/v1/dataforseo/serp/youtube/video_subtitles/live/advanced",
+    description: "Get YouTube subtitles through DataForSEO.",
+    inputSchema: s.object(
+      "Parameters for YouTube subtitles. Descriptions refer to upstream snake_case field names; supply the corresponding camelCase properties shown here. Nested filter fields retain upstream names.",
+      {
+        device: getSerpYoutubeCommentsDeviceSchema,
+        languageCode: getSerpYoutubeOrganicLanguageCodeSchema,
+        languageName: getSerpYoutubeOrganicLanguageNameSchema,
+        locationCode: getSerpYoutubeOrganicLocationCodeSchema,
+        locationName: getSerpYoutubeOrganicLocationNameSchema,
+        os: getSerpYoutubeSubtitlesOsSchema,
+        subtitlesLanguage: {
+          description: "language code of original text\nyou can get the language code from YouTube Video Info result",
+          type: ["string", "null"],
+        },
+        subtitlesTranslateLanguage: {
+          description:
+            'language code of translated text\npossible values:\n"az", "ay", "ak", "sq", "am", "en", "ar", "hy", "as", "af", "eu", "be", "bn", "my", "bg", "bs", "bho", "cy", "hu", "vi", "haw", "ht", "gl", "lg", "el", "ka", "gn", "gu", "gd", "da", "fy", "zu", "iw", "ig", "yi", "id", "ga", "is", "es", "it", "yo", "kk", "kn", "ca", "qu", "rw", "ky", "zh-Hant", "zh-Hans", "ko", "co", "xh", "ku", "km", "lo", "la", "lv", "ln", "lt", "lb", "mk", "mg", "ms", "ml", "dv", "mt", "mi", "mr", "mn", "und", "de", "ne", "nl", "no", "ny", "or", "om", "pa", "fa", "pl", "pt", "ps", "ro", "ru", "sm", "sa", "ceb", "nso", "sr", "si", "sd", "sk", "sl", "so", "sw", "su", "tg", "th", "ta", "tt", "te", "ti", "ts", "tr", "tk", "uz", "ug", "uk", "ur", "fil", "fi", "fr", "ha", "hi", "hmn", "hr", "cs", "sv", "sn", "ee", "eo", "et", "st", "jv", "ja", "kri"',
+          type: ["string", "null"],
+        },
+        tag: tagSchema,
+        videoId: s.string(
+          "ID of the video\nrequired field\nyou can find video ID in the URL or 'youtube_video' item of YouTube Organic result\nexample:\nY8Wu4rSNJms",
+          { minLength: 1 },
+        ),
+      },
+      {
+        required: ["videoId"],
+        allOf: [locationRequired, languageRequired],
+      },
+    ),
+  },
+  {
+    name: "get_dataforseo_serp_youtube_video_info",
+    path: "/apis/v1/dataforseo/serp/youtube/video_info/live/advanced",
+    description: "Get YouTube video details through DataForSEO.",
+    inputSchema: s.object(
+      "Parameters for YouTube video details. Descriptions refer to upstream snake_case field names; supply the corresponding camelCase properties shown here. Nested filter fields retain upstream names.",
+      {
+        device: getSerpYoutubeCommentsDeviceSchema,
+        languageCode: getSerpYoutubeOrganicLanguageCodeSchema,
+        languageName: getSerpYoutubeOrganicLanguageNameSchema,
+        locationCode: getSerpYoutubeOrganicLocationCodeSchema,
+        locationName: getSerpYoutubeOrganicLocationNameSchema,
+        os: getSerpYoutubeSubtitlesOsSchema,
+        tag: tagSchema,
+        videoId: videoIdSchema,
+      },
+      {
+        required: ["videoId"],
+        allOf: [locationRequired, languageRequired],
+      },
+    ),
+  },
+  {
+    name: "get_dataforseo_amazon_asin",
+    path: "/apis/v1/dataforseo/merchant/amazon/asin/live/advanced",
+    description: "Get Amazon product details through DataForSEO.",
+    inputSchema: s.object(
+      "Parameters for Amazon product details. Descriptions refer to upstream snake_case field names; supply the corresponding camelCase properties shown here. Nested filter fields retain upstream names.",
+      {
+        asin: s.string(
+          "product ID\nrequired field\nunique product identifier (ASIN) in Amazon\nyou can receive the asin parameter by making a separate request to the Amazon Products endpoint",
+          { minLength: 1 },
+        ),
+        languageCode: getAmazonAsinLanguageCodeSchema,
+        languageName: getAmazonAsinLanguageNameSchema,
+        locationCode: getAmazonAsinLocationCodeSchema,
+        locationCoordinate: getAmazonAsinLocationCoordinateSchema,
+        locationName: getAmazonAsinLocationNameSchema,
+        seDomain: getAmazonAsinSeDomainSchema,
+        tag: tagSchema,
+      },
+      {
+        required: ["asin"],
+        allOf: [locationOrCoordinatesRequired, languageRequired],
+      },
+    ),
+  },
+  {
+    name: "get_dataforseo_amazon_products",
+    path: "/apis/v1/dataforseo/merchant/amazon/products/live/advanced",
+    description: "Get Amazon product search results through DataForSEO.",
+    inputSchema: {
+      type: "object",
+      description:
+        "Parameters for Amazon product search results. Descriptions refer to upstream snake_case field names; supply the corresponding camelCase properties shown here. Nested filter fields retain upstream names.",
+      properties: {
+        department: {
+          description:
+            'amazon product department\noptional field\nspecify one of the following amazon departments for extracting product listings:\n"Arts & Crafts", "Automotive", "Baby", "Beauty & Personal Care", "Books", "Computers", "Digital Music", "Electronics", "Kindle Store", "Prime Video", "Women\'s Fashion", "Men\'s Fashion", "Girls\' Fashion", "Boys\' Fashion", "Deals", "Health & Household", "Home & Kitchen", "Industrial & Scientific", "Luggage", "Movies & TV", "Music, CDs & Vinyl", "Pet Supplies", "Software", "Sports & Outdoors", "Tools & Home Improvement", "Toys & Games", "Video Games"',
+          type: ["string", "null"],
+        },
+        depth: {
+          description:
+            "parsing depth\noptional field\nnumber of results to be retrieved from the Amazon results page\ndefault value: 100\nmax value: 700\nYour account will be billed per each SERP containing up to 100 results; \nSetting depth above 100 may result in additional charges if the search engine returns more than 100 results;\nThe cost can be calculated on the Pricing page.",
+          type: ["integer", "null"],
+        },
+        keyword: s.string(
+          "keyword\nrequired field\nyou can specify up to 700 characters in this field\nall %## will be decoded (plus character ‘+’ will be decoded to a space character)\nif you need to use the “%” character for your keyword, please specify it as “%25”;\nlearn more about rules and limitations of keyword and keywords fields in DataForSEO APIs in this Help Center article",
+        ),
+        languageCode: getAmazonAsinLanguageCodeSchema,
+        languageName: getAmazonAsinLanguageNameSchema,
+        locationCode: getAmazonAsinLocationCodeSchema,
+        locationCoordinate: getAmazonAsinLocationCoordinateSchema,
+        locationName: getAmazonAsinLocationNameSchema,
+        maxCrawlPages: {
+          description:
+            "page crawl limit\noptional field\nnumber of search results pages to crawl\nmax value: 7\nNote: the max_crawl_pages and depth parameters complement each other;\nlearn more at our help center",
+          type: ["integer", "null"],
+        },
+        priceMax: {
+          description:
+            "maximum product price\noptional field\nmaximum price of the returned products listed on Amazon for the specified query\nexample:\n100\nNote: if you specify price_max, the search_param parameter will be ignored",
+          type: ["integer", "null"],
+        },
+        priceMin: {
+          description:
+            "minimum product price\noptional field\nminimum price of the returned products listed on Amazon for the specified query\nexample:\n5\nNote: if you specify price_min, the search_param parameter will be ignored",
+          type: ["integer", "null"],
+        },
+        seDomain: getAmazonAsinSeDomainSchema,
+        searchParam: {
+          description:
+            "additional parameters of the search query\noptional field\nyou can use the following Amazon search URL parameters for customizing the search\nexample:\n&low-price=52 - search for products that cost more than 52 USD;\n&high-price=45 - search for products that cost less than 45 USD;\n&sort=relevancerank - sort results by relevance;\n&sort=featured-rank - sort results by featured products;\n&sort=price-asc-rank - sort by ascending price;\n&sort=price-desc-rank - sort by descending price;\n&sort=review-rank - sort by the average customer reviews value;\n&sort=date-desc-rank - sort by the newest arrival\nNote that search_param values will be ignored if any of the following parameters is used: price_min, price_max, sort_by",
+          type: ["string", "null"],
+        },
+        sortBy: {
+          description:
+            'results sorting rules\noptional field\nthe following sorting rules are supported:\nrelevance, price_low_to_high, price_high_to_low, featured, avg_customer_review, newest_arrival\nexample:\nsort_by:"relevance"\nNote: if you specify sort_by, the search_param parameter will be ignored',
+          type: ["string", "null"],
+        },
+        tag: tagSchema,
+        url: {
+          description:
+            "direct URL of the search query\noptional field\nyou can specify a direct URL and we will sort it out to the necessary fields. Note that this method is the most difficult for our API to process and also requires you to specify the exact language and location in the URL. In most cases, we wouldn’t recommend using this method.\nexample:\nhttps://www.amazon.com/s/?field-keywords=shoes&language=en_US",
+          type: ["string", "null"],
+        },
+      },
+      additionalProperties: false,
+      required: [],
+      allOf: [
+        {
+          anyOf: [
+            { required: ["locationCode"], properties: { locationCode: { not: { type: "null" } } } },
+            { required: ["locationName"], properties: { locationName: { not: { type: "null" } } } },
+            { required: ["locationCoordinate"], properties: { locationCoordinate: { not: { type: "null" } } } },
+            { required: ["url"], properties: { url: { type: "string", minLength: 1 } } },
+          ],
+        },
+        {
+          anyOf: [
+            { required: ["languageCode"], properties: { languageCode: { not: { type: "null" } } } },
+            { required: ["languageName"], properties: { languageName: { not: { type: "null" } } } },
+            { required: ["url"], properties: { url: { type: "string", minLength: 1 } } },
+          ],
+        },
+        {
+          anyOf: [
+            { required: ["keyword"] },
+            { required: ["url"], properties: { url: { type: "string", minLength: 1 } } },
+          ],
+        },
+      ],
+    },
+  },
+  {
+    name: "get_dataforseo_amazon_sellers",
+    path: "/apis/v1/dataforseo/merchant/amazon/sellers/live/advanced",
+    description: "Get Amazon product sellers through DataForSEO.",
+    inputSchema: s.object(
+      "Parameters for Amazon product sellers. Descriptions refer to upstream snake_case field names; supply the corresponding camelCase properties shown here. Nested filter fields retain upstream names.",
+      {
+        asin: s.string(
+          "unique product identifier on Amazon\nrequired field\nyou can get this value making a separate request to the Amazon Products endpoint\nnote that there is no full list of possible values as the asin values is a dynamic value assigned by Amazon\nexample:\nB085RFFC9Q\nlearn more about the identifier in this help center guide",
+          { minLength: 1 },
+        ),
+        languageCode: s.string(
+          "language code\nrequired field if you don't specify language_name\nif you use this field, you don't need to specify language_name\nyou can receive the list of available Amazon languages with their language_code by making a separate request to the https://api.dataforseo.com/v3/merchant/amazon/languages\nexample:\nen_US",
+        ),
+        languageName: s.string(
+          "full name of the language\nrequired field if you don't specify language_code\nif you use this field, you don't need to specify language_code\nyou can receive the list of available Amazon languages with their language_name by making a separate request to the https://api.dataforseo.com/v3/merchant/amazon/languages\nexample:\nEnglish (United States)",
+        ),
+        locationCode: s.integer(
+          "location code\nrequired field if you don't specify location_name or location_coordinate\nif you use this field, you don't need to specify location_name or location_coordinate\nyou can receive the list of available Amazon locations with their location_code by making a separate request to the https://api.dataforseo.com/v3/merchant/amazon/locations\nexample:\n2840",
+        ),
+        locationCoordinate: getAmazonAsinLocationCoordinateSchema,
+        locationName: s.string(
+          "full name of the location\nrequired field if you don't specify location_code or location_coordinate\nif you use this field, you don't need to specify location_code or location_coordinate\nyou can receive the list of available Amazon locations with their location_name by making a separate request to the https://api.dataforseo.com/v3/merchant/amazon/locations\nexample:\nLondon,England,United Kingdom",
+        ),
+        seDomain: {
+          description:
+            "search engine domain\noptional field\nwe choose the relevant search engine domain automatically according to the location and language you specify\nhowever, you can set a custom search engine domain in this field\nexample:\namazon.co.uk, amazon.com.au, amazon.de, etc.",
+          type: ["string", "null"],
+        },
+        tag: tagSchema,
+      },
+      {
+        required: ["asin"],
+        allOf: [locationOrCoordinatesRequired, languageRequired],
+      },
+    ),
+  },
+  {
+    name: "get_dataforseo_google_business_info",
+    path: "/apis/v1/dataforseo/business_data/google/my_business_info/live",
+    description: "Get Google Business profiles through DataForSEO.",
+    inputSchema: s.object(
+      "Parameters for Google Business profiles. Descriptions refer to upstream snake_case field names; supply the corresponding camelCase properties shown here. Nested filter fields retain upstream names.",
+      {
+        keyword: getGoogleBusinessInfoKeywordSchema,
+        languageCode: getGoogleBusinessInfoLanguageCodeSchema,
+        languageName: getGoogleBusinessInfoLanguageNameSchema,
+        locationCode: getGoogleBusinessInfoLocationCodeSchema,
+        locationCoordinate: getGoogleBusinessInfoLocationCoordinateSchema,
+        locationName: getGoogleBusinessInfoLocationNameSchema,
+        tag: tagSchema,
+      },
+      {
+        required: ["keyword"],
+        allOf: [locationOrCoordinatesRequired, languageRequired],
+      },
+    ),
+  },
+  {
+    name: "get_dataforseo_google_business_questions",
+    path: "/apis/v1/dataforseo/business_data/google/questions_and_answers/live",
+    description: "Get Google Business questions and answers through DataForSEO.",
+    inputSchema: s.object(
+      "Parameters for Google Business questions and answers. Descriptions refer to upstream snake_case field names; supply the corresponding camelCase properties shown here. Nested filter fields retain upstream names.",
+      {
+        depth: {
+          description:
+            "parsing depth\noptional field\nnumber of results in SERP\ndefault value: 20\nmax value: 100\nYour account will be billed per each SERP containing up to 20 results; \nSetting depth above 20 may result in additional charges if the search engine returns more than 20 results;\nIf the specified depth is higher than the number of questions in the response, the difference will be refunded automatically to your account balance;\nThe cost can be calculated on the Pricing page.",
+          type: ["integer", "null"],
+        },
+        keyword: getGoogleBusinessInfoKeywordSchema,
+        languageCode: getGoogleBusinessInfoLanguageCodeSchema,
+        languageName: getGoogleBusinessInfoLanguageNameSchema,
+        locationCode: getGoogleBusinessInfoLocationCodeSchema,
+        locationCoordinate: getGoogleBusinessInfoLocationCoordinateSchema,
+        locationName: getGoogleBusinessInfoLocationNameSchema,
+        tag: tagSchema,
+      },
+      {
+        required: ["keyword"],
+        allOf: [locationOrCoordinatesRequired, languageRequired],
+      },
+    ),
+  },
+  {
+    name: "get_dataforseo_onpage_lighthouse",
+    path: "/apis/v1/dataforseo/on_page/lighthouse/live/json",
+    description: "Get Lighthouse audits through DataForSEO.",
+    inputSchema: s.object(
+      "Parameters for Lighthouse audits. Descriptions refer to upstream snake_case field names; supply the corresponding camelCase properties shown here. Nested filter fields retain upstream names.",
+      {
+        audits: {
+          description:
+            'Lighthouse audits\noptional field\naudits are individual tests Lighthouse runs for each specific feature/optimization/metric to produce a numeric score (see official definition);  \nif you ignore this field, we will return data for all audits;\nuse this field to get data for specific audits you indicate here;\nNote: that some audits do not belong to a specific category and are stand-alone page quality measurements;\nin general, there can be several use cases:\n1. if you ignore categories, you can use this field to get data for the specified audits only\nfor example, if you ignore "categories" and specify "audits": ["metrics/cumulative-layout-shift","metrics/largest-contentful-paint","metrics/total-blocking-time"], you will get data only for these audits\n2. if you specify a category, you can use this field to additionally receive audits that do not belong to the category(-ies) you specified\nfor example, if you specify "categories": ["seo"] and "audits": ["metrics/cumulative-layout-shift","metrics/largest-contentful-paint","metrics/total-blocking-time"], you will get only these audits under "performance" and all audits under "seo"\nyou can get the full list of possible audits here',
+          items: s.string("The audits value value."),
+          type: ["array", "null"],
+        },
+        browserCpuThrottlingMultiplier: {
+          description:
+            "browser CPU throttling multiplier\nrequired if browser_network_throttling_method is set to devtools;\nset the CPU throttling multiplier to simulate device performance conditions during the Lighthouse audit;\ncan be specified within the following range: 1–4;\nNote: this parameter is applied only when browser_network_throttling_method is set to devtools;",
+          type: ["number", "null"],
+        },
+        browserNetworkThrottling: {
+          description:
+            "browser network throttling\nrequired if browser_network_throttling_method is set to devtools;\nset the network throttling profile to simulate connection speed conditions during the Lighthouse audit;\npossible values: no_throttling, fast_4g, slow_4g, regular_3g, pc;\nNote: this parameter is applied only when browser_network_throttling_method is set to devtools;",
+          type: ["string", "null"],
+        },
+        browserNetworkThrottlingMethod: {
+          description:
+            "browser network throttling method\noptional field\ndefines the method used to apply throttling during the Lighthouse audit;\npossible vaules:\nsimulate - calculates estimated performance metrics without applying explicit throttling;\ndevtools -  applies the throttling settings specified in browser_network_throttling and browser_cpu_throttling_multiplier;\nprovided - uses the network conditions of the crawling environment;",
+          type: ["string", "null"],
+        },
+        browserScreenHeight: {
+          description:
+            "browser screen height\noptional field\nset the screen height of the browser used for the Lighthouse audit to emulate a specific device;\ncan be specified within the following range: 240–9999;",
+          type: ["integer", "null"],
+        },
+        browserScreenScaleFactor: {
+          description:
+            "browser screen scale factor\noptional field\nset the device pixel ratio of the browser used for the Lighthouse audit;\ncan be specified within the following range: 0.5–3;",
+          type: ["number", "null"],
+        },
+        browserScreenWidth: {
+          description:
+            "browser screen width\noptional field\nset the screen width of the browser used for the Lighthouse audit to emulate a specific device;\ncan be specified within the following range: 240–9999;",
+          format: "int64",
+          type: ["integer", "null"],
+        },
+        categories: {
+          description:
+            "categories of Lighthouse audits\noptional field\neach category is a collection of audits and audit groups that applies weighting and scoring to the section (see official definition)\nif you ignore this field, we will return data for all categories unless you specify audits\nuse this field to get data for specific categories you indicate here\npossible values:\nseo, performance, best_practices, accessibility",
+          items: categoriesItemSchema,
+          type: ["array", "null"],
+        },
+        customUserAgent: {
+          description:
+            "custom user agent\noptional field\nspecify the custom user agent used by the browser when running the Lighthouse audit;\ncan be specified with up to 254 characters;",
+          type: ["string", "null"],
+        },
+        forMobile: {
+          description:
+            "applies mobile emulation\noptional field\nif set to true, Lighthouse will use mobile device and screen emulation to test the page against mobile environment\nif set to false, the results will be provided for desktop\ndefault value: false",
+          type: ["boolean", "null"],
+        },
+        languageCode: {
+          description:
+            "lighthouse language code\noptional field\nyou can receive the list of available languages of the search engine with their language_code by making a separate request to https://api.dataforseo.com/v3/on_page/lighthouse/languages\ndefault value:\nen",
+          type: ["string", "null"],
+        },
+        languageName: {
+          description:
+            "lighthouse language name\noptional field\nyou can receive the list of available languages of the search engine with their language_name by making a separate request to https://api.dataforseo.com/v3/on_page/lighthouse/languages\ndefault value:\nEnglish",
+          type: ["string", "null"],
+        },
+        tag: tagSchema,
+        url: s.string(
+          "target URL\nrequired field\ntarget page should be specified with its absolute URL (including http:// or https://)\nexample:\nhttps://dataforseo.com/",
+          { minLength: 1 },
+        ),
+        version: {
+          description:
+            "lighthouse version\noptional field\nyou can obtain the results specific to a certain Lighthouse version by specifying its number\nthe list of available versions is available through the Lighthouse Versions endpoint",
+          type: ["string", "null"],
+        },
+      },
+      {
+        required: ["url"],
+        allOf: [
+          {
+            if: {
+              properties: { browserNetworkThrottlingMethod: { const: "devtools" } },
+              required: ["browserNetworkThrottlingMethod"],
+            },
+            then: { required: ["browserCpuThrottlingMultiplier", "browserNetworkThrottling"] },
+          },
+        ],
+      },
+    ),
+  },
+  {
+    name: "get_dataforseo_app_store_listings",
+    path: "/apis/v1/dataforseo/app_data/apple/app_listings/search/live",
+    description: "Get App Store listings through DataForSEO.",
+    inputSchema: s.object(
+      "Parameters for App Store listings. Descriptions refer to upstream snake_case field names; supply the corresponding camelCase properties shown here. Nested filter fields retain upstream names.",
+      {
+        categories: {
+          description:
+            "app categories\noptional field\nthe categories you specify are used to search for app listings;\nyou can get the full list of available app listing categories by this link\nyou can specify up to 10 categories",
+          items: categoriesItemSchema,
+          type: ["array", "null"],
+        },
+        description: {
+          description:
+            "keyword in the app's description\noptional field\nkeywords that occur in the description of the app;\ncan contain up to 200 characters",
+          type: ["string", "null"],
+        },
+        filters: {
+          description:
+            'array of results filtering parameters\noptional field\nyou can add several filters at once (8 filters maximum)\nyou should set a logical operator and, or between the conditions\nthe following operators are supported:\nregex, not_regex, <, <=, >, >=, =, <>, in, not_in, like, not_like\nyou can use the % operator with like and not_like to match any string of zero or more characters\nexample:\n["rating.value",">",3]\nyou can receive the list of available filters_by making a separate request to https://api.dataforseo.com/v3/app_data/apple/app_listings/available_filtersn',
+          items: filtersItemSchema,
+          type: ["array", "null"],
+        },
+        limit: getLabsAppStoreAppCompetitorsLimitSchema,
+        offset: {
+          description:
+            "offset in the results array of returned apps\noptional field\ndefault value: 0\nif you specify the 10 value, the first ten entities in the results array will be omitted and the data will be provided for the successive entities\nNote: we recommend using this parameter only when retrieving up to 10,000 results\nfor retrieving over 10,000 results, use the offset_token instead.",
+          type: ["integer", "null"],
+        },
+        offsetToken: {
+          description:
+            "token for subsequent requests\noptional field\nprovided in the identical filed of the response to each request;\nuse this parameter to avoid timeouts while trying to obtain over 100,000 results in a single request;\nby specifying the unique offset_token value from the response array, you will get the subsequent results of the initial task;\noffset_token values are unique for each subsequent task \nNote: if the offset_token is specified in the request, all other parameters should be identical to the previous request\nlearn more about this parameter on our Help Center",
+          type: ["string", "null"],
+        },
+        orderBy: {
+          description:
+            'results sorting rules\noptional field\nyou can use the same values as in the filters array to sort the results\npossible sorting types:\nasc - results will be sorted in the ascending order\ndesc - results will be sorted in the descending order\nyou should use a comma to set up a sorting parameter\nexample:\n["item.rating.value,desc"]\nnote that you can set no more than three sorting rules in a single request\nyou should use a comma to separate several sorting rules\nexample:\n["item.rating.value,desc","item.rating.value,desc"]',
+          items: orderByItemSchema,
+          type: ["array", "null"],
+        },
+        tag: tagSchema,
+        title: {
+          description:
+            "keyword in the app's title\noptional field\nkeywords that occur in the title of the app;\ncan contain up to 200 characters",
+          type: ["string", "null"],
+        },
+      },
+      { required: [] },
+    ),
+  },
+  {
+    name: "get_dataforseo_ai_gemini_search",
+    path: "/apis/v1/dataforseo/ai_optimization/gemini/llm_scraper/live/advanced",
+    description: "Get Gemini search answers through DataForSEO.",
+    inputSchema: s.object(
+      "Parameters for Gemini search answers. Descriptions refer to upstream snake_case field names; supply the corresponding camelCase properties shown here. Nested filter fields retain upstream names.",
+      {
+        keyword: s.string(
+          "keyword\nrequired field\nyou can specify up to 2000 characters in the keyword field\nall %## will be decoded (plus character ‘+’ will be decoded to a space character)\nif you need to use the “%” character for your keyword, please specify it as “%25”;\nif you need to use the “+” character for your keyword, please specify it as “%2B”\nlearn more about rules and limitations of keyword and keywords fields in DataForSEO APIs in this Help Center article",
+          { minLength: 1 },
+        ),
+        languageCode: s.string(
+          "search engine language code\nrequired field if you don't specify language_name;\nif you use this field, you don't need to specify language_name;\nyou can receive the list of available languages of the search engine with their language_code_by making a separate request to the https://api.dataforseo.com/v3/ai_optimization/gemini/llm_scraper/languages\nexample: enn",
+        ),
+        languageName: s.string(
+          "full name of search engine language\nrequired field if you don't specify language_code;\nif you use this field, you don't need to specify language_code;\nyou can receive the list of available languages of the search engine with their language_name by making a separate request to the https://api.dataforseo.com/v3/ai_optimization/gemini/llm_scraper/languages\nexample: English",
+        ),
+        locationCode: s.integer(
+          "search engine location code\nrequired field if you don't specify location_name or location_coordinate\nif you use this field, you don't need to specify location_name or location_coordinate\nyou can receive the list of available locations of the search engines with their location_code by making a separate request to the https://api.dataforseo.com/v3/ai_optimization/gemini/llm_scraper/locations\nexample:\n2840",
+        ),
+        locationCoordinate: s.string(
+          'GPS coordinates of a location\nrequired field if you don\'t specify location_name or location_code\nif you use this field, you don\'t need to specify location_name or location_code\nlocation_coordinate parameter should be specified in the "latitude,longitude,radius" format\nthe maximum number of decimal digits for "latitude" and "longitude": 7\nthe minimum value for "radius": 199 (mm)\nthe maximum value for "radius": 199999 (mm)\nexample:\n53.476225,-2.243572,200',
+        ),
+        locationName: s.string(
+          "full name of search engine location\nrequired field if you don't specify location_code or location_coordinate\nif you use this field, you don't need to specify location_code or location_coordinate\nyou can receive the list of available locations of the search engine with their location_name by making a separate request to the https://api.dataforseo.com/v3/ai_optimization/gemini/llm_scraper/locations\nexample:\nUnited States",
+        ),
+        tag: tagSchema,
+      },
+      {
+        required: ["keyword"],
+        allOf: [locationOrCoordinatesRequired, languageRequired],
+      },
+    ),
+  },
+  {
+    name: "get_dataforseo_ai_mentions_top_brands",
+    path: "/apis/v1/dataforseo/ai_optimization/llm_mentions/top_mentioned_brands/live",
+    description: "Get AI mentioned brands through DataForSEO.",
+    inputSchema: s.object(
+      "Parameters for AI mentioned brands. Descriptions refer to upstream snake_case field names; supply the corresponding camelCase properties shown here. Nested filter fields retain upstream names.",
+      {
+        excludeBrands: {
+          description:
+            'array of brands to exclude from the response\noptional field\nif specified, the listed brands will be omitted from the items array\nexample:\n"exclude_brands": ["Audi"]',
+          items: s.string("The exclude brands value value."),
+          type: ["array", "null"],
+        },
+        filters: {
+          description:
+            'array of results filtering parameters\noptional field\nyou can add several filters at once (8 filters maximum)\nyou should set a logical operator and, or between the conditions\nthe following operators are supported:\n=, <>, in, not_in, like, not_like, ilike, not_ilike, match, not_match\nyou can use the % operator with like and not_like to match any string of zero or more characters\nexample:\n["ai_search_volume",">",1000]\nThe full list of possible filters is available here.',
+          items: filtersItemSchema,
+          type: ["array", "null"],
+        },
+        includeBrands: {
+          description:
+            'array of brands to include in the response\noptional field\nif specified, only the listed brands will be returned in the items array\nexample:\n"include_brands": ["Audi"]',
+          items: s.string("The include brands value value."),
+          type: ["array", "null"],
+        },
+        initialDatasetFilters: {
+          description:
+            'array of filter expressions applied before aggregation\noptional field\nyou can use this array to filter expressions applied to the raw mentions database before aggregation to limit the rows contributing to the result;\nyou can add several filters at once (8 filters maximum)\nyou should set a logical operator and, or between the conditions\nthe following operators are supported:\n=, <>, in, not_in, like, not_like, ilike, not_ilike, match, not_match\nyou can use the % operator with like and not_like to match any string of zero or more characters\nexample:\n["ai_search_volume",">",1000]\nthe full list of possible filters is available here.\nlearn more about the initial dataset filters in this help center article.',
+          items: initialDatasetFiltersItemSchema,
+          type: ["array", "null"],
+        },
+        internalListLimit: {
+          description:
+            "maximum number of elements within internal arrays\noptional field\nyou can use this field to limit the number of elements within the following arrays:\nsources_domain, search_results_domain, brand_entities_title, brand_entities_category\nminimum value: 1\nmaximum value: 10\ndefault value: 5",
+          type: ["integer", "null"],
+        },
+        languageCode: getAiMentionsTopBrandsLanguageCodeSchema,
+        languageName: getAiMentionsTopBrandsLanguageNameSchema,
+        limit: {
+          description:
+            "maximum number of results in the items array\noptional field\nyou can use this parameter to limit the number of data objects you receive in the items array\nminimum value: 1\nmaximum value: 1000\ndefault value: 100",
+          type: ["integer", "null"],
+        },
+        locationCode: getAiMentionsTopBrandsLocationCodeSchema,
+        locationName: getAiMentionsTopBrandsLocationNameSchema,
+        offset: {
+          description:
+            "offset in the results array of the returned mentions data\noptional field\ndefault value: 0\nexample: if you specify the 10 value, the first ten mentions objects in the results array will be omitted and the data will be provided for the successive objects;\nNote: the maximum value is 1000000",
+          type: ["integer", "null"],
+        },
+        orderBy: {
+          description:
+            'results sorting rules\noptional field\nyou can use the same values as in the filters array to sort the results\npossible sorting types:\nasc - results will be sorted in the ascending order\ndesc - results will be sorted in the descending order\nyou should use a comma to set up a sorting type\nexample:\n["ai_search_volume,desc"]\nNote: you can set no more than three sorting rules in a single request\nyou should use a comma to separate several sorting rules',
+          items: orderByItemSchema,
+          type: ["array", "null"],
+        },
+        platform: platformSchema,
+        tag: tagSchema,
+        target: s.array(
+          "array of objects containing target entities\nrequired field\nyou can specify up to 10 entities (objects) in the target field\none target entity can contain either one domain or one keyword and related parameters\nexamples:\ntarget array with a domain entity",
+          {
+            oneOf: [
+              {
+                discriminator: {
+                  mapping: {
+                    domain: "#/components/schemas/Provider0A3E90081762_AiOptimizationLLmMentionsDomainElement",
+                    keyword: "#/components/schemas/Provider0A3E90081762_AiOptimizationLLmMentionsKeywordElement",
+                  },
+                  propertyName: "type",
+                },
+                properties: {
+                  search_filter: searchFilterSchema,
+                  search_scope: {
+                    description:
+                      "target domain search scope\noptional field\npossible values:\nany, sources, search_results\ndefault value: any",
+                    items: { type: ["string", "null"], description: "The search scope value value." },
+                    type: ["array", "null"],
+                  },
+                },
+                type: "object",
+                description: "The target value variant value.",
+              },
+            ],
+            type: ["object", "null"],
+            description: "The target value value.",
+          },
+          { minItems: 1, maxItems: 10 },
+        ),
+      },
+      { required: ["target"] },
+    ),
+  },
+  {
+    name: "get_dataforseo_ai_mentions_top_pages",
+    path: "/apis/v1/dataforseo/ai_optimization/llm_mentions/top_pages/live",
+    description: "Get AI cited pages through DataForSEO.",
+    inputSchema: s.object(
+      "Parameters for AI cited pages. Descriptions refer to upstream snake_case field names; supply the corresponding camelCase properties shown here. Nested filter fields retain upstream names.",
+      {
+        initialDatasetFilters: initialDatasetFiltersSchema,
+        internalListLimit: s.integer(
+          "maximum number of elements within internal arrays optional field you can use this field to limit the number of elements within the following arrays: sources_domain search_results_domain minimum value: 1 maximum value: 10 default value: 5",
+        ),
+        itemsListLimit: s.integer(
+          "maximum number of results in the items array optional field you can use this parameter to limit the number of data objects you receive in the items array minimum value: 1 maximum value: 10 default value: 5",
+        ),
+        languageCode: getAiMentionsTopPagesLanguageCodeSchema,
+        languageName: getAiMentionsTopPagesLanguageNameSchema,
+        linksScope: s.string(
+          "links source scope optional field this parameter specifies which links will be used to extract pages and aggregation data possible values: sources, search_results default value: sources",
+        ),
+        locationCode: getAiMentionsTopPagesLocationCodeSchema,
+        locationName: getAiMentionsTopPagesLocationNameSchema,
+        platform: getAiMentionsTopPagesPlatformSchema,
+        tag: getAiMentionsTopPagesTagSchema,
+        target: s.array(
+          'array of objects containing target entities required field you can specify up to 10 entities (objects) in the target field one target entity can contain either one domain or one keyword and related parametersexamples: target array with a domain entity [{"domain": "en.wikipedia.org", "search_filter": "exclude"}] target array with a keyword entity [{"keyword": "bmw", "search_scope": ["question"], "match_type ": "partial_match"}] target array with multiple entities [{"domain": "en.wikipedia.org", "search_filter": "exclude"}, {"keyword": "bmw", "match_type ": "partial_match", "search_scope": ["answer"]}]',
+          {
+            oneOf: [
+              { required: ["domain"], description: "The target value variant value." },
+              { required: ["keyword"], description: "The target value variant value." },
+            ],
+            properties: {
+              domain: domainSchema,
+              include_subdomains: getAiMentionsTopPagesIncludeSubdomainsSchema,
+              keyword: getAiMentionsTopPagesKeywordSchema,
+              match_type: matchTypeSchema,
+              search_filter: getAiMentionsTopPagesSearchFilterSchema,
+              search_scope: searchScopeSchema,
+            },
+            type: "object",
+            description: "The target value value.",
+          },
+          { minItems: 1, maxItems: 10 },
+        ),
+      },
+      { required: ["target"] },
+    ),
+  },
+  {
+    name: "get_dataforseo_keywords_bing_keywords_for_site",
+    path: "/apis/v1/dataforseo/keywords_data/bing/keywords_for_site/live",
+    description: "Get Bing keywords for a website through DataForSEO.",
+    inputSchema: s.object(
+      "Parameters for Bing keywords for a website. Descriptions refer to upstream snake_case field names; supply the corresponding camelCase properties shown here. Nested filter fields retain upstream names.",
+      {
+        dateFrom: dateFromSchema,
+        dateTo: {
+          description:
+            "ending date of the time range\noptional field\nif you don't specify this field, data will be provided for the last 12 months;\nminimum value: two years back from today’s date;\nmaximum value: one month from today's date;\nnote: we do not recommend using a custom time range for the past year's dates;\ndate format: \"yyyy-mm-dd\"\nexample:\n\"2020-03-15\"\nNote: we do not recommend using a custom time range for the past year's dates",
+          type: ["string", "null"],
+          format: "date",
+        },
+        device: {
+          description:
+            "device type\noptional field\nspecify this field if you want to get the data for a particular device typepossible values: all, mobile, desktop, tablet\ndefault value: all",
+          type: ["string", "null"],
+        },
+        keywordsNegative: {
+          description:
+            "keywords negative array\noptional field\nThese keywords will be ignored in the results array;\nYou can specify a maximum of 200 terms that you want to exclude from the results;\nthe specified keywords will be converted to lowercase format",
+          items: s.string("The keywords negative value value."),
+          type: ["array", "null"],
+          maxItems: 200,
+        },
+        languageCode: getKeywordsBingKeywordsForSiteLanguageCodeSchema,
+        languageName: getKeywordsBingKeywordsForSiteLanguageNameSchema,
+        locationCode: getKeywordsBingKeywordsForSiteLocationCodeSchema,
+        locationCoordinate: getKeywordsBingKeywordsForSiteLocationCoordinateSchema,
+        locationName: getKeywordsBingKeywordsForSiteLocationNameSchema,
+        searchPartners: searchPartnersSchema,
+        sortBy: sortBySchema,
+        tag: tagSchema,
+        target: s.string("domain or URL\nrequired field\nthe domain name or URL of the target website", {
+          minLength: 1,
+        }),
+      },
+      {
+        required: ["target"],
+        allOf: [locationOrCoordinatesRequired, languageRequired],
+      },
+    ),
+  },
+  {
+    name: "get_dataforseo_ai_mentions_history",
+    path: "/apis/v1/dataforseo/ai_optimization/llm_mentions/historical/live",
+    description: "Get historical AI mentions for a domain or brand.",
+    inputSchema: s.object(
+      "Get historical AI mentions for a domain or brand. Top-level fields use camelCase; nested provider fields and filters retain their original names.",
+      {
+        dateFrom: {
+          description: 'start date of the time range optional field minimal value 2025-08-01 date format "yyyy-mm-dd"',
+          type: ["string", "null"],
+          format: "date",
+        },
+        dateTo: {
+          description:
+            'end date of the time range optional field Note value specified in date_from cannot exceed the value in date_to date format "yyyy-mm-dd"',
+          type: ["string", "null"],
+          format: "date",
+        },
+        languageCode: getAiMentionsHistoryLanguageCodeSchema,
+        languageName: getAiMentionsHistoryLanguageNameSchema,
+        locationCode: getAiMentionsHistoryLocationCodeSchema,
+        locationName: getAiMentionsHistoryLocationNameSchema,
+        platform: {
+          description:
+            "target platform optional field possible values: chat_gpt , google Note: if the platform is not specified, the data is returned for both platforms Note #2: chat_gpt data is available for the United States and English only",
+          type: ["string", "null"],
+        },
+        tag: getAiMentionsHistoryTagSchema,
+        target: targetSchema,
+      },
+      { required: ["target"] },
+    ),
+  },
+  {
+    name: "get_dataforseo_ai_mentions_delta",
+    path: "/apis/v1/dataforseo/ai_optimization/llm_mentions/timeseries_delta/live",
+    description: "Compare changes in AI mentions across time periods.",
+    inputSchema: s.object(
+      "Compare changes in AI mentions across time periods. Top-level fields use camelCase; nested provider fields and filters retain their original names.",
+      {
+        dateFrom: getAiMentionsDeltaDateFromSchema,
+        dateTo: getAiMentionsDeltaDateToSchema,
+        groupRange: s.string("timeseries delta range required field possible values: day , week , month , year"),
+        languageCode: getAiMentionsHistoryLanguageCodeSchema,
+        languageName: getAiMentionsHistoryLanguageNameSchema,
+        locationCode: getAiMentionsHistoryLocationCodeSchema,
+        locationName: getAiMentionsHistoryLocationNameSchema,
+        platform: getAiMentionsDeltaPlatformSchema,
+        tag: getAiMentionsHistoryTagSchema,
+        target: targetSchema,
+      },
+      { required: ["target"] },
+    ),
+  },
+  {
+    name: "get_dataforseo_ai_mentions_new_lost",
+    path: "/apis/v1/dataforseo/ai_optimization/llm_mentions/timeseries_new_lost/live",
+    description: "Track new and lost AI mentions over time.",
+    inputSchema: s.object(
+      "Track new and lost AI mentions over time. Top-level fields use camelCase; nested provider fields and filters retain their original names.",
+      {
+        dateFrom: getAiMentionsDeltaDateFromSchema,
+        dateTo: getAiMentionsDeltaDateToSchema,
+        groupRange: s.string("timeseries range required field possible values: day , week , month , year"),
+        languageCode: getAiMentionsHistoryLanguageCodeSchema,
+        languageName: getAiMentionsHistoryLanguageNameSchema,
+        locationCode: getAiMentionsHistoryLocationCodeSchema,
+        locationName: getAiMentionsHistoryLocationNameSchema,
+        platform: getAiMentionsDeltaPlatformSchema,
+        tag: getAiMentionsHistoryTagSchema,
+        target: targetSchema,
+      },
+      { required: ["target"] },
+    ),
+  },
+  {
+    name: "compare_dataforseo_ai_mentions",
+    path: "/apis/v1/dataforseo/ai_optimization/llm_mentions/multi_target_metrics/live",
+    description: "Compare AI visibility for named groups of domains and brands.",
+    inputSchema: s.object(
+      "Compare AI visibility for named groups of domains and brands. Top-level fields use camelCase; nested provider fields and filters retain their original names.",
+      {
+        filters: {
+          description:
+            'array of results filtering parameters optional field you can add several filters at once (8 filters maximum) you should set a logical operator and , or between the conditions the following operators are supported: = , <> , in , not_in , like , not_like , ilike , not_ilike , match , not_match you can use the % operator with like and not_like to match any string of zero or more characters example: ["ai_search_volume",">",1000] The full list of possible filters is available here.',
+          items: compareAiMentionsFiltersItemSchema,
+          type: ["array", "null"],
+        },
+        initialDatasetFilters: {
+          description:
+            'array of filter expressions applied before aggregation optional field you can use this array to filter expressions applied to the raw mentions database before aggregation to limit the rows contributing to the result; you can add several filters at once (8 filters maximum) you should set a logical operator and , or between the conditions the following operators are supported: = , <> , in , not_in , like , not_like , ilike , not_ilike , match , not_match you can use the % operator with like and not_like to match any string of zero or more characters example: ["ai_search_volume",">",1000] the full list of possible filters is available here. learn more about the initial dataset filters in this help center article.',
+          items: {
+            anyOf: [
+              s.string("The initial dataset filters value value."),
+              s.number("The initial dataset filters value value."),
+              s.boolean("The initial dataset filters value value."),
+              {
+                additionalProperties: compareAiMentionsFiltersItemVariantItemSchema,
+                type: ["object", "null"],
+                description: "The initial dataset filters value value.",
+              },
+              s.array("The initial dataset filters value value.", compareAiMentionsFiltersItemVariantItemSchema),
+            ],
+            description:
+              "JSON representation of filter values and nested expressions. Field names, operators, condition counts and operand compatibility remain provider-validated as documented for each endpoint; this is not a complete filter-language validator.",
+          },
+          type: ["array", "null"],
+        },
+        internalListLimit: {
+          description:
+            "maximum number of elements within internal arrays optional field you can use this field to limit the number of elements within the following arrays: sources_domain search_results_domain minimum value: 1 maximum value: 10 default value: 5",
+          type: ["integer", "null"],
+          minimum: 1,
+          maximum: 10,
+        },
+        languageCode: getAiMentionsHistoryLanguageCodeSchema,
+        languageName: getAiMentionsHistoryLanguageNameSchema,
+        limit: {
+          description: "the maximum number of returned objects optional field default value: 100 maximum value: 1000",
+          type: ["integer", "null"],
+          maximum: 1000,
+        },
+        locationCode: getAiMentionsHistoryLocationCodeSchema,
+        locationName: getAiMentionsHistoryLocationNameSchema,
+        offset: {
+          description:
+            "offset in the results array of the returned mentions data optional field default value: 0 example: if you specify the 10 value, the first ten mentions objects in the results array will be omitted and the data will be provided for the successive objects; Note: the maximum value is 1000000 , use the search_after_token if you would like to offset more results",
+          type: ["integer", "null"],
+        },
+        orderBy: {
+          description:
+            'results sorting rules optional field you can use the same values as in the filters array to sort the results possible sorting types: asc - results will be sorted in the ascending order desc - results will be sorted in the descending order you should use a comma to set up a sorting type example: ["ai_search_volume,desc"] Note: you can set no more than three sorting rules in a single request you should use a comma to separate several sorting rules',
+          items: orderByItemSchema,
+          type: ["array", "null"],
+        },
+        platform: getAiMentionsDeltaPlatformSchema,
+        tag: getAiMentionsHistoryTagSchema,
+        targets: s.array(
+          "Two to ten named groups of target entities to compare.",
+          s.object(
+            "A named target group.",
+            {
+              key: s.string("The label used to identify this group in comparisons.", { maxLength: 250 }),
+              target: compareAiMentionsTargetSchema,
+            },
+            { required: ["key", "target"] },
+          ),
+          { minItems: 2, maxItems: 10 },
+        ),
+      },
+      { required: ["targets"] },
+    ),
+  },
+  {
+    name: "get_dataforseo_keyword_gap",
+    path: "/apis/v1/dataforseo/dataforseo_labs/google/domain_intersection/live",
+    description: "Find shared or missing Google keywords between two domains.",
+    inputSchema: s.object(
+      "Find shared or missing Google keywords between two domains. Top-level fields use camelCase; nested provider fields and filters retain their original names.",
+      {
+        filters: {
+          description:
+            'array of results filtering parameters optional field you can add several filters at once (8 filters maximum) you should set a logical operator and, or between the conditions the following operators are supported: regex, not_regex, <, <=, >, >=, =, <>, in, not_in, match, not_match, ilike, not_ilike, like, not_like you can use the % operator with like and not_like, as well as ilike and not_ilike to match any string of zero or more characters example: ["keyword_data.keyword_info.search_volume","in",[100,1000]] [["first_domain_serp_element.etv",">",0],"and",["first_domain_serp_element.description","like","%goat%"]] [["keyword_data.keyword_info.search_volume",">",100], "and", [["first_domain_serp_element.description","like","%goat%"], "or", ["second_domain_serp_element.type","=","organic"]]] for more information about filters, please refer to Dataforseo Labs - Filters or this help center guide',
+          items: compareAiMentionsFiltersItemSchema,
+          type: ["array", "null"],
+        },
+        includeClickstreamData: {
+          description:
+            "include or exclude data from clickstream-based metrics in the result optional field if the parameter is set to true, you will receive clickstream_keyword_info, clickstream_etv, keyword_info_normalized_with_clickstream, and keyword_info_normalized_with_bing fields in the response default value: false with this parameter enabled, you will be charged double the price for the request learn more about how clickstream-based metrics are calculated in this help center article",
+          type: ["boolean", "null"],
+        },
+        includeSerpInfo: {
+          description:
+            "include data from SERP for each keyword optional field if set to true, we will return a serp_info array containing SERP data (number of search results, relevant URL, and SERP features) for every keyword in the response default value: false",
+          type: ["boolean", "null"],
+        },
+        intersections: {
+          description:
+            "domain intersections in SERP optional field if you set intersections to true, you will get the keywords for which both target domains specified as target1 and target2 have results within the same SERP; the corresponding SERP elements for both domains will be provided in the results array Note: this endpoint will not provide results if the number of intersecting keywords exceeds 10 million if you specify intersections: false, you will get the keywords for which the domain specified as target1 has results in SERP, and the domain specified as target2 doesn't; thus, the corresponding SERP elements and other data will be provided for the domain specified as target1only default value: true",
+          type: ["boolean", "null"],
+        },
+        itemTypes: {
+          description:
+            'search results type indicates type of search results included in the response optional field possible values: ["organic", "paid", "featured_snippet", "local_pack"] default value: ["organic", "paid"]',
+          items: itemTypesItemSchema,
+          type: ["array", "null"],
+        },
+        languageCode: {
+          description:
+            "language code required field if you don't specify language_name Note: it is required to specify either language_name or language_code you can receive the list of available languages with their language_code by making a separate request to the https://api.dataforseo.com/v3/dataforseo_labs/locations_and_languages example: en",
+          type: ["string", "null"],
+        },
+        languageName: {
+          description:
+            "full name of the language required field if you don't specify language_code Note: it is required to specify either language_name or language_code you can receive the list of available languages with their language_name by making a separate request to the https://api.dataforseo.com/v3/dataforseo_labs/locations_and_languages example: English",
+          type: ["string", "null"],
+        },
+        limit: {
+          description: "the maximum number of returned keywords optional field default value: 100 maximum value: 1000",
+          type: ["integer", "null"],
+          maximum: 1000,
+        },
+        locationCode: {
+          description:
+            "location code required field if you don't specify location_name Note: it is required to specify either location_name or location_code you can receive the list of available locations with their location_code by making a separate request to the https://api.dataforseo.com/v3/dataforseo_labs/locations_and_languages example: 2840",
+          type: ["integer", "null"],
+        },
+        locationName: {
+          description:
+            "full name of the location required field if you don't specify location_code Note: it is required to specify either location_name or location_code you can receive the list of available locations with their location_name by making a separate request to the https://api.dataforseo.com/v3/dataforseo_labs/locations_and_languages example: United Kingdom",
+          type: ["string", "null"],
+        },
+        offset: {
+          description:
+            "offset in the items array of returned keywords optional field default value: 0 if you specify the 10 value, the first ten keywords in the results array will be omitted and the data will be provided for the successive keywords",
+          type: ["integer", "null"],
+        },
+        orderBy: {
+          description:
+            'results sorting rules optional field you can use the same values as in the filters array to sort the results possible sorting types: asc - results will be sorted in the ascending order desc - results will be sorted in the descending order you should use a comma to set up a sorting parameter example: ["keyword_data.keyword_info.competition,desc"] default rule: ["keyword_data.keyword_info.search_volume,desc"] note that you can set no more than three sorting rules in a single request you should use a comma to separate several sorting rules example: ["keyword_data.keyword_info.search_volume,desc","keyword_data.keyword_info.cpc,desc"]',
+          items: orderByItemSchema,
+          type: ["array", "null"],
+        },
+        tag: getAiMentionsHistoryTagSchema,
+        target1: s.string(
+          "domain required field the domain name of the first target website the domain should be specified without https:// and www.",
+        ),
+        target2: s.string(
+          "domain required field the domain name of the second target website the domain should be specified without https:// and www.",
+        ),
+      },
+      {
+        allOf: [locationRequired, languageRequired],
+        required: ["target1", "target2"],
+      },
+    ),
+  },
+  {
+    name: "get_dataforseo_backlink_gap",
+    path: "/apis/v1/dataforseo/backlinks/domain_intersection/live",
+    description: "Compare referring domains linking to selected websites or pages.",
+    inputSchema: s.object(
+      "Compare referring domains linking to selected websites or pages. Top-level fields use camelCase; nested provider fields and filters retain their original names.",
+      {
+        backlinksFilters: {
+          description:
+            'filter the backlinks of your target optional field you can use this field to filter the initial backlinks that will be included in the dataset for aggregated metrics for your target you can filter the backlinks by all fields available in the response of this endpoint using this parameter, you can include only dofollow backlinks in the response and create a flexible backlinks dataset to calculate the metrics for example: "backlinks_filters": [["dofollow", "=", true]]',
+          items: {
+            anyOf: [
+              s.string("The backlinks filters value value."),
+              s.number("The backlinks filters value value."),
+              s.boolean("The backlinks filters value value."),
+              {
+                additionalProperties: compareAiMentionsFiltersItemVariantItemSchema,
+                type: ["object", "null"],
+                description: "The backlinks filters value value.",
+              },
+              s.array("The backlinks filters value value.", compareAiMentionsFiltersItemVariantItemSchema),
+            ],
+            description:
+              "JSON representation of filter values and nested expressions. Field names, operators, condition counts and operand compatibility remain provider-validated as documented for each endpoint; this is not a complete filter-language validator.",
+          },
+          type: ["array", "null"],
+        },
+        backlinksStatusType: {
+          description:
+            "set what backlinks to return and count optional field you can use this field to choose what backlinks will be returned and used for aggregated metrics for your targets ; possible values: all - all backlinks will be returned and counted; live - backlinks found during the last check will be returned and counted; lost - lost backlinks will be returned and counted; default value: live",
+          type: ["string", "null"],
+        },
+        excludeInternalBacklinks: {
+          description:
+            "indicates whether the backlinks from subdomains of the target are excluded optional field if set to false , the backlinks from subdomains of the target will be omitted and you won't receive the same domain in the response; default value: true",
+          type: ["boolean", "null"],
+        },
+        excludeTargets: {
+          description:
+            'domains, subdomains or webpages you want to exclude optional field you can specify up to 10 domains, subdomains or webpages if you use this array, results will contain the referring domains that link to targets but don\'t link to exclude_targets example: `"exclude_targets": [ "bbc.com", "https://www.apple.com/iphone/*", "https://dataforseo.com/apis/*"]`',
+          items: excludeTargetsItemSchema,
+          type: ["array", "null"],
+        },
+        filters: {
+          description:
+            'array of results filtering parameters optional field you can add several filters at once (8 filters maximum) you should set a logical operator and , or between the conditions the following operators are supported: regex , not_regex , = , <> , in , not_in , like , not_like , ilike , not_ilike , match , not_match you can use the % operator with like and not_like to match any string of zero or more characters example: ["1.internal_links_count",">","1"] [["2.referring_pages",">","2"], "and", ["1.backlinks",">","10"]] [["1.first_seen",">","2017-10-23 11:31:45 +00:00"], "and", [["2.target","like","%dataforseo.com%"],"or",["1.referring_domains",">","10"]]] The full list of possible filters is available here.',
+          items: compareAiMentionsFiltersItemSchema,
+          type: ["array", "null"],
+        },
+        includeIndirectLinks: {
+          description:
+            "indicates if indirect links to the targets will be included in the results optional field if set to true , the results will include data on indirect links pointing to a page that either redirects to a target, or points to a canonical page if set to false , indirect links will be ignored default value: true",
+          type: ["boolean", "null"],
+        },
+        includeSubdomains: getBacklinkGapIncludeSubdomainsSchema,
+        internalListLimit: {
+          description:
+            "maximum number of elements within internal arrays optional field you can use this field to limit the number of elements within the following arrays: referring_links_tld referring_links_types referring_links_attributes referring_links_platform_types referring_links_semantic_locations default value: 10 maximum value: 1000",
+          type: ["integer", "null"],
+          maximum: 1000,
+        },
+        intersectionMode: {
+          description:
+            "indicates whether to intersect backlinks optional field use this field to intersect or merge results for the specified domains possible values: all , partial all - results are based on all backlinks; partial - results are based on the intersecting backlinks only; default value: all",
+          type: ["string", "null"],
+        },
+        limit: {
+          description: "the maximum number of returned results optional field default value: 100 maximum value: 1000",
+          type: ["integer", "null"],
+          maximum: 1000,
+        },
+        offset: {
+          description:
+            "offset in the array of returned results optional field default value: 0 if you specify the 10 value, the first ten backlinks in the results array will be omitted and the data will be provided for the successive backlinks",
+          type: ["integer", "null"],
+        },
+        orderBy: {
+          description:
+            'results sorting rules optional field you can use the same values as in the filters array to sort the results possible sorting types: asc - results will be sorted in the ascending order desc - results will be sorted in the descending order you should use a comma to set up a sorting type example: ["backlinks,desc"] note that you can set no more than three sorting rules in a single request you should use a comma to separate several sorting rules example: ["backlinks,desc","rank,asc"]',
+          items: orderByItemSchema,
+          type: ["array", "null"],
+        },
+        rankScale: getBacklinkGapRankScaleSchema,
+        tag: getAiMentionsHistoryTagSchema,
+        targets: {
+          additionalProperties: { type: ["string", "null"], description: "The targets value value." },
+          description:
+            'domains, subdomains or webpages to get links for required field you can set up to 20 domains, subdomains or webpages a domain or a subdomain should be specified without https:// and www. a page should be specified with absolute URL (including http:// or https:// ) example: `"targets": { "1": "http://planet.postgresql.org/", "2": "http://gborg.postgresql.org/" }`',
+          type: "object",
+          minProperties: 1,
+          maxProperties: 20,
+        },
+      },
+      { required: ["targets"] },
+    ),
+  },
+  {
+    name: "get_dataforseo_backlink_history",
+    path: "/apis/v1/dataforseo/backlinks/history/live",
+    description: "Get historical backlink metrics for a domain.",
+    inputSchema: s.object(
+      "Get historical backlink metrics for a domain. Top-level fields use camelCase; nested provider fields and filters retain their original names.",
+      {
+        dateFrom: {
+          description:
+            'starting date of the time range optional field minimum value 2019-01-01 if you don\'t specify this field, the minimum value will be used by default date format: "yyyy-mm-dd" example: "2019-01-15"',
+          type: ["string", "null"],
+          format: "date",
+        },
+        dateTo: {
+          description:
+            'ending date of the time range optional field if you don\'t specify this field, the today\'s date will be used by default date format: "yyyy-mm-dd" example: "2019-01-15"',
+          type: ["string", "null"],
+          format: "date",
+        },
+        rankScale: getBacklinkGapRankScaleSchema,
+        tag: getAiMentionsHistoryTagSchema,
+        target: s.string("domain required field a domain should be specified without https:// and www."),
+      },
+      { required: ["target"] },
+    ),
+  },
+  {
+    name: "get_dataforseo_backlinks_new_lost",
+    path: "/apis/v1/dataforseo/backlinks/timeseries_new_lost_summary/live",
+    description: "Track newly acquired and lost backlinks over time.",
+    inputSchema: s.object(
+      "Track newly acquired and lost backlinks over time. Top-level fields use camelCase; nested provider fields and filters retain their original names.",
+      {
+        dateFrom: {
+          description:
+            'starting date of the time range optional field this field indicates the date which will be used as a threshold for new and lost backlinks and referring domains; the backlinks and referring domains that appeared in our index after the specified date will be considered as new; the backlinks and referring domains that weren\'t found after the specified date, but were present before, will be considered as lost; minimum value: 2019-01-30 maximum value shouldn\'t exceed the date specified in the date_to date format: "yyyy-mm-dd" example: "2021-01-01"',
+          type: ["string", "null"],
+          format: "date",
+        },
+        dateTo: {
+          description:
+            "ending date of the time range optional field if you don't specify this field, the today's date will be used by default minimum value shouldn't preceed the date specified in the date_from maximum value: today's date date format: \"yyyy-mm-dd\" example: \"2021-01-15\"",
+          type: ["string", "null"],
+          format: "date",
+        },
+        groupRange: {
+          description:
+            'time range which will be used to group the results optional field default value: month possible values: day , week , month , year note: for day , we will return items corresponding to all dates between and including date_from and date_to ; for week / month / year , we will return items corresponding to full weeks/months/years, where each item will indicate the last day of the week/month/year for example, if you specify: "group_range": "month", "date_from": "2022-03-23", "date_to": "2022-05-13" we will return items falling between 2022-03-01 and 2022-05-31, namely, three items corresponding to the following dates: 2022-03-31 , 2022-04-30 , 2022-05-31 if there is no data for a certain day / week / month / year , we will return 0',
+          type: ["string", "null"],
+        },
+        includeSubdomains: getBacklinkGapIncludeSubdomainsSchema,
+        tag: getAiMentionsHistoryTagSchema,
+        target: s.string(
+          'domain to get data for required field a domain should be specified without https:// and www. example: "forbes.com"',
+        ),
+      },
+      { required: ["target"] },
+    ),
+  },
+  {
+    name: "list_dataforseo_backlinks",
+    path: "/apis/v1/dataforseo/backlinks/backlinks/live",
+    description: "List backlinks with filters, sorting, and pagination.",
+    inputSchema: s.object(
+      "List backlinks with filters, sorting, and pagination. Top-level fields use camelCase; nested provider fields and filters retain their original names.",
+      {
+        backlinksStatusType: {
+          description:
+            "set what backlinks to return and count optional field you can use this field to choose what backlinks will be returned and used for aggregated metrics for your target ; possible values: all - all backlinks will be returned and counted; live - backlinks found during the last check will be returned and counted; lost - lost backlinks will be returned and counted; default value: live",
+          type: ["string", "null"],
+        },
+        customMode: {
+          additionalProperties: { type: ["object", "null"], description: "The custom mode value value." },
+          description:
+            'detailed results grouping type optional field use this object to get a specific number of backlinks per field if you use custom_mode , then mode will be ignored example: "custom_mode": {"field": "domain", "value": 100}',
+          type: ["object", "null"],
+        },
+        excludeInternalBacklinks: {
+          description:
+            "indicates if internal backlinks from subdomains to the target will be excluded from the results optional field if set to true , the results will not include data on internal backlinks from subdomains of the same domain as target if set to false , internal links will be included in the results default value: true",
+          type: ["boolean", "null"],
+        },
+        filters: {
+          description:
+            'array of results filtering parameters optional field you can add several filters at once (8 filters maximum) you should set a logical operator and , or between the conditions the following operators are supported: = , <> , in , not_in , like , not_like , ilike , not_ilike , regex , not_regex , match , not_match you can use the % operator with like and not_like to match any string of zero or more characters example: ["rank",">","80"] [["page_from_rank",">","55"], "and", ["dofollow","=",true]] [["first_seen",">","2017-10-23 11:31:45 +00:00"], "and", [["anchor","like","%seo%"],"or",["text_pre","like","%seo%"]]] The full list of possible filters is available here.',
+          items: compareAiMentionsFiltersItemSchema,
+          type: ["array", "null"],
+        },
+        includeSubdomains: getBacklinkGapIncludeSubdomainsSchema,
+        limit: {
+          description: "the maximum number of returned backlinks optional field default value: 100 maximum value: 1000",
+          type: ["integer", "null"],
+          maximum: 1000,
+        },
+        mode: {
+          description:
+            "results grouping type optional field possible grouping types: as_is - returns all backlinks one_per_domain - returns one backlink per domain one_per_anchor - returns one backlink per anchor default value: as_is",
+          type: ["string", "null"],
+        },
+        offset: {
+          description:
+            "offset in the results array of the returned backlinks optional field default value: 0 if you specify the 10 value, the first ten backlinks in the results array will be omitted and the data will be provided for the successive backlinks; Note: the maximum value is 20,000 , use the search_after_token if you would like to offset more results",
+          type: ["integer", "null"],
+        },
+        orderBy: {
+          description:
+            'results sorting rules optional field you can use the same values as in the filters array to sort the results possible sorting types: asc - results will be sorted in the ascending order desc - results will be sorted in the descending order you should use a comma to set up a sorting type example: ["rank,desc"] note that you can set no more than three sorting rules in a single request you should use a comma to separate several sorting rules example: ["domain_from_rank,desc","page_from_rank,asc"]',
+          items: orderByItemSchema,
+          type: ["array", "null"],
+        },
+        rankScale: getBacklinkGapRankScaleSchema,
+        searchAfterToken: {
+          description:
+            "token for subsequent requests optional field provided in the identical filed of the response to each request; use this parameter to avoid timeouts while trying to obtain over 20,000 results in a single request; by specifying the unique search_after_token value from the response array, you will get the subsequent results of the initial task; search_after_token values are unique for each subsequent task ; Note: if the search_after_token is specified in the request, all other parameters should be identical to the previous request",
+          type: ["string", "null"],
+        },
+        tag: getAiMentionsHistoryTagSchema,
+        target: s.string(
+          "domain, subdomain or webpage to get backlinks for required field a domain or a subdomain should be specified without https:// and www. a page should be specified with absolute URL (including http:// or https:// )",
+        ),
+      },
+      { required: ["target"] },
+    ),
+  },
+  {
+    name: "search_dataforseo_business_listings",
+    path: "/apis/v1/dataforseo/business_data/business_listings/search/live",
+    description: "Find business listings by category, location, title, and review filters.",
+    inputSchema: {
+      type: "object",
+      properties: {
+        categories: {
+          description:
+            "business categories optional field the categories you specify are used to search for business listings; if you don't use this field, we will return business listings found in the specified location; you can specify up to 10 categories",
+          items: categoriesItemSchema,
+          type: ["array", "null"],
+        },
+        description: {
+          description:
+            "description of the element in SERP optional field the description of the business entity for which the results are collected; can contain up to 200 characters",
+          type: ["string", "null"],
+        },
+        filters: {
+          description:
+            'array of results filtering parameters optional field you can add several filters at once (8 filters maximum) you should set a logical operator and , or between the conditions the following operators are supported: regex , not_regex , < , <= , > , >= , = , <> , in , not_in , like , not_like , ilike , not_ilike , match , not_match you can use the % operator with like and not_like to match any string of zero or more characters example: ["rating.value",">",3] you can receive the list of available filters_by making a separate request to https://api.dataforseo.com/v3/business_data/business_listings/available_filters The full list of possible filters is available here. n',
+          items: compareAiMentionsFiltersItemSchema,
+          type: ["array", "null"],
+        },
+        isClaimed: {
+          description: "indicates whether the business is verified by its owner on Google Maps optional field",
+          type: ["boolean", "null"],
+        },
+        limit: {
+          description:
+            "the maximum number of returned businesses optional field default value: 100 maximum value: 1000",
+          type: ["integer", "null"],
+          maximum: 1000,
+        },
+        locationCoordinate: {
+          description:
+            'GPS coordinates of a location optional field location_coordinate parameter should be specified in the "latitude,longitude,radius" format the maximum number of decimal digits for "latitude" and "longitude" : 7 the value of "radius" is specified in kilometres (km) the minimum value for "radius" : 1 the maximum value for "radius" : 100000 example: 53.476225,-2.243572,200 learn more about how to set location parameters in this API on our Help Center',
+          type: ["string", "null"],
+        },
+        offset: {
+          description:
+            "offset in the results array of returned businesses optional field default value: 0 if you specify the 10 value, the first ten entities in the results array will be omitted and the data will be provided for the successive entities Note: we recommend using this parameter only when retrieving up to 10,000 results for retrieving over 10,000 results, use the offset_token instead",
+          type: ["integer", "null"],
+        },
+        offsetToken: {
+          description:
+            "token for subsequent requests optional field provided in the identical filed of the response to each request; use this parameter to avoid timeouts while trying to obtain over 100,000 results in a single request; by specifying the unique offset_token value from the response array, you will get the subsequent results of the initial task; offset_token values are unique for each subsequent task Note: if the offset_token is specified in the request, all other parameters should be identical to the previous request learn more about this parameter on our Help Center",
+          type: ["string", "null"],
+        },
+        orderBy: {
+          description:
+            'results sorting rules optional field you can use the same values as in the filters array to sort the results possible sorting types: asc - results will be sorted in the ascending order desc - results will be sorted in the descending order you should use a comma to set up a sorting parameter example: ["rating.value,desc"] note that you can set no more than three sorting rules in a single request you should use a comma to separate several sorting rules example: ["rating.value,desc","rating.votes_count,desc"]',
+          items: orderByItemSchema,
+          type: ["array", "null"],
+        },
+        tag: getAiMentionsHistoryTagSchema,
+        title: {
+          description:
+            "title of the element in SERP optional field the name of the business entity for which the results are collected; can contain up to 200 characters",
+          type: ["string", "null"],
+        },
+      },
+      description:
+        "Find business listings by category, location, title, and review filters. Top-level fields use camelCase; nested provider fields and filters retain their original names.",
+      additionalProperties: false,
+      required: [],
+    },
+  },
+  {
+    name: "get_dataforseo_llm_mention_metrics",
+    path: "/apis/v1/dataforseo/ai_optimization/llm_mentions/aggregated_metrics/live",
+    description: "Aggregate AI mentions with initial dataset filters.",
+    inputSchema: s.object(
+      "Aggregate AI mentions with initial dataset filters. Top-level fields use camelCase; nested entity and filter fields retain upstream names.",
+      {
+        initialDatasetFilters: initialDatasetFiltersSchema,
+        internalListLimit: s.integer(
+          "maximum number of elements within internal arrays optional field you can use this field to limit the number of elements within the following arrays: sources_domain search_results_domain minimum value: 1 maximum value: 20 default value: 10",
+          { minimum: 1, maximum: 20 },
+        ),
+        languageCode: getAiMentionsTopPagesLanguageCodeSchema,
+        languageName: getAiMentionsTopPagesLanguageNameSchema,
+        locationCode: getAiMentionsTopPagesLocationCodeSchema,
+        locationName: getAiMentionsTopPagesLocationNameSchema,
+        platform: getAiMentionsTopPagesPlatformSchema,
+        tag: getLlmMentionMetricsTagSchema,
+        target: compareAiMentionsTargetSchema,
+      },
+      { required: ["target"] },
+    ),
+  },
+  {
+    name: "search_dataforseo_llm_mentions",
+    path: "/apis/v1/dataforseo/ai_optimization/llm_mentions/search/live",
+    description: "Search AI mentions with filters, sorting, and pagination.",
+    inputSchema: s.object(
+      "Search AI mentions with filters, sorting, and pagination. Top-level fields use camelCase; nested entity and filter fields retain upstream names.",
+      {
+        filters: s.array(
+          'array of results filtering parameters optional field you can add several filters at once (8 filters maximum) you should set a logical operator and, or between the conditions the following operators are supported: =, , in, not_in, like, not_like, ilike, not_ilike, match, not_match you can use the % operator with like and not_like to match any string of zero or more characters example: ["ai_search_volume",">","1000"]The full list of possible filters is available here.',
+          { description: "The filters value value." },
+        ),
+        languageCode: getAiMentionsTopPagesLanguageCodeSchema,
+        languageName: getAiMentionsTopPagesLanguageNameSchema,
+        limit: s.integer(
+          "the maximum number of returned objects optional fielddefault value: 100 maximum value: 1000",
+          { maximum: 1000 },
+        ),
+        locationCode: getAiMentionsTopPagesLocationCodeSchema,
+        locationName: getAiMentionsTopPagesLocationNameSchema,
+        offset: s.integer(
+          "offset in the results array of the returned mentions data optional fielddefault value: 0 example: if you specify the 10 value, the first ten mentions objects in the results array will be omitted and the data will be provided for the successive objects; Note: the maximum value is 9,000, use the search_after_token if you would like to offset more results",
+        ),
+        orderBy: s.array(
+          'results sorting rules optional field you can use the same values as in the filters array to sort the results possible sorting types: asc - results will be sorted in the ascending order desc - results will be sorted in the descending order you should use a comma to set up a sorting type example: ["ai_search_volume,desc"] note that you can set no more than three sorting rules in a single request you should use a comma to separate several sorting rules',
+          orderByItemSchema,
+        ),
+        platform: getAiMentionsTopPagesPlatformSchema,
+        searchAfterToken: s.string(
+          "token for subsequent requests optional field provided in the identical filed of the response to each request; use this parameter to avoid timeouts while trying to obtain over 20,000 results in a single request; by specifying the unique search_after_token value from the response array, you will get the subsequent results of the initial task; search_after_token values are unique for each subsequent task ; Note: if the search_after_token is specified in the request, all other parameters should be identical to the previous request",
+        ),
+        tag: getLlmMentionMetricsTagSchema,
+        target: s.array(
+          'array of objects containing target entities required field you can specify up to 10 entities (objects) in the target field one target entity can contain either one domain or one keyword and related parametersexamples: target array with a domain entity [{"domain": "en.wikipedia.org", "search_filter": "exclude"}] target array with a keyword entity [{"keyword": "bmw", "search_scope": ["question"], "match_type ": "partial_match"}] target array with multiple entities [{"domain": "en.wikipedia.org", "search_filter": "exclude"}, {"keyword": "bmw", "match_type ": "partial_match", "search_scope": ["answer"]}]',
+          s.object(
+            "The target value value.",
+            {
+              domain: domainSchema,
+              include_subdomains: getAiMentionsTopPagesIncludeSubdomainsSchema,
+              keyword: getAiMentionsTopPagesKeywordSchema,
+              match_type: searchLlmMentionsMatchTypeSchema,
+              search_filter: getAiMentionsTopPagesSearchFilterSchema,
+              search_scope: searchScopeSchema,
+            },
+            { oneOf: [{ required: ["domain"] }, { required: ["keyword"] }], required: [] },
+          ),
+          { minItems: 1, maxItems: 10 },
+        ),
+      },
+      { required: ["target"] },
+    ),
+  },
+  {
+    name: "get_dataforseo_llm_mention_top_domains",
+    path: "/apis/v1/dataforseo/ai_optimization/llm_mentions/top_domains/live",
+    description: "Rank domains cited in AI mentions with per-list limits.",
+    inputSchema: s.object(
+      "Rank domains cited in AI mentions with per-list limits. Top-level fields use camelCase; nested entity and filter fields retain upstream names.",
+      {
+        initialDatasetFilters: initialDatasetFiltersSchema,
+        internalListLimit: getLlmMentionTopDomainsInternalListLimitSchema,
+        itemsListLimit: s.integer(
+          "maximum number of results in the items array optional field you can use this parameter to limit the number of data objects you receive in the items array minimum value: 1 maximum value: 10 default value: 5",
+          { minimum: 1, maximum: 10 },
+        ),
+        languageCode: getAiMentionsTopPagesLanguageCodeSchema,
+        languageName: getAiMentionsTopPagesLanguageNameSchema,
+        linksScope: s.string(
+          "links source scope optional field this parameter specifies which links will be used to extract domains and aggregation data possible values: sources, search_results default value: sources",
+        ),
+        locationCode: getAiMentionsTopPagesLocationCodeSchema,
+        locationName: getAiMentionsTopPagesLocationNameSchema,
+        platform: getAiMentionsTopPagesPlatformSchema,
+        tag: getLlmMentionMetricsTagSchema,
+        target: s.array(
+          'array of objects containing target entities required field you can specify up to 10 entities (objects) in the target field one target entity can contain either one domain or one keyword and related parametersexamples: target array with a domain entity [{"domain": "en.wikipedia.org", "search_filter": "exclude"}] target array with a keyword entity [{"keyword": "bmw", "search_scope": ["question"], "match_type ": "partial_match"}] target array with multiple entities [{"domain": "en.wikipedia.org", "search_filter": "exclude"}, {"keyword": "bmw", "match_type ": "partial_match", "search_scope": ["answer"]}]',
+          s.object(
+            "The target value value.",
+            {
+              domain: domainSchema,
+              include_subdomains: getAiMentionsTopPagesIncludeSubdomainsSchema,
+              keyword: getAiMentionsTopPagesKeywordSchema,
+              match_type: matchTypeSchema,
+              search_filter: getAiMentionsTopPagesSearchFilterSchema,
+              search_scope: searchScopeSchema,
+            },
+            { oneOf: [{ required: ["domain"] }, { required: ["keyword"] }], required: [] },
+          ),
+          { minItems: 1, maxItems: 10 },
+        ),
+      },
+      { required: ["target"] },
+    ),
+  },
+  {
+    name: "get_dataforseo_ai_chat_gpt_llm_scraper",
+    path: "/apis/v1/dataforseo/ai_optimization/chat_gpt/llm_scraper/live/advanced",
+    description: "Research AI ChatGPT llm scraper through DataForSEO using one synchronous query.",
+    inputSchema: s.object(
+      "Parameters for AI ChatGPT llm scraper. Top-level names use camelCase; nested filters and entity fields keep their upstream names.",
+      {
+        forceWebSearch: {
+          description:
+            "force AI agent to use web search\noptional field\nwhen enabled, the AI model is forced to access and cite current web information;\ndefault value: false;\nNote: even if the parameter is set to true, there is no guarantee web sources will be cited in the response",
+          type: ["boolean", "null"],
+        },
+        keyword: s.string(
+          "keyword\nrequired field\nyou can specify up to 2000 characters in the keyword field\nall %## will be decoded (plus character ‘+’ will be decoded to a space character)\nif you need to use the “%” character for your keyword, please specify it as “%25”;\nif you need to use the “+” character for your keyword, please specify it as “%2B”\nlearn more about rules and limitations of keyword and keywords fields in DataForSEO APIs in this Help Center article",
+          { maxLength: 2000, minLength: 1 },
+        ),
+        languageCode: s.string(
+          "search engine language code\nrequired field if you don't specify language_name;\nif you use this field, you don't need to specify language_name;\nyou can receive the list of available languages of the search engine with their language_code by making a separate request to the https://api.dataforseo.com/v3/ai_optimization/chat_gpt/llm_scraper/languages",
+        ),
+        languageName: s.string(
+          "full name of search engine language\nrequired field if you don't specify language_code;\nif you use this field, you don't need to specify language_code;\nyou can receive the list of available languages of the search engine with their language_name by making a separate request to the https://api.dataforseo.com/v3/ai_optimization/chat_gpt/llm_scraper/languages",
+        ),
+        locationCode: s.integer(
+          "search engine location code\nrequired field if you don't specify location_name\nif you use this field, you don't need to specify location_name\nyou can receive the list of available locations of the search engines with their location_code by making a separate request to the https://api.dataforseo.com/v3/ai_optimization/chat_gpt/llm_scraper/locations\nexample:\n2840",
+        ),
+        locationName: s.string(
+          "full name of search engine location\nrequired field if you don't specify location_code\nif you use this field, you don't need to specify location_code\nyou can receive the list of available locations of the search engine with their location_name by making a separate request to the https://api.dataforseo.com/v3/ai_optimization/chat_gpt/llm_scraper/locations\nexample:\nUnited States",
+        ),
+        tag: tagSchema,
+      },
+      {
+        required: ["keyword"],
+        allOf: [nonemptyLocationRequired, nonemptyLanguageRequired],
+      },
+    ),
+  },
+  {
+    name: "get_dataforseo_ai_llm_mentions_cross_aggregated_metrics",
+    path: "/apis/v1/dataforseo/ai_optimization/llm_mentions/cross_aggregated_metrics/live",
+    description: "Research AI mentions cross aggregated metrics through DataForSEO using one synchronous query.",
+    inputSchema: s.object(
+      "Parameters for AI llm mentions cross aggregated metrics. Top-level names use camelCase; nested filters and entity fields keep their upstream names.",
+      {
+        initialDatasetFilters: s.array(
+          'array of filter expressions applied before aggregation optional field you can use this array to filter expressions applied to the raw mentions database before aggregation to limit the rows contributing to the result;you can add several filters at once (8 filters maximum) you should set a logical operator and, or between the conditions the following operators are supported: =, , in, not_in, like, not_like, ilike, not_ilike, match, not_match you can use the % operator with like and not_like to match any string of zero or more characters example: ["ai_search_volume",">","1000"]the full list of possible filters is available here. learn more about the initial dataset filters in this help center article.',
+          { description: "The initial dataset filters item value." },
+        ),
+        internalListLimit: getLlmMentionTopDomainsInternalListLimitSchema,
+        languageCode: getAiMentionsTopPagesLanguageCodeSchema,
+        languageName: getAiMentionsTopPagesLanguageNameSchema,
+        locationCode: getAiMentionsTopPagesLocationCodeSchema,
+        locationName: getAiMentionsTopPagesLocationNameSchema,
+        platform: getAiMentionsTopPagesPlatformSchema,
+        tag: getAiMentionsTopPagesTagSchema,
+        targets: s.array(
+          'array of objects containing target entities with aggregation keys required field you can specify up to 10, but not less than 2 target sets of parameters, each with its aggregation_key;example of a targets array with multiple entities: [{"aggregation_key":"bmw","target":[{"domain":"en.wikipedia.org","search_filter":"exclude"},{"keyword":"m5","match_type":"partial_match","search_scope":["answer"]}]},{"aggregation_key":"mercedes","target":[{"domain":"www.mercedes-benz.com","search_filter":"exclude"},{"keyword":"GLC","match_type":"word_match"}]}]',
+          {
+            properties: {
+              aggregation_key: s.string(
+                "aggregation key for grouping the results required field groups results for comparison and serves as a label for the group; you can specify up to 250 characters in the aggregation_key field",
+                { maxLength: 250, minLength: 1 },
+              ),
+              target: s.array(
+                "array of objects containing target entities required field a single target can contain up to 10 domain and/or keyword entities",
+                {
+                  oneOf: [{ required: ["domain"] }, { required: ["keyword"] }],
+                  properties: {
+                    domain: s.string(
+                      "target domain required field if you don't specify a keyword you can specify up to 63 characters in the domain field; a domain should be specified without https:// and www.",
+                      { maxLength: 63, minLength: 1 },
+                    ),
+                    include_subdomains: getAiMentionsTopPagesIncludeSubdomainsSchema,
+                    keyword: s.string(
+                      "target keyword required field if you don't specify a domain you can specify up to 250 characters in the keyword field all %## will be decoded (plus character ‘+’ will be decoded to a space character) if you need to use the “%” character for your keyword, please specify it as “%25”; if you need to use the “+” character for your keyword, please specify it as “%2B”learn more about rules and limitations of keyword and keywords fields in DataForSEO APIs in this Help Center article",
+                      { maxLength: 250, minLength: 1 },
+                    ),
+                    match_type: searchLlmMentionsMatchTypeSchema,
+                    search_filter: getAiMentionsTopPagesSearchFilterSchema,
+                    search_scope: s.array(
+                      "Search scope. Domain entities: any, sources, search_results. Keyword entities: any, question, answer, brand_entities, fan_out_queries. Default: any.",
+                      s.string("The search scope item value."),
+                    ),
+                  },
+                  type: "object",
+                  description: "The target item value.",
+                },
+                { maxItems: 10, minItems: 1 },
+              ),
+            },
+            required: ["aggregation_key", "target"],
+            type: "object",
+            description: "The targets item value.",
+          },
+          { maxItems: 10, minItems: 2 },
+        ),
+      },
+      { required: ["targets"] },
+    ),
+  },
+  {
+    name: "get_dataforseo_ai_llm_mentions_search_mentions",
+    path: "/apis/v1/dataforseo/ai_optimization/llm_mentions/search_mentions/live",
+    description: "Research AI mentions search mentions through DataForSEO using one synchronous query.",
+    inputSchema: s.object(
+      "Parameters for AI llm mentions search mentions. Top-level names use camelCase; nested filters and entity fields keep their upstream names.",
+      {
+        filters: filtersSchema,
+        languageCode: getAiMentionsTopBrandsLanguageCodeSchema,
+        languageName: getAiMentionsTopBrandsLanguageNameSchema,
+        limit: {
+          description:
+            "the maximum number of returned objects\noptional field\ndefault value: 100\nmaximum value: 1000",
+          type: ["integer", "null"],
+          maximum: 1000,
+        },
+        locationCode: getAiMentionsTopBrandsLocationCodeSchema,
+        locationName: getAiMentionsTopBrandsLocationNameSchema,
+        offset: {
+          description:
+            "offset in the results array of the returned mentions data\noptional field\ndefault value: 0\nexample: if you specify the 10 value, the first ten mentions objects in the results array will be omitted and the data will be provided for the successive objects;\nNote: the maximum value is 1000000, use the search_after_token if you would like to offset more results",
+          type: ["integer", "null"],
+          maximum: 1000000,
+          minimum: 0,
+        },
+        orderBy: getAiLlmMentionsSearchMentionsOrderBySchema,
+        platform: getAiLlmMentionsSearchMentionsPlatformSchema,
+        searchAfterToken: {
+          description:
+            "token for subsequent requests\noptional field\nprovided in the identical filed of the response to each request;\nuse this parameter to avoid timeouts while trying to obtain over 1000 results in a single request;\nby specifying the unique search_after_token value from the response array, you will get the subsequent results of the initial task;\nsearch_after_token values are unique for each subsequent task ;\nNote: if the search_after_token is specified in the request, all other parameters should be identical to the previous request",
+          type: ["string", "null"],
+        },
+        tag: tagSchema,
+        target: getAiLlmMentionsSearchMentionsTargetSchema,
+      },
+      { required: ["target"] },
+    ),
+  },
+  {
+    name: "get_dataforseo_ai_llm_mentions_target_metrics",
+    path: "/apis/v1/dataforseo/ai_optimization/llm_mentions/target_metrics/live",
+    description: "Research AI mentions target metrics through DataForSEO using one synchronous query.",
+    inputSchema: s.object(
+      "Parameters for AI llm mentions target metrics. Top-level names use camelCase; nested filters and entity fields keep their upstream names.",
+      {
+        initialDatasetFilters: getAiLlmMentionsTargetMetricsInitialDatasetFiltersSchema,
+        internalListLimit: {
+          description:
+            "maximum number of elements within internal arrays\noptional field\nyou can use this field to limit the number of elements within the following arrays:\nsources_domain\nsearch_results_domain\nminimum value: 1\nmaximum value: 10\ndefault value: 10",
+          type: ["integer", "null"],
+          minimum: 1,
+          maximum: 10,
+        },
+        languageCode: getAiMentionsTopBrandsLanguageCodeSchema,
+        languageName: getAiMentionsTopBrandsLanguageNameSchema,
+        locationCode: getAiMentionsTopBrandsLocationCodeSchema,
+        locationName: getAiMentionsTopBrandsLocationNameSchema,
+        platform: getAiLlmMentionsSearchMentionsPlatformSchema,
+        tag: tagSchema,
+        target: getAiLlmMentionsSearchMentionsTargetSchema,
+      },
+      { required: ["target"] },
+    ),
+  },
+  {
+    name: "get_dataforseo_ai_llm_mentions_target_metrics_lite",
+    path: "/apis/v1/dataforseo/ai_optimization/llm_mentions/target_metrics_lite/live",
+    description: "Research AI mentions target metrics lite through DataForSEO using one synchronous query.",
+    inputSchema: s.object(
+      "Parameters for AI llm mentions target metrics lite. Top-level names use camelCase; nested filters and entity fields keep their upstream names.",
+      {
+        initialDatasetFilters: getAiLlmMentionsTargetMetricsInitialDatasetFiltersSchema,
+        languageCode: getAiMentionsTopBrandsLanguageCodeSchema,
+        languageName: getAiMentionsTopBrandsLanguageNameSchema,
+        limit: getAiLlmMentionsTargetMetricsLiteLimitSchema,
+        locationCode: getAiMentionsTopBrandsLocationCodeSchema,
+        locationName: getAiMentionsTopBrandsLocationNameSchema,
+        offset: getAiLlmMentionsTargetMetricsLiteOffsetSchema,
+        orderBy: {
+          description:
+            'results sorting rules\noptional field\nyou can use the same values as in the filters array to sort the results\npossible sorting types:\nasc - results will be sorted in the ascending order\ndesc - results will be sorted in the descending order\nyou should use a comma to set up a sorting type\nexample:\n["ai_search_volume,desc"]\nnote that you can set no more than three sorting rules in a single request\nyou should use a comma to separate several sorting rules',
+          items: getAiLlmMentionsSearchMentionsOrderByItemSchema,
+          type: ["array", "null"],
+        },
+        platform: getAiLlmMentionsSearchMentionsPlatformSchema,
+        tag: tagSchema,
+        target: getAiLlmMentionsSearchMentionsTargetSchema,
+      },
+      { required: ["target"] },
+    ),
+  },
+  {
+    name: "get_dataforseo_ai_llm_mentions_top_mentioned_brand_categories",
+    path: "/apis/v1/dataforseo/ai_optimization/llm_mentions/top_mentioned_brand_categories/live",
+    description: "Research AI mentions top mentioned brand categories through DataForSEO using one synchronous query.",
+    inputSchema: s.object(
+      "Parameters for AI llm mentions top mentioned brand categories. Top-level names use camelCase; nested filters and entity fields keep their upstream names.",
+      {
+        excludeBrandCategories: {
+          description:
+            'array of brand categories to exclude from the response\noptional field\nif specified, the listed brand categories will be omitted from the items array\nexample:\n"exclude_brand_categories": ["business"]',
+          items: excludeBrandCategoriesItemSchema,
+          type: ["array", "null"],
+        },
+        filters: filtersSchema,
+        includeBrandCategories: {
+          description:
+            'array of brand_categories to include in the response\noptional field\nif specified, only the listed brand categories will be returned in the items array\nexample:\n"include_brand_categories": ["business"]',
+          items: includeBrandCategoriesItemSchema,
+          type: ["array", "null"],
+        },
+        initialDatasetFilters: getAiLlmMentionsTargetMetricsInitialDatasetFiltersSchema,
+        internalListLimit: getAiLlmMentionsTopMentionedBrandCategoriesInternalListLimitSchema,
+        languageCode: getAiMentionsTopBrandsLanguageCodeSchema,
+        languageName: getAiMentionsTopBrandsLanguageNameSchema,
+        limit: getAiLlmMentionsTargetMetricsLiteLimitSchema,
+        locationCode: getAiMentionsTopBrandsLocationCodeSchema,
+        locationName: getAiMentionsTopBrandsLocationNameSchema,
+        offset: getAiLlmMentionsTargetMetricsLiteOffsetSchema,
+        orderBy: getAiLlmMentionsSearchMentionsOrderBySchema,
+        platform: platformSchema,
+        tag: tagSchema,
+        target: getAiLlmMentionsSearchMentionsTargetSchema,
+      },
+      { required: ["target"] },
+    ),
+  },
+  {
+    name: "get_dataforseo_ai_llm_mentions_top_mentioned_brand_categories_lite",
+    path: "/apis/v1/dataforseo/ai_optimization/llm_mentions/top_mentioned_brand_categories_lite/live",
+    description:
+      "Research AI mentions top mentioned brand categories lite through DataForSEO using one synchronous query.",
+    inputSchema: s.object(
+      "Parameters for AI llm mentions top mentioned brand categories lite. Top-level names use camelCase; nested filters and entity fields keep their upstream names.",
+      {
+        excludeBrandCategories: {
+          description:
+            'array of brand categories to exclude from the response\noptional field\nif specified, the listed brand categories will be omitted from the items array\nexample:\n["company","insurance"]',
+          items: excludeBrandCategoriesItemSchema,
+          type: ["array", "null"],
+        },
+        filters: filtersSchema,
+        includeBrandCategories: {
+          description:
+            'array of brand categories to include in the response\noptional field\nif specified, only the listed brand categories will be returned in the items array\nexample:\n["company","insurance"]',
+          items: includeBrandCategoriesItemSchema,
+          type: ["array", "null"],
+        },
+        initialDatasetFilters: getAiLlmMentionsTargetMetricsInitialDatasetFiltersSchema,
+        internalListLimit: getAiLlmMentionsTopMentionedBrandCategoriesInternalListLimitSchema,
+        languageCode: getAiMentionsTopBrandsLanguageCodeSchema,
+        languageName: getAiMentionsTopBrandsLanguageNameSchema,
+        limit: getAiLlmMentionsTargetMetricsLiteLimitSchema,
+        locationCode: getAiMentionsTopBrandsLocationCodeSchema,
+        locationName: getAiMentionsTopBrandsLocationNameSchema,
+        offset: getAiLlmMentionsTargetMetricsLiteOffsetSchema,
+        orderBy: getAiLlmMentionsSearchMentionsOrderBySchema,
+        platform: getAiLlmMentionsTopMentionedBrandCategoriesLitePlatformSchema,
+        tag: tagSchema,
+        target: getAiLlmMentionsSearchMentionsTargetSchema,
+      },
+      { required: ["target"] },
+    ),
+  },
+  {
+    name: "get_dataforseo_ai_llm_mentions_top_mentioned_brands_lite",
+    path: "/apis/v1/dataforseo/ai_optimization/llm_mentions/top_mentioned_brands_lite/live",
+    description: "Research AI mentions top mentioned brands lite through DataForSEO using one synchronous query.",
+    inputSchema: s.object(
+      "Parameters for AI llm mentions top mentioned brands lite. Top-level names use camelCase; nested filters and entity fields keep their upstream names.",
+      {
+        excludeBrands: {
+          description:
+            'array of brands to exclude from the response\noptional field\nif specified, the listed brands will be omitted from the items array\nexample:\n["BMW","Audi"]',
+          items: s.string("The exclude brands item value."),
+          type: ["array", "null"],
+        },
+        filters: {
+          description:
+            'array of results filtering parameters\noptional field\nyou can add several filters at once (8 filters maximum)\nyou should set a logical operator and, or between the conditions\nthe following operators are supported:\n=, <>, in, not_in, like, not_like, ilike, not_ilike, match, not_match\nyou can use the % operator with like and not_like to match any string of zero or more characters\nexample:\n["ai_search_volume",">", 1000]\nThe full list of possible filters is available here.',
+          items: getAiLlmMentionsSearchMentionsFiltersItemSchema,
+          type: ["array", "null"],
+        },
+        includeBrands: {
+          description:
+            'array of brands to include in the response\noptional field\nif specified, only the listed brands will be returned in the items array\nexample:\n["BMW","Audi"]',
+          items: s.string("The include brands item value."),
+          type: ["array", "null"],
+        },
+        initialDatasetFilters: getAiLlmMentionsTargetMetricsInitialDatasetFiltersSchema,
+        internalListLimit: getAiLlmMentionsTopMentionedBrandCategoriesInternalListLimitSchema,
+        languageCode: getAiMentionsTopBrandsLanguageCodeSchema,
+        languageName: getAiMentionsTopBrandsLanguageNameSchema,
+        limit: getAiLlmMentionsTargetMetricsLiteLimitSchema,
+        locationCode: getAiMentionsTopBrandsLocationCodeSchema,
+        locationName: getAiMentionsTopBrandsLocationNameSchema,
+        offset: getAiLlmMentionsTargetMetricsLiteOffsetSchema,
+        orderBy: getAiLlmMentionsSearchMentionsOrderBySchema,
+        platform: getAiLlmMentionsTopMentionedBrandCategoriesLitePlatformSchema,
+        tag: tagSchema,
+        target: getAiLlmMentionsSearchMentionsTargetSchema,
+      },
+      { required: ["target"] },
+    ),
+  },
+  {
+    name: "get_dataforseo_ai_llm_mentions_top_mentioned_domains",
+    path: "/apis/v1/dataforseo/ai_optimization/llm_mentions/top_mentioned_domains/live",
+    description: "Research AI mentions top mentioned domains through DataForSEO using one synchronous query.",
+    inputSchema: s.object(
+      "Parameters for AI llm mentions top mentioned domains. Top-level names use camelCase; nested filters and entity fields keep their upstream names.",
+      {
+        excludeDomains: {
+          description:
+            'array of domains to exclude from the response\noptional field\nif specified, the listed domains will be omitted from the items array\nexample:\n"exclude_domains": ["en.wikipedia.org"]',
+          items: excludeDomainsItemSchema,
+          type: ["array", "null"],
+        },
+        filters: filtersSchema,
+        includeDomains: {
+          description:
+            'array of domains to include in the response\noptional field\nif specified, only the listed domains will be returned in the items array\nexample:\n"include_domains": ["en.wikipedia.org"]',
+          items: includeDomainsItemSchema,
+          type: ["array", "null"],
+        },
+        initialDatasetFilters: getAiLlmMentionsTargetMetricsInitialDatasetFiltersSchema,
+        internalListLimit: getAiLlmMentionsTopMentionedBrandCategoriesInternalListLimitSchema,
+        languageCode: getAiMentionsTopBrandsLanguageCodeSchema,
+        languageName: getAiMentionsTopBrandsLanguageNameSchema,
+        limit: getAiLlmMentionsTargetMetricsLiteLimitSchema,
+        linksScope: {
+          description:
+            "links source scope\noptional field\nthis parameter specifies which links will be used to extract domains and aggregation data\npossible values: sources, search_results\ndefault value: sources\nNote:if you specify search_results, the data will be available for chat_gpt only",
+          type: ["string", "null"],
+        },
+        locationCode: getAiMentionsTopBrandsLocationCodeSchema,
+        locationName: getAiMentionsTopBrandsLocationNameSchema,
+        offset: getAiLlmMentionsTargetMetricsLiteOffsetSchema,
+        orderBy: getAiLlmMentionsSearchMentionsOrderBySchema,
+        platform: getAiLlmMentionsSearchMentionsPlatformSchema,
+        tag: tagSchema,
+        target: getAiLlmMentionsSearchMentionsTargetSchema,
+      },
+      { required: ["target"] },
+    ),
+  },
+  {
+    name: "get_dataforseo_ai_llm_mentions_top_mentioned_domains_lite",
+    path: "/apis/v1/dataforseo/ai_optimization/llm_mentions/top_mentioned_domains_lite/live",
+    description: "Research AI mentions top mentioned domains lite through DataForSEO using one synchronous query.",
+    inputSchema: s.object(
+      "Parameters for AI llm mentions top mentioned domains lite. Top-level names use camelCase; nested filters and entity fields keep their upstream names.",
+      {
+        excludeDomains: {
+          description:
+            'array of domains to exclude from the response\noptional field\nif specified, the listed domains will be omitted from the items array\nexample:\n["google.com","bing.com"]',
+          items: excludeDomainsItemSchema,
+          type: ["array", "null"],
+        },
+        filters: filtersSchema,
+        includeDomains: {
+          description:
+            'array of domains to include in the response\noptional field\nif specified, only the listed domains will be returned in the items array\nexample:\n["dataforseo.com","seoinsider.com"]',
+          items: includeDomainsItemSchema,
+          type: ["array", "null"],
+        },
+        initialDatasetFilters: getAiLlmMentionsTargetMetricsInitialDatasetFiltersSchema,
+        internalListLimit: getAiLlmMentionsTopMentionedBrandCategoriesInternalListLimitSchema,
+        languageCode: {
+          description:
+            "search language code\noptional field\nif you use this field, you don't need to specify language_name;\nyou can receive the list of available languages of the search engine with their language_code_by making a separate request to the https://api.dataforseo.com/v3/ai_optimization/llm_mentions/locations_and_languages\ndefault value: en\nNote: chat_gpt data is available for en onlyn",
+          type: ["string", "null"],
+        },
+        languageName: getAiMentionsTopBrandsLanguageNameSchema,
+        limit: getAiLlmMentionsTargetMetricsLiteLimitSchema,
+        linksScope: {
+          description:
+            "links source scope\noptional field\nthis parameter specifies which links will be used to extract domains and aggregation data\npossible values: sources, search_results\ndefault value: sources;\nNote: if you specify search_results, the data will be available for chat_gpt only",
+          type: ["string", "null"],
+        },
+        locationCode: getAiMentionsTopBrandsLocationCodeSchema,
+        locationName: getAiMentionsTopBrandsLocationNameSchema,
+        offset: getAiLlmMentionsTargetMetricsLiteOffsetSchema,
+        orderBy: getAiLlmMentionsSearchMentionsOrderBySchema,
+        platform: getAiLlmMentionsTopMentionedDomainsLitePlatformSchema,
+        tag: tagSchema,
+        target: getAiLlmMentionsSearchMentionsTargetSchema,
+      },
+      { required: ["target"] },
+    ),
+  },
+  {
+    name: "get_dataforseo_ai_llm_mentions_top_mentioned_pages",
+    path: "/apis/v1/dataforseo/ai_optimization/llm_mentions/top_mentioned_pages/live",
+    description: "Research AI mentions top mentioned pages through DataForSEO using one synchronous query.",
+    inputSchema: s.object(
+      "Parameters for AI llm mentions top mentioned pages. Top-level names use camelCase; nested filters and entity fields keep their upstream names.",
+      {
+        excludePages: {
+          description:
+            'array of pages to exclude from the response\noptional field\nif specified, the listed pages will be omitted from the items array\nexample:\n"exclude_pages": ["https://example.page/"]',
+          items: excludePagesItemSchema,
+          type: ["array", "null"],
+        },
+        filters: filtersSchema,
+        includePages: {
+          description:
+            'array of pages to include in the response\noptional field\nif specified, only the listed pages will be returned in the items array\nexample:\n"include_pages": ["https://example.page/"]',
+          items: includePagesItemSchema,
+          type: ["array", "null"],
+        },
+        initialDatasetFilters: getAiLlmMentionsTargetMetricsInitialDatasetFiltersSchema,
+        internalListLimit: getAiLlmMentionsTopMentionedBrandCategoriesInternalListLimitSchema,
+        languageCode: getAiMentionsTopBrandsLanguageCodeSchema,
+        languageName: getAiMentionsTopBrandsLanguageNameSchema,
+        limit: getAiLlmMentionsTargetMetricsLiteLimitSchema,
+        linksScope: {
+          description:
+            "links source scope\noptional field\nthis parameter specifies which links will be used to extract domains and aggregation data\npossible values: sources, search_results\ndefault value: sources;\nNote:if you specify search_results, the data will be available for chat_gpt only",
+          type: ["string", "null"],
+        },
+        locationCode: getAiMentionsTopBrandsLocationCodeSchema,
+        locationName: getAiMentionsTopBrandsLocationNameSchema,
+        offset: getAiLlmMentionsTargetMetricsLiteOffsetSchema,
+        orderBy: getAiLlmMentionsSearchMentionsOrderBySchema,
+        platform: getAiLlmMentionsSearchMentionsPlatformSchema,
+        tag: tagSchema,
+        target: getAiLlmMentionsSearchMentionsTargetSchema,
+      },
+      { required: ["target"] },
+    ),
+  },
+  {
+    name: "get_dataforseo_ai_llm_mentions_top_mentioned_pages_lite",
+    path: "/apis/v1/dataforseo/ai_optimization/llm_mentions/top_mentioned_pages_lite/live",
+    description: "Research AI mentions top mentioned pages lite through DataForSEO using one synchronous query.",
+    inputSchema: s.object(
+      "Parameters for AI llm mentions top mentioned pages lite. Top-level names use camelCase; nested filters and entity fields keep their upstream names.",
+      {
+        excludePages: {
+          description:
+            'array of page URLs to exclude from the response\noptional field\nif specified, the listed pages will be omitted from the items array\nexample:\n`["https://dataforseo.com/apis/ai-optimization-api/llm-mentions-api", "https://dataforseo.com/apis/ai-optimization-api"]`',
+          items: excludePagesItemSchema,
+          type: ["array", "null"],
+        },
+        filters: filtersSchema,
+        includePages: {
+          description:
+            'array of page URLs to include in the response\noptional field\nif specified, only the listed pages will be returned in the items array\nexample:\n`["https://dataforseo.com/apis/ai-optimization-api/llm-mentions-api", "https://dataforseo.com/apis/ai-optimization-api"]`',
+          items: includePagesItemSchema,
+          type: ["array", "null"],
+        },
+        initialDatasetFilters: getAiLlmMentionsTargetMetricsInitialDatasetFiltersSchema,
+        internalListLimit: getAiLlmMentionsTopMentionedBrandCategoriesInternalListLimitSchema,
+        languageCode: getAiMentionsTopBrandsLanguageCodeSchema,
+        languageName: getAiMentionsTopBrandsLanguageNameSchema,
+        limit: getAiLlmMentionsTargetMetricsLiteLimitSchema,
+        linksScope: {
+          description:
+            "links source scope\noptional field\nthis parameter specifies which links will be used to extract domains and aggregation data\npossible values: sources, search_results\ndefault value: sources; ;\nNote: if you specify search_results, the data will be available for chat_gpt only",
+          type: ["string", "null"],
+        },
+        locationCode: getAiMentionsTopBrandsLocationCodeSchema,
+        locationName: getAiMentionsTopBrandsLocationNameSchema,
+        offset: getAiLlmMentionsTargetMetricsLiteOffsetSchema,
+        orderBy: getAiLlmMentionsSearchMentionsOrderBySchema,
+        platform: getAiLlmMentionsTopMentionedDomainsLitePlatformSchema,
+        tag: tagSchema,
+        target: getAiLlmMentionsSearchMentionsTargetSchema,
+      },
+      { required: ["target"] },
+    ),
+  },
+  {
+    name: "get_dataforseo_app_data_google_app_listings_search",
+    path: "/apis/v1/dataforseo/app_data/google/app_listings/search/live",
+    description: "Research Google Play app listings search through DataForSEO using one synchronous query.",
+    inputSchema: s.object(
+      "Parameters for app data google app listings search. Top-level names use camelCase; nested filters and entity fields keep their upstream names.",
+      {
+        categories: {
+          description:
+            "app categories\noptional field\nthe categories you specify are used to search for app listings;\nyou can get the full list of available app listing categories by this link\nyou can specify up to 10 categories",
+          items: getAppDataGoogleAppListingsSearchCategoriesItemSchema,
+          type: ["array", "null"],
+        },
+        description: {
+          description:
+            "keyword in the app's description\noptional field\nkeywords that occur in the description of the app;\ncan contain up to 200 characters",
+          type: ["string", "null"],
+          maxLength: 200,
+        },
+        filters: {
+          description:
+            'array of results filtering parameters\noptional field\nyou can add several filters at once (8 filters maximum)\nyou should set a logical operator and, or between the conditions\nthe following operators are supported:\nregex, not_regex, <, <=, >, >=, =, <>, in, not_in, like, not_like\nyou can use the % operator with like and not_like to match any string of zero or more characters\nexample:\n["item.rating.value",">",3]\nyou can receive the list of available filters_by making a separate request to https://api.dataforseo.com/v3/app_data/google/app_listings/available_filters',
+          items: getAiLlmMentionsSearchMentionsFiltersItemSchema,
+          type: ["array", "null"],
+        },
+        limit: {
+          description: "the maximum number of returned apps\noptional field\ndefault value: 100\nmaximum value: 1000",
+          type: ["integer", "null"],
+          maximum: 1000,
+        },
+        offset: {
+          description:
+            "offset in the results array of returned apps\noptional field\ndefault value: 0\nif you specify the 10 value, the first ten entities in the results array will be omitted and the data will be provided for the successive entities\nNote: we recommend using this parameter only when retrieving up to 10,000 results\nfor retrieving over 10,000 results, use the offset_token instead.",
+          type: ["integer", "null"],
+          minimum: 0,
+        },
+        offsetToken: getAppDataGoogleAppListingsSearchOffsetTokenSchema,
+        orderBy: {
+          description:
+            'results sorting rules\noptional field\nyou can use the same values as in the filters array to sort the results\npossible sorting types:\nasc - results will be sorted in the ascending order\ndesc - results will be sorted in the descending order\nyou should use a comma to set up a sorting parameter\nexample:\n["item.installs_count,asc"]\nnote that you can set no more than three sorting rules in a single request\nyou should use a comma to separate several sorting rules\nexample:\n["item.rating.value,desc","item.installs_count,asc"]',
+          items: getAiLlmMentionsSearchMentionsOrderByItemSchema,
+          type: ["array", "null"],
+        },
+        tag: tagSchema,
+        title: {
+          description:
+            "keyword in the app's title\noptional field\nkeywords that occur in the title of the app;\ncan contain up to 200 characters",
+          type: ["string", "null"],
+          maxLength: 200,
+        },
+      },
+      { required: [] },
+    ),
+  },
+  {
+    name: "get_dataforseo_backlinks_anchors",
+    path: "/apis/v1/dataforseo/backlinks/anchors/live",
+    description: "Research backlinks anchors through DataForSEO using one synchronous query.",
+    inputSchema: s.object(
+      "Parameters for backlinks anchors. Top-level names use camelCase; nested filters and entity fields keep their upstream names.",
+      {
+        backlinksFilters: backlinksFiltersSchema,
+        backlinksStatusType: getBacklinksAnchorsBacklinksStatusTypeSchema,
+        excludeInternalBacklinks: excludeInternalBacklinksSchema,
+        filters: {
+          description:
+            'array of results filtering parameters\noptional field\nyou can add several filters at once (8 filters maximum)\nyou should set a logical operator and, or between the conditions\nthe following operators are supported:\nregex, not_regex, =, <>, in, not_in, like, not_like, ilike, not_ilike, match, not_match\nyou can use the % operator with like and not_like to match any string of zero or more characters\nexample:\n["referring_links_types.anchors",">","1"]\n[["broken_pages",">","2"],\n"and",\n["backlinks",">","10"]]\n[["first_seen",">","2017-10-23 11:31:45 +00:00"],\n"and",\n[["anchor","like","%seo%"],"or",["referring_domains",">","10"]]]\nThe full list of possible filters is available here.',
+          items: getAiLlmMentionsSearchMentionsFiltersItemSchema,
+          type: ["array", "null"],
+        },
+        includeIndirectLinks: includeIndirectLinksSchema,
+        includeSubdomains: includeSubdomainsSchema,
+        internalListLimit: getBacklinksAnchorsInternalListLimitSchema,
+        limit: {
+          description:
+            "the maximum number of returned anchors\noptional field\ndefault value: 100\nmaximum value: 1000",
+          type: ["integer", "null"],
+          maximum: 1000,
+        },
+        offset: {
+          description:
+            "offset in the results array of returned anchors\noptional field\ndefault value: 0\nif you specify the 10 value, the first ten anchors in the results array will be omitted and the data will be provided for the successive anchors",
+          type: ["integer", "null"],
+          minimum: 0,
+        },
+        orderBy: getBacklinksAnchorsOrderBySchema,
+        rankScale: rankScaleSchema,
+        tag: tagSchema,
+        target: s.string(
+          "domain, subdomain or webpage to get anchors for\nrequired field\na domain or a subdomain should be specified without https:// and www.\na page should be specified with absolute URL (including http:// or https://)",
+          { minLength: 1 },
+        ),
+      },
+      { required: ["target"] },
+    ),
+  },
+  {
+    name: "get_dataforseo_backlinks_bulk_backlinks",
+    path: "/apis/v1/dataforseo/backlinks/bulk_backlinks/live",
+    description: "Research backlinks bulk backlinks through DataForSEO using one synchronous query.",
+    inputSchema: s.object(
+      "Parameters for backlinks bulk backlinks. Top-level names use camelCase; nested filters and entity fields keep their upstream names.",
+      {
+        tag: tagSchema,
+        targets: s.array(
+          'domains, subdomains or webpages to get the number of backlinks for\nrequired field\nyou can set up to 1000 domains, subdomains or webpages\nthe domain or subdomain should be specified without https:// and www.\nthe page should be specified with absolute URL (including http:// or https://)\nexample:\n`"targets": [\n"forbes.com",\n"cnn.com",\n"bbc.com",\n"yelp.com",\n"https://www.apple.com/iphone/",\n"https://ahrefs.com/blog/",\n"ibm.com",\n"https://variety.com/",\n"https://stackoverflow.com/",\n"www.trustpilot.com"\n]`',
+          targetsItemSchema,
+          { maxItems: 1000, minItems: 1 },
+        ),
+      },
+      { required: ["targets"] },
+    ),
+  },
+  {
+    name: "get_dataforseo_backlinks_bulk_new_lost_backlinks",
+    path: "/apis/v1/dataforseo/backlinks/bulk_new_lost_backlinks/live",
+    description: "Research backlinks bulk new lost backlinks through DataForSEO using one synchronous query.",
+    inputSchema: s.object(
+      "Parameters for backlinks bulk new lost backlinks. Top-level names use camelCase; nested filters and entity fields keep their upstream names.",
+      {
+        dateFrom: {
+          description:
+            'starting date of the time range\noptional field\nthis field indicates the date which will be used as a threshold for new and lost backlinks;\nthe backlinks that appeared in our index after the specified date will be considered as new;\nthe backlinks that weren\'t found after the specified date, but were present before, will be considered as lost;\ndefault value: today\'s date -(minus) one month;\ne.g. if today is 2021-10-13, default date_from will be 2021-09-13.\nminimum value equals today\'s date -(minus) one year;\ne.g. if today is 2021-10-13, minimum date_from will be 2020-10-13.\ndate format: "yyyy-mm-dd"\nexample:\n"2021-01-01"',
+          type: ["string", "null"],
+          format: "date",
+        },
+        tag: tagSchema,
+        targets: s.array(
+          'domains, subdomains or webpages to get new & lost backlinks for\nrequired field\nyou can set up to 1000 domains, subdomains or webpages\nthe domain or subdomain should be specified without `https://` and `www.` the page should be specified with absolute URL (including http:// or https://)\nexample:\n`"targets": [\n"forbes.com",\n"cnn.com",\n"bbc.com",\n"yelp.com",\n"https://www.apple.com/iphone/",\n"https://ahrefs.com/blog/",\n"ibm.com",\n"https://variety.com/",\n"https://stackoverflow.com/",\n"www.trustpilot.com"\n]`',
+          targetsItemSchema,
+          { maxItems: 1000, minItems: 1 },
+        ),
+      },
+      { required: ["targets"] },
+    ),
+  },
+  {
+    name: "get_dataforseo_backlinks_bulk_new_lost_referring_domains",
+    path: "/apis/v1/dataforseo/backlinks/bulk_new_lost_referring_domains/live",
+    description: "Research backlinks bulk new lost referring domains through DataForSEO using one synchronous query.",
+    inputSchema: s.object(
+      "Parameters for backlinks bulk new lost referring domains. Top-level names use camelCase; nested filters and entity fields keep their upstream names.",
+      {
+        dateFrom: {
+          description:
+            'starting date of the time range\noptional field\nthis field indicates the date which will be used as a threshold for new and lost referring domains;\nthe referring domains that appeared in our index after the specified date will be considered as new;\nthe referring domains that weren\'t found after the specified date, but were present before, will be considered as lost;\ndefault value: today\'s date -(minus) one month;\ne.g. if today is 2021-10-13, default date_from will be 2021-09-13.\nminimum value equals today\'s date -(minus) one year;\ne.g. if today is 2021-10-13, minimum date_from will be 2020-10-13.\ndate format: "yyyy-mm-dd"\nexample:\n"2021-01-01"',
+          type: ["string", "null"],
+          format: "date",
+        },
+        tag: tagSchema,
+        targets: s.array(
+          'domains, subdomains or webpages to get new & lost referring domains for\nrequired field\nyou can set up to 1000 domains, subdomains or webpages\nthe domain or subdomain should be specified without https:// and www.\nthe page should be specified with absolute URL (including http:// or https://)\nexample:\n`"targets": [\n"forbes.com",\n"cnn.com",\n"bbc.com",\n"yelp.com",\n"https://www.apple.com/iphone/",\n"https://ahrefs.com/blog/",\n"ibm.com",\n"https://variety.com/",\n"https://stackoverflow.com/",\n"www.trustpilot.com"\n]`',
+          targetsItemSchema,
+          { maxItems: 1000, minItems: 1 },
+        ),
+      },
+      { required: ["targets"] },
+    ),
+  },
+  {
+    name: "get_dataforseo_backlinks_bulk_pages_summary",
+    path: "/apis/v1/dataforseo/backlinks/bulk_pages_summary/live",
+    description: "Research backlinks bulk pages summary through DataForSEO using one synchronous query.",
+    inputSchema: s.object(
+      "Parameters for backlinks bulk pages summary. Top-level names use camelCase; nested filters and entity fields keep their upstream names.",
+      {
+        includeSubdomains: includeSubdomainsSchema,
+        rankScale: rankScaleSchema,
+        tag: tagSchema,
+        targets: s.array(
+          "domains, subdomains or webpages to get summary data for\nrequired field\na domain or a subdomain should be specified without https:// and www.\na page should be specified with absolute URL (including http:// or https://)\nyou can specify up to 1000 pages, domains, or subdomains in each request.\nnote that the URLs you set in a single request cannot belong to more than 100 different domains.",
+          targetsItemSchema,
+          { maxItems: 1000, minItems: 1 },
+        ),
+      },
+      { required: ["targets"] },
+    ),
+  },
+  {
+    name: "get_dataforseo_backlinks_bulk_ranks",
+    path: "/apis/v1/dataforseo/backlinks/bulk_ranks/live",
+    description: "Research backlinks bulk ranks through DataForSEO using one synchronous query.",
+    inputSchema: s.object(
+      "Parameters for backlinks bulk ranks. Top-level names use camelCase; nested filters and entity fields keep their upstream names.",
+      {
+        rankScale: rankScaleSchema,
+        tag: tagSchema,
+        targets: s.array(
+          'domains, subdomains or webpages to get rank for\nrequired field\nyou can set up to 1000 domains, subdomains or webpages\nthe domain or subdomain should be specified without https:// and www.\nthe page should be specified with absolute URL (including http:// or https://)\nexample:\n`"targets": [\n"forbes.com",\n"cnn.com",\n"bbc.com",\n"yelp.com",\n"https://www.apple.com/iphone/",\n"https://ahrefs.com/blog/",\n"ibm.com",\n"https://variety.com/",\n"https://stackoverflow.com/",\n"www.trustpilot.com"\n]`',
+          targetsItemSchema,
+          { maxItems: 1000, minItems: 1 },
+        ),
+      },
+      { required: ["targets"] },
+    ),
+  },
+  {
+    name: "get_dataforseo_backlinks_bulk_referring_domains",
+    path: "/apis/v1/dataforseo/backlinks/bulk_referring_domains/live",
+    description: "Research backlinks bulk referring domains through DataForSEO using one synchronous query.",
+    inputSchema: s.object(
+      "Parameters for backlinks bulk referring domains. Top-level names use camelCase; nested filters and entity fields keep their upstream names.",
+      {
+        tag: tagSchema,
+        targets: s.array(
+          'domains, subdomains or webpages to get the number of referring domains for\nrequired field\nyou can set up to 1000 domains, subdomains or webpages\nthe domain or subdomain should be specified without https:// and www.\nthe page should be specified with absolute URL (including http:// or https://)\nexample:\n`"targets": [\n"forbes.com",\n"cnn.com",\n"bbc.com",\n"yelp.com",\n"https://www.apple.com/iphone/",\n"https://ahrefs.com/blog/",\n"ibm.com",\n"https://variety.com/",\n"https://stackoverflow.com/",\n"www.trustpilot.com"\n]`',
+          targetsItemSchema,
+          { maxItems: 1000, minItems: 1 },
+        ),
+      },
+      { required: ["targets"] },
+    ),
+  },
+  {
+    name: "get_dataforseo_backlinks_competitors",
+    path: "/apis/v1/dataforseo/backlinks/competitors/live",
+    description: "Research backlinks competitors through DataForSEO using one synchronous query.",
+    inputSchema: s.object(
+      "Parameters for backlinks competitors. Top-level names use camelCase; nested filters and entity fields keep their upstream names.",
+      {
+        excludeInternalBacklinks: getBacklinksCompetitorsExcludeInternalBacklinksSchema,
+        excludeLargeDomains: {
+          description:
+            "indicates whether large domain will appear in results\noptional field\nif set to true, the results from the large domain (google.com, amazon.com, etc.) will be omitted;\ndefault value: true",
+          type: ["boolean", "null"],
+        },
+        filters: {
+          description:
+            'array of results filtering parameters\noptional field\nyou can add several filters at once (8 filters maximum)\nyou should set a logical operator and, or between the conditions\nthe following operators are supported:\nregex, not_regex, =, <>, in, not_in, like, not_like, ilike, not_ilike, match, not_match\nyou can use the % operator with like and not_like to match any string of zero or more characters\nexample:\n["rank",">","100"]\n[["target","like","%forbes%"],\n"and",\n[["rank",">","100"],"or",["intersections",">","5"]]]\nThe full list of possible filters is available here.',
+          items: getAiLlmMentionsSearchMentionsFiltersItemSchema,
+          type: ["array", "null"],
+        },
+        limit: getBacklinksCompetitorsLimitSchema,
+        mainDomain: {
+          description:
+            "indicates if only main domain of the target will be included in the search\noptional field\nif set to true, only the main domain will be included in search;\ndefault value: true",
+          type: ["boolean", "null"],
+        },
+        offset: {
+          description:
+            "offset in the results array of returned domains\noptional field\ndefault value: 0\nif you specify the 10 value, the first ten domains in the results array will be omitted and the data will be provided for the successive pages",
+          type: ["integer", "null"],
+          minimum: 0,
+        },
+        orderBy: {
+          description:
+            'results sorting rules\noptional field\nyou can use the same values as in the filters array to sort the results\npossible sorting types:\nasc - results will be sorted in the ascending order\ndesc - results will be sorted in the descending order\nyou should use a comma to set up a sorting type\nexample:\n["rank,desc"]\nnote that you can set no more than three sorting rules in a single request\nyou should use a comma to separate several sorting rules\nexample:\n["intersections,desc","rank,asc"]',
+          items: getAiLlmMentionsSearchMentionsOrderByItemSchema,
+          type: ["array", "null"],
+        },
+        rankScale: rankScaleSchema,
+        tag: tagSchema,
+        target: s.string(
+          "domain, subdomain or webpage to get competitor domains for\nrequired field\na domain or a subdomain should be specified without https:// and www.\na page should be specified with absolute URL (including http:// or https://)",
+          { minLength: 1 },
+        ),
+      },
+      { required: ["target"] },
+    ),
+  },
+  {
+    name: "get_dataforseo_backlinks_domain_pages",
+    path: "/apis/v1/dataforseo/backlinks/domain_pages/live",
+    description: "Research backlinks domain pages through DataForSEO using one synchronous query.",
+    inputSchema: s.object(
+      "Parameters for backlinks domain pages. Top-level names use camelCase; nested filters and entity fields keep their upstream names.",
+      {
+        backlinksFilters: getBacklinksDomainPagesBacklinksFiltersSchema,
+        backlinksStatusType: {
+          description:
+            "set what backlinks to return and count\noptional field\nyou can use this field to choose what backlinks will be returned and used for aggregated metrics;\npossible values:\nall - all backlinks will be returned and counted;\nlive - backlinks found during the last check will be returned and counted;\nlost - lost backlinks will be returned and counted;\ndefault value: live",
+          type: ["string", "null"],
+        },
+        excludeInternalBacklinks: getBacklinksCompetitorsExcludeInternalBacklinksSchema,
+        filters: {
+          description:
+            'array of results filtering parameters\noptional field\nyou can add several filters at once (8 filters maximum)\nyou should set a logical operator and, or between the conditions\nthe following operators are supported:\nregex, not_regex, =, <>, in, not_in, like, not_like, ilike, not_ilike, match, not_match\nyou can use the % operator with like and not_like to match any string of zero or more characters\nexample:\n["meta.internal_links_count",">","1"]\n[["meta.external_links_count",">","2"],\n"and",\n["backlinks",">","10"]]\n[["first_visited",">","2017-10-23 11:31:45 +00:00"],\n"and",\n[["title","like","%seo%"],"or",["referring_domains",">","10"]]]\nThe full list of possible filters is available here.',
+          items: getAiLlmMentionsSearchMentionsFiltersItemSchema,
+          type: ["array", "null"],
+        },
+        includeSubdomains: includeSubdomainsSchema,
+        internalListLimit: getBacklinksAnchorsInternalListLimitSchema,
+        limit: getBacklinksDomainPagesLimitSchema,
+        offset: getBacklinksDomainPagesOffsetSchema,
+        orderBy: {
+          description:
+            'results sorting rules\noptional field\nyou can use the same values as in the filters array to sort the results\npossible sorting types:\nasc - results will be sorted in the ascending order\ndesc - results will be sorted in the descending order\nyou should use a comma to set up a sorting type\nexample:\n["page_summary.backlinks,desc"]\nnote that you can set no more than three sorting rules in a single request\nyou should use a comma to separate several sorting rules\nexample:\n["page_summary.backlinks,desc","page_summary.rank,asc"]',
+          items: getAiLlmMentionsSearchMentionsOrderByItemSchema,
+          type: ["array", "null"],
+        },
+        rankScale: rankScaleSchema,
+        tag: tagSchema,
+        target: s.string(
+          "domain or subdomain\nrequired field\na domain or a subdomain should be specified without https:// and www.\nexample:\nforbes.com",
+          { minLength: 1 },
+        ),
+      },
+      { required: ["target"] },
+    ),
+  },
+  {
+    name: "get_dataforseo_backlinks_referring_networks",
+    path: "/apis/v1/dataforseo/backlinks/referring_networks/live",
+    description: "Research backlinks referring networks through DataForSEO using one synchronous query.",
+    inputSchema: s.object(
+      "Parameters for backlinks referring networks. Top-level names use camelCase; nested filters and entity fields keep their upstream names.",
+      {
+        backlinksFilters: backlinksFiltersSchema,
+        backlinksStatusType: getBacklinksAnchorsBacklinksStatusTypeSchema,
+        excludeInternalBacklinks: excludeInternalBacklinksSchema,
+        filters: {
+          description:
+            'array of results filtering parameters\noptional field\nyou can add several filters at once (8 filters maximum)\nyou should set a logical operator and, or between the conditions\nthe following operators are supported:\nregex, not_regex, =, <>, in, not_in, like, not_like, ilike, not_ilike, match, not_match\nyou can use the % operator with like and not_like to match any string of zero or more characters\nexample:\n["referring_pages",">","1"]\n[["referring_pages",">","2"],\n"and",\n["backlinks",">","10"]]\n[["first_seen",">","2017-10-23 11:31:45 +00:00"],\n"and",\n[["network_address","like","194.1.%"],"or",["referring_ips",">","10"]]]\nThe full list of possible filters is available here.',
+          items: getAiLlmMentionsSearchMentionsFiltersItemSchema,
+          type: ["array", "null"],
+        },
+        includeIndirectLinks: includeIndirectLinksSchema,
+        includeSubdomains: includeSubdomainsSchema,
+        internalListLimit: getBacklinksAnchorsInternalListLimitSchema,
+        limit: {
+          description:
+            "the maximum number of returned networks\noptional field\ndefault value: 100\nmaximum value: 1000",
+          type: ["integer", "null"],
+          maximum: 1000,
+        },
+        networkAddressType: {
+          description:
+            "indicates the type of network to get data for\noptional field\npossible values: ip, subnet\ndefault value: ip",
+          type: ["string", "null"],
+        },
+        offset: {
+          description:
+            "offset in the results array of returned networks\noptional field\ndefault value: 0\nif you specify the 10 value, the first ten domains in the results array will be omitted and the data will be provided for the successive pages",
+          type: ["integer", "null"],
+          minimum: 0,
+        },
+        orderBy: getBacklinksAnchorsOrderBySchema,
+        rankScale: rankScaleSchema,
+        tag: tagSchema,
+        target: s.string(
+          "domain, subdomain or webpage to get referring networks for\nrequired field\na domain or a subdomain should be specified without https:// and www.\na page should be specified with absolute URL (including http:// or https://)",
+          { minLength: 1 },
+        ),
+      },
+      { required: ["target"] },
+    ),
+  },
+  {
+    name: "get_dataforseo_backlinks_summary",
+    path: "/apis/v1/dataforseo/backlinks/summary/live",
+    description: "Research backlinks summary through DataForSEO using one synchronous query.",
+    inputSchema: s.object(
+      "Parameters for backlinks summary. Top-level names use camelCase; nested filters and entity fields keep their upstream names.",
+      {
+        backlinksFilters: getBacklinksDomainPagesBacklinksFiltersSchema,
+        backlinksStatusType: getBacklinksAnchorsBacklinksStatusTypeSchema,
+        excludeInternalBacklinks: getBacklinksCompetitorsExcludeInternalBacklinksSchema,
+        includeIndirectLinks: includeIndirectLinksSchema,
+        includeSubdomains: includeSubdomainsSchema,
+        internalListLimit: getBacklinksAnchorsInternalListLimitSchema,
+        rankScale: rankScaleSchema,
+        tag: tagSchema,
+        target: s.string(
+          "domain, subdomain or webpage to get data for\nrequired field\na domain or a subdomain should be specified without https:// and www.\na page should be specified with absolute URL (including http:// or https://)",
+          { minLength: 1 },
+        ),
+      },
+      { required: ["target"] },
+    ),
+  },
+  {
+    name: "get_dataforseo_backlinks_timeseries_summary",
+    path: "/apis/v1/dataforseo/backlinks/timeseries_summary/live",
+    description: "Research backlinks timeseries summary through DataForSEO using one synchronous query.",
+    inputSchema: s.object(
+      "Parameters for backlinks timeseries summary. Top-level names use camelCase; nested filters and entity fields keep their upstream names.",
+      {
+        dateFrom: {
+          description:
+            'starting date of the time range\noptional field\nthis field indicates the date which will be used as a threshold for summary data;\nminimum value: 2019-01-30\nmaximum value shouldn\'t exceed the date specified in the date_to\ndate format: "yyyy-mm-dd"\nexample:\n"2021-01-01"',
+          type: ["string", "null"],
+          format: "date",
+        },
+        dateTo: {
+          description:
+            "ending date of the time range\noptional field\nif you don't specify this field, the today's date will be used by default\nminimum value shouldn't preceed the date specified in the date_from\nmaximum value: today's date\ndate format: \"yyyy-mm-dd\"\nexample:\n\"2021-01-15\"",
+          type: ["string", "null"],
+          format: "date",
+        },
+        groupRange: {
+          description:
+            'time range which will be used to group the results\noptional field\ndefault value: month\npossible values: day, week, month, year\nnote: for day, we will return items corresponding to all dates between and including date_from and date_to;\nfor week/month/year, we will return items corresponding to full weeks/months/years, where each item will indicate the last day of the week/month/year\nfor example, if you specify:\n"group_range": "month",\n"date_from": "2022-03-23",\n"date_to": "2022-05-13"\nwe will return items falling between 2022-03-01 and 2022-05-31, namely, three items corresponding to the following dates: 2022-03-31, 2022-04-30, 2022-05-31\nif there is no data for a certain day/week/month/year, we will return 0',
+          type: ["string", "null"],
+        },
+        includeSubdomains: includeSubdomainsSchema,
+        rankScale: rankScaleSchema,
+        tag: tagSchema,
+        target: s.string(
+          'domain to get data for\nrequired field\na domain should be specified without https:// and www.\nexample:\n"forbes.com"',
+          { minLength: 1 },
+        ),
+      },
+      { required: ["target"] },
+    ),
+  },
+  {
+    name: "get_dataforseo_business_google_hotel_info",
+    path: "/apis/v1/dataforseo/business_data/google/hotel_info/live/advanced",
+    description: "Research business google hotel info through DataForSEO using one synchronous query.",
+    inputSchema: s.object(
+      "Parameters for business google hotel info. Top-level names use camelCase; nested filters and entity fields keep their upstream names.",
+      {
+        adults: {
+          description:
+            "number of adults\noptional field\nif you don't specify this field, two adults will be used by default\nexample:\n1",
+          type: ["integer", "null"],
+        },
+        checkIn: {
+          description:
+            'check-in date\noptional field\nif you don\'t specify this field, tomorrow\'s date will be used by default;\nthe value must not be earlier than today\'s date\ndate format: "yyyy-mm-dd"\nexample:\n"2019-01-15"',
+          type: ["string", "null"],
+          format: "date",
+        },
+        checkOut: {
+          description:
+            'check-out date\noptional field\nif you don\'t specify this field, our system will apply the date of two days from now by default;\nNote: the value cannot be less than or equal to check_in;\nthe range between check_in and check_out values cannot exceed 30 days\ndate format: "yyyy-mm-dd"\nexample:\n"2019-01-15"',
+          type: ["string", "null"],
+          format: "date",
+        },
+        children: {
+          description:
+            "number and age of children\noptional field\nif you don't specify this field, no children will be included in the search;\nset the following value if you want to include one 14-years-old child:\n[14]\nset the following value if you want to include one 13-years-old child and one 8-years-old child:\n[13,8]",
+          items: childrenItemSchema,
+          type: ["array", "null"],
+        },
+        currency: currencySchema,
+        hotelIdentifier: s.string(
+          "unique hotel identifier\nrequired field\nunique identifier of a hotel entity in Google search;\nyou can obtain the value by making a request to Advanced Google SERP API (enclosed in the hotels element of the response), or the Hotel Searches endpoint of Business Data API\nexample:\nChYIq6SB--i6p6cpGgovbS8wN2s5ODZfEAE",
+          { minLength: 1 },
+        ),
+        languageCode: getGoogleBusinessInfoLanguageCodeSchema,
+        languageName: getGoogleBusinessInfoLanguageNameSchema,
+        loadPricesByDates: {
+          description:
+            "load hotel stay prices by dates\noptional field\nif you specify this parameter with true, the response will include the prices_by_dates array with hotel stay prices divided by dates\nif you use this parameter, you will be charged double the base price for a request",
+          type: ["boolean", "null"],
+        },
+        locationCode: getGoogleBusinessInfoLocationCodeSchema,
+        locationCoordinate: s.string(
+          'GPS coordinates of a location\nrequired field if you don\'t specify location_name_or location_code\nif you use this field, you don\'t need to specify location_name or location_code\nlocation_coordinate parameter should be specified in the "latitude, longitude" format\nthe maximum number of decimal digits for "latitude" and "longitude": 7\nNote: if the coordinates are used to set a location, the search will occur in the nearest settlement;\nexample:\n53.476225,-2.243572n',
+        ),
+        locationName: getGoogleBusinessInfoLocationNameSchema,
+        pricesDateRange: {
+          description:
+            "predefined period for retrieving daily price data\noptional field\nto use this parameter, you must specify load_prices_by_dates with true\nif the prices_start_date is not specified, the start date is set to check_in date\npossible values: month, three_months, six_months, year\ndefault value: month",
+          type: ["string", "null"],
+        },
+        pricesEndDate: {
+          description:
+            "end date to load prices by dates\noptional field\nto use this parameter, you must specify load_prices_by_dates with true\nif this parameter is not specified, you will get prices by date for the month\ndate format: yyyy-mm-dd\nexample:\n2025-05-21",
+          type: ["string", "null"],
+          format: "date",
+        },
+        pricesStartDate: {
+          description:
+            "start date to load prices by dates\noptional field\nto use this parameter, you must specify load_prices_by_dates with true\nif this parameter is not specified, the start date is set to check_in date\ndate format: yyyy-mm-dd\nexample:\n2025-05-20",
+          type: ["string", "null"],
+          format: "date",
+        },
+        tag: tagSchema,
+      },
+      {
+        required: ["hotelIdentifier"],
+        allOf: [
+          requireAtLeastOne(
+            ["locationCode", "locationCoordinate", "locationName"],
+            ["locationCoordinate", "locationName"],
+          ),
+          nonemptyLanguageRequired,
+        ],
+      },
+    ),
+  },
+  {
+    name: "get_dataforseo_business_google_hotel_searches",
+    path: "/apis/v1/dataforseo/business_data/google/hotel_searches/live",
+    description: "Research business google hotel searches through DataForSEO using one synchronous query.",
+    inputSchema: s.object(
+      "Parameters for business google hotel searches. Top-level names use camelCase; nested filters and entity fields keep their upstream names.",
+      {
+        adults: {
+          description:
+            "number of adults\noptional field\nif you don't specify this field, the default value of 2 will be applied;\nnote that you can specify up to 6 persons including both adults and children\nexample:\n1",
+          type: ["integer", "null"],
+        },
+        amenities: {
+          description:
+            'hotel amenities\noptional field\nyou can use this field to specify different hotel amenities\nexample:\n[\n"free_parking",\n"pets_allowed"\n]\npossible values:\n`"air_conditioning",\n"all_inclusive_available",\n"bar",\n"free_breakfast",\n"fitness_center",\n"kid_friendly",\n"free_parking",\n"pets_allowed",\n"pool",\n"restaurant",\n"room_service",\n"spa",\n"free_wifi",\n"parking",\n"indoor_pool",\n"outdoor_pool",\n"wheelchair_accessible",\n"beach_access"`',
+          items: s.string("The amenities item value."),
+          type: ["array", "null"],
+        },
+        checkIn: {
+          description:
+            'check-in date\noptional field\nif you don\'t specify this field, tomorrow\'s date will be used by default;\ndate format: "yyyy-mm-dd"\nexample:\n"2019-01-15"\nNote: the value cannot precede the today\'s date',
+          type: ["string", "null"],
+          format: "date",
+        },
+        checkOut: {
+          description:
+            'check-out date\noptional field\nif you don\'t specify this field, our system will apply the date of two days from now by default;\ndate format: "yyyy-mm-dd"\nexample:\n"2019-01-15"\nNote: the value cannot be less than or equal to check_in;\nthe range between check_in and check_out values cannot exceed 30 days',
+          type: ["string", "null"],
+          format: "date",
+        },
+        children: {
+          description:
+            "number and age of children\noptional field\nif you don't specify this field, no children will be included in the search;\nage of child can be from 0 to 17;\nnote that you can specify up to 6 persons including both adults and children\nset the following value if you want to include one 14-year-old child:\n[14]\nset the following value if you want to include one 13-year-old child and one 8-year-old child:\n[13,8]",
+          items: childrenItemSchema,
+          type: ["array", "null"],
+        },
+        currency: currencySchema,
+        depth: {
+          description:
+            "parsing depth\noptional field\nnumber of results in Google Hotels\ndefault value: 18 organic results\nmax value: 140\nNote: your account will be billed per each 18 organic results regardless of paid listings in the response;\nthus, setting a depth above 18 may result in additional charges if Google Hotels return more than 18 results;\nif the specified depth is higher than the number of results in the response, the difference will be refunded automatically to your account balance",
+          type: ["integer", "null"],
+          maximum: 140,
+        },
+        freeCancellation: {
+          description:
+            "hotels with a free cancellation\noptional field\nset this field to true if you want to get the list of hotels with free cancellation of reservations\ndefault value: false",
+          type: ["boolean", "null"],
+        },
+        isVacationRentals: {
+          description:
+            "search for vacation rentals\noptional field\nset this field to true if you want to get the list of vacation rentals instead of hotels\ndefault value: false",
+          type: ["boolean", "null"],
+        },
+        keyword: {
+          description:
+            "keyword\noptional field\nthe keyword you specify is used to search for the list of hotels;\nif you don't use this field, we will return the list of hotels found in a specified location;\nyou can specify up to 700 characters in the keyword filed\nall %## will be decoded (plus character ‘+’ will be decoded to a space character)\nif you need to use the “%” character for your keyword, please specify it as “%25”;\nNote: in order to obtain accurate search results, the location name is appended to the keyword automatically\nlearn more about rules and limitations of keyword and keywords fields in DataForSEO APIs in this Help Center article",
+          type: ["string", "null"],
+          maxLength: 700,
+          minLength: 1,
+        },
+        languageCode: getGoogleBusinessInfoLanguageCodeSchema,
+        languageName: getGoogleBusinessInfoLanguageNameSchema,
+        locationCode: getGoogleBusinessInfoLocationCodeSchema,
+        locationCoordinate: s.string(
+          'GPS coordinates of a location\nrequired field if you don\'t specify location_name_or location_code\nif you use this field, you don\'t need to specify location_name or location_code\nlocation_coordinate parameter should be specified in the "latitude,longitude" format\nthe maximum number of decimal digits for "latitude" and "longitude": 7\nNote: if the coordinates are used to set a location, the search will occur in the nearest settlement\nexample:\n53.476225,-2.243572n',
+        ),
+        locationName: s.string(
+          "full name of search engine location\nrequired field if you don't specify location_code or location_coordinate\nif you use this field, you don't need to specify location_code or location_coordinate\nyou can receive the list of available locations with location_name by making a separate request to https://api.dataforseo.com/v3/business_data/google/locations\nexample:\nLondon,England,United Kingdom\nNote: in order to obtain accurate search results, the location_name you specify will be automatically appended to the keyword",
+        ),
+        maxPrice: {
+          description:
+            "maximum price per night\noptional field\nthe currency of this value depends on the currency field\nexample:\n600",
+          type: ["integer", "null"],
+        },
+        minPrice: {
+          description:
+            "minimum price per night\noptional field\nthe currency of this value depends on the currency field\nexample:\n100",
+          type: ["integer", "null"],
+        },
+        minRating: {
+          description:
+            "minimum rating\noptional field\nyou can use this field to specify guest rating higher than a certain value\nexample:\n2.5",
+          type: ["number", "null"],
+        },
+        searchThisArea: {
+          description:
+            "show hotels from the displayed area\noptional field\ncan take the values: true, false\ndefault value: true\nif set to false the search_this_area mode will be turned off\nNote: if the search_this_area mode is turned off, the location_name won't be appended to the keyword during search\nlearn more about this parameter on our Help Center",
+          type: ["boolean", "null"],
+        },
+        sortBy: {
+          description:
+            "results sorting parameters\noptional field\nyou can use this field to sort the results\npossible types of sorting:\nrelevance – sort by most relevant\nlowest_price – sort by the lowest price\nhighest_rating – sort by highest rating\nmost_reviewed – sort by most reviewed\ndefault value: relevance",
+          type: ["string", "null"],
+        },
+        stars: {
+          description:
+            "hotel stars\noptional field\nset this field to [5] if you want to get the list of 5-star hotels only\nexample:\n[3,4,5]",
+          items: s.string("The stars item value."),
+          type: ["array", "null"],
+        },
+        tag: tagSchema,
+      },
+      {
+        allOf: [
+          requireAtLeastOne(
+            ["locationCode", "locationCoordinate", "locationName"],
+            ["locationCoordinate", "locationName"],
+          ),
+          nonemptyLanguageRequired,
+        ],
+        required: [],
+      },
+    ),
+  },
+  {
+    name: "get_dataforseo_content_analysis_rating_distribution",
+    path: "/apis/v1/dataforseo/content_analysis/rating_distribution/live",
+    description: "Research content analysis rating distribution through DataForSEO using one synchronous query.",
+    inputSchema: s.object(
+      "Parameters for content analysis rating distribution. Top-level names use camelCase; nested filters and entity fields keep their upstream names.",
+      {
+        initialDatasetFilters: {
+          description:
+            'initial dataset filtering parameters\noptional field\ninitial filtering parameters that apply to fields in the Search endpoint\nyou can add several filters at once (8 filters maximum)\nyou should set a logical operator and, or between the conditions\nthe following operators are supported:\nregex, not_regex, <, <=, >, >=, =, <>, in, not_in, like,not_like, has, has_not, match, not_match\nyou can use the % operator with like and not_like to match any string of zero or more characters\nexample:\n["domain","<>", "logitech.com"]\n[["domain","<>","logitech.com"],"and",["content_info.connotation_types.negative",">",1000]]\n[["domain","<>","logitech.com"]],\n"and",\n[["content_info.connotation_types.negative",">",1000],\n"or",\n["content_info.text_category","has",10994]]]\nfor more information about filters, please refer to Content Analysis API - Filters\nlearn more about the initial dataset filters in this help center article.',
+          items: getAiLlmMentionsTargetMetricsInitialDatasetFiltersItemSchema,
+          type: ["array", "null"],
+        },
+        internalListLimit: getContentAnalysisRatingDistributionInternalListLimitSchema,
+        keyword: keywordSchema,
+        keywordFields: {
+          additionalProperties: { type: ["string", "null"], description: "The keyword fields entry value." },
+          description:
+            'target keyword fields and target keywords\noptional field\nuse this parameter to filter the dataset by keywords that certain fields should contain;\nfields you can specify: title, main_title, previous_title, snippet\nyou can indicate several fields;\nNote: to match an exact phrase instead of a stand-alone keyword, use double quotes and backslashes;\nexample:\n`"keyword_fields": {\n"snippet": "\\"logitech mouse\\"",\n"main_title": "sale"\n}`',
+          type: ["object", "null"],
+        },
+        pageType: getContentAnalysisRatingDistributionPageTypeSchema,
+        positiveConnotationThreshold: positiveConnotationThresholdSchema,
+        rankScale: getContentCategoryTrendsRankScaleSchema,
+        searchMode: searchModeSchema,
+        sentimentsConnotationThreshold: sentimentsConnotationThresholdSchema,
+        tag: tagSchema,
+      },
+      { required: ["keyword"] },
+    ),
+  },
+  {
+    name: "get_dataforseo_content_analysis_search",
+    path: "/apis/v1/dataforseo/content_analysis/search/live",
+    description: "Research content analysis search through DataForSEO using one synchronous query.",
+    inputSchema: s.object(
+      "Parameters for content analysis search. Top-level names use camelCase; nested filters and entity fields keep their upstream names.",
+      {
+        filters: {
+          description:
+            'array of results filtering parameters\noptional field\nyou can add several filters at once (8 filters maximum)\nyou should set a logical operator and, or between the conditions\nthe following operators are supported:\nregex, not_regex, <, <=, >, >=, =, <>, in, not_in, like,not_like, match, not_match\nyou can use the % operator with like and not_like to match any string of zero or more characters\nexample:\n["country","=", "US"]\n[["domain_rank",">",800],"and",["content_info.connotation_types.negative",">",0.9]]\n[["domain_rank",">",800],\n"and",\n[["page_types","has","ecommerce"],\n"or",\n["content_info.text_category","has",10994]]]\nfor more information about filters, please refer to Content Analysis API - Filters',
+          items: getAiLlmMentionsSearchMentionsFiltersItemSchema,
+          type: ["array", "null"],
+        },
+        keyword: s.string(
+          'target keyword\nrequired field\nUTF-8 encoding\nthe keywords will be converted to a lowercase format;\nNote: to match an exact phrase instead of a stand-alone keyword, use double quotes and backslashes;\nexample:\n`"keyword": "\\"tesla palo alto\\""`\nlearn more about rules and limitations of keyword and keywords fields in DataForSEO APIs in this Help Center article',
+          { minLength: 1 },
+        ),
+        keywordFields: {
+          additionalProperties: { type: ["string", "null"], description: "The keyword fields entry value." },
+          description:
+            'target keyword fields and target keywords\noptional field\nuse this parameter to filter the dataset by keywords that certain fields should contain;\nfields you can specify: title, main_title, previous_title, snippet\nyou can indicate several fields;\nNote: to match an exact phrase instead of a stand-alone keyword, use double quotes and backslashes;\nexample:\n`"keyword_fields": {\n"snippet": "\\"logitech mouse\\"",\n"main_title": "sale"\n}"`',
+          type: ["object", "null"],
+        },
+        limit: {
+          description:
+            "the maximum number of returned citations\noptional field\ndefault value: 100\nmaximum value: 1000",
+          type: ["integer", "null"],
+          maximum: 1000,
+        },
+        offset: {
+          description:
+            "offset in the results array of returned citations\noptional field\ndefault value: 0\nif you specify the 10 value, the first ten citations in the results array will be omitted and the data will be provided for the successive citations\nNote: we recommend using this parameter only when retrieving up to 10,000 results\nfor retrieving over 10,000 results, use the offset_token instead.",
+          type: ["integer", "null"],
+          minimum: 0,
+        },
+        offsetToken: {
+          description:
+            "offset token for subsequent requests\noptional field\nprovided in the identical field of the response to each request;\nuse this parameter to avoid timeouts while trying to obtain over 10,000 results in a single request;\nby specifying the unique offset_token value from the response array, you will get the subsequent results of the initial task;\noffset_token values are unique for each subsequent task\nNote: if the offset_token is specified in the request, all other parameters except limit will not be taken into account when processing a task\nlearn more about this parameter on our Help Center",
+          type: ["string", "null"],
+        },
+        orderBy: {
+          description:
+            'results sorting rules\noptional field\nyou can use the same values as in the filters array to sort the results\npossible sorting types:\nasc - results will be sorted in the ascending order\ndesc - results will be sorted in the descending order\nyou should use a comma to set up a sorting type\nexample:\n["content_info.sentiment_connotations.anger,desc"]\ndefault rule:\n["content_info.sentiment_connotations.anger,desc"]\nnote that you can set no more than three sorting rules in a single request\nyou should use a comma to separate several sorting rules\nexample:\n["content_info.sentiment_connotations.anger,desc","keyword_data.keyword_info.cpc,desc"]',
+          items: getAiLlmMentionsSearchMentionsOrderByItemSchema,
+          type: ["array", "null"],
+        },
+        pageType: getContentAnalysisRatingDistributionPageTypeSchema,
+        rankScale: {
+          description:
+            "defines the scale used for calculating and displaying the domain_rank, and url_rank values\noptional field\nyou can use this parameter to choose whether rank values are presented on a 0–100 or 0–1000 scale\npossible values:\none_hundred — rank values are displayed on a 0–100 scale\none_thousand — rank values are displayed on a 0–1000 scale\ndefault value: one_thousand\nlearn more about how this parameter works in this Help Center article",
+          type: ["string", "null"],
+        },
+        searchMode: searchModeSchema,
+        tag: tagSchema,
+      },
+      { required: ["keyword"] },
+    ),
+  },
+  {
+    name: "get_dataforseo_content_analysis_summary",
+    path: "/apis/v1/dataforseo/content_analysis/summary/live",
+    description: "Research content analysis summary through DataForSEO using one synchronous query.",
+    inputSchema: s.object(
+      "Parameters for content analysis summary. Top-level names use camelCase; nested filters and entity fields keep their upstream names.",
+      {
+        initialDatasetFilters: {
+          description:
+            'initial dataset filtering parameters\noptional field\ninitial filtering parameters that apply to fields in the Search endpoint\nyou can add several filters at once (8 filters maximum)\nyou should set a logical operator and, or between the conditions\nthe following operators are supported:\nregex, not_regex, <, <=, >, >=, =, <>, in, not_in, like,not_like, has, has_not\nyou can use the % operator with like and not_like to match any string of zero or more characters\nexample:\n["domain","<>", "logitech.com"]\n[["domain","<>","logitech.com"],"and",["content_info.connotation_types.negative",">",1000]]\n[["domain","<>","logitech.com"]],\n"and",\n[["content_info.connotation_types.negative",">",1000],\n"or",\n["content_info.text_category","has",10994]]]\nfor more information about filters, please refer to Content Analysis API - Filters\nlearn more about the initial dataset filters in this help center article.',
+          items: getAiLlmMentionsTargetMetricsInitialDatasetFiltersItemSchema,
+          type: ["array", "null"],
+        },
+        internalListLimit: getContentAnalysisRatingDistributionInternalListLimitSchema,
+        keyword: keywordSchema,
+        keywordFields: {
+          additionalProperties: { type: ["string", "null"], description: "The keyword fields entry value." },
+          description:
+            'target keyword fields and target keywords\noptional field\nuse this parameter to filter the dataset by keywords that certain fields should contain;\nfields you can specify: title, main_title, previous_title, snippet\nyou can indicate several fields;\nNote: to match an exact phrase instead of a stand-alone keyword, use double quotes and backslashes;\nexample:\n"keyword_fields": {\n"snippet": "\\"logitech mouse\\"",\n"main_title": "sale"\n}',
+          type: ["object", "null"],
+        },
+        pageType: getContentAnalysisRatingDistributionPageTypeSchema,
+        positiveConnotationThreshold: positiveConnotationThresholdSchema,
+        rankScale: getContentCategoryTrendsRankScaleSchema,
+        sentimentsConnotationThreshold: {
+          description:
+            "sentiment connotation threshold\noptional field\nspecified as the probability index threshold for sentiment connotations related to the citation content\nif you specify this field, sentiment_connotations object in the response will only contain data on citations where the\nprobability per each sentiment is more than or equal to the specified value\npossible values: from 0 to 1\ndefault value: 0.4",
+          type: ["number", "null"],
+        },
+        tag: tagSchema,
+      },
+      { required: ["keyword"] },
+    ),
+  },
+  {
+    name: "get_dataforseo_labs_apple_app_intersection",
+    path: "/apis/v1/dataforseo/dataforseo_labs/apple/app_intersection/live",
+    description: "Research Apple Labs app intersection through DataForSEO using one synchronous query.",
+    inputSchema: s.object(
+      "Parameters for Labs apple app intersection. Top-level names use camelCase; nested filters and entity fields keep their upstream names.",
+      {
+        appIds: {
+          additionalProperties: { type: ["string", "null"], description: "The app ids entry value." },
+          description:
+            'ids of the target apps\nrequired field\nIDs of the target mobile applications on App Store;\nyou can find the ID in the URL of every app listed on App Store;\nexample:\nin the URL https://apps.apple.com/us/app/id835599320\nthe id is 835599320;\nthe ids should be specified the following way:\n`"app_ids": {\n"1": "686449807",\n"2": "382617920"\n}`\nif you specify a single ID here, the API will return results only for one application;\nthe maximum number of app IDs you can specify in this object is 20',
+          type: "object",
+          maxProperties: 20,
+          minProperties: 1,
+        },
+        filters: {
+          description:
+            'array of results filtering parameters\noptional field\nyou can add several filters at once (8 filters maximum)\nyou should set a logical operator and, or between the conditions\nthe following operators are supported:\n<, <=, >, >=, =, <>, in, not_in\nexample:\n["keyword_data.keyword_info.search_volume",">",500]\n[["keyword_data.keyword_info.search_volume","<>",500],"and",[intersection_result.382617920.rank_group",">=","10"]]\nfor more information about filters, please refer to Dataforseo Labs - Filters or this help center guide',
+          items: getAiLlmMentionsSearchMentionsFiltersItemSchema,
+          type: ["array", "null"],
+        },
+        languageCode: getLabsAppleAppIntersectionLanguageCodeSchema,
+        languageName: getLabsAppleAppIntersectionLanguageNameSchema,
+        limit: getLabsAppleAppIntersectionLimitSchema,
+        locationCode: getLabsAppleAppIntersectionLocationCodeSchema,
+        locationName: getLabsAppleAppIntersectionLocationNameSchema,
+        offset: getLabsAppleAppIntersectionOffsetSchema,
+        orderBy: {
+          description:
+            'results sorting rules\noptional field\nyou can use the same values as in the filters array to sort the results;\npossible sorting types:\nasc - results will be sorted in the ascending order;\ndesc - results will be sorted in the descending order;\nyou should use a comma to specify a sorting type;\nexample:\n["intersection_result.382617920.rank_absolute,asc"]\nNote: you can set no more than three sorting rules in a single request;\nyou should use a comma to separate several sorting rules;\nexample:\n["intersection_result.382617920.rank_absolute,desc","keyword_data.keyword_info.search_volume,asc"]\ndefault rule:\n["keyword_data.keyword_info.search_volume,desc"]\nNote: if the item_types array contains item types that are different from organic, the results will be ordered by the first item type in the array',
+          items: getAiLlmMentionsSearchMentionsOrderByItemSchema,
+          type: ["array", "null"],
+        },
+        tag: tagSchema,
+      },
+      {
+        required: ["appIds"],
+        allOf: [nonemptyLocationRequired, nonemptyLanguageRequired],
+      },
+    ),
+  },
+  {
+    name: "get_dataforseo_labs_google_bulk_app_metrics",
+    path: "/apis/v1/dataforseo/dataforseo_labs/google/bulk_app_metrics/live",
+    description: "Research Google Labs bulk app metrics through DataForSEO using one synchronous query.",
+    inputSchema: s.object(
+      "Parameters for Labs google bulk app metrics. Top-level names use camelCase; nested filters and entity fields keep their upstream names.",
+      {
+        appIds: s.array(
+          "ids of the app\nrequired field\nIDs of the mobile applications on Google Play;\nyou can find the ID in the URL of every app listed on Google Play;\nexample:\nin the URL https://play.google.com/store/apps/details?id=org.telegram.messenger\nthe id is org.telegram.messenger;\nthe maximum number of IDs you can specify in this field is 1000",
+          s.string("The app ids item value."),
+          { maxItems: 1000, minItems: 1 },
+        ),
+        languageCode: getLabsAppleAppIntersectionLanguageCodeSchema,
+        languageName: getLabsAppleAppIntersectionLanguageNameSchema,
+        locationCode: getLabsAppleAppIntersectionLocationCodeSchema,
+        locationName: getLabsAppleAppIntersectionLocationNameSchema,
+        tag: tagSchema,
+      },
+      {
+        required: ["appIds"],
+        allOf: [nonemptyLocationRequired, nonemptyLanguageRequired],
+      },
+    ),
+  },
+  {
+    name: "get_dataforseo_labs_google_bulk_traffic_estimation",
+    path: "/apis/v1/dataforseo/dataforseo_labs/google/bulk_traffic_estimation/live",
+    description: "Research Google Labs bulk traffic estimation through DataForSEO using one synchronous query.",
+    inputSchema: s.object(
+      "Parameters for Labs google bulk traffic estimation. Top-level names use camelCase; nested filters and entity fields keep their upstream names.",
+      {
+        ignoreSynonyms: {
+          description:
+            "ignore highly similar keywords\noptional field\nif set to_true, only core keywords will be returned, all highly similar keywords will be excluded;\ndefault value: false",
+          type: ["boolean", "null"],
+        },
+        itemTypes: {
+          description:
+            'display results by item type\noptional field\nindicates the type of search results included in the response\nNote: if the item_types array contains item types that are different from organic, the results will be ordered by the first item type in the array\npossible values:\n["organic", "paid", "featured_snippet", "local_pack"]\ndefault value:\n["organic", "paid"]',
+          items: getLabsGoogleBulkTrafficEstimationItemTypesItemSchema,
+          type: ["array", "null"],
+        },
+        languageCode: getLabsGoogleBulkTrafficEstimationLanguageCodeSchema,
+        languageName: getLabsGoogleBulkTrafficEstimationLanguageNameSchema,
+        locationCode: getLabsGoogleBulkTrafficEstimationLocationCodeSchema,
+        locationName: getLabsGoogleBulkTrafficEstimationLocationNameSchema,
+        tag: tagSchema,
+        targets: s.array(
+          "target domains, subdomains, and webpages\nrequired field\nyou can specify domains, subdomains, and webpages in this field;\ndomains and subdomains should be specified without https:// and www.;\npages should be specified with absolute URL, including https:// and www.;\nyou can set up to 1000 domains, subdomains or webpages",
+          targetsItemSchema,
+          { maxItems: 1000, minItems: 1 },
+        ),
+      },
+      { required: ["targets"] },
+    ),
+  },
+  {
+    name: "get_dataforseo_labs_google_categories_for_domain",
+    path: "/apis/v1/dataforseo/dataforseo_labs/google/categories_for_domain/live",
+    description: "Research Google Labs categories for domain through DataForSEO using one synchronous query.",
+    inputSchema: s.object(
+      "Parameters for Labs google categories for domain. Top-level names use camelCase; nested filters and entity fields keep their upstream names.",
+      {
+        filters: {
+          description:
+            'array of results filtering parameters\noptional field\nyou can add several filters at once (8 filters maximum)\nyou should set a logical operator and, or between the conditions\nthe following operators are supported:\nregex, not_regex, <, <=, >, >=, =, <>, in, not_in\nexample:\n["metrics.organic.pos_1,">",0]\n[[["metrics.organic.count",">=",100],"and",["metrics.organic.pos_1",">",0]],\n"or",\n["metrics.organic.etv","in",[10,100]]]\nfor more information about filters, please refer to Dataforseo Labs - Filters or this help center guide',
+          items: getAiLlmMentionsSearchMentionsFiltersItemSchema,
+          type: ["array", "null"],
+        },
+        historicalSerpMode: historicalSerpModeSchema,
+        includeClickstreamData: includeClickstreamDataSchema,
+        includeSubcategories: {
+          description:
+            "indicates if the subcategories will be included in the search\noptional field\nif set to false, the subcategories will be ignored\ndefault value: false\nlearn more about the parameter in this help center article",
+          type: ["boolean", "null"],
+        },
+        itemTypes: {
+          description:
+            'display results by item type\noptional field\nindicates the type of search results included in the response\nNote: if the item_types array contains item types that are different from the organic object, the results will be ordered by the first item type in the array; you will not be able to sort and filter results by the types of search results not included in the response;\npossible values:\n["organic", "paid", "featured_snippet", "local_pack"]\ndefault value:\n["organic", "paid"]',
+          items: getLabsGoogleBulkTrafficEstimationItemTypesItemSchema,
+          type: ["array", "null"],
+        },
+        languageCode: {
+          description:
+            "language code\nrequired field if you don't specify language_name\nNote: it is required to specify either language_name or language_code\nyou can receive the list of available languages with their language_code by making a separate request to the\nhttps://api.dataforseo.com/v3/dataforseo_labs/locations_and_languages\nexample:\nen",
+          type: ["string", "null"],
+        },
+        languageName: getLabsKeywordsForCategoriesLanguageNameSchema,
+        limit: {
+          description:
+            "the maximum number of returned categories\noptional field\ndefault value: 100\nmaximum value: 1000",
+          type: ["integer", "null"],
+          maximum: 1000,
+        },
+        locationCode: getLabsGoogleCategoriesForDomainLocationCodeSchema,
+        locationName: getLabsKeywordIdeasLocationNameSchema,
+        offset: {
+          description:
+            "offset in the results array of returned categories\noptional field\ndefault value: 0\nif you specify the 10 value, the first ten categories in the results array will be omitted and the data will be provided for the successive categories",
+          type: ["integer", "null"],
+          minimum: 0,
+        },
+        orderBy: {
+          description:
+            'results sorting rules\noptional field\nyou can use the same values as in the filters array to sort the results\npossible sorting types:\nasc - results will be sorted in the ascending order\ndesc - results will be sorted in the descending order\nyou should use a comma to specify a sorting type\nexample:\n["metrics.paid.etv,asc"]\nNote: you can set no more than three sorting rules in a single request\nyou should use a comma to separate several sorting rules\nexample:\n["metrics.organic.etv,desc","metrics.paid.count,asc"]\ndefault rule:\n["metrics.organic.count,desc"]\nNote: if the item_types array contains item types that are different from the organic object, the results will be ordered by the first item type in the array',
+          items: getAiLlmMentionsSearchMentionsOrderByItemSchema,
+          type: ["array", "null"],
+        },
+        tag: tagSchema,
+        target: s.string(
+          "domain or subdomain\nrequired field\nthe domain or subdomain name of the target website\nthe domain or subdomain should be specified without https:// and www.",
+          { minLength: 1 },
+        ),
+      },
+      {
+        required: ["target"],
+        allOf: [nonemptyLocationRequired, nonemptyLanguageRequired],
+      },
+    ),
+  },
+  {
+    name: "get_dataforseo_labs_google_categories_for_keywords",
+    path: "/apis/v1/dataforseo/dataforseo_labs/google/categories_for_keywords/live",
+    description: "Research Google Labs categories for keywords through DataForSEO using one synchronous query.",
+    inputSchema: s.object(
+      "Parameters for Labs google categories for keywords. Top-level names use camelCase; nested filters and entity fields keep their upstream names.",
+      {
+        keywords: s.array(
+          "target keywords\nrequired field\nUTF-8 encoding\nmaximum number of keywords you can specify in this array: 1000\nthe keywords will be converted to lowercase format\nlearn more about rules and limitations of keyword and keywords fields in DataForSEO APIs in this Help Center article",
+          getLabsGoogleCategoriesForKeywordsKeywordsItemSchema,
+          { maxItems: 1000, minItems: 1 },
+        ),
+        languageCode: {
+          description:
+            "language code\nrequired field if don't specify language_name\nyou can receive the list of available languages with their language_code by making a separate request to the\nhttps://api.dataforseo.com/v3/dataforseo_labs/google/categories_for_keywords/languages\nexample:\nen",
+          type: ["string", "null"],
+        },
+        languageName: s.string(
+          "full name of the language\nrequired field if don't specify language_code\nyou can receive the list of available languages with their language_name by making a separate request to the\nhttps://api.dataforseo.com/v3/dataforseo_labs/google/categories_for_keywords/languages\nexample:\nEnglish",
+        ),
+        tag: tagSchema,
+      },
+      {
+        required: ["keywords"],
+        allOf: [nonemptyLanguageRequired],
+      },
+    ),
+  },
+  {
+    name: "get_dataforseo_labs_google_domain_rank_overview",
+    path: "/apis/v1/dataforseo/dataforseo_labs/google/domain_rank_overview/live",
+    description: "Research Google Labs domain rank overview through DataForSEO using one synchronous query.",
+    inputSchema: s.object(
+      "Parameters for Labs google domain rank overview. Top-level names use camelCase; nested filters and entity fields keep their upstream names.",
+      {
+        ignoreSynonyms: {
+          description:
+            "ignore highly similar keywords\noptional field\nif set to_true, all highly similar keywords will be excluded from the ranking and traffic calculations, the results will be based on data for main keywords from groups of synonyms\ndefault value: falsen",
+          type: ["boolean", "null"],
+        },
+        languageCode: getLabsGoogleDomainRankOverviewLanguageCodeSchema,
+        languageName: getLabsGoogleDomainRankOverviewLanguageNameSchema,
+        limit: {
+          description:
+            "the maximum number of returned results for domain\noptional field\ndefault value: 100\nmaximum value: 1000",
+          type: ["integer", "null"],
+          maximum: 1000,
+        },
+        locationCode: getLabsGoogleDomainRankOverviewLocationCodeSchema,
+        locationName: getLabsGoogleDomainRankOverviewLocationNameSchema,
+        offset: {
+          description:
+            "offset in the results array of returned items\noptional field\ndefault value: 0\nif you specify the 10 value, the first ten items in the results array will be omitted and the data will be provided for the successive items",
+          type: ["integer", "null"],
+          minimum: 0,
+        },
+        tag: tagSchema,
+        target: getLabsGoogleDomainRankOverviewTargetSchema,
+      },
+      { required: ["target"] },
+    ),
+  },
+  {
+    name: "get_dataforseo_labs_google_historical_bulk_traffic_estimation",
+    path: "/apis/v1/dataforseo/dataforseo_labs/google/historical_bulk_traffic_estimation/live",
+    description:
+      "Research Google Labs historical bulk traffic estimation through DataForSEO using one synchronous query.",
+    inputSchema: s.object(
+      "Parameters for Labs google historical bulk traffic estimation. Top-level names use camelCase; nested filters and entity fields keep their upstream names.",
+      {
+        dateFrom: {
+          description:
+            'starting date of the time range\noptional field\nif you don\'t specify this field, the data will be provided for the previous 12 months\nminimal possible value: 2020-10-01\ndate format: "yyyy-mm-dd"',
+          type: ["string", "null"],
+          format: "date",
+        },
+        dateTo: {
+          description:
+            'ending date of the time range\noptional field\nif you don\'t specify this field, the today\'s date will be used by default;\ndate format: "yyyy-mm-dd"\nexample:\n"2021-04-01"',
+          type: ["string", "null"],
+          format: "date",
+        },
+        ignoreSynonyms: {
+          description:
+            "ignore highly similar keywords\noptional field\nif set to_true only core keywords will be returned, all highly similar keywords will be excluded;\ndefault value: falsen",
+          type: ["boolean", "null"],
+        },
+        itemTypes: {
+          description:
+            'display results by item type\noptional field\nindicates the type of search results included in the response;\nNote: if the item_types array contains item types that are different from organic, the results will be ordered by the first item type in the array;\npossible values:\n["organic", "paid", "featured_snippet", "local_pack"]\ndefault value:\n["organic", "paid"]',
+          items: getLabsGoogleBulkTrafficEstimationItemTypesItemSchema,
+          type: ["array", "null"],
+        },
+        languageCode: getLabsGoogleBulkTrafficEstimationLanguageCodeSchema,
+        languageName: getLabsGoogleBulkTrafficEstimationLanguageNameSchema,
+        locationCode: getLabsGoogleBulkTrafficEstimationLocationCodeSchema,
+        locationName: getLabsGoogleBulkTrafficEstimationLocationNameSchema,
+        tag: tagSchema,
+        targets: s.array(
+          "target domains and subdomains\nrequired field\nyou can specify domains and subdomains in this field;\ndomains and subdomains should be specified without https:// and www.;\nyou can set up to 1000 domains or subdomains",
+          targetsItemSchema,
+          { maxItems: 1000, minItems: 1 },
+        ),
+      },
+      { required: ["targets"] },
+    ),
+  },
+  {
+    name: "get_dataforseo_labs_google_historical_keyword_data",
+    path: "/apis/v1/dataforseo/dataforseo_labs/google/historical_keyword_data/live",
+    description: "Research Google Labs historical keyword data through DataForSEO using one synchronous query.",
+    inputSchema: s.object(
+      "Parameters for Labs google historical keyword data. Top-level names use camelCase; nested filters and entity fields keep their upstream names.",
+      {
+        keywords: s.array(
+          "keywords\nrequired field\nThe maximum number of keywords you can specify: 700\nThe maximum number of characters for each keyword: 80\nThe maximum number of words for each keyword phrase: 10\nthe specified keywords will be converted to lowercase format, data will be provided in a separate array\nnote that if some of the keywords specified in this array are omitted in the results you receive, then our database doesn't contain such keywords and cannot return data on them\nyou will not be charged for the keywords omitted in the results\nlearn more about rules and limitations of keyword and keywords fields in DataForSEO APIs in this Help Center article",
+          getLabsGoogleCategoriesForKeywordsKeywordsItemSchema,
+          { maxItems: 700, minItems: 1 },
+        ),
+        languageCode: getLabsGoogleHistoricalKeywordDataLanguageCodeSchema,
+        languageName: getLabsGoogleHistoricalKeywordDataLanguageNameSchema,
+        locationCode: getLabsGoogleCategoriesForDomainLocationCodeSchema,
+        locationName: getLabsKeywordIdeasLocationNameSchema,
+        tag: tagSchema,
+      },
+      {
+        required: ["keywords"],
+        allOf: [nonemptyLocationRequired, nonemptyLanguageRequired],
+      },
+    ),
+  },
+  {
+    name: "get_dataforseo_labs_google_historical_rank_overview",
+    path: "/apis/v1/dataforseo/dataforseo_labs/google/historical_rank_overview/live",
+    description: "Research Google Labs historical rank overview through DataForSEO using one synchronous query.",
+    inputSchema: s.object(
+      "Parameters for Labs google historical rank overview. Top-level names use camelCase; nested filters and entity fields keep their upstream names.",
+      {
+        correlate: {
+          description:
+            "correlate data with previously obtained datasets\noptional field\ndefault value: true\nif you use this parameter, our system will correlate data you obtain now with previously obtained datasets\nthis parameter is intended to mitigate any inconsistencies that may result from changes to our database\nwe recommend always setting correlate to true",
+          type: ["boolean", "null"],
+        },
+        dateFrom: {
+          description:
+            'starting date of the time range\noptional field\nif you don\'t specify this field, the data will be provided for the previous 6 months\nminimal possible value: 2020-10-01\ndate format: "yyyy-mm-dd"',
+          type: ["string", "null"],
+          format: "date",
+        },
+        dateTo: {
+          description:
+            'ending date of the time range\noptional field\nif you don\'t specify this field, the today\'s date will be used by default\ndate format: "yyyy-mm-dd"\nexample:\n"2021-04-01"',
+          type: ["string", "null"],
+          format: "date",
+        },
+        ignoreSynonyms: {
+          description:
+            "ignore highly similar keywords\noptional field\nif set to true, only data based on core keywords will be returned, data for all highly similar keywords will be excluded;\ndefault value: false",
+          type: ["boolean", "null"],
+        },
+        includeClickstreamData: {
+          description:
+            "include or exclude data from clickstream-based metrics in the result\noptional field\nif the parameter is set to true, you will receive clickstream_etv, clickstream_gender_distribution, and clickstream_age_distribution fields with clickstream data in the response;\ndefault value: false;\nNote: historical clickstream data is available from 2024/05 (May, 2024);\nwith this parameter enabled, you will be charged double the price for the request;\nlearn more about how clickstream-based metrics are calculated in this help center article",
+          type: ["boolean", "null"],
+        },
+        languageCode: getLabsGoogleHistoricalKeywordDataLanguageCodeSchema,
+        languageName: getLabsGoogleHistoricalKeywordDataLanguageNameSchema,
+        locationCode: getLabsGoogleCategoriesForDomainLocationCodeSchema,
+        locationName: getLabsKeywordIdeasLocationNameSchema,
+        tag: tagSchema,
+        target: getLabsGoogleDomainRankOverviewTargetSchema,
+      },
+      {
+        required: ["target"],
+        allOf: [nonemptyLocationRequired, nonemptyLanguageRequired],
+      },
+    ),
+  },
+  {
+    name: "get_dataforseo_labs_google_historical_search_volume",
+    path: "/apis/v1/dataforseo/dataforseo_labs/google/historical_search_volume/live",
+    description: "Research Google Labs historical search volume through DataForSEO using one synchronous query.",
+    inputSchema: s.object(
+      "Parameters for Labs google historical search volume. Top-level names use camelCase; nested filters and entity fields keep their upstream names.",
+      {
+        includeClickstreamData: getLabsKeywordIdeasIncludeClickstreamDataSchema,
+        includeSerpInfo: includeSerpInfoSchema,
+        keywords: s.array(
+          "keywords\nrequired field\nThe maximum number of keywords you can specify: 700\nThe maximum number of characters for each keyword: 80\nThe maximum number of words for each keyword phrase: 10\nthe specified keywords will be converted to lowercase format, data will be provided in a separate array\nnote that if some of the keywords specified in this array are omitted in the results you receive, then our database doesn’t contain such keywords and cannot return data on them\nyou will not be charged for the keywords omitted in the results\nlearn more about rules and limitations of keyword and keywords fields in DataForSEO APIs in this Help Center article",
+          getLabsGoogleCategoriesForKeywordsKeywordsItemSchema,
+          { maxItems: 700, minItems: 1 },
+        ),
+        languageCode: {
+          description:
+            "language code\nrequired field if you don’t specify language_name\nNote: it is required to specify either language_name or language_code\nyou can receive the list of available locations with their language_code by making a separate request to the\nhttps://api.dataforseo.com/v3/dataforseo_labs/locations_and_languages\nexample:\nen",
+          type: ["string", "null"],
+        },
+        languageName: {
+          description:
+            "full name of the language\nrequired field if you don’t specify language_code\nNote: it is required to specify either language_name or language_code\nyou can receive the list of available locations with their language_name by making a separate request to the\nhttps://api.dataforseo.com/v3/dataforseo_labs/locations_and_languages\nexample:\nEnglish",
+          type: ["string", "null"],
+        },
+        locationCode: {
+          description:
+            "location code\nrequired field if you don’t specify location_name\nNote: it is required to specify either location_name or location_code\nyou can receive the list of available locations with their location_code by making a separate request to the\nhttps://api.dataforseo.com/v3/dataforseo_labs/locations_and_languages\nexample:\n2840",
+          type: ["integer", "null"],
+        },
+        locationName: {
+          description:
+            "full name of the location\nrequired field if you don’t specify location_code\nNote: it is required to specify either location_name or location_code\nyou can receive the list of available locations with their location_name by making a separate request to the\nhttps://api.dataforseo.com/v3/dataforseo_labs/locations_and_languages\nexample:\nUnited Kingdom",
+          type: ["string", "null"],
+        },
+        tag: tagSchema,
+      },
+      {
+        required: ["keywords"],
+        allOf: [nonemptyLocationRequired, nonemptyLanguageRequired],
+      },
+    ),
+  },
+  {
+    name: "get_dataforseo_labs_google_historical_serps",
+    path: "/apis/v1/dataforseo/dataforseo_labs/google/historical_serps/live",
+    description: "Research Google Labs historical serps through DataForSEO using one synchronous query.",
+    inputSchema: s.object(
+      "Parameters for Labs google historical serps. Top-level names use camelCase; nested filters and entity fields keep their upstream names.",
+      {
+        dateFrom: {
+          description:
+            'starting date of the time range\noptional field\nif you don\'t specify this field, the API will return all SERPs collected for 365 days starting from the current datetime value;\nminimal possible value: 365 days from the current datetime value;\ndate format: "yyyy-mm-dd"',
+          type: ["string", "null"],
+          format: "date",
+        },
+        dateTo: {
+          description:
+            'ending date of the time range\noptional field\nif you don\'t specify this field, the today\'s date will be used by default;\ndate format: "yyyy-mm-dd";\nexample:\n"2021-09-01"',
+          type: ["string", "null"],
+          format: "date",
+        },
+        keyword: s.string(
+          "keyword\nrequired field\nyou can specify up to 700 characters in the keyword field;\nall %## will be decoded (plus character ‘+’ will be decoded to a space character);\nif you need to use the “%” character for your keyword, please specify it as “%25”;\nif you need to use the “+” character for your keyword, please specify it as “%2B”",
+          { maxLength: 700, minLength: 1 },
+        ),
+        languageCode: getLabsGoogleHistoricalSerpsLanguageCodeSchema,
+        languageName: getLabsGoogleHistoricalSerpsLanguageNameSchema,
+        locationCode: s.integer(
+          "unique location identifier\nrequired field if you don't specify location_name\nNote: it is required to specify either location_name or location_code\nyou can receive the list of available locations with their location_code by making a separate request to https://api.dataforseo.com/v3/dataforseo_labs/locations_and_languages\nexample:\n2840",
+        ),
+        locationName: s.string(
+          "full name of the location\nrequired field if you don't specify location_code\nNote: it is required to specify either location_name or location_code\nyou can receive the list of available locations with their location_name by making a separate request to https://api.dataforseo.com/v3/dataforseo_labs/locations_and_languages\nexample:\nUnited Kingdom",
+        ),
+        tag: tagSchema,
+      },
+      {
+        required: ["keyword"],
+        allOf: [nonemptyLocationRequired, nonemptyLanguageRequired],
+      },
+    ),
+  },
+  {
+    name: "get_dataforseo_labs_google_keyword_suggestions",
+    path: "/apis/v1/dataforseo/dataforseo_labs/google/keyword_suggestions/live",
+    description: "Research Google Labs keyword suggestions through DataForSEO using one synchronous query.",
+    inputSchema: s.object(
+      "Parameters for Labs google keyword suggestions. Top-level names use camelCase; nested filters and entity fields keep their upstream names.",
+      {
+        exactMatch: {
+          description:
+            "search for the exact phrase\noptional field\nif set to true, the returned keywords will include the exact keyword phrase you specified, with potentially other words before or after that phrase\ndefault value: false",
+          type: ["boolean", "null"],
+        },
+        filters: {
+          description:
+            'array of results filtering parameters\noptional field\nyou can add several filters at once (8 filters maximum)\nyou should set a logical operator and, or between the conditions\nthe following operators are supported:\nregex, not_regex, <, <=, >, >=, =, <>, in, not_in, match, not_match, ilike, not_ilike, like, not_like\nyou can use the % operator with like and not_like, as well as ilike and not_ilike to match any string of zero or more characters\nexample:\n["keyword_info.search_volume",">",0]\n[["keyword_info.search_volume","in",[0,1000]],\n"and",\n["keyword_info.competition_level","=","LOW"]][["keyword_info.search_volume",">",100],\n"and",\n[["keyword_info.cpc","<",0.5],\n"or",\n["keyword_info.high_top_of_page_bid","<=",0.5]]]\nfor more information about filters, please refer to Dataforseo Labs - Filters or this help center guide',
+          items: getAiLlmMentionsSearchMentionsFiltersItemSchema,
+          type: ["array", "null"],
+        },
+        ignoreSynonyms: getLabsKeywordsForCategoriesIgnoreSynonymsSchema,
+        includeClickstreamData: getLabsKeywordIdeasIncludeClickstreamDataSchema,
+        includeSeedKeyword: includeSeedKeywordSchema,
+        includeSerpInfo: includeSerpInfoSchema,
+        keyword: s.string(
+          "keyword\nrequired field\nUTF-8 encoding\nthe keywords will be converted to lowercase format;\nlearn more about rules and limitations of keyword and keywords fields in DataForSEO APIs in this Help Center article",
+          { minLength: 1 },
+        ),
+        languageCode: getLabsKeywordIdeasLanguageCodeSchema,
+        languageName: getLabsKeywordIdeasLanguageNameSchema,
+        limit: getLabsAppleAppIntersectionLimitSchema,
+        locationCode: getLabsGoogleDomainRankOverviewLocationCodeSchema,
+        locationName: getLabsGoogleDomainRankOverviewLocationNameSchema,
+        offset: getLabsGoogleKeywordSuggestionsOffsetSchema,
+        offsetToken: offsetTokenSchema,
+        orderBy: {
+          description:
+            'results sorting rules\noptional field\nyou can use the same values as in the filters array to sort the results\npossible sorting types:\nasc - results will be sorted in the ascending order\ndesc - results will be sorted in the descending order\na comma is used as a separator\nexample:\n["keyword_info.competition,desc"]\ndefault rule:\n["keyword_info.search_volume,desc"]\nnote that you can set no more than three sorting rules in a single request\nyou should use a comma to separate several sorting rules\nexample:\n["keyword_info.search_volume,desc","keyword_info.cpc,desc"]',
+          items: getAiLlmMentionsSearchMentionsOrderByItemSchema,
+          type: ["array", "null"],
+        },
+        tag: tagSchema,
+      },
+      { required: ["keyword"] },
+    ),
+  },
+  {
+    name: "get_dataforseo_labs_google_keywords_for_app",
+    path: "/apis/v1/dataforseo/dataforseo_labs/google/keywords_for_app/live",
+    description: "Research Google Labs keywords for app through DataForSEO using one synchronous query.",
+    inputSchema: s.object(
+      "Parameters for Labs google keywords for app. Top-level names use camelCase; nested filters and entity fields keep their upstream names.",
+      {
+        appId: s.string(
+          "id of the apps\nrequired field\nID of the mobile application on Google Play;\nyou can find the ID in the URL of every app listed on Google Play;\nexample:\nin the URL https://play.google.com/store/apps/details?id=org.telegram.messenger\nthe id is org.telegram.messenger",
+          { minLength: 1 },
+        ),
+        filters: {
+          description:
+            'array of results filtering parameters\noptional field\nyou can add several filters at once (8 filters maximum)\nyou should set a logical operator and, or between the conditions\nthe following operators are supported:\n<, <=, >, >=, =, <>, in, not_in\nexample:\n["keyword_data.keyword_info.search_volume",">",500]\n[["keyword_data.keyword_info.search_volume","<>",500],"and",["ranked_serp_element.serp_item.rank_group",">=","10"]]\nfor more information about filters, please refer to Dataforseo Labs - Filters or this help center guide',
+          items: getAiLlmMentionsSearchMentionsFiltersItemSchema,
+          type: ["array", "null"],
+        },
+        languageCode: getLabsAppleAppIntersectionLanguageCodeSchema,
+        languageName: getLabsAppleAppIntersectionLanguageNameSchema,
+        limit: getLabsAppleAppIntersectionLimitSchema,
+        locationCode: getLabsAppleAppIntersectionLocationCodeSchema,
+        locationName: getLabsAppleAppIntersectionLocationNameSchema,
+        offset: getLabsAppleAppIntersectionOffsetSchema,
+        orderBy: {
+          description:
+            'results sorting rules\noptional field\nyou can use the same values as in the filters array to sort the results;\npossible sorting types:\nasc - results will be sorted in the ascending order;\ndesc - results will be sorted in the descending order;\nyou should use a comma to specify a sorting type;\nexample:\n["ranked_serp_element.serp_item.rank_group,asc"]\nNote: you can set no more than three sorting rules in a single request;\nyou should use a comma to separate several sorting rules;\nexample:\n["ranked_serp_element.serp_item.rank_group,desc","keyword_data.keyword_info.search_volume,asc"]\ndefault rule:\n["keyword_data.keyword_info.search_volume,desc"]\nNote: if the item_types array contains item types that are different from organic, the results will be ordered by the first item type in the array',
+          items: getAiLlmMentionsSearchMentionsOrderByItemSchema,
+          type: ["array", "null"],
+        },
+        tag: tagSchema,
+      },
+      {
+        required: ["appId"],
+        allOf: [nonemptyLocationRequired, nonemptyLanguageRequired],
+      },
+    ),
+  },
+  {
+    name: "get_dataforseo_labs_google_keywords_for_site",
+    path: "/apis/v1/dataforseo/dataforseo_labs/google/keywords_for_site/live",
+    description: "Research Google Labs keywords for site through DataForSEO using one synchronous query.",
+    inputSchema: s.object(
+      "Parameters for Labs google keywords for site. Top-level names use camelCase; nested filters and entity fields keep their upstream names.",
+      {
+        filters: {
+          description:
+            'array of results filtering parameters\noptional field\nyou can add several filters at once (8 filters maximum)\nyou should set a logical operator and, or between the conditions\nthe following operators are supported:\nregex, not_regex, <, <=, >, >=, =, <>, in, not_in, match, not_match, ilike, not_ilike, like, not_like\nyou can use the % operator with like and not_like, as well as ilike and not_ilike to match any string of zero or more characters\nnote that you can not filter the results by relevance\nexample:\n["keyword_info.search_volume",">",0]\nfor more information about filters, please refer to Dataforseo Labs - Filters or this help center guide',
+          items: getAiLlmMentionsSearchMentionsFiltersItemSchema,
+          type: ["array", "null"],
+        },
+        includeClickstreamData: {
+          description:
+            "include or exclude data from clickstream-based metrics in the result\noptional field\nif the parameter is set to_true, you will receive clickstream_keyword_info, keyword_info_normalized_with_clickstream, and keyword_info_normalized_with_bing fields in the response\ndefault value: false\nwith this parameter enabled, you will be charged double the price for the request\nlearn more about how clickstream-based metrics are calculated in this help center article",
+          type: ["boolean", "null"],
+        },
+        includeSerpInfo: includeSerpInfoSchema,
+        includeSubdomains: getLabsGoogleKeywordsForSiteIncludeSubdomainsSchema,
+        languageCode: getLabsKeywordIdeasLanguageCodeSchema,
+        languageName: getLabsKeywordIdeasLanguageNameSchema,
+        limit: {
+          description:
+            "the maximum number of keywords in the results array\noptional field\ndefault value: 100\nmaximum value: 1000",
+          type: ["integer", "null"],
+          maximum: 1000,
+        },
+        locationCode: getLabsKeywordsForCategoriesLocationCodeSchema,
+        locationName: getLabsKeywordIdeasLocationNameSchema,
+        offset: getLabsGoogleKeywordSuggestionsOffsetSchema,
+        offsetToken: offsetTokenSchema,
+        orderBy: {
+          description:
+            'results sorting rules\noptional field\nyou can use the same values as in the filters array to sort the results\npossible sorting types:\nasc - results will be sorted in the ascending order\ndesc - results will be sorted in the descending order\nyou should use a comma to set up a sorting parameter\ndefault rule:\n["relevance,desc"]\nrelevance is used as the default sorting rule to provide you with the closest keyword ideas. We recommend using this sorting rule to get highly-relevant search terms. Note that relevance is only our internal system identifier, so it can not be used as a filter, and you will not find this field in the result array. The relevance score is based on a similar principle as used in the Keywords For Keywords endpoint.note that you can set no more than three sorting rules in a single request\nyou should use a comma to separate several sorting rules\nexample:\n["relevance,desc","keyword_info.search_volume,desc"]',
+          items: getAiLlmMentionsSearchMentionsOrderByItemSchema,
+          type: ["array", "null"],
+        },
+        tag: tagSchema,
+        target: getLabsGoogleKeywordsForSiteTargetSchema,
+      },
+      { required: ["target"], allOf: [nonemptyLocationRequired] },
+    ),
+  },
+  {
+    name: "get_dataforseo_labs_google_page_intersection",
+    path: "/apis/v1/dataforseo/dataforseo_labs/google/page_intersection/live",
+    description: "Research Google Labs page intersection through DataForSEO using one synchronous query.",
+    inputSchema: s.object(
+      "Parameters for Labs google page intersection. Top-level names use camelCase; nested filters and entity fields keep their upstream names.",
+      {
+        excludePages: {
+          description:
+            'URLs of pages you want to excludeoptional fieldyou can set up to 10 pages in this arrayif you use this array, results will contain the keywords for which URLs from the pages object rank, but URLs from exclude_pages array do not;note that if you specify this field, the results will be based on the keywords any URL from pages ranks for regardless of intersections between them. However, you can set intersection_mode to intersect and results will contain the keywords all URLs from pages rank for in the same SERP and URLs from exclude_pages do not. use a wildcard (\'*\') character to specify the search patternexample:"exclude_pages":["https://www.apple.com/iphone/*","https://dataforseo.com/apis/*","https://www.microsoft.com/en-us/industry/services/"]',
+          items: excludePagesItemSchema,
+          type: ["array", "null"],
+          maxItems: 10,
+        },
+        filters: {
+          description:
+            'array of results filtering parametersoptional fieldyou can add several filters at once (8 filters maximum)you should set a logical operator and, or between the conditionsthe following operators are supported:regex, not_regex, <, <=, >, >=, =, <>, in, not_in, ilike, not_ilike, like, not_like, match, not_matchyou can use the % operator with like and not_like, as well as ilike and not_ilike to match any string of zero or more charactersnote that if you want to filter by any field in the intersection_result array you need to specify the number of corresponding pagefor instance, if you want to filter results by the ranking of the first specified URL, you should set the following filter:[intersection_result.1.rank_absolute,"=",1]if you want to filter results and receive only organic listings for the third specified URL, you should set the following filter:[intersection_result.3.type,"=","organic"] , etc.example:["keyword_data.keyword_info.search_volume","in",[100,1000]][["intersection_result.1.etv",">",0],"and",["intersection_result.1.description","like","%goat%"]][["keyword_data.keyword_info.search_volume",">",100],"and",[["intersection_result.2.description","like","%goat%"],"or",["intersection_result.2.type","=","organic"]]]for more information about filters, please refer to Dataforseo Labs - Filters or this help center guide',
+          items: getAiLlmMentionsSearchMentionsFiltersItemSchema,
+          type: ["array", "null"],
+        },
+        ignoreSynonyms: {
+          description:
+            "ignore highly similar keywordsoptional fieldif set to true only core keywords will be returned, all highly similar keywords will be excluded; default value: false",
+          type: ["boolean", "null"],
+        },
+        includeClickstreamData: {
+          description:
+            "include or exclude data from clickstream-based metrics in the resultoptional fieldif the parameter is set to true, you will receive clickstream_keyword_info, clickstream_etv, keyword_info_normalized_with_clickstream, and keyword_info_normalized_with_bing fields in the responsedefault value: falsewith this parameter enabled, you will be charged double the price for the requestlearn more about how clickstream-based metrics are calculated in this help center article",
+          type: ["boolean", "null"],
+        },
+        includeSerpInfo: {
+          description:
+            "include data from SERP for each keywordoptional fieldif set to true, we will return a serp_info array containing SERP data (number of search results, relevant URL, and SERP features) for every keyword in the responsedefault value: false",
+          type: ["boolean", "null"],
+        },
+        includeSubdomains: {
+          description:
+            "indicates if the subdomains will be included in the searchoptional fieldif set to false, the subdomains will be ignoreddefault value: true",
+          type: ["boolean", "null"],
+        },
+        intersectionMode: {
+          description:
+            "indicates whether to intersect keywordsoptional fielduse this field to intersect or merge results for the specified URLspossible values: union, intersectunion - results are based on all keywords any URL from pages rank for;intersect - results are based on the keywords all URLs from pages rank for in the same SERP:by default, results are based on the intersect mode if you specify only pages array. If you specify exclude_pages as well, results are based on the union mode",
+          type: ["string", "null"],
+        },
+        itemTypes: {
+          description:
+            'search results typeindicates type of search results included in the responseoptional fieldpossible values: ["organic", "paid", "featured_snippet", "local_pack"]default value: ["organic", "paid"]',
+          items: getLabsGoogleBulkTrafficEstimationItemTypesItemSchema,
+          type: ["array", "null"],
+        },
+        languageCode: {
+          description:
+            "language coderequired field if you don't specify language_nameNote: it is required to specify either language_name or language_codeyou can receive the list of available languages with their language_code by making a separate request to the https://api.dataforseo.com/v3/dataforseo_labs/locations_and_languagesexample:en",
+          type: ["string", "null"],
+        },
+        languageName: {
+          description:
+            "full name of the languagerequired field if you don't specify language_codeNote: it is required to specify either language_name or language_codeyou can receive the list of available languages with their language_name by making a separate request to the https://api.dataforseo.com/v3/dataforseo_labs/locations_and_languagesexample:English",
+          type: ["string", "null"],
+        },
+        limit: {
+          description: "the maximum number of returned keywordsoptional fielddefault value: 100maximum value: 1000",
+          type: ["integer", "null"],
+          maximum: 1000,
+        },
+        locationCode: {
+          description:
+            "location coderequired field if you don't specify location_nameNote: it is required to specify either location_name or location_codeyou can receive the list of available locations with their location_code by making a separate request to the https://api.dataforseo.com/v3/dataforseo_labs/locations_and_languagesexample:2840",
+          type: ["integer", "null"],
+        },
+        locationName: {
+          description:
+            "full name of the locationrequired field if you don't specify location_codeNote: it is required to specify either location_name or location_codeyou can receive the list of available locations with their location_name by making a separate request to the https://api.dataforseo.com/v3/dataforseo_labs/locations_and_languagesexample:United Kingdom",
+          type: ["string", "null"],
+        },
+        offset: {
+          description:
+            "offset in the items array of returned keywordsoptional fielddefault value: 0if you specify 10 here, the first ten keywords in the results array will be omitted and the data will be provided for the successive keywords",
+          type: ["integer", "null"],
+          minimum: 0,
+        },
+        orderBy: {
+          description:
+            'results sorting rulesoptional fieldyou can use the same values as in the filters array to sort the resultspossible sorting types:asc - results will be sorted in the ascending orderdesc - results will be sorted in the descending orderyou should use a comma to set up a sorting parameterexample:["keyword_data.keyword_info.competition,desc"]default rule:["keyword_data.keyword_info.search_volume,desc"]note that you can set no more than three sorting rules in a single requestyou should use a comma to separate several sorting rulesexample:["intersection_result.1.rank_group,asc","intersection_result.2.rank_absolute,asc"]',
+          items: getAiLlmMentionsSearchMentionsOrderByItemSchema,
+          type: ["array", "null"],
+        },
+        pages: {
+          additionalProperties: { type: ["string", "null"], description: "The pages entry value." },
+          description:
+            'target URLs of pagesrequired fieldyou can set up to 20 pages in this objectthe pages should be specified with absolute URLs (including http:// or https://)example:"pages": {"1":"https://www.apple.com/mac/*","2":"https://dataforseo.com/*","3":"https://support.microsoft.com/"}if you specify a single page here, we will return results only for this page;you can also use a wildcard (\'\') character to specify the search patternexample:"example.com"search for the exact URL"example.com/eng/"search for the example.com page and all its related URLs which start with \'/eng/\', such as "example.com/eng/index.html" and "example.com/eng/help/", etc.note: a wilcard should be placed after the slash (\'/\') character in the end of the URL, it is not possible to place it after the domain in the following way:https://dataforseo.comuse https://dataforseo.com/ insteadNote: this endpoint will not provide results if the number of intersecting keywords exceeds 10 million',
+          type: "object",
+          maxProperties: 20,
+          minProperties: 1,
+        },
+        tag: getLabsGooglePageIntersectionTagSchema,
+      },
+      {
+        required: ["pages"],
+        allOf: [nonemptyLocationRequired, nonemptyLanguageRequired],
+      },
+    ),
+  },
+  {
+    name: "get_dataforseo_labs_google_ranked_keywords",
+    path: "/apis/v1/dataforseo/dataforseo_labs/google/ranked_keywords/live",
+    description: "Research Google Labs ranked keywords through DataForSEO using one synchronous query.",
+    inputSchema: s.object(
+      "Parameters for Labs google ranked keywords. Top-level names use camelCase; nested filters and entity fields keep their upstream names.",
+      {
+        filters: {
+          description:
+            'array of results filtering parameters\noptional field\nyou can add several filters at once (8 filters maximum)\nyou should set a logical operator and, or between the conditions\nthe following operators are supported:\nregex, not_regex, <, <=, >, >=, =, <>, in, not_in, match, not_match, ilike, not_ilike, like, not_like\nyou can use the % operator with like and not_like, as well as ilike and not_ilike to match any string of zero or more characters\nexample:\n["ranked_serp_element.serp_item.rank_group","<=",10]\n[["ranked_serp_element.serp_item.rank_group","<=",10],\n"and",\n["ranked_serp_element.serp_item.type","<>","paid"]]\n[["keyword_data.keyword_info.search_volume","<>",0],\n"and",\n[["ranked_serp_element.serp_item.type","<>","paid"],"or",["ranked_serp_element.serp_item.is_malicious","=",false]]]\nif you want to get the keywords a particular webpage ranks for, you can use a target field or filter by the ranked_serp_element.serp_item.relative_url parameter\nexample:\n["ranked_serp_element.serp_item.relative_url", "=", "/apis/rank-tracker-api"]\nfor more information about filters, please refer to Dataforseo Labs - Filters or this help center guide',
+          items: getAiLlmMentionsSearchMentionsFiltersItemSchema,
+          type: ["array", "null"],
+        },
+        historicalSerpMode: {
+          description:
+            "data collection mode\noptional field\nyou can use this field to filter the results;\npossible types of filtering:\nlive — return keywords for which the specified target currently has ranking results in SERP;\nlost — return keywords for which the specified target had previously had ranking results in SERP, but didn't have them during the last check;\nall — return both types of keywords.\ndefault value: live",
+          type: ["string", "null"],
+        },
+        ignoreSynonyms: getLabsKeywordsForCategoriesIgnoreSynonymsSchema,
+        includeClickstreamData: {
+          description:
+            "include or exclude data from clickstream-based metrics in the result\noptional field\nif the parameter is set to true, you will receive clickstream_keyword_info, clickstream_etv, clickstream_gender_distribution, clickstream_age_distribution, keyword_info_normalized_with_clickstream, and keyword_info_normalized_with_bing fields in the response\ndefault value: false\nwith this parameter enabled, you will be charged double the price for the request\nlearn more about how clickstream-based metrics are calculated in this help center article",
+          type: ["boolean", "null"],
+        },
+        itemTypes: {
+          description:
+            'display results by item type\noptional field\nindicates the type of search results included in the response\nNote: if the item_types array contains item types that are different from organic, the results will be ordered by the first item type in the array; you will not be able to sort and filter results by the types of search results not included in the response;\npossible values:\n["organic", "paid", "featured_snippet", "local_pack", "ai_overview_reference"]\ndefault value:\n["organic", "paid"]',
+          items: getLabsGoogleBulkTrafficEstimationItemTypesItemSchema,
+          type: ["array", "null"],
+        },
+        languageCode: getLabsGoogleDomainRankOverviewLanguageCodeSchema,
+        languageName: getLabsGoogleDomainRankOverviewLanguageNameSchema,
+        limit: getLabsAppleAppIntersectionLimitSchema,
+        loadRankAbsolute: {
+          description:
+            "return rankings distribution by rank_absolute\noptional field\ndefault value: false\nif set to true, we will return the field metrics_absolute containing rankings distribution by the rank_absolute parameter that indicates the result’s position among all SERP elements",
+          type: ["boolean", "null"],
+        },
+        locationCode: getLabsGoogleDomainRankOverviewLocationCodeSchema,
+        locationName: getLabsGoogleDomainRankOverviewLocationNameSchema,
+        offset: getLabsAppleAppIntersectionOffsetSchema,
+        orderBy: {
+          description:
+            'results sorting rules\noptional field\nyou can use the same values as in the filters array to sort the results\npossible sorting types:\nasc - results will be sorted in the ascending order\ndesc - results will be sorted in the descending order\nyou should use a comma to set up a sorting type\nexample:\n["keyword_data.keyword_info.competition,desc"]\ndefault rule:\n["ranked_serp_element.serp_item.rank_group,asc"]\nnote that you can set no more than three sorting rules in a single request\nyou should use a comma to separate several sorting rules\nexample:\n["keyword_data.keyword_info.search_volume,desc","keyword_data.keyword_info.cpc,desc"]',
+          items: getAiLlmMentionsSearchMentionsOrderByItemSchema,
+          type: ["array", "null"],
+        },
+        tag: tagSchema,
+        target: getLabsGoogleKeywordsForSiteTargetSchema,
+      },
+      { required: ["target"] },
+    ),
+  },
+  {
+    name: "get_dataforseo_labs_google_related_keywords",
+    path: "/apis/v1/dataforseo/dataforseo_labs/google/related_keywords/live",
+    description: "Research Google Labs related keywords through DataForSEO using one synchronous query.",
+    inputSchema: s.object(
+      "Parameters for Labs google related keywords. Top-level names use camelCase; nested filters and entity fields keep their upstream names.",
+      {
+        depth: {
+          description:
+            "keyword search depth\noptional field\ndefault value: 1\nnumber of the returned results depends on the value you set in this field\nyou can specify a level from 0 to 4\nestimated number of keywords for each level (maximum):\n0 - the keyword set in the keyword field\n1 – 8 keywords\n2 – 72 keywords\n3 – 584 keywords\n4 – 4680 keywords",
+          type: ["integer", "null"],
+        },
+        filters: {
+          description:
+            'array of results filtering parameters\noptional field\nyou can add several filters at once (8 filters maximum)\nyou should set a logical operator and, or between the conditions\nthe following operators are supported:\nregex, not_regex, <, <=, >, >=, =, <>, in, not_in, match, not_match, ilike, not_ilike, like,not_like\nyou can use the % operator with like and not_like, as well as ilike and not_ilike to match any string of zero or more characters\nexample:\n["keyword_data.keyword_info.search_volume",">",0]\n[["keyword_info.search_volume","in",[0,1000]],\n"and",\n["keyword_data.keyword_info.competition_level","=","LOW"]]\n[["keyword_data.keyword_info.search_volume",">",100],\n"and",\n[["keyword_data.keyword_info.cpc","<",0.5],\n"or",\n["keyword_info.high_top_of_page_bid","<=",0.5]]]\nfor more information about filters, please refer to Dataforseo Labs - Filters or this help center guide',
+          items: getAiLlmMentionsSearchMentionsFiltersItemSchema,
+          type: ["array", "null"],
+        },
+        ignoreSynonyms: { description: "The ignore synonyms value.", type: ["boolean", "null"] },
+        includeClickstreamData: { description: "The include clickstream data value.", type: ["boolean", "null"] },
+        includeSeedKeyword: includeSeedKeywordSchema,
+        includeSerpInfo: includeSerpInfoSchema,
+        keyword: s.string(
+          "keyword\nrequired field\nUTF-8 encoding\nthe keywords will be converted to lowercase format\nlearn more about rules and limitations of keyword and keywords fields in DataForSEO APIs in this Help Center article",
+          { minLength: 1 },
+        ),
+        languageCode: getLabsGoogleHistoricalKeywordDataLanguageCodeSchema,
+        languageName: getLabsGoogleHistoricalKeywordDataLanguageNameSchema,
+        limit: getLabsAppleAppIntersectionLimitSchema,
+        locationCode: getLabsGoogleCategoriesForDomainLocationCodeSchema,
+        locationName: getLabsKeywordIdeasLocationNameSchema,
+        offset: getLabsAppleAppIntersectionOffsetSchema,
+        orderBy: {
+          description:
+            'results sorting rules\noptional field\nyou can use the same values as in the filters array to sort the results\npossible sorting types:\nasc - results will be sorted in the ascending order\ndesc - results will be sorted in the descending order\nyou should use a comma to set up a sorting type\nexample:\n["keyword_data.keyword_info.competition,desc"]\ndefault rule:\n["keyword_data.keyword_info.search_volume,desc"]\nnote that you can set no more than three sorting rules in a single request\nyou should use a comma to separate several sorting rules\nexample:\n["keyword_data.keyword_info.search_volume,desc","keyword_data.keyword_info.cpc,desc"]',
+          items: getAiLlmMentionsSearchMentionsOrderByItemSchema,
+          type: ["array", "null"],
+        },
+        replaceWithCoreKeyword: {
+          description:
+            "return data for core keyword\noptional field\nif true, serp_info and related_keywords will be returned for the main keyword in the group that the specified keyword belongs to;\nif false, serp_info and related_keywords will be returned for the specified keyword (if available);\nrefer to this help center article for more details;\ndefault value: false",
+          type: ["boolean", "null"],
+        },
+        tag: tagSchema,
+      },
+      {
+        required: ["keyword"],
+        allOf: [nonemptyLocationRequired, nonemptyLanguageRequired],
+      },
+    ),
+  },
+  {
+    name: "get_dataforseo_labs_google_relevant_pages",
+    path: "/apis/v1/dataforseo/dataforseo_labs/google/relevant_pages/live",
+    description: "Research Google Labs relevant pages through DataForSEO using one synchronous query.",
+    inputSchema: s.object(
+      "Parameters for Labs google relevant pages. Top-level names use camelCase; nested filters and entity fields keep their upstream names.",
+      {
+        filters: {
+          description:
+            'array of results filtering parameters\noptional field\nyou can add several filters at once (8 filters maximum)\nyou should set a logical operator and, or between the conditions\nthe following operators are supported:\nregex, not_regex, <, <=, >, >=, =, <>, in, not_in\nexample:\n["metrics.paid.count",">",0]\n[["metrics.organic.count",">",50],"and",["metrics.organic.pos_1","<>",0]]\n[[""metrics.organic.count",">",50"],\n"and",\n[["metrics.organic.pos_1","<>",0],"or",["metrics.organic.pos_2_3","<>",0]]]\nfor more information about filters, please refer to Dataforseo Labs - Filters or this help center guide',
+          items: getAiLlmMentionsSearchMentionsFiltersItemSchema,
+          type: ["array", "null"],
+        },
+        historicalSerpMode: historicalSerpModeSchema,
+        ignoreSynonyms: getLabsGoogleRelevantPagesIgnoreSynonymsSchema,
+        includeClickstreamData: getLabsGoogleRelevantPagesIncludeClickstreamDataSchema,
+        itemTypes: itemTypesSchema,
+        languageCode: getLabsGoogleDomainRankOverviewLanguageCodeSchema,
+        languageName: getLabsGoogleDomainRankOverviewLanguageNameSchema,
+        limit: getBacklinksDomainPagesLimitSchema,
+        locationCode: getLabsGoogleDomainRankOverviewLocationCodeSchema,
+        locationName: getLabsGoogleDomainRankOverviewLocationNameSchema,
+        offset: getBacklinksDomainPagesOffsetSchema,
+        orderBy: getLabsGoogleRelevantPagesOrderBySchema,
+        tag: tagSchema,
+        target: getLabsGoogleDomainRankOverviewTargetSchema,
+      },
+      { required: ["target"] },
+    ),
+  },
+  {
+    name: "get_dataforseo_labs_google_search_intent",
+    path: "/apis/v1/dataforseo/dataforseo_labs/google/search_intent/live",
+    description: "Research Google Labs search intent through DataForSEO using one synchronous query.",
+    inputSchema: s.object(
+      "Parameters for Labs google search intent. Top-level names use camelCase; nested filters and entity fields keep their upstream names.",
+      {
+        keywords: s.array(
+          "target keywords\nrequired field\nUTF-8 encoding\nmaximum number of keywords you can specify in this array: 1000;\nthe keywords will be converted to lowercase format\nlearn more about rules and limitations of keyword and keywords fields in DataForSEO APIs in this Help Center article",
+          getLabsGoogleCategoriesForKeywordsKeywordsItemSchema,
+          { maxItems: 1000, minItems: 1 },
+        ),
+        tag: tagSchema,
+      },
+      { required: ["keywords"] },
+    ),
+  },
+  {
+    name: "get_dataforseo_labs_google_serp_competitors",
+    path: "/apis/v1/dataforseo/dataforseo_labs/google/serp_competitors/live",
+    description: "Research Google Labs serp competitors through DataForSEO using one synchronous query.",
+    inputSchema: s.object(
+      "Parameters for Labs google serp competitors. Top-level names use camelCase; nested filters and entity fields keep their upstream names.",
+      {
+        filters: {
+          description:
+            'array of results filtering parameters\noptional field\nyou can add several filters at once (8 filters maximum)\nyou should set a logical operator and, or between the conditions\nthe following operators are supported:\nregex, not_regex, <, <=, >, >=, =, <>, in, not_in, match, not_match, ilike, not_ilike, like, not_like\nyou can use the % operator with like and not_like, as well as ilike and not_ilike to match any string of zero or more characters\nexample:\n["median_position","in",[1,10]]\n[["median_position","in",[1,10]],"and",["domain","not_like","%wikipedia.org%"]]\n[["domain","not_like","%wikipedia.org%"],\n"and",\n[["relevant_serp_items",">",0],"or",["median_position","in",[1,10]]]]\nfor more information about filters, please refer to Dataforseo Labs - Filters or this help center guide',
+          items: getAiLlmMentionsSearchMentionsFiltersItemSchema,
+          type: ["array", "null"],
+        },
+        includeSubdomains: getLabsGoogleKeywordsForSiteIncludeSubdomainsSchema,
+        itemTypes: {
+          description:
+            'search results type\nindicates type of search results included in the response\noptional field\npossible values:\n["organic", "paid", "featured_snippet", "local_pack"]\ndefault value:\n["organic", "paid"]',
+          items: getLabsGoogleBulkTrafficEstimationItemTypesItemSchema,
+          type: ["array", "null"],
+        },
+        keywords: s.array(
+          "keywords array\nrequired field\nthe results will be based on the keywords you specify in this array\nUTF-8 encoding;\nthe keywords will be converted to lowercase format;\nyou can specify the maximum of 200 keywords\nlearn more about rules and limitations of keyword and keywords fields in DataForSEO APIs in this Help Center article",
+          getLabsGoogleCategoriesForKeywordsKeywordsItemSchema,
+          { maxItems: 200, minItems: 1 },
+        ),
+        languageCode: getLabsGoogleHistoricalSerpsLanguageCodeSchema,
+        languageName: getLabsGoogleHistoricalSerpsLanguageNameSchema,
+        limit: getBacklinksCompetitorsLimitSchema,
+        locationCode: s.integer(
+          "unique location identifier\nrequired field if you don't specify location_name\nNote: it is required to specify either location_name or location_code\nyou can receive the list of available locations with their location_code parameters by making a separate request to the\nhttps://api.dataforseo.com/v3/dataforseo_labs/locations_and_languages\nexample:\n2840",
+        ),
+        locationName: s.string(
+          "full name of the location\nrequired field if you don't specify location_code\nNote: it is required to specify either location_name or location_code\nyou can receive the list of available locations with location_name parameters by making a separate request to the\nhttps://api.dataforseo.com/v3/dataforseo_labs/locations_and_languages\nexample:\nUnited Kingdom",
+        ),
+        offset: {
+          description:
+            "offset in the results array of returned domains\noptional field\ndefault value: 0\nif you specify the 10 value, the first ten domains in the results array will be omitted and the data will be provided for the successive domains",
+          type: ["integer", "null"],
+          minimum: 0,
+        },
+        orderBy: {
+          description:
+            'results sorting rules\noptional field\nyou can use the same values as in the filters array to sort the results\npossible sorting types:\nasc - results will be sorted in the ascending order\ndesc - results will be sorted in the descending order\nthe comma is used as a separator\nexample:\n["avg_position,asc"]\ndefault rule:\n["rating,desc"]\nnote that you can set no more than three sorting rules in a single request\nyou should use a comma to separate several sorting rules\nexample:\n["avg_position,asc","etv,desc"]',
+          items: getAiLlmMentionsSearchMentionsOrderByItemSchema,
+          type: ["array", "null"],
+        },
+        tag: tagSchema,
+      },
+      {
+        required: ["keywords"],
+        allOf: [nonemptyLocationRequired, nonemptyLanguageRequired],
+      },
+    ),
+  },
+  {
+    name: "get_dataforseo_labs_google_subdomains",
+    path: "/apis/v1/dataforseo/dataforseo_labs/google/subdomains/live",
+    description: "Research Google Labs subdomains through DataForSEO using one synchronous query.",
+    inputSchema: s.object(
+      "Parameters for Labs google subdomains. Top-level names use camelCase; nested filters and entity fields keep their upstream names.",
+      {
+        filters: {
+          description:
+            'array of results filtering parameters\noptional field\nyou can add several filters at once (8 filters maximum)\nyou should set a logical operator and, or between the conditions\nthe following operators are supported:\nregex, not_regex, <, <=, >, >=, =, <>, in, not_in\nexample:\n["metrics.paid.count",">",0]\n[["metrics.paid.count",">",0],"and",["metrics.paid.etv",">","50"]]\n[["metrics.organic.count",">","10"],\n"and",\n[["metrics.organic.pos_1","<>",0],"or",["metrics.organic.pos_2_3","<>",0]]]\nfor more information about filters, please refer to Dataforseo Labs - Filters or this help center guide',
+          items: getAiLlmMentionsSearchMentionsFiltersItemSchema,
+          type: ["array", "null"],
+        },
+        historicalSerpMode: historicalSerpModeSchema,
+        ignoreSynonyms: getLabsGoogleRelevantPagesIgnoreSynonymsSchema,
+        includeClickstreamData: getLabsGoogleRelevantPagesIncludeClickstreamDataSchema,
+        itemTypes: itemTypesSchema,
+        languageCode: getLabsGoogleDomainRankOverviewLanguageCodeSchema,
+        languageName: getLabsGoogleDomainRankOverviewLanguageNameSchema,
+        limit: getLabsAppleAppIntersectionLimitSchema,
+        locationCode: getLabsGoogleDomainRankOverviewLocationCodeSchema,
+        locationName: getLabsGoogleDomainRankOverviewLocationNameSchema,
+        offset: getLabsAppleAppIntersectionOffsetSchema,
+        orderBy: getLabsGoogleRelevantPagesOrderBySchema,
+        tag: tagSchema,
+        target: getLabsGoogleDomainRankOverviewTargetSchema,
+      },
+      { required: ["target"] },
+    ),
+  },
+  {
+    name: "get_dataforseo_labs_google_top_searches",
+    path: "/apis/v1/dataforseo/dataforseo_labs/google/top_searches/live",
+    description: "Research Google Labs top searches through DataForSEO using one synchronous query.",
+    inputSchema: s.object(
+      "Parameters for Labs google top searches. Top-level names use camelCase; nested filters and entity fields keep their upstream names.",
+      {
+        filters: {
+          description:
+            'array of results filtering parameters\noptional field\nyou can add several filters at once (8 filters maximum)\nyou should set a logical operator and, or between the conditions\nthe following operators are supported:\nregex, not_regex, <, <=, >, >=, =, <>, in, not_in, match, not_match, ilike, not_ilike, like,not_like\nyou can use the % operator with like and not_like,as well as ilike and not_ilike to match any string of zero or more characters\nexample:\n["keyword_info.search_volume",">",0]\n[["keyword_info.search_volume","in",[0,1000]],\n"and",\n["keyword_info.competition_level","=","LOW"]]\n[["keyword_info.search_volume",">",100],\n"and",\n[["keyword_info.cpc","<",0.5],\n"or",\n["keyword_info.high_top_of_page_bid","<=",0.5]]]\nfor more information about filters, please refer to Dataforseo Labs - Filters or this help center guide',
+          items: getAiLlmMentionsSearchMentionsFiltersItemSchema,
+          type: ["array", "null"],
+        },
+        ignoreSynonyms: getLabsKeywordsForCategoriesIgnoreSynonymsSchema,
+        includeClickstreamData: getLabsKeywordIdeasIncludeClickstreamDataSchema,
+        includeSerpInfo: includeSerpInfoSchema,
+        languageCode: getLabsGoogleHistoricalKeywordDataLanguageCodeSchema,
+        languageName: getLabsGoogleHistoricalKeywordDataLanguageNameSchema,
+        limit: {
+          description:
+            "the maximum number of returned keywords\noptional field\nnote: you can get more than 1000 results by using the offset_token provided in the response to each subsequent request\ndefault value: 1000\nmaximum value: 1000",
+          type: ["integer", "null"],
+          maximum: 1000,
+        },
+        locationCode: getLabsGoogleCategoriesForDomainLocationCodeSchema,
+        locationName: getLabsKeywordIdeasLocationNameSchema,
+        offset: getLabsGoogleKeywordSuggestionsOffsetSchema,
+        offsetToken: offsetTokenSchema,
+        orderBy: {
+          description:
+            'results sorting rules\noptional field\nyou can use the same values as in the filters array to sort the results\npossible sorting types:\nasc - results will be sorted in the ascending order\ndesc - results will be sorted in the descending order\nyou should use a comma to set up a sorting type\nexample:\n["keyword_info.competition,desc"]\ndefault rule:\n["keyword_info.search_volume,desc"]\nnote that you can set no more than three sorting rules in a single request\nyou should use a comma to separate several sorting rules\nexample:\n["keyword_info.search_volume,desc","keyword_info.cpc,desc"]',
+          items: getAiLlmMentionsSearchMentionsOrderByItemSchema,
+          type: ["array", "null"],
+        },
+        tag: tagSchema,
+      },
+      {
+        allOf: [nonemptyLocationRequired, nonemptyLanguageRequired],
+        required: [],
+      },
+    ),
+  },
+  {
+    name: "get_dataforseo_domain_technologies_aggregation_technologies",
+    path: "/apis/v1/dataforseo/domain_analytics/technologies/aggregation_technologies/live",
+    description: "Research website technology aggregation technologies through DataForSEO using one synchronous query.",
+    inputSchema: s.object(
+      "Parameters for domain technologies aggregation technologies. Top-level names use camelCase; nested filters and entity fields keep their upstream names.",
+      {
+        category: s.string(
+          'id of the target technology category\nrequired field if you don\'t specify group, keyword or technology\nat least one field (group, category, keyword, technology) must be set\nyou can find the full list of technology category ids on this page\nexample:\n"crm"',
+        ),
+        filters: {
+          description:
+            'array of results filtering parameters\noptional field\nyou can add several filters at once (8 filters maximum)\nyou should set a logical operator and, or between the conditions\nthe following operators are supported:\n<, <=, >, >=, =, <>, in, not_in, like,not_like\nyou can use the % operator with like and not_like to match any string of zero or more characters\nyou can use the following parameters to filter the results: domain_rank, last_visited, country_iso_code, language_code, content_language_code\nNote: all filtering parameters are taken from the domain_technology_item of the domain_technologies endpoint;\nexample:\n[["country_iso_code","=","US"],\n"and",\n["domain_rank",">",800]]for more information about filters, please refer to Domain Analytics Technologies API - Filters',
+          items: getAiLlmMentionsSearchMentionsFiltersItemSchema,
+          type: ["array", "null"],
+        },
+        group: s.string(
+          'id of the target technology group\nrequired field if you don\'t specify technology, category or keyword\nat least one field (group, category, keyword, technology) must be set\nyou can find the full list of technology group ids on this page\nexample:\n"marketing"',
+        ),
+        internalCategoriesListLimit: {
+          description:
+            'maximum number of returned technology categories within the same group\noptional field\nyou can use this field to limit the number of items with identical "category" in the results\ndefault value: 5\nminimum value: 1\nmaximum value: 10000',
+          type: ["integer", "null"],
+          minimum: 1,
+          maximum: 10000,
+        },
+        internalGroupsListLimit: {
+          description:
+            'maximum number of returned technology groups\noptional field\nyou can use this field to limit the number of items with identical "group" in the results\ndefault value: 5\nminimum value: 1\nmaximum value: 10000',
+          type: ["integer", "null"],
+          minimum: 1,
+          maximum: 10000,
+        },
+        internalListLimit: {
+          description:
+            'maximum number of items with identical "category", "group", and "technology"\noptional field\nif you use this field, the values specified in internal_groups_list_limit, internal_categories_list_limit and internal_technologies_list_limit will be ignored;\nyou can use this field to limit the number of items with identical "category", "group", or "technology"\ndefault value: 10\nminimum value: 1\nmaximum value: 10000',
+          type: ["integer", "null"],
+          minimum: 1,
+          maximum: 10000,
+        },
+        internalTechnologiesListLimit: {
+          description:
+            'maximum number of returned technologies within the same category\noptional field\nyou can use this field to limit the number of items with identical "technology" in the results\ndefault value: 10\nminimum value: 1\nmaximum value: 10000',
+          type: ["integer", "null"],
+          minimum: 1,
+          maximum: 10000,
+        },
+        keyword: s.string(
+          "target keyword in the domain's meta keywords\nrequired field if you don't specify group, category or technology\nat least one field (group, category, keyword, technology) must be set\nUTF-8 encoding\nexample:\n\"seo\"learn more about rules and limitations of keyword and keywords fields in DataForSEO APIs in this Help Center article",
+          { minLength: 1 },
+        ),
+        limit: {
+          description:
+            "the maximum number of returned technologies\noptional field\ndefault value: 100\nmaximum value: 10000",
+          type: ["integer", "null"],
+          maximum: 10000,
+        },
+        mode: modeSchema,
+        offset: {
+          description:
+            "offset in the results array of returned domains\noptional field\ndefault value: 0\nmaximum value: 9999\nif you specify the 10 value, the first ten technologies in the results array will be omitted and the data will be provided for the successive technologies",
+          type: ["integer", "null"],
+          maximum: 9999,
+          minimum: 0,
+        },
+        orderBy: {
+          description:
+            'results sorting rules\noptional field\nyou can use the following values to sort the results: groups_count, categories_count, technologies_count\npossible sorting types:\nasc - results will be sorted in the ascending order\ndesc - results will be sorted in the descending order\nyou should use a comma to set up a sorting type\nexample:\n["groups_count,desc"]\nnote that you can set no more than three sorting rules in a single request\nyou should use a comma to separate several sorting rules\nexample:\n["groups_count,desc","technologies_count,desc"]\ndefault value:\n["groups_count,desc","categories_count,desc","technologies_count,desc"]',
+          items: getAiLlmMentionsSearchMentionsOrderByItemSchema,
+          type: ["array", "null"],
+        },
+        tag: tagSchema,
+        technology: s.string(
+          'target technology\nrequired field if you don\'t specify group, keyword or category\nat least one field (group, category, keyword, technology) must be set\nyou can find the full list of technologies on this page\nexample:\n"Salesforce"',
+        ),
+      },
+      {
+        allOf: [
+          requireAtLeastOne(
+            ["category", "group", "keyword", "technology"],
+            ["category", "group", "keyword", "technology"],
+          ),
+        ],
+        required: [],
+      },
+    ),
+  },
+  {
+    name: "get_dataforseo_domain_technologies_domain_technologies",
+    path: "/apis/v1/dataforseo/domain_analytics/technologies/domain_technologies/live",
+    description: "Research website technology website technology through DataForSEO using one synchronous query.",
+    inputSchema: s.object(
+      "Parameters for domain technologies domain technologies. Top-level names use camelCase; nested filters and entity fields keep their upstream names.",
+      {
+        target: s.string(
+          "target domain\nrequired field\ndomain name of the website to analyze\nNote: results will be returned for the specified domain only",
+          { minLength: 1 },
+        ),
+      },
+      { required: ["target"] },
+    ),
+  },
+  {
+    name: "get_dataforseo_domain_technologies_domains_by_html_terms",
+    path: "/apis/v1/dataforseo/domain_analytics/technologies/domains_by_html_terms/live",
+    description: "Research website technology domains by html terms through DataForSEO using one synchronous query.",
+    inputSchema: s.object(
+      "Parameters for domain technologies domains by html terms. Top-level names use camelCase; nested filters and entity fields keep their upstream names.",
+      {
+        filters: {
+          description:
+            'array of results filtering parameters\noptional field\nyou can add several filters at once (8 filters maximum)\nyou should set a logical operator and, or between the conditions\nthe following operators are supported:\n<, <=, >, >=, =, <>, in, not_in, like, not_like\nyou can use the % operator with like and not_like to match any string of zero or more characters\nexample:\n["domain","like","%seo%"]\n[["country_iso_code","=","US"],\n"and",\n["domain_rank",">",100]]\n[["domain_rank",">",100],\n"and",\n[["country_iso_code","=","US"],"or",["country_iso_code","=","CA"]]]\nfor more information about filters, please refer to Domain Analytics Technologies API - Filters',
+          items: getAiLlmMentionsSearchMentionsFiltersItemSchema,
+          type: ["array", "null"],
+        },
+        keywords: {
+          description:
+            'target keywords in the domain\'s title, description or meta keywords\noptional field\nUTF-8 encoding\nmaximum number of keywords you can specify: 10\nexample:\n["seo","software"]\nlearn more about rules and limitations of keyword and keywords fields in DataForSEO APIs in this Help Center article',
+          items: getLabsGoogleCategoriesForKeywordsKeywordsItemSchema,
+          type: ["array", "null"],
+          maxItems: 10,
+        },
+        limit: getDomainTechnologiesDomainsByHtmlTermsLimitSchema,
+        mode: {
+          description:
+            "search mode\noptional field\npossible search mode types:\nstrict_entry - search for results exactly matching the order, intervals and separators in the specified search terms\nentry - search for results ignoring the order, intervals and separators in the specified search terms\ndefault value: entry",
+          type: ["string", "null"],
+        },
+        offset: getDomainTechnologiesDomainsByHtmlTermsOffsetSchema,
+        offsetToken: getAppDataGoogleAppListingsSearchOffsetTokenSchema,
+        orderBy: getDomainTechnologiesDomainsByHtmlTermsOrderBySchema,
+        searchTerms: s.array(
+          'target search terms\nrequired field\nspecify target HTML elements, tags, attributes, their content or all of the above\nif you specify more than one search term, you will receive only the domains containing all of the specified terms in the HTML code of their homepage\nmaximum number of search terms you can specify: 10\nexample:\n["data-attrid"]',
+          s.string("The search terms item value."),
+          { maxItems: 10, minItems: 1 },
+        ),
+      },
+      { required: ["searchTerms"] },
+    ),
+  },
+  {
+    name: "get_dataforseo_domain_technologies_domains_by_technology",
+    path: "/apis/v1/dataforseo/domain_analytics/technologies/domains_by_technology/live",
+    description: "Research website technology domains by technology through DataForSEO using one synchronous query.",
+    inputSchema: s.object(
+      "Parameters for domain technologies domains by technology. Top-level names use camelCase; nested filters and entity fields keep their upstream names.",
+      {
+        categories: s.array(
+          'ids of the target technology categories\nrequired field if you don\'t specify groups, technology_paths, keywords or technologies\nyou can find the full list of technology category ids on this page\nnote: you can specify up to 10 technology categories in this array\nexample:\n["payment_processors","crm"]',
+          getAppDataGoogleAppListingsSearchCategoriesItemSchema,
+        ),
+        filters: {
+          description:
+            'array of results filtering parameters\noptional field\nyou can add several filters at once (8 filters maximum)\nyou should set a logical operator and, or between the conditions\nthe following operators are supported:\n<, <=, >, >=, =, <>, in, not_in, like, not_like\nyou can use the % operator with like and not_like to match any string of zero or more characters\nexample:\n["country_iso_code","=","US"]\n[["country_iso_code","=","US"],\n"and",\n["domain_rank",">",100]]\n[["domain_rank",">",100],\n"and",\n[["country_iso_code","=","US"],"or",["country_iso_code","=","CA"]]]\nfor more information about filters, please refer to Domain Analytics Technologies API - Filters',
+          items: getAiLlmMentionsSearchMentionsFiltersItemSchema,
+          type: ["array", "null"],
+        },
+        groups: s.array(
+          'ids of the target technology groups\nrequired field if you don\'t specify technologies, technology_paths, keywords or categories\nyou can find the full list of technology group ids on this page\nnote: you can specify up to 10 technology groups in this array\nexample:\n["sales", "marketing"]',
+          groupsItemSchema,
+        ),
+        keywords: s.array(
+          'target keywords in the domain\'s title, description or meta keywords\nrequired field if you don\'t specify groups, technology_paths, technologies or categories\noptional field\nyou can specify the maximum of 10 keywords;\nUTF-8 encoding;\nexample:\n["seo","software"]\nlearn more about rules and limitations of keyword and keywords fields in DataForSEO APIs in this Help Center article',
+          getLabsGoogleCategoriesForKeywordsKeywordsItemSchema,
+          { maxItems: 10 },
+        ),
+        limit: getDomainTechnologiesDomainsByHtmlTermsLimitSchema,
+        mode: modeSchema,
+        offset: getDomainTechnologiesDomainsByHtmlTermsOffsetSchema,
+        offsetToken: getAppDataGoogleAppListingsSearchOffsetTokenSchema,
+        orderBy: getDomainTechnologiesDomainsByHtmlTermsOrderBySchema,
+        technologies: s.array(
+          'target technologies\nrequired field if you don\'t specify groups, technology_paths, keywords or categories\nyou can find the full list of technologies you can specify here on this page\nnote: you can specify up to 10 technologies in this array\nexample:\n["Google Pay","Salesforce"]',
+          technologiesItemSchema,
+        ),
+        technologyPaths: s.array(
+          'target technology paths\nrequired field if you don\'t specify groups, technologies, keywords or categories\nat least one field (technology_paths, groups, technologies, keywords or categories) must be set;\neach technology path should be specified as a separate object containing "path" and "name", where "path" is specified as "$group_id.$category_id" and "name" - as the name of the target technology;\neach object with a technology path should be separated with a comma\nyou can find the full list of technology group ids, category ids and technology names on this page\nnote: you can specify up to 10 technology paths in this array\nexample:\n[{"path": "content.cms","name": "wordpress"}, {"path": "marketing.crm","name": "salesforce"}]',
+          technologyPathsItemSchema,
+        ),
+      },
+      {
+        allOf: [
+          {
+            anyOf: [
+              { required: ["categories"], properties: { categories: { not: { type: "null" }, minItems: 1 } } },
+              { required: ["groups"], properties: { groups: { not: { type: "null" }, minItems: 1 } } },
+              { required: ["keywords"], properties: { keywords: { not: { type: "null" }, minItems: 1 } } },
+              { required: ["technologies"], properties: { technologies: { not: { type: "null" }, minItems: 1 } } },
+              {
+                required: ["technologyPaths"],
+                properties: { technologyPaths: { not: { type: "null" }, minItems: 1 } },
+              },
+            ],
+          },
+        ],
+        required: [],
+      },
+    ),
+  },
+  {
+    name: "get_dataforseo_domain_technologies_technologies_summary",
+    path: "/apis/v1/dataforseo/domain_analytics/technologies/technologies_summary/live",
+    description: "Research website technology technologies summary through DataForSEO using one synchronous query.",
+    inputSchema: s.object(
+      "Parameters for domain technologies technologies summary. Top-level names use camelCase; nested filters and entity fields keep their upstream names.",
+      {
+        categories: s.array(
+          'ids of the target technology categories\nrequired field if you don\'t specify groups, technology_paths, technologies, or keywords\nyou can find the full list of technology category ids on this page\nnote: you can specify up to 10 technology categories in this array\nexample:\n["payment_processors","crm"]',
+          getAppDataGoogleAppListingsSearchCategoriesItemSchema,
+        ),
+        filters: {
+          description:
+            'array of results filtering parameters\noptional field\nyou can add several filters at once (8 filters maximum)\nyou should set a logical operator and, or between the conditions\nthe following operators are supported:\n<, <=, >, >=, =, <>, in, not_in, like,not_like\nyou can use the % operator with like and not_like to match any string of zero or more characters\nyou can use the following parameters to filter the results: domain_rank, last_visited, country_iso_code, language_code, content_language_code\nexample:\n[["country_iso_code","=","US"],\n"and",\n["domain_rank",">",800]]\nfor more information about filters, please refer to Domain Analytics Technologies API - Filters',
+          items: getAiLlmMentionsSearchMentionsFiltersItemSchema,
+          type: ["array", "null"],
+        },
+        groups: s.array(
+          'ids of the target technology groups\nrequired field if you don\'t specify technologies, technology_paths, categories, or keywords\nyou can find the full list of technology group ids on this page\nnote: you can specify up to 10 technology groups in this array\nexample:\n["sales", "marketing"]',
+          groupsItemSchema,
+        ),
+        internalListLimit: {
+          description:
+            "maximum number of elements within internal arrays\noptional field\nyou can use this field to limit the number of elements within the following arrays:\ncountries, languages, content_languages, keywords\ndefault value: 10\nminimum value: 1\nmaximum value: 10000",
+          type: ["integer", "null"],
+          minimum: 1,
+          maximum: 10000,
+        },
+        keywords: s.array(
+          'target keywords in the domain\'s title, description or meta keywords\nrequired field if you don\'t specify groups, technology_paths, categories, or technologies\nyou can specify the maximum of 10 keywords;\nUTF-8 encoding;\nexample:\n["seo","software"]\nlearn more about rules and limitations of keyword and keywords fields in DataForSEO APIs in this Help Center article',
+          getLabsGoogleCategoriesForKeywordsKeywordsItemSchema,
+          { maxItems: 10 },
+        ),
+        mode: modeSchema,
+        tag: tagSchema,
+        technologies: s.array(
+          'target technologies\nrequired field if you don\'t specify groups, technology_paths, categories, or keywords\nyou can find the full list of technologies you can specify here on this page\nnote: you can specify up to 10 technologies in this array\nexample:\n["Google Pay","Salesforce"]',
+          technologiesItemSchema,
+        ),
+        technologyPaths: s.array(
+          'target technology paths\nrequired field if you don\'t specify groups, technologies and categories\neach technology path should be specified as a separate object containing "path" and "name", where "path" is specified as "$group_id.$category_id" and "name" - as the name of the target technology;\neach object with a technology path should be separated with a comma\nyou can find the full list of technology group ids, category ids and technology names on this page\nnote: you can specify up to 10 technology paths in this array\nexample:\n[{"path": "content.cms","name": "wordpress"}, {"path": "marketing.crm","name": "salesforce"}]',
+          technologyPathsItemSchema,
+        ),
+      },
+      {
+        allOf: [
+          {
+            anyOf: [
+              { required: ["categories"], properties: { categories: { not: { type: "null" }, minItems: 1 } } },
+              { required: ["groups"], properties: { groups: { not: { type: "null" }, minItems: 1 } } },
+              { required: ["keywords"], properties: { keywords: { not: { type: "null" }, minItems: 1 } } },
+              { required: ["technologies"], properties: { technologies: { not: { type: "null" }, minItems: 1 } } },
+              {
+                required: ["technologyPaths"],
+                properties: { technologyPaths: { not: { type: "null" }, minItems: 1 } },
+              },
+            ],
+          },
+        ],
+        required: [],
+      },
+    ),
+  },
+  {
+    name: "get_dataforseo_domain_technologies_technology_stats",
+    path: "/apis/v1/dataforseo/domain_analytics/technologies/technology_stats/live",
+    description: "Research website technology technology stats through DataForSEO using one synchronous query.",
+    inputSchema: s.object(
+      "Parameters for domain technologies technology stats. Top-level names use camelCase; nested filters and entity fields keep their upstream names.",
+      {
+        dateFrom: {
+          description:
+            'starting date of the time range\noptional field\nminimum value: 2022-10-31\nif you don\'t specify this field, the minimum value will be used by default\ndate format: "yyyy-mm-dd"\nexample:\n"2023-06-01"',
+          type: ["string", "null"],
+          format: "date",
+        },
+        dateTo: {
+          description:
+            'ending date of the time range\noptional field\nif you don\'t specify this field, the today\'s date will be used by default\ndate format: "yyyy-mm-dd"\nexample:\n"2023-01-15"',
+          type: ["string", "null"],
+          format: "date",
+        },
+        tag: tagSchema,
+        technology: s.string(
+          'target technology\nrequired field\nyou can find the full list of technologies you can specify here on this page\nexample:\n"Salesforce"',
+          { minLength: 1 },
+        ),
+      },
+      { required: ["technology"] },
+    ),
+  },
+  {
+    name: "get_dataforseo_domain_whois_overview",
+    path: "/apis/v1/dataforseo/domain_analytics/whois/overview/live",
+    description: "Research domain whois overview through DataForSEO using one synchronous query.",
+    inputSchema: s.object(
+      "Parameters for domain whois overview. Top-level names use camelCase; nested filters and entity fields keep their upstream names.",
+      {
+        filters: {
+          description:
+            "array of results filtering parameters\noptional field\nyou can add several filters at once (8 filters maximum)\nyou should set a logical operator and, or between the conditions\nthe following operators are supported:\nregex, <, <=, >, >=, =, <>, in, not_in, like, not_like\nyou can use the % operator with like and not_like to match any string of zero or more characters",
+          items: getAiLlmMentionsSearchMentionsFiltersItemSchema,
+          type: ["array", "null"],
+        },
+        limit: getBacklinksCompetitorsLimitSchema,
+        offset: {
+          description:
+            "offset in the results array of returned items\noptional field\ndefault value: 0\nif you specify the 10 value, the first ten items in the results array will be omitted and the data will be provided for the successive items;\nNote: we recommend using this parameter only when retrieving up to 10,000 results for retrieving over 10,000 results, use the offset_token instead",
+          type: ["integer", "null"],
+          minimum: 0,
+        },
+        offsetToken: getAppDataGoogleAppListingsSearchOffsetTokenSchema,
+        orderBy: {
+          description:
+            'results sorting rules\noptional field\nyou can use the same values as in the filters array to sort the results\npossible sorting types:\nasc - results will be sorted in the ascending order\ndesc - results will be sorted in the descending order\nthe comma is used as a separator\nexample:\n["metrics.organic.pos_1,desc"]\ndefault rule:\n["metrics.organic.count,desc"]\nnote that you can set no more than three sorting rules in a single request\nyou should use a comma to separate several sorting rules\nexample:\n["expiration_datetime,asc","metrics.organic.etv,desc","metrics.organic.pos_1,desc"]',
+          items: getAiLlmMentionsSearchMentionsOrderByItemSchema,
+          type: ["array", "null"],
+        },
+        tag: tagSchema,
+      },
+      { required: [] },
+    ),
+  },
+  {
+    name: "get_dataforseo_keywords_bing_audience_estimation",
+    path: "/apis/v1/dataforseo/keywords_data/bing/audience_estimation/live",
+    description: "Research Bing keyword audience estimation through DataForSEO using one synchronous query.",
+    inputSchema: s.object(
+      "Parameters for keyword bing audience estimation. Top-level names use camelCase; nested filters and entity fields keep their upstream names.",
+      {
+        age: {
+          description:
+            "selection of age ranges for targeting\npossible values: eighteen_to_twenty_four, fifty_to_sixty_four, sixty_five_and_above, thirteen_to_seventeen, thirty_five_to_forty_nine, twenty_five_to_thirty_four, unknown, zero_to_twelve",
+          items: s.string("The age item value."),
+          type: ["array", "null"],
+        },
+        bid: {
+          description: "desired bid setting value in USD\nmaximum value: 1000",
+          type: ["number", "null"],
+          maximum: 1000,
+        },
+        dailyBudget: {
+          description: "daily campaign budget value in USD\nmaximum value: 10000",
+          type: ["number", "null"],
+          maximum: 10000,
+        },
+        gender: {
+          description: "gender to target\npossible values: male, female, unknown",
+          items: s.string("The gender item value."),
+          type: ["array", "null"],
+        },
+        industry: {
+          description:
+            "industry of LinkedIn profile targeting\nif you use this field, you can receive the list of available industry names with industry_id by making a separate request to the https://api.dataforseo.com/v3/keywords_data/bing/audience_estimation/industries\nexample: 806301758",
+          items: s.string("The industry item value."),
+          type: ["array", "null"],
+        },
+        jobFunction: {
+          description:
+            "job function of LinkedIn profile targeting\nif you use this field, you can receive the list of available job function names with job_function_id by making a separate request to the https://api.dataforseo.com/v3/keywords_data/bing/audience_estimation/job_functions\nexample: 806300451",
+          items: s.string("The job function item value."),
+          type: ["array", "null"],
+        },
+        locationCode: getKeywordsBingKeywordsForSiteLocationCodeSchema,
+        locationCoordinate: s.string(
+          "GPS coordinates of a location\nrequired field if you don't specify location_name or location_code\nif you use this field, you don't need to specify location_name or location_code\nlocation_coordinate parameter should be specified in the \"latitude,longitude,radius (in km)\" format\nthe data will be provided for the country the specified coordinates belong to\nexample:\n29.6821525,-82.4098881,100",
+        ),
+        locationName: getKeywordsBingKeywordsForSiteLocationNameSchema,
+      },
+      {
+        allOf: [
+          requireAtLeastOne(
+            ["locationCode", "locationCoordinate", "locationName"],
+            ["locationCoordinate", "locationName"],
+          ),
+        ],
+        required: [],
+      },
+    ),
+  },
+  {
+    name: "get_dataforseo_keywords_bing_keyword_performance",
+    path: "/apis/v1/dataforseo/keywords_data/bing/keyword_performance/live",
+    description: "Research Bing keyword keyword performance through DataForSEO using one synchronous query.",
+    inputSchema: s.object(
+      "Parameters for keyword bing keyword performance. Top-level names use camelCase; nested filters and entity fields keep their upstream names.",
+      {
+        device: {
+          description:
+            "device type\noptional field\nspecify this field if you want to get the data for a particular device typepossible values: desktop, mobile, tablet, all\ndefault value: all",
+          type: ["string", "null"],
+        },
+        keywords: s.array(
+          "keywords\nrequired field\nThe maximum number of keywords you can specify: 1000\nThe maximum number of characters for each keyword: 80\nThe maximum number of words for each keyword phrase: 10\nthe specified keywords will be converted to lowercase, data will be provided in a separate array\nlearn more about rules and limitations of keyword and keywords fields in DataForSEO APIs in this Help Center article",
+          getLabsGoogleCategoriesForKeywordsKeywordsItemSchema,
+          { maxItems: 1000, minItems: 1 },
+        ),
+        languageCode: s.string(
+          'search engine language code\nrequired field if you don\'t specify language_name\nyou can receive the list of available locations and languages by making a separate request to https://api.dataforseo.com/v3/keywords_data/bing/keyword_performance/locations_and_languages\nexample:\n"en"',
+        ),
+        languageName: s.string(
+          "full name of search engine language\nrequired field if you don't specify language_code\nif you use this field, you don't need to specify language_code\nyou can receive the list of available locations and languages by making a separate request to https://api.dataforseo.com/v3/keywords_data/bing/keyword_performance/locations_and_languages\nexample:\nEnglish",
+        ),
+        locationCode: s.integer(
+          "search engine location code\nrequired field if you don't specify location_name or location_coordinate\nif you use this field, you don't need to specify location_name or location_coordinate\nyou can receive the list of available locations and languages by making a separate request to https://api.dataforseo.com/v3/keywords_data/bing/keyword_performance/locations_and_languages\nexample:\n2840",
+        ),
+        locationCoordinate: getKeywordsBingKeywordsForSiteLocationCoordinateSchema,
+        locationName: s.string(
+          "full name of search engine location\nrequired field if you don't specify location_code or location_coordinate\nif you use this field, you don't need to specify location_code or location_coordinate\nyou can receive the list of available locations and languages by making a separate request to https://api.dataforseo.com/v3/keywords_data/bing/keyword_performance/locations_and_languages\nexample:\n\"United States\"",
+        ),
+        match: {
+          description:
+            "keywords match type\noptional field\ncan take the following values:\naggregate returns data across all match types;\nbroad returns data for all user queries containing the specified keyword with varying word order;\nphrase returns data for all user queries containing the specified keyword with identical word order;\nexact returns data for user query that matches the specified keyword;Note: the aggregate match type is applied by default",
+          type: ["string", "null"],
+        },
+        tag: tagSchema,
+      },
+      {
+        required: ["keywords"],
+        allOf: [
+          requireAtLeastOne(
+            ["locationCode", "locationCoordinate", "locationName"],
+            ["locationCoordinate", "locationName"],
+          ),
+          nonemptyLanguageRequired,
+        ],
+      },
+    ),
+  },
+  {
+    name: "get_dataforseo_keywords_bing_keyword_suggestions_for_url",
+    path: "/apis/v1/dataforseo/keywords_data/bing/keyword_suggestions_for_url/live",
+    description: "Research Bing keyword keyword suggestions for url through DataForSEO using one synchronous query.",
+    inputSchema: s.object(
+      "Parameters for keyword bing keyword suggestions for url. Top-level names use camelCase; nested filters and entity fields keep their upstream names.",
+      {
+        excludeBrands: s.boolean("determines whether the results exclude brand keywords optional field"),
+        languageCode: s.string(
+          "search engine language code required field if you don’t specify language_name if you use this field, you don’t need to specify language_name you can receive the list of available languages with their language_code by making a separate request to https://api.dataforseo.com/v3/keywords_data/bing/keyword_suggestions_for_url/languages example: en",
+        ),
+        languageName: s.string(
+          "Full name of the search engine language. Required if language_code is not supplied; either language_name or language_code is sufficient.",
+        ),
+        target: s.string(
+          "target URL of the webpage to scan for possible keywords required field maximum length: 2000 characters",
+          { maxLength: 2000, minLength: 1 },
+        ),
+      },
+      {
+        allOf: [{ anyOf: [{ required: ["languageName"] }, { required: ["languageCode"] }] }, nonemptyLanguageRequired],
+        required: ["target"],
+      },
+    ),
+  },
+  {
+    name: "get_dataforseo_keywords_bing_keywords_for_keywords",
+    path: "/apis/v1/dataforseo/keywords_data/bing/keywords_for_keywords/live",
+    description: "Research Bing keyword keywords for keywords through DataForSEO using one synchronous query.",
+    inputSchema: s.object(
+      "Parameters for keyword bing keywords for keywords. Top-level names use camelCase; nested filters and entity fields keep their upstream names.",
+      {
+        dateFrom: dateFromSchema,
+        dateTo: {
+          description:
+            'ending date of the time range\noptional field\nif you don\'t specify this field, data will be provided for the last 12 months;\nminimum value: two years back from today’s date;\nmaximum value: one month from today\'s date;\ndate format: "yyyy-mm-dd"\nexample:\n"2020-03-15"\nNote: we do not recommend using a custom time range for the past year\'s dates',
+          type: ["string", "null"],
+          format: "date",
+        },
+        device: getKeywordsBingKeywordsForKeywordsDeviceSchema,
+        keywords: s.array(
+          "keywords\nrequired field\nyou can specify the maximum of 200 keywords with each keyword containing no more than 100 characters;\nthe specified keywords will be converted to lowercase, data will be provided in a separate array\nlearn more about rules and limitations of keyword and keywords fields in DataForSEO APIs in this Help Center article",
+          s.string("The keywords item value.", { maxLength: 100 }),
+          { maxItems: 200, minItems: 1 },
+        ),
+        keywordsNegative: {
+          description:
+            "keywords negative array\noptional field\nThese keywords will be ignored in the results array;\nYou can specify a maximum of 200 terms that you want to exclude from the results;\nthe specified keywords will be converted to lowercase format",
+          items: s.string("The keywords negative item value."),
+          type: ["array", "null"],
+        },
+        languageCode: getKeywordsBingKeywordsForSiteLanguageCodeSchema,
+        languageName: getKeywordsBingKeywordsForSiteLanguageNameSchema,
+        locationCode: getKeywordsBingKeywordsForSiteLocationCodeSchema,
+        locationCoordinate: getKeywordsBingKeywordsForSiteLocationCoordinateSchema,
+        locationName: getKeywordsBingKeywordsForSiteLocationNameSchema,
+        searchPartners: searchPartnersSchema,
+        sortBy: sortBySchema,
+        tag: tagSchema,
+      },
+      {
+        required: ["keywords"],
+        allOf: [
+          requireAtLeastOne(
+            ["locationCode", "locationCoordinate", "locationName"],
+            ["locationCoordinate", "locationName"],
+          ),
+          nonemptyLanguageRequired,
+        ],
+      },
+    ),
+  },
+  {
+    name: "get_dataforseo_keywords_bing_search_volume",
+    path: "/apis/v1/dataforseo/keywords_data/bing/search_volume/live",
+    description: "Research Bing keyword search volume through DataForSEO using one synchronous query.",
+    inputSchema: s.object(
+      "Parameters for keyword bing search volume. Top-level names use camelCase; nested filters and entity fields keep their upstream names.",
+      {
+        dateFrom: {
+          description:
+            'starting date of the time range\noptional field\nminimal value: 24 months from today\'s date;\nif you don\'t specify this field, data will be provided for the last 12 months;\nminimum value: two years back from today’s date;\nif Status endpoint returns false in the actual_data field, date_from can be set to the month before last and prior;\nif Status endpoint returns true in the actual_data field, date_from can be set to the last month and prior;\ndate format: "yyyy-mm-dd"\nexample:\n"2020-01-01"Note: we do not recommend using a custom time range for the past year\'s dates',
+          type: ["string", "null"],
+          format: "date",
+        },
+        dateTo: {
+          description:
+            "ending date of the time range\noptional field\nif you don't specify this field, data will be provided for the last 12 months;\nminimum value: two years back from today’s date;\nmaximum value: one month from today's date;\nnote: we do not recommend using a custom time range for the past year's dates;\ndate format: \"yyyy-mm-dd\"\nexample:\n\"2020-03-15\"Note: we do not recommend using a custom time range for the past year's dates",
+          type: ["string", "null"],
+          format: "date",
+        },
+        device: getKeywordsBingKeywordsForKeywordsDeviceSchema,
+        keywords: keywordsSchema,
+        languageCode: getKeywordsBingKeywordsForSiteLanguageCodeSchema,
+        languageName: getKeywordsBingKeywordsForSiteLanguageNameSchema,
+        locationCode: getKeywordsBingKeywordsForSiteLocationCodeSchema,
+        locationCoordinate: getKeywordsBingKeywordsForSiteLocationCoordinateSchema,
+        locationName: getKeywordsBingKeywordsForSiteLocationNameSchema,
+        searchPartners: searchPartnersSchema,
+        sortBy: sortBySchema,
+        tag: tagSchema,
+      },
+      {
+        required: ["keywords"],
+        allOf: [
+          requireAtLeastOne(
+            ["locationCode", "locationCoordinate", "locationName"],
+            ["locationCoordinate", "locationName"],
+          ),
+          nonemptyLanguageRequired,
+        ],
+      },
+    ),
+  },
+  {
+    name: "get_dataforseo_keywords_bing_search_volume_history",
+    path: "/apis/v1/dataforseo/keywords_data/bing/search_volume_history/live",
+    description: "Research Bing keyword search volume history through DataForSEO using one synchronous query.",
+    inputSchema: s.object(
+      "Parameters for keyword bing search volume history. Top-level names use camelCase; nested filters and entity fields keep their upstream names.",
+      {
+        dateFrom: {
+          description:
+            'starting date of the time range\noptional field\nminimum value: 24 months back from today’s date;\nif Status endpoint returns false in the actual_data field, date_from can be set to the month before last and prior;\nif Status endpoint returns true in the actual_data field, date_from can be set to the last month and prior;\ndate format: "yyyy-mm-dd"\nexample:\n"2020-01-01"Note: we do not recommend using a custom time range;\nNote 2: if date_from and date_to parameters are not specified, the data will be returned for the past 24 months;\nif you specify the period parameter:\nwith value weekly, you will get results for the past 15 weeks;\nwith value daily, you will get results for the past 45 days',
+          type: ["string", "null"],
+          format: "date",
+        },
+        dateTo: {
+          description:
+            'ending date of the time range\noptional fieldminimum value: two years back from today’s date;\nmaximum value: one day from today\'s date;\ndate format: "yyyy-mm-dd"\nexample:\n"2020-03-15"\nNote: we do not recommend using a custom time range\nNote 2: if date_from and date_to parameters are not specified, the data will be returned for the past 24 months\nif you specify the period parameter:\nwith value weekly, you will get results for the past 15 weeks\nwith value daily, you will get results for the past 45 days',
+          type: ["string", "null"],
+          format: "date",
+        },
+        device: {
+          description:
+            'device types\noptional field\nspecify this field if you want to get the data for a particular device types\npossible values: mobile, desktop, tablet, non_smartphones\ndefault value: ["mobile", "desktop", "tablet", "non_smartphones"]',
+          items: s.string("The device item value."),
+          type: ["array", "null"],
+        },
+        keywords: keywordsSchema,
+        languageCode: s.string(
+          "search engine language code\nrequired field if you don't specify language_name\nif you use this field, you don't need to specify language_name\nyou can receive the list of available languages of the search engines with their language_code by making a separate request to https://api.dataforseo.com/v3/keywords_data/bing/search_volume_history/locations_and_languages",
+        ),
+        languageName: s.string(
+          "full name of search engine language\nrequired field if you don't specify language_code\nif you use this field, you don't need to specify language_code\nyou can receive the list of available languages of the search engines with their language_code by making a separate request to https://api.dataforseo.com/v3/keywords_data/bing/search_volume_history/locations_and_languages",
+        ),
+        locationCode: s.integer(
+          "search engine location code\nrequired field if you don't specify location_name or location_coordinate\nif you use this field, you don't need to specify location_name or location_coordinate\nyou can receive the list of available locations of the search engines with their location_code by making a separate request to https://api.dataforseo.com/v3/keywords_data/bing/search_volume_history/locations_and_languages\nexample:\n2840",
+        ),
+        locationCoordinate: getKeywordsBingKeywordsForSiteLocationCoordinateSchema,
+        locationName: s.string(
+          "full name of search engine location\nrequired field if you don't specify location_code or location_coordinate\nif you use this field, you don't need to specify location_code or location_coordinate\nyou can receive the list of available locations of the search engine with their location_name by making a separate request to https://api.dataforseo.com/v3/keywords_data/bing/search_volume_history/locations_and_languages\nexample:\nLondon,England,United Kingdom",
+        ),
+        period: {
+          description:
+            "aggregates the returned data to a certain time period\noptional field\nspecify this field if you want to get the data in monthly, weekly or daily formatpossible values: monthly, weekly, daily\nmonthly - returns data up to past 24 months\nweekly - returns data up to past 15 weeks\ndaily - returns data up to past 45 days\ndefault value: monthly",
+          type: ["string", "null"],
+        },
+        tag: tagSchema,
+      },
+      {
+        required: ["keywords"],
+        allOf: [
+          requireAtLeastOne(
+            ["locationCode", "locationCoordinate", "locationName"],
+            ["locationCoordinate", "locationName"],
+          ),
+          nonemptyLanguageRequired,
+        ],
+      },
+    ),
+  },
+  {
+    name: "get_dataforseo_keywords_clickstream_data_bulk_search_volume",
+    path: "/apis/v1/dataforseo/keywords_data/clickstream_data/bulk_search_volume/live",
+    description: "Research keyword clickstream data bulk search volume through DataForSEO using one synchronous query.",
+    inputSchema: s.object(
+      "Parameters for keyword clickstream data bulk search volume. Top-level names use camelCase; nested filters and entity fields keep their upstream names.",
+      {
+        keywords: getKeywordsClickstreamDataBulkSearchVolumeKeywordsSchema,
+        locationCode: s.integer(
+          "location code\nrequired field if you don't specify location_name\nNote: it is required to specify either location_name or location_code\nyou can receive the list of available locations with their location_code by making a separate request to the\nhttps://api.dataforseo.com/v3/keywords_data/clickstream_data/locations_and_languages\nexample:\n2840",
+        ),
+        locationName: s.string(
+          "full name of the location\nrequired field if you don't specify location_code\nNote: it is required to specify either location_name or location_code\nyou can receive the list of available locations with their location_name by making a separate request to the\nhttps://api.dataforseo.com/v3/keywords_data/clickstream_data/locations_and_languages\nexample:\nUnited Kingdom",
+        ),
+        tag: tagSchema,
+      },
+      { required: ["keywords"], allOf: [nonemptyLocationRequired] },
+    ),
+  },
+  {
+    name: "get_dataforseo_keywords_clickstream_data_dataforseo_search_volume",
+    path: "/apis/v1/dataforseo/keywords_data/clickstream_data/dataforseo_search_volume/live",
+    description:
+      "Research keyword clickstream data dataforseo search volume through DataForSEO using one synchronous query.",
+    inputSchema: s.object(
+      "Parameters for keyword clickstream data dataforseo search volume. Top-level names use camelCase; nested filters and entity fields keep their upstream names.",
+      {
+        keywords: s.array(
+          "target keywords\nrequired field\nUTF-8 encoding\nmaximum number of keywords you can specify in this array: 1000\nthe keywords will be converted to lowercase format\nNote: certain symbols and characters (e.g., UTF symbols, emojis) are not allowed\nto learn more about which symbols and characters can be used, please refer to this article\nlearn more about rules and limitations of keyword and keywords fields in DataForSEO APIs in this Help Center article",
+          getLabsGoogleCategoriesForKeywordsKeywordsItemSchema,
+          { maxItems: 1000, minItems: 1 },
+        ),
+        languageCode: s.string(
+          "search engine language code\nrequired field if don’t specify language_name\nyou can receive the list of available languages with their language_code by making a separate request to the https://api.dataforseo.com/v3/keywords_data/clickstream_data/locations_and_languages\nexample:\nen",
+        ),
+        languageName: s.string(
+          "full name of search engine language\nrequired field if don’t specify language_code\nyou can receive the list of available languages with their language_name by making a separate request to the https://api.dataforseo.com/v3/keywords_data/clickstream_data/locations_and_languages\nexample:\nEnglish",
+        ),
+        locationCode: s.integer(
+          "search engine location code\nrequired field if you don’t specify location_name\nif you use this field, you can receive the list of available locations with location_code by making a separate request to the https://api.dataforseo.com/v3/keywords_data/clickstream_data/locations_and_languages\nexample:\n2826",
+        ),
+        locationName: s.string(
+          "full name of search engine location\nrequired field if you don’t specify location_code\nyou can receive the list of available locations with location_name by making a separate request to https://api.dataforseo.com/v3/keywords_data/clickstream_data/locations_and_languages\nexample:\nUnited Kingdom",
+        ),
+        tag: tagSchema,
+        useClickstream: {
+          description:
+            "use clickstream data to provide results\noptional field\nif set to true, you will get DataForSEO search volume values based on clickstream data;\nif set to false, Bing search volume data will be used to calculate DataForSEO search volume;\ndefault value: true;\nNote: Bing search volume is available for locations provided in Bing Search Volume History Locations and Bing Ads Locations endpoints; search volume values for any other location are calculated based on clickstream data even if you set this parameter to false",
+          type: ["boolean", "null"],
+        },
+      },
+      {
+        required: ["keywords"],
+        allOf: [nonemptyLocationRequired, nonemptyLanguageRequired],
+      },
+    ),
+  },
+  {
+    name: "get_dataforseo_keywords_clickstream_data_global_search_volume",
+    path: "/apis/v1/dataforseo/keywords_data/clickstream_data/global_search_volume/live",
+    description:
+      "Research keyword clickstream data global search volume through DataForSEO using one synchronous query.",
+    inputSchema: s.object(
+      "Parameters for keyword clickstream data global search volume. Top-level names use camelCase; nested filters and entity fields keep their upstream names.",
+      { keywords: getKeywordsClickstreamDataBulkSearchVolumeKeywordsSchema, tag: tagSchema },
+      { required: ["keywords"] },
+    ),
+  },
+  {
+    name: "get_dataforseo_keywords_dataforseo_trends_demography",
+    path: "/apis/v1/dataforseo/keywords_data/dataforseo_trends/demography/live",
+    description: "Research keyword dataforseo trends demography through DataForSEO using one synchronous query.",
+    inputSchema: s.object(
+      "Parameters for keyword dataforseo trends demography. Top-level names use camelCase; nested filters and entity fields keep their upstream names.",
+      {
+        dateFrom: getKeywordsTrendsDemographyDateFromSchema,
+        dateTo: getKeywordsTrendsDemographyDateToSchema,
+        keywords: getKeywordsTrendsDemographyKeywordsSchema,
+        locationCode: getKeywordsTrendsDemographyLocationCodeSchema,
+        locationName: getKeywordsTrendsDemographyLocationNameSchema,
+        tag: tagSchema,
+        timeRange: timeRangeSchema,
+        type: typeSchema,
+      },
+      { required: ["keywords"] },
+    ),
+  },
+  {
+    name: "get_dataforseo_keywords_dataforseo_trends_merged_data",
+    path: "/apis/v1/dataforseo/keywords_data/dataforseo_trends/merged_data/live",
+    description: "Research keyword dataforseo trends merged data through DataForSEO using one synchronous query.",
+    inputSchema: s.object(
+      "Parameters for keyword dataforseo trends merged data. Top-level names use camelCase; nested filters and entity fields keep their upstream names.",
+      {
+        dateFrom: getKeywordsTrendsDemographyDateFromSchema,
+        dateTo: getKeywordsTrendsDemographyDateToSchema,
+        keywords: getKeywordsTrendsDemographyKeywordsSchema,
+        locationCode: getKeywordsTrendsDemographyLocationCodeSchema,
+        locationName: getKeywordsTrendsDemographyLocationNameSchema,
+        tag: tagSchema,
+        timeRange: timeRangeSchema,
+        type: typeSchema,
+      },
+      { required: ["keywords"] },
+    ),
+  },
+  {
+    name: "get_dataforseo_keywords_dataforseo_trends_subregion_interests",
+    path: "/apis/v1/dataforseo/keywords_data/dataforseo_trends/subregion_interests/live",
+    description:
+      "Research keyword dataforseo trends subregion interests through DataForSEO using one synchronous query.",
+    inputSchema: s.object(
+      "Parameters for keyword dataforseo trends subregion interests. Top-level names use camelCase; nested filters and entity fields keep their upstream names.",
+      {
+        dateFrom: getKeywordsTrendsDemographyDateFromSchema,
+        dateTo: getKeywordsTrendsDemographyDateToSchema,
+        keywords: getKeywordsTrendsDemographyKeywordsSchema,
+        locationCode: getKeywordsTrendsDemographyLocationCodeSchema,
+        locationName: getKeywordsTrendsDemographyLocationNameSchema,
+        tag: tagSchema,
+        timeRange: timeRangeSchema,
+        type: typeSchema,
+      },
+      { required: ["keywords"] },
+    ),
+  },
+  {
+    name: "get_dataforseo_keywords_google_ads_ad_traffic_by_keywords",
+    path: "/apis/v1/dataforseo/keywords_data/google_ads/ad_traffic_by_keywords/live",
+    description: "Research Google Ads keyword ad traffic by keywords through DataForSEO using one synchronous query.",
+    inputSchema: s.object(
+      "Parameters for keyword google ads ad traffic by keywords. Top-level names use camelCase; nested filters and entity fields keep their upstream names.",
+      {
+        bid: s.integer(
+          "the maximum custom bid\nrequired field\nthe collected data will be based on this value\nit stands for the price you are willing to pay for an ad; the higher value you specify here, the higher values you will get in the returned metrics\nlearn more in this help center article",
+        ),
+        dateFrom: s.string(
+          'starting date of the forecasting time range\nrequired field if you specify date_to\nif you indicate date_from and date_to, you don\'t need to specify date_interval\nminimum value is tomorrow\'s date\nthe value you specify in date_from shouldn\'t be further than date_to\ndate format: "yyyy-mm-dd"\nexample:\n"2021-10-30"if Status endpoint returns false in the actual_data field, date_from can be set to the month before last and prior;\nif Status endpoint returns true in the actual_data field, date_from can be set to the last month and prior',
+          { format: "date" },
+        ),
+        dateInterval: {
+          description:
+            "forecasting date interval\noptional field\nif you specify date_interval, you don't need to indicate date_from and date_to\npossible values: next_week, next_month, next_quarter\ndefault value: next_month",
+          type: ["string", "null"],
+        },
+        dateTo: s.string(
+          'ending date of the forecasting time range\nrequired field if you specify date_from\nif you indicate date_from and date_to, you don\'t need to specify date_interval\nminimum value is date_from +1 day\nmaximum value is current day and month of the next year\ndate format: "yyyy-mm-dd"\nexample:\n"2022-10-30"',
+          { format: "date" },
+        ),
+        keywords: s.array(
+          "keywords\nrequired field\nThe maximum number of keywords you can specify: 1000\nThe maximum number of characters for each keyword: 80\nThe maximum number of words for each keyword phrase: 10\nthe keywords you specify will be converted to a lowercase format\nNote: Google Ads may return no data for certain groups of keywords\nvisit our Help Center to learn more\nAlso note that Google Ads doesn't allow using certain symbols and characters (e.g., UTF symbols, emojis), so you can't use them when setting a task;\nto learn more about which symbols and characters can be used, please refer to this article\nlearn more about rules and limitations of keyword and keywords fields in DataForSEO APIs in this Help Center article",
+          getLabsGoogleCategoriesForKeywordsKeywordsItemSchema,
+          { maxItems: 1000, minItems: 1 },
+        ),
+        languageCode: getKeywordsGoogleAdsAdTrafficByKeywordsLanguageCodeSchema,
+        languageName: getKeywordsGoogleAdsAdTrafficByKeywordsLanguageNameSchema,
+        locationCode: getKeywordsGoogleAdsAdTrafficByKeywordsLocationCodeSchema,
+        locationCoordinate: getKeywordsGoogleAdsAdTrafficByKeywordsLocationCoordinateSchema,
+        locationName: getKeywordsGoogleAdsAdTrafficByKeywordsLocationNameSchema,
+        match: s.string("keywords match-type\nrequired field\ncan take the following values: exact, broad, phrase", {
+          minLength: 1,
+        }),
+        sortBy: {
+          description:
+            "results sorting parameters\noptional field\nUse these parameters to sort the results by relevance, impressions, ctr, average_cpc, cost, or clicks in the descending order\ndefault value: relevance",
+          type: ["string", "null"],
+        },
+        tag: tagSchema,
+      },
+      { required: ["bid", "keywords", "match"], dependentRequired: { dateFrom: ["dateTo"], dateTo: ["dateFrom"] } },
+    ),
+  },
+  {
+    name: "get_dataforseo_keywords_google_ads_keywords_for_keywords",
+    path: "/apis/v1/dataforseo/keywords_data/google_ads/keywords_for_keywords/live",
+    description: "Research Google Ads keyword keywords for keywords through DataForSEO using one synchronous query.",
+    inputSchema: s.object(
+      "Parameters for keyword google ads keywords for keywords. Top-level names use camelCase; nested filters and entity fields keep their upstream names.",
+      {
+        dateFrom: getKeywordsGoogleAdsKeywordsForKeywordsDateFromSchema,
+        dateTo: getKeywordsGoogleAdsKeywordsForKeywordsDateToSchema,
+        includeAdultKeywords: includeAdultKeywordsSchema,
+        keywords: s.array(
+          "keywords\nrequired field\nThe maximum number of keywords you can specify: 20\nThe maximum number of characters for each keyword: 80\nthe keywords you specify will be converted to a lowercase format\nNote: Google Ads may return no data for certain groups of keywords\nvisit our Help Center to learn more\nAlso note that Google Ads doesn't allow using certain symbols and characters (e.g., UTF symbols, emojis), so you can't use them when setting a task;\nto learn more about which symbols and characters can be used, please refer to this article\nlearn more about rules and limitations of keyword and keywords fields in DataForSEO APIs in this Help Center article",
+          getLabsGoogleCategoriesForKeywordsKeywordsItemSchema,
+          { maxItems: 20, minItems: 1 },
+        ),
+        languageCode: getKeywordsGoogleAdsAdTrafficByKeywordsLanguageCodeSchema,
+        languageName: getKeywordsGoogleAdsAdTrafficByKeywordsLanguageNameSchema,
+        locationCode: getKeywordsGoogleAdsAdTrafficByKeywordsLocationCodeSchema,
+        locationCoordinate: getKeywordsGoogleAdsAdTrafficByKeywordsLocationCoordinateSchema,
+        locationName: getKeywordsGoogleAdsAdTrafficByKeywordsLocationNameSchema,
+        searchPartners: getKeywordsGoogleAdsKeywordsForKeywordsSearchPartnersSchema,
+        sortBy: getKeywordsGoogleAdsKeywordsForKeywordsSortBySchema,
+        tag: tagSchema,
+      },
+      { required: ["keywords"] },
+    ),
+  },
+  {
+    name: "get_dataforseo_keywords_google_ads_keywords_for_site",
+    path: "/apis/v1/dataforseo/keywords_data/google_ads/keywords_for_site/live",
+    description: "Research Google Ads keyword keywords for site through DataForSEO using one synchronous query.",
+    inputSchema: s.object(
+      "Parameters for keyword google ads keywords for site. Top-level names use camelCase; nested filters and entity fields keep their upstream names.",
+      {
+        dateFrom: getKeywordsGoogleAdsKeywordsForKeywordsDateFromSchema,
+        dateTo: getKeywordsGoogleAdsKeywordsForKeywordsDateToSchema,
+        includeAdultKeywords: includeAdultKeywordsSchema,
+        languageCode: getKeywordsGoogleAdsAdTrafficByKeywordsLanguageCodeSchema,
+        languageName: getKeywordsGoogleAdsAdTrafficByKeywordsLanguageNameSchema,
+        locationCode: getKeywordsGoogleAdsAdTrafficByKeywordsLocationCodeSchema,
+        locationCoordinate: getKeywordsGoogleAdsAdTrafficByKeywordsLocationCoordinateSchema,
+        locationName: getKeywordsGoogleAdsAdTrafficByKeywordsLocationNameSchema,
+        searchPartners: getKeywordsGoogleAdsKeywordsForKeywordsSearchPartnersSchema,
+        sortBy: getKeywordsGoogleAdsKeywordsForKeywordsSortBySchema,
+        tag: tagSchema,
+        target: s.string(
+          "domain or page\nrequired field\nthe domain name of the target website or the url of the target page;\nnote: to obtain keywords for the target website, use the target_type parameter",
+          { minLength: 1 },
+        ),
+        targetType: {
+          description:
+            "search keywords for site or for url\noptional field\npossible values: site, page;\ndefault value: page;\nif set to site, keywords will be provided for the entire site;\nif set to page, keywords will be provided for the specified webpage",
+          type: ["string", "null"],
+        },
+      },
+      { required: ["target"] },
+    ),
+  },
+  {
+    name: "get_dataforseo_keywords_google_ads_search_volume",
+    path: "/apis/v1/dataforseo/keywords_data/google_ads/search_volume/live",
+    description: "Research Google Ads keyword search volume through DataForSEO using one synchronous query.",
+    inputSchema: s.object(
+      "Parameters for keyword google ads search volume. Top-level names use camelCase; nested filters and entity fields keep their upstream names.",
+      {
+        dateFrom: getKeywordsGoogleAdsKeywordsForKeywordsDateFromSchema,
+        dateTo: {
+          description:
+            'ending date of the time range\noptional field\nNote: the indicated date cannot be greater than the past month, Google Ads does not return data on the current month;\nif you don\'t specify this field, yesterday\'s date will be used by default\ndate format: "yyyy-mm-dd"\nexample:\n"2022-11-30"',
+          type: ["string", "null"],
+          format: "date",
+        },
+        includeAdultKeywords: {
+          description:
+            "include keywords associated with adult content\noptional field\nif set to_true, adult keywords will be included in the response\ndefault value:_false\nnote_that the API may return no data for such keywords due to_Google Ads restrictionsn",
+          type: ["boolean", "null"],
+        },
+        keywords: s.array(
+          "keywords\nrequired field\nThe maximum number of keywords you can specify: 1000\nThe maximum number of characters for each keyword: 80\nThe maximum number of words for each keyword phrase: 10\nthe keywords you specify will be converted to a lowercase format\nNote #1: Google Ads may return no data for certain groups of keywords;\nNote #2: Google Ads provides combined search volume values for groups of similar keywords\nto obtain search volume for similar keywords, we recommend submitting such keywords in separate requests;\nNote #3: Google Ads doesn't allow using certain symbols and characters (e.g., UTF symbols, emojis), so you can't use them when setting a task;\nto learn more about which symbols and characters can be used, please refer to this article\nlearn more about rules and limitations of keyword and keywords fields in DataForSEO APIs in this Help Center article",
+          getLabsGoogleCategoriesForKeywordsKeywordsItemSchema,
+          { maxItems: 1000, minItems: 1 },
+        ),
+        languageCode: getKeywordsGoogleAdsAdTrafficByKeywordsLanguageCodeSchema,
+        languageName: getKeywordsGoogleAdsAdTrafficByKeywordsLanguageNameSchema,
+        locationCode: getKeywordsGoogleAdsAdTrafficByKeywordsLocationCodeSchema,
+        locationCoordinate: getKeywordsGoogleAdsAdTrafficByKeywordsLocationCoordinateSchema,
+        locationName: getKeywordsGoogleAdsAdTrafficByKeywordsLocationNameSchema,
+        searchPartners: getKeywordsGoogleAdsKeywordsForKeywordsSearchPartnersSchema,
+        sortBy: {
+          description:
+            "results sorting parameters\noptional field\nuse these parameters to sort the results by relevance, search_volume, competition_index, low_top_of_page_bid, or high_top_of_page_bid in the descending order\ndefault value: relevance",
+          type: ["string", "null"],
+        },
+        tag: {
+          description:
+            "user-defined task identifier\noptional field\nthe character limit is 255\nyou can use this parameter to identify the task and match it with the result\nyou will find the specified tag value in the data array of the response",
+          type: ["string", "null"],
+          maxLength: 255,
+        },
+      },
+      { required: ["keywords"] },
+    ),
+  },
+  {
+    name: "get_dataforseo_keywords_google_trends_explore",
+    path: "/apis/v1/dataforseo/keywords_data/google_trends/explore/live",
+    description: "Research keyword google trends explore through DataForSEO using one synchronous query.",
+    inputSchema: s.object(
+      "Parameters for keyword google trends explore. Top-level names use camelCase; nested filters and entity fields keep their upstream names.",
+      {
+        categoryCode: s.integer(
+          "google trends search category\nrequired field if you don't specify `keywords`\nif you don't specify `keywords`, the value of this field must be greater than `0`\nif you specify `keywords` and don't specify this field, the 0 value will be applied by default and the search will be carried out across all available categories\nyou can receive the list of available categories with their category_code by making a separate request to the https://api.dataforseo.com/v3/keywords_data/google_trends/categories",
+        ),
+        dateFrom: getKeywordsTrendsDemographyDateFromSchema,
+        dateTo: getKeywordsTrendsDemographyDateToSchema,
+        itemTypes: {
+          description:
+            'types of items returned\noptional field\nto speed up the execution of the request, specify one item at a time;\npossible values:\n"google_trends_graph", "google_trends_map", "google_trends_topics_list","google_trends_queries_list"\ndefault value:\n"google_trends_graph"\nNote: to obtain google_trends_topics_list and google_trends_queries_list items, specify no more than 1 keyword in the keywords field',
+          items: getLabsGoogleBulkTrafficEstimationItemTypesItemSchema,
+          type: ["array", "null"],
+        },
+        keywords: s.array(
+          "keywords\nrequired field if you don't specify `category_code`\nthe maximum number of keywords you can specify: 5\nthe maximum number of characters you can specify in a keyword: 100\nthe minimum number of characters must be greater than 1\ncomma characters (,) in the specified keywords will be unset and ignored\nNote: keywords cannot consist of a combination of the following characters: < > | \" - + = ~ ! : * ( ) [ ] { }\nNote: to obtain google_trends_topics_list and google_trends_queries_list items, specify no more than 1 keyword\nlearn more about rules and limitations of keyword and keywords fields in DataForSEO APIs in this Help Center article",
+          s.string("The keywords item value.", { minLength: 2, maxLength: 100 }),
+          { maxItems: 5 },
+        ),
+        languageCode: {
+          description:
+            "search engine language code\noptional field\ndefault value: en\nif you use this field, you don't need to specify language_name\nyou can receive the list of available languages of the search engine with their language_code by making a separate request to https://api.dataforseo.com/v3/keywords_data/google_trends/languages\nexample:\nen",
+          type: ["string", "null"],
+        },
+        languageName: {
+          description:
+            "full name of search engine language\noptional field\ndefault value: English\nif you use this field, you don't need to specify language_code\nyou can receive the list of available languages of the search engine with their language_name by making a separate request to https://api.dataforseo.com/v3/keywords_data/google_trends/languages\nexample:\nEnglish",
+          type: ["string", "null"],
+        },
+        locationCode: {
+          description:
+            "search engine location code\noptional field\nif you don't use this field, you will recieve global results\nif you use this field, you don't need to specify location_name\nyou can use this field as an array to set several locations, each corresponding to a specific keyword - learn more;\nyou can receive the list of available locations of the search engines with their location_code by making a separate request to https://api.dataforseo.com/v3/keywords_data/google_trends/locations\nexample:\n2840 Multiple locations must match the keyword count and order.",
+          anyOf: [
+            { type: ["string", "integer"], description: "One location applied to every keyword." },
+            s.array(
+              "One location per keyword, in matching order.",
+              { type: ["string", "integer"], description: "The location for the keyword at the same position." },
+              { minItems: 1, maxItems: 5 },
+            ),
+            locationCodeVariantSchema,
+          ],
+        },
+        locationName: {
+          description:
+            "full name of search engine location\noptional field\nif you don't use this field, you will recieve global results\nif you use this field, you don't need to specify location_code\nyou can use this field as an array to set several locations, each corresponding to a specific keyword - learn more;\nyou can receive the list of available locations of the search engine with their location_name by making a separate request to https://api.dataforseo.com/v3/keywords_data/google_trends/locations\nexample:\nUnited Kingdom Multiple locations must match the keyword count and order.",
+          anyOf: [
+            s.string("One location applied to every keyword."),
+            s.array(
+              "One location per keyword, in matching order.",
+              s.string("The location for the keyword at the same position."),
+              { minItems: 1, maxItems: 5 },
+            ),
+            locationCodeVariantSchema,
+          ],
+        },
+        tag: tagSchema,
+        timeRange: {
+          description:
+            "preset time ranges\noptional field\nif you specify date_from or date_to parameters, this field will be ignored when setting a task\npossible values for all type parameters:\npast_hour, past_4_hours, past_day, past_7_days, past_30_days, past_90_days, past_12_months, past_5_years\npossible values for web only:\n2004_present\npossible values for news, youtube, images, froogle:\n2008_present",
+          type: ["string", "null"],
+        },
+        type: typeSchema,
+      },
+      {
+        allOf: [
+          {
+            anyOf: [
+              { required: ["keywords"], properties: { keywords: { not: { type: "null" }, minItems: 1 } } },
+              { required: ["categoryCode"], properties: { categoryCode: { not: { type: "null" }, minimum: 1 } } },
+            ],
+          },
+          {
+            if: {
+              required: ["locationCode"],
+              properties: { locationCode: { type: "array", minItems: 1, maxItems: 1 } },
+            },
+            then: { required: ["keywords"], properties: { keywords: { minItems: 1, maxItems: 1 } } },
+          },
+          {
+            if: {
+              required: ["locationCode"],
+              properties: { locationCode: { type: "array", minItems: 2, maxItems: 2 } },
+            },
+            then: { required: ["keywords"], properties: { keywords: { minItems: 2, maxItems: 2 } } },
+          },
+          {
+            if: {
+              required: ["locationCode"],
+              properties: { locationCode: { type: "array", minItems: 3, maxItems: 3 } },
+            },
+            then: { required: ["keywords"], properties: { keywords: { minItems: 3, maxItems: 3 } } },
+          },
+          {
+            if: {
+              required: ["locationCode"],
+              properties: { locationCode: { type: "array", minItems: 4, maxItems: 4 } },
+            },
+            then: { required: ["keywords"], properties: { keywords: { minItems: 4, maxItems: 4 } } },
+          },
+          {
+            if: {
+              required: ["locationCode"],
+              properties: { locationCode: { type: "array", minItems: 5, maxItems: 5 } },
+            },
+            then: { required: ["keywords"], properties: { keywords: { minItems: 5, maxItems: 5 } } },
+          },
+          {
+            if: {
+              required: ["locationName"],
+              properties: { locationName: { type: "array", minItems: 1, maxItems: 1 } },
+            },
+            then: { required: ["keywords"], properties: { keywords: { minItems: 1, maxItems: 1 } } },
+          },
+          {
+            if: {
+              required: ["locationName"],
+              properties: { locationName: { type: "array", minItems: 2, maxItems: 2 } },
+            },
+            then: { required: ["keywords"], properties: { keywords: { minItems: 2, maxItems: 2 } } },
+          },
+          {
+            if: {
+              required: ["locationName"],
+              properties: { locationName: { type: "array", minItems: 3, maxItems: 3 } },
+            },
+            then: { required: ["keywords"], properties: { keywords: { minItems: 3, maxItems: 3 } } },
+          },
+          {
+            if: {
+              required: ["locationName"],
+              properties: { locationName: { type: "array", minItems: 4, maxItems: 4 } },
+            },
+            then: { required: ["keywords"], properties: { keywords: { minItems: 4, maxItems: 4 } } },
+          },
+          {
+            if: {
+              required: ["locationName"],
+              properties: { locationName: { type: "array", minItems: 5, maxItems: 5 } },
+            },
+            then: { required: ["keywords"], properties: { keywords: { minItems: 5, maxItems: 5 } } },
+          },
+        ],
+        required: [],
+      },
+    ),
+  },
+  {
+    name: "get_dataforseo_serp_bing_organic",
+    path: "/apis/v1/dataforseo/serp/bing/organic/live/advanced",
+    description: "Research Bing organic through DataForSEO using one synchronous query.",
+    inputSchema: s.object(
+      "Parameters for serp bing organic. Top-level names use camelCase; nested filters and entity fields keep their upstream names.",
+      {
+        browserScreenHeight: browserScreenHeightSchema,
+        browserScreenResolutionRatio: browserScreenResolutionRatioSchema,
+        browserScreenWidth: {
+          description:
+            "browser screen width\noptional field\nyou can set a custom browser screen width to calculate pixel rankings for a particular device;\ncan be specified within the following range: 240-9999;\nby default, the parameter is set to:\n1920 for desktop;\n360 for mobile on android;\n375 for mobile on iOS;\nNote: to use this parameter, set calculate_rectangles to true",
+          type: ["integer", "null"],
+        },
+        calculateRectangles: {
+          description:
+            "calculate pixel rankings for SERP elements in advanced results\noptional field\npixel ranking refers to the distance between the result snippet and top left corner of the screen;\nVisit Help Center to learn more>>\nby default, the parameter is set to false\nNote: provider usage may increase for using this parameter\nFor current API pricing, see the published x-aisa-pricing metadata. Where supported, obtain a quote for your exact request.",
+          type: ["boolean", "null"],
+        },
+        depth: {
+          description:
+            "parsing depth\noptional field\nnumber of results in SERP\ndefault value: 10\nmax value: 200\nYour account will be billed per each SERP containing up to 10 results;\nSetting depth above 10 may result in additional charges if the search engine returns more than 10 results;\nThe cost can be calculated on the Pricing page.",
+          type: ["integer", "null"],
+          maximum: 200,
+        },
+        device: deviceSchema,
+        keyword: getSerpBingOrganicKeywordSchema,
+        languageCode: getSerpGoogleNewsLanguageCodeSchema,
+        languageName: getSerpGoogleLocalFinderLanguageNameSchema,
+        locationCode: getSerpGoogleLocalFinderLocationCodeSchema,
+        locationCoordinate: s.string(
+          'GPS coordinates of a location\nrequired field if you don\'t specify location_name or location_code\nif you use this field, you don\'t need to specify location_name or location_code\nlocation_coordinate parameter should be specified in the "latitude,longitude" format\nthe maximum number of decimal digits for "latitude" and "longitude": 7\nexample:\n53.476225,-2.243572',
+        ),
+        locationName: getSerpGoogleLocalFinderLocationNameSchema,
+        matchType: s.string(
+          "target match type\nrequired field if stop_crawl_on_match is specified\ntype of match for the match_value\npossible values:\ndomain – specific domain or subdomain\nwith_subdomains – main domain and subdomains\nwildcard – wildcard pattern",
+        ),
+        matchValue: s.string(
+          'target domain, subdomain, or wildcard value\nrequired field if stop_crawl_on_match is specified\nspecify a target domain, subdomain, or wildcard value;\nNote: domain or subdomain must be specified without a request protocol;\nexample: "match_value": "dataforseo.com",\n"match_value": "/blog/post-*"',
+        ),
+        maxCrawlPages: getSerpBingOrganicMaxCrawlPagesSchema,
+        os: osSchema,
+        searchParam: getSerpBingOrganicSearchParamSchema,
+        stopCrawlOnMatch: stopCrawlOnMatchSchema,
+        tag: tagSchema,
+        target: getSerpBingOrganicTargetSchema,
+        url: {
+          description:
+            "direct URL of the search query\noptional field\nyou can specify a direct URL and we will sort it out to the necessary fields. Note that this method is the most difficult for our API to process and also requires you to specify the exact language and location in the URL. In most cases, we wouldn’t recommend using this method.\nexample:\nhttps://www.bing.com/search?q=rank%20checker&count=50&first=1&setlang=en&cc=US&safesearch=Moderate&FORM=SEPAGE",
+          type: ["string", "null"],
+        },
+      },
+      {
+        anyOf: [
+          { required: ["url"], properties: { url: { type: "string", minLength: 1 } } },
+          {
+            required: ["keyword"],
+            allOf: [
+              {
+                if: { properties: { stopCrawlOnMatch: { const: true } }, required: ["stopCrawlOnMatch"] },
+                then: { required: ["matchType", "matchValue"] },
+              },
+              requireAtLeastOne(
+                ["locationCode", "locationCoordinate", "locationName"],
+                ["locationCoordinate", "locationName"],
+              ),
+              nonemptyLanguageRequired,
+            ],
+          },
+        ],
+        required: [],
+      },
+    ),
+  },
+  {
+    name: "get_dataforseo_serp_google_ads_advertisers",
+    path: "/apis/v1/dataforseo/serp/google/ads_advertisers/live/advanced",
+    description: "Research Google ads advertisers through DataForSEO using one synchronous query.",
+    inputSchema: s.object(
+      "Parameters for serp google ads advertisers. Top-level names use camelCase; nested filters and entity fields keep their upstream names.",
+      {
+        keyword: s.string("Keyword to search advertisers for", { minLength: 1 }),
+        locationCode: getSerpGoogleAdsAdvertisersLocationCodeSchema,
+        locationName: getSerpGoogleAdsAdvertisersLocationNameSchema,
+      },
+      { required: ["keyword"] },
+    ),
+  },
+  {
+    name: "get_dataforseo_serp_google_ads_search",
+    path: "/apis/v1/dataforseo/serp/google/ads_search/live/advanced",
+    description: "Research Google ads search through DataForSEO using one synchronous query.",
+    inputSchema: s.object(
+      "Parameters for serp google ads search. Top-level names use camelCase; nested filters and entity fields keep their upstream names.",
+      {
+        advertiserIds: s.array(
+          "Advertiser identifiers; required if target is not specified",
+          s.string("The advertiser ids item value."),
+        ),
+        locationCode: getSerpGoogleAdsAdvertisersLocationCodeSchema,
+        locationCoordinate: getSerpGoogleAdsSearchLocationCoordinateSchema,
+        locationName: getSerpGoogleAdsAdvertisersLocationNameSchema,
+        target: s.string(
+          "Domain name associated with an advertiser account; required if advertiser_ids is not specified",
+        ),
+      },
+      {
+        anyOf: [{ required: ["advertiserIds"] }, { required: ["target"] }],
+        allOf: [
+          {
+            anyOf: [
+              { required: ["advertiserIds"], properties: { advertiserIds: { not: { type: "null" }, minItems: 1 } } },
+              { required: ["target"], properties: { target: { not: { type: "null" }, minLength: 1 } } },
+            ],
+          },
+        ],
+        required: [],
+      },
+    ),
+  },
+  {
+    name: "get_dataforseo_serp_google_autocomplete",
+    path: "/apis/v1/dataforseo/serp/google/autocomplete/live/advanced",
+    description: "Research Google autocomplete through DataForSEO using one synchronous query.",
+    inputSchema: s.object(
+      "Parameters for serp google autocomplete. Top-level names use camelCase; nested filters and entity fields keep their upstream names.",
+      {
+        client: {
+          description:
+            "search client for autocomplete\noptional field\nautocomplete results may differ depending on the search client;\npossible values:\nchrome — used when google search is opened in google chrome;\nchrome-omni — used in the address bar in chrome;\ngws-wiz — used in google search home page;\ngws-wiz-serp — used in google search engine results page;\nsafari — used when google search is opened in safari browser;\nfirefox — used when google search is opened in firefox browser;\npsy-ab — may be used when google search is opened in google chrome browser;\ntoolbar — returns XML;\nyoutube — returns JSONP;\ngws-wiz-local — used in google local;\nimg — used in google's image search;\nproducts-cc — used in google shopping search",
+          type: ["string", "null"],
+        },
+        cursorPointer: {
+          description:
+            'search bar cursor pointer\noptional field\nthe horizontal numerical position of the cursor pointer within the keyword in the search bar;\nby modifying the position of the cursor pointer, you will obtain different autocomplete suggestions for the same seed keyword;\nminimal value: 0\ndefault value: the number of the last character of the specified keyword\nexample:\n|which query are s - "cursor_pointer": 0\nwhich query is s| - "cursor_pointer": 16\nwhich que|ry is s - "cursor_pointer": 9',
+          type: ["integer", "null"],
+          minimum: 0,
+        },
+        keyword: getSerpGoogleAutocompleteKeywordSchema,
+        languageCode: s.string(
+          "search engine language code\nrequired field if you don't specify language_name\nif you use this field, you don't need to specify language_name;\nyou can receive the list of available languages of the search engine with their language_code by making a separate request to the https://api.dataforseo.com/v3/serp/google/languages\nexample:\nen",
+        ),
+        languageName: s.string(
+          "full name of search engine language\nrequired field if you don't specify language_code\nif you use this field, you don't need to specify language_code;\nyou can receive the list of available languages of the search engine with their language_name by making a separate request to https://api.dataforseo.com/v3/serp/google/languages\nexample:\nEnglish",
+        ),
+        locationCode: s.integer(
+          "search engine location code\nrequired field if you don't specify location_name;\nyou can receive the list of available locations of the search engines with their location_code by making a separate request to https://api.dataforseo.com/v3/serp/google/locations\nexample:\n2840",
+        ),
+        locationName: s.string(
+          "full name of search engine location\nrequired field if you don't specify location_code\nif you use this field, you don't need to specify location_code;\nyou can receive the list of available locations of the search engine with their location_name by making a separate request to https://api.dataforseo.com/v3/serp/google/autocomplete/locations\nexample:\nLondon,England,United Kingdom",
+        ),
+        tag: tagSchema,
+      },
+      {
+        required: ["keyword"],
+        allOf: [nonemptyLocationRequired, nonemptyLanguageRequired],
+      },
+    ),
+  },
+  {
+    name: "get_dataforseo_serp_google_dataset_info",
+    path: "/apis/v1/dataforseo/serp/google/dataset_info/live/advanced",
+    description: "Research Google dataset info through DataForSEO using one synchronous query.",
+    inputSchema: s.object(
+      "Parameters for serp google dataset info. Top-level names use camelCase; nested filters and entity fields keep their upstream names.",
+      {
+        datasetId: s.string(
+          "ID of the dataset\nrequired field\nyou can find dataset ID in the dataset URL or dataset item of Google Dataset Search result\nexample:\nL2cvMTFqbl85ZHN6MQ==",
+          { minLength: 1 },
+        ),
+        device: getSerpGoogleFinanceMarketsDeviceSchema,
+        languageCode: {
+          description:
+            "search engine language code\noptional field\nif you use this field, you don't need to specify language_name\npossible value:\nen",
+          type: ["string", "null"],
+        },
+        languageName: getSerpGoogleDatasetInfoLanguageNameSchema,
+        os: {
+          description:
+            "device operating system\noptional field\npossible values: windows, macos\ndefault value: windows",
+          type: ["string", "null"],
+        },
+        tag: tagSchema,
+      },
+      { required: ["datasetId"] },
+    ),
+  },
+  {
+    name: "get_dataforseo_serp_google_dataset_search",
+    path: "/apis/v1/dataforseo/serp/google/dataset_search/live/advanced",
+    description: "Research Google dataset search through DataForSEO using one synchronous query.",
+    inputSchema: s.object(
+      "Parameters for serp google dataset search. Top-level names use camelCase; nested filters and entity fields keep their upstream names.",
+      {
+        depth: {
+          description:
+            "parsing depth\noptional field\nnumber of results in SERP\ndefault value: 20\nmax value: 200\nYour account will be billed per each SERP containing up to 20 results;\nSetting depth above 20 may result in additional charges if the search engine returns more than 20 results;\nIf the specified depth is higher than the number of results in the response, the difference will be refunded to your account balance automatically.",
+          type: ["integer", "null"],
+          maximum: 200,
+        },
+        device: getSerpGoogleFinanceMarketsDeviceSchema,
+        fileFormats: {
+          description:
+            "file formats of the dataset\noptional field\npossible values: other, archive, text, image, document, tabular",
+          items: s.string("The file formats item value."),
+          type: ["array", "null"],
+        },
+        isFree: {
+          description: "indicates whether displayed datasets are free\noptional field\npossible values: true, false",
+          type: ["boolean", "null"],
+        },
+        keyword: getSerpGoogleAutocompleteKeywordSchema,
+        languageCode: {
+          description:
+            "search engine language code\noptional field if you don't specify language_name\nif you use this field, you don't need to specify language_name\npossible value:\nen",
+          type: ["string", "null"],
+        },
+        languageName: getSerpGoogleDatasetInfoLanguageNameSchema,
+        lastUpdated: {
+          description: "last time the dataset was updated\noptional field\npossible values: 1m, 1y, 3y",
+          type: ["string", "null"],
+        },
+        os: getSerpYoutubeSubtitlesOsSchema,
+        tag: tagSchema,
+        topics: {
+          description:
+            "dataset topics\noptional field\npossible values: humanities, social_sciences, life_sciences, agriculture, natural_sciences, geo, computer, architecture_and_urban_planning, engineering",
+          items: s.string("The topics item value."),
+          type: ["array", "null"],
+        },
+        usageRights: {
+          description: "usage rights of the dataset\noptional field\npossible values: commercial, noncommercial",
+          type: ["string", "null"],
+        },
+      },
+      { required: ["keyword"] },
+    ),
+  },
+  {
+    name: "get_dataforseo_serp_google_events",
+    path: "/apis/v1/dataforseo/serp/google/events/live/advanced",
+    description: "Research Google events through DataForSEO using one synchronous query.",
+    inputSchema: s.object(
+      "Parameters for serp google events. Top-level names use camelCase; nested filters and entity fields keep their upstream names.",
+      {
+        keyword: s.string("Keyword to search for", { minLength: 1 }),
+        languageCode: s.string("Search engine language code"),
+        languageName: s.string("Full name of search engine language"),
+        locationCode: getSerpGoogleAdsAdvertisersLocationCodeSchema,
+        locationCoordinate: getSerpGoogleAdsSearchLocationCoordinateSchema,
+        locationName: getSerpGoogleAdsAdvertisersLocationNameSchema,
+      },
+      { required: ["keyword"] },
+    ),
+  },
+  {
+    name: "get_dataforseo_serp_google_finance_explore",
+    path: "/apis/v1/dataforseo/serp/google/finance_explore/live/advanced",
+    description: "Research Google finance explore through DataForSEO using one synchronous query.",
+    inputSchema: s.object(
+      "Parameters for serp google finance explore. Top-level names use camelCase; nested filters and entity fields keep their upstream names.",
+      {
+        device: getSerpGoogleFinanceMarketsDeviceSchema,
+        languageCode: getSerpGoogleFinanceMarketsLanguageCodeSchema,
+        languageName: getSerpGoogleImagesLanguageNameSchema,
+        locationCode: getSerpGoogleFinanceMarketsLocationCodeSchema,
+        locationName: getSerpGoogleFinanceExploreLocationNameSchema,
+        newsType: {
+          description:
+            "financial news filters\noptional field\npossible values: top_stories, local_market, world_markets\ndefault value: top_stories\nNote: if you specify local_market or world_markets, the charge per task will be multiplied by 2",
+          type: ["string", "null"],
+        },
+        os: getSerpGoogleFinanceMarketsOsSchema,
+        tag: tagSchema,
+      },
+      {
+        allOf: [nonemptyLocationRequired, nonemptyLanguageRequired],
+        required: [],
+      },
+    ),
+  },
+  {
+    name: "get_dataforseo_serp_google_finance_ticker_search",
+    path: "/apis/v1/dataforseo/serp/google/finance_ticker_search/live/advanced",
+    description: "Research Google finance ticker search through DataForSEO using one synchronous query.",
+    inputSchema: s.object(
+      "Parameters for serp google finance ticker search. Top-level names use camelCase; nested filters and entity fields keep their upstream names.",
+      {
+        category: {
+          description:
+            "category of financial instruments to search for\noptional field\npossible values: all, stock, index, mutual_fund, currency, futures\ndefault value: all",
+          type: ["string", "null"],
+        },
+        keyword: s.string(
+          "company or financial instrument name\nrequired field\nin this field, you can enter the name of a company or financial instrument to search for relevant tickers;\nyou can specify up to 700 characters in the keyword field;\nall %## will be decoded (plus character ‘+’ will be decoded to a space character)\nif you need to use the “%” character for your keyword, please specify it as “%25”;\nif you need to use the “+” character for your keyword, please specify it as “%2B”;\nlearn more about rules and limitations of keyword and keywords fields in DataForSEO APIs in this Help Center article",
+          { maxLength: 700, minLength: 1 },
+        ),
+        languageCode: getSerpGoogleFinanceMarketsLanguageCodeSchema,
+        languageName: getSerpGoogleImagesLanguageNameSchema,
+        locationCode: getSerpGoogleFinanceMarketsLocationCodeSchema,
+        locationName: getSerpGoogleFinanceExploreLocationNameSchema,
+        tag: tagSchema,
+      },
+      {
+        required: ["keyword"],
+        allOf: [nonemptyLocationRequired, nonemptyLanguageRequired],
+      },
+    ),
+  },
+  {
+    name: "get_dataforseo_serp_google_maps",
+    path: "/apis/v1/dataforseo/serp/google/maps/live/advanced",
+    description: "Research Google maps through DataForSEO using one synchronous query.",
+    inputSchema: s.object(
+      "Parameters for serp google maps. Top-level names use camelCase; nested filters and entity fields keep their upstream names.",
+      {
+        depth: {
+          description:
+            "parsing depth\noptional field\nnumber of results in SERP\ndefault value: 100\nmax value: 700\nYour account will be billed per each SERP containing up to 100 results;\nSetting depth above 100 may result in additional charges if the search engine returns more than 100 results;\nThe cost can be calculated on the Pricing page.",
+          type: ["integer", "null"],
+          maximum: 700,
+        },
+        device: {
+          description:
+            "device type\noptional field\nreturn results for a specific device type\ncan take the values:desktop, mobile\ndefault value: desktop\nnote: for mobile device, only 20 results are returned for every SERP",
+          type: ["string", "null"],
+        },
+        keyword: getSerpBingOrganicKeywordSchema,
+        languageCode: getSerpGoogleFinanceMarketsLanguageCodeSchema,
+        languageName: getSerpGoogleImagesLanguageNameSchema,
+        locationCode: getSerpGoogleImagesLocationCodeSchema,
+        locationCoordinate: s.string(
+          'GPS coordinates of a location\nrequired field if you don\'t specify location_name or location_code\nif you use this field, you don\'t need to specify location_name or location_code\nlocation_coordinate parameter should be specified in the "latitude,longitude,zoom" format\nif "zoom" is not specified, 17z will be applied as a default value\nthe maximum number of decimal digits for "latitude" and "longitude": 7\nthe minimum value for "zoom": 3z\nthe maximum value for "zoom": 21z\nexample:\n52.6178549,-155.352142,20z',
+        ),
+        locationName: getSerpGoogleImagesLocationNameSchema,
+        maxCrawlPages: {
+          description:
+            "page crawl limit\noptional field\nnumber of search results pages to crawl\nmax value: 100\nNote: the max_crawl_pages and depth parameters complement each other;\nlearn more at our help center",
+          type: ["integer", "null"],
+          maximum: 100,
+        },
+        os: osSchema,
+        seDomain: seDomainSchema,
+        searchPlaces: {
+          description:
+            "search places mode\noptional field\nthe search places mode allows to obtain Google Maps results on a certain place (e.g., Apple Store in New York)\nhowever, due to the pecularities of our data mining algorithm, this mode might interfere with some local-intent queries - and display results for a location that is different from that specified in the request;\nto prevent this interference and obtain correct results for keywords with local intent you may set this parameter to false;\ndefault value: true\nNote: if the search_places mode is turned off and no results were found in the search area, the results array will be empty",
+          type: ["boolean", "null"],
+        },
+        searchThisArea: {
+          description:
+            "show results from the displayed area\noptional field\ncan take the values:true, false\ndefault value: true\nif set to false, the search_this_area mode will be turned off\nNote: if the search_this_area mode is turned off, Google Maps listings might contain results beyond the displayed area",
+          type: ["boolean", "null"],
+        },
+        tag: tagSchema,
+        url: {
+          description:
+            "direct URL of the search query\noptional field\nyou can specify a direct URL and we will sort it out to the necessary fields. Note that this method is the most difficult for our API to process and also requires you to specify the exact language and location in the URL. In most cases, we wouldn’t recommend using this method.\nexample:\nhttps://google.com/maps/search/pizza/@37.09024,-95.712891,4z\nNote: the following search engine parameters are not supported and will be automatically unset if specified in the URL: allinanchor:, allintext:, allintitle:, allinurl:, cache:, define:, definition:, filetype:, id:, inanchor:, info:, intext:, intitle:, inurl:, link:, site:.",
+          type: ["string", "null"],
+        },
+      },
+      {
+        anyOf: [
+          { required: ["url"], properties: { url: { type: "string", minLength: 1 } } },
+          {
+            required: ["keyword"],
+            allOf: [
+              requireAtLeastOne(
+                ["locationCode", "locationCoordinate", "locationName"],
+                ["locationCoordinate", "locationName"],
+              ),
+              nonemptyLanguageRequired,
+            ],
+          },
+        ],
+        required: [],
+      },
+    ),
+  },
+  {
+    name: "get_dataforseo_serp_google_organic",
+    path: "/apis/v1/dataforseo/serp/google/organic/live/advanced",
+    description: "Research Google organic through DataForSEO using one synchronous query.",
+    inputSchema: s.object(
+      "Parameters for serp google organic. Top-level names use camelCase; nested filters and entity fields keep their upstream names.",
+      {
+        browserScreenHeight: {
+          description:
+            "browser screen heightoptional fieldyou can set a custom browser screen height to calculate pixel rankings for a particular device;can be specified within the following range: 240-9999;by default, the parameter is set to:1080 for desktop;640 for mobile on android;812 for mobile on iOS;Note: to use this parameter, set calculate_rectangles to true",
+          type: ["integer", "null"],
+        },
+        browserScreenResolutionRatio: {
+          description:
+            "browser screen resolution ratiooptional fieldyou can set a custom browser screen resolution ratio to calculate pixel rankings for a particular device;can be specified within the following range: 0.5-3;by default, the parameter is set to:1 for desktop;3 for mobile on android;3 for mobile on iOS;Note: to use this parameter, set calculate_rectangles to true",
+          type: ["integer", "null"],
+        },
+        browserScreenWidth: {
+          description:
+            "browser screen widthoptional fieldyou can set a custom browser screen width to calculate pixel rankings for a particular device;can be specified within the following range: 240-9999;by default, the parameter is set to:1920 for desktop;360 for mobile on android;375 for mobile on iOS;Note: to use this parameter, set calculate_rectangles to true",
+          type: ["integer", "null"],
+        },
+        calculateRectangles: {
+          description:
+            "calcualte pixel rankings for SERP elements in advanced resultsoptional fieldpixel ranking refers to the distance between the result snippet and top left corner of the screen;Visit Help Center to learn more>>by default, the parameter is set to false;Note: provider usage may increase for using this parameter\nFor current API pricing, see the published x-aisa-pricing metadata. Where supported, obtain a quote for your exact request.",
+          type: ["boolean", "null"],
+        },
+        depth: {
+          description:
+            "parsing depthoptional fieldnumber of results in SERPdefault value: 10max value: 200Your account will be billed per each SERP containing up to 10 results;Setting depth above 10 may result in additional charges if the search engine returns more than 10 results;The cost can be calculated on the Pricing page.",
+          type: ["integer", "null"],
+          maximum: 200,
+        },
+        device: {
+          description:
+            "device typeoptional fieldreturn results for a specific device typecan take the values:desktop, mobiledefault value: desktop",
+          type: ["string", "null"],
+        },
+        findTargetsIn: {
+          description:
+            'SERP element types to check for targetsoptional fieldto enable this parameter, stop_crawl_on_match must also be enabledspecifies which SERP element types should be checked for target matchesif not specified, all first-level elements with url and domain fields are checked for targetspossible values: organic, paid, local_pack, featured_snippet, events, google_flights, images, jobs, knowledge_graph, local_service, map, scholarly_articles, third_party_reviews, twitterNote: cannot contain the same element types as ignore_targets_inexample:"find_targets_in": ["organic", "featured_snippet"]learn more about this parameter on our Help Center',
+          items: s.string("The find targets in item value."),
+          type: ["array", "null"],
+        },
+        groupOrganicResults: {
+          description:
+            "display related resultsoptional fieldif set to true, the related_result element in the response will be provided as a snippet of its parent organic result;if set to false, the related_result element will be provided as a separate organic result;default value: true",
+          type: ["boolean", "null"],
+        },
+        ignoreTargetsIn: {
+          description:
+            'SERP element types to exclude from target searchoptional fieldto enable this parameter, stop_crawl_on_match must also be enabledspecifies which SERP element types should be excluded when searching for target matchespossible values: organic, paid, local_pack, featured_snippet, events, google_flights, images, jobs, knowledge_graph, local_service, map, scholarly_articles, third_party_reviews, twitterNote: cannot contain the same element types as find_targets_inexample:"ignore_targets_in": ["paid", "images"]learn more about this parameter on our Help Center',
+          items: s.string("The ignore targets in item value."),
+          type: ["array", "null"],
+        },
+        keyword: s.string(
+          "keywordrequired fieldyou can specify up to 700 characters in the keyword fieldall %## will be decoded (plus character ‘+’ will be decoded to a space character)if you need to use the “%” character for your keyword, please specify it as “%25”;if you need to use the “+” character for your keyword, please specify it as “%2B”;if this field contains such parameters as ‘allinanchor:’, ‘allintext:’, ‘allintitle:’, ‘allinurl:’, ‘cache:’, ‘define:’, ‘definition:’, ‘filetype:’, ‘id:’, ‘inanchor:’, ‘info:’, ‘intext:’, ‘intitle:’, ‘inurl:’, ‘link:’, ‘site:’, the charge per task will be multiplied by 5learn more about rules and limitations of keyword and keywords fields in DataForSEO APIs in this Help Center article",
+          { maxLength: 700, minLength: 1 },
+        ),
+        languageCode: {
+          description:
+            "search engine language codeoptional field if you specify language_nameif you use this field, you don't need to specify language_nameyou can receive the list of available languages of the search engine with their language_code by making a separate request to the https://api.dataforseo.com/v3/serp/google/languagesexample:en",
+          type: ["string", "null"],
+        },
+        languageName: {
+          description:
+            "full name of search engine languageoptional field if you specify language_codeif you use this field, you don't need to specify language_codeyou can receive the list of available languages of the search engine with their language_name by making a separate request to the https://api.dataforseo.com/v3/serp/google/languagesexample:English",
+          type: ["string", "null"],
+        },
+        loadAsyncAiOverview: {
+          description:
+            'load asynchronous ai overviewoptional fieldset to true to obtain ai_overview items is SERPs even if they are loaded asynchronously;if set to false, you will only obtain ai_overview items from cache;default value: falseNote: provider usage may increase for using this parameter;if the element is absent or contains "asynchronous_ai_overview": false, all extra charges will be returned to your account balance\nFor current API pricing, see the published x-aisa-pricing metadata. Where supported, obtain a quote for your exact request.',
+          type: ["boolean", "null"],
+        },
+        locationCode: {
+          description:
+            "search engine location coderequired field if you don't specify location_name or location_coordinateif you use this field, you don't need to specify location_name or location_coordinateyou can receive the list of available locations of the search engines with their location_code by making a separate request to the https://api.dataforseo.com/v3/serp/google/locationsexample:2840",
+          type: ["integer", "null"],
+        },
+        locationCoordinate: {
+          description:
+            'GPS coordinates of a locationoptional field if you specify location_name or location_codeif you use this field, you don\'t need to specify location_name or location_codelocation_coordinate parameter should be specified in the "latitude,longitude,radius" formatthe maximum number of decimal digits for "latitude" and "longitude": 7the minimum value for "radius": 199 (mm)the maximum value for "radius": 199999 (mm)example:53.476225,-2.243572,200',
+          type: ["string", "null"],
+        },
+        locationName: {
+          description:
+            "full name of search engine locationrequired field if you don't specify location_code or location_coordinateif you use this field, you don't need to specify location_code or location_coordinateyou can receive the list of available locations of the search engine with their location_name by making a separate request to the https://api.dataforseo.com/v3/serp/google/locationsexample:London,England,United Kingdom",
+          type: ["string", "null"],
+        },
+        matchType: {
+          description:
+            "target match typerequired field if stop_crawl_on_match is specifiedtype of match for the match_valuepossible values:domain – specific domain or subdomainwith_subdomains – main domain and subdomainswildcard – wildcard pattern",
+          type: ["string", "null"],
+        },
+        matchValue: {
+          description:
+            'target domain, subdomain, or wildcard valuerequired field if stop_crawl_on_match is specifiedspecify a target domain, subdomain, or wildcard value;Note: domain or subdomain must be specified without a request protocol;example: "match_value": "dataforseo.com","match_value": "/blog/post-*"',
+          type: ["string", "null"],
+        },
+        maxCrawlPages: {
+          description:
+            "page crawl limitoptional fieldnumber of search results pages to crawlmax value: 100Note: you will be charged for each page crawled (10 organic results per page);learn more about pricing on our Pricing page;Note#2: the max_crawl_pages and depth parameters complement each other;learn more at our help center",
+          type: ["integer", "null"],
+          maximum: 100,
+        },
+        os: {
+          description:
+            "device operating systemoptional fieldif you specify desktop in the device field, choose from the following values: windows, macosdefault value: windowsif you specify mobile in the device field, choose from the following values: android, iosdefault value: android",
+          type: ["string", "null"],
+        },
+        peopleAlsoAskClickDepth: {
+          description:
+            "clicks on the corresponding elementoptional fieldspecify the click depth on the people_also_ask element to get additional people_also_ask_element items;if the element is absent or we perform fewer clicks than you specified, all extra charges will be returned to your account balancepossible values: from 1 to 4\nFor current API pricing, see the published x-aisa-pricing metadata. Where supported, obtain a quote for your exact request.",
+          type: ["integer", "null"],
+        },
+        removeFromUrl: {
+          description:
+            'remove specific parameters from URLsoptional fieldusing this field, you can specify up to 10 parameters to remove from URLs in the resultexample:"remove_from_url": ["srsltid"]Note: if the target field is specified, the specified URL parameters will be removed before the search',
+          items: s.string("The remove from url item value."),
+          type: ["array", "null"],
+          maxItems: 10,
+        },
+        seDomain: {
+          description:
+            "search engine domainoptional fieldwe choose the relevant search engine domain automatically according to the location and language you specifyhowever, you can set a custom search engine domain in this fieldexample:google.co.uk, google.com.au, google.de, etc.",
+          type: ["string", "null"],
+        },
+        searchParam: {
+          description:
+            "additional parameters of the search queryoptional fieldget the list of available parameters and additional details hereNote: the following search engine parameters are not supported and will be automatically unset if specified: lr, cr, as_qdr, as_sitesearch, as_occt, as_filetype.",
+          type: ["string", "null"],
+        },
+        stopCrawlOnMatch: stopCrawlOnMatchSchema,
+        tag: getLabsGooglePageIntersectionTagSchema,
+        target: {
+          description:
+            "target domain, subdomain, or webpage to get results foroptional fielda domain or a subdomain should be specified without https:// and www.note that the results of target-specific tasks will only include SERP elements that contain a url string;you can also use a wildcard (‘*’) character to specify the search pattern in SERP and narrow down the results;examples:example.com - returns results for the website's home page with URLs, such as https://example.com, or https://www.example.com/, or https://example.com/;example.com* - returns results for the domain, including all its pages;*example.com* - returns results for the entire domain, including all its pages and subdomains;*example.com - returns results for the home page regardless of the subdomain, such as https://en.example.com;example.com/example-page - returns results for the exact URL;example.com/example-page* - returns results for all domain's URLs that start with the specified string",
+          type: ["string", "null"],
+        },
+        targetSearchMode: {
+          description:
+            "target matching modeoptional fieldto enable this parameter, stop_crawl_on_match must also be enableddefines how the crawl should stop when multiple targets are specified in stop_crawl_on_matchpossible values: all, anyall – the crawl stops only when all specified targets are foundany – the crawl stops when any single target is founddefault value: anylearn more about this parameter on our Help Center",
+          type: ["string", "null"],
+        },
+        url: {
+          description:
+            "direct URL of the search queryoptional fieldyou can specify a direct URL and we will sort it out to the necessary fields. Note that this method is the most difficult for our API to process and also requires you to specify the exact language and location in the URL. In most cases, we wouldn’t recommend using this method.example:https://www.google.co.uk/search?q=%20rank%20tracker%20api&hl=en&gl=GB&uule=w+CAIQIFISCXXeIa8LoNhHEZkq1d1aOpZSNote: the following search engine parameters are not supported and will be automatically unset if specified in the URL: lr, cr, as_qdr, as_sitesearch, as_occt, as_filetype.",
+          type: ["string", "null"],
+        },
+      },
+      {
+        anyOf: [
+          { required: ["url"], properties: { url: { type: "string", minLength: 1 } } },
+          {
+            required: ["keyword"],
+            allOf: [
+              {
+                if: { properties: { stopCrawlOnMatch: { const: true } }, required: ["stopCrawlOnMatch"] },
+                then: { required: ["matchType", "matchValue"] },
+              },
+              requireAtLeastOne(
+                ["locationCode", "locationCoordinate", "locationName"],
+                ["locationCoordinate", "locationName"],
+              ),
+            ],
+          },
+        ],
+        required: [],
+      },
+    ),
+  },
+  {
+    name: "get_dataforseo_serp_yahoo_organic",
+    path: "/apis/v1/dataforseo/serp/yahoo/organic/live/advanced",
+    description: "Research Yahoo organic through DataForSEO using one synchronous query.",
+    inputSchema: s.object(
+      "Parameters for serp yahoo organic. Top-level names use camelCase; nested filters and entity fields keep their upstream names.",
+      {
+        depth: {
+          description:
+            "parsing depth\noptional field\nnumber of results in SERP\ndefault value: 6\nmax value: 200\nYour account will be billed per each SERP;\nEach Yahoo SERP can contain fewer than 10 results, so setting depth above the default value may result in additional charges ;\nThe cost can be calculated on the Pricing page.",
+          type: ["integer", "null"],
+          maximum: 200,
+        },
+        device: deviceSchema,
+        keyword: s.string(
+          'keyword\nrequired field\nyou can specify up to 700 characters in the keyword field\nall %## will be decoded (plus character \'+\' will be decoded to a space character)\nif you need to use the "%" character for your keyword, please specify it as "%25";\nif you need to use the “+” character for your keyword, please specify it as “%2B”\nlearn more about rules and limitations of keyword and keywords fields in DataForSEO APIs in this Help Center article',
+          { maxLength: 700, minLength: 1 },
+        ),
+        languageCode: s.string(
+          "search engine language code\nrequired field if you don't specify language_name\nif you use this field, you don't need to specify language_name\nyou can receive the list of available languages of the search engine with their language_code_by making a separate request to the https://api.dataforseo.com/v3/serp/{{low_se_name}}/languages\nexample:\nenn",
+        ),
+        languageName: getSerpGoogleLocalFinderLanguageNameSchema,
+        locationCode: s.integer(
+          "search engine location code\nrequired field if you don't specify location_name_or location_coordinate\nif you use this field, you don't need to specify location_name or location_coordinate\nyou can receive the list of available locations of the search engines with their location_code by making a separate request to the https://api.dataforseo.com/v3/serp/{{low_se_name}}/locations\nexample:\n2840n",
+        ),
+        locationCoordinate: getGoogleBusinessInfoLocationCoordinateSchema,
+        locationName: getSerpGoogleLocalFinderLocationNameSchema,
+        maxCrawlPages: getSerpBingOrganicMaxCrawlPagesSchema,
+        os: osSchema,
+        seDomain: {
+          description:
+            "search engine domain\noptional field\nwe choose the relevant search engine domain automatically according to the location and language you specify\nhowever, you can set a custom search engine domain in this field\nexample:\nau.search.yahoo.com, uk.search.yahoo.com, ca.search.yahoo.com, etc.",
+          type: ["string", "null"],
+        },
+        searchParam: getSerpBingOrganicSearchParamSchema,
+        stopCrawlOnMatch: stopCrawlOnMatchSchema,
+        tag: tagSchema,
+        target: getSerpBingOrganicTargetSchema,
+        url: {
+          description:
+            "direct URL of the search query\noptional field\nyou can specify a direct URL and we will sort it out to the necessary fields. Note that this method is the most difficult for our API to process and also requires you to specify the exact language and location in the URL. In most cases, we wouldn’t recommend using this method.\nexample:\nhttps://search.yahoo.com/search?p=rank+checker&n=100&vl=lang_en&vc=us&ei=UTF-8",
+          type: ["string", "null"],
+        },
+      },
+      {
+        anyOf: [
+          { required: ["url"], properties: { url: { type: "string", minLength: 1 } } },
+          {
+            required: ["keyword"],
+            allOf: [
+              {
+                if: { properties: { stopCrawlOnMatch: { const: true } }, required: ["stopCrawlOnMatch"] },
+                then: { required: ["matchType", "matchValue"] },
+              },
+              requireAtLeastOne(
+                ["locationCode", "locationCoordinate", "locationName"],
+                ["locationCoordinate", "locationName"],
+              ),
+              nonemptyLanguageRequired,
+            ],
+          },
+        ],
+        required: [],
+      },
+    ),
+  },
+];
 
 const outputSchema = s.looseObject(
   "The DataForSEO response, preserving task statuses, costs, results, and additional fields.",
