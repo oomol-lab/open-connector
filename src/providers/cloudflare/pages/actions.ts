@@ -207,7 +207,7 @@ export const actions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "deploy_pages_site",
     description:
-      "Deploy a prebuilt Pages site from a public ZIP URL. The archive root is the site root. Uploads assets in batches and submits the deployment; use get_pages_deployment to wait for completion. Connector limits: 512 MiB compressed and expanded, 20,000 files, 25 MiB per file. Include compiled _worker.js or _worker.bundle for Pages Functions.",
+      "Deploy a prebuilt Pages site from a public ZIP URL. The archive root is the site root. Uploads assets in batches and submits the deployment; use get_pages_deployment to wait for completion. Connector limits: 4 MiB compressed and expanded when the connector runs on Cloudflare Workers, 512 MiB elsewhere, 20,000 files, 25 MiB per file. Include compiled _worker.js or _worker.bundle for Pages Functions.",
     operationType: "write",
     requiredScopes: [],
     providerPermissions: ["Pages Write"],

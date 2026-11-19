@@ -2,9 +2,11 @@ import { blake3 } from "@noble/hashes/blake3.js";
 import { unzipSync, Unzip, UnzipInflate } from "fflate";
 import { getMimeType } from "hono/utils/mime";
 import { extname } from "node:path";
+import { isCloudflareWorkerRuntime } from "../../../core/runtime-execution.ts";
 import { providerInputError } from "../../provider-runtime.ts";
 
-export const archiveMaximumBytes: number = 512 * 1024 * 1024;
+// Leave room for expanded assets, base64 and JSON copies in the Workers isolate.
+export const archiveMaximumBytes: number = (isCloudflareWorkerRuntime() ? 4 : 512) * 1024 * 1024;
 
 const specialNames = new Set([
   "_headers",

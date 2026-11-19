@@ -46,7 +46,7 @@ export const actions: ActionDefinition[] = [
     name: "list_event_notification_rules",
     operationType: "read",
     description: "List every event notification rule of an R2 bucket grouped by target queue.",
-    requiredScopes: [],
+    requiredScopes: ["workers-r2.read", "queues.read"],
     providerPermissions: [...readPermissions, ...queuesReadPermissions],
     inputSchema: s.object(
       "Input for listing event notification rules.",
@@ -66,7 +66,7 @@ export const actions: ActionDefinition[] = [
     name: "get_event_notification_rules",
     operationType: "read",
     description: "Get the event notification rules that send R2 bucket events to one queue.",
-    requiredScopes: [],
+    requiredScopes: ["workers-r2.read", "queues.read"],
     providerPermissions: [...readPermissions, ...queuesReadPermissions],
     inputSchema: s.object(
       "Input for reading the rules bound to one queue.",
@@ -84,7 +84,7 @@ export const actions: ActionDefinition[] = [
     name: "create_event_notification_rules",
     operationType: "write",
     description: "Add event notification rules that send R2 bucket events to a Cloudflare Queue.",
-    requiredScopes: [],
+    requiredScopes: ["workers-r2.write", "queues.write"],
     providerPermissions: [...writePermissions, ...queuesWritePermissions],
     inputSchema: s.object(
       "Input for creating event notification rules.",
@@ -123,7 +123,7 @@ export const actions: ActionDefinition[] = [
     operationType: "destructive",
     description:
       "Delete event notification rules bound to one queue. Deletes every rule for the queue when ruleIds is omitted.",
-    requiredScopes: [],
+    requiredScopes: ["workers-r2.write", "queues.write"],
     providerPermissions: [...writePermissions, ...queuesWritePermissions],
     inputSchema: s.object(
       "Input for deleting event notification rules.",
