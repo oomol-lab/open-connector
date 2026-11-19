@@ -1,5 +1,10 @@
 import { requiredString, compactObject, optionalInteger, optionalRecord, optionalString } from "../../../core/cast.ts";
-import { ProviderRequestError, requiredResponseRecord, providerResponseError } from "../../provider-runtime.ts";
+import {
+  runProviderRequest,
+  ProviderRequestError,
+  requiredResponseRecord,
+  providerResponseError,
+} from "../../provider-runtime.ts";
 import { cloudflareRequestEnvelope } from "./client.ts";
 
 interface CloudflareAccount {
@@ -14,18 +19,20 @@ export async function requestCloudflareAccounts(
   signal: AbortSignal | undefined,
   input: { page?: number; perPage?: number } = {},
 ): Promise<{ accounts: CloudflareAccount[]; resultInfo?: Record<string, unknown> }> {
-  const envelope = await cloudflareRequestEnvelope(
-    apiToken,
-    {
-      path: "/accounts",
-      query: {
-        page: input.page ?? 1,
-        per_page: input.perPage ?? 50,
+  const envelope = await runProviderRequest({ label: "Cloudflare accounts", signal }, (requestSignal) =>
+    cloudflareRequestEnvelope(
+      apiToken,
+      {
+        path: "/accounts",
+        query: {
+          page: input.page ?? 1,
+          per_page: input.perPage ?? 50,
+        },
       },
-    },
-    fetcher,
-    "execute",
-    signal,
+      fetcher,
+      "execute",
+      requestSignal,
+    ),
   );
   if (!Array.isArray(envelope.result)) {
     throw new ProviderRequestError(502, "malformed cloudflare accounts response");

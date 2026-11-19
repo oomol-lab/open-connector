@@ -1,7 +1,7 @@
 import type { ProviderRuntimeHandler } from "../../provider-executors.ts";
 import type { CloudflareContext } from "../shared/context.ts";
 
-import { optionalString, optionalInteger } from "../../../core/cast.ts";
+import { optionalString, optionalRawString, optionalInteger } from "../../../core/cast.ts";
 import { withCloudflareClient } from "../shared/action-client.ts";
 import { withAccountHandlers } from "../shared/context.ts";
 import { namespacePath, valuePath } from "./paths.ts";
@@ -39,7 +39,7 @@ export const handlers: Record<string, ProviderRuntimeHandler<CloudflareContext>>
     client.list({
       path: `${namespacePath(client)}/keys`,
       query: {
-        prefix: optionalString(client.input.prefix),
+        prefix: optionalRawString(client.input.prefix),
         cursor: optionalString(client.input.cursor),
         limit: optionalInteger(client.input.limit),
       },

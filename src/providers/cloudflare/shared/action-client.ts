@@ -9,10 +9,12 @@ export class CloudflareClient {
   readonly input: Record<string, unknown>;
   readonly apiToken: string;
   readonly fetcher: typeof fetch;
-  constructor(input: Record<string, unknown>, apiToken: string, fetcher: typeof fetch) {
+  readonly signal?: AbortSignal;
+  constructor(input: Record<string, unknown>, apiToken: string, fetcher: typeof fetch, signal?: AbortSignal) {
     this.input = input;
     this.apiToken = apiToken;
     this.fetcher = fetcher;
+    this.signal = signal;
   }
 
   id(field: string): string {
@@ -62,6 +64,6 @@ export function withCloudflareClient(
           ...init,
           signal: init?.signal && signal ? AbortSignal.any([signal, init.signal]) : (init?.signal ?? signal),
         })) as typeof fetch;
-      return handler(new CloudflareClient(input, context.accessToken, requestFetch));
+      return handler(new CloudflareClient(input, context.accessToken, requestFetch, signal));
     });
 }

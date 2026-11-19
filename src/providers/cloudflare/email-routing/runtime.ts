@@ -36,7 +36,8 @@ export const handlers: Record<string, ProviderRuntimeHandler<CloudflareContext>>
 };
 
 async function listRoutingRules(input: Record<string, unknown>, context: CloudflareContext): Promise<unknown> {
-  if (!input.zoneId) input = await resolveActionAccount(input, context);
+  if (input.zoneId !== undefined) requiredInputString(input.zoneId, "zoneId");
+  else input = await resolveActionAccount(input, context);
   const explicitAccount = optionalString(input.accountId);
   const explicitZone = optionalString(input.zoneId);
   if (explicitAccount && explicitZone) {

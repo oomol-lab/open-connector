@@ -4,7 +4,7 @@ import { Client, SdkHttpError, SdkError } from "@modelcontextprotocol/client";
 import { SSEClientTransport } from "@modelcontextprotocol/client";
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/client";
 import { CfWorkerJsonSchemaValidator } from "@modelcontextprotocol/client/validators/cf-worker";
-import { providerFetch, ProviderRequestError } from "./provider-runtime.ts";
+import { providerFetch, ProviderRequestError, isAbortLikeError } from "./provider-runtime.ts";
 
 const mcpConnectTimeoutMs = 60_000;
 const modernMcpProtocolVersion = "2026-07-28";
@@ -106,7 +106,11 @@ export function createMcpDiagnosticFetch(fetcher: FetchLike, transport: McpHttpT
     const response = await fetcher(url, init);
     // EventSource needs the original response status for its SSE error mapping.
     if (transport === "streamable_http" && (response.status === 401 || response.status === 403)) {
-      const detail = (await response.text()).trim() || response.headers.get("www-authenticate") || response.statusText;
+      const body = await response.text().catch((error: unknown) => {
+        if (isAbortLikeError(error) || error instanceof ProviderRequestError || init?.signal?.aborted) throw error;
+        return "";
+      });
+      const detail = body.trim() || response.headers.get("www-authenticate") || response.statusText;
       throw new ProviderRequestError(
         response.status,
         `${label} MCP request failed (HTTP ${response.status}): ${detail}`,

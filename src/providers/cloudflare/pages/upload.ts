@@ -2,7 +2,7 @@ import type { CloudflareClient } from "../shared/action-client.ts";
 
 import { optionalRecord, optionalString } from "../../../core/cast.ts";
 import { downloadUploadSource } from "../../provider-files.ts";
-import { ProviderRequestError, requiredInputString } from "../../provider-runtime.ts";
+import { ProviderRequestError, requiredInputString, isAbortLikeError } from "../../provider-runtime.ts";
 import { cloudflareRequestEnvelope } from "../shared/client.ts";
 import { archiveMaximumBytes, readPagesArchive } from "./archive.ts";
 import { normalizeDeployment, projectPath } from "./deployment.ts";
@@ -74,7 +74,10 @@ export async function deployPagesSite(client: CloudflareClient): Promise<unknown
     { path: "/pages/assets/upsert-hashes", method: "POST", body: { hashes } },
     requestFetch,
     "execute",
-  );
+  ).catch((error: unknown) => {
+    // Wrangler treats this cache update as best effort; asset uploads above remain mandatory.
+    if (client.signal?.aborted || isAbortLikeError(error)) throw error;
+  });
   const form = new FormData();
   form.set("manifest", JSON.stringify(Object.fromEntries(assets.map((asset) => [`/${asset.name}`, asset.hash]))));
   for (const [field, keyName] of [

@@ -97,3 +97,17 @@ it("keeps an SDK wrapper around an untyped fetch failure", async () => {
   ).rejects.toThrow();
   expect(received).not.toBe(original);
 });
+
+it("keeps the HTTP challenge when the diagnostic body stream fails", async () => {
+  const response = new Response(
+    new ReadableStream({
+      start(controller) {
+        controller.error(new Error("connection reset"));
+      },
+    }),
+    { status: 403, headers: { "www-authenticate": "Bearer realm=fixture" } },
+  );
+  await expect(
+    createMcpDiagnosticFetch(async () => response, "streamable_http", "fixture")("https://mcp.example"),
+  ).rejects.toMatchObject({ status: 403, message: "fixture MCP request failed (HTTP 403): Bearer realm=fixture" });
+});

@@ -24,7 +24,7 @@ export const provider: ProviderDefinition = {
           label: "Default Account ID",
           required: false,
           description:
-            "Optional default account for account-scoped actions and account-owned token verification. Find it at https://developers.cloudflare.com/fundamentals/account/find-account-and-zone-ids/.",
+            "Optional default account for account-scoped actions and account-owned token verification. An action accountId overrides this default. Find it at https://developers.cloudflare.com/fundamentals/account/find-account-and-zone-ids/.",
         },
       ],
     },

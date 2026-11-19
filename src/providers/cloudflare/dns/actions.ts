@@ -315,9 +315,9 @@ export const actions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "create_zone",
     description:
-      "Create a Cloudflare zone and return its assigned nameservers. Registrar nameserver changes are a separate step.",
+      "Create a Cloudflare zone and return its assigned nameservers. Full setups require a separate registrar nameserver update; partial setups use Cloudflare zone verification.",
     operationType: "write",
-    requiredScopes: [],
+    requiredScopes: ["zone.write"],
     providerPermissions: ["Zone Write"],
     inputSchema: s.object(
       "The action parameters.",
@@ -335,7 +335,7 @@ export const actions: ActionDefinition[] = [
     name: "get_zone_setting",
     description: "Read one Cloudflare zone setting, such as SSL mode or cache configuration.",
     operationType: "read",
-    requiredScopes: [],
+    requiredScopes: ["zone-settings.read"],
     providerPermissions: ["Zone Settings Read"],
     inputSchema: s.object(
       "The action parameters.",
@@ -348,7 +348,7 @@ export const actions: ActionDefinition[] = [
     name: "get_zone_dns_settings",
     description: "Read the DNS settings of a Cloudflare zone.",
     operationType: "read",
-    requiredScopes: [],
+    requiredScopes: ["zone-dns-settings.read"],
     providerPermissions: ["Zone DNS Settings Read"],
     inputSchema: s.object(
       "The action parameters.",

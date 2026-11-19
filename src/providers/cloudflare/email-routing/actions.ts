@@ -116,7 +116,7 @@ export const actions: ActionDefinition[] = [
     name: "list_routing_rules",
     operationType: "read",
     description: "List Cloudflare Email Routing rules for a zone or account.",
-    requiredScopes: [rulesRead],
+    requiredScopes: ["email-routing-rule.read"],
     providerPermissions: [rulesRead],
     inputSchema: listRulesInput,
     outputSchema: s.object(
@@ -130,7 +130,7 @@ export const actions: ActionDefinition[] = [
     operationType: "write",
     description:
       "Create a Cloudflare Email Routing rule in a zone. Forward actions require verified destination addresses.",
-    requiredScopes: [rulesWrite],
+    requiredScopes: ["email-routing-rule.write"],
     providerPermissions: [rulesWrite],
     inputSchema: createInput,
     outputSchema: s.object("The output payload for this action.", { rule: ruleSchema }),
@@ -139,7 +139,7 @@ export const actions: ActionDefinition[] = [
     name: "update_routing_rule",
     operationType: "destructive",
     description: "Replace a Cloudflare Email Routing rule in a zone.",
-    requiredScopes: [rulesWrite],
+    requiredScopes: ["email-routing-rule.write"],
     providerPermissions: [rulesWrite],
     inputSchema: updateInput,
     outputSchema: s.object("The output payload for this action.", { rule: ruleSchema }),
@@ -148,7 +148,7 @@ export const actions: ActionDefinition[] = [
     name: "delete_routing_rule",
     operationType: "destructive",
     description: "Delete a Cloudflare Email Routing rule from a zone.",
-    requiredScopes: [rulesWrite],
+    requiredScopes: ["email-routing-rule.write"],
     providerPermissions: [rulesWrite],
     inputSchema: s.object("The input payload for this action.", { zoneId, ruleId }, { required: ["ruleId", "zoneId"] }),
     outputSchema: s.object("The output payload for this action.", {
@@ -161,7 +161,7 @@ export const actions: ActionDefinition[] = [
     operationType: "read",
     description:
       "List Cloudflare Email Routing destination addresses. Use addresses with a non-null verified timestamp for forward actions.",
-    requiredScopes: [addressesRead],
+    requiredScopes: ["email-routing-address.read"],
     providerPermissions: [addressesRead],
     inputSchema: s.object(
       "The input payload for this action.",

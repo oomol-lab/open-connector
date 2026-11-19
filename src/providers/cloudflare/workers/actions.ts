@@ -954,7 +954,7 @@ export const actions: ActionDefinition[] = [
     name: "list_worker_routes",
     description: "List Worker routes for a zone.",
     operationType: "read",
-    requiredScopes: [],
+    requiredScopes: ["workers-routes.read"],
     providerPermissions: ["Workers Routes Read"],
     inputSchema: s.object("The action parameters.", { zoneId }, { optional: [] }),
     outputSchema: s.requiredObject("The action result.", listOutput),
@@ -963,7 +963,7 @@ export const actions: ActionDefinition[] = [
     name: "create_worker_route",
     description: "Attach a Worker to a zone route pattern, or create an exclusion route by omitting scriptName.",
     operationType: "write",
-    requiredScopes: [],
+    requiredScopes: ["workers-routes.write"],
     providerPermissions: ["Workers Routes Write"],
     inputSchema: s.object(
       "The action parameters.",
@@ -980,7 +980,7 @@ export const actions: ActionDefinition[] = [
     name: "update_worker_route",
     description: "Update the pattern and Worker for a zone route.",
     operationType: "write",
-    requiredScopes: [],
+    requiredScopes: ["workers-routes.write"],
     providerPermissions: ["Workers Routes Write"],
     inputSchema: s.object(
       "The action parameters.",
@@ -998,7 +998,7 @@ export const actions: ActionDefinition[] = [
     name: "delete_worker_route",
     description: "Delete a Worker route from a zone.",
     operationType: "destructive",
-    requiredScopes: [],
+    requiredScopes: ["workers-routes.write"],
     providerPermissions: ["Workers Routes Write"],
     inputSchema: s.object(
       "The action parameters.",
@@ -1014,7 +1014,7 @@ export const actions: ActionDefinition[] = [
     name: "list_worker_domains",
     description: "List Worker custom domains in an account.",
     operationType: "read",
-    requiredScopes: [],
+    requiredScopes: ["workers-scripts.read"],
     providerPermissions: ["Workers Scripts Read"],
     inputSchema: s.object(
       "The action parameters.",
@@ -1032,7 +1032,7 @@ export const actions: ActionDefinition[] = [
     name: "attach_worker_domain",
     description: "Attach a custom domain to a Worker service.",
     operationType: "write",
-    requiredScopes: [],
+    requiredScopes: ["workers-scripts.write"],
     providerPermissions: ["Workers Scripts Write"],
     inputSchema: s.object(
       "The action parameters.",
@@ -1053,7 +1053,7 @@ export const actions: ActionDefinition[] = [
     name: "delete_worker_domain",
     description: "Detach a Worker custom domain.",
     operationType: "destructive",
-    requiredScopes: [],
+    requiredScopes: ["workers-scripts.write"],
     providerPermissions: ["Workers Scripts Write"],
     inputSchema: s.object("The action parameters.", { accountId, domainId }, { optional: ["accountId"] }),
     outputSchema: s.requiredObject("The action result.", resultOutput),

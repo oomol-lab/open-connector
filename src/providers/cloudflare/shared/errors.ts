@@ -1,5 +1,5 @@
 import { optionalRecord, optionalString } from "../../../core/cast.ts";
-import { ProviderRequestError, providerInputError } from "../../provider-runtime.ts";
+import { ProviderRequestError, providerInputError, withRetryAfterSeconds } from "../../provider-runtime.ts";
 
 export function readCloudflareErrorMessage(payload: unknown, status: number): string {
   const record = optionalRecord(payload);
@@ -43,7 +43,7 @@ export function cloudflareResponseError(
   phase: "validate" | "execute",
 ): ProviderRequestError {
   const message = readCloudflareErrorMessage(payload, response.status);
-  if (response.status === 429) return new ProviderRequestError(429, message);
+  if (response.status === 429) return new ProviderRequestError(429, message, withRetryAfterSeconds(response));
   if (phase === "validate" && [400, 401, 403, 404].includes(response.status)) return providerInputError(message);
   if (response.status === 400 || response.status === 404) return new ProviderRequestError(response.status, message);
   return new ProviderRequestError(response.ok ? 502 : response.status, message, undefined, "provider_error");
