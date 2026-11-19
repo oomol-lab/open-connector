@@ -1,7 +1,7 @@
 import type { ProviderDefinition } from "../../core/types.ts";
 
 import { actions } from "./actions.ts";
-import { cloudflareAuthorizationOptions, cloudflareDefaultScopes } from "./authorization.ts";
+import { cloudflareAuthorizationOptions, cloudflareDefaultScopes, cloudflareAuthTypes } from "./authorization.ts";
 
 export const provider: ProviderDefinition = {
   service: "cloudflare",
@@ -9,7 +9,7 @@ export const provider: ProviderDefinition = {
   description: "Deploy websites and Workers, manage DNS, KV, R2, email routing, and browser rendering.",
   categories: ["Developer Tools", "Storage"],
   homepageUrl: "https://www.cloudflare.com",
-  authTypes: ["api_key", "oauth2", "custom_credential"],
+  authTypes: cloudflareAuthTypes,
   auth: [
     {
       type: "custom_credential",

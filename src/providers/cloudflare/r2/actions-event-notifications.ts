@@ -2,6 +2,7 @@ import type { ActionDefinition } from "../../../core/types.ts";
 
 import { s } from "../../../core/json-schema.ts";
 import { defineProviderAction } from "../../../core/provider-definition.ts";
+import { cloudflareTokenAuthTypes } from "../authorization.ts";
 import { bucketNameSchema, jurisdictionSchema, readPermissions, writePermissions } from "./schemas.ts";
 
 const service = "cloudflare";
@@ -43,6 +44,7 @@ const queueNotificationConfigSchema = s.object(
 
 export const actions: ActionDefinition[] = [
   defineProviderAction(service, {
+    authTypes: cloudflareTokenAuthTypes,
     name: "list_event_notification_rules",
     operationType: "read",
     description: "List every event notification rule of an R2 bucket grouped by target queue.",
@@ -63,6 +65,7 @@ export const actions: ActionDefinition[] = [
     }),
   }),
   defineProviderAction(service, {
+    authTypes: cloudflareTokenAuthTypes,
     name: "get_event_notification_rules",
     operationType: "read",
     description: "Get the event notification rules that send R2 bucket events to one queue.",
@@ -81,6 +84,7 @@ export const actions: ActionDefinition[] = [
     outputSchema: queueNotificationConfigSchema,
   }),
   defineProviderAction(service, {
+    authTypes: cloudflareTokenAuthTypes,
     name: "create_event_notification_rules",
     operationType: "write",
     description: "Add event notification rules that send R2 bucket events to a Cloudflare Queue.",
@@ -119,6 +123,7 @@ export const actions: ActionDefinition[] = [
     }),
   }),
   defineProviderAction(service, {
+    authTypes: cloudflareTokenAuthTypes,
     name: "delete_event_notification_rules",
     operationType: "destructive",
     description:

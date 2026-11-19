@@ -2,6 +2,7 @@ import type { ActionDefinition } from "../../../core/types.ts";
 
 import { s } from "../../../core/json-schema.ts";
 import { defineProviderAction } from "../../../core/provider-definition.ts";
+import { cloudflareTokenAuthTypes } from "../authorization.ts";
 import { actions as r2AccountActions } from "./actions-account.ts";
 import { actions as r2BucketSettingsActions } from "./actions-bucket-settings.ts";
 import { actions as r2DomainActions } from "./actions-domains.ts";
@@ -102,6 +103,7 @@ const updateBucketInputSchema = s.object(
 
 const coreActions: ActionDefinition[] = [
   defineProviderAction(service, {
+    authTypes: cloudflareTokenAuthTypes,
     name: "list_buckets",
     operationType: "read",
     description: "List the R2 buckets in a Cloudflare account.",
@@ -129,6 +131,7 @@ const coreActions: ActionDefinition[] = [
     ),
   }),
   defineProviderAction(service, {
+    authTypes: cloudflareTokenAuthTypes,
     name: "get_bucket",
     operationType: "read",
     description: "Get one R2 bucket by name.",
@@ -146,6 +149,7 @@ const coreActions: ActionDefinition[] = [
     outputSchema: s.object("The output payload for this action.", { bucket: bucketSchema }),
   }),
   defineProviderAction(service, {
+    authTypes: cloudflareTokenAuthTypes,
     name: "download_object",
     operationType: "read",
     description: "Download one R2 object into local transit file storage.",
@@ -165,6 +169,7 @@ const coreActions: ActionDefinition[] = [
     outputSchema: downloadedObjectSchema,
   }),
   defineProviderAction(service, {
+    authTypes: cloudflareTokenAuthTypes,
     name: "create_bucket",
     operationType: "write",
     description: "Create an R2 bucket in a Cloudflare account.",
@@ -184,6 +189,7 @@ const coreActions: ActionDefinition[] = [
     outputSchema: s.object("The output payload for this action.", { bucket: bucketSchema }),
   }),
   defineProviderAction(service, {
+    authTypes: cloudflareTokenAuthTypes,
     name: "update_bucket",
     operationType: "write",
     description: "Update mutable R2 bucket properties such as default storage class or jurisdiction.",
@@ -193,6 +199,7 @@ const coreActions: ActionDefinition[] = [
     outputSchema: s.object("The output payload for this action.", { bucket: bucketSchema }),
   }),
   defineProviderAction(service, {
+    authTypes: cloudflareTokenAuthTypes,
     name: "delete_bucket",
     operationType: "destructive",
     description: "Delete an R2 bucket by name.",
@@ -213,6 +220,7 @@ const coreActions: ActionDefinition[] = [
     }),
   }),
   defineProviderAction(service, {
+    authTypes: cloudflareTokenAuthTypes,
     name: "get_bucket_cors_policy",
     operationType: "read",
     description: "Fetch the bucket-level CORS policy for an R2 bucket.",
@@ -236,6 +244,7 @@ const coreActions: ActionDefinition[] = [
     ),
   }),
   defineProviderAction(service, {
+    authTypes: cloudflareTokenAuthTypes,
     name: "update_bucket_cors_policy",
     operationType: "destructive",
     description: "Replace the bucket-level CORS policy for an R2 bucket.",
@@ -257,6 +266,7 @@ const coreActions: ActionDefinition[] = [
     }),
   }),
   defineProviderAction(service, {
+    authTypes: cloudflareTokenAuthTypes,
     name: "delete_bucket_cors_policy",
     operationType: "destructive",
     description: "Delete the bucket-level CORS policy for an R2 bucket.",
@@ -277,6 +287,7 @@ const coreActions: ActionDefinition[] = [
     }),
   }),
   defineProviderAction(service, {
+    authTypes: cloudflareTokenAuthTypes,
     name: "put_object",
     operationType: "destructive",
     description:
@@ -314,6 +325,7 @@ const coreActions: ActionDefinition[] = [
     }),
   }),
   defineProviderAction(service, {
+    authTypes: cloudflareTokenAuthTypes,
     name: "generate_presigned_url",
     operationType: "read",
     description:

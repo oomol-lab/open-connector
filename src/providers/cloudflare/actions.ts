@@ -2,6 +2,7 @@ import type { ActionDefinition } from "../../core/types.ts";
 
 import { s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
+import { cloudflareTokenAuthTypes } from "./authorization.ts";
 import { actions as browserRenderingActions } from "./browser-rendering/actions.ts";
 import { actions as dnsActions } from "./dns/actions.ts";
 import { actions as emailRoutingActions } from "./email-routing/actions.ts";
@@ -12,8 +13,9 @@ import { actions as workersActions } from "./workers/actions.ts";
 
 const service = "cloudflare";
 
-const combinedActions: ActionDefinition[] = [
+export const actions: ActionDefinition[] = [
   defineProviderAction(service, {
+    authTypes: cloudflareTokenAuthTypes,
     name: "list_accounts",
     operationType: "read",
     description: "List accessible Cloudflare accounts and pagination metadata.",
@@ -46,8 +48,3 @@ const combinedActions: ActionDefinition[] = [
   ...kvActions,
   ...pagesActions,
 ];
-
-export const actions: ActionDefinition[] = combinedActions.map((action) => ({
-  ...action,
-  authTypes: action.authTypes ?? ["api_key", "oauth2"],
-}));

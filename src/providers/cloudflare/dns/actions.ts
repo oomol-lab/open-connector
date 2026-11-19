@@ -2,6 +2,7 @@ import type { ActionDefinition } from "../../../core/types.ts";
 
 import { s } from "../../../core/json-schema.ts";
 import { defineProviderAction } from "../../../core/provider-definition.ts";
+import { cloudflareTokenAuthTypes } from "../authorization.ts";
 
 const service = "cloudflare";
 const accountId = s.string("The account ID. Defaults to the connection account, or the only accessible account.");
@@ -190,6 +191,7 @@ const updateDnsRecordInputSchema = s.object(
 
 export const actions: ActionDefinition[] = [
   defineProviderAction(service, {
+    authTypes: cloudflareTokenAuthTypes,
     name: "list_zones",
     operationType: "read",
     description: "List the Cloudflare zones visible to the current API token.",
@@ -218,6 +220,7 @@ export const actions: ActionDefinition[] = [
     ),
   }),
   defineProviderAction(service, {
+    authTypes: cloudflareTokenAuthTypes,
     name: "get_zone",
     operationType: "read",
     description: "Get one Cloudflare zone by zone ID.",
@@ -227,6 +230,7 @@ export const actions: ActionDefinition[] = [
     outputSchema: s.object("The output payload for this action.", { zone: zoneSchema }),
   }),
   defineProviderAction(service, {
+    authTypes: cloudflareTokenAuthTypes,
     name: "list_dns_records",
     operationType: "read",
     description: "List DNS records inside one Cloudflare zone.",
@@ -260,6 +264,7 @@ export const actions: ActionDefinition[] = [
     ),
   }),
   defineProviderAction(service, {
+    authTypes: cloudflareTokenAuthTypes,
     name: "get_dns_record",
     operationType: "read",
     description: "Get one DNS record from a Cloudflare zone.",
@@ -276,6 +281,7 @@ export const actions: ActionDefinition[] = [
     outputSchema: s.object("The output payload for this action.", { record: dnsRecordSchema }),
   }),
   defineProviderAction(service, {
+    authTypes: cloudflareTokenAuthTypes,
     name: "create_dns_record",
     operationType: "write",
     description: "Create a DNS record inside a Cloudflare zone.",
@@ -285,6 +291,7 @@ export const actions: ActionDefinition[] = [
     outputSchema: s.object("The output payload for this action.", { record: dnsRecordSchema }),
   }),
   defineProviderAction(service, {
+    authTypes: cloudflareTokenAuthTypes,
     name: "update_dns_record",
     operationType: "write",
     description: "Patch one DNS record inside a Cloudflare zone.",
@@ -294,6 +301,7 @@ export const actions: ActionDefinition[] = [
     outputSchema: s.object("The output payload for this action.", { record: dnsRecordSchema }),
   }),
   defineProviderAction(service, {
+    authTypes: cloudflareTokenAuthTypes,
     name: "delete_dns_record",
     operationType: "destructive",
     description: "Delete one DNS record from a Cloudflare zone.",
@@ -313,6 +321,7 @@ export const actions: ActionDefinition[] = [
     }),
   }),
   defineProviderAction(service, {
+    authTypes: cloudflareTokenAuthTypes,
     name: "create_zone",
     description:
       "Create a Cloudflare zone and return its assigned nameservers. Full setups require a separate registrar nameserver update; partial setups use Cloudflare zone verification.",
@@ -332,6 +341,7 @@ export const actions: ActionDefinition[] = [
     outputSchema: s.requiredObject("The action result.", resultOutput),
   }),
   defineProviderAction(service, {
+    authTypes: cloudflareTokenAuthTypes,
     name: "get_zone_setting",
     description: "Read one Cloudflare zone setting, such as SSL mode or cache configuration.",
     operationType: "read",
@@ -345,6 +355,7 @@ export const actions: ActionDefinition[] = [
     outputSchema: s.requiredObject("The action result.", resultOutput),
   }),
   defineProviderAction(service, {
+    authTypes: cloudflareTokenAuthTypes,
     name: "get_zone_dns_settings",
     description: "Read the DNS settings of a Cloudflare zone.",
     operationType: "read",
