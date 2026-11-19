@@ -1,9 +1,10 @@
 import type { FetchLike, VersionNegotiationMode } from "@modelcontextprotocol/client";
 
-import { Client, SdkHttpError } from "@modelcontextprotocol/client";
+import { Client, SdkHttpError, SdkError } from "@modelcontextprotocol/client";
 import { SSEClientTransport } from "@modelcontextprotocol/client";
 import { StreamableHTTPClientTransport } from "@modelcontextprotocol/client";
 import { CfWorkerJsonSchemaValidator } from "@modelcontextprotocol/client/validators/cf-worker";
+import { providerFetch, ProviderRequestError } from "./provider-runtime.ts";
 
 const mcpConnectTimeoutMs = 60_000;
 const modernMcpProtocolVersion = "2026-07-28";
@@ -29,7 +30,9 @@ export async function withMcpClient<T>(options: McpClientOptions, run: (client: 
   let retriedSession = false;
   while (true) {
     const transportOptions = {
-      fetch: options.fetcher,
+      fetch: options.mapError
+        ? options.fetcher
+        : createMcpDiagnosticFetch(options.fetcher ?? providerFetch, options.transport, options.endpoint.hostname),
       requestInit: {
         headers: options.headers,
         redirect: options.redirect,
@@ -65,7 +68,8 @@ export async function withMcpClient<T>(options: McpClientOptions, run: (client: 
         retriedSession = true;
         continue;
       }
-      throw options.mapError ? options.mapError(error) : error;
+      const transportError = unwrapMcpTransportError(error);
+      throw options.mapError ? options.mapError(transportError) : transportError;
     } finally {
       if (options.terminateSession && transport instanceof StreamableHTTPClientTransport) {
         await terminateMcpSession(transport);
@@ -94,4 +98,27 @@ async function terminateMcpSession(transport: StreamableHTTPClientTransport): Pr
 
 function resolveVersionNegotiationMode(protocolVersion: McpProtocolVersion | undefined): VersionNegotiationMode {
   return protocolVersion === "modern" ? { pin: modernMcpProtocolVersion } : "legacy";
+}
+
+/** Preserve Streamable HTTP authentication diagnostics before the SDK consumes the body. */
+export function createMcpDiagnosticFetch(fetcher: FetchLike, transport: McpHttpTransport, label: string): FetchLike {
+  return async (url, init) => {
+    const response = await fetcher(url, init);
+    // EventSource needs the original response status for its SSE error mapping.
+    if (transport === "streamable_http" && (response.status === 401 || response.status === 403)) {
+      const detail = (await response.text()).trim() || response.headers.get("www-authenticate") || response.statusText;
+      throw new ProviderRequestError(
+        response.status,
+        `${label} MCP request failed (HTTP ${response.status}): ${detail}`,
+        undefined,
+        "provider_error",
+      );
+    }
+    return response;
+  };
+}
+
+// Version negotiation wraps fetch failures; restore only our typed transport error.
+function unwrapMcpTransportError(error: unknown): unknown {
+  return error instanceof SdkError && error.cause instanceof ProviderRequestError ? error.cause : error;
 }

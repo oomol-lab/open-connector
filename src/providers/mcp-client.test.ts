@@ -8,7 +8,8 @@ const lifecycle = vi.hoisted(() => ({
   terminateSession: vi.fn(),
 }));
 
-vi.mock("@modelcontextprotocol/client", () => ({
+vi.mock("@modelcontextprotocol/client", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("@modelcontextprotocol/client")>()),
   Client: class {
     connect = lifecycle.connect;
     close = lifecycle.close;
@@ -117,4 +118,15 @@ it("rebuilds a connected Streamable HTTP session once after a 404 when explicitl
   expect(run).toHaveBeenCalledTimes(2);
   expect(lifecycle.connect).toHaveBeenCalledTimes(2);
   expect(lifecycle.close).toHaveBeenCalledTimes(2);
+});
+
+it("does not unwrap application objects that resemble SDK errors", async () => {
+  const error = { data: { cause: new Error("application failure") } };
+  lifecycle.connect.mockRejectedValue(error);
+  await expect(
+    withMcpClient(
+      { endpoint: new URL("https://example.com/mcp"), transport: "streamable_http" },
+      async () => undefined,
+    ),
+  ).rejects.toBe(error);
 });

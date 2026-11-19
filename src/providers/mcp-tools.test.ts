@@ -7,7 +7,8 @@ const client = vi.hoisted(() => ({
   callTool: vi.fn(),
 }));
 
-vi.mock("./mcp-client.ts", () => ({
+vi.mock("./mcp-client.ts", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("./mcp-client.ts")>()),
   withMcpClient: vi.fn(async (_options: unknown, run: (value: typeof client) => Promise<unknown>) => run(client)),
 }));
 
