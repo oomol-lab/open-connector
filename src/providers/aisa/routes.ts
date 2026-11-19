@@ -10,7 +10,7 @@ import { dataForSeoOnPageRoutes } from "./dataforseo-onpage-actions.ts";
 import { dataForSeoResearchContracts } from "./dataforseo-research-actions.ts";
 import { dataForSeoTaskRoutes } from "./dataforseo-task-actions.ts";
 import { discoveryRoutes } from "./discovery-actions.ts";
-import { aisaFirecrawlFamilies } from "./firecrawl-actions.ts";
+import { aisaFirecrawlRoutes } from "./firecrawl-actions.ts";
 import { macroResearchRoutes } from "./macro-research-actions.ts";
 import { pinterestResearchRoutes } from "./pinterest-research-actions.ts";
 import { polymarketResearchRoutes } from "./polymarket-research-actions.ts";
@@ -318,46 +318,7 @@ export const aisaActionRoutes: Record<string, AisaActionRoute> = {
       },
     ]),
   ),
-  ...Object.fromEntries(
-    aisaFirecrawlFamilies.flatMap((family) => {
-      const base = `/apis/v1/firecrawl/${family.path}`;
-      return [
-        [
-          `submit_firecrawl_${family.name}`,
-          {
-            path: base,
-            method: "POST",
-            query: {},
-            asyncJob: "submit",
-            body: Object.fromEntries(
-              Object.keys(readSchemaProperties(family.inputSchema))
-                .filter((key) => key !== "maxPriceUsd")
-                .map((key) => [key, key]),
-            ),
-          },
-        ],
-        [
-          `get_firecrawl_${family.name}`,
-          {
-            path: `${base}/{taskId}`,
-            query: {},
-            pathParams: { taskId: "taskId" },
-            asyncJob: "get",
-          },
-        ],
-        [
-          `cancel_firecrawl_${family.name}`,
-          {
-            path: `${base}/{taskId}/cancel`,
-            method: "POST",
-            query: {},
-            pathParams: { taskId: "taskId" },
-            asyncJob: "cancel",
-          },
-        ],
-      ] as Array<[string, AisaActionRoute]>;
-    }),
-  ),
+  ...aisaFirecrawlRoutes,
   search_exa: {
     path: "/apis/v1/exa/search",
     method: "POST",

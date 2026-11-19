@@ -41,6 +41,17 @@ const scholarOutput = s.looseObject(
   { required: [] },
 );
 
+function scholarSearch(name: string, description: string): ActionDefinition {
+  return defineProviderAction("aisa", {
+    name,
+    description,
+    operationType: "read",
+    requiredScopes: [],
+    inputSchema: scholarInput,
+    outputSchema: scholarOutput,
+  });
+}
+
 export const discoveryActions: ActionDefinition[] = [
   defineProviderAction("aisa", {
     name: "generate_parallel_findall_spec",
@@ -85,28 +96,17 @@ export const discoveryActions: ActionDefinition[] = [
       { required: [] },
     ),
   }),
-  ...[
-    [
-      "search_scholar_articles",
-      "Search academic papers with source links, abstracts, authors, and citation counts when available.",
-    ],
-    [
-      "search_scholar_mixed",
-      "Search academic literature and the web together; author and citation data are optional for mixed sources.",
-    ],
-    [
-      "search_scholar_web",
-      "Search web sources with titles, links, and snippets; this does not retrieve full page text.",
-    ],
-  ].map(([name, description]) =>
-    defineProviderAction("aisa", {
-      name: name!,
-      description: description!,
-      operationType: "read",
-      requiredScopes: [],
-      inputSchema: scholarInput,
-      outputSchema: scholarOutput,
-    }),
+  scholarSearch(
+    "search_scholar_articles",
+    "Search academic papers with source links, abstracts, authors, and citation counts when available.",
+  ),
+  scholarSearch(
+    "search_scholar_mixed",
+    "Search academic literature and the web together; author and citation data are optional for mixed sources.",
+  ),
+  scholarSearch(
+    "search_scholar_web",
+    "Search web sources with titles, links, and snippets; this does not retrieve full page text.",
   ),
   defineProviderAction("aisa", {
     name: "search_polymarket",
@@ -340,6 +340,8 @@ export const discoveryActions: ActionDefinition[] = [
   }),
 ];
 
+const scholarQuery = { query: "query", maxResults: "max_num_results", minYear: "as_ylo", maxYear: "as_yhi" };
+
 export const discoveryRoutes: Record<string, AisaActionRoute> = {
   generate_parallel_findall_spec: {
     method: "POST",
@@ -351,17 +353,17 @@ export const discoveryRoutes: Record<string, AisaActionRoute> = {
   search_scholar_articles: {
     path: "/apis/v1/scholar/search/scholar",
     method: "POST",
-    query: { query: "query", maxResults: "max_num_results", minYear: "as_ylo", maxYear: "as_yhi" },
+    query: scholarQuery,
   },
   search_scholar_mixed: {
     path: "/apis/v1/scholar/search/mixed",
     method: "POST",
-    query: { query: "query", maxResults: "max_num_results", minYear: "as_ylo", maxYear: "as_yhi" },
+    query: scholarQuery,
   },
   search_scholar_web: {
     path: "/apis/v1/scholar/search/web",
     method: "POST",
-    query: { query: "query", maxResults: "max_num_results", minYear: "as_ylo", maxYear: "as_yhi" },
+    query: scholarQuery,
   },
   search_polymarket: {
     path: "/apis/v1/polymarket/public-search",

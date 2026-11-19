@@ -1,6 +1,7 @@
 import type { ActionDefinition, JsonSchema } from "../../core/types.ts";
+import type { AisaActionRoute } from "./routes.ts";
 
-import { s } from "../../core/json-schema.ts";
+import { readSchemaProperties, s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
 import { aisaJobOutput, aisaJobSubmissionProperties, aisaJobTaskId } from "./async-job-schema.ts";
 
@@ -67,45 +68,77 @@ interface FirecrawlFamily {
   name: string;
   path: string;
   inputSchema: JsonSchema;
+  description: string;
 }
 
-export const aisaFirecrawlFamilies: readonly FirecrawlFamily[] = [
-  { name: "crawl", path: "crawl", inputSchema: crawlInput },
-  { name: "batch_scrape", path: "batch-scrape", inputSchema: batchInput },
+const families: readonly FirecrawlFamily[] = [
+  {
+    name: "crawl",
+    path: "crawl",
+    inputSchema: crawlInput,
+    description: "Start a background website crawl through AIsa Firecrawl. Poll the returned task ID for results.",
+  },
+  {
+    name: "batch_scrape",
+    path: "batch-scrape",
+    inputSchema: batchInput,
+    description:
+      "Start a background batch scrape of known URLs through AIsa Firecrawl. Poll the returned task ID for results.",
+  },
 ];
 
-export const aisaFirecrawlActions: readonly ActionDefinition[] = aisaFirecrawlFamilies.flatMap((family) => [
-  defineProviderAction("aisa", {
-    name: `submit_firecrawl_${family.name}`,
-    operationType: "write",
-    requiredScopes: [],
-    description:
-      family.name === "crawl"
-        ? "Start a background website crawl through AIsa Firecrawl. Poll the returned task ID for results."
-        : "Start a background batch scrape of known URLs through AIsa Firecrawl. Poll the returned task ID for results.",
-    inputSchema: family.inputSchema,
-    outputSchema: s.object("The submitted task handle.", { taskId: aisaJobTaskId }, { optional: [] }),
-    asyncLifecycle: {
-      startActionId: "aisa." + `submit_firecrawl_${family.name}`,
-      statusActionId: `aisa.get_firecrawl_${family.name}`,
-    },
-  }),
-  defineProviderAction("aisa", {
-    name: `get_firecrawl_${family.name}`,
-    operationType: "read",
-    requiredScopes: [],
-    description:
-      "Get a Firecrawl task state and results. Check outputExpired and job errors even when the task has finished.",
-    inputSchema: s.object("Identify the task to query.", { taskId: aisaJobTaskId }, { optional: [] }),
-    outputSchema: aisaJobOutput,
-  }),
-  defineProviderAction("aisa", {
-    name: `cancel_firecrawl_${family.name}`,
-    operationType: "destructive",
-    requiredScopes: [],
-    description:
-      "Request cancellation of a Firecrawl task. Work already performed may still be charged; poll the task for final state and pricing.",
-    inputSchema: s.object("Identify the task to cancel.", { taskId: aisaJobTaskId }, { optional: [] }),
-    outputSchema: aisaJobOutput,
-  }),
-]);
+export const aisaFirecrawlActions: ActionDefinition[] = [];
+export const aisaFirecrawlRoutes: Record<string, AisaActionRoute> = {};
+
+for (const family of families) {
+  const submit = `submit_firecrawl_${family.name}`;
+  const get = `get_firecrawl_${family.name}`;
+  const cancel = `cancel_firecrawl_${family.name}`;
+  const base = `/apis/v1/firecrawl/${family.path}`;
+  const body = Object.fromEntries(
+    Object.keys(readSchemaProperties(family.inputSchema))
+      .filter((key) => key !== "maxPriceUsd")
+      .map((key) => [key, key]),
+  );
+  aisaFirecrawlRoutes[submit] = { path: base, method: "POST", query: {}, asyncJob: "submit", body };
+  aisaFirecrawlRoutes[get] = { path: base + "/{taskId}", query: {}, pathParams: { taskId: "taskId" }, asyncJob: "get" };
+  aisaFirecrawlRoutes[cancel] = {
+    path: base + "/{taskId}/cancel",
+    method: "POST",
+    query: {},
+    pathParams: { taskId: "taskId" },
+    asyncJob: "cancel",
+  };
+  aisaFirecrawlActions.push(
+    defineProviderAction("aisa", {
+      name: submit,
+      operationType: "write",
+      requiredScopes: [],
+      description: family.description,
+      inputSchema: family.inputSchema,
+      outputSchema: s.object("The submitted task handle.", { taskId: aisaJobTaskId }, { optional: [] }),
+      asyncLifecycle: {
+        startActionId: `aisa.${submit}`,
+        statusActionId: `aisa.${get}`,
+      },
+    }),
+    defineProviderAction("aisa", {
+      name: get,
+      operationType: "read",
+      requiredScopes: [],
+      description:
+        "Get a Firecrawl task state and results. Check outputExpired and job errors even when the task has finished.",
+      inputSchema: s.object("Identify the task to query.", { taskId: aisaJobTaskId }, { optional: [] }),
+      outputSchema: aisaJobOutput,
+    }),
+    defineProviderAction("aisa", {
+      name: cancel,
+      operationType: "destructive",
+      requiredScopes: [],
+      description:
+        "Request cancellation of a Firecrawl task. Work already performed may still be charged; poll the task for final state and pricing.",
+      inputSchema: s.object("Identify the task to cancel.", { taskId: aisaJobTaskId }, { optional: [] }),
+      outputSchema: aisaJobOutput,
+    }),
+  );
+}
