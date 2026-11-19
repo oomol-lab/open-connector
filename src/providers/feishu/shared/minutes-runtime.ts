@@ -2,6 +2,7 @@ import type { FeishuJsonRequest } from "./client.ts";
 
 import { optionalNumber } from "../../../core/cast.ts";
 import { providerInputError } from "../../provider-runtime.ts";
+import { fetchFeishuNote } from "./note-runtime.ts";
 import { requireFeishuResponseString } from "./response.ts";
 
 interface MinutesActionHandler {
@@ -229,16 +230,18 @@ async function getMeeting(input: Record<string, unknown>, request: FeishuJsonReq
   if (input.includeArtifacts !== true) {
     return { meeting };
   }
-  // Feishu answers one half per request: query_mode 0 is the meeting, and
-  // query_mode 1 only its related artifacts, a sibling of `meeting`.
-  const artifacts = await request({
-    path,
-    query: {
-      with_participants: false,
-      query_mode: 1,
+  const noteId = optionalString(meeting.note_id);
+  if (!noteId) {
+    return { meeting, relatedArtifacts: {} };
+  }
+  const note = await fetchFeishuNote(noteId, request);
+  return {
+    meeting,
+    relatedArtifacts: {
+      note_doc_token: note.noteDocumentToken,
+      verbatim_doc_token: note.verbatimDocumentToken,
     },
-  });
-  return { meeting, relatedArtifacts: recordValue(artifacts.related_artifacts) };
+  };
 }
 
 async function getRecording(input: Record<string, unknown>, request: FeishuJsonRequest) {
