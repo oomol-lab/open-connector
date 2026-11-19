@@ -1,6 +1,7 @@
 import type { ProviderRuntimeHandler } from "../../provider-executors.ts";
 import type { CloudflareContext } from "../shared/context.ts";
 
+import { encodeS3ObjectKey } from "../../../core/aws-sigv4.ts";
 import {
   looseArray,
   optionalInteger,
@@ -15,7 +16,6 @@ import {
   buildCloudflareR2BucketPath,
   buildR2JurisdictionHeaders,
   requestEnvelope,
-  encodeR2ObjectKeyPath,
   readObject,
   readObjectArray,
   readOptionalStringArray,
@@ -66,7 +66,7 @@ async function deleteObject(input: Record<string, unknown>, context: CloudflareC
     context.accessToken,
     {
       method: "DELETE",
-      path: `${buildCloudflareR2BucketPath(input, context)}/objects/${encodeR2ObjectKeyPath(objectKey)}`,
+      path: `${buildCloudflareR2BucketPath(input, context)}/objects/${encodeS3ObjectKey(objectKey)}`,
       headers: buildR2JurisdictionHeaders(input),
     },
     { fetcher: context.fetcher, signal: context.signal },

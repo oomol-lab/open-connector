@@ -4,9 +4,9 @@ import type { CloudflareContext } from "../shared/context.ts";
 import { optionalRecord, optionalString, requiredRawString, requiredString } from "../../../core/cast.ts";
 import { queryParams } from "../../../core/request.ts";
 import { providerInputError, ProviderRequestError, providerUserAgent } from "../../provider-runtime.ts";
-import { cloudflareApiBaseUrl } from "../shared/client.ts";
+import { cloudflareApiBaseUrl, readCloudflareEnvelope } from "../shared/client.ts";
 import { resolveAccountId } from "../shared/context.ts";
-import { cloudflareResponseError, parseCloudflareResponseText } from "../shared/errors.ts";
+import { cloudflareResponseError } from "../shared/errors.ts";
 
 export interface CloudflareR2RequestInput {
   method?: "GET" | "POST" | "PATCH" | "PUT" | "DELETE";
@@ -101,16 +101,6 @@ export function buildR2JurisdictionHeaders(input: Record<string, unknown>): Reco
   };
 }
 
-export function encodeR2ObjectKeyPath(objectKey: string): string {
-  return objectKey.split("/").map(encodeR2ObjectKeySegment).join("/");
-}
-
-function encodeR2ObjectKeySegment(segment: string): string {
-  return encodeURIComponent(segment).replace(/[!'()*]/g, (character) => {
-    return `%${character.charCodeAt(0).toString(16).toUpperCase()}`;
-  });
-}
-
 export async function requestEnvelope(
   apiToken: string,
   request: CloudflareR2RequestInput,
@@ -156,10 +146,6 @@ export function buildCloudflareR2Url(
     url.searchParams.set(key, value);
   }
   return url.toString();
-}
-
-export async function readCloudflareEnvelope(response: Response): Promise<CloudflareEnvelope> {
-  return parseCloudflareResponseText(await response.text());
 }
 
 export function readObject(value: unknown, label: string): Record<string, unknown> {

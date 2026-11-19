@@ -4,6 +4,7 @@ import type { CloudflareContext } from "../shared/context.ts";
 import type { CloudflareR2RequestInput } from "./client.ts";
 import type { CloudflareR2PresignedMethod } from "./s3-presign.ts";
 
+import { encodeS3ObjectKey } from "../../../core/aws-sigv4.ts";
 import {
   base64Bytes,
   compactObject,
@@ -22,6 +23,7 @@ import {
   runProviderRequest,
   providerResponseError,
 } from "../../provider-runtime.ts";
+import { readCloudflareEnvelope } from "../shared/client.ts";
 import { withAccount, resolveAccountId } from "../shared/context.ts";
 import { cloudflareResponseError } from "../shared/errors.ts";
 import {
@@ -29,8 +31,6 @@ import {
   buildR2JurisdictionHeaders,
   readObjectKey,
   buildCloudflareR2Url,
-  encodeR2ObjectKeyPath,
-  readCloudflareEnvelope,
   resolveR2S3AccessKeyId,
   requestEnvelope as requestR2Envelope,
   readRequiredString,
@@ -111,7 +111,7 @@ async function downloadObject(input: Record<string, unknown>, context: Cloudflar
   const bucketName = requiredString(input.bucketName, "bucketName", providerInputError);
   const objectKey = readObjectKey(input);
   const url = buildCloudflareR2Url(
-    `/accounts/${encodeURIComponent(accountId)}/r2/buckets/${encodeURIComponent(bucketName)}/objects/${encodeR2ObjectKeyPath(objectKey)}`,
+    `/accounts/${encodeURIComponent(accountId)}/r2/buckets/${encodeURIComponent(bucketName)}/objects/${encodeS3ObjectKey(objectKey)}`,
   );
   const headers: Record<string, string> = {
     accept: "*/*",
@@ -294,7 +294,7 @@ async function putObject(input: Record<string, unknown>, context: CloudflareCont
   };
   const response = await context.fetcher(
     buildCloudflareR2Url(
-      `/accounts/${encodeURIComponent(accountId)}/r2/buckets/${encodeURIComponent(bucketName)}/objects/${encodeR2ObjectKeyPath(objectKey)}`,
+      `/accounts/${encodeURIComponent(accountId)}/r2/buckets/${encodeURIComponent(bucketName)}/objects/${encodeS3ObjectKey(objectKey)}`,
     ),
     {
       method: "PUT",
