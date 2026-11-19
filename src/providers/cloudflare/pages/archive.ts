@@ -2,7 +2,7 @@ import { blake3 } from "@noble/hashes/blake3.js";
 import { unzipSync, Unzip, UnzipInflate } from "fflate";
 import { getMimeType } from "hono/utils/mime";
 import { extname } from "node:path";
-import { ProviderRequestError } from "../../provider-runtime.ts";
+import { providerInputError } from "../../provider-runtime.ts";
 
 export const archiveMaximumBytes: number = 512 * 1024 * 1024;
 
@@ -81,21 +81,13 @@ export function readPagesArchive(bytes: Uint8Array): { assets: PagesAsset[]; spe
       unzip.push(bytes.subarray(offset, offset + chunkSize), offset + chunkSize >= bytes.length);
     if (Object.keys(entries).length !== sizes.size) throw new Error("ZIP contains incomplete entries");
   } catch (error) {
-    throw new ProviderRequestError(
-      400,
+    throw providerInputError(
       `Invalid Pages ZIP archive: ${error instanceof Error ? error.message : "cannot decode ZIP"}`,
-      undefined,
-      "provider_error",
     );
   }
-  if (!count) throw new ProviderRequestError(400, "The Pages ZIP archive is empty");
+  if (!count) throw providerInputError("The Pages ZIP archive is empty");
   if (entries["_worker.js"] && entries["_worker.bundle"])
-    throw new ProviderRequestError(
-      400,
-      "Provide either _worker.js or _worker.bundle, not both",
-      undefined,
-      "provider_error",
-    );
+    throw providerInputError("Provide either _worker.js or _worker.bundle, not both");
   const assets: PagesAsset[] = [];
   const special: Record<string, Uint8Array> = {};
   for (const [name, content] of Object.entries(entries)) {

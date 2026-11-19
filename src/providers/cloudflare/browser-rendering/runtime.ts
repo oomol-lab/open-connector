@@ -1,5 +1,4 @@
 import type { ProviderRuntimeHandler } from "../../provider-executors.ts";
-import type { ProviderRequestContext } from "../../provider-runtime.ts";
 import type { CloudflareEnvelope } from "../shared/client.ts";
 import type { CloudflareContext } from "../shared/context.ts";
 
@@ -13,14 +12,9 @@ import {
   optionalString,
   requiredString,
 } from "../../../core/cast.ts";
-import { ProviderRequestError, providerUserAgent } from "../../provider-runtime.ts";
-import { cloudflareApiBaseUrl } from "../shared/client.ts";
+import { ProviderRequestError, runProviderRequest } from "../../provider-runtime.ts";
+import { cloudflareRequestEnvelope } from "../shared/client.ts";
 import { withAccountHandlers, resolveAccountId } from "../shared/context.ts";
-import { cloudflareResponseError, parseCloudflareResponseText } from "../shared/errors.ts";
-
-type CloudflareRequestPhase = "validate" | "execute";
-
-type QueryValue = string | number | boolean | undefined;
 
 export const handlers: Record<string, ProviderRuntimeHandler<CloudflareContext>> = withAccountHandlers({
   get_html_content(input, context) {
@@ -130,18 +124,22 @@ async function runQuickAction(
 
   const accountId = resolveAccountId(input, context);
 
-  return cloudflareRequestEnvelope(
-    context.accessToken,
-    {
-      method: "POST",
-      path: `/accounts/${encodeURIComponent(accountId)}/browser-rendering/${endpoint}`,
-      query: compactObject({
-        cacheTTL: optionalNumber(input.cacheTtl),
-      }),
-      body,
-    },
-    context,
-    "execute",
+  return runProviderRequest({ label: "cloudflare browser run", signal: context.signal }, (signal) =>
+    cloudflareRequestEnvelope(
+      context.accessToken,
+      {
+        method: "POST",
+        path: `/accounts/${encodeURIComponent(accountId)}/browser-rendering/${endpoint}`,
+        query: compactObject({
+          cacheTTL: optionalNumber(input.cacheTtl),
+        }),
+        body,
+        headers: { accept: "application/json" },
+      },
+      context.fetcher,
+      "execute",
+      signal,
+    ),
   );
 }
 
@@ -198,72 +196,6 @@ function normalizeResponseFormat(value: unknown): Record<string, unknown> | unde
     type: optionalString(input.type),
     json_schema: optionalRecord(input.jsonSchema),
   });
-}
-
-async function cloudflareRequestEnvelope(
-  apiToken: string,
-  request: {
-    method?: "GET" | "POST";
-    path: string;
-    query?: Record<string, QueryValue>;
-    body?: Record<string, unknown>;
-  },
-  context: ProviderRequestContext,
-  phase: CloudflareRequestPhase,
-): Promise<CloudflareEnvelope> {
-  let response: Response;
-  let envelope: CloudflareEnvelope;
-  try {
-    response = await context.fetcher(buildCloudflareUrl(request.path, request.query), {
-      method: request.method ?? "GET",
-      headers: cloudflareHeaders(apiToken, request.body != null),
-      body: request.body == null ? undefined : JSON.stringify(request.body),
-      signal: context.signal,
-    });
-    envelope = await readCloudflareEnvelope(response);
-  } catch (error) {
-    if (error instanceof ProviderRequestError) {
-      throw error;
-    }
-    throw new ProviderRequestError(
-      502,
-      error instanceof Error
-        ? `cloudflare browser run request failed: ${error.message}`
-        : "cloudflare browser run request failed",
-    );
-  }
-
-  if (!response.ok || envelope.success === false) {
-    throw cloudflareResponseError(response, envelope, phase);
-  }
-
-  return envelope;
-}
-
-function buildCloudflareUrl(path: string, query?: Record<string, QueryValue>): string {
-  const url = new URL(`${cloudflareApiBaseUrl}${path}`);
-  for (const [key, value] of Object.entries(query ?? {})) {
-    if (value !== undefined) {
-      url.searchParams.set(key, String(value));
-    }
-  }
-  return url.toString();
-}
-
-function cloudflareHeaders(apiToken: string, hasBody: boolean): Record<string, string> {
-  const headers: Record<string, string> = {
-    accept: "application/json",
-    authorization: `Bearer ${apiToken}`,
-    "user-agent": providerUserAgent,
-  };
-  if (hasBody) {
-    headers["content-type"] = "application/json";
-  }
-  return headers;
-}
-
-async function readCloudflareEnvelope(response: Response): Promise<CloudflareEnvelope> {
-  return parseCloudflareResponseText(await response.text());
 }
 
 function normalizeScrapeResults(value: unknown): Array<Record<string, unknown>> {
