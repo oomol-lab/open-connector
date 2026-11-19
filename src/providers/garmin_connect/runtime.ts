@@ -166,6 +166,13 @@ export const garminConnectActionHandlers: ProviderActionHandlers<"garmin_connect
     });
     return { heartRate: nullableResponseRecord(heartRate, "heart rate") };
   },
+  async list_wellness_activities(input, context) {
+    const range = readDateRange(input);
+    const response = await getGarminConnect(context, {
+      path: `/wellnessactivity-service/activity/summary/range/${encodePathSegment(range.startDate)}/${encodePathSegment(range.endDate)}`,
+    });
+    return { activities: responseList(response, "wellness activities") };
+  },
   async list_weight(input, context) {
     const range = readDateRange(input);
     const weight = await getGarminConnect(context, {
