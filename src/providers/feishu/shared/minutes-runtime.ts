@@ -217,14 +217,28 @@ async function searchMeetings(input: Record<string, unknown>, request: FeishuJso
 
 async function getMeeting(input: Record<string, unknown>, request: FeishuJsonRequest) {
   const meetingId = requiredString(input.meetingId, "meetingId");
+  const path = `/vc/v1/meetings/${encode(meetingId)}`;
   const data = await request({
-    path: `/vc/v1/meetings/${encode(meetingId)}`,
+    path,
     query: {
       with_participants: input.includeParticipants === true,
       query_mode: 0,
     },
   });
-  return { meeting: recordValue(data.meeting) };
+  const meeting = recordValue(data.meeting);
+  if (input.includeArtifacts !== true) {
+    return { meeting };
+  }
+  // Feishu answers one half per request: query_mode 0 is the meeting, and
+  // query_mode 1 only its related artifacts, a sibling of `meeting`.
+  const artifacts = await request({
+    path,
+    query: {
+      with_participants: false,
+      query_mode: 1,
+    },
+  });
+  return { meeting, relatedArtifacts: recordValue(artifacts.related_artifacts) };
 }
 
 async function getRecording(input: Record<string, unknown>, request: FeishuJsonRequest) {

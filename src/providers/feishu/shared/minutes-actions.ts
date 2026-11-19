@@ -4,6 +4,16 @@ import { s } from "../../../core/json-schema.ts";
 import { defineProviderAction } from "../../../core/provider-definition.ts";
 const minuteToken = s.string("The Feishu Minutes token.", { minLength: 1 });
 const meetingId = s.string("The Feishu video meeting ID.", { minLength: 1 });
+
+/**
+ * The field-level permissions behind `get_vc_meeting`'s `includeArtifacts`.
+ * They are optional so existing Feishu apps keep their consent screen; request
+ * them explicitly to read a meeting's note and verbatim document tokens.
+ */
+export const feishuMeetingArtifactScopes: string[] = [
+  "vc:meeting.artifact.note:read",
+  "vc:meeting.artifact.verbatim:read",
+];
 const pageSize = s.positiveInteger("The maximum number of results on this page.", {
   maximum: 30,
 });
@@ -321,24 +331,44 @@ export function createFeishuMinutesActions(service: string): readonly ActionDefi
     defineProviderAction(service, {
       name: "get_vc_meeting",
       operationType: "read",
-      description: "Get Feishu video meeting metadata and participant data.",
+      description:
+        "Get Feishu video meeting metadata and participant data. With includeArtifacts, a second request also returns the meeting's related artifacts: the note and verbatim document tokens, each present only when the connection was granted vc:meeting.artifact.note:read or vc:meeting.artifact.verbatim:read. Those two permissions are not part of the default consent; request them explicitly once the app has them enabled.",
       requiredScopes: ["vc:meeting.meetingevent:read"],
+      // The two artifact permissions (feishuMeetingArtifactScopes) are
+      // field-level and stay out of providerPermissions on purpose: that list
+      // is the default consent, and Feishu refuses an authorization (error
+      // 20027) that names a permission the app has not enabled.
       providerPermissions: ["vc:meeting.meetingevent:read"],
       inputSchema: s.object(
         "Identify the meeting.",
         {
           meetingId,
           includeParticipants: s.boolean("Whether to include participant data."),
+          includeArtifacts: s.boolean(
+            "Whether to also return the meeting's related artifacts (note and verbatim document tokens).",
+          ),
         },
         {
-          optional: ["includeParticipants"],
+          optional: ["includeParticipants", "includeArtifacts"],
         },
       ),
       outputSchema: s.object(
-        "The requested meeting.",
-        { meeting: item },
+        "The requested meeting, and its related artifacts when includeArtifacts is set.",
         {
-          optional: [],
+          meeting: item,
+          relatedArtifacts: s.looseRequiredObject(
+            "The meeting's related artifacts, as Feishu returns them. A token is absent without its permission and an empty string until the document exists.",
+            {
+              note_doc_token: s.string("The document token of the meeting notes."),
+              verbatim_doc_token: s.string("The document token of the verbatim transcript."),
+            },
+            {
+              optional: ["note_doc_token", "verbatim_doc_token"],
+            },
+          ),
+        },
+        {
+          optional: ["relatedArtifacts"],
         },
       ),
     }),
