@@ -2,7 +2,7 @@ import type { GranolaMeeting } from "./actions.ts";
 
 import { XMLParser } from "fast-xml-parser";
 import { SyntaxValidator } from "fast-xml-validator";
-import { objectArray, optionalString, requiredRawString, requiredString } from "../../core/cast.ts";
+import { objectArray, optionalRecord, optionalString, requiredRawString, requiredString } from "../../core/cast.ts";
 import { parseProviderJsonBodyText, providerResponseError, requiredResponseRecord } from "../provider-runtime.ts";
 
 interface GranolaMcpFolder {
@@ -48,17 +48,26 @@ export function parseGranolaMeetings(text: string): GranolaMeeting[] {
   const meetings = records.map((meeting) => ({
     id: requiredString(meeting["@_id"], "Granola meeting ID", providerResponseError),
     title: requiredRawString(meeting["@_title"], "Granola meeting title", providerResponseError),
-    date: requiredRawString(meeting["@_date"], "Granola meeting date", providerResponseError),
+    date: requiredRawString(
+      meeting["@_meeting_at"] ?? meeting["@_date"],
+      "Granola meeting date",
+      providerResponseError,
+    ),
     attendees: requiredRawString(meeting.known_participants ?? "", "Granola participants", providerResponseError),
-    summary:
-      meeting.summary === undefined
-        ? undefined
-        : requiredRawString(meeting.summary, "Granola meeting summary", providerResponseError),
+    summary: parseGranolaSummary(meeting.summary),
   }));
   if (new Set(meetings.map((meeting) => meeting.id)).size !== meetings.length) {
     throw providerResponseError("Granola returned duplicate meeting IDs.");
   }
   return meetings;
+}
+
+function parseGranolaSummary(value: unknown): string | undefined {
+  if (value === undefined) return undefined;
+  const envelope = optionalRecord(value);
+  // Granola marks empty notes explicitly; its explanatory text is not note content.
+  if (envelope?.["@_status"] === "empty") return "";
+  return requiredRawString(value, "Granola meeting summary", providerResponseError);
 }
 
 /** Map MCP folder titles to the note API's folder names, without inventing hierarchy metadata. */
