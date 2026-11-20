@@ -91,6 +91,7 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
   baseUrl: lurkapiBaseUrl,
   auth: { type: "api_key_header", name: "x-api-key" },
   skipDnsValidation: true,
+  timeoutMs: requestTimeoutMs,
 });
 
 export const credentialValidators: CredentialValidators = {
@@ -155,7 +156,13 @@ function lurkapiRequestError(
   const message = optionalString(body?.error) ?? `LurkAPI request failed with HTTP ${status}`;
   const details = withRetryAfterSeconds(response, payload);
   if (status === 402) {
-    return new ProviderRequestError(402, message, details, "insufficient_credit");
+    // `over_max_credits` means the call costs more than the caller's own max_credits, which a top-up cannot fix.
+    return new ProviderRequestError(
+      402,
+      message,
+      details,
+      code === "over_max_credits" ? "invalid_input" : "insufficient_credit",
+    );
   }
   if (status === 401 || status === 403) {
     const refusedKey = code === undefined || credentialErrorCodes.has(code);

@@ -13,7 +13,7 @@ const openApiPath = "/openapi.json";
 const catalogTtlMs = 10 * 60_000;
 const openApiMaxBytes = 4 * 1024 * 1024;
 
-export interface LurkapiParameter {
+interface LurkapiParameter {
   name: string;
   required: boolean;
   type: string;
@@ -21,7 +21,7 @@ export interface LurkapiParameter {
   enum: unknown[] | null;
 }
 
-export interface LurkapiEndpoint {
+interface LurkapiEndpoint {
   path: string;
   platform: string;
   title: string;
