@@ -10,6 +10,19 @@ describe("R2TransitFileService", () => {
     await expectScopeIsolation(createService(new MemoryR2Bucket()));
   });
 
+  it("removes the payload when its scope marker cannot be written", async () => {
+    const bucket = new MemoryR2Bucket();
+    const put = bucket.put.bind(bucket);
+    bucket.put = async (key, value, options) => {
+      if (key.endsWith(".meta.json")) throw new Error("metadata write failed");
+      return put(key, value, options);
+    };
+    await expect(createService(bucket).create(new File(["secret"], "s.txt"), { scope: "tenant-a" })).rejects.toThrow(
+      "metadata write failed",
+    );
+    await expect(bucket.list({ prefix: "" })).resolves.toMatchObject({ objects: [] });
+  });
+
   it("uploads, reads, and deletes transit files", async () => {
     const bucket = new MemoryR2Bucket();
     const service = createService(bucket);

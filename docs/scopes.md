@@ -64,8 +64,8 @@ that hands a scoped `downloadUrl` to a browser must therefore proxy the download
 ## Deleting a scope
 
 `DELETE /api/scopes/:scope` (admin) revokes the scope's runtime tokens, fails its open OAuth requests, including console
-reconnects of its connections (a callback already in flight cannot store its connection, and the grant it obtained is
-revoked), cancels its trigger
+reconnects of its connections (a callback already in flight cannot store its connection; the grant it obtained is
+revoked on a best-effort basis, and a failed provider revocation is logged rather than reported), cancels its trigger
 subscriptions, disconnects its stored connections (revoking OAuth grants, including connections whose provider has
 left the catalog), purges its runs and deletes its transit files. It answers `200` with the
 counts, or `207` with a `failures` list when a step failed; call it again to finish. Nothing outside the scope is touched.

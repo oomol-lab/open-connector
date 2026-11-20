@@ -51,14 +51,15 @@ export class R2TransitFileService implements ITransitFileService {
       ...(options?.scope === undefined ? {} : { scope: options.scope }),
     };
 
-    // The scope marker goes first, so a payload never exists without it: deleteByScope finds every scoped upload.
-    await this.bucket.put(metadataKey(fileId), JSON.stringify(metadata));
+    // The payload goes first and is unreadable until its scope marker exists. A purge that runs between the two writes
+    // skips the file and a later one finds both keys; a payload whose marker could not be written is removed here.
+    await this.bucket.put(objectKey(fileId), file.stream(), {
+      httpMetadata: { contentType: metadata.mimeType },
+    });
     try {
-      await this.bucket.put(objectKey(fileId), file.stream(), {
-        httpMetadata: { contentType: metadata.mimeType },
-      });
+      await this.bucket.put(metadataKey(fileId), JSON.stringify(metadata));
     } catch (error) {
-      await this.bucket.delete(metadataKey(fileId)).catch(() => undefined);
+      await this.bucket.delete(objectKey(fileId));
       throw error;
     }
 

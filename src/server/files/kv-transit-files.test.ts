@@ -10,6 +10,19 @@ describe("KVTransitFileService", () => {
     await expectScopeIsolation(createService(new MemoryKVNamespace()));
   });
 
+  it("removes the payload when its scope marker cannot be written", async () => {
+    const namespace = new MemoryKVNamespace();
+    const put = namespace.put.bind(namespace);
+    namespace.put = async (key, value, options) => {
+      if (key.endsWith(".meta.json")) throw new Error("metadata write failed");
+      return put(key, value, options);
+    };
+    await expect(createService(namespace).create(new File(["secret"], "s.txt"), { scope: "tenant-a" })).rejects.toThrow(
+      "metadata write failed",
+    );
+    await expect(namespace.list({ prefix: "" })).resolves.toMatchObject({ keys: [] });
+  });
+
   it("uploads, reads, and deletes transit files", async () => {
     const namespace = new MemoryKVNamespace();
     const service = createService(namespace);
