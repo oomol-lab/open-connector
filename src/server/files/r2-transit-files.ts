@@ -88,7 +88,11 @@ export class R2TransitFileService implements ITransitFileService {
         return { keys: page.objects.map(({ key }) => key), cursor: page.truncated ? page.cursor : undefined };
       },
       async (fileId) => (await this.readMetadata(fileId))?.scope,
-      (fileId) => Promise.all([this.bucket.delete(objectKey(fileId)), this.bucket.delete(metadataKey(fileId))]),
+      // Data first: the metadata is the only scope marker, so it must survive a failed data delete for a retry.
+      async (fileId) => {
+        await this.bucket.delete(objectKey(fileId));
+        await this.bucket.delete(metadataKey(fileId));
+      },
     );
   }
 

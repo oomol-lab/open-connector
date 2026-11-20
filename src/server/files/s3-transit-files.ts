@@ -181,7 +181,15 @@ export class S3TransitFileService implements IStagedTransitFileService {
       throw new TransitFileError(404, "file_not_found", "Transit file was not found.");
     }
 
-    assertFileAccess(object.Metadata?.scope, access);
+    try {
+      assertFileAccess(object.Metadata?.scope, access);
+    } catch (error) {
+      // The body stream holds a pooled socket until it is consumed or released (Node streams and web streams).
+      const body = object.Body as { destroy?: () => void; cancel?: () => Promise<void> };
+      if (body.destroy) body.destroy();
+      else await body.cancel?.().catch(() => undefined);
+      throw error;
+    }
     return {
       object,
       metadata: {

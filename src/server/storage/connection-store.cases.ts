@@ -79,6 +79,16 @@ export function connectionStoreTests(getDatabase: () => RuntimeDatabase): void {
     await expect(store.get("example", "tenant-b-app", { scope: "tenant-a" })).resolves.toBeUndefined();
     await expect(store.get("example", "tenant-a-app", { scope: undefined })).resolves.toBeUndefined();
     await expect(store.getById(unscoped.id, { scope: undefined })).resolves.toMatchObject({ id: unscoped.id });
+    // The scope is checked inside the write, so no other scope (or an unscoped write) can take the name over.
+    await expect(store.set("example", "tenant-a-app", credential, "tenant-b")).rejects.toMatchObject({
+      code: "connection_scope_conflict",
+    });
+    await expect(store.set("example", "tenant-a-app", credential)).rejects.toMatchObject({
+      code: "connection_scope_conflict",
+    });
+    await expect(store.set("example", "plain", credential, "tenant-a")).rejects.toMatchObject({
+      code: "connection_scope_conflict",
+    });
     // Updating the credential keeps the scope.
     const replaced = await store.set("example", "tenant-a-app", { ...credential, apiKey: "rotated" }, "tenant-a");
     expect(replaced.scope).toBe("tenant-a");

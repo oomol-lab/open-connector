@@ -319,6 +319,9 @@ describe("TransitFileService", () => {
       name: malformed.fileId,
       mimeType: "text/markdown",
     });
+    // A missing side-car is a legacy unscoped file; a malformed one has an unknown scope, so only the operator sees it.
+    await expect(service.read(missing.fileId, {})).resolves.toMatchObject({ sizeBytes: 11 });
+    await expect(service.read(malformed.fileId, {})).rejects.toMatchObject({ code: "file_not_found" });
   });
 
   it("deletes a stored file with its side-car and reports an unknown id as no deletion", async () => {

@@ -122,9 +122,11 @@ describe("scope isolation", () => {
       { apiKey: "key-a-rotated", scope: "tenant-b" },
       "admin-token",
     );
-    // A reconnect keeps the scope of its target; the request cannot move the connection.
-    expect(reconnect.status).toBe(200);
-    expect((await reconnect.json()).data.scope).toBe("tenant-a");
+    // A reconnect keeps the scope of its target; naming another scope is rejected, not ignored.
+    expect(reconnect.status).toBe(400);
+    expect((await reconnect.json()).errorCode).toBe("invalid_input");
+    const kept = await call(`/v1/connections/by-id/${a.connectionId}`, undefined, "admin-token");
+    expect((await kept.json()).data.scope).toBe("tenant-a");
   });
 
   it("namespaces idempotency keys per scope so one tenant cannot collide with or replay another's key", async () => {
@@ -241,6 +243,42 @@ describe("scope isolation", () => {
     expect((await execute(b.token, b.alias)).status).toBe(200);
     expect(await (await fetchFile(fileB)).text()).toBe("beta");
   });
+  it("deletes only the scope's stored connections, never a shared default, and the console keeps a scope", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn<typeof fetch>(async () =>
+        Response.json({ status: "ok", message: {}, credit_balance: 100 }, { headers: { "x-api-pool": "plus" } }),
+      ),
+    );
+    runtime = await createConnectorRuntime(await fixture(["crossref"]));
+    // crossref works without a key, so tenant-a's listing offers a virtual `default` for it.
+    const shared = await call(
+      "/api/connections/crossref",
+      { authType: "api_key", values: { apiKey: "shared" } },
+      "admin-token",
+      "PUT",
+    );
+    expect(shared.status).toBe(200);
+    const a = await tenant("tenant-a", "key-a");
+
+    // Replacing a scoped connection from the console keeps its scope.
+    const edited = await call(
+      "/api/connections/ninjapear",
+      { authType: "api_key", values: { apiKey: "rotated" }, connectionName: a.alias },
+      "admin-token",
+      "PUT",
+    );
+    expect(edited.status).toBe(200);
+    const kept = await (await call(`/v1/connections/by-id/${a.connectionId}`, undefined, "admin-token")).json();
+    expect(kept.data.scope).toBe("tenant-a");
+
+    const removed = await (await call("/api/scopes/tenant-a", undefined, "admin-token", "DELETE")).json();
+    expect(removed.deleted.connections).toBe(1);
+    const left = (await (await call("/v1/connections", undefined, "admin-token")).json()).data as Array<{
+      service: string;
+    }>;
+    expect(left.map((connection) => connection.service)).toEqual(["crossref"]);
+  });
 });
 
 describe("tenant connect tokens", () => {
@@ -339,6 +377,9 @@ describe("tenant connect tokens", () => {
     expect(stillPending.data.status).toBe("initiated");
     // A tenant cannot name another scope when starting OAuth.
     expect((await call("/v1/connections/github/connect", { scope: "tenant-b" }, a)).status).toBe(400);
+    // Nor override the administrator's client configuration or return address.
+    for (const body of [{ returnUri: "https://example.org/" }, { extra: { instanceUrl: "https://example.org" } }])
+      expect((await call("/v1/connections/github/connect", body, a)).status).toBe(400);
 
     // Deleting the scope fails its pending request, so a late callback cannot store a connection in it.
     const removed = await (await call("/api/scopes/tenant-a", undefined, "admin-token", "DELETE")).json();
@@ -424,12 +465,12 @@ function call(path: string, body?: unknown, token = "admin-token", method = body
   );
 }
 
-async function fixture(): Promise<ConnectorRuntimeOptions> {
+async function fixture(services: string[] = []): Promise<ConnectorRuntimeOptions> {
   const root = await mkdtemp(join(tmpdir(), "open-connector-scope-"));
   directories.push(root);
   const catalogDir = join(root, "catalog");
   await mkdir(catalogDir);
-  for (const service of ["ninjapear", "github"]) {
+  for (const service of ["ninjapear", "github", ...services]) {
     await cp(resolve(import.meta.dirname, `../../catalog/apps/${service}.json`), join(catalogDir, `${service}.json`));
   }
   return {

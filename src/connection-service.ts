@@ -104,6 +104,8 @@ export interface DisconnectOptions {
    * grant at the provider, where revoking would end the one that stays.
    */
   revoke?: boolean;
+  /** Only disconnect a connection of this scope: a row of another scope is never read, revoked or deleted. */
+  within?: ScopeFilter;
 }
 
 export interface DisconnectedConnectionSummary {
@@ -440,7 +442,6 @@ export class ConnectionService {
     const connectionName = normalizeConnectionName(connectionNameInput);
     const generation = retirementGeneration ?? (await this.store.getRetirementGeneration(service, connectionName));
     const storedCredential = await this.prepareOAuthCredential(service, credential, signal);
-    await this.assertScopeCompatible(service, connectionName, scope);
     const stored = await this.store.setIfCurrentGeneration(
       service,
       connectionName,
@@ -466,15 +467,9 @@ export class ConnectionService {
     return stored && stored.source !== "saas" && stored.scope !== undefined ? { id, scope: stored.scope } : { id };
   }
 
-  /** A name that already exists keeps its scope: another scope may neither overwrite nor adopt the connection. */
-  private async assertScopeCompatible(service: string, connectionName: string, scope?: string): Promise<void> {
-    const existing = await this.store.get(service, connectionName);
-    if (existing && existing.source !== "saas" && existing.scope !== scope) {
-      throw new ConnectionError(
-        "connection_scope_conflict",
-        `${service} connection ${connectionName} already exists in a different scope.`,
-      );
-    }
+  /** The scope a connection was stored with, for operator paths that replace a connection by name. */
+  async getStoredScope(service: string, connectionName?: string): Promise<string | undefined> {
+    return (await this.store.get(service, normalizeConnectionName(connectionName)))?.scope;
   }
 
   /** Capture the durable disconnect fence before sending the user to the provider. */
@@ -523,6 +518,11 @@ export class ConnectionService {
     const connection = await this.store.getById(id, within);
     if (!connection) throw new ConnectionError("connection_not_found", "Connection not found.");
     return connection;
+  }
+
+  /** The stored connections of a scope, including ones whose provider has left the catalog. */
+  async listStoredConnections(within: ScopeFilter): Promise<StoredConnection[]> {
+    return this.store.list(within);
   }
 
   async listManagedConnections(within?: ScopeFilter): Promise<ManagedConnectionSummary[]> {
@@ -583,7 +583,6 @@ export class ConnectionService {
     }
     this.assertNotCancelled(input.signal);
     const connectionName = normalizeConnectionName(input.connectionName);
-    if (!expected) await this.assertScopeCompatible(provider.service, connectionName, input.scope);
     const stored = expected
       ? await this.replaceCredential(expected, credential)
       : await this.store.set(provider.service, connectionName, credential, input.scope);
@@ -625,13 +624,15 @@ export class ConnectionService {
     // refuses (a row bound to active Trigger subscriptions) then ends nothing at the provider,
     // where revoking first would leave a dead grant behind a row that stays.
     let stored: StoredConnection | undefined;
-    if (options.revoke === true) {
+    if (options.revoke === true || options.within) {
       try {
-        stored = await this.store.get(service, connectionName);
+        stored = await this.store.get(service, connectionName, options.within);
       } catch (error) {
         this.logger?.warn({ service, connectionName, error: describeError(error) }, "oauth token revocation skipped");
         throw error;
       }
+      if (!stored && options.within)
+        throw new ConnectionError("app_not_found", `${service} connection ${connectionName} was not found.`);
     }
     return this.credentials.withDisconnect(stored?.id, async () => {
       if (stored && stored.source !== "saas" && stored.credential.authType === "oauth2") {
@@ -640,7 +641,7 @@ export class ConnectionService {
         if (refresh) {
           // A failed early refresh can leave the original access token usable for revocation.
           const refreshed = await refresh.catch(() => credential);
-          const current = await this.store.get(service, connectionName);
+          const current = await this.store.get(service, connectionName, options.within);
           if (
             current?.source === "saas" ||
             current?.id !== stored.id ||
@@ -664,6 +665,15 @@ export class ConnectionService {
 
       return { service, connectionName, configured: false, revoked };
     });
+  }
+
+  /** End a grant that was issued but never stored, such as one whose scope was deleted during authorization. */
+  async revokeUnstoredCredential(service: string, credential: OAuthCredential): Promise<void> {
+    try {
+      await this.oauthCredentials?.revoke?.(service, credential);
+    } catch (error) {
+      this.logger?.warn({ service, error: describeError(error) }, "oauth token revocation failed");
+    }
   }
 
   /**

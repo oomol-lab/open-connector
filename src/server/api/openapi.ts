@@ -236,9 +236,11 @@ const runtimeConnectionProperties: Record<string, JsonSchema> = {
     description: "Provider account identity from the stored credential profile.",
   }),
   service: jsonSchema.string({ description: "Provider service identifier." }),
-  scope: jsonSchema.string({
-    description: "Opaque isolation scope the connection was stored with. Absent for an unscoped connection.",
-  }),
+  scope: jsonSchema.optional(
+    jsonSchema.string({
+      description: "Opaque isolation scope the connection was stored with. Absent for an unscoped connection.",
+    }),
+  ),
   status: { type: "string", enum: ["active", "disconnected"] },
   alias: jsonSchema.string({ description: namedConnectionDescription }),
   authType: jsonSchema.string({ description: "Connection authentication type." }),
@@ -1014,6 +1016,7 @@ export function createOpenApiDocument(options: OpenApiDocumentOptions = {}): Ope
               description: "Provider account identity from the stored credential profile.",
             }),
             service: jsonSchema.string({ description: "Provider service identifier." }),
+            scope: jsonSchema.string({ description: "Isolation scope of a stored connection. Absent when unscoped." }),
             authType: jsonSchema.string({ description: "Connection authentication type." }),
             configured: jsonSchema.boolean({ description: "Whether the provider is connected." }),
             notion: notionConnectionSchema,
@@ -1271,6 +1274,9 @@ export function createOpenApiDocument(options: OpenApiDocumentOptions = {}): Ope
             ),
             connectionId: jsonSchema.string({ description: "Stable connection identifier used by the run." }),
             runtimeTokenId: jsonSchema.string({ description: "Stored runtime token identifier used by the run." }),
+            scope: jsonSchema.string({
+              description: "Isolation scope of the token that made the run. Absent when unscoped.",
+            }),
             policy: { $ref: "#/components/schemas/PolicyDecision" },
             inputSummary: {
               description: "Redacted action input summary.",

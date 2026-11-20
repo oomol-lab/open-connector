@@ -151,7 +151,7 @@ export class ConnectionRequestStore {
     const [rows] = await this.transaction([
       {
         sql: `update connection_requests set phase = 'completed', status = 'failed', error_code = 'scope_deleted', error_message = 'The scope was deleted.', value = null, updated_at = ?
-        where kind = 'local' and owner = ? and phase = 'pending' returning id`,
+        where kind = 'local' and owner = ? and phase in ('pending', 'processing') returning id`,
         values: [Date.now(), owner],
       },
     ]);

@@ -176,6 +176,8 @@ export function createConsoleOAuthRoutes({
       logger?.info(logContext, "connection started");
       return writeConnectionResult(context, connections.connectWithoutAuth(service, { connectionName }), logContext);
     }
+    // The console is the operator view: replacing a connection keeps the scope it was stored with.
+    const scope = await connections.getStoredScope(service, connectionName);
     if (authType === "api_key") {
       logger?.info(logContext, "connection started");
       return writeConnectionResult(
@@ -183,6 +185,7 @@ export function createConsoleOAuthRoutes({
         connections.connectWithApiKey(service, {
           values,
           connectionName,
+          scope,
           signal: context.req.raw.signal,
         }),
         logContext,
@@ -195,6 +198,7 @@ export function createConsoleOAuthRoutes({
         connections.connectWithCustomCredential(service, {
           values,
           connectionName,
+          scope,
           signal: context.req.raw.signal,
         }),
         logContext,
@@ -316,6 +320,7 @@ export function createConsoleOAuthRoutes({
       const authorization = await oauthFlow.startAuthorization({
         service,
         connectionName,
+        scope: await connections.getStoredScope(service, connectionName),
         clientConfig: readOAuthClientConfigInput(body),
         authorizationOptionIds: readOptionalStringArray(body, "authorizationOptionIds"),
       });

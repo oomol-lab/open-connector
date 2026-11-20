@@ -85,10 +85,13 @@ export function createScopeRoutes(options: ScopeRoutesOptions): Hono {
     }
 
     await attempt("connections", undefined, async () => {
-      for (const connection of await options.connections.listConnections(undefined, { scope })) {
-        if (!connection.configured) continue;
+      // Stored rows only: never a virtual default, and a connection whose provider left the catalog is still removed.
+      for (const connection of await options.connections.listStoredConnections({ scope })) {
         await attempt("connections", connection.id, async () => {
-          await options.connections.disconnect(connection.service, connection.connectionName, { revoke: true });
+          await options.connections.disconnect(connection.service, connection.connectionName, {
+            revoke: true,
+            within: { scope },
+          });
           deleted.connections += 1;
         });
       }

@@ -719,6 +719,39 @@ describe("OAuthFlowService", () => {
     await expect(services.connections.getCredential("example")).resolves.toBeUndefined();
   });
 
+  it("revokes the grant of a callback whose scope was deleted during the token exchange", async () => {
+    const services = createServices([oauthProvider]);
+    await services.clientConfigs.upsertConfig({
+      service: "example",
+      clientId: "client-id",
+      clientSecret: "client-secret",
+      extra: { tenant: "default" },
+    });
+    const revoke = vi.spyOn(services.connections, "revokeUnstoredCredential").mockResolvedValue();
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => {
+        // The scope is deleted after the callback claimed its request, while the provider issues the token.
+        await services.flow.cancelPendingRequests("scope:tenant-a");
+        return Response.json({ access_token: "access-token", token_type: "Bearer" });
+      }),
+    );
+
+    const started = await services.flow.startConnectionRequest({
+      service: "example",
+      owner: "scope:tenant-a",
+      scope: "tenant-a",
+    });
+    await expect(
+      services.flow.completeAuthorization({ state: started.stateHandle, code: "code" }),
+    ).rejects.toMatchObject({ code: "scope_deleted" });
+    expect(revoke).toHaveBeenCalledWith("example", expect.objectContaining({ accessToken: "access-token" }));
+    await expect(services.flow.getConnectionRequest(started.connectionRequestId)).resolves.toMatchObject({
+      status: "failed",
+      errorCode: "scope_deleted",
+    });
+  });
+
   it("does not store OAuth credentials when the callback signal is already cancelled", async () => {
     const services = createServices([oauthProvider]);
     await services.clientConfigs.upsertConfig({

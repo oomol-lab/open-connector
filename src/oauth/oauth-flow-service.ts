@@ -186,7 +186,7 @@ export class OAuthFlowService {
     return this.requests.get(id, owner);
   }
 
-  /** Fail every pending request of one owner, so a late callback cannot store its connection. */
+  /** Fail every open request of one owner, including a callback already in flight, so it cannot store its connection. */
   async cancelPendingRequests(owner: string): Promise<number> {
     return this.requests.cancelPending(owner);
   }
@@ -418,6 +418,11 @@ export class OAuthFlowService {
         input.signal?.throwIfAborted();
         const appId = await this.requests.complete(request, credential, input.signal);
         if (!appId) {
+          // The scope was deleted while the provider issued this grant: end the grant instead of leaving it live.
+          if ((await this.requests.get(request.connectionRequestId))?.errorCode === "scope_deleted") {
+            await this.connections.revokeUnstoredCredential(pending.service, credential);
+            throw new OAuthFlowError("scope_deleted", "The scope was deleted during authorization.");
+          }
           if (request.target) {
             try {
               await this.connections.getStoredConnection(request.target.id);
@@ -458,7 +463,8 @@ export class OAuthFlowService {
       }
       if (request) {
         const code =
-          error instanceof OAuthFlowError && ["app_not_found", "request_key_conflict"].includes(error.code)
+          error instanceof OAuthFlowError &&
+          ["app_not_found", "request_key_conflict", "scope_deleted"].includes(error.code)
             ? error.code
             : "provider_error";
         const message = "OAuth connection failed.";

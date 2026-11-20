@@ -104,7 +104,7 @@ export class SqlConnectionStore implements IConnectionStore {
         ? { sql: "1 = 1", values: [] }
         : retirementMatches(service, connectionName, retirementGeneration);
     const value = await this.codec.encode(JSON.stringify(credential));
-    const [[accepted], , , [row]] = await this.transaction([
+    const [[accepted], , , [row], [existing]] = await this.transaction([
       retirementGeneration === undefined
         ? { sql: "select 1", values: [] }
         : lockRetirement(service, connectionName, retirementGeneration),
@@ -112,9 +112,11 @@ export class SqlConnectionStore implements IConnectionStore {
         sql: "update connections set revision = revision where service = ? and connection_name = ?",
         values: [service, connectionName],
       },
-      queueSaasConnections(`service = ? and connection_name = ? and ${fence.sql}`, [
+      // A SaaS connection is unscoped, so only an unscoped write may replace it.
+      queueSaasConnections(`service = ? and connection_name = ? and scope is not distinct from ? and ${fence.sql}`, [
         service,
         connectionName,
+        scope ?? null,
         ...fence.values,
       ]),
       {
@@ -123,8 +125,9 @@ export class SqlConnectionStore implements IConnectionStore {
           revision = excluded.revision, value = excluded.value, updated_at = excluded.updated_at, scope = excluded.scope,
           source = 'local', managed_project_id = null, provider_config_id = null, external_user_id = null,
           remote_account_id = null, local_request_id = null, provider_account_id = excluded.provider_account_id
-          where not exists (select 1 from trigger_subscriptions where connection_id = connections.id and mode <> 'resource-set' and status in ('active', 'deleting'))
-          or (connections.provider_account_id is not null and connections.provider_account_id = excluded.provider_account_id) returning id, revision`,
+          where connections.scope is not distinct from excluded.scope
+          and (not exists (select 1 from trigger_subscriptions where connection_id = connections.id and mode <> 'resource-set' and status in ('active', 'deleting'))
+          or (connections.provider_account_id is not null and connections.provider_account_id = excluded.provider_account_id)) returning id, revision`,
         values: [
           crypto.randomUUID(),
           crypto.randomUUID(),
@@ -139,8 +142,19 @@ export class SqlConnectionStore implements IConnectionStore {
           ...fence.values,
         ],
       },
+      {
+        sql: "select scope from connections where service = ? and connection_name = ?",
+        values: [service, connectionName],
+      },
     ]);
     if (!accepted) return undefined;
+    // Checked in the same transaction as the write, so two scopes racing for one name cannot take it over.
+    if (!row && (existing?.scope ?? undefined) !== scope)
+      throw new HttpRequestError(
+        "connection_scope_conflict",
+        `${service} connection ${connectionName} already exists in a different scope.`,
+        409,
+      );
     if (!row)
       throw new HttpRequestError(
         "connection_has_subscriptions",

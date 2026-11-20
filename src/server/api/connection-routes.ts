@@ -1,4 +1,5 @@
 import type { ConnectionService } from "../../connection-service.ts";
+import type { StoredConnection } from "../../connection-store.ts";
 import type { ScopeFilter } from "../../core/scope.ts";
 import type { OAuthFlowService } from "../../oauth/oauth-flow-service.ts";
 import type { SaasOAuthService } from "../../saas/saas-oauth-service.ts";
@@ -47,6 +48,15 @@ export function createConnectionRoutes({ connections, oauthFlow, saasOAuth }: Co
     }
     return scope;
   };
+  /** A reconnect keeps the scope of its connection; naming any other scope is rejected rather than ignored. */
+  const scopeFor = (context: Context, target: StoredConnection | undefined, requested: string | undefined) => {
+    const scope = resolveScope(context, requested);
+    if (!target) return scope;
+    const kept = target.source === "saas" ? undefined : target.scope;
+    if (scope !== undefined && scope !== kept)
+      throw new ConnectionError("invalid_input", "A reconnect keeps the scope of its connection.");
+    return kept;
+  };
   app.onError((error, context) => {
     if (error instanceof SaasError) {
       if (error.retryAfter) context.header("Retry-After", error.retryAfter);
@@ -78,11 +88,14 @@ export function createConnectionRoutes({ connections, oauthFlow, saasOAuth }: Co
   });
   app.get("/connection-requests/:connectionRequestId", async (context) => {
     const id = context.req.param("connectionRequestId");
-    const admin = hasAdminBearer(context);
-    const request = admin
-      ? ((saasOAuth ? await saasOAuth.sync(id, owner, context.req.raw.signal) : undefined) ??
-        (await oauthFlow.getConnectionRequest(id)))
-      : await oauthFlow.getConnectionRequest(id, ownerOf(tenantOf(context)));
+    // Only a tenant token reaches this route without being the administrator (bearer or console cookie).
+    const tenant = tenantOf(context);
+    const request =
+      tenant === undefined
+        ? ((saasOAuth && hasAdminBearer(context)
+            ? await saasOAuth.sync(id, owner, context.req.raw.signal)
+            : undefined) ?? (await oauthFlow.getConnectionRequest(id)))
+        : await oauthFlow.getConnectionRequest(id, scopeOwner(tenant));
     if (!request)
       return writeRuntimeFailure(context, {
         status: 404,
@@ -99,7 +112,11 @@ export function createConnectionRoutes({ connections, oauthFlow, saasOAuth }: Co
       const target = reconnect
         ? await connections.getStoredConnection(context.req.param("appId")!, withinOf(context))
         : undefined;
-      const scope = target?.source === "saas" ? undefined : (target?.scope ?? resolveScope(context, input.scope));
+      const scope = scopeFor(context, target, input.scope);
+      // The client configuration and the return address belong to the administrator: a tenant could otherwise point
+      // the token exchange (and the client secret) at its own host, or turn the runtime into an open redirect.
+      if (tenantOf(context) !== undefined && (input.returnUri || input.extra || input.secretExtra))
+        throw new ConnectionError("invalid_input", "returnUri, extra and secretExtra are administrator-only.");
       return writeRuntimeSuccess(
         context,
         await oauthFlow.startConnectionRequest({
@@ -140,7 +157,7 @@ export function createConnectionRoutes({ connections, oauthFlow, saasOAuth }: Co
             ...options,
             values: { ...input.extra, apiKey: input.apiKey },
             comment: input.comment,
-            scope: resolveScope(context, input.scope),
+            scope: scopeFor(context, target, input.scope),
           });
         } else {
           const input = parseBody(customConnectionInput, body);
@@ -148,7 +165,7 @@ export function createConnectionRoutes({ connections, oauthFlow, saasOAuth }: Co
             ...options,
             values: input.values,
             comment: input.comment,
-            scope: resolveScope(context, input.scope),
+            scope: scopeFor(context, target, input.scope),
           });
         }
         return writeRuntimeSuccess(

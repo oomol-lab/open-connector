@@ -144,26 +144,34 @@ export class TransitFileService implements IStagedTransitFileService {
 
   async deleteByScope(scope: string): Promise<number> {
     let deleted = 0;
+    let failure: unknown;
     await mkdir(this.rootDir, { recursive: true });
     for await (const entry of await opendir(this.rootDir)) {
       if (!entry.isFile() || !isSafeFileId(entry.name)) {
         continue;
       }
       const path = join(this.rootDir, entry.name);
-      const metadata = await this.readMetadata(path, entry.name);
-      if (metadata.scope !== scope) {
-        continue;
-      }
-      if (
-        await unlink(path).then(
+      try {
+        const metadata = await this.readMetadata(path, entry.name);
+        if (metadata.scope !== scope) {
+          continue;
+        }
+        // Keep the side-car (the only scope marker) unless the data is gone, so a retry can still find the file.
+        const removed = await unlink(path).then(
           () => true,
-          () => false,
-        )
-      ) {
-        deleted += 1;
+          (error: unknown) => {
+            if (isMissingFile(error)) return false;
+            throw error;
+          },
+        );
+        if (removed) deleted += 1;
+        await unlink(metadataPath(path)).catch(() => undefined);
+      } catch (error) {
+        // Finish the other files first; the failure is still reported, so the caller retries.
+        failure ??= error;
       }
-      await unlink(metadataPath(path)).catch(() => undefined);
     }
+    if (failure !== undefined) throw failure;
     return deleted;
   }
 
@@ -266,19 +274,25 @@ export class TransitFileService implements IStagedTransitFileService {
 
   private async readMetadata(path: string, fileId: string): Promise<StoredDescriptor> {
     const fallback = { name: fileId, mimeType: contentTypeFromFileId(fileId) };
-    const text = await readFile(metadataPath(path), "utf8").catch(() => undefined);
+    // Only a missing side-car means a legacy unscoped file; an unreadable one must not grant unscoped access.
+    const text = await readFile(metadataPath(path), "utf8").catch((error: unknown) => {
+      if (isMissingFile(error)) return undefined;
+      throw error;
+    });
     if (!text) {
       return fallback;
     }
+    let parsed: Partial<StoredDescriptor>;
     try {
-      const parsed = JSON.parse(text) as Partial<StoredDescriptor>;
-      return {
-        ...normalizeDescriptor(parsed, fallback),
-        ...(typeof parsed.scope === "string" && parsed.scope ? { scope: parsed.scope } : {}),
-      };
+      parsed = JSON.parse(text) as Partial<StoredDescriptor>;
     } catch {
-      return fallback;
+      // Its scope is unknown, so only the operator may see it: no caller's scope matches this marker.
+      return { ...fallback, scope: unreadableScope };
     }
+    return {
+      ...normalizeDescriptor(parsed, fallback),
+      ...(typeof parsed.scope === "string" && parsed.scope ? { scope: parsed.scope } : {}),
+    };
   }
 
   private async writeStream(file: TransitFileStream, tempPath: string): Promise<number> {
@@ -314,4 +328,11 @@ function isManagedFileName(fileName: string): boolean {
 
 function metadataPath(path: string): string {
   return `${path}.meta.json`;
+}
+
+/** Not a valid scope (it contains a space), so it never equals the scope of a caller. */
+const unreadableScope = " unreadable";
+
+function isMissingFile(error: unknown): boolean {
+  return (error as NodeJS.ErrnoException | undefined)?.code === "ENOENT";
 }

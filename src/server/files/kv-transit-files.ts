@@ -100,7 +100,11 @@ export class KVTransitFileService implements ITransitFileService {
         return { keys: page.keys.map(({ name }) => name), cursor: page.list_complete ? undefined : page.cursor };
       },
       async (fileId) => (await this.readMetadata(fileId))?.scope,
-      (fileId) => Promise.all([this.namespace.delete(objectKey(fileId)), this.namespace.delete(metadataKey(fileId))]),
+      // Data first: the metadata is the only scope marker, so it must survive a failed data delete for a retry.
+      async (fileId) => {
+        await this.namespace.delete(objectKey(fileId));
+        await this.namespace.delete(metadataKey(fileId));
+      },
     );
   }
 
