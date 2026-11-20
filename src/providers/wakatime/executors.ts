@@ -203,8 +203,8 @@ async function requestWakatimeJson(input: {
         method: "GET",
         signal: timeout.signal,
         headers: {
-          Authorization: `Basic ${Buffer.from(input.apiKey).toString("base64")}`,
-          Accept: "application/json",
+          "Authorization": `Basic ${Buffer.from(input.apiKey).toString("base64")}`,
+          "Accept": "application/json",
           "User-Agent": providerUserAgent,
         },
       });

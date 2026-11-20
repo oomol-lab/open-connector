@@ -196,7 +196,7 @@ async function requestSmtp2goJson(input: {
     const response = await input.context.fetcher(buildSmtp2goUrl(input.path), {
       method: "POST",
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "content-type": "application/json",
         "user-agent": providerUserAgent,
         "X-Smtp2go-Api-Key": input.context.apiKey,

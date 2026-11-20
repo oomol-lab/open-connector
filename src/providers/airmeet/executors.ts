@@ -89,7 +89,7 @@ async function requestAction(
         if (input[key] !== undefined) url.searchParams.set(key, String(input[key]));
     const response = await context.fetcher(url, {
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "content-type": "application/json",
         "user-agent": providerUserAgent,
         "x-airmeet-access-token": auth.token,
@@ -110,7 +110,7 @@ async function authenticate(
     const response = await context.fetcher(`${baseUrls[context.region]}/auth`, {
       method: "POST",
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "content-type": "application/json",
         "user-agent": providerUserAgent,
         "x-airmeet-access-key": context.accessKey,

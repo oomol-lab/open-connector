@@ -359,9 +359,9 @@ async function requestQingflowEnvelope(input: QingflowRequestInput) {
     const response = await input.fetcher(url, {
       method: input.method ?? "GET",
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         ...input.headers,
-        accessToken: input.accessToken,
+        "accessToken": input.accessToken,
         ...(input.body === undefined ? {} : { "content-type": "application/json" }),
         "user-agent": providerUserAgent,
       },

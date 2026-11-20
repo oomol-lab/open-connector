@@ -130,8 +130,8 @@ async function getProduct(input: Record<string, unknown>, context: ApiKeyProvide
 async function listOrders(input: Record<string, unknown>, context: ApiKeyProviderContext): Promise<unknown> {
   return goodyRequest({
     path: buildPath("/v1/orders", {
-      page: input.page,
-      per_page: input.per_page,
+      "page": input.page,
+      "per_page": input.per_page,
       "created_at[after]": input.created_at_after,
       "created_at[before]": input.created_at_before,
     }),
@@ -193,8 +193,8 @@ async function goodyRequest(input: GoodyRequestInput): Promise<unknown> {
 
 function goodyHeaders(apiKey: string): Record<string, string> {
   return {
-    accept: "application/json",
-    authorization: `Bearer ${apiKey}`,
+    "accept": "application/json",
+    "authorization": `Bearer ${apiKey}`,
     "user-agent": providerUserAgent,
   };
 }

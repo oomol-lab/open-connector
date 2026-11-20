@@ -67,18 +67,18 @@ export const mailgunActionHandlers: ProviderActionHandlers<"mailgun", MailgunAct
     const domain = requiredInputString(input.domain, "domain");
     return normalizeListResponse(
       mailgunGetJson(`/v3/${encodePathSegment(domain)}/events`, context, {
-        begin: optionalString(input.begin),
-        end: optionalString(input.end),
-        ascending: optionalString(input.ascending),
-        limit: optionalInteger(input.limit),
-        event: optionalString(input.event),
-        severity: optionalString(input.severity),
-        recipient: optionalString(input.recipient),
-        from: optionalString(input.from),
-        to: optionalString(input.to),
-        subject: optionalString(input.subject),
+        "begin": optionalString(input.begin),
+        "end": optionalString(input.end),
+        "ascending": optionalString(input.ascending),
+        "limit": optionalInteger(input.limit),
+        "event": optionalString(input.event),
+        "severity": optionalString(input.severity),
+        "recipient": optionalString(input.recipient),
+        "from": optionalString(input.from),
+        "to": optionalString(input.to),
+        "subject": optionalString(input.subject),
         "message-id": optionalString(input.messageId),
-        tags: optionalString(input.tags),
+        "tags": optionalString(input.tags),
       }),
     );
   },
@@ -425,7 +425,7 @@ async function mailgunFetch(
     return await context.fetcher(url, {
       method,
       headers: {
-        authorization: createMailgunAuthorizationHeader(context.apiKey),
+        "authorization": createMailgunAuthorizationHeader(context.apiKey),
         "user-agent": providerUserAgent,
         ...options.headers,
       },

@@ -291,8 +291,8 @@ function buildTruveraUrl(apiBaseUrl: string, path: string, query?: Record<string
 
 function truveraHeaders(apiKey: string, extraHeaders: Record<string, string>) {
   return {
-    Authorization: `Bearer ${apiKey}`,
-    Accept: "application/json",
+    "Authorization": `Bearer ${apiKey}`,
+    "Accept": "application/json",
     "User-Agent": providerUserAgent,
     ...extraHeaders,
   };

@@ -17,10 +17,7 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
   baseUrl: omnisendApiBaseUrl,
   auth: { type: "api_key_authorization", prefix: "Omnisend-API-Key " },
   skipDnsValidation: true,
-  customizeRequest({ headers }) {
-    if (!headers.has("accept")) headers.set("accept", "application/json");
-    if (!headers.has("omnisend-version")) headers.set("omnisend-version", omnisendApiVersion);
-  },
+  defaultHeaders: { "accept": "application/json", "omnisend-version": omnisendApiVersion },
 });
 
 const contactBodyKeys = [
@@ -345,8 +342,8 @@ async function omnisendFetch(input: OmnisendRequestOptions): Promise<Response> {
 
 function omnisendHeaders(apiKey: string, hasBody: boolean): Record<string, string> {
   const headers: Record<string, string> = {
-    accept: "application/json",
-    authorization: `Omnisend-API-Key ${apiKey}`,
+    "accept": "application/json",
+    "authorization": `Omnisend-API-Key ${apiKey}`,
     "omnisend-version": omnisendApiVersion,
     "user-agent": providerUserAgent,
   };

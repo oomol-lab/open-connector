@@ -83,7 +83,7 @@ const movieSchema = s.looseObject("Movie resource returned by RAWG for one game.
   preview: s.url("Preview image URL returned by RAWG when present."),
   data: s.looseObject("Nested movie stream URLs returned by RAWG.", {
     "480": s.url("480p trailer URL returned by RAWG when present."),
-    max: s.url("Highest-quality trailer URL returned by RAWG when present."),
+    "max": s.url("Highest-quality trailer URL returned by RAWG when present."),
   }),
 });
 

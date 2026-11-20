@@ -233,7 +233,7 @@ async function searchScripture(input: Record<string, unknown>, context: ApiBible
 
 function buildDisplayQuery(input: Record<string, unknown>): Record<string, string | undefined> {
   return compactObject({
-    parallels: optionalString(input.parallels),
+    "parallels": optionalString(input.parallels),
     "content-type": optionalString(input.contentType),
     "include-notes": booleanString(input.includeNotes),
     "include-titles": booleanString(input.includeTitles),
@@ -257,7 +257,7 @@ async function requestApiBibleJson(input: {
     response = await input.fetcher(buildApiBibleUrl(input.path, input.query), {
       method: "GET",
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "api-key": input.apiKey,
         "user-agent": providerUserAgent,
       },

@@ -249,7 +249,7 @@ const cases: readonly { name: string; verify(create: CreateHarness): Promise<voi
             query: { connector_subscription: "wrong" },
           });
           assert.notEqual(invalid.status, 200);
-          return { status: 201, data: { data: { gid: "hook" }, "X-Hook-Secret": secret } };
+          return { status: 201, data: { "data": { gid: "hook" }, "X-Hook-Secret": secret } };
         }
         throw new Error(`Unexpected Asana request ${request.method} ${request.endpoint}`);
       });

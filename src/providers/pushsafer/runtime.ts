@@ -191,7 +191,7 @@ async function requestPushsaferJson(input: PushsaferRequestInput) {
     const response = await input.fetcher(new URL(input.path, pushsaferApiBaseUrl), {
       method: "POST",
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "content-type": "application/x-www-form-urlencoded",
         "user-agent": providerUserAgent,
       },

@@ -352,7 +352,7 @@ async function requestSageSalesManagementJsonWithStatus(input: {
     const response = await input.fetcher(buildSageSalesManagementUrl(input.path, input.query), {
       method: input.method,
       headers: compactObject({
-        accept: "application/json",
+        "accept": "application/json",
         ...(input.body ? { "content-type": "application/json" } : {}),
         ...(input.sessionKey ? { "x-session-key": input.sessionKey } : {}),
         ...input.extraHeaders,

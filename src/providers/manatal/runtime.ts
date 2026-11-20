@@ -264,8 +264,8 @@ async function requestManatalJson(options: ManatalRequestOptions): Promise<unkno
   }
 
   const headers: Record<string, string> = {
-    accept: "application/json",
-    authorization: buildManatalAuthorizationHeader(options.context.apiKey),
+    "accept": "application/json",
+    "authorization": buildManatalAuthorizationHeader(options.context.apiKey),
     "user-agent": providerUserAgent,
   };
   if (options.body !== undefined) {

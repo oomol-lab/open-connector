@@ -100,13 +100,13 @@ export const actions: ProviderActionDefinition[] = [
       "Payment list query.",
       {
         ...pagination,
-        start_date: s.string("Include payments created on or after this date, YYYY-MM-DD.", {
+        "start_date": s.string("Include payments created on or after this date, YYYY-MM-DD.", {
           format: "date",
         }),
-        end_date: s.string("Include payments created on or before this date, YYYY-MM-DD.", {
+        "end_date": s.string("Include payments created on or before this date, YYYY-MM-DD.", {
           format: "date",
         }),
-        link_identifier: s.nonEmptyString("Only include payments made through this payment link."),
+        "link_identifier": s.nonEmptyString("Only include payments made through this payment link."),
         "order_by[field]": s.stringEnum("Payment sort field.", ["created_at"]),
         "order_by[direction]": s.stringEnum("Sort direction. Defaults to desc.", ["asc", "desc"]),
       },

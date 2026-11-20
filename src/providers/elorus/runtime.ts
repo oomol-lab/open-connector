@@ -311,9 +311,9 @@ async function requestElorusJson(input: {
 
 function buildElorusHeaders(apiKey: string, organizationId: string, hasBody: boolean): Record<string, string> {
   return compactObject({
-    accept: "application/json",
+    "accept": "application/json",
     "content-type": hasBody ? "application/json" : undefined,
-    authorization: `Token ${apiKey}`,
+    "authorization": `Token ${apiKey}`,
     "x-elorus-organization": organizationId,
     "user-agent": providerUserAgent,
   }) as Record<string, string>;

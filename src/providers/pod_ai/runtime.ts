@@ -57,7 +57,7 @@ async function requestPodAiJson(input: PodAiRequestOptions): Promise<Record<stri
     response = await input.context.fetcher(url, {
       method,
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "x-api-key": input.apiKey,
         "user-agent": providerUserAgent,
         ...(input.body === undefined ? {} : { "content-type": "application/json" }),

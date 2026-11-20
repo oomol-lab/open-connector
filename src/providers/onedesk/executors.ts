@@ -164,7 +164,7 @@ async function onedeskPostJson(
     response = await context.fetcher(new URL(path, onedeskApiBaseUrl), {
       method: "POST",
       headers: onedeskHeaders(context.apiKey, {
-        accept: "application/json",
+        "accept": "application/json",
         "content-type": "application/json",
       }),
       body: JSON.stringify(body),

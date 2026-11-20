@@ -82,7 +82,7 @@ export async function requestAppleAdsAccessToken(
     const response = await fetcher(appleAdsTokenEndpoint, {
       method: "POST",
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "content-type": "application/x-www-form-urlencoded",
         "user-agent": providerUserAgent,
       },

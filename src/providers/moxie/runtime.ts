@@ -104,7 +104,7 @@ async function requestMoxieJson(input: {
   const timeout = createProviderTimeout(input.signal);
   try {
     const response = await input.fetcher(url, {
-      headers: { accept: "application/json", "user-agent": providerUserAgent, "x-api-key": input.apiKey },
+      headers: { "accept": "application/json", "user-agent": providerUserAgent, "x-api-key": input.apiKey },
       signal: timeout.signal,
     });
     const text = await readBoundedText(response);

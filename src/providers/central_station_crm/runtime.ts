@@ -416,7 +416,7 @@ function buildCentralStationCrmUrl(apiBaseUrl: string, path: string, query: Reco
 
 function buildCentralStationCrmHeaders(apiKey: string, hasBody: boolean) {
   return compactObject<Record<string, string | undefined>>({
-    accept: "application/json",
+    "accept": "application/json",
     "content-type": hasBody ? "application/json" : undefined,
     "user-agent": providerUserAgent,
     "x-apikey": apiKey,

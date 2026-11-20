@@ -79,9 +79,7 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
   baseUrl: statamicApiBaseUrl,
   auth: { type: "api_key_authorization", prefix: "Bearer " },
   skipDnsValidation: true,
-  customizeRequest({ headers }) {
-    if (!headers.has("accept")) headers.set("accept", "application/json");
-  },
+  defaultHeaders: { accept: "application/json" },
 });
 
 export const credentialValidators: CredentialValidators = {
@@ -122,8 +120,8 @@ async function requestStatamicJson(input: {
 }): Promise<Record<string, unknown>> {
   return runProviderRequest({ signal: input.context.signal, label: "Statamic" }, async (signal) => {
     const headers: Record<string, string> = {
-      accept: "application/json",
-      authorization: `Bearer ${input.context.apiKey}`,
+      "accept": "application/json",
+      "authorization": `Bearer ${input.context.apiKey}`,
       "user-agent": providerUserAgent,
     };
     if (input.body !== undefined) {

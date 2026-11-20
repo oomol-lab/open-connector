@@ -315,8 +315,8 @@ async function requestJiminnyJson(input: {
     response = await input.fetcher(url.toString(), {
       method: "GET",
       headers: {
-        accept: "application/json",
-        authorization: `Bearer ${input.apiKey}`,
+        "accept": "application/json",
+        "authorization": `Bearer ${input.apiKey}`,
         "user-agent": providerUserAgent,
       },
       signal: input.signal,

@@ -122,7 +122,7 @@ async function databoxRequestJson(input: {
 }): Promise<unknown> {
   return runProviderRequest({ signal: input.context.signal, label: "Databox" }, async (signal) => {
     const headers: Record<string, string> = {
-      accept: "application/json",
+      "accept": "application/json",
       "user-agent": providerUserAgent,
       "x-api-key": input.context.apiKey,
     };

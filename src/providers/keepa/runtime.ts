@@ -595,7 +595,7 @@ async function requestKeepa(input: KeepaRequest): Promise<Record<string, unknown
     response = await input.context.fetcher(url, {
       method: input.body ? "POST" : "GET",
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         ...(input.body ? { "content-type": "application/json;charset=UTF-8" } : {}),
         "user-agent": providerUserAgent,
       },

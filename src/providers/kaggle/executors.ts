@@ -239,8 +239,8 @@ async function kaggleRequestJson(input: KaggleRequestInput, context: KaggleConte
     response = await context.fetcher(buildKaggleUrl(input), {
       method: "GET",
       headers: {
-        accept: "application/json",
-        authorization: buildBasicAuthHeader(context.username, context.apiKey),
+        "accept": "application/json",
+        "authorization": buildBasicAuthHeader(context.username, context.apiKey),
         "user-agent": providerUserAgent,
       },
       signal: context.signal,

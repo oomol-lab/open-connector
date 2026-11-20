@@ -415,8 +415,8 @@ async function supportbeeJsonRequest(
 
 function supportbeeHeaders(apiKey: string, hasJsonBody: boolean): Record<string, string> {
   return {
-    accept: "application/json",
-    authorization: `Bearer ${apiKey}`,
+    "accept": "application/json",
+    "authorization": `Bearer ${apiKey}`,
     "user-agent": providerUserAgent,
     ...(hasJsonBody ? { "content-type": "application/json" } : {}),
   };

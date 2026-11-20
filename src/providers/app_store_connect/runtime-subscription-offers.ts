@@ -49,7 +49,7 @@ export const appStoreConnectSubscriptionOfferHandlers: AppStoreConnectHandlers =
       label: "App Store Connect introductory offer list",
       query: {
         "filter[territory]": readCommaSeparatedList(input.territoryIds),
-        include: priceRelationshipsInclude,
+        "include": priceRelationshipsInclude,
       },
     });
     return {
@@ -639,7 +639,7 @@ async function listOfferPrices(
     label: `${request.label} list`,
     query: {
       "filter[territory]": readCommaSeparatedList(input.territoryIds),
-      include: priceRelationshipsInclude,
+      "include": priceRelationshipsInclude,
     },
   });
   return {

@@ -172,8 +172,8 @@ async function requestKeeperScimJson(input: {
     response = await input.context.fetcher(url, {
       method: "GET",
       headers: {
-        accept: "application/scim+json, application/json",
-        authorization: `Bearer ${input.context.apiKey}`,
+        "accept": "application/scim+json, application/json",
+        "authorization": `Bearer ${input.context.apiKey}`,
         "user-agent": providerUserAgent,
       },
       signal: timeout.signal,

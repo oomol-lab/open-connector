@@ -449,8 +449,8 @@ async function elasticsearchRequest<T>(input: ElasticsearchRequestInput): Promis
   const response = await input.fetcher(url.toString(), {
     method: input.method,
     headers: {
-      accept: "application/json",
-      authorization: input.authorization,
+      "accept": "application/json",
+      "authorization": input.authorization,
       "user-agent": elasticsearchUserAgent,
       ...(input.ndjsonBody !== undefined
         ? { "content-type": "application/x-ndjson" }

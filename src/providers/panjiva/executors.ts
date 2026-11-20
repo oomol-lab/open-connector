@@ -81,9 +81,7 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
       };
     },
   },
-  customizeRequest({ headers }) {
-    if (!headers.has("accept")) headers.set("accept", "application/json");
-  },
+  defaultHeaders: { accept: "application/json" },
 });
 export const credentialValidators: CredentialValidators = {
   async customCredential(input, { fetcher, signal }) {

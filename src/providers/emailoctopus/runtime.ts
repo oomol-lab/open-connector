@@ -275,7 +275,7 @@ async function requestEmailoctopusNoContent(input: EmailoctopusRequestOptions): 
       method,
       headers: {
         "user-agent": providerUserAgent,
-        accept: "application/json",
+        "accept": "application/json",
       },
       signal: input.context.signal,
     });
@@ -356,7 +356,7 @@ function createEmailoctopusHttpError(
 function buildJsonHeaders(hasBody: boolean): Record<string, string> {
   const headers: Record<string, string> = {
     "user-agent": providerUserAgent,
-    accept: "application/json",
+    "accept": "application/json",
   };
   if (hasBody) {
     headers["content-type"] = "application/json";

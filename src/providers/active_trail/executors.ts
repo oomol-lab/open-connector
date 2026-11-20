@@ -247,8 +247,8 @@ async function requestActiveTrailJson(input: {
 
   try {
     const headers: Record<string, string> = {
-      accept: "application/json",
-      authorization: input.context.apiKey,
+      "accept": "application/json",
+      "authorization": input.context.apiKey,
       "user-agent": providerUserAgent,
     };
     if (input.body) {

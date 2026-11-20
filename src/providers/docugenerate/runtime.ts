@@ -252,8 +252,8 @@ async function requestDocugenerate(input: DocugenerateRequestInput): Promise<unk
 
 function docugenerateHeaders(apiKey: string, hasBody: boolean): Record<string, string> {
   const headers: Record<string, string> = {
-    Authorization: apiKey,
-    accept: "application/json",
+    "Authorization": apiKey,
+    "accept": "application/json",
     "user-agent": providerUserAgent,
   };
   if (hasBody) {

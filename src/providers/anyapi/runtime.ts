@@ -40,7 +40,7 @@ export async function requestAnyapi(
       if (value !== undefined) url.searchParams.set(key, String(value));
     }
     const headers = new Headers({
-      accept: "application/json",
+      "accept": "application/json",
       "user-agent": providerUserAgent,
       "X-API-Key": apiKey,
     });

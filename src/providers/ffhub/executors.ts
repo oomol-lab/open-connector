@@ -209,8 +209,8 @@ function createFfhubError(response: Response, payload: unknown, phase: FfhubRequ
 
 function createFfhubHeaders(apiKey: string, hasJsonBody: boolean): Headers {
   const headers = new Headers({
-    Accept: "application/json",
-    Authorization: `Bearer ${apiKey}`,
+    "Accept": "application/json",
+    "Authorization": `Bearer ${apiKey}`,
     "User-Agent": providerUserAgent,
   });
   if (hasJsonBody) {

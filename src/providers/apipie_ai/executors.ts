@@ -108,7 +108,7 @@ async function apipieAiRequest(
 
 function apipieAiHeaders(apiKey: string): Record<string, string> {
   return {
-    authorization: `Bearer ${apiKey}`,
+    "authorization": `Bearer ${apiKey}`,
     "content-type": "application/json",
     "user-agent": providerUserAgent,
   };

@@ -68,7 +68,7 @@ async function source(request: Record<string, unknown>) {
     {
       method: "POST",
       headers: {
-        authorization: `Bearer ${token}`,
+        "authorization": `Bearer ${token}`,
         "content-type": "application/json",
         "x-oo-connector-app-id": connectionId,
       },

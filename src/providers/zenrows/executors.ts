@@ -153,7 +153,7 @@ async function requestZenrowsUrl(
         {
           method: "GET",
           headers: {
-            accept: "*/*",
+            "accept": "*/*",
             ...(authLocation === "header" ? { "x-api-key": context.apiKey } : {}),
             "user-agent": providerUserAgent,
           },

@@ -74,7 +74,7 @@ async function setup(configuredOrigin?: string) {
   const call = (path: string, method = "GET", body?: unknown, token = "admin") =>
     app.request(path, {
       method,
-      headers: { authorization: `Bearer ${token}`, "content-type": "application/json" },
+      headers: { "authorization": `Bearer ${token}`, "content-type": "application/json" },
       body: body === undefined ? undefined : JSON.stringify(body),
     });
   return { call, fetcher, logger };

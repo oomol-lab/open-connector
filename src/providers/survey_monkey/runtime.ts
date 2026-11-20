@@ -334,8 +334,8 @@ async function requestSurveyMonkeyJson(input: {
     const response = await input.fetcher(url, {
       method: input.method,
       headers: {
-        Accept: "application/json",
-        Authorization: `Bearer ${input.accessToken}`,
+        "Accept": "application/json",
+        "Authorization": `Bearer ${input.accessToken}`,
         "User-Agent": providerUserAgent,
         ...(input.body ? { "Content-Type": "application/json" } : {}),
       },

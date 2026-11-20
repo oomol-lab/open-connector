@@ -16,9 +16,7 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
   baseUrl: workosApiBaseUrl,
   auth: { type: "api_key_authorization", prefix: "Bearer " },
   skipDnsValidation: true,
-  customizeRequest({ headers }) {
-    if (!headers.has("accept")) headers.set("accept", "application/json");
-  },
+  defaultHeaders: { accept: "application/json" },
 });
 
 type WorkosActionHandler = ProviderRuntimeHandler<ApiKeyProviderContext>;
@@ -238,8 +236,8 @@ async function workosRequest(input: {
 
 function workosHeaders(apiKey: string, extraHeaders: Record<string, string>): Headers {
   return new Headers({
-    accept: "application/json",
-    authorization: `Bearer ${apiKey}`,
+    "accept": "application/json",
+    "authorization": `Bearer ${apiKey}`,
     "user-agent": providerUserAgent,
     ...extraHeaders,
   });

@@ -370,8 +370,8 @@ function buildUrl(path: string, query: Record<string, PandadocQueryValue> = {}, 
 
 function buildHeaders(apiKey: string, body: FormData | Record<string, unknown> | undefined): Record<string, string> {
   return compactObject({
-    accept: "application/json",
-    authorization: `API-Key ${apiKey}`,
+    "accept": "application/json",
+    "authorization": `API-Key ${apiKey}`,
     "content-type": body && !(body instanceof FormData) ? "application/json" : undefined,
     "user-agent": providerUserAgent,
   }) as Record<string, string>;

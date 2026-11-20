@@ -192,7 +192,7 @@ async function requestZenkitJson(options: ZenkitRequestOptions) {
     }
 
     const headers: Record<string, string> = {
-      accept: "application/json",
+      "accept": "application/json",
       "user-agent": providerUserAgent,
       "zenkit-api-key": options.apiKey,
     };

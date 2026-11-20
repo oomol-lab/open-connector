@@ -75,7 +75,7 @@ async function source(request: Record<string, unknown>) {
   const response = await connector.app.request("/v1/providers/slackbot/triggers/slackbot.on_event/execute", {
     method: "POST",
     headers: {
-      authorization: `Bearer ${token}`,
+      "authorization": `Bearer ${token}`,
       "content-type": "application/json",
       "x-oo-connector-app-id": connectionId,
     },

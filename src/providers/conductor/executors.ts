@@ -198,8 +198,8 @@ async function requestConductorJson(input: {
     response = await input.context.fetcher(url, {
       method: "GET",
       headers: {
-        Authorization: `token ${input.context.apiKey}`,
-        accept: "application/json",
+        "Authorization": `token ${input.context.apiKey}`,
+        "accept": "application/json",
         "content-type": "application/json",
         "user-agent": providerUserAgent,
       },

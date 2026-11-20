@@ -95,7 +95,7 @@ async function requestSeventeenTrack(
     const response = await context.fetcher(`${seventeenTrackApiBaseUrl}/${path}`, {
       method: "POST",
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "content-type": "application/json",
         "17token": apiKey,
         "user-agent": providerUserAgent,

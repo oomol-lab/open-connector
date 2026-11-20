@@ -189,8 +189,8 @@ async function requestMetaTrader(input: MetaTraderRequest): Promise<unknown> {
         if (value !== undefined) url.searchParams.set(key, String(value));
       }
       const headers = new Headers({
-        accept: "application/json",
-        authorization: `Bearer ${input.apiKey}`,
+        "accept": "application/json",
+        "authorization": `Bearer ${input.apiKey}`,
         "user-agent": providerUserAgent,
       });
       if (input.body !== undefined) headers.set("content-type", "application/json");

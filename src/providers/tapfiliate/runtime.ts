@@ -292,7 +292,7 @@ async function requestTapfiliateJson(input: {
 
   try {
     const headers: Record<string, string> = {
-      accept: "application/json",
+      "accept": "application/json",
       "user-agent": providerUserAgent,
       "X-Api-Key": requiredString(input.context.apiKey, "apiKey", providerInputError),
     };

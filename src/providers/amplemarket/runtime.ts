@@ -237,8 +237,8 @@ async function requestAmplemarket(
 
 function amplemarketHeaders(apiKey: string) {
   return {
-    accept: "application/json",
-    authorization: `Bearer ${apiKey}`,
+    "accept": "application/json",
+    "authorization": `Bearer ${apiKey}`,
     "user-agent": providerUserAgent,
   };
 }

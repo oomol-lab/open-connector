@@ -38,8 +38,8 @@ async function request(context: ApiKeyProviderContext, endpoint: string, options
     const url = new URL(`${baseUrl}${endpoint}`);
     for (const [key, value] of Object.entries(query)) if (value !== undefined) url.searchParams.set(key, String(value));
     const headers: Record<string, string> = {
-      authorization: `Bearer ${apiKey}`,
-      accept: "application/json",
+      "authorization": `Bearer ${apiKey}`,
+      "accept": "application/json",
       "user-agent": providerUserAgent,
     };
     if (body !== undefined) headers["content-type"] = "application/json";
@@ -181,8 +181,5 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
   baseUrl,
   auth: { type: "api_key_authorization", prefix: "Bearer " },
   skipDnsValidation: true,
-  customizeRequest({ headers }) {
-    for (const [name, value] of Object.entries({ accept: "application/json", "user-agent": providerUserAgent }))
-      if (!headers.has(name)) headers.set(name, value);
-  },
+  defaultHeaders: { "accept": "application/json", "user-agent": providerUserAgent },
 });

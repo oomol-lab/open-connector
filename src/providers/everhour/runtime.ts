@@ -78,9 +78,9 @@ export const everhourActionHandlers: ProviderActionHandlers<"everhour", Everhour
         path: `/projects/${encodePathSegment(projectId)}/tasks`,
         phase: "execute",
         query: compactObject({
-          page: readOptionalPositiveInteger(input.page, "page"),
-          limit: readOptionalPositiveInteger(input.limit, "limit"),
-          query: optionalString(input.query),
+          "page": readOptionalPositiveInteger(input.page, "page"),
+          "limit": readOptionalPositiveInteger(input.limit, "limit"),
+          "query": optionalString(input.query),
           "exclude-closed": optionalBoolean(input.excludeClosed),
         }),
       },
@@ -239,7 +239,7 @@ async function requestEverhourJson(input: EverhourRequestInput, context: ApiKeyP
     response = await context.fetcher(url.toString(), {
       method: input.method,
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "x-api-key": context.apiKey,
         "user-agent": providerUserAgent,
         ...(input.body === undefined ? {} : { "content-type": "application/json" }),

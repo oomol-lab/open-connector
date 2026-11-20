@@ -32,7 +32,7 @@ async function request(
       }
       const response = await fetcher(url, {
         method: "GET",
-        headers: { accept: "application/json", "user-agent": providerUserAgent },
+        headers: { "accept": "application/json", "user-agent": providerUserAgent },
         signal,
       });
       const text = await readProviderTextBody(response, "validemail response", undefined, signal);
@@ -91,8 +91,5 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
   baseUrl,
   auth: { type: "api_key_query", name: "token" },
   skipDnsValidation: true,
-  customizeRequest({ headers }) {
-    for (const [name, value] of Object.entries({ accept: "application/json", "user-agent": providerUserAgent }))
-      if (!headers.has(name)) headers.set(name, value);
-  },
+  defaultHeaders: { "accept": "application/json", "user-agent": providerUserAgent },
 });

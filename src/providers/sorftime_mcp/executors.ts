@@ -103,7 +103,7 @@ function withSorftimeClient<T>(context: ApiKeyProviderContext, run: (client: Cli
       transport: "streamable_http",
       fetcher: context.fetcher,
       headers: {
-        authorization: `Bearer ${context.apiKey}`,
+        "authorization": `Bearer ${context.apiKey}`,
         "user-agent": providerUserAgent,
       },
       redirect: "manual",

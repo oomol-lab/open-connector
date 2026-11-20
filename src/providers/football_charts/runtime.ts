@@ -263,7 +263,7 @@ async function requestFootballCharts(input: FootballChartsRequest): Promise<Reco
     url.searchParams.set(key, value);
   }
   const headers = new Headers({
-    accept: "application/json",
+    "accept": "application/json",
     "user-agent": providerUserAgent,
   });
   if (context.apiKey) {

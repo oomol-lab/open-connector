@@ -334,7 +334,7 @@ async function zhihuRawRequest(apiKey: string, input: ZhihuRequestInput, fetcher
 
   try {
     const headers = new Headers({
-      authorization: `Bearer ${apiKey}`,
+      "authorization": `Bearer ${apiKey}`,
       "user-agent": zhihuUserAgent,
       "x-request-timestamp": String(Math.floor(Date.now() / 1000)),
     });

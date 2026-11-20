@@ -78,8 +78,8 @@ async function request(
     const response = await context.fetcher(new URL(path, evervaultApiBaseUrl), {
       method: "POST",
       headers: {
-        accept: "application/json",
-        authorization: `Basic ${Buffer.from(`${context.appId}:${context.apiKey}`).toString("base64")}`,
+        "accept": "application/json",
+        "authorization": `Basic ${Buffer.from(`${context.appId}:${context.apiKey}`).toString("base64")}`,
         "content-type": "application/json",
         "user-agent": providerUserAgent,
       },

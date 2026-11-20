@@ -104,7 +104,7 @@ async function requestTaveJson(input: TaveRequestInput): Promise<Record<string, 
     const response = await input.context.fetcher(url, {
       method: "GET",
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "content-type": "application/json",
         "x-api-key": input.context.apiKey,
         "user-agent": providerUserAgent,

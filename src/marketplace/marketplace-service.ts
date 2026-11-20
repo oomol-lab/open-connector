@@ -231,7 +231,7 @@ export class MarketplaceService {
           allowTrustedHosts: true,
           init: {
             method: "POST",
-            headers: { authorization: `Bearer ${snapshot.apiKey}`, "content-type": "application/json" },
+            headers: { "authorization": `Bearer ${snapshot.apiKey}`, "content-type": "application/json" },
             body: JSON.stringify({ input }),
             signal,
           },

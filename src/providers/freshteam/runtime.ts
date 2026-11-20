@@ -291,9 +291,9 @@ async function requestFreshteamJson(input: FreshteamRequestInput): Promise<Fresh
     const response = await input.fetcher(buildFreshteamUrl(input.baseUrl, input.path, input.query), {
       method: "GET",
       headers: {
-        Authorization: `Bearer ${input.apiKey}`,
+        "Authorization": `Bearer ${input.apiKey}`,
         "User-Agent": providerUserAgent,
-        Accept: "application/json",
+        "Accept": "application/json",
       },
       signal: timeout.signal,
     });

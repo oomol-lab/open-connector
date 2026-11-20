@@ -145,8 +145,8 @@ async function requestCoderpadJson(input: CoderpadRequestInput): Promise<unknown
 
   try {
     const headers = new Headers({
-      accept: "application/json",
-      authorization: `Token token="${input.apiKey}"`,
+      "accept": "application/json",
+      "authorization": `Token token="${input.apiKey}"`,
       "user-agent": providerUserAgent,
     });
     const response = await input.fetcher(url, {

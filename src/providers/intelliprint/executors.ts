@@ -178,8 +178,8 @@ async function intelliprintGetJson(
 
 function intelliprintHeaders(apiKey: string): Record<string, string> {
   return {
-    Authorization: apiKey,
-    accept: "application/json",
+    "Authorization": apiKey,
+    "accept": "application/json",
     "user-agent": providerUserAgent,
   };
 }

@@ -351,7 +351,7 @@ function signAwsStsRequest(input: {
     region: input.region,
     service: awsServiceName,
     headers: {
-      accept: "application/xml",
+      "accept": "application/xml",
       "content-type": "application/x-www-form-urlencoded; charset=utf-8",
       "user-agent": providerUserAgent,
     },

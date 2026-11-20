@@ -112,7 +112,7 @@ async function requestIndexed(input: IndexedRequest): Promise<Record<string, unk
     const response = await context.fetcher(url, {
       method: input.body ? "POST" : "GET",
       headers: compactObject({
-        accept: "application/json",
+        "accept": "application/json",
         "user-agent": providerUserAgent,
         "x-api-key": context.apiKey,
         "content-type": input.body ? "application/json" : undefined,

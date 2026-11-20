@@ -267,7 +267,7 @@ async function requestTisane(input: {
   contentType?: string;
 }): Promise<unknown> {
   const headers: Record<string, string> = {
-    accept: input.responseMode === "text" ? "text/plain" : "application/json",
+    "accept": input.responseMode === "text" ? "text/plain" : "application/json",
     [tisaneApiKeyHeader]: input.apiKey,
     "user-agent": providerUserAgent,
   };

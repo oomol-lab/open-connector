@@ -122,8 +122,8 @@ async function requestMailblusterJson(input: {
 }): Promise<Record<string, unknown>> {
   const url = new URL(input.path, `${mailblusterApiBaseUrl}/`);
   const headers: Record<string, string> = {
-    accept: "application/json",
-    authorization: input.context.apiKey,
+    "accept": "application/json",
+    "authorization": input.context.apiKey,
     "user-agent": providerUserAgent,
   };
   if (input.body) {

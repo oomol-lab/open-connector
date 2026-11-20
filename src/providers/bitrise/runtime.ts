@@ -211,8 +211,8 @@ async function bitriseFetch(input: BitriseRequestInput) {
 
 function buildBitriseHeaders(apiKey: string, hasBody: boolean): Record<string, string> {
   let headers: Record<string, string> = {
-    Authorization: apiKey,
-    accept: "application/json",
+    "Authorization": apiKey,
+    "accept": "application/json",
     "user-agent": providerUserAgent,
   };
   if (hasBody) {

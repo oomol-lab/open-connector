@@ -152,7 +152,7 @@ function buildStatuspalUrl(path: string, query?: Record<string, unknown>): strin
 
 function statuspalHeaders(apiKey?: string): Record<string, string> {
   const headers: Record<string, string> = {
-    accept: "application/json",
+    "accept": "application/json",
     "user-agent": providerUserAgent,
   };
   if (apiKey) {

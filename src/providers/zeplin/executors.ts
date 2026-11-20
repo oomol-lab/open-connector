@@ -13,11 +13,7 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
   baseUrl: zeplinApiBaseUrl,
   auth: { type: "oauth_bearer" },
   skipDnsValidation: true,
-  customizeRequest({ headers }) {
-    if (!headers.has("accept")) {
-      headers.set("accept", "application/json");
-    }
-  },
+  defaultHeaders: { accept: "application/json" },
 });
 
 export const credentialValidators: CredentialValidators = {

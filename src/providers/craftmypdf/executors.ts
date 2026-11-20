@@ -237,7 +237,7 @@ async function requestJson(input: {
 
 function headers(apiKey: string, includeJsonContentType: boolean): Record<string, string> {
   return compactObject({
-    accept: "application/json",
+    "accept": "application/json",
     "content-type": includeJsonContentType ? "application/json" : undefined,
     "user-agent": providerUserAgent,
     "x-api-key": apiKey,

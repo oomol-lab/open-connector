@@ -222,10 +222,10 @@ async function requestPagerDutyJson<T>(input: {
   }
 
   const headers = compactObject({
-    accept: pagerDutyAcceptHeader,
-    authorization: `Token token=${input.apiKey}`,
+    "accept": pagerDutyAcceptHeader,
+    "authorization": `Token token=${input.apiKey}`,
     "content-type": input.body === undefined ? undefined : "application/json",
-    from: input.fromEmail,
+    "from": input.fromEmail,
     "user-agent": providerUserAgent,
   }) as Record<string, string>;
 

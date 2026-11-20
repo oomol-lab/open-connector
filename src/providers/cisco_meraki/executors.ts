@@ -20,11 +20,7 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
     type: "api_key_header",
     name: "X-Cisco-Meraki-API-Key",
   },
-  customizeRequest({ headers }) {
-    if (!headers.has("accept")) {
-      headers.set("accept", "application/json");
-    }
-  },
+  defaultHeaders: { accept: "application/json" },
 });
 
 export const credentialValidators: CredentialValidators = {

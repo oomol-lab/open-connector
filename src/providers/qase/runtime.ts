@@ -196,9 +196,9 @@ async function requestQase(input: QaseRequestInput) {
     const response = await input.fetcher(url, {
       method: input.method ?? "GET",
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "content-type": "application/json",
-        token: input.apiKey,
+        "token": input.apiKey,
         "user-agent": providerUserAgent,
       },
       body: input.body === undefined ? undefined : JSON.stringify(input.body),

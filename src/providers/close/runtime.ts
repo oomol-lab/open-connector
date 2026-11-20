@@ -393,8 +393,8 @@ async function closeRequest(
     response = await fetcher(url, {
       method,
       headers: {
-        accept: "application/json",
-        authorization: `Basic ${Buffer.from(`${apiKey}:`).toString("base64")}`,
+        "accept": "application/json",
+        "authorization": `Basic ${Buffer.from(`${apiKey}:`).toString("base64")}`,
         ...(body ? { "content-type": "application/json" } : {}),
         "user-agent": providerUserAgent,
       },

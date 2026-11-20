@@ -217,7 +217,7 @@ describe("ConnectServer", () => {
     const response = await app.fetch(
       new Request("http://localhost/v1/actions/example.echo?token=private-query", {
         method: "POST",
-        headers: { authorization: "Bearer private-credential", "content-type": "application/json" },
+        headers: { "authorization": "Bearer private-credential", "content-type": "application/json" },
         body: JSON.stringify({ input: {} }),
         signal: controller.signal,
       }),
@@ -278,7 +278,7 @@ describe("ConnectServer", () => {
     function verify(app: ReturnType<ConnectServer["createApp"]>, body: object) {
       return app.request("/v1/providers/feishu_app_bot/events/verify", {
         method: "POST",
-        headers: { authorization: "Bearer verify-token", "content-type": "application/json" },
+        headers: { "authorization": "Bearer verify-token", "content-type": "application/json" },
         body: JSON.stringify(body),
       });
     }
@@ -347,7 +347,7 @@ describe("ConnectServer", () => {
       const response = await app.request("/v1/providers/feishu_app_bot/events/verify", {
         method: "POST",
         headers: {
-          authorization: "Bearer verify-token",
+          "authorization": "Bearer verify-token",
           "content-type": "application/json",
           "x-lark-request-timestamp": timestamp,
           "x-lark-request-nonce": nonce,
@@ -415,7 +415,7 @@ describe("ConnectServer", () => {
       const app = createTestServer([feishuProvider], { eventVerifyToken: "verify-token" }).createApp();
       const response = await app.request("/v1/providers/feishu_app_bot/events/verify", {
         method: "POST",
-        headers: { authorization: "Bearer wrong", "content-type": "application/json" },
+        headers: { "authorization": "Bearer wrong", "content-type": "application/json" },
         body: "{}",
       });
       expect(response.status).toBe(401);
@@ -536,7 +536,7 @@ describe("ConnectServer", () => {
       return app.request("/v1/providers/slackbot/events/verify", {
         method: "POST",
         headers: {
-          authorization: "Bearer verify-token",
+          "authorization": "Bearer verify-token",
           "x-slack-request-timestamp": timestamp,
           "x-slack-signature": await sign(body, timestamp),
           ...headers,
@@ -576,7 +576,7 @@ describe("ConnectServer", () => {
         method: "PUT",
         headers: {
           "content-type": "application/json",
-          authorization: "Bearer admin-token",
+          "authorization": "Bearer admin-token",
         },
         body: JSON.stringify({
           clientId: "client",
@@ -1500,7 +1500,7 @@ describe("ConnectServer", () => {
     const adminActionRun = await app.request("/v1/actions/example.echo", {
       method: "POST",
       headers: {
-        authorization: "Bearer local-token",
+        "authorization": "Bearer local-token",
         "content-type": "application/json",
       },
       body: JSON.stringify({ input: {} }),
@@ -2534,7 +2534,7 @@ describe("ConnectServer", () => {
     const created = await app.request("/api/runtime-tokens", {
       method: "POST",
       headers: {
-        authorization: "Bearer local-token",
+        "authorization": "Bearer local-token",
         "content-type": "application/json",
       },
       body: JSON.stringify({
@@ -2578,7 +2578,7 @@ describe("ConnectServer", () => {
 
     const created = await app.request("/api/runtime-tokens", {
       method: "POST",
-      headers: { authorization: "Bearer local-token", "content-type": "application/json" },
+      headers: { "authorization": "Bearer local-token", "content-type": "application/json" },
       body: JSON.stringify({
         name: "Claude Desktop",
         allowedActions: [" example.* ", "example.*"],
@@ -2613,7 +2613,7 @@ describe("ConnectServer", () => {
 
     const updated = await app.request(`/api/runtime-tokens/${createdBody.record.id}`, {
       method: "PUT",
-      headers: { authorization: "Bearer local-token", "content-type": "application/json" },
+      headers: { "authorization": "Bearer local-token", "content-type": "application/json" },
       body: JSON.stringify({
         allowedActions: ["example.echo"],
         blockedActions: [],
@@ -2808,7 +2808,7 @@ describe("ConnectServer", () => {
 
     const denied = await app.request("/v1/actions/example.echo", {
       method: "POST",
-      headers: { authorization: `Bearer ${token.token}`, "content-type": "application/json" },
+      headers: { "authorization": `Bearer ${token.token}`, "content-type": "application/json" },
       body: JSON.stringify({ input: {} }),
     });
     expect(denied.status).toBe(400);
@@ -2835,13 +2835,13 @@ describe("ConnectServer", () => {
     }).createApp();
     const defaultConnectionResponse = await app.request("/api/connections/example", {
       method: "PUT",
-      headers: { authorization: "Bearer local-token", "content-type": "application/json" },
+      headers: { "authorization": "Bearer local-token", "content-type": "application/json" },
       body: JSON.stringify({ authType: "api_key", values: { apiKey: "default-key" } }),
     });
     const defaultConnection = (await defaultConnectionResponse.json()) as { id: string };
     const workConnectionResponse = await app.request("/api/connections/example", {
       method: "PUT",
-      headers: { authorization: "Bearer local-token", "content-type": "application/json" },
+      headers: { "authorization": "Bearer local-token", "content-type": "application/json" },
       body: JSON.stringify({
         authType: "api_key",
         connectionName: "work",
@@ -2851,7 +2851,7 @@ describe("ConnectServer", () => {
     const workConnection = (await workConnectionResponse.json()) as { id: string };
     const created = await app.request("/api/runtime-tokens", {
       method: "POST",
-      headers: { authorization: "Bearer local-token", "content-type": "application/json" },
+      headers: { "authorization": "Bearer local-token", "content-type": "application/json" },
       body: JSON.stringify({
         name: "Work only",
         allowedActions: [],
@@ -2930,7 +2930,7 @@ describe("ConnectServer", () => {
 
     const grantedMissingCreated = await app.request("/api/runtime-tokens", {
       method: "POST",
-      headers: { authorization: "Bearer local-token", "content-type": "application/json" },
+      headers: { "authorization": "Bearer local-token", "content-type": "application/json" },
       body: JSON.stringify({
         name: "Work and ghost",
         allowedActions: [],
@@ -2947,7 +2947,7 @@ describe("ConnectServer", () => {
     const grantedMissing = await app.request("/v1/actions/example.echo", {
       method: "POST",
       headers: {
-        authorization: `Bearer ${grantedMissingToken.token}`,
+        "authorization": `Bearer ${grantedMissingToken.token}`,
         "content-type": "application/json",
       },
       body: JSON.stringify({ input: {}, connectionName: "ghost" }),
@@ -2985,7 +2985,7 @@ describe("ConnectServer", () => {
     await app.request("/api/connections/example", {
       method: "PUT",
       headers: {
-        authorization: "Bearer local-token",
+        "authorization": "Bearer local-token",
         "content-type": "application/json",
       },
       body: JSON.stringify({ authType: "api_key", values: { apiKey: "default-key" } }),
@@ -2993,7 +2993,7 @@ describe("ConnectServer", () => {
     const restricted = await app.request("/api/runtime-tokens", {
       method: "POST",
       headers: {
-        authorization: "Bearer local-token",
+        "authorization": "Bearer local-token",
         "content-type": "application/json",
       },
       body: JSON.stringify({
@@ -3007,7 +3007,7 @@ describe("ConnectServer", () => {
     const unrestricted = await app.request("/api/runtime-tokens", {
       method: "POST",
       headers: {
-        authorization: "Bearer local-token",
+        "authorization": "Bearer local-token",
         "content-type": "application/json",
       },
       body: JSON.stringify({
@@ -3041,7 +3041,7 @@ describe("ConnectServer", () => {
     const app = createTestServer([apiKeyProvider], { runtimeTokens, auth: { adminToken: "local-token" } }).createApp();
     const created = await app.request("/api/runtime-tokens", {
       method: "POST",
-      headers: { authorization: "Bearer local-token", "content-type": "application/json" },
+      headers: { "authorization": "Bearer local-token", "content-type": "application/json" },
       body: JSON.stringify({
         name: "Work only",
         allowedActions: [],
@@ -3053,7 +3053,7 @@ describe("ConnectServer", () => {
     const token = (await created.json()) as { record: { id: string } };
     const omitted = await app.request(`/api/runtime-tokens/${token.record.id}`, {
       method: "PUT",
-      headers: { authorization: "Bearer local-token", "content-type": "application/json" },
+      headers: { "authorization": "Bearer local-token", "content-type": "application/json" },
       body: JSON.stringify({ allowedActions: [], blockedActions: [], allowedProxies: [] }),
     });
     expect(omitted.status).toBe(400);
@@ -3077,13 +3077,13 @@ describe("ConnectServer", () => {
     }).createApp();
     await app.request("/api/connections/example", {
       method: "PUT",
-      headers: { authorization: "Bearer local-token", "content-type": "application/json" },
+      headers: { "authorization": "Bearer local-token", "content-type": "application/json" },
       body: JSON.stringify({ authType: "api_key", values: { apiKey: "example-key" } }),
     });
     const createToken = async (name: string): Promise<string> => {
       const response = await app.request("/api/runtime-tokens", {
         method: "POST",
-        headers: { authorization: "Bearer local-token", "content-type": "application/json" },
+        headers: { "authorization": "Bearer local-token", "content-type": "application/json" },
         body: JSON.stringify({ name }),
       });
       return ((await response.json()) as { token: string }).token;
@@ -3093,7 +3093,7 @@ describe("ConnectServer", () => {
     const request = (token: string) => ({
       method: "POST",
       headers: {
-        authorization: `Bearer ${token}`,
+        "authorization": `Bearer ${token}`,
         "content-type": "application/json",
         "idempotency-key": "shared-key",
       },
@@ -3162,7 +3162,7 @@ describe("ConnectServer", () => {
     const request = (key: string) => ({
       method: "POST",
       headers: {
-        authorization: `Bearer ${token}`,
+        "authorization": `Bearer ${token}`,
         "content-type": "application/json",
         "idempotency-key": key,
       },
@@ -4423,12 +4423,12 @@ describe("ConnectServer", () => {
 
     await app.request("/api/connections/example", {
       method: "PUT",
-      headers: { authorization: "Bearer local-token", "content-type": "application/json" },
+      headers: { "authorization": "Bearer local-token", "content-type": "application/json" },
       body: JSON.stringify({ authType: "api_key", values: { apiKey: "example-key" } }),
     });
     const deniedCreation = await app.request("/api/runtime-tokens", {
       method: "POST",
-      headers: { authorization: "Bearer local-token", "content-type": "application/json" },
+      headers: { "authorization": "Bearer local-token", "content-type": "application/json" },
       body: JSON.stringify({
         name: "Actions only",
         allowedActions: ["*"],
@@ -4439,7 +4439,7 @@ describe("ConnectServer", () => {
     const deniedToken = (await deniedCreation.json()) as { token: string };
     const grantedCreation = await app.request("/api/runtime-tokens", {
       method: "POST",
-      headers: { authorization: "Bearer local-token", "content-type": "application/json" },
+      headers: { "authorization": "Bearer local-token", "content-type": "application/json" },
       body: JSON.stringify({
         name: "Example proxy",
         allowedActions: ["example.echo"],
@@ -4450,7 +4450,7 @@ describe("ConnectServer", () => {
     const grantedToken = (await grantedCreation.json()) as { token: string };
     const request = (token: string) => ({
       method: "POST",
-      headers: { authorization: `Bearer ${token}`, "content-type": "application/json" },
+      headers: { "authorization": `Bearer ${token}`, "content-type": "application/json" },
       body: JSON.stringify({ endpoint: "/items", method: "GET" }),
     });
 

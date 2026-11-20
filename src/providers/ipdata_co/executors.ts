@@ -240,7 +240,7 @@ function buildFieldLookupUrl(apiKey: string, fieldName: string, ip?: string): UR
 
 function ipdataHeaders(): Record<string, string> {
   return {
-    accept: "application/json",
+    "accept": "application/json",
     "user-agent": providerUserAgent,
   };
 }

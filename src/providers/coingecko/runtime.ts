@@ -77,7 +77,7 @@ export async function coingeckoRequest(
       method: "GET",
       signal,
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "user-agent": providerUserAgent,
         [coingeckoAuthHeader(plan)]: apiKey,
       },

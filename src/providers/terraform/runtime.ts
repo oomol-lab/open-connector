@@ -193,8 +193,8 @@ async function requestTerraformJson(
   const response = await context.fetcher(url, {
     method: "GET",
     headers: {
-      accept: "application/vnd.api+json",
-      authorization: `Bearer ${context.apiKey}`,
+      "accept": "application/vnd.api+json",
+      "authorization": `Bearer ${context.apiKey}`,
       "content-type": "application/vnd.api+json",
       "user-agent": providerUserAgent,
     },

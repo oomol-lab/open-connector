@@ -133,7 +133,7 @@ async function createSource(
       deploymentId: "deployment",
       reference,
       consumers,
-      headers: { authorization: `Bearer ${token ?? (await botToken())}`, "content-type": "application/json" },
+      headers: { "authorization": `Bearer ${token ?? (await botToken())}`, "content-type": "application/json" },
       rawBody: Buffer.from(JSON.stringify(body)).toString("base64"),
     })) as {
       response?: { status: number; body: string };
@@ -301,7 +301,7 @@ describe("Microsoft Teams Bot activity source", () => {
           action: "route",
           deploymentId: "deployment",
           applicationId,
-          headers: { authorization: `Bearer ${token ?? (await botToken())}`, "content-type": "application/json" },
+          headers: { "authorization": `Bearer ${token ?? (await botToken())}`, "content-type": "application/json" },
           rawBody: Buffer.from(JSON.stringify(body)).toString("base64"),
         },
         () => undefined,

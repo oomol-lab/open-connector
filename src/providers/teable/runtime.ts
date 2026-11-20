@@ -215,8 +215,8 @@ async function teableRequest(path: string, input: TeableRequestInput) {
 
 function teableHeaders(apiKey: string, hasBody: boolean) {
   const headers: Record<string, string> = {
-    Authorization: `Bearer ${apiKey}`,
-    accept: "application/json",
+    "Authorization": `Bearer ${apiKey}`,
+    "accept": "application/json",
     "user-agent": providerUserAgent,
   };
   if (hasBody) {

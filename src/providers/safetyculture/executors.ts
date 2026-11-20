@@ -31,9 +31,7 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
   baseUrl: safetycultureApiBaseUrl,
   auth: { type: "api_key_authorization", prefix: "Bearer " },
   skipDnsValidation: true,
-  customizeRequest({ headers }) {
-    if (!headers.has("accept")) headers.set("accept", "application/json");
-  },
+  defaultHeaders: { accept: "application/json" },
 });
 
 type SafetycultureRequestPhase = "validate" | "execute";
@@ -268,8 +266,8 @@ function safetycultureUrl(path: string, query?: Record<string, SafetycultureQuer
 
 function safetycultureHeaders(apiKey: string, hasBody: boolean): Record<string, string> {
   return {
-    authorization: `Bearer ${apiKey}`,
-    accept: "application/json",
+    "authorization": `Bearer ${apiKey}`,
+    "accept": "application/json",
     ...(hasBody ? { "content-type": "application/json" } : {}),
     "user-agent": providerUserAgent,
   };

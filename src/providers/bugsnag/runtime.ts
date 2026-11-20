@@ -249,8 +249,8 @@ async function requestBugsnagJson(input: {
     const response = await input.fetcher(url, {
       method: "GET",
       headers: {
-        accept: "application/json",
-        authorization: `token ${input.apiKey}`,
+        "accept": "application/json",
+        "authorization": `token ${input.apiKey}`,
         "user-agent": providerUserAgent,
       },
       signal: timeout.signal,

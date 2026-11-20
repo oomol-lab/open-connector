@@ -182,7 +182,7 @@ function appendQueryValue(url: URL, key: string, value: unknown): void {
 
 function buildTombaHeaders(credential: TombaCredential, hasBody: boolean): Record<string, string> {
   return {
-    accept: "application/json",
+    "accept": "application/json",
     "user-agent": providerUserAgent,
     "x-tomba-key": credential.apiKey,
     "x-tomba-secret": credential.apiSecret,

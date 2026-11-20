@@ -177,8 +177,8 @@ async function mailercloudRequest(input: MailercloudRequestInput): Promise<unkno
 
 function mailercloudHeaders(apiKey: string, hasBody: boolean): Record<string, string> {
   const headers: Record<string, string> = {
-    accept: "application/json",
-    authorization: apiKey,
+    "accept": "application/json",
+    "authorization": apiKey,
     "user-agent": providerUserAgent,
   };
   if (hasBody) {

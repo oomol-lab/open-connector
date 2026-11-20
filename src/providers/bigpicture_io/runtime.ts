@@ -105,8 +105,8 @@ async function requestBigpictureJson(input: {
     response = await input.context.fetcher(buildBigpictureUrl(input.baseUrl, input.path, input.query), {
       method: "GET",
       headers: {
-        accept: "application/json",
-        authorization: input.context.apiKey,
+        "accept": "application/json",
+        "authorization": input.context.apiKey,
         "user-agent": providerUserAgent,
       },
       signal: timeout.signal,

@@ -316,7 +316,7 @@ async function simlaFetch(input: SimlaRequestOptions): Promise<Response> {
   }
 
   const headers = new Headers({
-    accept: "application/json",
+    "accept": "application/json",
     "user-agent": providerUserAgent,
     "X-API-KEY": input.apiKey,
   });

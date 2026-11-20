@@ -256,7 +256,7 @@ function buildNocrmUrl(baseUrl: string, path: string, query?: Record<string, str
 
 function buildNocrmHeaders(apiKey: string, hasBody: boolean): Headers {
   const headers = new Headers({
-    accept: "application/json",
+    "accept": "application/json",
     "user-agent": providerUserAgent,
     "x-api-key": apiKey,
   });

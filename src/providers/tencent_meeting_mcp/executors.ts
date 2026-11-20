@@ -124,15 +124,14 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
   sensitiveHeaders: ["X-Tencent-Meeting-Token"],
   skipDnsValidation: true,
   redirect: "manual",
-  customizeRequest({ url, headers }) {
+  defaultHeaders: {
+    "content-type": "application/json",
+    "accept": "application/json, text/event-stream",
+    "X-Skill-Version": version,
+  },
+  customizeRequest({ url }) {
     if (url.href !== endpoint)
       throw new ProviderRequestError(400, "Use the official Tencent Meeting MCP endpoint without a query string");
-    for (const [name, value] of Object.entries({
-      "content-type": "application/json",
-      accept: "application/json, text/event-stream",
-      "X-Skill-Version": version,
-    }))
-      if (!headers.has(name)) headers.set(name, value);
   },
   async readError(response) {
     return new ProviderRequestError(

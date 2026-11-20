@@ -13,11 +13,7 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
   baseUrl: vimeoApiBaseUrl,
   auth: { type: "oauth_bearer" },
   skipDnsValidation: true,
-  customizeRequest({ headers }) {
-    if (!headers.has("accept")) {
-      headers.set("accept", "application/vnd.vimeo.*+json;version=3.4");
-    }
-  },
+  defaultHeaders: { accept: "application/vnd.vimeo.*+json;version=3.4" },
 });
 
 export const credentialValidators: CredentialValidators = {

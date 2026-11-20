@@ -203,7 +203,7 @@ async function requestWithoutToken(input: TaigaRequestInput, authToken?: string)
     if (value != null) url.searchParams.set(key, String(value));
   }
   const headers = new Headers({
-    accept: "application/json",
+    "accept": "application/json",
     "content-type": "application/json",
     "user-agent": providerUserAgent,
   });

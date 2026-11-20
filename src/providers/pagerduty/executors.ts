@@ -11,9 +11,7 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
   baseUrl: pagerDutyApiBaseUrl,
   auth: { type: "api_key_authorization", prefix: "Token token=" },
   skipDnsValidation: true,
-  customizeRequest({ headers }) {
-    if (!headers.has("accept")) headers.set("accept", "application/vnd.pagerduty+json;version=2");
-  },
+  defaultHeaders: { accept: "application/vnd.pagerduty+json;version=2" },
 });
 
 export const credentialValidators: CredentialValidators = {

@@ -401,8 +401,8 @@ function buildQuentnUrl(input: {
 
 function buildQuentnHeaders(apiKey: string, hasBody: boolean): Record<string, string> {
   const headers: Record<string, string> = {
-    accept: "application/json",
-    authorization: `Bearer ${apiKey}`,
+    "accept": "application/json",
+    "authorization": `Bearer ${apiKey}`,
     "user-agent": providerUserAgent,
   };
   if (hasBody) {

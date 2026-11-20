@@ -610,8 +610,8 @@ async function whatsappRequest<T>(input: WhatsAppRequestInput): Promise<T> {
   }
 
   const headers = new Headers({
-    accept: "application/json",
-    authorization: `Bearer ${input.accessToken}`,
+    "accept": "application/json",
+    "authorization": `Bearer ${input.accessToken}`,
     "user-agent": providerUserAgent,
   });
   const body = input.rawBody ?? (input.body ? JSON.stringify(input.body) : undefined);

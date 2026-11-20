@@ -194,12 +194,12 @@ async function requestBeeminderJson(input: {
         method: input.method,
         headers: body
           ? {
-              accept: "application/json",
+              "accept": "application/json",
               "content-type": "application/x-www-form-urlencoded",
               "user-agent": providerUserAgent,
             }
           : {
-              accept: "application/json",
+              "accept": "application/json",
               "user-agent": providerUserAgent,
             },
         body,

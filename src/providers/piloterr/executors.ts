@@ -207,7 +207,7 @@ async function takePiloterrScreenshot(
   }
   return runProviderRequest({ signal: context.signal, label: "Piloterr screenshot", timeoutMs }, async (signal) => {
     const response = await context.fetcher(url.toString(), {
-      headers: { accept: "*/*", "user-agent": providerUserAgent, "x-api-key": context.apiKey },
+      headers: { "accept": "*/*", "user-agent": providerUserAgent, "x-api-key": context.apiKey },
       signal,
     });
     if (!response.ok) {
@@ -247,7 +247,7 @@ async function piloterrRequest(
     const url = new URL(path, apiBaseUrl);
     for (const [key, value] of Object.entries(queryParams(query))) url.searchParams.set(key, value);
     const response = await context.fetcher(url.toString(), {
-      headers: { accept: "application/json", "user-agent": providerUserAgent, "x-api-key": context.apiKey },
+      headers: { "accept": "application/json", "user-agent": providerUserAgent, "x-api-key": context.apiKey },
       signal,
     });
     const payload = await readProviderJsonBody(response, {

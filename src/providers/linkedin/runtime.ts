@@ -210,8 +210,8 @@ async function requestLinkedinJson(
 
 function buildLinkedinRestHeaders(accessToken: string, headers: Record<string, string> = {}): Record<string, string> {
   return {
-    accept: "application/json",
-    authorization: `Bearer ${accessToken}`,
+    "accept": "application/json",
+    "authorization": `Bearer ${accessToken}`,
     "content-type": "application/json",
     "linkedin-version": linkedinApiVersion,
     "user-agent": providerUserAgent,

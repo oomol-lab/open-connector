@@ -93,7 +93,7 @@ async function requestJson(
   let payload: unknown;
   try {
     response = await context.fetcher(url, {
-      headers: { accept: "application/json", apikey: context.apiKey, "user-agent": providerUserAgent },
+      headers: { "accept": "application/json", "apikey": context.apiKey, "user-agent": providerUserAgent },
       signal: context.signal,
     });
     payload = await readPayload(response);

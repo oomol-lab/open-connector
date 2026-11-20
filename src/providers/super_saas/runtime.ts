@@ -140,7 +140,7 @@ async function requestSuperSaas(url: URL, fetcher: ProviderFetch, signal?: Abort
     response = await fetcher(url.toString(), {
       method: "GET",
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "user-agent": providerUserAgent,
       },
       signal,

@@ -72,8 +72,8 @@ function requestSurf(
 }
 function requestHeaders(apiKey: string) {
   return new Headers({
-    authorization: `Bearer ${apiKey}`,
-    accept: "application/json",
+    "authorization": `Bearer ${apiKey}`,
+    "accept": "application/json",
     "user-agent": providerUserAgent,
   });
 }

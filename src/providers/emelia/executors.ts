@@ -139,8 +139,8 @@ async function requestEmeliaJson(
     const response = await context.fetcher(url, {
       method: input.method,
       headers: {
-        accept: "application/json",
-        authorization: context.apiKey,
+        "accept": "application/json",
+        "authorization": context.apiKey,
         "user-agent": providerUserAgent,
       },
       signal: timeout.signal,

@@ -301,8 +301,8 @@ function buildAblyUrl(path: string, query?: URLSearchParams): URL {
 
 function buildAblyHeaders(apiKey: string, hasBody: boolean): Record<string, string> {
   const headers: Record<string, string> = {
-    accept: "application/json",
-    authorization: `Basic ${Buffer.from(apiKey).toString("base64")}`,
+    "accept": "application/json",
+    "authorization": `Basic ${Buffer.from(apiKey).toString("base64")}`,
     "user-agent": providerUserAgent,
   };
   if (hasBody) {

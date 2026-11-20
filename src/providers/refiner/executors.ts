@@ -308,8 +308,8 @@ async function requestRefinerJson(options: RefinerRequestOptions): Promise<unkno
     appendQueryValue(url, key, value);
   }
   const headers = new Headers({
-    Accept: "application/json",
-    Authorization: `Bearer ${options.context.apiKey}`,
+    "Accept": "application/json",
+    "Authorization": `Bearer ${options.context.apiKey}`,
     "User-Agent": providerUserAgent,
   });
   let body: string | undefined;

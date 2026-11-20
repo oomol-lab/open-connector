@@ -165,7 +165,7 @@ function listContacts(input: GetresponseInput, fetcher: typeof fetch) {
       "query[createdOn][to]": optionalInputString(input.input.createdTo),
       "query[changedOn][from]": optionalInputString(input.input.changedFrom),
       "query[changedOn][to]": optionalInputString(input.input.changedTo),
-      additionalFlags: input.input.exactMatch === true ? "exactMatch" : undefined,
+      "additionalFlags": input.input.exactMatch === true ? "exactMatch" : undefined,
       ...buildSortQuery(input.input),
       ...buildPageQuery(input.input),
     }),
@@ -337,7 +337,7 @@ async function requestGetresponseJson(input: {
   const url = buildGetresponseUrl(input.connection.apiBaseUrl, input.path, input.query);
   const method = input.method ?? "GET";
   const headers = new Headers({
-    accept: "application/json",
+    "accept": "application/json",
     "user-agent": providerUserAgent,
     "x-auth-token": `api-key ${input.apiKey}`,
   });

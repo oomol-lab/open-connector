@@ -374,7 +374,7 @@ async function requestSureContactJson(options: SureContactRequestOptions): Promi
 
 function surecontactHeaders(apiKey: string, hasJsonBody: boolean): Record<string, string> {
   const headers: Record<string, string> = {
-    accept: "application/json",
+    "accept": "application/json",
     "user-agent": providerUserAgent,
     "x-api-key": apiKey,
   };

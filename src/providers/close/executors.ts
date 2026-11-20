@@ -18,9 +18,7 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
   baseUrl: closeApiBaseUrl,
   auth: { type: "api_key_basic", suffix: ":" },
   skipDnsValidation: true,
-  customizeRequest({ headers }) {
-    if (!headers.has("accept")) headers.set("accept", "application/json");
-  },
+  defaultHeaders: { accept: "application/json" },
 });
 
 export const credentialValidators: CredentialValidators = {

@@ -3,7 +3,7 @@ import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } f
 import { requiredString, optionalString } from "../../core/cast.ts";
 import { defineOAuthProviderExecutors } from "../provider-executors.ts";
 import { defineProviderProxy } from "../provider-proxy.ts";
-import { ProviderRequestError, providerResponseError, requiredInputString } from "../provider-runtime.ts";
+import { encodeNonDotPathSegment, providerResponseError, requiredInputString } from "../provider-runtime.ts";
 export { oauth } from "./oauth.ts";
 import { ebayApiBaseUrl, ebayIdentityUrl } from "./constants.ts";
 import { requestEbay } from "./runtime.ts";
@@ -22,10 +22,9 @@ export const executors: ProviderExecutors = defineOAuthProviderExecutors(
       async (data, context) => {
         if (name === "get_user") return requestEbay(ebayIdentityUrl, context.accessToken, context.fetcher);
         let pathname = "/sell/fulfillment/v1/order";
-        if (data.orderId != null) pathname += `/${encodePathSegment(requiredInputString(data.orderId, "orderId"))}`;
+        if (data.orderId != null) pathname += `/${encodePathSegment(data.orderId, "orderId")}`;
         if (name.includes("shipping_fulfillment")) pathname += "/shipping_fulfillment";
-        if (data.fulfillmentId != null)
-          pathname += `/${encodePathSegment(requiredInputString(data.fulfillmentId, "fulfillmentId"))}`;
+        if (data.fulfillmentId != null) pathname += `/${encodePathSegment(data.fulfillmentId, "fulfillmentId")}`;
         const url = new URL(pathname, ebayApiBaseUrl);
         if (name === "create_shipping_fulfillment") {
           const { orderId: _orderId, ...body } = data;
@@ -42,10 +41,7 @@ export const executors: ProviderExecutors = defineOAuthProviderExecutors(
   { skipDnsValidation: true },
 );
 export const proxy: ProviderProxyExecutor = defineProviderProxy({
-  customizeRequest({ headers }) {
-    if (!headers.has("accept")) headers.set("accept", "application/json");
-    if (!headers.has("content-type")) headers.set("content-type", "application/json");
-  },
+  defaultHeaders: { "accept": "application/json", "content-type": "application/json" },
   service: "ebay",
   baseUrl: ebayApiBaseUrl,
   auth: { type: "oauth_bearer" },
@@ -62,8 +58,7 @@ export const credentialValidators: CredentialValidators = {
     };
   },
 };
-function encodePathSegment(value: string): string {
-  if (value === "." || value === "..")
-    throw new ProviderRequestError(400, "eBay resource IDs cannot be dot segments", undefined, "invalid_input");
-  return encodeURIComponent(value);
+
+function encodePathSegment(value: unknown, fieldName: string): string {
+  return encodeNonDotPathSegment(requiredInputString(value, fieldName));
 }

@@ -22,7 +22,7 @@ async function request(route: string, apiKey: string, fetcher: typeof fetch, par
     url.searchParams.set("api_key", apiKey);
     const response = await fetcher(url, {
       method: "GET",
-      headers: { accept: "application/json", "user-agent": providerUserAgent },
+      headers: { "accept": "application/json", "user-agent": providerUserAgent },
       signal,
     });
     const text = await readProviderTextBody(response, "kickofflabs response", undefined, signal);
@@ -84,8 +84,5 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
   baseUrl,
   auth: { type: "api_key_query", name: "api_key" },
   skipDnsValidation: true,
-  customizeRequest({ headers }) {
-    if (!headers.has("accept")) headers.set("accept", "application/json");
-    if (!headers.has("user-agent")) headers.set("user-agent", providerUserAgent);
-  },
+  defaultHeaders: { "accept": "application/json", "user-agent": providerUserAgent },
 });

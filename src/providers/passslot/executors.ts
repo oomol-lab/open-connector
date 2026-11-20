@@ -180,8 +180,8 @@ async function requestPassslotJson(input: PassslotRequestInput, context: ApiKeyP
   const response = await context.fetcher(`${passslotApiBaseUrl}${input.path}`, {
     method: input.method ?? "GET",
     headers: {
-      accept: "application/json",
-      authorization: `Basic ${Buffer.from(`${context.apiKey}:`).toString("base64")}`,
+      "accept": "application/json",
+      "authorization": `Basic ${Buffer.from(`${context.apiKey}:`).toString("base64")}`,
       "user-agent": providerUserAgent,
       ...(input.body === undefined ? {} : { "content-type": "application/json" }),
     },

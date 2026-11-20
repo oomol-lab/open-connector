@@ -286,7 +286,7 @@ async function requestSurveyMethodsJson(input: {
     response = await input.fetcher(url, {
       method: input.method,
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "content-type": "application/json",
         "user-agent": providerUserAgent,
       },

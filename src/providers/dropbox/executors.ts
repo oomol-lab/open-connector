@@ -1002,7 +1002,7 @@ function normalizeWriteMode(mode: string, updateRev: string | undefined) {
   if (mode === "update") {
     return {
       ".tag": "update",
-      update: updateRev,
+      "update": updateRev,
     };
   }
   return "add";

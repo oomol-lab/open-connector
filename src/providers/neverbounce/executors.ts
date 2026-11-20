@@ -85,11 +85,7 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
   baseUrl: neverbounceApiBaseUrl,
   auth: { type: "api_key_query_or_form_body", name: "key" },
   skipDnsValidation: true,
-  customizeRequest({ headers }) {
-    if (!headers.has("accept")) {
-      headers.set("accept", "application/json");
-    }
-  },
+  defaultHeaders: { accept: "application/json" },
 });
 
 export const credentialValidators: CredentialValidators = {
@@ -157,7 +153,7 @@ async function requestNeverBounceRaw(
   const timeout = createProviderTimeout(context.signal);
   try {
     const headers: Record<string, string> = {
-      accept: options.accept,
+      "accept": options.accept,
       "user-agent": providerUserAgent,
     };
     let body: URLSearchParams | undefined;

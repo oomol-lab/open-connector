@@ -100,8 +100,8 @@ export async function authenticate(
       method: "GET",
       headers: {
         // HRMOS encodes the Secret Key itself, with no trailing Basic-auth colon.
-        authorization: basicAuthorizationHeader(apiKey),
-        accept: "application/json",
+        "authorization": basicAuthorizationHeader(apiKey),
+        "accept": "application/json",
         "content-type": "application/json",
         "user-agent": providerUserAgent,
       },
@@ -177,9 +177,9 @@ export async function executeHrmosAction(
       const response = await fetcher(url, {
         method: operation.method,
         headers: {
-          authorization: `Token ${token}`,
+          "authorization": `Token ${token}`,
           "content-type": "application/json",
-          accept: operation.response === "file" ? "text/csv" : "application/json",
+          "accept": operation.response === "file" ? "text/csv" : "application/json",
           "user-agent": providerUserAgent,
         },
         body: operation.bodyField ? JSON.stringify(parameters[operation.bodyField]) : undefined,

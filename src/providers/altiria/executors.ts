@@ -312,8 +312,8 @@ async function requestAltiria(input: AltiriaRequestInput) {
     const response = await fetcher(url, {
       method: input.method ?? (input.body ? "POST" : "GET"),
       headers: {
-        accept: "application/json",
-        authorization: basicAuthorization(input.username, input.apiPassword),
+        "accept": "application/json",
+        "authorization": basicAuthorization(input.username, input.apiPassword),
         "content-type": "application/json",
         "user-agent": providerUserAgent,
       },

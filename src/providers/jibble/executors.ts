@@ -99,8 +99,8 @@ async function request(
   const response = await context.fetcher(target, {
     method,
     headers: {
-      accept: "application/json",
-      authorization: `Bearer ${context.apiKey}`,
+      "accept": "application/json",
+      "authorization": `Bearer ${context.apiKey}`,
       "content-type": "application/json",
       "user-agent": providerUserAgent,
     },

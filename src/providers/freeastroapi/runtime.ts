@@ -296,7 +296,7 @@ async function requestFreeastroapi(input: FreeastroapiRequest) {
       if (value !== undefined && value !== null) url.searchParams.set(key, String(value));
     }
     const headers = new Headers({
-      accept: "application/json",
+      "accept": "application/json",
       "x-api-key": input.apiKey,
       "user-agent": providerUserAgent,
     });

@@ -8,15 +8,15 @@ import { readSchemaProperties, readSchemaRequired } from "../../core/json-schema
 import { samplePattern } from "./pattern-example.ts";
 
 const exampleStringFormats: Record<string, string> = {
-  date: "2000-01-01",
+  "date": "2000-01-01",
   "date-time": "2000-01-01T00:00:00Z",
-  email: "user@example.com",
-  hostname: "example.com",
-  ipv4: "192.0.2.1",
-  ipv6: "2001:db8::1",
-  uri: "https://example.com",
-  url: "https://example.com",
-  uuid: "00000000-0000-4000-8000-000000000000",
+  "email": "user@example.com",
+  "hostname": "example.com",
+  "ipv4": "192.0.2.1",
+  "ipv6": "2001:db8::1",
+  "uri": "https://example.com",
+  "url": "https://example.com",
+  "uuid": "00000000-0000-4000-8000-000000000000",
 };
 
 /** Build a small example for the schema shapes used by the action catalog. */

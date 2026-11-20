@@ -177,7 +177,7 @@ async function requestMicrosoftTextTranslate(input: MicrosoftTextTranslateReques
 
 function buildHeaders(input: MicrosoftTextTranslateRequestInput): Record<string, string> {
   const headers: Record<string, string> = {
-    accept: "application/json",
+    "accept": "application/json",
     "Ocp-Apim-Subscription-Key": input.context.apiKey,
     "user-agent": providerUserAgent,
   };

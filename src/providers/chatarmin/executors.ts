@@ -191,9 +191,7 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
   baseUrl: chatarminApiBaseUrl,
   auth: { type: "api_key_authorization", prefix: "Bearer " },
   skipDnsValidation: true,
-  customizeRequest({ headers }) {
-    if (!headers.has("accept")) headers.set("accept", "application/json");
-  },
+  defaultHeaders: { accept: "application/json" },
 });
 
 export const credentialValidators: CredentialValidators = {
@@ -314,8 +312,8 @@ function buildChatarminUrl(path: string, query: Record<string, string | undefine
 
 function chatarminHeaders(apiKey: string, hasBody: boolean): Record<string, string> {
   const headers: Record<string, string> = {
-    accept: "application/json",
-    authorization: `Bearer ${apiKey}`,
+    "accept": "application/json",
+    "authorization": `Bearer ${apiKey}`,
     "user-agent": providerUserAgent,
   };
   if (hasBody) {

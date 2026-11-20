@@ -131,7 +131,7 @@ function sendListmonkRequest(options: ListmonkRequestOptions, accept: string, si
   const { context } = options;
   const headers = new Headers({
     accept,
-    authorization: listmonkAuthorizationHeader(context.apiUser, context.apiKey),
+    "authorization": listmonkAuthorizationHeader(context.apiUser, context.apiKey),
     "user-agent": providerUserAgent,
   });
   let body: string | undefined;

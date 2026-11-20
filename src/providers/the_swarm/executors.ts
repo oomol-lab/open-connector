@@ -143,7 +143,7 @@ async function requestTheSwarmJson(input: {
   body?: Record<string, unknown>;
 }): Promise<unknown> {
   const headers: Record<string, string> = {
-    accept: "application/json",
+    "accept": "application/json",
     "user-agent": providerUserAgent,
     "x-api-key": input.context.apiKey,
   };

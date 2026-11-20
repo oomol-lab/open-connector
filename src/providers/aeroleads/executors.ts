@@ -100,7 +100,7 @@ async function requestAeroleads(url: URL, context: AeroleadsActionContext): Prom
     response = await context.fetcher(url.toString(), {
       method: "GET",
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "user-agent": providerUserAgent,
       },
       signal: context.signal,

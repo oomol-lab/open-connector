@@ -144,8 +144,8 @@ async function requestSplunkHec(input: SplunkHecRequestInput) {
 
   try {
     const headers: Record<string, string> = {
-      accept: "application/json",
-      authorization: `Splunk ${input.credential.token}`,
+      "accept": "application/json",
+      "authorization": `Splunk ${input.credential.token}`,
       "user-agent": providerUserAgent,
     };
     if (input.contentType) {

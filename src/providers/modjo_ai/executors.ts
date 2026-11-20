@@ -14,9 +14,7 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
   baseUrl: modjoAiApiBaseUrl,
   auth: { type: "api_key_authorization", prefix: "Bearer " },
   skipDnsValidation: true,
-  customizeRequest({ headers }) {
-    if (!headers.has("accept")) headers.set("accept", "application/json");
-  },
+  defaultHeaders: { accept: "application/json" },
 });
 
 type ModjoRequestMode = "validate" | "execute";
@@ -162,8 +160,8 @@ function modjoUrl(path: string, query?: Record<string, string>): URL {
 
 function modjoHeaders(apiKey: string): Record<string, string> {
   return {
-    accept: "application/json",
-    authorization: `Bearer ${apiKey}`,
+    "accept": "application/json",
+    "authorization": `Bearer ${apiKey}`,
     "user-agent": providerUserAgent,
   };
 }

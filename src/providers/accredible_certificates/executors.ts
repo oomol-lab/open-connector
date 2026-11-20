@@ -76,10 +76,7 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
   baseUrl: accredibleCertificatesApiBaseUrl,
   auth: { type: "api_key_authorization", prefix: "Token token=" },
   skipDnsValidation: true,
-  customizeRequest({ headers }) {
-    if (!headers.has("accept")) headers.set("accept", "application/json");
-    if (!headers.has("content-type")) headers.set("content-type", "application/json");
-  },
+  defaultHeaders: { "accept": "application/json", "content-type": "application/json" },
 });
 
 export const credentialValidators: CredentialValidators = {
@@ -296,8 +293,8 @@ async function requestAccredibleCertificatesJson(input: {
   let response: Response;
   let payload: unknown;
   const headers: Record<string, string> = {
-    accept: "application/json",
-    authorization: `Token token=${input.apiKey}`,
+    "accept": "application/json",
+    "authorization": `Token token=${input.apiKey}`,
     "user-agent": providerUserAgent,
   };
   if (method === "POST") {

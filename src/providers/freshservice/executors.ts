@@ -424,9 +424,9 @@ function isFreshserviceSubdomain(value: string): boolean {
 
 function freshserviceHeaders(apiKey: string, method: "GET" | "POST" | undefined): Record<string, string> {
   const headers: Record<string, string> = {
-    authorization: buildFreshserviceAuthorizationHeader(apiKey),
+    "authorization": buildFreshserviceAuthorizationHeader(apiKey),
     "user-agent": providerUserAgent,
-    accept: "application/json",
+    "accept": "application/json",
   };
   if (method === "POST") {
     headers["content-type"] = "application/json";

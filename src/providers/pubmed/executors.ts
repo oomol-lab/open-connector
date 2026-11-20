@@ -38,9 +38,7 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
   allowedOrigins: ["https://pubmed.ncbi.nlm.nih.gov", "https://pmc.ncbi.nlm.nih.gov"],
   auth: { type: "optional_api_key_query", name: "api_key" },
   skipDnsValidation: true,
-  customizeRequest({ headers }) {
-    if (!headers.has("accept")) headers.set("accept", "application/json, application/xml, text/xml");
-  },
+  defaultHeaders: { accept: "application/json, application/xml, text/xml" },
 });
 
 export const credentialValidators: CredentialValidators = {

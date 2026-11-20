@@ -103,9 +103,7 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
   },
   auth: { type: "api_key_authorization", prefix: "Bearer " },
   skipDnsValidation: true,
-  customizeRequest({ headers }) {
-    if (!headers.has("accept")) headers.set("accept", "application/json");
-  },
+  defaultHeaders: { accept: "application/json" },
 });
 
 export const credentialValidators: CredentialValidators = {
@@ -206,8 +204,8 @@ async function latticeRequest(input: LatticeRequestOptions): Promise<unknown> {
     response = await input.context.fetcher(buildLatticeUrl(input.context.apiBaseUrl, input.path, input.query), {
       method: input.method,
       headers: {
-        accept: "application/json",
-        authorization: `Bearer ${input.context.apiKey}`,
+        "accept": "application/json",
+        "authorization": `Bearer ${input.context.apiKey}`,
         "user-agent": providerUserAgent,
       },
       signal: input.context.signal,

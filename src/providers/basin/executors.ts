@@ -207,9 +207,7 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
   baseUrl: basinApiBaseUrl,
   auth: { type: "api_key_authorization", prefix: "Token " },
   skipDnsValidation: true,
-  customizeRequest({ headers }) {
-    if (!headers.has("accept")) headers.set("accept", "application/json");
-  },
+  defaultHeaders: { accept: "application/json" },
 });
 
 export const credentialValidators: CredentialValidators = {
@@ -348,8 +346,8 @@ async function basinFetch(input: {
 
 function basinHeaders(apiKey: string, hasBody: boolean): Record<string, string> {
   return {
-    accept: "application/json",
-    authorization: `Token ${apiKey}`,
+    "accept": "application/json",
+    "authorization": `Token ${apiKey}`,
     ...(hasBody ? { "content-type": "application/json" } : {}),
     "user-agent": providerUserAgent,
   };

@@ -190,7 +190,7 @@ async function requestStormboardObject(
 
 function stormboardHeaders(apiKey: string): Record<string, string> {
   return {
-    accept: "application/json",
+    "accept": "application/json",
     "x-api-key": apiKey,
     "user-agent": providerUserAgent,
   };

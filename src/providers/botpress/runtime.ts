@@ -133,8 +133,8 @@ function buildBotpressUrl(path: string): URL {
 
 function botpressHeaders(apiKey: string, workspaceId?: string): Record<string, string> {
   return compactObject({
-    accept: "application/json",
-    authorization: `Bearer ${apiKey}`,
+    "accept": "application/json",
+    "authorization": `Bearer ${apiKey}`,
     "user-agent": providerUserAgent,
     "x-workspace-id": workspaceId,
   }) as Record<string, string>;

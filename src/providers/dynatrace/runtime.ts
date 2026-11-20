@@ -187,9 +187,9 @@ async function requestDynatraceJson(options: DynatraceRequestOptions): Promise<u
 
 function dynatraceHeaders(apiKey: string): Record<string, string> {
   return {
-    accept: "application/json",
+    "accept": "application/json",
     "content-type": "application/json",
-    authorization: `Api-Token ${apiKey}`,
+    "authorization": `Api-Token ${apiKey}`,
     "user-agent": providerUserAgent,
   };
 }

@@ -260,7 +260,7 @@ async function sendsparkRequestJson(
 
 function sendsparkHeaders(context: SendsparkContext, hasBody: boolean): Record<string, string> {
   return compactObject({
-    accept: "application/json",
+    "accept": "application/json",
     "content-type": hasBody ? "application/json" : undefined,
     "user-agent": providerUserAgent,
     "x-api-key": context.workspaceApiKey,

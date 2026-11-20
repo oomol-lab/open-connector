@@ -396,8 +396,8 @@ async function requestHelpdesk(input: {
 
 function helpdeskHeaders(accountId: string, apiKey: string, hasBody: boolean) {
   const headers: Record<string, string> = {
-    accept: "application/json",
-    authorization: `Basic ${Buffer.from(`${accountId}:${apiKey}`).toString("base64")}`,
+    "accept": "application/json",
+    "authorization": `Basic ${Buffer.from(`${accountId}:${apiKey}`).toString("base64")}`,
     "user-agent": providerUserAgent,
   };
   if (hasBody) {

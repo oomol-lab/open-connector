@@ -741,7 +741,7 @@ function buildIpinfoHeaders(
   authInQuery = false,
 ): Record<string, string> {
   const headers: Record<string, string> = {
-    accept: expectJson ? "application/json" : "text/plain",
+    "accept": expectJson ? "application/json" : "text/plain",
     "user-agent": providerUserAgent,
   };
 

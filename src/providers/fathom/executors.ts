@@ -202,9 +202,7 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
   baseUrl: fathomApiBaseUrl,
   auth: { type: "api_key_authorization", prefix: "Bearer " },
   skipDnsValidation: true,
-  customizeRequest({ headers }) {
-    if (!headers.has("accept")) headers.set("accept", "application/json");
-  },
+  defaultHeaders: { accept: "application/json" },
 });
 
 export const credentialValidators: CredentialValidators = {
@@ -279,8 +277,8 @@ async function fathomFetch(input: FathomRequestOptions): Promise<Response> {
 
 function fathomHeaders(apiKey: string, hasBody: boolean): Record<string, string> {
   return {
-    accept: "application/json",
-    authorization: `Bearer ${apiKey}`,
+    "accept": "application/json",
+    "authorization": `Bearer ${apiKey}`,
     ...(hasBody ? { "content-type": "application/x-www-form-urlencoded" } : {}),
     "user-agent": providerUserAgent,
   };

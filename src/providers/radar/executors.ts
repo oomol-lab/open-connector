@@ -182,8 +182,8 @@ async function requestRadarJson(input: {
     const response = await input.context.fetcher(buildRadarUrl(input.path, input.query), {
       method: "GET",
       headers: {
-        accept: "application/json",
-        authorization: input.apiKey,
+        "accept": "application/json",
+        "authorization": input.apiKey,
         "user-agent": providerUserAgent,
       },
       signal: timeout.signal,

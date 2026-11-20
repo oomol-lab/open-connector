@@ -165,8 +165,8 @@ async function streamtimeRequest(
     response = await context.fetcher(url, {
       method,
       headers: {
-        accept: "application/json",
-        authorization: `Bearer ${context.apiKey}`,
+        "accept": "application/json",
+        "authorization": `Bearer ${context.apiKey}`,
         ...(body ? { "content-type": "application/json" } : {}),
         "user-agent": providerUserAgent,
       },

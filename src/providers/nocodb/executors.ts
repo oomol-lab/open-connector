@@ -443,7 +443,7 @@ function buildNocodbUrl(baseUrl: string, path: string, query?: Record<string, st
 
 function buildNocodbHeaders(apiKey: string, hasBody: boolean): Headers {
   const headers = new Headers({
-    accept: "application/json",
+    "accept": "application/json",
     "user-agent": providerUserAgent,
     "xc-token": apiKey,
   });

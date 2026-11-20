@@ -527,7 +527,7 @@ export const appStoreConnectAppInfoHandlers: AppStoreConnectHandlers = {
       label: "App Store Connect app tag",
       query: {
         "filter[visibleInAppStore]": booleanString(input.visibleInAppStore),
-        sort: pickOptionalString(input, "sort"),
+        "sort": pickOptionalString(input, "sort"),
       },
     });
     return { appTags: page.items, nextCursor: page.nextCursor, total: page.total };
@@ -617,7 +617,7 @@ export const appStoreConnectAppInfoHandlers: AppStoreConnectHandlers = {
   },
 };
 
-const appCategoryInclude = { include: "parent,subcategories", "limit[subcategories]": "50" };
+const appCategoryInclude = { "include": "parent,subcategories", "limit[subcategories]": "50" };
 
 function readBooleanFields(
   input: Record<string, unknown>,

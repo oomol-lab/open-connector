@@ -246,8 +246,8 @@ async function requestSaucelabs(input: {
     const response = await input.fetcher(url, {
       method: input.method ?? "GET",
       headers: {
-        accept: "application/json",
-        authorization: `Basic ${Buffer.from(`${input.credential.username}:${input.credential.apiKey}`).toString("base64")}`,
+        "accept": "application/json",
+        "authorization": `Basic ${Buffer.from(`${input.credential.username}:${input.credential.apiKey}`).toString("base64")}`,
         ...(input.body === undefined ? {} : { "content-type": "application/json" }),
         "user-agent": providerUserAgent,
       },

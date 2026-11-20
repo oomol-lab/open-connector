@@ -162,7 +162,7 @@ export async function requestWacheteToken(input: {
     const response = await input.fetcher(buildWacheteUrl(wacheteLoginPath), {
       method: "POST",
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "content-type": "application/json",
         "user-agent": providerUserAgent,
       },
@@ -208,8 +208,8 @@ async function requestWacheteJson(input: {
   });
   const timeout = createProviderTimeout(input.context.signal);
   const headers: Record<string, string> = {
-    accept: "application/json",
-    authorization: `Bearer ${token}`,
+    "accept": "application/json",
+    "authorization": `Bearer ${token}`,
     "user-agent": providerUserAgent,
   };
   const init: RequestInit = {

@@ -85,8 +85,8 @@ async function requestJson(
     response = await fetcher(url, {
       method: "GET",
       headers: {
-        accept: "application/json",
-        token: apiKey,
+        "accept": "application/json",
+        "token": apiKey,
         "user-agent": providerUserAgent,
       },
     });

@@ -147,9 +147,7 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
   baseUrl: floatApiBaseUrl,
   auth: { type: "api_key_authorization", prefix: "Bearer " },
   skipDnsValidation: true,
-  customizeRequest({ headers }) {
-    if (!headers.has("accept")) headers.set("accept", "application/json");
-  },
+  defaultHeaders: { accept: "application/json" },
 });
 
 export const credentialValidators: CredentialValidators = {
@@ -199,8 +197,8 @@ async function requestFloatJson(context: FloatActionContext, input: FloatRequest
     const response = await context.fetcher(buildFloatUrl(input.path, input.query), {
       method: "GET",
       headers: {
-        accept: "application/json",
-        authorization: `Bearer ${context.apiKey}`,
+        "accept": "application/json",
+        "authorization": `Bearer ${context.apiKey}`,
         "user-agent": providerUserAgent,
       },
       signal,
@@ -251,7 +249,7 @@ function buildCommonListQuery(
   extraQuery: Record<string, string | undefined>,
 ): Record<string, string | undefined> {
   return compactObject({
-    page: readOptionalQueryValue(input.page),
+    "page": readOptionalQueryValue(input.page),
     "per-page": readOptionalQueryValue(input.perPage),
     ...extraQuery,
   });

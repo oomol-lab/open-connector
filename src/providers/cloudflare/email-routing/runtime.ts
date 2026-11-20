@@ -165,7 +165,7 @@ async function requestCloudflare(
 
 function buildHeaders(context: CloudflareContext, hasBody: boolean): Record<string, string> {
   const headers: Record<string, string> = {
-    accept: "application/json",
+    "accept": "application/json",
     ...context.authHeaders,
     "user-agent": providerUserAgent,
   };

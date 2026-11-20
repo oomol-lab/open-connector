@@ -155,8 +155,8 @@ async function requestOcrWebService(
     const response = await context.fetcher(url, {
       method: input.method ?? "GET",
       headers: {
-        accept: "application/json",
-        authorization: buildBasicAuthorizationHeader(context),
+        "accept": "application/json",
+        "authorization": buildBasicAuthorizationHeader(context),
         "user-agent": providerUserAgent,
       },
       body: input.body,

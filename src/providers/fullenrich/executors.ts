@@ -144,8 +144,8 @@ async function requestFullenrichJson(options: FullenrichRequestOptions): Promise
   const timeout = createProviderTimeout(options.context.signal);
   try {
     const headers: Record<string, string> = {
-      accept: "application/json",
-      authorization: `Bearer ${options.context.apiKey}`,
+      "accept": "application/json",
+      "authorization": `Bearer ${options.context.apiKey}`,
       "user-agent": providerUserAgent,
     };
     if (options.body) {

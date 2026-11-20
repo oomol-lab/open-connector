@@ -138,8 +138,8 @@ async function requestJson(
   return runProviderRequest({ label: "ExhibitDay", signal: context.signal }, async (signal) => {
     const url = new URL(`${exhibitdayApiBaseUrl}${path}`);
     const headers = new Headers({
-      accept: "application/json",
-      api_key: context.apiKey,
+      "accept": "application/json",
+      "api_key": context.apiKey,
       "user-agent": providerUserAgent,
     });
     let body: string | undefined;

@@ -48,7 +48,7 @@ export async function requestV0Json<T>({
   }
 
   const headers = new Headers({
-    authorization: `Bearer ${apiKey}`,
+    "authorization": `Bearer ${apiKey}`,
     "user-agent": providerUserAgent,
   });
   if (body) {

@@ -75,7 +75,7 @@ export const credentialValidators: CredentialValidators = {
 
 function requestRuncrate(input: RuncrateRequest, context: ApiKeyProviderContext): Promise<Record<string, unknown>> {
   const headers = new Headers({
-    authorization: `Bearer ${context.apiKey}`,
+    "authorization": `Bearer ${context.apiKey}`,
     "content-type": "application/json",
     "user-agent": providerUserAgent,
   });

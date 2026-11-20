@@ -86,8 +86,8 @@ export const salesforceLeadHandlers: Record<string, SalesforceHandler> = {
         method: "POST",
         headers: {
           "content-type": "text/xml; charset=UTF-8",
-          accept: "text/xml",
-          SOAPAction: "convertLead",
+          "accept": "text/xml",
+          "SOAPAction": "convertLead",
         },
         body: xml,
         signal,

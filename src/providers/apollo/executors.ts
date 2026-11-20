@@ -187,7 +187,7 @@ async function requestApolloJson(input: {
   let payload: unknown;
   try {
     const headers: Record<string, string> = {
-      accept: "application/json",
+      "accept": "application/json",
       "x-api-key": input.apiKey,
       "user-agent": providerUserAgent,
     };
@@ -231,9 +231,9 @@ async function readApolloPayload(response: Response): Promise<unknown> {
 
 function buildOrganizationSearchQuery(input: Record<string, unknown>): Record<string, ApolloQueryValue> {
   return compactObject({
-    page: optionalNumber(input.page),
-    per_page: optionalNumber(input.perPage),
-    q_organization_name: optionalString(input.organizationName),
+    "page": optionalNumber(input.page),
+    "per_page": optionalNumber(input.perPage),
+    "q_organization_name": optionalString(input.organizationName),
     "organization_ids[]": asStringList(input.organizationIds),
     "organization_locations[]": asStringList(input.organizationLocations),
     "organization_not_locations[]": asStringList(input.excludedOrganizationLocations),
@@ -247,11 +247,11 @@ function buildOrganizationSearchQuery(input: Record<string, unknown>): Record<st
 
 function buildPeopleSearchQuery(input: Record<string, unknown>): Record<string, ApolloQueryValue> {
   return compactObject({
-    page: optionalNumber(input.page),
-    per_page: optionalNumber(input.perPage),
-    q_keywords: optionalString(input.keywords),
+    "page": optionalNumber(input.page),
+    "per_page": optionalNumber(input.perPage),
+    "q_keywords": optionalString(input.keywords),
     "person_titles[]": asStringList(input.personTitles),
-    include_similar_titles: typeof input.includeSimilarTitles === "boolean" ? input.includeSimilarTitles : undefined,
+    "include_similar_titles": typeof input.includeSimilarTitles === "boolean" ? input.includeSimilarTitles : undefined,
     "organization_ids[]": asStringList(input.organizationIds),
     "person_locations[]": asStringList(input.personLocations),
     "person_seniorities[]": asStringList(input.personSeniorities),

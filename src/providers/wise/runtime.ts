@@ -107,8 +107,8 @@ async function requestWiseJson(options: WiseRequestOptions): Promise<unknown> {
     response = await options.fetcher(url, {
       method: "GET",
       headers: {
-        accept: "application/json",
-        authorization: `Bearer ${options.apiKey}`,
+        "accept": "application/json",
+        "authorization": `Bearer ${options.apiKey}`,
         "user-agent": providerUserAgent,
       },
       signal: options.signal,

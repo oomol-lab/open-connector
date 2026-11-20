@@ -1057,7 +1057,7 @@ async function fetchFuxinSource(
   try {
     const response = await fetcher(url, {
       headers: {
-        accept: "*/*",
+        "accept": "*/*",
         "user-agent": providerUserAgent,
       },
       signal,

@@ -268,8 +268,8 @@ async function requestRazorpayJson(input: {
     const response = await input.fetcher(url.toString(), {
       method: input.method,
       headers: {
-        Accept: "application/json",
-        Authorization: buildBasicAuthorizationHeader(input.keyId, input.keySecret),
+        "Accept": "application/json",
+        "Authorization": buildBasicAuthorizationHeader(input.keyId, input.keySecret),
         "Content-Type": "application/json",
         "User-Agent": providerUserAgent,
       },

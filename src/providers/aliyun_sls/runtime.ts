@@ -148,7 +148,7 @@ export async function requestAliyunSlsJson(
     credential: context.credential,
     date: context.now(),
     headers: {
-      accept: "application/json",
+      "accept": "application/json",
       "user-agent": providerUserAgent,
       ...headersToRecord(input.headers),
     },

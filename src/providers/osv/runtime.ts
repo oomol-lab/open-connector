@@ -69,7 +69,7 @@ async function requestOsvJson(path: string, init: RequestInit, context: OsvRunti
     const response = await context.fetcher(`${osvApiBaseUrl}${path}`, {
       ...init,
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "content-type": "application/json",
         "user-agent": providerUserAgent,
       },

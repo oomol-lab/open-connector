@@ -59,7 +59,7 @@ export const appStoreConnectSubscriptionHandlers: AppStoreConnectHandlers = {
       query: {
         "filter[referenceName]": pickOptionalString(input, "referenceName"),
         "filter[subscriptions.state]": readCommaSeparatedList(input.subscriptionStates),
-        sort: pickOptionalString(input, "sort"),
+        "sort": pickOptionalString(input, "sort"),
       },
     });
     return { subscriptionGroups: page.items, nextCursor: page.nextCursor, total: page.total };
@@ -189,7 +189,7 @@ export const appStoreConnectSubscriptionHandlers: AppStoreConnectHandlers = {
         "filter[name]": pickOptionalString(input, "name"),
         "filter[productId]": pickOptionalString(input, "productId"),
         "filter[state]": readCommaSeparatedList(input.states),
-        sort: pickOptionalString(input, "sort"),
+        "sort": pickOptionalString(input, "sort"),
       },
     });
     return {
@@ -349,7 +349,7 @@ export const appStoreConnectSubscriptionHandlers: AppStoreConnectHandlers = {
           "subscriptionPricePointId",
         ),
 
-        include: "subscriptionPricePoint",
+        "include": "subscriptionPricePoint",
       },
     });
     return {

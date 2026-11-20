@@ -67,7 +67,7 @@ async function downloadShopifyBulkResult(input: Record<string, unknown>, context
       const response = await context.fetcher(requiredInputString(input.url, "url"), {
         signal,
         headers: {
-          accept: "application/jsonl, application/x-ndjson, application/json, text/plain",
+          "accept": "application/jsonl, application/x-ndjson, application/json, text/plain",
           "user-agent": providerUserAgent,
         },
       });

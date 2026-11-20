@@ -97,7 +97,7 @@ async function vatlayerRawRequest(
   try {
     return await context.fetcher(url, {
       method: "GET",
-      headers: { accept: "application/json", "user-agent": providerUserAgent },
+      headers: { "accept": "application/json", "user-agent": providerUserAgent },
       signal: context.signal,
     });
   } catch (error) {

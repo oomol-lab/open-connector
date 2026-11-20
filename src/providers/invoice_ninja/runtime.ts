@@ -241,7 +241,7 @@ async function requestJson(input: {
     const response = await input.fetcher(url, {
       method: input.method ?? "GET",
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "x-api-token": input.apiKey,
         "x-requested-with": "XMLHttpRequest",
         "user-agent": providerUserAgent,

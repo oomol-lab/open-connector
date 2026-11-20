@@ -425,7 +425,7 @@ function extractKlangioErrorMessage(payload: unknown): string | undefined {
 
 function buildKlangioHeaders(apiKey: string, input: { accept: string }): Headers {
   return new Headers({
-    accept: input.accept,
+    "accept": input.accept,
     "kl-api-key": apiKey,
     "user-agent": providerUserAgent,
   });

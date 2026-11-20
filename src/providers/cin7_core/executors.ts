@@ -260,7 +260,7 @@ async function requestCin7CoreJson(input: {
     const response = await input.context.fetcher(buildCin7CoreUrl(input), {
       method: input.method,
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "content-type": "application/json",
         "user-agent": providerUserAgent,
         "api-auth-accountid": input.context.accountId,

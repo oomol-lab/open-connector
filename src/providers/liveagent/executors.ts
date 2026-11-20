@@ -379,8 +379,8 @@ function buildLiveagentUrl(apiBaseUrl: string, path: string, query?: Record<stri
 
 function buildLiveagentHeaders(apiKey: string, hasBody: boolean) {
   const headers = new Headers({
-    accept: "application/json",
-    apikey: apiKey,
+    "accept": "application/json",
+    "apikey": apiKey,
     "user-agent": providerUserAgent,
   });
   if (hasBody) {

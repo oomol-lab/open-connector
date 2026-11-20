@@ -732,6 +732,24 @@ describe("defineProviderProxy per-connection transport", () => {
     expect(new Headers(transport.mock.calls[0]![1]!.headers).has("authorization")).toBe(true);
   });
 
+  it("fills missing proxy headers while preserving caller headers and authentication", async () => {
+    const transport = jsonTransport();
+    const proxy = defineProviderProxy({
+      service: "test_service",
+      baseUrl: "https://api.example.com/",
+      auth: { type: "bearer" },
+      defaultHeaders: { "accept": "application/json", "authorization": "fallback", "x-version": "2" },
+      transport: async () => transport,
+    });
+
+    await proxy({ method: "GET", endpoint: "/items", headers: { Accept: "text/plain" } }, executionContext);
+
+    const headers = new Headers(transport.mock.calls[0]![1]!.headers);
+    expect(headers.get("accept")).toBe("text/plain");
+    expect(headers.get("authorization")).toBe("Bearer test-key");
+    expect(headers.get("x-version")).toBe("2");
+  });
+
   it("falls back to the shared egress fetch when the connection selects none", async () => {
     const platformCalls = stubFetchSequence([new Response("{}", { status: 200 })]);
     const proxy = defineProviderProxy({
@@ -992,7 +1010,7 @@ describe("provider egress SSRF guard", () => {
         method: "GET",
         endpoint: "/items",
         headers: {
-          authorization: "caller-token",
+          "authorization": "caller-token",
           "x-workspace-id": "caller-workspace",
           "x-parent-login": "caller-parent",
           "x-optional": "caller-optional",
@@ -1196,7 +1214,7 @@ describe("provider egress SSRF guard", () => {
     stubFetchSequence([
       new Response(JSON.stringify({ error: { message: "https://attacker.example/collect" } }), {
         status: 302,
-        headers: { location: "https://attacker.example/collect", "content-type": "application/json" },
+        headers: { "location": "https://attacker.example/collect", "content-type": "application/json" },
       }),
     ]);
     const readError = vi.fn(

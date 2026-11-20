@@ -73,11 +73,7 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
     type: "api_key_header",
     name: "x-openstatus-key",
   },
-  customizeRequest({ headers }) {
-    if (!headers.has("accept")) {
-      headers.set("accept", "application/json");
-    }
-  },
+  defaultHeaders: { accept: "application/json" },
 });
 
 export const credentialValidators: CredentialValidators = {
@@ -346,7 +342,7 @@ async function openstatusFetch(input: {
 
 function buildOpenstatusHeaders(apiKey: string, hasJsonBody: boolean): Headers {
   const headers = new Headers({
-    accept: "application/json",
+    "accept": "application/json",
     "user-agent": providerUserAgent,
     "x-openstatus-key": apiKey,
   });

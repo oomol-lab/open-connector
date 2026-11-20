@@ -13,8 +13,8 @@ export const githubOAuthRuntime: ProviderOAuthRuntime = {
           {
             method: "DELETE",
             headers: {
-              accept: githubDefaultAcceptHeader,
-              authorization: basicAuthorizationHeader(
+              "accept": githubDefaultAcceptHeader,
+              "authorization": basicAuthorizationHeader(
                 `${input.clientConfig.clientId}:${input.clientConfig.clientSecret}`,
               ),
               "content-type": "application/json",

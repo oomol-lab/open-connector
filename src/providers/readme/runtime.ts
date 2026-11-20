@@ -463,8 +463,8 @@ async function requestReadMeJsonWithResponse(options: ReadMeRequestOptions) {
   }
 
   const headers = compactObject<Record<string, string | undefined>>({
-    Accept: "application/json",
-    Authorization: `Basic ${Buffer.from(`${options.apiKey}:`).toString("base64")}`,
+    "Accept": "application/json",
+    "Authorization": `Basic ${Buffer.from(`${options.apiKey}:`).toString("base64")}`,
     "Content-Type": options.body ? "application/json" : undefined,
     "User-Agent": providerUserAgent,
     "x-readme-version": options.version,

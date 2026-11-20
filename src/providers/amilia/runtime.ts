@@ -179,8 +179,8 @@ async function requestAmiliaJson(input: {
   try {
     const response = await input.context.fetcher(url, {
       headers: {
-        accept: "application/json",
-        authorization: `Bearer ${input.context.apiKey}`,
+        "accept": "application/json",
+        "authorization": `Bearer ${input.context.apiKey}`,
         "user-agent": providerUserAgent,
       },
       signal: timeout.signal,

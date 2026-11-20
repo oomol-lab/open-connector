@@ -149,11 +149,7 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
   baseUrl: gumroadApiBaseUrl,
   auth: { type: "api_key_query_or_form_body", name: "access_token" },
   skipDnsValidation: true,
-  customizeRequest({ headers }) {
-    if (!headers.has("accept")) {
-      headers.set("accept", "application/json");
-    }
-  },
+  defaultHeaders: { accept: "application/json" },
 });
 
 export const credentialValidators: CredentialValidators = {
@@ -203,7 +199,7 @@ async function requestGumroad(input: {
     ...input.params,
   });
   const headers: Record<string, string> = {
-    accept: "application/json",
+    "accept": "application/json",
     "user-agent": providerUserAgent,
   };
   const body = input.method === "GET" ? undefined : params.toString();

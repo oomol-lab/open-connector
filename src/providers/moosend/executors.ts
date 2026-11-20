@@ -142,7 +142,7 @@ async function requestMoosendJson(input: MoosendRequestOptions): Promise<Record<
   }
 
   const headers: Record<string, string> = {
-    accept: "application/json",
+    "accept": "application/json",
     "user-agent": providerUserAgent,
   };
   if (input.body) {

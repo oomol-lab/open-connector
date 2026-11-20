@@ -26,9 +26,9 @@ async function request(
   if (method === "GET")
     for (const [key, value] of Object.entries(body)) if (value !== undefined) url.searchParams.set(key, String(value));
   const headers = new Headers({
-    accept: "application/json",
-    authorization: context.authorization,
-    organizationId: context.organizationId,
+    "accept": "application/json",
+    "authorization": context.authorization,
+    "organizationId": context.organizationId,
     "user-agent": providerUserAgent,
   });
   if (backendIdentifier) headers.set("x-favro-backend-identifier", backendIdentifier);

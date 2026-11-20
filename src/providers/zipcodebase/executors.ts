@@ -98,9 +98,7 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
   baseUrl: zipcodebaseApiBaseUrl,
   auth: { type: "api_key_header", name: "apikey" },
   skipDnsValidation: true,
-  customizeRequest({ headers }) {
-    if (!headers.has("accept")) headers.set("accept", "application/json");
-  },
+  defaultHeaders: { accept: "application/json" },
 });
 
 export const credentialValidators: CredentialValidators = {
@@ -142,8 +140,8 @@ async function requestZipcodebaseJson(
     response = await context.fetcher(buildZipcodebaseUrl(path, query), {
       method: "GET",
       headers: {
-        accept: "application/json",
-        apikey: context.apiKey,
+        "accept": "application/json",
+        "apikey": context.apiKey,
         "user-agent": providerUserAgent,
       },
       signal: context.signal,

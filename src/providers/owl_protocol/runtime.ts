@@ -228,7 +228,7 @@ function buildProjectTokenPath(input: Record<string, unknown>): string {
 
 function buildRequestHeaders(apiKey: string, hasJsonBody: boolean): Record<string, string> {
   const headers: Record<string, string> = {
-    accept: "application/json",
+    "accept": "application/json",
     "user-agent": providerUserAgent,
     "x-api-key": apiKey,
   };

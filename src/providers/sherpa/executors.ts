@@ -116,7 +116,7 @@ async function request(
   try {
     const response = await fetcher(`${apiBaseUrl}${path}`, {
       method: "POST",
-      headers: { accept: "application/json", "content-type": "application/vnd.api+json", "x-api-key": apiKey },
+      headers: { "accept": "application/json", "content-type": "application/vnd.api+json", "x-api-key": apiKey },
       body: JSON.stringify(body),
       signal: timeout.signal,
     });

@@ -292,7 +292,7 @@ async function twilioRequest<T>(input: TwilioRequestInput): Promise<T> {
     response = await input.fetcher(url.toString(), {
       method: input.method ?? (input.body ? "POST" : "GET"),
       headers: {
-        authorization: buildTwilioAuthorizationHeader(input.accountSid, input.authToken),
+        "authorization": buildTwilioAuthorizationHeader(input.accountSid, input.authToken),
         "user-agent": providerUserAgent,
         ...(input.body ? { "content-type": "application/x-www-form-urlencoded" } : {}),
       },

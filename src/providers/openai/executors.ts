@@ -327,8 +327,8 @@ async function openaiCancelBatch(input: Record<string, unknown>, context: ApiKey
 
 function openaiBaseHeaders(apiKey: string): Record<string, string> {
   return {
-    accept: "application/json",
-    authorization: `Bearer ${apiKey}`,
+    "accept": "application/json",
+    "authorization": `Bearer ${apiKey}`,
     "user-agent": providerUserAgent,
   };
 }

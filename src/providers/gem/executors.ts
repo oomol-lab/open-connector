@@ -232,7 +232,7 @@ async function gemGetJson(path: string, context: ApiKeyProviderContext, phase: G
 
 function gemHeaders(apiKey: string): Record<string, string> {
   return {
-    accept: "application/json",
+    "accept": "application/json",
     "user-agent": providerUserAgent,
     "x-api-key": apiKey,
   };

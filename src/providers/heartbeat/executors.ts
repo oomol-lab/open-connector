@@ -160,8 +160,8 @@ async function requestHeartbeatJson(input: {
     const response = await input.context.fetcher(url, {
       method: "GET",
       headers: {
-        accept: "application/json",
-        authorization: `Bearer ${input.context.apiKey}`,
+        "accept": "application/json",
+        "authorization": `Bearer ${input.context.apiKey}`,
         "user-agent": providerUserAgent,
       },
       signal,

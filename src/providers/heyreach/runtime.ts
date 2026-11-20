@@ -211,7 +211,7 @@ async function requestHeyreachJson(input: HeyreachRequestInput): Promise<unknown
     const response = await input.context.fetcher(buildHeyreachUrl(input.path, input.query), {
       method: input.method,
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "content-type": "application/json",
         "user-agent": providerUserAgent,
         "x-api-key": input.context.apiKey,

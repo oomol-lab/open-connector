@@ -168,8 +168,8 @@ function requestCursor(
   setSearchParams(url, options.query ?? {});
   return runProviderRequest({ signal: context.signal, label: "Cursor" }, async (signal) => {
     const headers = new Headers({
-      accept: "application/json",
-      authorization: basicAuthorizationHeader(`${context.apiKey}:`),
+      "accept": "application/json",
+      "authorization": basicAuthorizationHeader(`${context.apiKey}:`),
       "user-agent": providerUserAgent,
     });
     if (options.body !== undefined) headers.set("content-type", "application/json");

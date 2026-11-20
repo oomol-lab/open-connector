@@ -216,8 +216,8 @@ function buildFlyUrl(path: string, query: Array<[string, FlyQueryValue]>): URL {
 
 function buildFlyHeaders(apiKey: string, hasJsonBody: boolean): Record<string, string> {
   return {
-    authorization: `Bearer ${apiKey}`,
-    accept: "application/json",
+    "authorization": `Bearer ${apiKey}`,
+    "accept": "application/json",
     ...(hasJsonBody ? { "content-type": "application/json" } : {}),
     "user-agent": providerUserAgent,
   };

@@ -70,8 +70,8 @@ export async function requestFutunn(
     const response = await fetcher(url, {
       method: body === undefined ? "GET" : "POST",
       headers: {
-        authorization: `Bearer ${input.accessToken}`,
-        accept: "application/json",
+        "authorization": `Bearer ${input.accessToken}`,
+        "accept": "application/json",
         "content-type": "application/json",
         "user-agent": providerUserAgent,
       },

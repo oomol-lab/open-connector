@@ -99,7 +99,7 @@ async function requestJson(path: string, request: RequestInput, context: ApiKeyP
     for (const [key, value] of Object.entries(request.query ?? {}))
       if (value !== undefined) url.searchParams.set(key, String(value));
     const headers = new Headers({
-      accept: "application/json",
+      "accept": "application/json",
       "user-agent": providerUserAgent,
       "x-api-key": context.apiKey,
     });

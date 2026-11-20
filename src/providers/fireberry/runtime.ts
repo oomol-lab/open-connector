@@ -272,8 +272,8 @@ function buildFireberryUrl(path: string, query?: Record<string, unknown>) {
 
 function fireberryHeaders(apiKey: string, hasBody: boolean) {
   const headers = new Headers({
-    tokenid: apiKey,
-    accept: "application/json",
+    "tokenid": apiKey,
+    "accept": "application/json",
     "user-agent": providerUserAgent,
   });
   if (hasBody) {

@@ -144,9 +144,9 @@ async function requestTaniumGraphql(input: {
     const response = await input.fetcher(input.gatewayUrl, {
       method: "POST",
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "content-type": "application/json",
-        session: input.apiKey,
+        "session": input.apiKey,
         "user-agent": providerUserAgent,
       },
       body: JSON.stringify(

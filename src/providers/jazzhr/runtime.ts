@@ -208,7 +208,7 @@ async function requestJazzhrJson(input: {
     const response = await input.fetcher(buildJazzhrUrl(input.apiKey, input.path, input.query), {
       method: "GET",
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "user-agent": providerUserAgent,
       },
       signal: timeout.signal,

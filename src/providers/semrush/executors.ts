@@ -141,7 +141,7 @@ async function requestSemrushReport(input: {
     const response = await input.fetcher(buildSemrushUrl(input.apiKey, input.params), {
       method: "GET",
       headers: {
-        accept: "text/csv, text/plain, */*",
+        "accept": "text/csv, text/plain, */*",
         "user-agent": providerUserAgent,
       },
       signal,

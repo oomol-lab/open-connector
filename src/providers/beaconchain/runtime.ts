@@ -290,8 +290,8 @@ async function requestBeaconchainJson(
     response = await context.fetcher(new URL(path, beaconchainApiBaseUrl), {
       method: "POST",
       headers: {
-        accept: "application/json",
-        authorization: `Bearer ${context.apiKey}`,
+        "accept": "application/json",
+        "authorization": `Bearer ${context.apiKey}`,
         "content-type": "application/json",
         "user-agent": providerUserAgent,
       },

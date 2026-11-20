@@ -119,8 +119,8 @@ async function requestScreenshotbaseJson(input: ScreenshotbaseRequestInput) {
     const response = await input.fetcher(buildScreenshotbaseUrl(input.path, input.query), {
       method: "GET",
       headers: {
-        accept: "application/json",
-        apikey: input.apiKey,
+        "accept": "application/json",
+        "apikey": input.apiKey,
         "user-agent": providerUserAgent,
       },
       signal: timeoutHandle.signal,

@@ -43,11 +43,7 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
   baseUrl: wappalyzerApiBaseUrl,
   auth: { type: "api_key_header", name: "x-api-key" },
   skipDnsValidation: true,
-  customizeRequest({ headers }) {
-    if (!headers.has("accept")) {
-      headers.set("accept", "application/json");
-    }
-  },
+  defaultHeaders: { accept: "application/json" },
 });
 
 export const credentialValidators: CredentialValidators = {
@@ -166,7 +162,7 @@ async function requestWappalyzerJson(input: {
     const response = await input.fetcher(buildWappalyzerUrl(input.path, input.query), {
       method: "GET",
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "user-agent": providerUserAgent,
         "x-api-key": input.apiKey,
       },

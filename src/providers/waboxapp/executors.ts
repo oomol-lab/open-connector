@@ -87,11 +87,7 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
   baseUrl: waboxappApiBaseUrl,
   auth: { type: "api_key_query_or_form_body", name: "token" },
   skipDnsValidation: true,
-  customizeRequest({ headers }) {
-    if (!headers.has("accept")) {
-      headers.set("accept", "application/json");
-    }
-  },
+  defaultHeaders: { accept: "application/json" },
 });
 
 export const credentialValidators: CredentialValidators = {
@@ -211,7 +207,7 @@ async function requestWaboxappStatus(
       method: "GET",
       url,
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "user-agent": providerUserAgent,
       },
       signal,
@@ -240,7 +236,7 @@ async function requestWaboxappMessage(input: {
       method: "POST",
       url: new URL(input.actionPath, waboxappApiBaseUrl),
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "content-type": "application/x-www-form-urlencoded;charset=UTF-8",
         "user-agent": providerUserAgent,
       },

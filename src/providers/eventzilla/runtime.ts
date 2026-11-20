@@ -207,7 +207,7 @@ async function requestEventzillaJson(
     const response = await context.fetcher(buildEventzillaUrl(input.path, input.query), {
       method: "GET",
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "x-api-key": context.apiKey,
         "user-agent": providerUserAgent,
       },

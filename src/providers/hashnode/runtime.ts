@@ -418,8 +418,8 @@ async function requestHashnodeGraphql(input: HashnodeGraphqlRequest): Promise<Ha
     response = await input.fetcher(hashnodeApiUrl, {
       method: "POST",
       headers: {
-        authorization: `Bearer ${input.apiKey}`,
-        accept: "application/json",
+        "authorization": `Bearer ${input.apiKey}`,
+        "accept": "application/json",
         "content-type": "application/json",
         "user-agent": providerUserAgent,
       },

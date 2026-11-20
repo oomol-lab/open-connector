@@ -87,8 +87,8 @@ async function request(input: RequestInput): Promise<unknown> {
     const response = await input.context.fetcher(url, {
       method: input.method,
       headers: {
-        accept: "application/json",
-        authorization: `Bearer ${input.context.apiKey}`,
+        "accept": "application/json",
+        "authorization": `Bearer ${input.context.apiKey}`,
         "content-type": "application/json",
         "user-agent": providerUserAgent,
       },

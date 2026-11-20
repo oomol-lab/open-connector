@@ -50,8 +50,8 @@ async function request(
     const response = await fetcher(url, {
       method: endpoint.method,
       headers: {
-        authorization: `Bearer ${apiKey}`,
-        accept: "application/json",
+        "authorization": `Bearer ${apiKey}`,
+        "accept": "application/json",
         "content-type": "application/json",
       },
       body:

@@ -170,8 +170,8 @@ async function requestSevdeskJson(input: SevdeskRequestInput): Promise<unknown> 
     response = await input.context.fetcher(buildSevdeskUrl(input.path, input.query), {
       method: input.method ?? "GET",
       headers: {
-        Authorization: input.context.apiKey,
-        Accept: "application/json",
+        "Authorization": input.context.apiKey,
+        "Accept": "application/json",
         "User-Agent": providerUserAgent,
         ...(input.body ? { "Content-Type": "application/json" } : {}),
       },

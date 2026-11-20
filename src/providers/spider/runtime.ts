@@ -96,8 +96,8 @@ async function requestSpiderJson(
     response = await context.fetcher(new URL(`${spiderApiBaseUrl}${input.path}`), {
       method: input.method ?? "GET",
       headers: {
-        accept: "application/json",
-        authorization: `Bearer ${context.apiKey}`,
+        "accept": "application/json",
+        "authorization": `Bearer ${context.apiKey}`,
         "content-type": "application/json",
         "user-agent": providerUserAgent,
       },

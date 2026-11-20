@@ -240,9 +240,9 @@ async function requestPartnerStackJson(
 function partnerStackPartnerFetch(path: string, context: PartnerStackPartnerContext) {
   return context.fetcher(new URL(path, partnerStackPartnerApiBaseUrl), {
     headers: {
-      accept: "application/json",
+      "accept": "application/json",
       "user-agent": providerUserAgent,
-      authorization: `Bearer ${context.apiKey}`,
+      "authorization": `Bearer ${context.apiKey}`,
     },
   });
 }

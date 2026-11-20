@@ -315,8 +315,8 @@ function buildAddressfinderUrl(path: string, apiKey: string, query: Record<strin
 
 function addressfinderHeaders(apiSecret: string): Record<string, string> {
   return {
-    Accept: "application/json",
-    Authorization: apiSecret,
+    "Accept": "application/json",
+    "Authorization": apiSecret,
     "User-Agent": providerUserAgent,
   };
 }

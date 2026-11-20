@@ -171,7 +171,7 @@ async function requestUnsplashJson(input: {
     const response = await input.context.fetcher(buildUnsplashUrl(input.path, input.query), {
       method: "GET",
       headers: {
-        authorization: `Client-ID ${input.context.apiKey}`,
+        "authorization": `Client-ID ${input.context.apiKey}`,
         "accept-version": "v1",
         "user-agent": providerUserAgent,
       },

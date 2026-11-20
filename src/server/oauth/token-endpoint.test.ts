@@ -84,7 +84,7 @@ async function createManualClient(
 ): Promise<{ clientId: string; clientSecret?: string }> {
   const response = await app.request(`${ISSUER}/api/oauth-clients`, {
     method: "POST",
-    headers: { "content-type": "application/json", authorization: `Bearer ${ADMIN_TOKEN}` },
+    headers: { "content-type": "application/json", "authorization": `Bearer ${ADMIN_TOKEN}` },
     body: JSON.stringify({
       clientName: "ChatGPT",
       redirectUris: [REDIRECT],
@@ -115,7 +115,7 @@ async function authorizeAndApprove(app: HonoApp, clientId: string, scope = "mcp:
   expect(handle).toBeTruthy();
   const approved = await app.request(`${ISSUER}/oauth/mcp/authorize`, {
     method: "POST",
-    headers: { "content-type": "application/x-www-form-urlencoded", origin: ISSUER },
+    headers: { "content-type": "application/x-www-form-urlencoded", "origin": ISSUER },
     body: new URLSearchParams({ handle: handle ?? "", decision: "approve", admin_token: ADMIN_TOKEN }).toString(),
     redirect: "manual",
   });
@@ -528,7 +528,7 @@ describe("refresh replay detection", () => {
   async function mcpStatus(app: HonoApp, accessToken: string): Promise<number> {
     const response = await app.request(`${ISSUER}/mcp`, {
       method: "POST",
-      headers: { authorization: `Bearer ${accessToken}`, "content-type": "application/json" },
+      headers: { "authorization": `Bearer ${accessToken}`, "content-type": "application/json" },
       body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "tools/list" }),
     });
     return response.status;
@@ -654,7 +654,7 @@ describe("token endpoint source rate limits", () => {
           method: "POST",
           headers: {
             "content-type": "application/x-www-form-urlencoded",
-            authorization: basicHeader(clientId, clientSecret ?? ""),
+            "authorization": basicHeader(clientId, clientSecret ?? ""),
             "x-forwarded-for": `198.51.100.${index}`,
           },
           body: new URLSearchParams({ client_id: `unrelated-${index}`, grant_type: "invalid", token: "unknown" }),

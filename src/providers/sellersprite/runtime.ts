@@ -151,7 +151,7 @@ async function requestSellerSpriteData(input: SellerSpriteRequest): Promise<unkn
     response = await input.context.fetcher(new URL(input.path, sellerSpriteApiBaseUrl), {
       method: input.method ?? "GET",
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "content-type": "application/json;charset=UTF-8",
         "secret-key": input.context.apiKey,
         "user-agent": providerUserAgent,

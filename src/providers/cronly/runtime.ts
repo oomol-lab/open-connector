@@ -123,8 +123,8 @@ async function requestCronlyJson(input: CronlyRequestInput): Promise<unknown> {
     const response = await input.context.fetcher(new URL(path, `${cronlyApiBaseUrl}/`), {
       method: input.method ?? "GET",
       headers: {
-        accept: "application/json",
-        authorization: `Bearer ${input.context.apiKey}`,
+        "accept": "application/json",
+        "authorization": `Bearer ${input.context.apiKey}`,
         "content-type": "application/json",
         "user-agent": providerUserAgent,
       },

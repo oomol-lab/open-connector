@@ -68,10 +68,7 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
   baseUrl: webflowApiBaseUrl,
   auth: { type: "bearer" },
   skipDnsValidation: true,
-  customizeRequest({ headers }) {
-    if (!headers.has("accept")) headers.set("accept", "application/json");
-    if (!headers.has("content-type")) headers.set("content-type", "application/json");
-  },
+  defaultHeaders: { "accept": "application/json", "content-type": "application/json" },
 });
 
 export const credentialValidators: CredentialValidators = {
@@ -422,8 +419,8 @@ async function webflowFetchJson(
 
 function webflowHeaders(accessToken: string, contentType?: string): Record<string, string> {
   return compactObject({
-    accept: "application/json",
-    authorization: `Bearer ${accessToken}`,
+    "accept": "application/json",
+    "authorization": `Bearer ${accessToken}`,
     "content-type": contentType,
     "user-agent": providerUserAgent,
   }) as Record<string, string>;

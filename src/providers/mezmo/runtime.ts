@@ -131,8 +131,8 @@ async function requestMezmoJson(input: {
     const response = await input.context.fetcher(buildMezmoUrl(input.path, input.params), {
       method: "GET",
       headers: {
-        accept: "application/json",
-        authorization: `Token ${input.context.apiKey}`,
+        "accept": "application/json",
+        "authorization": `Token ${input.context.apiKey}`,
         "user-agent": providerUserAgent,
       },
       signal,

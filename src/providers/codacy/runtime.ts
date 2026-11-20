@@ -228,7 +228,7 @@ async function codacyFetch(input: {
 
 function codacyHeaders(apiKey: string): Headers {
   return new Headers({
-    accept: "application/json",
+    "accept": "application/json",
     "user-agent": providerUserAgent,
     "api-token": apiKey,
   });

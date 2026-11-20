@@ -29,9 +29,9 @@ async function execute(
         const response = await fetcher(`${search1apiBaseUrl}/screenshot`, {
           method: "POST",
           headers: {
-            authorization: `Bearer ${token}`,
+            "authorization": `Bearer ${token}`,
             "content-type": "application/json",
-            accept: "image/png, image/jpeg, image/webp",
+            "accept": "image/png, image/jpeg, image/webp",
           },
           body: JSON.stringify(data),
           signal,

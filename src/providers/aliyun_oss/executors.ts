@@ -102,8 +102,8 @@ interface AliyunOssClient {
   signatureUrl(
     name: string,
     options?: {
-      expires?: number;
-      method?: "GET" | "PUT" | "DELETE";
+      "expires"?: number;
+      "method"?: "GET" | "PUT" | "DELETE";
       "Content-Type"?: string;
     },
   ): string;
@@ -421,8 +421,8 @@ async function aliyunListBuckets(input: Record<string, unknown>, context: Aliyun
   const client = await createClientForAction(input, context);
   const result = await client.listBuckets(
     compactObject({
-      prefix: optionalString(input.prefix),
-      marker: optionalString(input.marker),
+      "prefix": optionalString(input.prefix),
+      "marker": optionalString(input.marker),
       "max-keys": optionalPositiveInteger(input.maxKeys),
     }),
   );
@@ -440,8 +440,8 @@ async function aliyunListObjects(input: Record<string, unknown>, context: Aliyun
   const client = await createClientForAction(input, context, bucket);
   const result = await client.listV2(
     compactObject({
-      prefix: optionalString(input.prefix),
-      delimiter: optionalString(input.delimiter),
+      "prefix": optionalString(input.prefix),
+      "delimiter": optionalString(input.delimiter),
       "continuation-token": optionalString(input.continuationToken),
       "start-after": optionalString(input.startAfter),
       "fetch-owner": input.fetchOwner === true ? true : undefined,
@@ -648,7 +648,7 @@ async function aliyunGeneratePresignedUrl(input: Record<string, unknown>, contex
   const url = client.signatureUrl(
     objectKey,
     compactObject({
-      expires: expiresSeconds,
+      "expires": expiresSeconds,
       method,
       "Content-Type": optionalString(input.contentType),
     }),

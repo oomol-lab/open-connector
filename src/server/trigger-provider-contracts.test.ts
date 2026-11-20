@@ -576,7 +576,7 @@ describe("Native Trigger provider transport and pagination contracts", () => {
         const offset = token === "initial-delta" ? 0 : Number(token);
         const end = Math.min(offset + Number(url.searchParams.get("$top")), total);
         return {
-          value: Array.from({ length: end - offset }, (_, index) => ({
+          "value": Array.from({ length: end - offset }, (_, index) => ({
             id: `item-${offset + index}`,
             file: {},
             eTag: `version-${offset + index}`,

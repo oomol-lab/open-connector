@@ -730,7 +730,7 @@ function cloudflareHeaders(
   input: { hasBody: boolean; useJsonContentType?: boolean; extraHeaders?: Record<string, string> },
 ): Record<string, string> {
   const headers: Record<string, string> = {
-    accept: "application/json",
+    "accept": "application/json",
     ...authHeaders,
     "user-agent": providerUserAgent,
   };

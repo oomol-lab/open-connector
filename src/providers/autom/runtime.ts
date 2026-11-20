@@ -267,7 +267,7 @@ export async function requestAutomJson(input: AutomRequestOptions): Promise<unkn
     response = await input.fetcher(url, {
       method: "GET",
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "user-agent": providerUserAgent,
         "x-api-key": input.apiKey,
       },

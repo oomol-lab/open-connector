@@ -142,7 +142,7 @@ async function requestScraperapiUrl(
     const response = await context.fetcher(buildScraperapiUrl(url, query, context.apiKey), {
       ...init,
       headers: {
-        accept: "*/*",
+        "accept": "*/*",
         "user-agent": providerUserAgent,
         ...init.headers,
       },

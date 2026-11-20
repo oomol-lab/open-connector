@@ -584,7 +584,7 @@ function buildTiDBUrl(input: TiDBRequestInput) {
 
 function buildTiDBHeaders() {
   return {
-    accept: "application/json",
+    "accept": "application/json",
     "user-agent": providerUserAgent,
   };
 }

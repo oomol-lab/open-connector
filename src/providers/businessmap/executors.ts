@@ -40,10 +40,7 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
     ).apiBaseUrl;
   },
   auth: { type: "api_key_header", name: "apikey" },
-  customizeRequest({ headers }) {
-    if (!headers.has("accept")) headers.set("accept", "application/json");
-    if (!headers.has("content-type")) headers.set("content-type", "application/json");
-  },
+  defaultHeaders: { "accept": "application/json", "content-type": "application/json" },
 });
 
 export const credentialValidators: CredentialValidators = {

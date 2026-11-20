@@ -50,8 +50,8 @@ export async function attioRequest(path: string, input: AttioRequestOptions): Pr
 
 function attioHeaders(apiKey: string, hasBody: boolean) {
   const headers: Record<string, string> = {
-    Authorization: `Bearer ${apiKey}`,
-    accept: "application/json",
+    "Authorization": `Bearer ${apiKey}`,
+    "accept": "application/json",
     "user-agent": providerUserAgent,
   };
   if (hasBody) {

@@ -89,7 +89,7 @@ async function requestKeenable(request: KeenableRequest): Promise<Record<string,
   const url = new URL(request.path, keenableApiBaseUrl);
   setSearchParams(url, request.query ?? {});
   const headers = new Headers({
-    accept: "application/json",
+    "accept": "application/json",
     "user-agent": providerUserAgent,
     "x-keenable-title": keenableAppTitle,
   });

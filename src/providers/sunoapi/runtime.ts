@@ -207,8 +207,8 @@ async function requestSunoApiJson(input: SunoApiRequest): Promise<unknown> {
     const response = await input.fetcher(buildSunoApiUrl(input.path, input.query), {
       method: input.method,
       headers: {
-        accept: "application/json",
-        authorization: `Bearer ${input.apiKey}`,
+        "accept": "application/json",
+        "authorization": `Bearer ${input.apiKey}`,
         "user-agent": providerUserAgent,
         "content-type": "application/json",
       },

@@ -71,7 +71,7 @@ async function withClickUpMcpClient<T>(
       endpoint: new URL(endpoint),
       transport: "streamable_http",
       fetcher: context.fetcher,
-      headers: { authorization: `Bearer ${context.accessToken}`, "user-agent": providerUserAgent },
+      headers: { "authorization": `Bearer ${context.accessToken}`, "user-agent": providerUserAgent },
       signal: context.signal,
       mapError: (error) => mapClickUpMcpError(error, phase),
     },

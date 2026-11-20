@@ -91,7 +91,7 @@ async function withMcdonaldsCnMcpClient<T>(
   run: (client: Client) => Promise<T>,
 ): Promise<T> {
   const headers = new Headers({
-    authorization: `Bearer ${context.apiKey}`,
+    "authorization": `Bearer ${context.apiKey}`,
     "user-agent": providerUserAgent,
   });
   return withMcpClient(

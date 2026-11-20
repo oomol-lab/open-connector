@@ -21,9 +21,7 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
   baseUrl: moonclerkApiBaseUrl,
   auth: { type: "api_key_authorization", prefix: "Token token=" },
   skipDnsValidation: true,
-  customizeRequest({ headers }) {
-    if (!headers.has("accept")) headers.set("accept", moonclerkVersionHeader);
-  },
+  defaultHeaders: { accept: moonclerkVersionHeader },
 });
 
 type MoonclerkRequestPhase = "validate" | "execute";
@@ -157,8 +155,8 @@ async function requestMoonclerk(input: {
     response = await input.context.fetcher(url, {
       method: "GET",
       headers: {
-        accept: moonclerkVersionHeader,
-        authorization: `Token token=${input.context.apiKey}`,
+        "accept": moonclerkVersionHeader,
+        "authorization": `Token token=${input.context.apiKey}`,
         "user-agent": providerUserAgent,
       },
       signal: input.context.signal,

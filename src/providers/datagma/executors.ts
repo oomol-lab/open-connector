@@ -164,7 +164,7 @@ async function requestDatagma(input: {
     const response = await input.fetcher(url.toString(), {
       method: "GET",
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "user-agent": providerUserAgent,
       },
       signal: timeoutHandle.signal,

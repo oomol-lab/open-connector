@@ -98,8 +98,8 @@ async function requestJson(input: {
     const response = await input.context.fetcher(input.url, {
       method: "POST",
       headers: {
-        accept: "application/json",
-        authorization: `Bearer ${input.context.apiKey}`,
+        "accept": "application/json",
+        "authorization": `Bearer ${input.context.apiKey}`,
         "content-type": "application/json",
         "user-agent": providerUserAgent,
         "x-pdfvector-source": "oomol-connector",

@@ -265,8 +265,8 @@ function litellmRequest(input: LitellmRequestInput, context: LitellmContext): Pr
 
 function buildLitellmHeaders(apiKey: string, includeJsonContentType: boolean): Headers {
   const headers = new Headers({
-    accept: "application/json",
-    authorization: `Bearer ${apiKey}`,
+    "accept": "application/json",
+    "authorization": `Bearer ${apiKey}`,
     "user-agent": providerUserAgent,
   });
   if (includeJsonContentType) {

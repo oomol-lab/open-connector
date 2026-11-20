@@ -226,8 +226,8 @@ function normalizePagination(value: unknown): Record<string, unknown> {
 
 export function buildAircallHeaders(apiId: string, apiKey: string): Record<string, string> {
   return {
-    accept: "application/json",
-    authorization: buildBasicAuthorizationHeader(apiId, apiKey),
+    "accept": "application/json",
+    "authorization": buildBasicAuthorizationHeader(apiId, apiKey),
     "user-agent": providerUserAgent,
   };
 }

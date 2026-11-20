@@ -65,8 +65,8 @@ export const credentialValidators: CredentialValidators = {
   async oauth2(input, { fetcher, signal }) {
     const response = await fetcher(orcidUserInfoUrl, {
       headers: {
-        accept: "application/json",
-        authorization: `Bearer ${input.accessToken}`,
+        "accept": "application/json",
+        "authorization": `Bearer ${input.accessToken}`,
         "user-agent": providerUserAgent,
       },
       signal,
@@ -99,8 +99,8 @@ export const credentialValidators: CredentialValidators = {
 async function request(url: URL, context: OAuthProviderContext): Promise<Record<string, unknown>> {
   const response = await context.fetcher(url, {
     headers: {
-      accept: "application/vnd.orcid+json",
-      authorization: `Bearer ${context.accessToken}`,
+      "accept": "application/vnd.orcid+json",
+      "authorization": `Bearer ${context.accessToken}`,
       "user-agent": providerUserAgent,
     },
     signal: context.signal,

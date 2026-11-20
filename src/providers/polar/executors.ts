@@ -144,8 +144,8 @@ async function polarGetJson(path: string, context: ApiKeyProviderContext, phase:
 
 function polarHeaders(apiKey: string): Record<string, string> {
   return {
-    accept: "application/json",
-    authorization: `Bearer ${apiKey}`,
+    "accept": "application/json",
+    "authorization": `Bearer ${apiKey}`,
     "user-agent": providerUserAgent,
   };
 }

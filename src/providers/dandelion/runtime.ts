@@ -13,7 +13,7 @@ async function request(path: string, input: Record<string, unknown>, context: Ap
   }
   const response = await context.fetcher(new URL(path, dandelionApiBaseUrl), {
     method: "POST",
-    headers: { accept: "application/json", "content-type": "application/x-www-form-urlencoded" },
+    headers: { "accept": "application/json", "content-type": "application/x-www-form-urlencoded" },
     body,
     signal: context.signal,
   });

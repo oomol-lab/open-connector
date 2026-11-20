@@ -57,7 +57,7 @@ export async function validateNasdaqCredential(
   await nasdaqGet(
     buildDatatableDataPath("SHARADAR/TICKERS"),
     {
-      ticker: "AAPL",
+      "ticker": "AAPL",
       "qopts.columns": "ticker",
     },
     {
@@ -164,9 +164,9 @@ function executeGetDividendHistory(input: Record<string, unknown>, context: ApiK
   return executeDatatableQuery(
     "SHARADAR/SF1",
     compactObject({
-      ticker: readRequiredInputString(input, "ticker"),
-      dimension: "ARQ",
-      datekey: readOptionalInputString(input, "date"),
+      "ticker": readRequiredInputString(input, "ticker"),
+      "dimension": "ARQ",
+      "datekey": readOptionalInputString(input, "date"),
       "qopts.columns": readOptionalColumns(input) ?? defaultDividendColumns,
       "qopts.per_page": readOptionalInputInteger(input, "perPage"),
       "qopts.cursor_id": readOptionalInputString(input, "cursorId"),
@@ -196,7 +196,7 @@ async function executeGetEndOfDayQuote(
   const result = await executeDatatableQuery(
     "QUOTEMEDIA/PRICES",
     compactObject({
-      ticker: readRequiredInputString(input, "ticker"),
+      "ticker": readRequiredInputString(input, "ticker"),
       "date.gte": readOptionalInputString(input, "dateGte"),
       "date.lte": readOptionalInputString(input, "dateLte"),
       "qopts.columns": defaultQuoteColumns,
@@ -260,7 +260,7 @@ async function nasdaqGet(
     response = await context.fetcher(url, {
       method: "GET",
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "user-agent": providerUserAgent,
         "x-api-token": context.apiKey,
       },

@@ -257,10 +257,10 @@ async function requestMakeJson<T>(input: MakeRequestOptions): Promise<T> {
 
 function buildMakeHeaders(apiKey: string, hasBody: boolean): Record<string, string> {
   return compactObject({
-    accept: "application/json",
+    "accept": "application/json",
     "content-type": hasBody ? "application/json" : undefined,
     "user-agent": providerUserAgent,
-    authorization: `Token ${apiKey}`,
+    "authorization": `Token ${apiKey}`,
   }) as Record<string, string>;
 }
 

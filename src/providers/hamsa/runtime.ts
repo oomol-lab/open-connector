@@ -99,8 +99,8 @@ async function requestHamsaJson(
     response = await fetcher(new URL(path, hamsaApiBaseUrl), {
       method: "GET",
       headers: {
-        accept: "application/json",
-        authorization: `Token ${apiKey}`,
+        "accept": "application/json",
+        "authorization": `Token ${apiKey}`,
         "user-agent": providerUserAgent,
       },
     });

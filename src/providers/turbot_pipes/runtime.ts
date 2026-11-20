@@ -85,8 +85,8 @@ async function turbotPipesPostJson(
     response = await context.fetcher(turbotPipesUrl(path), {
       method: "POST",
       headers: {
-        authorization: `Bearer ${context.apiKey}`,
-        accept: "application/json",
+        "authorization": `Bearer ${context.apiKey}`,
+        "accept": "application/json",
         "content-type": "application/json",
         "user-agent": providerUserAgent,
       },

@@ -18,7 +18,7 @@ export const appStoreConnectUserHandlers: AppStoreConnectHandlers = {
         "filter[roles]": readCommaSeparatedList(input.roles),
         "filter[username]": pickOptionalString(input, "username"),
         "filter[visibleApps]": pickOptionalString(input, "visibleAppId"),
-        sort: pickOptionalString(input, "sort"),
+        "sort": pickOptionalString(input, "sort"),
       },
     });
     return { users: page.items, nextCursor: page.nextCursor, total: page.total };

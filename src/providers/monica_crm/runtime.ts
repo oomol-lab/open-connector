@@ -161,8 +161,8 @@ async function requestMonicaCrmJson(input: MonicaCrmRequest, fetcher: typeof fet
   const response = await fetcher(url, {
     method: input.method,
     headers: {
-      accept: "application/json",
-      authorization: `Bearer ${input.apiKey}`,
+      "accept": "application/json",
+      "authorization": `Bearer ${input.apiKey}`,
       ...(input.body ? { "content-type": "application/json" } : {}),
       "user-agent": providerUserAgent,
     },

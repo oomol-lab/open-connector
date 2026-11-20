@@ -140,7 +140,7 @@ const macroIndicatorRowSchema = s.looseObject("A macro indicator row returned by
 });
 
 const ustYieldRateSchema = s.looseObject("A US Treasury yield rate row returned by EODHD.", {
-  date: s.nullableString("Yield rate date."),
+  "date": s.nullableString("Yield rate date."),
   "1_month": s.nullableNumber("One-month constant maturity rate."),
   "2_months": s.nullableNumber("Two-month constant maturity rate."),
   "3_months": s.nullableNumber("Three-month constant maturity rate."),

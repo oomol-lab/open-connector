@@ -392,7 +392,7 @@ export const appStoreConnectGameCenterHandlers: AppStoreConnectHandlers = {
       label: `${detailLabel} list`,
       query: {
         "filter[gameCenterAppVersions.enabled]": booleanString(input.appVersionsEnabled),
-        include: detailInclude,
+        "include": detailInclude,
       },
     });
     return {

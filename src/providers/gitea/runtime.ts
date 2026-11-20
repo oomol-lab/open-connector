@@ -1275,10 +1275,10 @@ async function listReleases(input: Record<string, unknown>, context: GiteaAction
     baseUrl: context.baseUrl,
     path: `/repos/${encodeURIComponent(owner)}/${encodeURIComponent(repo)}/releases`,
     query: compactObject({
-      draft: optionalBoolean(input.draft),
+      "draft": optionalBoolean(input.draft),
       "pre-release": optionalBoolean(input.prerelease),
-      page: readOptionalPositiveInteger(input.page, "page"),
-      limit: readOptionalPositiveInteger(input.limit, "limit"),
+      "page": readOptionalPositiveInteger(input.page, "page"),
+      "limit": readOptionalPositiveInteger(input.limit, "limit"),
     }),
     fetcher: context.fetcher,
     signal: context.signal,
@@ -2481,8 +2481,8 @@ async function requestGiteaArray(
 
 async function giteaFetch(input: GiteaRequestInput): Promise<Response> {
   const headers = new Headers({
-    Accept: "application/json",
-    Authorization: `token ${input.apiKey}`,
+    "Accept": "application/json",
+    "Authorization": `token ${input.apiKey}`,
     "User-Agent": providerUserAgent,
   });
 

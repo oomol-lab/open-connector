@@ -155,8 +155,8 @@ async function requestTalenoxJson(options: TalenoxRequestOptions): Promise<unkno
     const response = await options.fetcher(url, {
       method: "GET",
       headers: {
-        accept: "application/json",
-        authorization: `Bearer ${options.apiKey}`,
+        "accept": "application/json",
+        "authorization": `Bearer ${options.apiKey}`,
         "user-agent": providerUserAgent,
       },
       signal: timeout.signal,

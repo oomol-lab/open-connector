@@ -169,7 +169,7 @@ async function requestCrunchbaseJson(input: {
       method: input.method ?? "GET",
       headers: {
         "X-cb-user-key": input.context.apiKey,
-        accept: "application/json",
+        "accept": "application/json",
         "user-agent": providerUserAgent,
         ...(input.body ? { "content-type": "application/json" } : {}),
       },

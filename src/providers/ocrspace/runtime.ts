@@ -151,8 +151,8 @@ async function requestOcrspaceConversionStats(formData: FormData, context: ApiKe
 
 function ocrspaceHeaders(apiKey: string): Record<string, string> {
   return {
-    accept: "application/json",
-    apikey: apiKey,
+    "accept": "application/json",
+    "apikey": apiKey,
     "user-agent": providerUserAgent,
   };
 }

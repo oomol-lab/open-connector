@@ -358,8 +358,8 @@ async function seqeraFetch(input: {
 }): Promise<Response> {
   const url = buildSeqeraUrl(input.apiBaseUrl, input.path, input.query);
   const headers = new Headers({
-    Accept: "application/json",
-    Authorization: `Bearer ${input.apiKey}`,
+    "Accept": "application/json",
+    "Authorization": `Bearer ${input.apiKey}`,
     "User-Agent": providerUserAgent,
   });
 

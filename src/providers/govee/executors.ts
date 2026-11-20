@@ -177,7 +177,7 @@ async function requestGovee(input: GoveeRequestInput): Promise<unknown> {
     response = await input.fetcher(`${goveeApiBaseUrl}${input.path}`, {
       method: input.method,
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "Govee-API-Key": input.apiKey,
         "user-agent": providerUserAgent,
         ...(input.body ? { "content-type": "application/json" } : {}),

@@ -126,7 +126,7 @@ async function requestTomtomJson(
     response = await context.fetcher(buildTomtomUrl(input.path, { key: context.apiKey, ...(input.query ?? {}) }), {
       method: "GET",
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "user-agent": providerUserAgent,
       },
       signal: context.signal,

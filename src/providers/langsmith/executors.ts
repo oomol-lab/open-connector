@@ -405,7 +405,7 @@ async function requestLangSmithJson(input: LangSmithRequestInput): Promise<unkno
 
 function buildLangSmithHeaders(context: LangSmithActionContext, hasJsonBody: boolean): Record<string, string> {
   const headers: Record<string, string> = {
-    accept: "application/json",
+    "accept": "application/json",
     "user-agent": providerUserAgent,
     "X-Api-Key": context.apiKey,
   };

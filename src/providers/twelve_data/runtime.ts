@@ -352,8 +352,8 @@ async function twelveDataGet(
     response = await context.fetcher(url, {
       method: "GET",
       headers: {
-        authorization: `apikey ${context.apiKey}`,
-        accept: "application/json",
+        "authorization": `apikey ${context.apiKey}`,
+        "accept": "application/json",
         "user-agent": providerUserAgent,
       },
       signal: context.signal,

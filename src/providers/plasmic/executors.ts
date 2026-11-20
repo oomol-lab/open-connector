@@ -109,7 +109,7 @@ async function plasmicGetJson(url: URL, context: PlasmicContext): Promise<unknow
 
 function plasmicHeaders(cmsId: string, apiKey: string): Record<string, string> {
   return {
-    accept: "application/json",
+    "accept": "application/json",
     "user-agent": providerUserAgent,
     [plasmicCmsTokenHeaderName]: `${cmsId}:${apiKey}`,
   };

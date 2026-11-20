@@ -348,8 +348,8 @@ describe("OneDrive item permissions", () => {
               {
                 user: {
                   "@odata.type": "#microsoft.graph.sharePointIdentity",
-                  displayName: "someone@example.com",
-                  email: "someone@example.com",
+                  "displayName": "someone@example.com",
+                  "email": "someone@example.com",
                 },
               },
             ],
@@ -374,8 +374,8 @@ describe("OneDrive item permissions", () => {
               {
                 user: {
                   "@odata.type": "#microsoft.graph.sharePointIdentity",
-                  displayName: "someone@example.com",
-                  email: "someone@example.com",
+                  "displayName": "someone@example.com",
+                  "email": "someone@example.com",
                 },
               },
             ],

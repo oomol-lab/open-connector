@@ -151,8 +151,8 @@ async function performKarakeepRequest<T>(
     { signal: context.signal, timeoutMs: options.timeoutMs, label: "Karakeep" },
     async (signal) => {
       const headers = new Headers({
-        accept: "application/json",
-        authorization: `Bearer ${context.apiKey}`,
+        "accept": "application/json",
+        "authorization": `Bearer ${context.apiKey}`,
         "user-agent": providerUserAgent,
       });
       let body: BodyInit | undefined;

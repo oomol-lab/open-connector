@@ -3,7 +3,7 @@ import type { ProviderActionHandlers } from "../provider-executors.ts";
 
 import { defineProviderExecutors } from "../provider-executors.ts";
 import { defineProviderProxy } from "../provider-proxy.ts";
-import { ProviderRequestError } from "../provider-runtime.ts";
+import { encodeNonDotPathSegment, ProviderRequestError } from "../provider-runtime.ts";
 
 const service = "biorxiv_medrxiv";
 const biorxivMedrxivApiBaseUrl = "https://api.biorxiv.org";
@@ -84,7 +84,7 @@ async function executeBiorxivMedrxivAction(actionName: string, input: Record<str
   }
 
   if (actionName === "list_publisher_articles") {
-    const publisherPrefix = encodePathSegment(readString(input, "publisherPrefix"));
+    const publisherPrefix = encodePathSegment(input, "publisherPrefix");
     const payload = await requestApi(
       `publisher/${publisherPrefix}/${readDateRange(input)}/${readCursor(input)}`,
       fetcher,
@@ -166,7 +166,7 @@ function readMessage(messages: unknown): Record<string, unknown> | undefined {
 }
 
 function readDateRange(input: Record<string, unknown>): string {
-  return `${encodePathSegment(readString(input, "startDate"))}/${encodePathSegment(readString(input, "endDate"))}`;
+  return `${encodePathSegment(input, "startDate")}/${encodePathSegment(input, "endDate")}`;
 }
 
 function readCursor(input: Record<string, unknown>): number {
@@ -190,14 +190,7 @@ function encodeDoi(doi: string): string {
   if (segments.length < 2 || segments.some((segment) => segment.length === 0)) {
     throw new ProviderRequestError(400, "doi must include a prefix and suffix");
   }
-  return segments.map(encodePathSegment).join("/");
-}
-
-function encodePathSegment(value: string): string {
-  if (value === "." || value === "..") {
-    throw new ProviderRequestError(400, "path segments cannot be . or ..");
-  }
-  return encodeURIComponent(value);
+  return segments.map(encodeNonDotPathSegment).join("/");
 }
 
 function readNumber(value: unknown): number | undefined {
@@ -207,4 +200,8 @@ function readNumber(value: unknown): number | undefined {
 
 function isObject(value: unknown): value is Record<string, unknown> {
   return value !== null && typeof value === "object" && !Array.isArray(value);
+}
+
+function encodePathSegment(input: Record<string, unknown>, fieldName: string): string {
+  return encodeNonDotPathSegment(readString(input, fieldName));
 }

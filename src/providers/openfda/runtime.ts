@@ -102,7 +102,7 @@ async function requestOpenfdaJson(input: OpenfdaRequestInput): Promise<Record<st
   const response = await input.fetcher(url, {
     method: "GET",
     headers: {
-      accept: "application/json",
+      "accept": "application/json",
       "user-agent": providerUserAgent,
     },
   });

@@ -352,7 +352,7 @@ async function tushareRequest(
       method: "POST",
       signal: timeout.signal,
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "content-type": "application/json",
         "user-agent": providerUserAgent,
       },

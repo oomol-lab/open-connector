@@ -27,7 +27,7 @@ async function request(
     const response = await fetcher(`${baseUrl}${endpoint}`, {
       method: body === undefined ? "GET" : "POST",
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "content-type": "application/json",
         "x-api-key": apiKey,
       },
@@ -132,7 +132,5 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
   baseUrl,
   auth: { type: "api_key_header", name: "x-api-key" },
   skipDnsValidation: true,
-  customizeRequest({ headers }) {
-    if (!headers.has("accept")) headers.set("accept", "application/json");
-  },
+  defaultHeaders: { accept: "application/json" },
 });

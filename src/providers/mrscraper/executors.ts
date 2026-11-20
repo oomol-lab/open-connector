@@ -86,7 +86,7 @@ async function execute(
           headers: {
             "x-api-token": apiKey,
             "content-type": "application/json",
-            accept: html ? "text/html" : "application/json",
+            "accept": html ? "text/html" : "application/json",
           },
           body: html ? undefined : JSON.stringify(body),
           signal,
@@ -108,7 +108,7 @@ export const credentialValidators: CredentialValidators = {
     const payload = await runProviderRequest({ label: "MrScraper", signal }, async (signal) =>
       readResponse(
         await fetcher("https://api.app.mrscraper.com/api/v1/subscription-accounts", {
-          headers: { "x-api-token": input.apiKey, accept: "application/json" },
+          headers: { "x-api-token": input.apiKey, "accept": "application/json" },
           signal,
         }),
       ),

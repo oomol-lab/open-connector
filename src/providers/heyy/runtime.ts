@@ -243,8 +243,8 @@ async function heyyRequestJson(
 
 function heyyHeaders(apiKey: string, hasBody: boolean): Headers {
   const headers = new Headers({
-    accept: "application/json",
-    authorization: `Bearer ${apiKey}`,
+    "accept": "application/json",
+    "authorization": `Bearer ${apiKey}`,
     "user-agent": providerUserAgent,
   });
   if (hasBody) {

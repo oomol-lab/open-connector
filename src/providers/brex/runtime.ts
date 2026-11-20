@@ -261,8 +261,8 @@ async function requestBrexJson(input: BrexRequestInput): Promise<unknown> {
     const response = await input.fetcher(url.toString(), {
       method: input.method,
       headers: {
-        accept: "application/json",
-        authorization: `Bearer ${input.apiKey}`,
+        "accept": "application/json",
+        "authorization": `Bearer ${input.apiKey}`,
         "user-agent": providerUserAgent,
       },
       signal: timeout.signal,

@@ -119,7 +119,7 @@ async function request(
   const response = await context.fetcher(url, {
     method,
     headers: {
-      accept: "application/json",
+      "accept": "application/json",
       "content-type": "application/json",
       "mumble-api-key": context.apiKey,
       "user-agent": providerUserAgent,

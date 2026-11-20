@@ -161,7 +161,7 @@ async function fiberAiGetJson(input: {
 
 function fiberAiHeaders(): Record<string, string> {
   return {
-    accept: "application/json",
+    "accept": "application/json",
     "user-agent": providerUserAgent,
   };
 }

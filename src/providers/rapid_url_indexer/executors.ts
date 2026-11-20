@@ -12,7 +12,7 @@ import {
 } from "../provider-runtime.ts";
 import actions from "./actions.ts";
 const baseUrl = "https://rapidurlindexer.com/wp-json/api/v1";
-const defaultHeaders = { accept: "application/json", "user-agent": providerUserAgent };
+const defaultHeaders = { "accept": "application/json", "user-agent": providerUserAgent };
 async function request(
   endpoint: string,
   apiKey: string,
@@ -97,7 +97,5 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
   service: "rapid_url_indexer",
   baseUrl,
   auth: { type: "api_key_header", name: "X-API-Key" },
-  customizeRequest({ headers }) {
-    if (!headers.has("accept")) headers.set("accept", "application/json");
-  },
+  defaultHeaders: { accept: "application/json" },
 });

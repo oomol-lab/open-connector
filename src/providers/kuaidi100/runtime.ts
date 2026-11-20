@@ -173,7 +173,7 @@ function withKuaidi100Client<T>(
       endpoint,
       transport: "streamable_http",
       fetcher: context.fetcher,
-      headers: { responseFormat: "json", "user-agent": providerUserAgent },
+      headers: { "responseFormat": "json", "user-agent": providerUserAgent },
       redirect: "manual",
       signal: context.signal,
       mapError: (error) => mapKuaidi100McpError(error, phase),

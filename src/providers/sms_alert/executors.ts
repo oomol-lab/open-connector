@@ -278,7 +278,7 @@ async function requestSmsAlert(input: {
     response = await input.context.fetcher(url, {
       method: input.method,
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "user-agent": providerUserAgent,
       },
       signal: timeout.signal,

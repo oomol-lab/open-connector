@@ -420,8 +420,8 @@ async function requestTicktickJson<T>(
 
 function buildTicktickHeaders(accessToken: string, body: unknown): HeadersInit {
   return compactObject({
-    authorization: `Bearer ${accessToken}`,
-    accept: "application/json",
+    "authorization": `Bearer ${accessToken}`,
+    "accept": "application/json",
     "user-agent": providerUserAgent,
     "content-type": body != null ? "application/json" : undefined,
   }) as HeadersInit;

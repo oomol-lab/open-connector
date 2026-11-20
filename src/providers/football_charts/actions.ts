@@ -63,9 +63,9 @@ const tableRowSchema = s.looseObject("One team standings row.", {
 const probabilitiesSchema = s.looseObject(
   "Calibrated model probabilities in the 0 to 1 range. Draw probability equals 1 minus home minus away.",
   {
-    home: s.nullableNumber("Home win probability."),
-    away: s.nullableNumber("Away win probability."),
-    btts_yes: s.nullableNumber("Both teams to score probability."),
+    "home": s.nullableNumber("Home win probability."),
+    "away": s.nullableNumber("Away win probability."),
+    "btts_yes": s.nullableNumber("Both teams to score probability."),
     "over_0.5": s.nullableNumber("Probability of more than 0.5 total goals."),
     "over_1.5": s.nullableNumber("Probability of more than 1.5 total goals."),
     "over_2.5": s.nullableNumber("Probability of more than 2.5 total goals."),
@@ -73,9 +73,9 @@ const probabilitiesSchema = s.looseObject(
     "over_4.5": s.nullableNumber("Probability of more than 4.5 total goals."),
     "ht_over_0.5": s.nullableNumber("Probability of more than 0.5 first-half goals."),
     "ht_over_1.5": s.nullableNumber("Probability of more than 1.5 first-half goals."),
-    expected_home_goals: s.nullableNumber("Expected goals for the home side."),
-    expected_away_goals: s.nullableNumber("Expected goals for the away side."),
-    expected_ht_goals: s.nullableNumber("Expected first-half goals."),
+    "expected_home_goals": s.nullableNumber("Expected goals for the home side."),
+    "expected_away_goals": s.nullableNumber("Expected goals for the away side."),
+    "expected_ht_goals": s.nullableNumber("Expected first-half goals."),
   },
 );
 

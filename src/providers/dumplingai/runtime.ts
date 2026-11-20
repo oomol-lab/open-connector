@@ -63,8 +63,8 @@ async function requestJson(
   if (method === "GET")
     for (const [key, value] of Object.entries(input)) if (value !== undefined) url.searchParams.set(key, String(value));
   const headers = new Headers({
-    accept: "application/json",
-    authorization: `Bearer ${apiKey}`,
+    "accept": "application/json",
+    "authorization": `Bearer ${apiKey}`,
     "user-agent": providerUserAgent,
   });
   if (method === "POST") headers.set("content-type", "application/json");

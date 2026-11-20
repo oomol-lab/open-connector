@@ -85,8 +85,8 @@ async function requestPodscribeJson(
     response = await context.fetcher(new URL(path, podscribeApiBaseUrl), {
       method,
       headers: {
-        authorization: `Bearer ${context.apiKey}`,
-        accept: "application/json",
+        "authorization": `Bearer ${context.apiKey}`,
+        "accept": "application/json",
         "user-agent": providerUserAgent,
         ...(body === undefined ? {} : { "content-type": "application/json" }),
       },

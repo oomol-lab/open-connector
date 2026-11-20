@@ -24,7 +24,7 @@ interface MicrosoftTodoRequestInput {
 }
 
 interface MicrosoftTodoGraphPage {
-  value?: unknown;
+  "value"?: unknown;
   "@odata.nextLink"?: unknown;
 }
 

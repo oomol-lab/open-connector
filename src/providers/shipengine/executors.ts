@@ -187,7 +187,7 @@ async function shipengineRequest(
 
 function shipengineHeaders(apiKey: string, hasJsonBody: boolean): Record<string, string> {
   const headers: Record<string, string> = {
-    Accept: "application/json",
+    "Accept": "application/json",
     "API-Key": apiKey,
     "User-Agent": providerUserAgent,
   };

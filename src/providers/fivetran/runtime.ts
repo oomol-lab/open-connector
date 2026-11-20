@@ -153,8 +153,8 @@ async function requestFivetran(
     response = await context.fetcher(url, {
       method: "GET",
       headers: {
-        accept: "application/json",
-        authorization: `Basic ${Buffer.from(`${context.apiKey}:${context.apiSecret}`).toString("base64")}`,
+        "accept": "application/json",
+        "authorization": `Basic ${Buffer.from(`${context.apiKey}:${context.apiSecret}`).toString("base64")}`,
         "user-agent": providerUserAgent,
       },
       signal: context.signal,

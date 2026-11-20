@@ -57,7 +57,7 @@ export const bamboohrActionHandlers: ProviderActionHandlers<"bamboohr", Provider
       context,
       path: "/api/v1/employees",
       query: {
-        fields: joinFields(input.fields),
+        "fields": joinFields(input.fields),
         "page[limit]": optionalInteger(input.limit),
         "page[after]": optionalString(input.after),
         "page[before]": optionalString(input.before),
@@ -280,7 +280,7 @@ function buildBamboohrUrl(
 
 function buildBamboohrHeaders(authorization: string): Record<string, string> {
   return {
-    accept: "application/json",
+    "accept": "application/json",
     authorization,
     "user-agent": providerUserAgent,
   };

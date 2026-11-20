@@ -143,8 +143,8 @@ export async function huggingfaceRequestJson<T>(input: HuggingfaceRequestJsonInp
     response = await input.fetcher(url.toString(), {
       method: input.method ?? (input.body ? "POST" : "GET"),
       headers: compactObject({
-        accept: "application/json",
-        authorization: `${input.tokenType ?? "Bearer"} ${input.accessToken}`,
+        "accept": "application/json",
+        "authorization": `${input.tokenType ?? "Bearer"} ${input.accessToken}`,
         "content-type": input.body ? "application/json" : undefined,
         "user-agent": providerUserAgent,
       }) as HeadersInit,

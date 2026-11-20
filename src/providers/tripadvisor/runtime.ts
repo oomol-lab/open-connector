@@ -145,7 +145,7 @@ async function tripadvisorGet(
     response = await context.fetcher(tripadvisorRequestUrl(path, context.apiKey, query), {
       method: "GET",
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "user-agent": providerUserAgent,
       },
       signal: context.signal,

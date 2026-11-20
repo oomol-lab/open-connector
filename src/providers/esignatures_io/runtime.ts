@@ -263,8 +263,8 @@ async function esignaturesIoRequest(
 
 function esignaturesIoHeaders(apiKey: string, hasJsonBody: boolean): Record<string, string> {
   const headers: Record<string, string> = {
-    accept: "application/json",
-    authorization: buildEsignaturesIoAuthorizationHeader(apiKey),
+    "accept": "application/json",
+    "authorization": buildEsignaturesIoAuthorizationHeader(apiKey),
     "user-agent": providerUserAgent,
   };
   if (hasJsonBody) {

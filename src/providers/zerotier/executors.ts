@@ -64,7 +64,7 @@ export const zerotierActionHandlers: ProviderActionHandlers<"zerotier", Zerotier
         path: "/network",
         query: {
           "org-id": zerotierOrgId(ctx, input),
-          stats: booleanString(input.stats),
+          "stats": booleanString(input.stats),
           "permission-check": optionalStringArray(input.permissionCheck),
         },
       });
@@ -386,8 +386,8 @@ export const zerotierActionHandlers: ProviderActionHandlers<"zerotier", Zerotier
       path: "/org",
       query: {
         "permission-check": optionalStringArray(input.permissionCheck),
-        latest: optionalStringArray(input.latest),
-        stats: booleanString(input.stats),
+        "latest": optionalStringArray(input.latest),
+        "stats": booleanString(input.stats),
       },
     });
     return zerotierList(payload);
@@ -399,7 +399,7 @@ export const zerotierActionHandlers: ProviderActionHandlers<"zerotier", Zerotier
       path: "/network-group",
       query: {
         "org-id": zerotierOrgId(ctx, input),
-        stats: booleanString(input.stats),
+        "stats": booleanString(input.stats),
         "permission-check": optionalStringArray(input.permissionCheck),
       },
     });
@@ -451,7 +451,7 @@ export const zerotierActionHandlers: ProviderActionHandlers<"zerotier", Zerotier
     const payload = await zerotierRequest(ctx, {
       path: `/network-group/${id(input, "networkGroupId")}/network`,
       query: {
-        stats: booleanString(input.stats),
+        "stats": booleanString(input.stats),
         "permission-check": optionalStringArray(input.permissionCheck),
       },
     });
@@ -516,7 +516,7 @@ export const zerotierActionHandlers: ProviderActionHandlers<"zerotier", Zerotier
     const payload = await zerotierRequest(ctx, {
       path: `/org/${id(input, "orgId")}/principal`,
       query: {
-        search: requiredInputString(input.search, "search"),
+        "search": requiredInputString(input.search, "search"),
         "principal-type": optionalStringArray(input.principalType),
       },
     });

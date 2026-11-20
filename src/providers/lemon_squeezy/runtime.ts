@@ -436,9 +436,9 @@ function mapLemonSqueezyError(
 
 function lemonSqueezyHeaders(apiKey: string): Record<string, string> {
   return {
-    Accept: "application/vnd.api+json",
+    "Accept": "application/vnd.api+json",
     "Content-Type": "application/vnd.api+json",
-    Authorization: `Bearer ${apiKey}`,
+    "Authorization": `Bearer ${apiKey}`,
     "User-Agent": providerUserAgent,
   };
 }

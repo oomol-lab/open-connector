@@ -175,8 +175,8 @@ async function requestCallrailJson(input: {
 
 function callrailHeaders(apiKey: string): Record<string, string> {
   return {
-    accept: "application/json",
-    authorization: `Token token="${apiKey}"`,
+    "accept": "application/json",
+    "authorization": `Token token="${apiKey}"`,
     "user-agent": providerUserAgent,
   };
 }

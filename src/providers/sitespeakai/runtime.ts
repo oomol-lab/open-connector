@@ -218,8 +218,8 @@ async function requestSitespeakai(
 
 function sitespeakaiHeaders(apiKey: string, extraHeaders: Record<string, string>): Record<string, string> {
   return {
-    accept: "application/json",
-    authorization: `Bearer ${apiKey}`,
+    "accept": "application/json",
+    "authorization": `Bearer ${apiKey}`,
     "user-agent": providerUserAgent,
     ...extraHeaders,
   };

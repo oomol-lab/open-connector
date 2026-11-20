@@ -250,7 +250,7 @@ async function alchemyRpcRequest(
     {
       method: "POST",
       headers: buildAlchemyHeaders(apiKey, {
-        accept: "application/json",
+        "accept": "application/json",
         "content-type": "application/json",
       }),
       body: JSON.stringify({
@@ -342,7 +342,7 @@ async function alchemyRequestJson(
 
 function buildAlchemyHeaders(apiKey: string, extra: Record<string, string>): Record<string, string> {
   return {
-    authorization: `Bearer ${apiKey}`,
+    "authorization": `Bearer ${apiKey}`,
     "user-agent": providerUserAgent,
     ...extra,
   };

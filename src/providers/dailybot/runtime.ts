@@ -193,7 +193,7 @@ async function dailybotRequest(input: {
       method: input.method,
       headers: {
         "X-API-KEY": input.context.apiKey,
-        Accept: "application/json",
+        "Accept": "application/json",
         "Content-Type": "application/json",
       },
       body: input.body === undefined ? undefined : JSON.stringify(input.body),

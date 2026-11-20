@@ -72,7 +72,7 @@ async function requestZenscrapeRaw(
       const response = await context.fetcher(buildZenscrapeUrl(query, context.apiKey), {
         method: "GET",
         headers: {
-          accept: "*/*",
+          "accept": "*/*",
           "user-agent": providerUserAgent,
           ...forwardHeaders,
         },

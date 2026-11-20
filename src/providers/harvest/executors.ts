@@ -506,8 +506,8 @@ async function requestHarvest(input: HarvestRequestOptions): Promise<{ payload: 
   }
 
   const headers = new Headers({
-    Accept: "application/json",
-    Authorization: `Bearer ${input.accessToken}`,
+    "Accept": "application/json",
+    "Authorization": `Bearer ${input.accessToken}`,
     "Harvest-Account-Id": input.accountId,
     "User-Agent": providerUserAgent,
   });
@@ -610,8 +610,8 @@ async function requestHarvestAccounts(
     const response = await fetcher(harvestAccountsUrl, {
       method: "GET",
       headers: {
-        Accept: "application/json",
-        Authorization: `Bearer ${accessToken}`,
+        "Accept": "application/json",
+        "Authorization": `Bearer ${accessToken}`,
         "User-Agent": providerUserAgent,
       },
       signal: resolvedSignal,

@@ -175,7 +175,7 @@ function buildNeutrinoHeaders(apiKey: string, userId: string): Record<string, st
   return {
     "API-Key": apiKey,
     "User-ID": userId,
-    accept: "application/json",
+    "accept": "application/json",
     "user-agent": providerUserAgent,
   };
 }

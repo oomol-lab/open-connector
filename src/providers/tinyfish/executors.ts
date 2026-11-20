@@ -51,7 +51,7 @@ async function request(
   }
   const headers = new Headers({
     "X-API-Key": apiKey,
-    accept:
+    "accept":
       endpoint.responseType === "screenshot"
         ? "image/jpeg"
         : endpoint.responseType === "html"

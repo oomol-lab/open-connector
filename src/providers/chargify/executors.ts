@@ -60,7 +60,7 @@ async function request(
     }
   }
   const response = await context.fetcher(url, {
-    headers: { accept: "application/json", authorization: context.authorization, "user-agent": providerUserAgent },
+    headers: { "accept": "application/json", "authorization": context.authorization, "user-agent": providerUserAgent },
     signal: context.signal,
   });
   const payload = await response.json().catch(() => null);
@@ -173,7 +173,7 @@ export const credentialValidators: CredentialValidators = {
     const resolvedSiteUrl = siteUrl(input.values.siteUrl);
     const authorization = `Basic ${Buffer.from(`${input.apiKey}:x`).toString("base64")}`;
     const response = await fetcher(new URL("/site.json", resolvedSiteUrl), {
-      headers: { accept: "application/json", authorization, "user-agent": providerUserAgent },
+      headers: { "accept": "application/json", authorization, "user-agent": providerUserAgent },
       signal,
     });
     const payload = await response.json().catch(() => null);
@@ -213,8 +213,5 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
     return siteUrl((await requireApiKeyCredential(context, "chargify")).values.siteUrl);
   },
   auth: { type: "api_key_basic", suffix: ":x" },
-  customizeRequest({ headers }) {
-    if (!headers.has("accept")) headers.set("accept", "application/json");
-    if (!headers.has("user-agent")) headers.set("user-agent", providerUserAgent);
-  },
+  defaultHeaders: { "accept": "application/json", "user-agent": providerUserAgent },
 });

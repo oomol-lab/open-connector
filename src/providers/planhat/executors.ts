@@ -184,8 +184,8 @@ async function requestPlanhatJson(request: PlanhatRequest): Promise<unknown> {
     const response = await request.context.fetcher(url, {
       method: request.method,
       headers: {
-        accept: "application/json",
-        authorization: `Bearer ${request.context.apiKey}`,
+        "accept": "application/json",
+        "authorization": `Bearer ${request.context.apiKey}`,
         "user-agent": providerUserAgent,
         ...(request.body === undefined ? {} : { "content-type": "application/json" }),
       },

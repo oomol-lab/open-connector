@@ -118,9 +118,9 @@ async function requestProcessplan(
     const response = await context.fetcher(url, {
       method: options.method ?? "GET",
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         ...(options.body === undefined ? {} : { "content-type": "application/json" }),
-        tkn_id: context.apiKey,
+        "tkn_id": context.apiKey,
         "user-agent": providerUserAgent,
       },
       body: options.body === undefined ? undefined : JSON.stringify(options.body),

@@ -392,7 +392,7 @@ async function smugmugRequest(
   const response = await context.fetcher(buildSmugmugUrl(path, query, context.apiKey), {
     method: "GET",
     headers: {
-      accept: "application/json",
+      "accept": "application/json",
       "user-agent": providerUserAgent,
     },
     signal: context.signal,

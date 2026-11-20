@@ -166,7 +166,7 @@ async function requestLuma(context: ApiKeyProviderContext, url: URL, mode: "vali
 
 function lumaHeaders(apiKey: string): Record<string, string> {
   return {
-    accept: "application/json",
+    "accept": "application/json",
     "x-luma-api-key": apiKey,
     "user-agent": providerUserAgent,
   };

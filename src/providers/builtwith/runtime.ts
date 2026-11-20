@@ -162,7 +162,7 @@ async function builtwithRequest(
     const response = await context.fetcher(buildBuiltwithUrl(input, context.apiKey), {
       method: "GET",
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "user-agent": providerUserAgent,
       },
       signal,

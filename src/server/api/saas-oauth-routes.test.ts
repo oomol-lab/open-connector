@@ -228,7 +228,7 @@ it("starts remotely without a local client config, keeps cookie GET read-only, a
     body: {},
     token: null,
     cookie,
-    headers: { origin: "https://connect.example", "x-openconnector-request": "sync" },
+    headers: { "origin": "https://connect.example", "x-openconnector-request": "sync" },
   });
   expect((await browser.json()).returnUri).toBe("oomol://connect/done?keep=yes&status=success&service=example");
 });
@@ -240,9 +240,9 @@ it("requires same-origin protected POST and does not fall back from an invalid b
   const before = env.calls.length;
   const invalidHeaders: Record<string, string>[] = [
     {},
-    { origin: "https://evil.example", "x-openconnector-request": "sync" },
+    { "origin": "https://evil.example", "x-openconnector-request": "sync" },
     { origin: "https://connect.example" },
-    { origin: "https://connect.example", "x-openconnector-request": "sync", "content-type": "text/plain" },
+    { "origin": "https://connect.example", "x-openconnector-request": "sync", "content-type": "text/plain" },
   ];
   for (const headers of invalidHeaders) {
     expect(
@@ -273,7 +273,7 @@ it("keeps unauthenticated local GET read-only while allowing same-origin local P
   const result = await env.call(`/api/oauth/connection-requests/${data.connectionRequestId}/sync`, {
     method: "POST",
     body: {},
-    headers: { origin: "https://connect.example", "x-openconnector-request": "sync" },
+    headers: { "origin": "https://connect.example", "x-openconnector-request": "sync" },
   });
   expect((await result.json()).request.status).toBe("connected");
 });
@@ -470,7 +470,7 @@ it("creates named Console requests and reconnects through the original source af
   await env.call("/api/oauth/connection-requests/" + request.connectionRequestId + "/sync", {
     method: "POST",
     body: {},
-    headers: { origin: "https://connect.example", "x-openconnector-request": "sync" },
+    headers: { "origin": "https://connect.example", "x-openconnector-request": "sync" },
   });
   const connection = await env.database.connectionStore.get("example", "work");
   expect(connection?.source).toBe("saas");
@@ -527,7 +527,7 @@ it("explains Console origin mismatches without contacting SaaS", async () => {
     body: {},
     token: null,
     cookie,
-    headers: { origin: "http://localhost:5173", "x-openconnector-request": "sync" },
+    headers: { "origin": "http://localhost:5173", "x-openconnector-request": "sync" },
   });
   expect(response.status).toBe(403);
   expect(await response.json()).toMatchObject({

@@ -208,8 +208,8 @@ async function mineruFetch(
   signal?: AbortSignal,
 ): Promise<Response> {
   const headers: Record<string, string> = {
-    accept: "application/json",
-    authorization: `Bearer ${apiKey}`,
+    "accept": "application/json",
+    "authorization": `Bearer ${apiKey}`,
     "user-agent": providerUserAgent,
   };
   let body: string | undefined;

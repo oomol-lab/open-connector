@@ -259,8 +259,8 @@ async function requestTextitJson(input: {
   }
 
   const headers: Record<string, string> = {
-    accept: "application/json",
-    authorization: `Token ${input.context.apiKey}`,
+    "accept": "application/json",
+    "authorization": `Token ${input.context.apiKey}`,
     "user-agent": providerUserAgent,
   };
   const body = input.body === undefined ? undefined : JSON.stringify(input.body);

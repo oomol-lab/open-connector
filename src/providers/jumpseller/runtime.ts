@@ -458,8 +458,8 @@ function unwrapResource(payload: unknown, key: JumpsellerResourceKey) {
 
 function jumpsellerHeaders(credential: JumpsellerCredential, hasBody: boolean) {
   return {
-    accept: "application/json",
-    authorization: buildBasicAuthorizationHeader(credential),
+    "accept": "application/json",
+    "authorization": buildBasicAuthorizationHeader(credential),
     ...(hasBody ? { "content-type": "application/json" } : {}),
     "user-agent": providerUserAgent,
   };

@@ -193,7 +193,7 @@ function normalizeImgbbVariant(value: unknown, fieldName: string): ImgbbHostedVa
 
 function imgbbHeaders(): Record<string, string> {
   return {
-    accept: "application/json",
+    "accept": "application/json",
     "user-agent": providerUserAgent,
   };
 }

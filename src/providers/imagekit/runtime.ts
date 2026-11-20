@@ -265,8 +265,8 @@ function buildImagekitUrl(path: string, query: Record<string, string | undefined
 
 function imagekitHeaders(apiKey: string, hasBody: boolean): Record<string, string> {
   const headers: Record<string, string> = {
-    accept: "application/json",
-    authorization: `Basic ${Buffer.from(`${apiKey}:`, "utf8").toString("base64")}`,
+    "accept": "application/json",
+    "authorization": `Basic ${Buffer.from(`${apiKey}:`, "utf8").toString("base64")}`,
     "user-agent": providerUserAgent,
   };
   if (hasBody) {

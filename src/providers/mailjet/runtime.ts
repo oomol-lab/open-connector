@@ -172,8 +172,8 @@ async function requestMailjet(input: {
   }
 
   const headers: Record<string, string> = {
-    accept: "application/json",
-    authorization: buildBasicAuthorizationHeader(input.apiKey, input.apiSecret),
+    "accept": "application/json",
+    "authorization": buildBasicAuthorizationHeader(input.apiKey, input.apiSecret),
     "user-agent": providerUserAgent,
   };
   if (input.body !== undefined) {

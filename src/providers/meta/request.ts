@@ -43,7 +43,7 @@ export function metaRequest(
       url.searchParams.set("appsecret_proof", hmacHex(context.appSecret, context.accessToken));
     }
 
-    const headers = new Headers({ accept: "application/json", "user-agent": providerUserAgent });
+    const headers = new Headers({ "accept": "application/json", "user-agent": providerUserAgent });
     if (context.accessToken) {
       headers.set("authorization", `Bearer ${context.accessToken}`);
     }

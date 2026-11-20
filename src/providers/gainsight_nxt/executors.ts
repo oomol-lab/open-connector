@@ -164,8 +164,8 @@ async function requestGainsightJson(input: {
     const response = await input.fetcher(url, {
       method: input.method,
       headers: {
-        Accept: "application/json",
-        Accesskey: input.apiKey,
+        "Accept": "application/json",
+        "Accesskey": input.apiKey,
         "Content-Type": "application/json",
         "User-Agent": providerUserAgent,
       },

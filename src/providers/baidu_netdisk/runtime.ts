@@ -162,7 +162,7 @@ export async function downloadBaiduNetdiskFile(
     async (signal) => {
       const response = await providerFetch(downloadUrl, {
         headers: {
-          accept: "*/*",
+          "accept": "*/*",
           "user-agent": "pan.baidu.com",
         },
         signal,
@@ -301,7 +301,7 @@ async function requestBaiduNetdiskApi(
       ...init,
       headers: {
         "user-agent": "pan.baidu.com",
-        accept: "application/json",
+        "accept": "application/json",
         ...Object.fromEntries(new Headers(init.headers).entries()),
       },
     });

@@ -70,7 +70,7 @@ async function requestSocialFetch(path: string, context: SocialFetchContext): Pr
   let response: Response;
   try {
     response = await context.fetcher(new URL(path, socialFetchApiBaseUrl), {
-      headers: { accept: "application/json", "user-agent": providerUserAgent, "x-api-key": context.apiKey },
+      headers: { "accept": "application/json", "user-agent": providerUserAgent, "x-api-key": context.apiKey },
       signal: context.signal,
     });
   } catch (error) {

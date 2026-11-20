@@ -218,9 +218,9 @@ export async function requestZylvieJson(input: {
     const response = await input.fetcher(url, {
       method: input.method,
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         ...(input.body ? { "content-type": "application/json" } : {}),
-        authorization: `Bearer ${input.apiKey}`,
+        "authorization": `Bearer ${input.apiKey}`,
         "user-agent": providerUserAgent,
       },
       ...(input.body ? { body: JSON.stringify(input.body) } : {}),

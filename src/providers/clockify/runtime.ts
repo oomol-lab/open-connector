@@ -382,7 +382,7 @@ async function clockifyFetch(input: {
 function clockifyHeaders(apiKey: string, hasJsonBody: boolean): Headers {
   const headers = new Headers({
     "x-api-key": apiKey,
-    accept: "application/json",
+    "accept": "application/json",
     "user-agent": providerUserAgent,
   });
   if (hasJsonBody) {

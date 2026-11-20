@@ -228,7 +228,7 @@ function buildE2bUrl(path: string, query?: Record<string, E2bQueryValue>): URL {
 
 function buildE2bHeaders(apiKey: string, hasBody: boolean): Record<string, string> {
   const headers: Record<string, string> = {
-    accept: "application/json",
+    "accept": "application/json",
     "user-agent": providerUserAgent,
     "x-api-key": apiKey,
   };

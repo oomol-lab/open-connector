@@ -59,8 +59,8 @@ async function fetchRequest(path: string, apiKey: string, body: Record<string, u
     return await fetcher(new URL(path, profileapiApiBaseUrl), {
       method: "POST",
       headers: {
-        accept: "application/json",
-        authorization: `ApiKey ${apiKey}`,
+        "accept": "application/json",
+        "authorization": `ApiKey ${apiKey}`,
         "content-type": "application/json",
         "user-agent": providerUserAgent,
       },

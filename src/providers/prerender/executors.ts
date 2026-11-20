@@ -135,7 +135,7 @@ async function requestPrerender(input: {
     response = await input.context.fetcher(buildPrerenderUrl(input.path), {
       method: input.method,
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         ...(input.method === "POST" ? { "content-type": "application/json" } : {}),
         "user-agent": providerUserAgent,
       },

@@ -164,8 +164,8 @@ function buildBidsketchUrl(path: string, query?: Record<string, number | undefin
 
 function buildBidsketchHeaders(apiKey: string): Headers {
   return new Headers({
-    accept: "application/json",
-    authorization: `Token token="${apiKey}"`,
+    "accept": "application/json",
+    "authorization": `Token token="${apiKey}"`,
     "user-agent": providerUserAgent,
   });
 }

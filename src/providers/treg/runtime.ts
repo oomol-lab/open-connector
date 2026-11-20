@@ -80,7 +80,7 @@ export async function requestTreg(input: RequestOptions): Promise<{ payload: unk
       for (const item of Array.isArray(value) ? value : [value]) url.searchParams.append(key, String(item));
     }
 
-    const headers = new Headers({ accept: "application/json", "user-agent": providerUserAgent });
+    const headers = new Headers({ "accept": "application/json", "user-agent": providerUserAgent });
     for (const [key, value] of Object.entries(input.headers ?? {})) {
       if (blockedHeaders.includes(key.toLowerCase()))
         throw new ProviderRequestError(

@@ -13,10 +13,7 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
   baseUrl,
   auth: { type: "api_key_json_body", name: "wpkey" },
   skipDnsValidation: true,
-  customizeRequest({ headers }) {
-    if (!headers.has("accept")) headers.set("accept", "text/plain");
-    if (!headers.has("content-type")) headers.set("content-type", "application/json");
-  },
+  defaultHeaders: { "accept": "text/plain", "content-type": "application/json" },
 });
 
 const handlers: ProviderActionHandlers<"alt_text_generator_ai", ProviderRuntimeHandler<ApiKeyProviderContext>> = {
@@ -24,7 +21,7 @@ const handlers: ProviderActionHandlers<"alt_text_generator_ai", ProviderRuntimeH
     const imageUrl = typeof input.imageUrl === "string" ? input.imageUrl : "";
     const response = await context.fetcher(`${baseUrl}/api/wp`, {
       method: "POST",
-      headers: { accept: "text/plain", "content-type": "application/json", "user-agent": providerUserAgent },
+      headers: { "accept": "text/plain", "content-type": "application/json", "user-agent": providerUserAgent },
       body: JSON.stringify({ image: imageUrl, wpkey: context.apiKey }),
       signal: context.signal,
     });

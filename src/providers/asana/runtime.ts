@@ -232,8 +232,8 @@ function isJsonObject(body: AsanaRequestOptions["body"]): body is Record<string,
 
 function createAsanaHeaders(accessToken: string, isJson: boolean): Headers {
   const headers = new Headers({
-    accept: "application/json",
-    authorization: `Bearer ${accessToken}`,
+    "accept": "application/json",
+    "authorization": `Bearer ${accessToken}`,
     "user-agent": providerUserAgent,
   });
   if (isJson) {

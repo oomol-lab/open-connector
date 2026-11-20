@@ -203,8 +203,8 @@ async function pdflessRequest(request: PdflessRequest): Promise<unknown> {
 
 function pdflessHeaders(apiKey: string, hasJsonBody: boolean): Record<string, string> {
   const headers: Record<string, string> = {
-    accept: "application/json",
-    apikey: apiKey,
+    "accept": "application/json",
+    "apikey": apiKey,
     "user-agent": providerUserAgent,
   };
   if (hasJsonBody) {

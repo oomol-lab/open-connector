@@ -220,8 +220,8 @@ async function requestBrowserstackJson(input: {
 function buildBrowserstackHeaders(credential: BrowserstackContext, hasBody: boolean): Record<string, string> {
   const token = Buffer.from(`${credential.username}:${credential.accessKey}`).toString("base64");
   const headers: Record<string, string> = {
-    accept: "application/json",
-    authorization: `Basic ${token}`,
+    "accept": "application/json",
+    "authorization": `Basic ${token}`,
     "user-agent": providerUserAgent,
   };
   if (hasBody) {

@@ -25,8 +25,8 @@ async function request(
   const response = await context.fetcher(url, {
     method,
     headers: {
-      accept: "application/json",
-      authorization: context.authorization,
+      "accept": "application/json",
+      "authorization": context.authorization,
       "content-type": "application/json",
       "user-agent": providerUserAgent,
     },

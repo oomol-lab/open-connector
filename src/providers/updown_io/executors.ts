@@ -122,7 +122,7 @@ async function requestUpdownJson(input: {
 function updownHeaders(apiKey: string): Headers {
   return new Headers({
     "X-API-KEY": apiKey,
-    accept: "application/json",
+    "accept": "application/json",
     "user-agent": providerUserAgent,
   });
 }

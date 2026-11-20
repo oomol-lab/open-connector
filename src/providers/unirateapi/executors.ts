@@ -41,7 +41,7 @@ async function request(
     return await runProviderRequest({ signal: parentSignal, label: "UniRateAPI" }, async (signal) => {
       const response = await fetcher(url, {
         signal,
-        headers: { accept: "application/json", "user-agent": providerUserAgent },
+        headers: { "accept": "application/json", "user-agent": providerUserAgent },
       });
       let payload: unknown;
       try {
@@ -107,11 +107,5 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
   baseUrl,
   auth: { type: "api_key_query", name: "api_key" },
   skipDnsValidation: true,
-  customizeRequest({ headers }) {
-    for (const [key, value] of Object.entries({
-      accept: "application/json",
-      "user-agent": providerUserAgent,
-    }))
-      if (!headers.has(key)) headers.set(key, value);
-  },
+  defaultHeaders: { "accept": "application/json", "user-agent": providerUserAgent },
 });

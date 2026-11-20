@@ -243,8 +243,8 @@ async function requestClickhelpJson(input: ClickhelpRequest) {
     const response = await input.fetcher(url, {
       method: input.method ?? "GET",
       headers: {
-        accept: "application/json",
-        authorization: basicAuthorizationHeader(`${input.credential.login}:${input.credential.apiKey}`),
+        "accept": "application/json",
+        "authorization": basicAuthorizationHeader(`${input.credential.login}:${input.credential.apiKey}`),
         "content-type": "application/json",
         "user-agent": providerUserAgent,
       },

@@ -171,8 +171,8 @@ async function requestAmplitudeJson(input: AmplitudeRequestInput) {
     response = await input.fetcher(url.toString(), {
       method: "GET",
       headers: {
-        Accept: "application/json",
-        Authorization: buildAmplitudeBasicAuthorizationHeader(input.apiKeyId, input.secretKey),
+        "Accept": "application/json",
+        "Authorization": buildAmplitudeBasicAuthorizationHeader(input.apiKeyId, input.secretKey),
         "User-Agent": providerUserAgent,
       },
       signal: timeout.signal,

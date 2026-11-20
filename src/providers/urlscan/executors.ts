@@ -88,7 +88,7 @@ async function requestUrlscanJson(input: {
   let response: Response;
   try {
     const headers = new Headers({
-      accept: "application/json",
+      "accept": "application/json",
       "user-agent": providerUserAgent,
       "API-Key": input.context.apiKey,
     });

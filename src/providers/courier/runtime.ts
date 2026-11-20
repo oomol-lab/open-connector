@@ -263,8 +263,8 @@ async function requestCourierJson(input: CourierRequestInput): Promise<CourierRe
 
   try {
     const headers: Record<string, string> = {
-      accept: "application/json",
-      authorization: `Bearer ${input.context.apiKey}`,
+      "accept": "application/json",
+      "authorization": `Bearer ${input.context.apiKey}`,
       "user-agent": providerUserAgent,
     };
 

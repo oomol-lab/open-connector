@@ -146,8 +146,8 @@ async function executeUpstashCommand(
     const response = await context.fetcher(new URL(context.restUrl), {
       method: "POST",
       headers: {
-        accept: "application/json",
-        authorization: `Bearer ${context.restToken}`,
+        "accept": "application/json",
+        "authorization": `Bearer ${context.restToken}`,
         "content-type": "application/json",
         "user-agent": providerUserAgent,
       },

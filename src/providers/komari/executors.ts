@@ -46,9 +46,7 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
   },
   auth: { type: "api_key_authorization", prefix: "Bearer " },
   allowPrivateNetwork: isPrivateNetworkAccessAllowed,
-  customizeRequest({ headers }) {
-    if (!headers.has("accept")) headers.set("accept", "application/json");
-  },
+  defaultHeaders: { accept: "application/json" },
 });
 
 export const credentialValidators: CredentialValidators = {

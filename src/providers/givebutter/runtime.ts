@@ -150,8 +150,8 @@ async function requestGivebutterJson(
     response = await fetcher(buildGivebutterUrl(input), {
       method: "GET",
       headers: {
-        accept: "application/json",
-        authorization: `Bearer ${apiKey.trim()}`,
+        "accept": "application/json",
+        "authorization": `Bearer ${apiKey.trim()}`,
         "user-agent": providerUserAgent,
       },
       signal,

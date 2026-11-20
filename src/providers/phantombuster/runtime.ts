@@ -106,7 +106,7 @@ async function requestJson(
       method,
       headers: compactObject({
         [apiKeyHeader]: context.apiKey,
-        accept: "application/json",
+        "accept": "application/json",
         "user-agent": providerUserAgent,
         "content-type": body ? "application/json" : undefined,
       }) as Record<string, string>,

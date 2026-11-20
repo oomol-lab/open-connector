@@ -84,8 +84,8 @@ async function requestZenserpSearch(
     response = await context.fetcher(buildZenserpUrl(query), {
       method: "GET",
       headers: {
-        accept: "application/json",
-        apikey: context.apiKey,
+        "accept": "application/json",
+        "apikey": context.apiKey,
         "user-agent": providerUserAgent,
       },
       signal: context.signal,

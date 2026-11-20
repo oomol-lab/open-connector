@@ -191,9 +191,9 @@ async function requestChecklyJson(input: {
     response = await input.context.fetcher(buildUrl(input.path, input.query), {
       method: "GET",
       headers: {
-        authorization: `Bearer ${input.context.apiKey}`,
+        "authorization": `Bearer ${input.context.apiKey}`,
         "x-checkly-account": input.context.accountId,
-        accept: "application/json",
+        "accept": "application/json",
         "user-agent": providerUserAgent,
       },
       signal,

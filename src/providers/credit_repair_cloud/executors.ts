@@ -210,7 +210,7 @@ async function requestCreditRepairCloud(context: CreditRepairCloudRequestContext
     const response = await context.fetcher(url, {
       method: "POST",
       headers: {
-        accept: "application/xml, text/xml, text/html",
+        "accept": "application/xml, text/xml, text/html",
         "content-type": "application/x-www-form-urlencoded;charset=UTF-8",
         "user-agent": providerUserAgent,
       },

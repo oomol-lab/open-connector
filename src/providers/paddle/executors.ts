@@ -231,8 +231,8 @@ async function paddleRequest(
 
 function paddleHeaders(apiKey: string, hasBody: boolean, skipCount: boolean) {
   const headers: Record<string, string> = {
-    Authorization: `Bearer ${apiKey}`,
-    accept: "application/json",
+    "Authorization": `Bearer ${apiKey}`,
+    "accept": "application/json",
     "user-agent": providerUserAgent,
   };
   if (hasBody) {

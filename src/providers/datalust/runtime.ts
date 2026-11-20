@@ -513,7 +513,7 @@ async function requestSeqStatus(input: DatalustRequestOptions): Promise<number> 
 async function requestSeq(input: DatalustRequestOptions): Promise<Response> {
   const url = buildDatalustUrl(input.context.baseUrl, input.path, input.query);
   const headers = new Headers({
-    accept: seqAcceptHeader,
+    "accept": seqAcceptHeader,
     [seqApiKeyHeader]: input.context.apiKey,
     "user-agent": providerUserAgent,
   });

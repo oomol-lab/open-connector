@@ -181,8 +181,8 @@ async function requestMoesifJson(input: MoesifRequestInput): Promise<unknown> {
     response = await input.fetcher(buildMoesifUrl(input.path, input.params, input.repeatedParams), {
       method: "GET",
       headers: {
-        accept: "application/json",
-        Authorization: `Bearer ${input.apiKey}`,
+        "accept": "application/json",
+        "Authorization": `Bearer ${input.apiKey}`,
         "user-agent": providerUserAgent,
       },
       signal: timeout.signal,

@@ -152,8 +152,8 @@ async function requestPretix(
   try {
     const response = await context.fetcher(url, {
       headers: {
-        accept: "application/json",
-        authorization: `Token ${context.token}`,
+        "accept": "application/json",
+        "authorization": `Token ${context.token}`,
         "user-agent": providerUserAgent,
       },
       signal: timeout.signal,

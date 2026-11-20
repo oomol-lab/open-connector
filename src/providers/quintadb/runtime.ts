@@ -201,7 +201,7 @@ async function requestQuintaDbJson(input: QuintaDbRequestInput): Promise<unknown
   }
 
   const headers = new Headers({
-    accept: "application/json",
+    "accept": "application/json",
     "user-agent": providerUserAgent,
   });
   if (input.body !== undefined) {

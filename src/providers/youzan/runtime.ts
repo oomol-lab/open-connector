@@ -79,7 +79,7 @@ export async function getYouzanToken(
     {
       method: "POST",
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "content-type": "application/json",
         "user-agent": providerUserAgent,
       },
@@ -344,7 +344,7 @@ async function requestYouzanApi(
     {
       method: "POST",
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "content-type": "application/json",
         "user-agent": providerUserAgent,
       },

@@ -257,7 +257,7 @@ function withNotionMcpClient<T>(
         endpoint: new URL(notionMcpEndpoint),
         transport: "streamable_http",
         fetcher: context.fetcher,
-        headers: { authorization: `Bearer ${context.accessToken}`, "user-agent": providerUserAgent },
+        headers: { "authorization": `Bearer ${context.accessToken}`, "user-agent": providerUserAgent },
         redirect: "manual",
         signal,
         mapError: mapNotionMcpError,

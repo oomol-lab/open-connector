@@ -143,7 +143,7 @@ async function buildiumRequestJson(input: {
     const response = await input.context.fetcher(url, {
       method: "GET",
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "user-agent": providerUserAgent,
         "x-buildium-client-id": input.context.clientId,
         "x-buildium-client-secret": input.context.clientSecret,

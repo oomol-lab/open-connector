@@ -23,7 +23,7 @@ async function request(
   const response = await context.fetcher(new URL(path, context.baseUrl), {
     method,
     headers: {
-      accept: "application/json",
+      "accept": "application/json",
       "client-token": context.clientToken,
       "content-type": "application/json",
       "user-agent": providerUserAgent,

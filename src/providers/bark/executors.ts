@@ -360,7 +360,7 @@ function buildBarkUrl(baseUrl: string, path: string): string {
 
 function buildBarkHeaders(hasBody: boolean): Record<string, string> {
   return {
-    Accept: "application/json",
+    "Accept": "application/json",
     "User-Agent": providerUserAgent,
     ...(hasBody ? { "Content-Type": "application/json" } : {}),
   };

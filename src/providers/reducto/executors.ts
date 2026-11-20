@@ -33,11 +33,7 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
   baseUrl: reductoApiBaseUrl,
   auth: { type: "api_key_authorization", prefix: "Bearer " },
   skipDnsValidation: true,
-  customizeRequest({ headers }) {
-    if (!headers.has("accept")) {
-      headers.set("accept", "application/json");
-    }
-  },
+  defaultHeaders: { accept: "application/json" },
 });
 
 export const credentialValidators = {
@@ -146,7 +142,7 @@ async function reductoPostJson(
     {
       method: "POST",
       headers: reductoHeaders(context.apiKey, {
-        accept: "application/json",
+        "accept": "application/json",
         "content-type": "application/json",
       }),
       body: JSON.stringify(body),
@@ -196,7 +192,7 @@ async function reductoRequestJson(
 function reductoHeaders(apiKey: string, extraHeaders: Record<string, string>): Record<string, string> {
   return {
     "user-agent": providerUserAgent,
-    Authorization: `Bearer ${apiKey}`,
+    "Authorization": `Bearer ${apiKey}`,
     ...extraHeaders,
   };
 }

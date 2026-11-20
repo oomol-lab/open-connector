@@ -100,8 +100,8 @@ async function firstbaseRequestJson(
     response = await context.fetcher(firstbaseUrl(path), {
       method,
       headers: {
-        accept: "application/json",
-        authorization: `ApiKey ${context.apiKey}`,
+        "accept": "application/json",
+        "authorization": `ApiKey ${context.apiKey}`,
         "user-agent": providerUserAgent,
       },
       signal: context.signal,

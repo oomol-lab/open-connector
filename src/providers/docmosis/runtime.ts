@@ -414,7 +414,7 @@ async function docmosisFetch(input: {
     return await input.fetcher(buildDocmosisUrl(input.apiBaseUrl, input.path), {
       method: "POST",
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "content-type": "application/json",
         "user-agent": providerUserAgent,
       },

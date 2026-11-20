@@ -82,10 +82,7 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
   baseUrl: landbotApiBaseUrl,
   auth: { type: "api_key_authorization", prefix: "Token " },
   skipDnsValidation: true,
-  customizeRequest({ headers }) {
-    if (!headers.has("accept")) headers.set("accept", "application/json");
-    if (!headers.has("content-type")) headers.set("content-type", "application/json");
-  },
+  defaultHeaders: { "accept": "application/json", "content-type": "application/json" },
 });
 
 export const credentialValidators: CredentialValidators = {
@@ -138,8 +135,8 @@ async function landbotRequest(input: {
     response = await input.context.fetcher(url.toString(), {
       method: input.method ?? "GET",
       headers: {
-        accept: "application/json",
-        authorization: `Token ${input.context.apiKey}`,
+        "accept": "application/json",
+        "authorization": `Token ${input.context.apiKey}`,
         "content-type": "application/json",
         "user-agent": providerUserAgent,
       },

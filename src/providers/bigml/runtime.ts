@@ -143,7 +143,7 @@ async function request(
     const response = await context.fetcher(url, {
       method,
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "user-agent": providerUserAgent,
         ...(body === undefined ? {} : { "content-type": "application/json" }),
       },

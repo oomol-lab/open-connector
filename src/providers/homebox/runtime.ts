@@ -106,7 +106,7 @@ function buildHomeBoxUrl(
 async function performHomeBoxRequest(options: HomeBoxRequestOptions, signal: AbortSignal): Promise<Response> {
   const { context } = options;
   const url = buildHomeBoxUrl(context, options.path, options.query);
-  const headers = new Headers({ accept: "application/json", "user-agent": providerUserAgent });
+  const headers = new Headers({ "accept": "application/json", "user-agent": providerUserAgent });
   headers.set("authorization", `Bearer ${context.apiKey}`);
 
   let body: BodyInit | undefined;

@@ -71,7 +71,7 @@ export async function createChartShortUrl(
     response = await fetcher(new URL("/chart/create", quickchartBaseUrl), {
       method: "POST",
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "content-type": "application/json",
         "user-agent": providerUserAgent,
       },

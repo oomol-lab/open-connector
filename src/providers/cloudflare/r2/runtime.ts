@@ -114,7 +114,7 @@ async function downloadObject(input: Record<string, unknown>, context: Cloudflar
     `/accounts/${encodeURIComponent(accountId)}/r2/buckets/${encodeURIComponent(bucketName)}/objects/${encodeS3ObjectKey(objectKey)}`,
   );
   const headers: Record<string, string> = {
-    accept: "*/*",
+    "accept": "*/*",
     ...context.authHeaders,
     "user-agent": providerUserAgent,
   };
@@ -299,7 +299,7 @@ async function putObject(input: Record<string, unknown>, context: CloudflareCont
     {
       method: "PUT",
       headers: compactObject({
-        accept: "application/json",
+        "accept": "application/json",
         ...context.authHeaders,
         "user-agent": providerUserAgent,
         ...headers,

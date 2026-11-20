@@ -167,7 +167,7 @@ async function requestIplocateJson(
 
 function iplocateHeaders(apiKey: string, hasBody: boolean): Record<string, string> {
   const headers: Record<string, string> = {
-    accept: "application/json",
+    "accept": "application/json",
     "user-agent": providerUserAgent,
     "X-API-Key": apiKey,
   };

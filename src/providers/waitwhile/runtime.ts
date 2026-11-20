@@ -76,7 +76,7 @@ async function request(
     const response = await context.fetcher(url, {
       method,
       signal,
-      headers: { apikey: context.apiKey, accept: "application/json", "content-type": "application/json" },
+      headers: { "apikey": context.apiKey, "accept": "application/json", "content-type": "application/json" },
       body: method == "POST" ? JSON.stringify(values) : undefined,
     });
     const text = await response.text();

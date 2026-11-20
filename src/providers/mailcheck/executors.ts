@@ -170,8 +170,8 @@ async function requestMailcheckJson(input: {
     response = await input.context.fetcher(url, {
       method: "GET",
       headers: {
-        accept: "application/json",
-        authorization: `Bearer ${input.apiKey}`,
+        "accept": "application/json",
+        "authorization": `Bearer ${input.apiKey}`,
         "user-agent": providerUserAgent,
       },
       signal: timeout.signal,

@@ -31,8 +31,8 @@ async function request(
     const response = await fetcher(url, {
       method,
       headers: {
-        authorization: `Bearer ${apiKey}`,
-        accept: "application/json",
+        "authorization": `Bearer ${apiKey}`,
+        "accept": "application/json",
         "content-type": "application/json",
       },
       body: method === "POST" || method === "PATCH" ? JSON.stringify(values) : undefined,
@@ -114,7 +114,5 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
   service: "agentline",
   baseUrl,
   auth: { type: "api_key_authorization", prefix: "Bearer " },
-  customizeRequest({ headers }) {
-    if (!headers.has("accept")) headers.set("accept", "application/json");
-  },
+  defaultHeaders: { accept: "application/json" },
 });

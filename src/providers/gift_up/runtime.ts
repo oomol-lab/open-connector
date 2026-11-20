@@ -424,8 +424,8 @@ function buildGiftUpUrl(path: string, query: Record<string, GiftUpQueryValue> = 
 
 function giftUpHeaders(apiKey: string, hasJsonBody: boolean): Record<string, string> {
   const headers: Record<string, string> = {
-    accept: "application/json",
-    authorization: `Bearer ${apiKey}`,
+    "accept": "application/json",
+    "authorization": `Bearer ${apiKey}`,
     "user-agent": providerUserAgent,
   };
   if (hasJsonBody) {

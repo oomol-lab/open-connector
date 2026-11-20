@@ -151,8 +151,8 @@ async function postonceRequest(request: PostonceRequest, context: ApiKeyProvider
     const url = new URL(`${apiBaseUrl}${request.path}`);
     for (const [key, value] of Object.entries(queryParams(request.query ?? {}))) url.searchParams.set(key, value);
     const headers: Record<string, string> = {
-      accept: "application/json",
-      authorization: `Bearer ${context.apiKey}`,
+      "accept": "application/json",
+      "authorization": `Bearer ${context.apiKey}`,
       "user-agent": providerUserAgent,
       ...request.headers,
     };

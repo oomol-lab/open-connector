@@ -185,8 +185,8 @@ function buildSmartsheetUrl(path: string, params: Record<string, string | undefi
 
 function buildSmartsheetHeaders(apiKey: string, hasBody: boolean): Record<string, string> {
   return compactObject({
-    accept: "application/json",
-    authorization: `Bearer ${apiKey}`,
+    "accept": "application/json",
+    "authorization": `Bearer ${apiKey}`,
     "smartsheet-integration-source": smartsheetIntegrationSource,
     "user-agent": providerUserAgent,
     "content-type": hasBody ? "application/json" : undefined,

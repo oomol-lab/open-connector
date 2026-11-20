@@ -209,8 +209,8 @@ async function leadiqRequest(
     response = await fetcher(`${leadiqApiBaseUrl}${leadiqGraphqlPath}`, {
       method: "POST",
       headers: {
-        accept: "application/json",
-        authorization: `Basic ${apiKey}`,
+        "accept": "application/json",
+        "authorization": `Basic ${apiKey}`,
         "content-type": "application/json",
         "user-agent": providerUserAgent,
       },

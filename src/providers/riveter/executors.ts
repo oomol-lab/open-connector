@@ -28,10 +28,7 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
   baseUrl: riveterApiBaseUrl,
   auth: { type: "api_key_authorization", prefix: "Bearer " },
   skipDnsValidation: true,
-  customizeRequest({ headers }) {
-    if (!headers.has("accept")) headers.set("accept", "application/json");
-    if (!headers.has("content-type")) headers.set("content-type", "application/json");
-  },
+  defaultHeaders: { "accept": "application/json", "content-type": "application/json" },
 });
 
 type RiveterActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
@@ -107,8 +104,8 @@ async function requestRiveterObject(input: {
     const response = await input.context.fetcher(buildRiveterUrl(input.path), {
       method: input.method,
       headers: {
-        accept: "application/json",
-        authorization: `Bearer ${input.context.apiKey}`,
+        "accept": "application/json",
+        "authorization": `Bearer ${input.context.apiKey}`,
         ...(input.body ? { "content-type": "application/json" } : {}),
         "user-agent": providerUserAgent,
       },

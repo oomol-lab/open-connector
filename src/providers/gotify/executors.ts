@@ -119,11 +119,7 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
     return normalizeGotifyBaseUrl(baseUrl);
   },
   auth: { type: "api_key_header", name: "X-Gotify-Key" },
-  customizeRequest({ headers }) {
-    if (!headers.has("accept")) {
-      headers.set("accept", "application/json");
-    }
-  },
+  defaultHeaders: { accept: "application/json" },
   allowPrivateNetwork: isPrivateNetworkAccessAllowed,
 });
 
@@ -186,7 +182,7 @@ async function requestGotifyJson(input: GotifyJsonRequestOptions): Promise<unkno
   const timeout = createProviderTimeout(input.context.signal);
   try {
     const headers: Record<string, string> = {
-      accept: "application/json",
+      "accept": "application/json",
       "user-agent": providerUserAgent,
     };
     if (input.body) {

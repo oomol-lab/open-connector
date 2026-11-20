@@ -165,8 +165,8 @@ async function requestNamelyJson(input: {
     response = await input.context.fetcher(buildNamelyUrl(input.context.company, input.path, input.query), {
       method: "GET",
       headers: {
-        accept: "application/json",
-        authorization: `Bearer ${input.context.apiKey}`,
+        "accept": "application/json",
+        "authorization": `Bearer ${input.context.apiKey}`,
         "user-agent": providerUserAgent,
       },
       signal: input.context.signal,

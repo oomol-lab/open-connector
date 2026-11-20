@@ -173,8 +173,8 @@ async function requestPostalyticsJson(input: PostalyticsRequestInput): Promise<u
     const response = await input.context.fetcher(url, {
       method: "GET",
       headers: {
-        accept: "application/json",
-        authorization: buildPostalyticsAuthorizationHeader(input.context.apiKey),
+        "accept": "application/json",
+        "authorization": buildPostalyticsAuthorizationHeader(input.context.apiKey),
         "user-agent": providerUserAgent,
       },
       signal: timeout.signal,

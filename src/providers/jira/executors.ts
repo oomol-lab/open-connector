@@ -555,8 +555,8 @@ async function jiraJsonValueRequest(input: JiraRequestInput): Promise<unknown> {
 
 function buildAuthorizationHeaders(accessToken: string) {
   return {
-    authorization: `Bearer ${accessToken}`,
-    accept: "application/json",
+    "authorization": `Bearer ${accessToken}`,
+    "accept": "application/json",
     "user-agent": providerUserAgent,
   };
 }

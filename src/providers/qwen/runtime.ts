@@ -661,8 +661,8 @@ async function requestJson(
     const response = await context.fetcher(new URL(path, `${qwenApiBaseUrl}/`), {
       method,
       headers: {
-        accept: "application/json",
-        authorization: `Bearer ${context.apiKey}`,
+        "accept": "application/json",
+        "authorization": `Bearer ${context.apiKey}`,
         ...(body ? { "content-type": "application/json" } : {}),
         "user-agent": providerUserAgent,
         ...(asynchronous ? { "x-dashscope-async": "enable" } : {}),

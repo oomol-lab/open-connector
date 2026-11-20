@@ -82,10 +82,10 @@ export const qltyActionHandlers: ProviderActionHandlers<"qlty", QltyActionHandle
         search: buildSearchParams({
           "page[limit]": input.limit,
           "page[offset]": input.offset,
-          category: input.category,
-          level: input.level,
-          status: input.status,
-          tool: trimSearchValue(input.tool),
+          "category": input.category,
+          "level": input.level,
+          "status": input.status,
+          "tool": trimSearchValue(input.tool),
         }),
       },
       context,
@@ -187,8 +187,8 @@ async function requestQlty(
     response = await context.fetcher(url, {
       method: "GET",
       headers: {
-        accept: "application/json",
-        authorization: `Bearer ${context.apiKey}`,
+        "accept": "application/json",
+        "authorization": `Bearer ${context.apiKey}`,
         "user-agent": providerUserAgent,
       },
       signal: context.signal,

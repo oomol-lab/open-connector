@@ -127,7 +127,7 @@ interface ApiframeRequestInput {
 async function requestApiframe(input: ApiframeRequestInput): Promise<unknown> {
   return runProviderRequest({ label: "Apiframe", signal: input.signal }, async (signal) => {
     const headers = new Headers({
-      accept: "application/json",
+      "accept": "application/json",
       "user-agent": providerUserAgent,
       "X-API-Key": input.apiKey,
     });

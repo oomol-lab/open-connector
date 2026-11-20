@@ -397,7 +397,7 @@ async function detrackRequest(input: DetrackRequestInput) {
     const response = await input.fetcher(url, {
       method: input.method ?? "GET",
       headers: {
-        Accept: "application/json",
+        "Accept": "application/json",
         "X-API-KEY": input.apiKey,
         "User-Agent": providerUserAgent,
         ...(input.body === undefined ? {} : { "Content-Type": "application/json" }),

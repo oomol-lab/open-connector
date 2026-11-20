@@ -222,7 +222,7 @@ async function executeTakeScreenshot(input: Record<string, unknown>, context: Ap
 
 function buildHeaders(apiKey: string): Record<string, string> {
   return {
-    accept: "application/json",
+    "accept": "application/json",
     "content-type": "application/json",
     "user-agent": providerUserAgent,
     "x-api-key": apiKey,

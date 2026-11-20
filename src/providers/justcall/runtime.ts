@@ -236,8 +236,8 @@ async function requestJustCallJson(options: JustCallRequestOptions) {
     }
 
     const headers: Record<string, string> = {
-      accept: "application/json",
-      authorization: buildJustCallAuthorizationHeader(options.apiKey, options.apiSecret),
+      "accept": "application/json",
+      "authorization": buildJustCallAuthorizationHeader(options.apiKey, options.apiSecret),
       "user-agent": providerUserAgent,
     };
     if (options.body !== undefined) {

@@ -117,7 +117,7 @@ async function requestSmartRecruitersJson(
     const response = await context.fetcher(buildSmartRecruitersUrl(input.path, input.query), {
       method: input.method,
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "user-agent": providerUserAgent,
         "X-SmartToken": context.apiKey,
       },

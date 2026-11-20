@@ -148,17 +148,7 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
   baseUrl: raindropApiBaseUrl,
   auth: { type: "api_key_authorization", prefix: "Bearer " },
   skipDnsValidation: true,
-  customizeRequest({ headers }) {
-    if (!headers.has("accept")) {
-      headers.set("accept", "application/json");
-    }
-    if (!headers.has("content-type")) {
-      headers.set("content-type", "application/json");
-    }
-    if (!headers.has("user-agent")) {
-      headers.set("user-agent", providerUserAgent);
-    }
-  },
+  defaultHeaders: { "accept": "application/json", "content-type": "application/json", "user-agent": providerUserAgent },
 });
 
 function collectionBody(input: Record<string, unknown>): Record<string, unknown> {
@@ -205,8 +195,8 @@ async function requestJson(
     const response = await context.fetcher(url, {
       method: init.method,
       headers: {
-        accept: "application/json",
-        authorization: `Bearer ${context.apiKey}`,
+        "accept": "application/json",
+        "authorization": `Bearer ${context.apiKey}`,
         "content-type": "application/json",
         "user-agent": providerUserAgent,
       },

@@ -182,8 +182,8 @@ function buildRoamUrl(path: string, query?: Record<string, string | number | und
 
 function roamHeaders(apiKey: string): Record<string, string> {
   return {
-    accept: "application/json",
-    authorization: `Bearer ${apiKey}`,
+    "accept": "application/json",
+    "authorization": `Bearer ${apiKey}`,
     "content-type": "application/json",
     "user-agent": providerUserAgent,
   };

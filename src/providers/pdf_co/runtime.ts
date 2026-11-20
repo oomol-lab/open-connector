@@ -177,7 +177,7 @@ async function pdfCoPostJson(
 function pdfCoHeaders(apiKey: string): Record<string, string> {
   return {
     "x-api-key": apiKey,
-    accept: "application/json",
+    "accept": "application/json",
     "user-agent": providerUserAgent,
   };
 }

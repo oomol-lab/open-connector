@@ -332,7 +332,7 @@ export const appStoreConnectTestFlightFeedbackHandlers: AppStoreConnectHandlers 
     const { payload } = await requestAppStoreConnect(context, {
       path: resourcePath("/v1/builds", buildId),
       query: {
-        include: "buildBundles",
+        "include": "buildBundles",
         "fields[builds]": "buildBundles",
         "limit[buildBundles]": "50",
       },
@@ -414,7 +414,7 @@ export const appStoreConnectTestFlightFeedbackHandlers: AppStoreConnectHandlers 
       ),
       label: "App Store Connect beta tester usage",
       query: {
-        period: pickOptionalString(input, "period"),
+        "period": pickOptionalString(input, "period"),
         "filter[apps]": readAppStoreConnectId(input.appId, "appId"),
       },
     });
@@ -452,8 +452,8 @@ async function listFeedback(context: AppStoreConnectContext, input: Record<strin
       "filter[osVersion]": readCommaSeparatedList(input.osVersions),
       "filter[appPlatform]": readCommaSeparatedList(input.appPlatforms),
       "filter[devicePlatform]": readCommaSeparatedList(input.devicePlatforms),
-      sort: pickOptionalString(input, "sort"),
-      include: "build,tester",
+      "sort": pickOptionalString(input, "sort"),
+      "include": "build,tester",
     },
   });
   return {
@@ -568,8 +568,8 @@ async function listBetaTesterUsages(
   const page = await listResources(context, input, {
     ...request,
     query: {
-      period: pickOptionalString(input, "period"),
-      groupBy: optionalBoolean(input.groupByBetaTester) ? "betaTesters" : undefined,
+      "period": pickOptionalString(input, "period"),
+      "groupBy": optionalBoolean(input.groupByBetaTester) ? "betaTesters" : undefined,
       "filter[betaTesters]": readOptionalAppStoreConnectId(input.betaTesterId, "betaTesterId"),
     },
   });

@@ -218,8 +218,8 @@ function buildDialMyCallsUrl(path: string) {
 
 function buildDialMyCallsHeaders(apiKey: string, options: { hasBody: boolean; range?: string }) {
   return {
-    accept: "application/json",
-    authorization: `Basic ${Buffer.from(`${apiKey}:`, "utf8").toString("base64")}`,
+    "accept": "application/json",
+    "authorization": `Basic ${Buffer.from(`${apiKey}:`, "utf8").toString("base64")}`,
     "user-agent": providerUserAgent,
     ...(options.hasBody ? { "content-type": "application/json" } : {}),
     ...(options.range ? { range: options.range } : {}),

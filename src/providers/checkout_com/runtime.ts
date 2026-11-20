@@ -107,8 +107,8 @@ async function request(
   const response = await context.fetcher(new URL(path.slice(1), `${context.apiBaseUrl}/`), {
     method,
     headers: {
-      accept: "application/json",
-      authorization: `Bearer ${context.apiKey}`,
+      "accept": "application/json",
+      "authorization": `Bearer ${context.apiKey}`,
       "user-agent": providerUserAgent,
       ...(body ? { "content-type": "application/json" } : {}),
     },

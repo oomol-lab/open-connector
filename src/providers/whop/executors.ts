@@ -157,10 +157,7 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
   baseUrl: whopApiBaseUrl,
   auth: { type: "api_key_authorization", prefix: "Bearer " },
   skipDnsValidation: true,
-  customizeRequest({ headers }) {
-    if (!headers.has("accept")) headers.set("accept", "application/json");
-    if (!headers.has("api-version-date")) headers.set("api-version-date", whopApiVersion);
-  },
+  defaultHeaders: { "accept": "application/json", "api-version-date": whopApiVersion },
 });
 
 export const credentialValidators: CredentialValidators = {
@@ -240,8 +237,8 @@ async function whopFetch(input: WhopRequestOptions): Promise<Response> {
 
 function whopHeaders(apiKey: string): Record<string, string> {
   return {
-    accept: "application/json",
-    authorization: `Bearer ${apiKey}`,
+    "accept": "application/json",
+    "authorization": `Bearer ${apiKey}`,
     "api-version-date": whopApiVersion,
     "user-agent": providerUserAgent,
   };

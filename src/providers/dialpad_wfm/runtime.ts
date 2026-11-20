@@ -93,8 +93,8 @@ async function requestDialpadWfmJson(input: DialpadWfmRequestInput): Promise<unk
     response = await input.context.fetcher(buildDialpadWfmUrl(input), {
       method: "GET",
       headers: {
-        accept: "application/json",
-        authorization: `Bearer ${input.context.apiKey}`,
+        "accept": "application/json",
+        "authorization": `Bearer ${input.context.apiKey}`,
         "user-agent": providerUserAgent,
       },
       signal: timeout.signal,

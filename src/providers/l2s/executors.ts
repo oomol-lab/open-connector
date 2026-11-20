@@ -121,8 +121,8 @@ async function l2sRequest(context: ApiKeyProviderContext, input: L2sRequestInput
     const response = await context.fetcher(new URL(input.path, l2sApiBaseUrl), {
       method: input.method,
       headers: {
-        authorization: `Bearer ${context.apiKey}`,
-        accept: "application/json",
+        "authorization": `Bearer ${context.apiKey}`,
+        "accept": "application/json",
         "content-type": "application/json",
         "user-agent": providerUserAgent,
       },

@@ -305,8 +305,8 @@ export const appStoreConnectXcodeCloudHandlers: AppStoreConnectHandlers = {
         "filter[processingState]": pickOptionalString(input, "processingState"),
         "filter[betaAppReviewSubmission.betaReviewState]": pickOptionalString(input, "betaReviewState"),
         "filter[expired]": booleanString(input.expired),
-        sort: pickOptionalString(input, "sort"),
-        include: "preReleaseVersion",
+        "sort": pickOptionalString(input, "sort"),
+        "include": "preReleaseVersion",
       },
     });
     return {
@@ -628,7 +628,7 @@ async function listProductRepositories(
 function buildRunListQuery(input: Record<string, unknown>): Record<string, string | undefined> {
   return {
     "filter[builds]": readOptionalAppStoreConnectId(input.buildId, "buildId"),
-    sort: pickOptionalString(input, "sort"),
+    "sort": pickOptionalString(input, "sort"),
   };
 }
 

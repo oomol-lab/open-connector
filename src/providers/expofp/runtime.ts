@@ -142,7 +142,7 @@ async function requestExpofpJson(
     const response = await context.fetcher(new URL(path.replace(/^\//, ""), `${expofpApiBaseUrl}/`), {
       method: "POST",
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "content-type": "application/json",
         "user-agent": providerUserAgent,
       },

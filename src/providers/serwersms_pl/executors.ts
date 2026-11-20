@@ -42,8 +42,8 @@ function request(
     const response = await fetcher(new URL(`${endpoint}.json`, apiBaseUrl), {
       method: "POST",
       headers: {
-        authorization: `Bearer ${apiKey}`,
-        accept: "application/json",
+        "authorization": `Bearer ${apiKey}`,
+        "accept": "application/json",
         "content-type": "application/x-www-form-urlencoded",
         "user-agent": providerUserAgent,
       },
@@ -108,8 +108,5 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
   baseUrl: apiBaseUrl,
   auth: { type: "api_key_authorization", prefix: "Bearer " },
   skipDnsValidation: true,
-  customizeRequest({ headers }) {
-    for (const [key, value] of Object.entries({ accept: "application/json" }))
-      if (!headers.has(key)) headers.set(key, value);
-  },
+  defaultHeaders: { accept: "application/json" },
 });

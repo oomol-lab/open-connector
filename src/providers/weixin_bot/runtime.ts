@@ -156,8 +156,8 @@ export async function requestWeixin(options: WeixinRequestOptions): Promise<Reco
 function authenticatedHeaders(botToken: string): Headers {
   const headers = new Headers({
     "content-type": "application/json",
-    AuthorizationType: "ilink_bot_token",
-    Authorization: `Bearer ${botToken}`,
+    "AuthorizationType": "ilink_bot_token",
+    "Authorization": `Bearer ${botToken}`,
     "iLink-App-Id": "bot",
     "iLink-App-ClientVersion": appClientVersion,
   });

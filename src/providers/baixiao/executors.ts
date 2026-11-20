@@ -62,10 +62,7 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
   allowedEndpoint: (value) => value === "/mcp",
   timeoutMs,
   skipDnsValidation: true,
-  customizeRequest({ headers }) {
-    if (!headers.has("accept")) headers.set("accept", "application/json, text/event-stream");
-    if (!headers.has("content-type")) headers.set("content-type", "application/json");
-  },
+  defaultHeaders: { "accept": "application/json, text/event-stream", "content-type": "application/json" },
 });
 export const credentialValidators: CredentialValidators = {
   async apiKey(input, options) {
@@ -93,7 +90,7 @@ async function callTool(context: ApiKeyProviderContext, name: string, args: Reco
   return result;
 }
 function withClient<T>(context: ApiKeyProviderContext, run: (client: Client) => Promise<T>): Promise<T> {
-  const headers = new Headers({ authorization: `Bearer ${context.apiKey}`, "user-agent": providerUserAgent });
+  const headers = new Headers({ "authorization": `Bearer ${context.apiKey}`, "user-agent": providerUserAgent });
   return withMcpClient(
     {
       endpoint: new URL(endpoint),

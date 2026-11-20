@@ -78,8 +78,8 @@ export const slickdealsActionHandlers: ProviderActionHandlers<"slickdeals", Slic
         "includeStoreIds[]": input.includeStoreIds,
         "includeCategoryIds[]": input.includeCategoryIds,
         "includeBrandIds[]": input.includeBrandIds,
-        type: input.type,
-        createdAfter: input.createdAfter,
+        "type": input.type,
+        "createdAfter": input.createdAfter,
       }),
       token,
       fetcher,
@@ -179,8 +179,8 @@ async function requestSlickdealsJson(input: {
     const response = await input.fetcher(buildSlickdealsUrl(input.path, input.query), {
       method: "GET",
       headers: {
-        accept: "application/json",
-        authorization: `Bearer ${input.token}`,
+        "accept": "application/json",
+        "authorization": `Bearer ${input.token}`,
         "user-agent": providerUserAgent,
       },
       redirect: "manual",

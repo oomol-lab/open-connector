@@ -234,8 +234,8 @@ function buildCloudinaryBaseUrl(cloudName: string): string {
 
 function cloudinaryHeaders(input: Pick<CloudinaryContext, "apiKey" | "apiSecret">): Record<string, string> {
   return {
-    accept: "application/json",
-    authorization: `Basic ${Buffer.from(`${input.apiKey}:${input.apiSecret}`).toString("base64")}`,
+    "accept": "application/json",
+    "authorization": `Basic ${Buffer.from(`${input.apiKey}:${input.apiSecret}`).toString("base64")}`,
     "user-agent": providerUserAgent,
   };
 }

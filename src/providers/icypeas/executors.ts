@@ -186,8 +186,8 @@ async function requestIcypeasJson(
     const response = await context.fetcher(buildIcypeasUrl(input.path), {
       method: "POST",
       headers: {
-        accept: "application/json",
-        authorization: context.apiKey,
+        "accept": "application/json",
+        "authorization": context.apiKey,
         "content-type": "application/json",
         "user-agent": providerUserAgent,
       },

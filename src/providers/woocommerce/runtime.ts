@@ -320,8 +320,8 @@ async function uploadMedia(input: Record<string, unknown>, context: WooCommerceC
   const response = await context.fetcher(`${context.wpApiBaseUrl}/media`, {
     method: "POST",
     headers: {
-      accept: "application/json",
-      authorization: `Basic ${Buffer.from(`${username}:${applicationPassword}`).toString("base64")}`,
+      "accept": "application/json",
+      "authorization": `Basic ${Buffer.from(`${username}:${applicationPassword}`).toString("base64")}`,
       "content-disposition": `attachment; filename="${escapeHeaderFileName(source.fileName)}"`,
       "content-type": source.mimeType,
       "user-agent": providerUserAgent,
@@ -517,8 +517,8 @@ async function woocommerceRequest<T>(input: WooCommerceRequestInput): Promise<{ 
     if (value !== undefined && value !== "") url.searchParams.set(key, String(value));
   }
   const headers: Record<string, string> = {
-    accept: "application/json",
-    authorization: `Basic ${Buffer.from(`${input.context.consumerKey}:${input.context.consumerSecret}`).toString("base64")}`,
+    "accept": "application/json",
+    "authorization": `Basic ${Buffer.from(`${input.context.consumerKey}:${input.context.consumerSecret}`).toString("base64")}`,
     "user-agent": providerUserAgent,
   };
   const body = input.body ? JSON.stringify(input.body) : undefined;
@@ -691,8 +691,8 @@ async function updateUploadedMediaMetadata(
     const response = await context.fetcher(`${context.wpApiBaseUrl}/media/${mediaId}`, {
       method: "POST",
       headers: {
-        accept: "application/json",
-        authorization: `Basic ${Buffer.from(`${auth.username}:${auth.applicationPassword}`).toString("base64")}`,
+        "accept": "application/json",
+        "authorization": `Basic ${Buffer.from(`${auth.username}:${auth.applicationPassword}`).toString("base64")}`,
         "content-type": "application/json",
         "user-agent": providerUserAgent,
       },

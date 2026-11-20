@@ -221,8 +221,8 @@ async function requestQuaderno(
 
 function buildHeaders(apiKey: string, hasBody = false) {
   return {
-    accept: "application/json",
-    authorization: buildQuadernoAuthorizationHeader(apiKey),
+    "accept": "application/json",
+    "authorization": buildQuadernoAuthorizationHeader(apiKey),
     "user-agent": providerUserAgent,
     ...(hasBody ? { "content-type": "application/json" } : {}),
   };

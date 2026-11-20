@@ -498,8 +498,8 @@ async function requestStudyBatch(
 ): Promise<Record<string, unknown>[]> {
   const query = new URLSearchParams({
     "filter.ids": nctIds.join("|"),
-    fields: fields.join("|"),
-    pageSize: String(nctIds.length),
+    "fields": fields.join("|"),
+    "pageSize": String(nctIds.length),
   });
   setOptionalString(query, "markupFormat", markupFormat);
 
@@ -529,7 +529,7 @@ async function requestJson(
       {
         method: "GET",
         headers: {
-          accept: "application/json",
+          "accept": "application/json",
           "user-agent": providerUserAgent,
         },
         signal: timeout.signal,

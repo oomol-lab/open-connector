@@ -231,7 +231,7 @@ async function requestApiverveData(input: {
     const response = await input.context.fetcher(buildApiverveUrl(input.path, input.params), {
       method: "GET",
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "user-agent": providerUserAgent,
         "X-API-Key": input.context.apiKey,
       },

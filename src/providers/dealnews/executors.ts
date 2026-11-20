@@ -67,7 +67,7 @@ async function requestFeed(url: URL, context: DealNewsContext): Promise<unknown>
   try {
     const response = await context.fetcher(url, {
       headers: {
-        accept: "application/rss+xml, application/xml;q=0.9, text/xml;q=0.8",
+        "accept": "application/rss+xml, application/xml;q=0.9, text/xml;q=0.8",
         "user-agent": providerUserAgent,
       },
       signal: timeout.signal,

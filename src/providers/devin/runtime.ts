@@ -166,8 +166,8 @@ async function requestDevin(request: DevinRequestOptions, context: ApiKeyProvide
   const response = await context.fetcher(url, {
     method: request.method ?? "GET",
     headers: {
-      accept: "application/json",
-      authorization: `Bearer ${context.apiKey}`,
+      "accept": "application/json",
+      "authorization": `Bearer ${context.apiKey}`,
       ...(request.body === undefined ? {} : { "content-type": "application/json" }),
       "user-agent": providerUserAgent,
     },

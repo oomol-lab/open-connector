@@ -51,7 +51,7 @@ export async function googlecalendarRequest(url: string, input: GooglecalendarRe
     }
 
     const headers = {
-      authorization: `Bearer ${input.accessToken}`,
+      "authorization": `Bearer ${input.accessToken}`,
       "user-agent": providerUserAgent,
       ...(input.headers ?? {}),
     };

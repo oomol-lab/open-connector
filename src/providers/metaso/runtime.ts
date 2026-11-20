@@ -113,7 +113,7 @@ async function requestMetaso(
     response = await context.fetcher(`${metasoApiBaseUrl}${path}`, {
       method: "POST",
       headers: {
-        authorization: `Bearer ${context.apiKey}`,
+        "authorization": `Bearer ${context.apiKey}`,
         accept,
         "content-type": "application/json",
         "user-agent": providerUserAgent,

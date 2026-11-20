@@ -113,7 +113,7 @@ async function executeNewsApiGet(
   const response = await context.fetcher(buildNewsApiUrl(path, compactQuery(query)), {
     method: "GET",
     headers: {
-      accept: "application/json",
+      "accept": "application/json",
       "user-agent": providerUserAgent,
       "x-api-key": context.apiKey,
     },

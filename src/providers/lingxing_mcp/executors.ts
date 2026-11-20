@@ -37,9 +37,7 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
     return normalizeLingxingMcpEndpoint(credential.values.serverUrl).toString();
   },
   auth: { type: "custom_credential_header", field: "mcpKey", name: "x-mcp-key" },
-  customizeRequest({ headers }) {
-    if (!headers.has("accept")) headers.set("accept", "application/json, text/event-stream");
-  },
+  defaultHeaders: { accept: "application/json, text/event-stream" },
 });
 
 export const credentialValidators: CredentialValidators = {

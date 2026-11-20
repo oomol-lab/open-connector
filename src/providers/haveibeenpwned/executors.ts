@@ -253,7 +253,7 @@ async function requestHaveIBeenPwnedJson(input: {
     const response = await input.fetcher(buildHaveIBeenPwnedUrl(input.path, input.query ?? {}), {
       method: "GET",
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "hibp-api-key": input.apiKey,
         "user-agent": providerUserAgent,
       },

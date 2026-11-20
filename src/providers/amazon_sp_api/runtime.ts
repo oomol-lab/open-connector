@@ -1,5 +1,6 @@
 import { requiredRawString, looseArray, recordOrEmpty, optionalString } from "../../core/cast.ts";
 import {
+  encodeNonDotPathSegment,
   ProviderRequestError,
   providerInputError,
   isAbortLikeError,
@@ -55,7 +56,7 @@ export async function amazonRequest(
     const response = await context.fetcher(url, {
       method: options.method ?? "GET",
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "content-type": "application/json",
         "user-agent": amazonUserAgent,
         "x-amz-access-token": context.accessToken,
@@ -153,11 +154,6 @@ export function executeAmazonAction(
   }
 }
 
-function encodePathSegment(value: unknown, name: string) {
-  const segment = requiredRawString(value, name, providerInputError);
-  // Reject dot segments so URL normalization cannot rewrite the listing path.
-  if (segment === "." || segment === "..") {
-    throw new ProviderRequestError(400, `${name} must not be a dot path segment`, undefined, "invalid_input");
-  }
-  return encodeURIComponent(segment);
+function encodePathSegment(value: unknown, fieldName: string): string {
+  return encodeNonDotPathSegment(requiredRawString(value, fieldName, providerInputError));
 }

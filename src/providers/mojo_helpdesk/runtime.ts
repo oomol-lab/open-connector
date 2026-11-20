@@ -193,7 +193,7 @@ async function requestMojo(options: MojoRequest): Promise<unknown> {
       if (value !== undefined) url.searchParams.set(key, String(value));
     }
     const headers = new Headers({
-      accept: "application/json",
+      "accept": "application/json",
       "user-agent": providerUserAgent,
       "x-api-key": options.apiKey,
     });

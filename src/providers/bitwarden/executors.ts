@@ -153,7 +153,7 @@ async function token(
     fetcher(`${regions[value.region].identity}/connect/token`, {
       method: "POST",
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "content-type": "application/x-www-form-urlencoded",
         "user-agent": providerUserAgent,
       },
@@ -181,7 +181,11 @@ async function request(path: string, operation: string, context: Context, query:
   for (const [key, value] of Object.entries(query)) if (value != null) url.searchParams.set(key, String(value));
   const response = await runProviderRequest({ signal: context.signal, label: `Bitwarden ${operation}` }, (signal) =>
     context.fetcher(url, {
-      headers: { accept: "application/json", authorization: `Bearer ${accessToken}`, "user-agent": providerUserAgent },
+      headers: {
+        "accept": "application/json",
+        "authorization": `Bearer ${accessToken}`,
+        "user-agent": providerUserAgent,
+      },
       signal,
     }),
   );

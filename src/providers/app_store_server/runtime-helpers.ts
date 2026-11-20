@@ -109,8 +109,8 @@ export async function requestAppStoreServer(
 
   return runProviderRequest({ label: providerLabel, signal: context.signal }, async (signal) => {
     const headers: Record<string, string> = {
-      accept: "application/json",
-      authorization: await context.authorization(),
+      "accept": "application/json",
+      "authorization": await context.authorization(),
       "user-agent": providerUserAgent,
     };
     if (input.rawBody !== undefined) {

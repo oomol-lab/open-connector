@@ -145,7 +145,7 @@ async function requestSerplyJson(
     response = await context.fetcher(buildSerplyUrl(path, query), {
       method: "GET",
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "user-agent": providerUserAgent,
         "x-api-key": context.apiKey,
         ...headerOverrides,

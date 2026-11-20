@@ -46,14 +46,14 @@ const didDocumentSchema = s.object(
       s.string("A single JSON-LD context URI.", { minLength: 1 }),
       s.array("An array of JSON-LD context values.", s.unknown("One JSON-LD context value.")),
     ]),
-    id: didStringSchema,
-    authentication: s.array("The DID authentication verification methods.", verificationMethodReferenceSchema),
-    assertionMethod: s.array("The DID assertion verification methods.", verificationMethodReferenceSchema),
-    capabilityInvocation: s.array(
+    "id": didStringSchema,
+    "authentication": s.array("The DID authentication verification methods.", verificationMethodReferenceSchema),
+    "assertionMethod": s.array("The DID assertion verification methods.", verificationMethodReferenceSchema),
+    "capabilityInvocation": s.array(
       "The DID capability invocation verification methods.",
       verificationMethodReferenceSchema,
     ),
-    publicKey: s.array("The public keys published in the DID document.", didPublicKeySchema),
+    "publicKey": s.array("The public keys published in the DID document.", didPublicKeySchema),
   },
   {
     optional: ["@context", "id", "authentication", "assertionMethod", "capabilityInvocation", "publicKey"],

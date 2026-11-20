@@ -167,7 +167,7 @@ async function requestMemberstackJson(input: {
   return runProviderRequest({ signal: input.context.signal, label: "Memberstack" }, async (signal) => {
     const body = input.body && Object.keys(input.body).length > 0 ? input.body : undefined;
     const headers: Record<string, string> = {
-      accept: "application/json",
+      "accept": "application/json",
       "user-agent": providerUserAgent,
       "x-api-key": input.context.apiKey,
     };

@@ -314,8 +314,8 @@ async function acculynxRequest(input: {
     response = await input.fetcher(url, {
       method: input.method,
       headers: {
-        Authorization: `Bearer ${input.apiKey}`,
-        accept: "application/json",
+        "Authorization": `Bearer ${input.apiKey}`,
+        "accept": "application/json",
         "user-agent": providerUserAgent,
         ...(input.body === undefined ? {} : { "content-type": "application/json" }),
       },

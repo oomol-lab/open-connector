@@ -46,8 +46,8 @@ export const appStoreConnectDistributionHandlers: AppStoreConnectHandlers = {
         "filter[archived]": booleanString(input.archived),
         "filter[versions.locale]": pickOptionalString(input, "versionLocale"),
         "filter[versions.platforms]": pickOptionalString(input, "versionPlatform"),
-        sort: pickOptionalString(input, "sort"),
-        include: backgroundAssetInclude,
+        "sort": pickOptionalString(input, "sort"),
+        "include": backgroundAssetInclude,
       },
     });
     return {
@@ -129,8 +129,8 @@ export const appStoreConnectDistributionHandlers: AppStoreConnectHandlers = {
         "filter[internalBetaRelease.state]": pickOptionalString(input, "internalBetaReleaseState"),
         "filter[externalBetaRelease.state]": pickOptionalString(input, "externalBetaReleaseState"),
         "filter[appStoreRelease.state]": pickOptionalString(input, "appStoreReleaseState"),
-        sort: pickOptionalString(input, "sort"),
-        include: backgroundAssetVersionInclude,
+        "sort": pickOptionalString(input, "sort"),
+        "include": backgroundAssetVersionInclude,
       },
     });
     return {

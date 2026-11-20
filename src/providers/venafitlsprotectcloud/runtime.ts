@@ -129,7 +129,7 @@ async function requestVenafiCloud(input: {
     if (value !== undefined) url.searchParams.set(key, value);
   const response = await input.fetcher(url, {
     headers: {
-      accept: "application/json",
+      "accept": "application/json",
       "content-type": "application/json",
       "tppl-api-key": input.apiKey,
       "user-agent": providerUserAgent,

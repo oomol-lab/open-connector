@@ -11,9 +11,7 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
   baseUrl: gtmetrixApiBaseUrl,
   auth: { type: "api_key_basic", suffix: ":" },
   skipDnsValidation: true,
-  customizeRequest({ headers }) {
-    if (!headers.has("accept")) headers.set("accept", "application/vnd.api+json");
-  },
+  defaultHeaders: { accept: "application/vnd.api+json" },
 });
 
 export const executors: ProviderExecutors = defineApiKeyProviderExecutors(service, gtmetrixActionHandlers);

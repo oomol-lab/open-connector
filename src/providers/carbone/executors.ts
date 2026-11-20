@@ -203,7 +203,7 @@ function carboneUrl(path: string, query: Record<string, unknown>) {
 
 function carboneHeaders(apiKey: string, carboneVersion: number | undefined, extraHeaders: Record<string, string>) {
   return {
-    Authorization: `Bearer ${apiKey}`,
+    "Authorization": `Bearer ${apiKey}`,
     "carbone-version": String(carboneVersion ?? carboneDefaultVersion),
     "user-agent": providerUserAgent,
     ...extraHeaders,

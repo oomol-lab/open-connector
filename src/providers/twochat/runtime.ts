@@ -168,7 +168,7 @@ async function requestTwochat(input: TwochatRequestInput): Promise<TwochatRespon
 
   try {
     const headers: Record<string, string> = {
-      accept: "application/json",
+      "accept": "application/json",
       "user-agent": providerUserAgent,
       "x-user-api-key": input.apiKey,
     };

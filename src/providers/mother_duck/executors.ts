@@ -202,8 +202,8 @@ async function requestMotherDuckJson(input: MotherDuckRequestInput): Promise<unk
     const response = await input.context.fetcher(new URL(input.path, motherDuckApiBaseUrl), {
       method: input.method ?? "GET",
       headers: jsonObject({
-        authorization: `Bearer ${input.context.apiKey}`,
-        accept: "application/json",
+        "authorization": `Bearer ${input.context.apiKey}`,
+        "accept": "application/json",
         "content-type": input.body ? "application/json" : undefined,
         "user-agent": providerUserAgent,
       }) as Record<string, string>,

@@ -126,8 +126,8 @@ async function request(spec: Spec, context: ApiKeyProviderContext, phase: "valid
     const response = await context.fetcher(url, {
       method: spec.method,
       headers: {
-        accept: "application/json",
-        authorization: `Bearer ${context.apiKey}`,
+        "accept": "application/json",
+        "authorization": `Bearer ${context.apiKey}`,
         ...(spec.body ? { "content-type": "application/json" } : {}),
         "user-agent": providerUserAgent,
       },

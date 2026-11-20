@@ -29,7 +29,7 @@ export function requestFengshuiJson(
     const response = await fetcher(url, {
       method: "GET",
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "X-API-Key": apiKey,
         "user-agent": providerUserAgent,
       },

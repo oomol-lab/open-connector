@@ -202,7 +202,7 @@ function buildLeadmagicUrl(path: string): string {
 
 function buildLeadmagicHeaders(apiKey: string, hasBody: boolean): Record<string, string> {
   return compactObject({
-    accept: "application/json",
+    "accept": "application/json",
     "content-type": hasBody ? "application/json" : undefined,
     "user-agent": providerUserAgent,
     "X-API-Key": apiKey,

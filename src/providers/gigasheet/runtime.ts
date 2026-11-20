@@ -255,7 +255,7 @@ async function requestGigasheet(input: GigasheetRequestInput): Promise<Response>
 
 function gigasheetHeaders(apiKey: string, includeBody: boolean): Record<string, string> {
   const headers: Record<string, string> = {
-    accept: "application/json",
+    "accept": "application/json",
     "user-agent": providerUserAgent,
     "X-GIGASHEET-TOKEN": apiKey,
   };

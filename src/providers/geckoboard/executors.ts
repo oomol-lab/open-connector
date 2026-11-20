@@ -85,11 +85,7 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
     suffix: ":",
   },
   skipDnsValidation: true,
-  customizeRequest({ headers }) {
-    if (!headers.has("accept")) {
-      headers.set("accept", "application/json");
-    }
-  },
+  defaultHeaders: { accept: "application/json" },
 });
 
 export const credentialValidators: CredentialValidators = {
@@ -170,8 +166,8 @@ async function requestGeckoboardJson(input: {
 
 function geckoboardHeaders(apiKey: string, hasBody: boolean): Record<string, string> {
   const headers: Record<string, string> = {
-    accept: "application/json",
-    authorization: `Basic ${Buffer.from(`${apiKey}:`).toString("base64")}`,
+    "accept": "application/json",
+    "authorization": `Basic ${Buffer.from(`${apiKey}:`).toString("base64")}`,
     "user-agent": providerUserAgent,
   };
   if (hasBody) {

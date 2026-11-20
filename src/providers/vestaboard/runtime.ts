@@ -141,7 +141,7 @@ async function vestaboardFetch(input: VestaboardRequestInput): Promise<Response>
   return input.fetcher(url.toString(), {
     method: input.method,
     headers: {
-      accept: "application/json",
+      "accept": "application/json",
       "content-type": "application/json",
       "user-agent": providerUserAgent,
       "x-vestaboard-token": input.apiKey,

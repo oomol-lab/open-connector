@@ -14,8 +14,8 @@ const { positionals, values: options } = parseArgs({
   allowPositionals: true,
   options: {
     "data-dir": { type: "string" },
-    plain: { type: "boolean" },
-    yes: { type: "boolean" },
+    "plain": { type: "boolean" },
+    "yes": { type: "boolean" },
   },
   strict: true,
 });

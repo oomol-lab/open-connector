@@ -32,8 +32,8 @@ async function request(path: string, query: Record<string, unknown>, context: Co
     if (value !== undefined) url.searchParams.set(key, Array.isArray(value) ? value.join(",") : String(value));
   const response = await context.fetcher(url, {
     headers: {
-      accept: "application/json",
-      authorization: `Basic ${Buffer.from(`${context.apiKey}:${context.apiSecret}`).toString("base64")}`,
+      "accept": "application/json",
+      "authorization": `Basic ${Buffer.from(`${context.apiKey}:${context.apiSecret}`).toString("base64")}`,
       "user-agent": providerUserAgent,
     },
     signal: context.signal,

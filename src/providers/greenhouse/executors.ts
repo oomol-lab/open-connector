@@ -205,9 +205,9 @@ async function requestGreenhouse(input: {
     response = await input.context.fetcher(url, {
       method: input.method ?? "GET",
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "user-agent": providerUserAgent,
-        authorization: buildAuthorizationHeader(input.context.apiKey),
+        "authorization": buildAuthorizationHeader(input.context.apiKey),
         ...input.headers,
       },
       body: input.body,

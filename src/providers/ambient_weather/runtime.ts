@@ -159,7 +159,7 @@ async function requestAmbientWeatherJson(
   try {
     response = await context.fetcher(url, {
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "user-agent": providerUserAgent,
       },
       signal: context.signal,

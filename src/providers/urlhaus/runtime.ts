@@ -81,7 +81,7 @@ async function requestUrlhaus(request: UrlhausRequest): Promise<unknown> {
       method: "POST",
       headers: {
         "Auth-Key": request.context.apiKey,
-        accept: "application/json",
+        "accept": "application/json",
         // URLhaus expects form-encoded POST data (see urlhaus-api.abuse.ch docs),
         // not JSON: a JSON body yields HTTP 200 with an empty response.
         "content-type": "application/x-www-form-urlencoded",
@@ -110,7 +110,7 @@ export async function validateUrlhausAuthKey(
     const response = await fetcher(new URL(urlhausValidationPath, urlhausApiBaseUrl), {
       headers: {
         "Auth-Key": apiKey,
-        accept: "application/json",
+        "accept": "application/json",
         "user-agent": providerUserAgent,
       },
       signal: requestSignal,

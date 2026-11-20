@@ -116,8 +116,8 @@ export async function requestEsaJson<T>(context: EsaActionContext, input: EsaReq
 
 function esaHeaders(accessToken: string, hasJsonBody: boolean): Record<string, string> {
   const headers: Record<string, string> = {
-    accept: "application/json",
-    authorization: `Bearer ${accessToken}`,
+    "accept": "application/json",
+    "authorization": `Bearer ${accessToken}`,
     "user-agent": providerUserAgent,
   };
   if (hasJsonBody) {
@@ -894,7 +894,7 @@ async function downloadAttachmentImage(context: EsaActionContext, url: string) {
   let response: Response;
   try {
     response = await providerFetch(url, {
-      headers: { accept: "image/*", "user-agent": providerUserAgent },
+      headers: { "accept": "image/*", "user-agent": providerUserAgent },
       signal: context.signal,
     });
   } catch (error) {

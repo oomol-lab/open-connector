@@ -233,8 +233,8 @@ async function requestDatascopeJson(input: {
   }
 
   const headers = new Headers({
-    Accept: "application/json",
-    Authorization: input.apiKey,
+    "Accept": "application/json",
+    "Authorization": input.apiKey,
     "User-Agent": providerUserAgent,
   });
 

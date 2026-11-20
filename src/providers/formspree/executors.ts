@@ -54,10 +54,7 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
   baseUrl: formspreeApiBaseUrl,
   auth: { type: "api_key_authorization", prefix: "Bearer " },
   skipDnsValidation: true,
-  customizeRequest({ headers }) {
-    if (!headers.has("accept")) headers.set("accept", "application/json");
-    if (!headers.has("content-type")) headers.set("content-type", "application/json");
-  },
+  defaultHeaders: { "accept": "application/json", "content-type": "application/json" },
 });
 
 export const credentialValidators: CredentialValidators = {
@@ -128,8 +125,8 @@ async function formspreeFetch(
   const timeoutSignal = AbortSignal.timeout(defaultProviderRequestTimeoutMs);
   const signal = input.signal ? AbortSignal.any([input.signal, timeoutSignal]) : timeoutSignal;
   const headers = new Headers({
-    accept: "application/json",
-    authorization: `Bearer ${input.apiKey}`,
+    "accept": "application/json",
+    "authorization": `Bearer ${input.apiKey}`,
     "user-agent": providerUserAgent,
   });
 

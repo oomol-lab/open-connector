@@ -183,8 +183,8 @@ function buildAgentMailUrl(path: string, query?: Record<string, unknown>) {
 
 function agentMailHeaders(apiKey: string, hasJsonBody: boolean) {
   return {
-    Accept: "application/json",
-    Authorization: `Bearer ${apiKey}`,
+    "Accept": "application/json",
+    "Authorization": `Bearer ${apiKey}`,
     ...(hasJsonBody ? { "Content-Type": "application/json" } : {}),
     "User-Agent": providerUserAgent,
   };

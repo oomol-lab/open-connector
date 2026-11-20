@@ -61,8 +61,8 @@ async function postAccepted(
 
 function userlistHeaders(apiKey: string): Record<string, string> {
   return {
-    accept: "application/json",
-    authorization: `Push ${apiKey}`,
+    "accept": "application/json",
+    "authorization": `Push ${apiKey}`,
     "content-type": "application/json; charset=utf-8",
     "user-agent": providerUserAgent,
   };

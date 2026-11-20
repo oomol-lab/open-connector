@@ -172,8 +172,8 @@ function buildCronitorUrl(path: string): URL {
 
 function buildCronitorHeaders(apiKey: string, hasBody: boolean): Record<string, string> {
   return {
-    accept: "application/json",
-    authorization: `Basic ${Buffer.from(`${apiKey}:`, "utf8").toString("base64")}`,
+    "accept": "application/json",
+    "authorization": `Basic ${Buffer.from(`${apiKey}:`, "utf8").toString("base64")}`,
     "cronitor-version": cronitorApiVersion,
     "user-agent": providerUserAgent,
     ...(hasBody ? { "content-type": "application/json" } : {}),

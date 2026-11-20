@@ -253,7 +253,7 @@ async function boloformsRequest(input: {
   let payload: unknown;
   try {
     const headers = new Headers({
-      accept: "application/json",
+      "accept": "application/json",
       "user-agent": providerUserAgent,
       "x-api-key": input.apiKey,
     });

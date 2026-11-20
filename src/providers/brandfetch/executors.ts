@@ -125,8 +125,8 @@ function buildBrandfetchUrl(path: string): string {
 
 function buildBrandfetchHeaders(apiKey: string, contentType?: string): Record<string, string> {
   const headers: Record<string, string> = {
-    accept: "application/json",
-    authorization: `Bearer ${apiKey}`,
+    "accept": "application/json",
+    "authorization": `Bearer ${apiKey}`,
     "user-agent": providerUserAgent,
   };
   if (contentType) {

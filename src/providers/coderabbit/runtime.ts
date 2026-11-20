@@ -308,7 +308,7 @@ async function requestCoderabbit(
     response = await context.fetcher(url, {
       method: request.method,
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         ...(request.body ? { "content-type": "application/json" } : {}),
         "user-agent": providerUserAgent,
         "x-coderabbitai-api-key": context.apiKey,

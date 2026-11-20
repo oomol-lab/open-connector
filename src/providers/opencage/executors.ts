@@ -93,7 +93,7 @@ async function opencageRequest(
     response = await context.fetcher(buildOpencageUrl(format, query, context.apiKey), {
       method: "GET",
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "user-agent": providerUserAgent,
       },
       signal: context.signal,

@@ -63,10 +63,7 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
     );
   },
   auth: { type: "api_key_authorization", prefix: "Token token=" },
-  customizeRequest({ headers }) {
-    if (!headers.has("accept")) headers.set("accept", "application/json");
-    if (!headers.has("content-type")) headers.set("content-type", "application/json");
-  },
+  defaultHeaders: { "accept": "application/json", "content-type": "application/json" },
 });
 
 const mocoValidationPath = "/session";
@@ -266,8 +263,8 @@ async function requestMocoJson(options: MocoRequestOptions): Promise<MocoJsonRes
 
 function mocoHeaders(apiKey: string): Record<string, string> {
   return {
-    accept: "application/json",
-    authorization: `Token token=${apiKey}`,
+    "accept": "application/json",
+    "authorization": `Token token=${apiKey}`,
     "content-type": "application/json",
     "user-agent": providerUserAgent,
   };

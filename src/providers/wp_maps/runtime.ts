@@ -96,7 +96,7 @@ async function requestJson(
   url.searchParams.set("access_token", credential.accessToken);
   url.searchParams.set("client_id", credential.clientId);
   if (language) url.searchParams.set("lang", language);
-  const headers = new Headers({ accept: "application/json", "user-agent": providerUserAgent });
+  const headers = new Headers({ "accept": "application/json", "user-agent": providerUserAgent });
   if (body !== undefined) headers.set("content-type", "application/json");
   const response = await fetcher(url, {
     method,

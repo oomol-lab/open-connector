@@ -112,10 +112,10 @@ export const spyfuActionHandlers: ProviderActionHandlers<"spyfu", SpyfuActionHan
       apiKey,
       path: "/apis/domain_stats_api/v2/getMatchingDomains",
       query: {
-        query: readRequiredString(input.query, "query"),
-        countryCode: readOptionalString(input.countryCode),
-        sortBy: readOptionalString(input.sortBy),
-        sortOrder: readOptionalString(input.sortOrder),
+        "query": readRequiredString(input.query, "query"),
+        "countryCode": readOptionalString(input.countryCode),
+        "sortBy": readOptionalString(input.sortBy),
+        "sortOrder": readOptionalString(input.sortOrder),
         "monthlyBudget.min": asOptionalNumber(input.minMonthlyBudget),
         "monthlyBudget.max": asOptionalNumber(input.maxMonthlyBudget),
         "monthlyOrganicClicks.min": asOptionalNumber(input.minMonthlyOrganicClicks),
@@ -132,8 +132,8 @@ export const spyfuActionHandlers: ProviderActionHandlers<"spyfu", SpyfuActionHan
         "averageOrganicRank.max": asOptionalNumber(input.maxAverageOrganicRank),
         "averageAdRank.min": asOptionalNumber(input.minAverageAdRank),
         "averageAdRank.max": asOptionalNumber(input.maxAverageAdRank),
-        pageSize: asOptionalInteger(input.pageSize) ?? 5,
-        startingRow: asOptionalInteger(input.startingRow),
+        "pageSize": asOptionalInteger(input.pageSize) ?? 5,
+        "startingRow": asOptionalInteger(input.startingRow),
       },
       fetcher,
       phase: "execute",
@@ -167,15 +167,15 @@ export const spyfuActionHandlers: ProviderActionHandlers<"spyfu", SpyfuActionHan
       apiKey,
       path: "/apis/serp_api/v2/seo/getTopPages",
       query: {
-        query: readRequiredString(input.query, "query"),
+        "query": readRequiredString(input.query, "query"),
         searchType,
-        keywordFilter: readOptionalString(input.keywordFilter),
+        "keywordFilter": readOptionalString(input.keywordFilter),
         "seoClicks.min": asOptionalNumber(input.minSeoClicks),
         "seoClicks.max": asOptionalNumber(input.maxSeoClicks),
-        countryCode: readOptionalString(input.countryCode),
-        pageSize: asOptionalInteger(input.pageSize) ?? 5,
-        startingRow: asOptionalInteger(input.startingRow),
-        sortOrder: readOptionalString(input.sortOrder),
+        "countryCode": readOptionalString(input.countryCode),
+        "pageSize": asOptionalInteger(input.pageSize) ?? 5,
+        "startingRow": asOptionalInteger(input.startingRow),
+        "sortOrder": readOptionalString(input.sortOrder),
       },
       fetcher,
       phase: "execute",
@@ -527,7 +527,7 @@ async function requestSpyfuJson(input: {
   }
 
   const headers: Record<string, string> = {
-    accept: "application/json",
+    "accept": "application/json",
     "user-agent": providerUserAgent,
   };
   if (input.body !== undefined) {

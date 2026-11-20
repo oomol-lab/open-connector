@@ -38,8 +38,8 @@ async function request(
   const response = await context.fetcher(url, {
     method,
     headers: {
-      accept: "application/json",
-      apikey: context.apiKey,
+      "accept": "application/json",
+      "apikey": context.apiKey,
       "user-agent": providerUserAgent,
       ...(body ? { "content-type": "application/x-www-form-urlencoded" } : {}),
     },
@@ -69,21 +69,21 @@ async function request(
 const handlers = {
   send_text_message(input: Record<string, unknown>, context: Context) {
     return request(context, "/wa/api/v1/msg", "POST", {
-      channel: "whatsapp",
-      source: requiredString(input.source, "source", providerInputError),
-      destination: requiredString(input.destination, "destination", providerInputError),
+      "channel": "whatsapp",
+      "source": requiredString(input.source, "source", providerInputError),
+      "destination": requiredString(input.destination, "destination", providerInputError),
       "src.name": requiredString(input.appName, "appName", providerInputError),
-      message: JSON.stringify({ type: "text", text: requiredString(input.text, "text", providerInputError) }),
-      disablePreview: typeof input.disablePreview === "boolean" ? String(input.disablePreview) : undefined,
+      "message": JSON.stringify({ type: "text", text: requiredString(input.text, "text", providerInputError) }),
+      "disablePreview": typeof input.disablePreview === "boolean" ? String(input.disablePreview) : undefined,
     });
   },
   send_template_message(input: Record<string, unknown>, context: Context) {
     return request(context, "/wa/api/v1/template/msg", "POST", {
-      channel: "whatsapp",
-      source: requiredString(input.source, "source", providerInputError),
-      destination: requiredString(input.destination, "destination", providerInputError),
+      "channel": "whatsapp",
+      "source": requiredString(input.source, "source", providerInputError),
+      "destination": requiredString(input.destination, "destination", providerInputError),
       "src.name": requiredString(input.appName, "appName", providerInputError),
-      template: JSON.stringify({
+      "template": JSON.stringify({
         id: requiredString(input.templateId, "templateId", providerInputError),
         params:
           input.parameters === undefined ? [] : requiredStringArray(input.parameters, "parameters", providerInputError),

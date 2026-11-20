@@ -82,8 +82,8 @@ async function requestPlateRecognizerJson(input: {
     response = await input.context.fetcher(new URL(input.path, platerecognizerApiBaseUrl), {
       method: input.method,
       headers: {
-        accept: "application/json",
-        authorization: `Token ${input.context.apiKey}`,
+        "accept": "application/json",
+        "authorization": `Token ${input.context.apiKey}`,
         "user-agent": providerUserAgent,
       },
       body: input.body,

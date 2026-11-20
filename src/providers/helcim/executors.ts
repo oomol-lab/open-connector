@@ -15,7 +15,7 @@ async function request(
   const response = await context.fetcher(new URL(path, `${baseUrl}/`), {
     method,
     headers: {
-      accept: "application/json",
+      "accept": "application/json",
       "api-token": context.apiKey,
       "content-type": "application/json",
       "user-agent": providerUserAgent,

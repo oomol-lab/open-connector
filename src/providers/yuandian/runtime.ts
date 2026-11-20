@@ -295,7 +295,7 @@ async function yuandianRequest(
 function yuandianHeaders(apiKey: string, extraHeaders: Record<string, string> = {}): Record<string, string> {
   return {
     "X-API-Key": apiKey,
-    accept: "application/json",
+    "accept": "application/json",
     "user-agent": providerUserAgent,
     ...extraHeaders,
   };

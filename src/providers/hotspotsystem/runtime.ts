@@ -202,7 +202,7 @@ async function hotspotsystemRawRequest(
       method: "GET",
       signal: timeout.signal,
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "sn-apikey": context.apiKey,
         "user-agent": providerUserAgent,
       },

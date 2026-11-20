@@ -142,7 +142,7 @@ async function requestJson(
   label: string,
 ): Promise<unknown> {
   if (options.apiKeyInQuery) url.searchParams.set("key", context.apiKey);
-  const headers = new Headers({ accept: "application/json", "user-agent": providerUserAgent });
+  const headers = new Headers({ "accept": "application/json", "user-agent": providerUserAgent });
   if (options.body) headers.set("content-type", "application/json");
   if (!options.apiKeyInQuery) headers.set("x-goog-api-key", context.apiKey);
   if (options.fieldMask) headers.set("x-goog-fieldmask", options.fieldMask);

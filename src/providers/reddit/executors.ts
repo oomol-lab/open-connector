@@ -196,8 +196,8 @@ async function redditRequest(context: OAuthProviderContext, options: RedditReque
   }
 
   const headers: Record<string, string> = {
-    accept: "application/json",
-    authorization: `Bearer ${context.accessToken}`,
+    "accept": "application/json",
+    "authorization": `Bearer ${context.accessToken}`,
     "user-agent": providerUserAgent,
   };
   let body: URLSearchParams | undefined;

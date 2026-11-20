@@ -198,12 +198,12 @@ async function requestMcdonaldsCnJson<T = unknown>(
   const signBody = input.method === "POST" ? (body ?? "{}") : buildGetSignBody(input.path, query);
   const timestamp = String(Date.now());
   const headers = new Headers({
-    accept: "application/json",
-    AppId: context.appId,
-    MerchantId: context.merchantId,
-    Timestamp: timestamp,
-    Sign: createMcdonaldsCnSign(context, signBody, timestamp),
-    Version: apiVersion,
+    "accept": "application/json",
+    "AppId": context.appId,
+    "MerchantId": context.merchantId,
+    "Timestamp": timestamp,
+    "Sign": createMcdonaldsCnSign(context, signBody, timestamp),
+    "Version": apiVersion,
     "user-agent": providerUserAgent,
   });
   if (body !== undefined) {

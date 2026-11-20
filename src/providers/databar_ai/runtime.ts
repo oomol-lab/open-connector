@@ -136,7 +136,7 @@ async function requestDatabarAi(input: {
   const response = await input.context.fetcher(url, {
     method: input.method ?? "GET",
     headers: {
-      accept: "application/json",
+      "accept": "application/json",
       "user-agent": providerUserAgent,
       "x-apikey": input.context.apiKey,
       ...(input.body === undefined ? {} : { "content-type": "application/json" }),

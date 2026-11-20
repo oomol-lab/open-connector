@@ -171,7 +171,5 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
   service: "g2",
   baseUrl,
   auth: { type: "api_key_authorization", prefix: "Bearer " },
-  customizeRequest({ headers }) {
-    if (!headers.has("accept")) headers.set("accept", "application/vnd.api+json");
-  },
+  defaultHeaders: { accept: "application/vnd.api+json" },
 });

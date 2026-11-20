@@ -476,7 +476,7 @@ it("preserves safe business errors, remote correlation and Retry-After through i
     app.request("https://connect.example/v1/actions/example.echo", {
       method: "POST",
       headers: {
-        authorization: "Bearer admin",
+        "authorization": "Bearer admin",
         "content-type": "application/json",
         "idempotency-key": "saas-execution",
       },
@@ -500,7 +500,7 @@ it("preserves safe business errors, remote correlation and Retry-After through i
 it("serializes SaaS action and proxy success without changing the public data shapes", async () => {
   const f = await setup();
   const app = await f.app();
-  const headers = { authorization: "Bearer admin", "content-type": "application/json" };
+  const headers = { "authorization": "Bearer admin", "content-type": "application/json" };
   const actionResponse = await app.request("https://connect.example/v1/actions/example.echo", {
     method: "POST",
     headers,
@@ -540,7 +540,7 @@ it("preserves raw SaaS proxy business failures and Retry-After at the HTTP bound
     );
   const response = await app.request("https://connect.example/v1/proxy/example", {
     method: "POST",
-    headers: { authorization: "Bearer admin", "content-type": "application/json" },
+    headers: { "authorization": "Bearer admin", "content-type": "application/json" },
     body: JSON.stringify({ endpoint: "/items", method: "GET", alias: "work" }),
   });
   expect(response.status).toBe(429);

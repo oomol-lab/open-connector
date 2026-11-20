@@ -324,8 +324,8 @@ function buildKommoUrl(apiBaseUrl: string, path: string, query: Record<string, Q
 
 function buildKommoHeaders(apiKey: string): Record<string, string> {
   return {
-    accept: "application/json",
-    authorization: `Bearer ${apiKey}`,
+    "accept": "application/json",
+    "authorization": `Bearer ${apiKey}`,
     "user-agent": providerUserAgent,
   };
 }

@@ -98,8 +98,8 @@ async function requestLusha(input: {
     response = await input.context.fetcher(url.toString(), {
       method: input.method ?? "GET",
       headers: {
-        accept: "application/json",
-        api_key: input.context.apiKey,
+        "accept": "application/json",
+        "api_key": input.context.apiKey,
         "user-agent": providerUserAgent,
         ...(input.body ? { "content-type": "application/json" } : {}),
       },

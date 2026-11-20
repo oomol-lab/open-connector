@@ -257,7 +257,7 @@ function normalizeEncodianApiBaseUrl(value?: string): string {
 function encodianHeaders(apiKey: string): Record<string, string> {
   return {
     "content-type": "application/json",
-    accept: "application/json",
+    "accept": "application/json",
     "user-agent": providerUserAgent,
     "X-ApiKey": apiKey,
   };

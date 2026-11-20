@@ -33,8 +33,5 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
   service: "anyapi",
   baseUrl: anyapiBaseUrl,
   auth: { type: "api_key_header", name: "X-API-Key" },
-  async customizeRequest({ headers: proxyHeaders }) {
-    for (const [name, value] of Object.entries({ accept: "application/json", "user-agent": providerUserAgent }))
-      if (!proxyHeaders.has(name)) proxyHeaders.set(name, value);
-  },
+  defaultHeaders: { "accept": "application/json", "user-agent": providerUserAgent },
 });

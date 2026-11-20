@@ -26,7 +26,7 @@ export const appStoreConnectAppsBuildsHandlers: AppStoreConnectHandlers = {
         "filter[bundleId]": pickOptionalString(input, "bundleId"),
         "filter[name]": pickOptionalString(input, "name"),
         "filter[sku]": pickOptionalString(input, "sku"),
-        sort: pickOptionalString(input, "sort"),
+        "sort": pickOptionalString(input, "sort"),
       },
     });
     return { apps: page.items, nextCursor: page.nextCursor, total: page.total };
@@ -54,8 +54,8 @@ export const appStoreConnectAppsBuildsHandlers: AppStoreConnectHandlers = {
         "filter[processingState]": pickOptionalString(input, "processingState"),
         "filter[betaAppReviewSubmission.betaReviewState]": pickOptionalString(input, "betaReviewState"),
         "filter[expired]": booleanString(input.expired),
-        sort: pickOptionalString(input, "sort"),
-        include: "preReleaseVersion",
+        "sort": pickOptionalString(input, "sort"),
+        "include": "preReleaseVersion",
       },
     });
     return {
@@ -97,7 +97,7 @@ export const appStoreConnectAppsBuildsHandlers: AppStoreConnectHandlers = {
         "filter[app]": readAppStoreConnectId(input.appId, "appId"),
         "filter[platform]": pickOptionalString(input, "platform"),
         "filter[version]": pickOptionalString(input, "version"),
-        sort: pickOptionalString(input, "sort"),
+        "sort": pickOptionalString(input, "sort"),
       },
     });
     return { preReleaseVersions: page.items, nextCursor: page.nextCursor, total: page.total };

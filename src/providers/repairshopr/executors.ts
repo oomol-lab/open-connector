@@ -104,11 +104,7 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
     return readRepairshoprApiBaseUrl(credential.values, credential.metadata);
   },
   auth: { type: "api_key_header", name: "Authorization" },
-  customizeRequest({ headers }) {
-    if (!headers.has("accept")) {
-      headers.set("accept", "application/json");
-    }
-  },
+  defaultHeaders: { accept: "application/json" },
 });
 
 export const credentialValidators: CredentialValidators = {
@@ -179,8 +175,8 @@ async function requestRepairshoprJson(
     response = await input.fetcher(buildRepairshoprUrl(input.apiBaseUrl, input.path, input.query), {
       method: "GET",
       headers: {
-        accept: "application/json",
-        authorization: input.apiKey,
+        "accept": "application/json",
+        "authorization": input.apiKey,
         "user-agent": providerUserAgent,
       },
       signal: input.signal,

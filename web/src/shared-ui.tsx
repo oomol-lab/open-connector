@@ -92,7 +92,7 @@ export function providerIconSource(
   }
 
   const searchParams = new URLSearchParams({
-    larger: "true",
+    "larger": "true",
     "throw-error-on-404": "true",
   });
   return { kind: "url", value: `https://a.favicon.im/${hostname}?${searchParams.toString()}` };

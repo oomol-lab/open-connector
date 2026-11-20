@@ -23,8 +23,8 @@ async function summarize(body: string, apiKey: string, fetcher: typeof fetch, pa
       method: "POST",
       signal,
       headers: {
-        authorization: `Bot ${apiKey}`,
-        accept: "application/json",
+        "authorization": `Bot ${apiKey}`,
+        "accept": "application/json",
         "content-type": "application/json",
         "user-agent": providerUserAgent,
       },
@@ -139,12 +139,5 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
   baseUrl,
   auth: { type: "api_key_authorization", prefix: "Bot " },
   skipDnsValidation: true,
-  customizeRequest({ headers }) {
-    for (const [key, value] of Object.entries({
-      accept: "application/json",
-      "content-type": "application/json",
-      "user-agent": providerUserAgent,
-    }))
-      if (!headers.has(key)) headers.set(key, value);
-  },
+  defaultHeaders: { "accept": "application/json", "content-type": "application/json", "user-agent": providerUserAgent },
 });

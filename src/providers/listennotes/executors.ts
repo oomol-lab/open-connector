@@ -264,7 +264,7 @@ function buildListennotesUrl(path: string, query: Record<string, string>): strin
 
 function listennotesHeaders(apiKey: string): Record<string, string> {
   return {
-    accept: "application/json",
+    "accept": "application/json",
     "user-agent": providerUserAgent,
     "X-ListenAPI-Key": apiKey,
   };

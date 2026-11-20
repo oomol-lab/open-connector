@@ -242,8 +242,8 @@ async function requestHexJson(options: HexRequestOptions): Promise<unknown> {
   }
 
   const headers = new Headers({
-    accept: "application/json",
-    authorization: `Bearer ${options.apiKey}`,
+    "accept": "application/json",
+    "authorization": `Bearer ${options.apiKey}`,
     "user-agent": providerUserAgent,
   });
   for (const [key, value] of Object.entries(options.headers ?? {})) {

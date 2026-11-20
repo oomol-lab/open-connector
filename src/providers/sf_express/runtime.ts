@@ -279,7 +279,7 @@ export async function requestSfExpress(
       method: "POST",
       headers: {
         "content-type": "application/x-www-form-urlencoded",
-        accept: "application/json",
+        "accept": "application/json",
         "user-agent": providerUserAgent,
       },
       body: form.toString(),

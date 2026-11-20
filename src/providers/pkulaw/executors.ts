@@ -145,10 +145,10 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
   service: "pkulaw",
   baseUrl: pkulawMcpGateway,
   auth: { type: "api_key_authorization", prefix: "Bearer " },
-  customizeRequest({ headers }) {
-    if (!headers.has("accept")) headers.set("accept", "application/json, text/event-stream");
-    if (!headers.has("content-type")) headers.set("content-type", "application/json");
-    if (!headers.has("user-agent")) headers.set("user-agent", providerUserAgent);
+  defaultHeaders: {
+    "accept": "application/json, text/event-stream",
+    "content-type": "application/json",
+    "user-agent": providerUserAgent,
   },
   skipDnsValidation: true,
 });

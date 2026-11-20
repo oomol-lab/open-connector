@@ -192,7 +192,7 @@ async function requestSkyvernJson(input: {
     const response = await input.fetcher(new URL(input.path, skyvernApiBaseUrl), {
       method: input.method,
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "content-type": "application/json",
         "x-api-key": input.apiKey,
         "user-agent": providerUserAgent,

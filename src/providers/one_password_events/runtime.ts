@@ -193,8 +193,8 @@ async function requestOnePasswordEventsJson(input: {
     const response = await input.context.fetcher(new URL(input.path, `${input.context.baseUrl}/`), {
       method: input.method,
       headers: {
-        accept: "application/json",
-        authorization: `Bearer ${input.context.apiKey}`,
+        "accept": "application/json",
+        "authorization": `Bearer ${input.context.apiKey}`,
         ...(input.method === "POST" ? { "content-type": "application/json" } : {}),
         "user-agent": providerUserAgent,
       },

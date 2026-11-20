@@ -52,7 +52,7 @@ interface Item {
 interface Page {
   readonly "@odata.deltaLink"?: string;
   readonly "@odata.nextLink"?: string;
-  readonly value?: readonly Item[];
+  readonly "value"?: readonly Item[];
 }
 
 export const oneDriveItemChanged: PollDefinition = {

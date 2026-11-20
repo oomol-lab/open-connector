@@ -295,7 +295,7 @@ async function readBigCommercePayload(response: Response): Promise<unknown> {
 
 function buildBigCommerceHeaders(apiKey: string, hasBody: boolean): Headers {
   const headers = new Headers({
-    accept: "application/json",
+    "accept": "application/json",
     "x-auth-token": apiKey,
     "user-agent": providerUserAgent,
   });

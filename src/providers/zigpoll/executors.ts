@@ -13,11 +13,7 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
   baseUrl: zigpollApiBaseUrl,
   auth: { type: "api_key_header", name: "Authorization" },
   skipDnsValidation: true,
-  customizeRequest({ headers }) {
-    if (!headers.has("accept")) {
-      headers.set("accept", "application/json");
-    }
-  },
+  defaultHeaders: { accept: "application/json" },
 });
 
 export const credentialValidators: CredentialValidators = {

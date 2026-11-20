@@ -199,7 +199,7 @@ async function requestMoreTreesJson(input: {
   body?: Record<string, unknown>;
 }) {
   const headers = new Headers({
-    accept: "application/json",
+    "accept": "application/json",
     "user-agent": providerUserAgent,
   });
   if (input.apiKey) {

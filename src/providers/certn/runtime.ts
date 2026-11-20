@@ -229,8 +229,8 @@ async function requestCertn(input: {
       method: input.method,
       signal: timeout.signal,
       headers: {
-        accept: "application/json",
-        authorization: `Api-Key ${input.context.apiKey}`,
+        "accept": "application/json",
+        "authorization": `Api-Key ${input.context.apiKey}`,
         "user-agent": providerUserAgent,
       },
     });

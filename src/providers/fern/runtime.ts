@@ -132,8 +132,8 @@ async function fernGetJson(path: string, context: ApiKeyProviderContext, phase: 
 
 function fernHeaders(apiKey: string): Record<string, string> {
   return {
-    authorization: `Bearer ${apiKey}`,
-    accept: "application/json",
+    "authorization": `Bearer ${apiKey}`,
+    "accept": "application/json",
     "user-agent": providerUserAgent,
   };
 }

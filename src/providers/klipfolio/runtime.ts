@@ -137,7 +137,7 @@ async function requestKlipfolioJson(input: {
     const response = await input.fetcher(buildKlipfolioUrl(input.path, input.params ?? {}), {
       method: input.method,
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "kf-api-key": input.apiKey,
         "user-agent": providerUserAgent,
       },

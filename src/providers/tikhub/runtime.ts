@@ -208,8 +208,8 @@ async function invokeTikHubEndpoint(input: Record<string, unknown>, fetcher: typ
     const response = await fetcher(url, {
       method,
       headers: {
-        accept: "application/json",
-        authorization: `Bearer ${apiKey}`,
+        "accept": "application/json",
+        "authorization": `Bearer ${apiKey}`,
         ...(serializedBody === undefined ? {} : { "content-type": "application/json" }),
         "user-agent": providerUserAgent,
       },
@@ -577,8 +577,8 @@ async function requestTikHubUserJson(input: {
     const response = await input.fetcher(url, {
       method: "GET",
       headers: {
-        accept: "application/json",
-        authorization: `Bearer ${input.apiKey}`,
+        "accept": "application/json",
+        "authorization": `Bearer ${input.apiKey}`,
         "user-agent": providerUserAgent,
       },
       redirect: "manual",

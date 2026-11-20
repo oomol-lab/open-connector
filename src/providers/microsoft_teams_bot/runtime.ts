@@ -461,7 +461,7 @@ async function fetchConnectorToken(
         {
           method: "POST",
           headers: {
-            accept: "application/json",
+            "accept": "application/json",
             "content-type": "application/x-www-form-urlencoded",
             "user-agent": providerUserAgent,
           },
@@ -529,8 +529,8 @@ async function requestConnector(input: TeamsBotConnectorRequest): Promise<unknow
   const token = await fetchConnectorToken(input.context, cloudForServiceUrl(input.serviceUrl), "execute");
   return runProviderRequest({ signal: input.context.signal, label: "Microsoft Teams Bot" }, async (signal) => {
     const headers = new Headers({
-      accept: "application/json",
-      authorization: `Bearer ${token}`,
+      "accept": "application/json",
+      "authorization": `Bearer ${token}`,
       "user-agent": providerUserAgent,
     });
     if (input.body !== undefined) {

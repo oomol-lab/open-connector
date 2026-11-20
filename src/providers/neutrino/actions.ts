@@ -39,19 +39,19 @@ const blocklistSensorSchema = outputObject("A Neutrino blocklist sensor entry.",
 const validateEmailInputSchema = s.object(
   "Input parameters for Neutrino email validation.",
   {
-    email: requiredString("The email address to parse, validate, and clean."),
+    "email": requiredString("The email address to parse, validate, and clean."),
     "fix-typos": s.boolean("Whether to automatically attempt to fix typos in the address."),
   },
   { required: ["email"], optional: ["fix-typos"] },
 );
 
 const validateEmailOutputSchema = outputObject("Email validation result returned by Neutrino.", {
-  valid: s.boolean(
+  "valid": s.boolean(
     "Whether the email has valid syntax, an active domain, correct DNS records, and operational MX servers.",
   ),
-  email: s.string("The complete email address, corrected when typo fixing is enabled."),
-  domain: s.string("The domain name of the email address."),
-  provider: s.string("The domain name of the email hosting provider."),
+  "email": s.string("The complete email address, corrected when typo fixing is enabled."),
+  "domain": s.string("The domain name of the email address."),
+  "provider": s.string("The domain name of the email hosting provider."),
   "mx-ip": s.string("The first resolved IP address of the primary MX server, or an empty string."),
   "is-freemail": s.boolean("Whether the address is from a free email provider."),
   "is-disposable": s.boolean("Whether the address is from a disposable, temporary, or darknet email service."),
@@ -65,21 +65,21 @@ const validateEmailOutputSchema = outputObject("Email validation result returned
 const validatePhoneInputSchema = s.object(
   "Input parameters for Neutrino phone validation.",
   {
-    number: requiredString("The phone number in international or local format."),
+    "number": requiredString("The phone number in international or local format."),
     "country-code": countryCodeSchema,
-    ip: s.string("A user IP address used to infer the country for local numbers."),
+    "ip": s.string("A user IP address used to infer the country for local numbers."),
   },
   { required: ["number"], optional: ["country-code", "ip"] },
 );
 
 const validatePhoneOutputSchema = outputObject("Phone validation result returned by Neutrino.", {
-  valid: s.boolean("Whether this is a valid phone number."),
-  type: s.string("The number type based on the number prefix."),
+  "valid": s.boolean("Whether this is a valid phone number."),
+  "type": s.string("The number type based on the number prefix."),
   "international-calling-code": s.string("The international calling code."),
   "international-number": s.string("The number represented in E.164 format."),
   "local-number": s.string("The number represented in local dialing format."),
-  location: s.string("The phone number location."),
-  country: s.string("The phone number country."),
+  "location": s.string("The phone number location."),
+  "country": s.string("The phone number country."),
   "country-code": s.string("The phone number country as an ISO 2-letter country code."),
   "country-code3": s.string("The phone number country as an ISO 3-letter country code."),
   "currency-code": s.string("The ISO 4217 currency code associated with the country."),
@@ -90,32 +90,32 @@ const validatePhoneOutputSchema = outputObject("Phone validation result returned
 const getIpInfoInputSchema = s.object(
   "Input parameters for Neutrino IP info lookup.",
   {
-    ip: requiredString("An IPv4 or IPv6 address. CIDR notation is also accepted by Neutrino."),
+    "ip": requiredString("An IPv4 or IPv6 address. CIDR notation is also accepted by Neutrino."),
     "reverse-lookup": s.boolean("Whether to run a reverse DNS PTR lookup."),
   },
   { required: ["ip"], optional: ["reverse-lookup"] },
 );
 
 const getIpInfoOutputSchema = outputObject("IP geolocation payload returned by Neutrino.", {
-  ip: s.string("The IPv4 or IPv6 address returned."),
-  valid: s.boolean("Whether this is a valid IPv4 or IPv6 address."),
+  "ip": s.string("The IPv4 or IPv6 address returned."),
+  "valid": s.boolean("Whether this is a valid IPv4 or IPv6 address."),
   "is-v6": s.boolean("Whether this is an IPv6 address."),
   "is-v4-mapped": s.boolean("Whether this is an IPv4-mapped IPv6 address."),
   "is-bogon": s.boolean("Whether this is a bogon, private, local, or reserved IP address."),
-  country: s.string("The full country name."),
+  "country": s.string("The full country name."),
   "country-code": s.string("The ISO 2-letter country code."),
   "country-code3": s.string("The ISO 3-letter country code."),
   "continent-code": s.string("The ISO 2-letter continent code."),
   "currency-code": s.string("The ISO 4217 currency code associated with the country."),
-  city: s.string("The city name when detectable."),
-  region: s.string("The region name when detectable."),
+  "city": s.string("The city name when detectable."),
+  "region": s.string("The region name when detectable."),
   "region-code": s.string("The ISO 3166-2 region code when detectable."),
   "language-code": s.string("The ISO 2-letter official language code for the country."),
-  longitude: s.number("The location longitude."),
-  latitude: s.number("The location latitude."),
-  hostname: s.string("The full hostname when reverse lookup is enabled."),
+  "longitude": s.number("The location longitude."),
+  "latitude": s.number("The location latitude."),
+  "hostname": s.string("The full hostname when reverse lookup is enabled."),
   "host-domain": s.string("The host domain when reverse lookup is enabled."),
-  timezone: timezoneSchema,
+  "timezone": timezoneSchema,
 });
 
 const lookupDomainInputSchema = s.object(
@@ -128,22 +128,22 @@ const lookupDomainInputSchema = s.object(
 );
 
 const lookupDomainOutputSchema = outputObject("Domain intelligence payload returned by Neutrino.", {
-  domain: s.string("The primary domain name excluding subdomains."),
-  valid: s.boolean("Whether a valid registered domain with DNS NS records was found."),
-  fqdn: s.string("The fully qualified domain name."),
+  "domain": s.string("The primary domain name excluding subdomains."),
+  "valid": s.boolean("Whether a valid registered domain with DNS NS records was found."),
+  "fqdn": s.string("The fully qualified domain name."),
   "is-subdomain": s.boolean("Whether the FQDN is a subdomain of the primary domain."),
-  tld: s.string("The top-level domain."),
+  "tld": s.string("The top-level domain."),
   "tld-cc": s.string("The associated ISO 2-letter country code for country-code TLDs."),
-  rank: s.integer("The estimated global traffic rank, or 0 when outside the top one million."),
+  "rank": s.integer("The estimated global traffic rank, or 0 when outside the top one million."),
   "is-gov": s.boolean("Whether this domain is under a government or military TLD."),
   "is-opennic": s.boolean("Whether this domain is under an OpenNIC TLD."),
   "is-pending": s.boolean("Whether this unseen domain is still being processed."),
   "is-adult": s.boolean("Whether the domain hosts adult content."),
   "is-malicious": s.boolean("Whether the domain is listed on at least one blocklist."),
-  blocklists: s.array("Blocklist categories this domain is listed on.", s.string("A category.")),
-  sensors: s.array("Blocklist sensors that detected this domain.", blocklistSensorSchema),
+  "blocklists": s.array("Blocklist categories this domain is listed on.", s.string("A category.")),
+  "sensors": s.array("Blocklist sensors that detected this domain.", blocklistSensorSchema),
   "registered-date": s.string("The ISO registration or first-seen date, or an empty string."),
-  age: s.integer("The number of days since the domain was registered."),
+  "age": s.integer("The number of days since the domain was registered."),
   "registrar-name": s.string("The domain registrar name."),
   "registrar-id": s.integer("The IANA registrar ID, or 0 when unavailable."),
   "dns-provider": s.string("The primary DNS provider domain."),
@@ -157,7 +157,7 @@ const lookupDomainOutputSchema = outputObject("Domain intelligence payload retur
 const checkIpBlocklistInputSchema = s.object(
   "Input parameters for Neutrino IP blocklist lookup.",
   {
-    ip: requiredString(
+    "ip": requiredString(
       "An IPv4 or IPv6 address. CIDR notation, port numbers, and comma-separated IPs are also accepted by Neutrino.",
     ),
     "vpn-lookup": s.boolean("Whether to include public VPN provider IP addresses."),
@@ -166,7 +166,7 @@ const checkIpBlocklistInputSchema = s.object(
 );
 
 const checkIpBlocklistOutputSchema = outputObject("IP blocklist payload returned by Neutrino.", {
-  ip: s.string("The IP address that was checked."),
+  "ip": s.string("The IP address that was checked."),
   "is-bot": s.boolean("Whether the IP hosts a malicious bot or botnet member."),
   "is-exploit-bot": s.boolean("Whether the IP is running exploit scanning software."),
   "is-malware": s.boolean("Whether the IP is involved in distributing or running malware."),
@@ -181,9 +181,9 @@ const checkIpBlocklistOutputSchema = outputObject("IP blocklist payload returned
   "is-listed": s.boolean("Whether the IP is listed on any blocklist."),
   "is-vpn": s.boolean("Whether the IP belongs to a public VPN provider."),
   "last-seen": s.integer("The Unix time when this IP was last seen on any blocklist."),
-  blocklists: s.array("Blocklist categories this IP is listed on.", s.string("A category.")),
-  sensors: s.array("Sensors that detected this IP.", blocklistSensorSchema),
-  cidr: s.string("The CIDR address for this listing when listed."),
+  "blocklists": s.array("Blocklist categories this IP is listed on.", s.string("A category.")),
+  "sensors": s.array("Sensors that detected this IP.", blocklistSensorSchema),
+  "cidr": s.string("The CIDR address for this listing when listed."),
 });
 
 export const neutrinoActions: ActionDefinition[] = [

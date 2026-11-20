@@ -93,8 +93,8 @@ async function requestTriggercmdPayload(input: TriggercmdRequestInput): Promise<
   let response: Response;
   try {
     const headers: Record<string, string> = {
-      accept: "application/json",
-      authorization: `Bearer ${input.apiKey}`,
+      "accept": "application/json",
+      "authorization": `Bearer ${input.apiKey}`,
       "user-agent": providerUserAgent,
     };
     if (input.body !== undefined) {

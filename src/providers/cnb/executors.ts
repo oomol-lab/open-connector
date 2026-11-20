@@ -75,7 +75,7 @@ async function request({ pathname, method, parameters, apiKey, fetcher, parentSi
       signal,
       headers: {
         ...defaultHeaders,
-        authorization: `Bearer ${apiKey}`,
+        "authorization": `Bearer ${apiKey}`,
         "content-type": "application/json",
       },
       body: method === "GET" ? undefined : JSON.stringify(parameters),
@@ -165,10 +165,7 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
   baseUrl,
   auth: { type: "api_key_authorization", prefix: "Bearer " },
   skipDnsValidation: true,
-  customizeRequest({ headers }) {
-    for (const [name, value] of Object.entries({ accept: "application/vnd.cnb.api+json" }))
-      if (!headers.has(name)) headers.set(name, value);
-  },
+  defaultHeaders: { accept: "application/vnd.cnb.api+json" },
   async readError(response) {
     return new ProviderRequestError(
       response.status,

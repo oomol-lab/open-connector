@@ -191,7 +191,7 @@ async function requestPlane(
     response = await context.fetcher(buildPlaneUrl(normalizePlaneApiBaseUrl(context.apiBaseUrl), path, query), {
       method,
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "user-agent": providerUserAgent,
         "X-API-Key": context.apiKey,
         ...(body ? { "content-type": "application/json" } : {}),

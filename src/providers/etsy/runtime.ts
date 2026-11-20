@@ -51,9 +51,9 @@ export async function requestEtsy(
     const response = await fetcher(url, {
       method: body ? "POST" : "GET",
       headers: {
-        authorization: `Bearer ${accessToken}`,
+        "authorization": `Bearer ${accessToken}`,
         "x-api-key": apiKey,
-        accept: "application/json",
+        "accept": "application/json",
         "content-type": "application/json",
       },
       body: body ? JSON.stringify(body) : undefined,

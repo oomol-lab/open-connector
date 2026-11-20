@@ -75,10 +75,7 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
   baseUrl: lightfieldApiBaseUrl,
   auth: { type: "api_key_authorization", prefix: "Bearer " },
   skipDnsValidation: true,
-  customizeRequest({ headers }) {
-    if (!headers.has("accept")) headers.set("accept", "application/json");
-    if (!headers.has("lightfield-version")) headers.set("lightfield-version", lightfieldApiVersion);
-  },
+  defaultHeaders: { "accept": "application/json", "lightfield-version": lightfieldApiVersion },
 });
 
 export const credentialValidators: CredentialValidators = {
@@ -189,8 +186,8 @@ async function requestLightfield(input: {
 
 function lightfieldHeaders(apiKey: string): Record<string, string> {
   return {
-    accept: "application/json",
-    authorization: `Bearer ${apiKey}`,
+    "accept": "application/json",
+    "authorization": `Bearer ${apiKey}`,
     "lightfield-version": lightfieldApiVersion,
     "user-agent": providerUserAgent,
   };

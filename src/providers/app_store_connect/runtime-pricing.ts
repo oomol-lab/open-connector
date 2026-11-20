@@ -113,7 +113,7 @@ export const appStoreConnectPricingHandlers: AppStoreConnectHandlers = {
       label: `${pricePointLabel} list`,
       query: {
         "filter[territory]": readCommaSeparatedList(input.territoryIds),
-        include: "territory",
+        "include": "territory",
       },
     });
     return {
@@ -141,7 +141,7 @@ export const appStoreConnectPricingHandlers: AppStoreConnectHandlers = {
       label: `${pricePointLabel} equalization list`,
       query: {
         "filter[territory]": readCommaSeparatedList(input.territoryIds),
-        include: "territory",
+        "include": "territory",
       },
     });
     return {
@@ -318,7 +318,7 @@ async function listSchedulePrices(
       "filter[startDate]": pickOptionalString(input, "startDate"),
       "filter[endDate]": pickOptionalString(input, "endDate"),
 
-      include: "appPricePoint,territory",
+      "include": "appPricePoint,territory",
     },
   });
   return {

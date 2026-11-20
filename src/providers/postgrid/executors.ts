@@ -198,7 +198,7 @@ function buildPostgridUrl(path: string, params: Record<string, string | undefine
 
 function postgridHeaders(apiKey: string, includeBodyHeaders: boolean): Record<string, string> {
   return {
-    accept: "application/json",
+    "accept": "application/json",
     ...(includeBodyHeaders ? { "content-type": "application/json" } : {}),
     "user-agent": providerUserAgent,
     "x-api-key": apiKey,

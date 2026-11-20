@@ -106,7 +106,7 @@ async function withBtMcpClient<T>(context: BtMcpContext, run: (client: Client) =
       transport: "streamable_http",
       fetcher: context.fetcher,
       headers: new Headers({
-        authorization: `Bearer ${context.authorizationToken}`,
+        "authorization": `Bearer ${context.authorizationToken}`,
         "user-agent": providerUserAgent,
       }),
       signal: context.signal,

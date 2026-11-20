@@ -136,7 +136,7 @@ async function requestIpgeolocationIoJson(
     const response = await context.fetcher(buildIpgeolocationIoUrl(input.path, context.apiKey, input.params), {
       method: "GET",
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "user-agent": providerUserAgent,
       },
       signal: timeout.signal,

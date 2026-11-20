@@ -163,10 +163,7 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
   baseUrl: woodpeckerCoApiBaseUrl,
   auth: { type: "api_key_header", name: "x-api-key" },
   skipDnsValidation: true,
-  customizeRequest({ headers }) {
-    if (!headers.has("accept")) headers.set("accept", "application/json");
-    if (!headers.has("content-type")) headers.set("content-type", "application/json");
-  },
+  defaultHeaders: { "accept": "application/json", "content-type": "application/json" },
 });
 
 export const credentialValidators: CredentialValidators = {
@@ -225,7 +222,7 @@ async function requestWoodpeckerCoJson(input: {
     response = await input.context.fetcher(url, {
       method: input.method,
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "user-agent": providerUserAgent,
         "x-api-key": input.context.apiKey,
       },

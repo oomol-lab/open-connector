@@ -67,9 +67,9 @@ describe("Dropbox transit downloads", () => {
     const requests = stubResponses([
       dropboxDownloadResponse(content, {
         ".tag": "file",
-        id: "id:document-1",
-        name: "document.pdf",
-        size: content.length,
+        "id": "id:document-1",
+        "name": "document.pdf",
+        "size": content.length,
       }),
     ]);
     const { store, create } = createTransitFileStore(1024);
@@ -104,9 +104,9 @@ describe("Dropbox transit downloads", () => {
     const requests = stubResponses([
       dropboxDownloadResponse(content, {
         ".tag": "file",
-        id: "id:shared-1",
-        name: "source.bin",
-        size: content.length,
+        "id": "id:shared-1",
+        "name": "source.bin",
+        "size": content.length,
       }),
     ]);
     const { store } = createTransitFileStore(1024);
@@ -141,9 +141,9 @@ describe("Dropbox transit downloads", () => {
     const requests = stubResponses([
       dropboxDownloadResponse(new Uint8Array([1]), {
         ".tag": "file",
-        id: "id:large-1",
-        name: "large.bin",
-        size: 3,
+        "id": "id:large-1",
+        "name": "large.bin",
+        "size": 3,
       }),
     ]);
     const { store, create } = createTransitFileStore(2);
@@ -166,9 +166,9 @@ describe("Dropbox transit downloads", () => {
     stubResponses([
       dropboxDownloadResponse(new Uint8Array([1, 2, 3]), {
         ".tag": "file",
-        id: "id:growing-1",
-        name: "growing.bin",
-        size: 1,
+        "id": "id:growing-1",
+        "name": "growing.bin",
+        "size": 1,
       }),
     ]);
     const { store, create } = createTransitFileStore(2);
@@ -208,12 +208,12 @@ describe("Dropbox-API-Arg header encoding", () => {
     const requests = stubResponses([
       dropboxDownloadResponse(content, {
         ".tag": "file",
-        id: "id:cjk-1",
+        "id": "id:cjk-1",
         // ASCII on purpose: this fixture rides the RESPONSE header, which is
         // under the same ByteString limit. The request header is what is
         // under test here.
-        name: "kkndme.pdf",
-        size: content.length,
+        "name": "kkndme.pdf",
+        "size": content.length,
       }),
     ]);
     const { store } = createTransitFileStore(1024);
@@ -256,7 +256,7 @@ describe("Dropbox membership", () => {
       const invitees = [
         {
           access_type: { ".tag": "viewer" },
-          invitee: { ".tag": "email", email: "pending@example.com" },
+          invitee: { ".tag": "email", "email": "pending@example.com" },
           is_inherited: false,
           permissions: [],
         },
@@ -329,11 +329,11 @@ describe("Dropbox membership", () => {
   );
 
   it("preserves explicit-sharing changes on initial and continued listing pages", async () => {
-    const entry = { ".tag": "file", id: "id:file-1", name: "notes.txt", has_explicit_shared_members: true };
+    const entry = { ".tag": "file", "id": "id:file-1", "name": "notes.txt", "has_explicit_shared_members": true };
     const requests = stubResponses([
       Response.json({ entries: [entry], cursor: "next", has_more: true }),
       Response.json({ entries: [{ ...entry, has_explicit_shared_members: false }], cursor: "done", has_more: false }),
-      Response.json({ ".tag": "folder", id: "id:folder-1", name: "private" }),
+      Response.json({ ".tag": "folder", "id": "id:folder-1", "name": "private" }),
     ]);
     expect(
       await executeDropboxAction("list_folder", { path: "", includeHasExplicitSharedMembers: true }),

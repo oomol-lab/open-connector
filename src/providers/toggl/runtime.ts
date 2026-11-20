@@ -419,8 +419,8 @@ function requestContext(context: ApiKeyProviderContext): {
 
 function togglHeaders(apiKey: string, hasJsonBody: boolean): Headers {
   const headers = new Headers({
-    Authorization: buildTogglAuthorizationHeader(apiKey),
-    Accept: "application/json",
+    "Authorization": buildTogglAuthorizationHeader(apiKey),
+    "Accept": "application/json",
     "User-Agent": providerUserAgent,
   });
   if (hasJsonBody) headers.set("Content-Type", "application/json");

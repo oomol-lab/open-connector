@@ -100,9 +100,7 @@ export const executors: ProviderExecutors = defineProviderExecutors({
   ),
 });
 export const proxy: ProviderProxyExecutor = defineProviderProxy({
-  customizeRequest({ headers }) {
-    if (!headers.has("accept")) headers.set("accept", "application/json");
-  },
+  defaultHeaders: { accept: "application/json" },
   service: "karbon",
   baseUrl: apiBaseUrl,
   skipDnsValidation: true,

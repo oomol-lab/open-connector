@@ -41,7 +41,7 @@ async function execute(
       break;
   }
   const headers = new Headers({
-    accept: "application/json",
+    "accept": "application/json",
     "x-api-key": context.apiKey,
     "user-agent": providerUserAgent,
   });
@@ -103,7 +103,5 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
   service: "pingback",
   baseUrl: apiBaseUrl,
   auth: { type: "api_key_header", name: "x-api-key" },
-  customizeRequest({ headers }) {
-    if (!headers.has("accept")) headers.set("accept", "application/json");
-  },
+  defaultHeaders: { accept: "application/json" },
 });

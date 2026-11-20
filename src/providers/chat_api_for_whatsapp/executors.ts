@@ -43,11 +43,7 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
     type: "api_key_query",
     name: "token",
   },
-  customizeRequest({ headers }) {
-    if (!headers.has("accept")) {
-      headers.set("accept", "application/json");
-    }
-  },
+  defaultHeaders: { accept: "application/json" },
 });
 
 export const credentialValidators: CredentialValidators = {

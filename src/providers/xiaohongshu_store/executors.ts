@@ -198,7 +198,7 @@ async function requestXiaohongshuStore(input: XiaohongshuStoreRequestInput): Pro
     const response = await input.fetcher(xiaohongshuStoreApiUrl, {
       method: "POST",
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "content-type": "application/json",
         "user-agent": providerUserAgent,
       },

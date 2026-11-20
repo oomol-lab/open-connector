@@ -102,7 +102,7 @@ function buildCheaperinferenceHeaders(
   anthropicVersion?: string,
 ): Headers {
   const headers = new Headers({
-    authorization: `Bearer ${apiKey}`,
+    "authorization": `Bearer ${apiKey}`,
     "user-agent": providerUserAgent,
   });
 

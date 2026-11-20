@@ -157,8 +157,8 @@ async function requestIpregistryJson(
     response = await context.fetcher(buildIpregistryUrl(input.pathSegments, input.query), {
       method,
       headers: {
-        accept: "application/json",
-        authorization: `ApiKey ${context.apiKey}`,
+        "accept": "application/json",
+        "authorization": `ApiKey ${context.apiKey}`,
         ...(method === "POST" ? { "content-type": "application/json" } : {}),
         "user-agent": providerUserAgent,
       },

@@ -209,8 +209,8 @@ async function mailersendFetch(input: MailersendRequestOptions): Promise<Respons
 
 function mailersendHeaders(apiKey: string, hasBody: boolean): Record<string, string> {
   return {
-    accept: "application/json",
-    authorization: `Bearer ${apiKey}`,
+    "accept": "application/json",
+    "authorization": `Bearer ${apiKey}`,
     ...(hasBody ? { "content-type": "application/json" } : {}),
     "user-agent": providerUserAgent,
   };

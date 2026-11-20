@@ -329,7 +329,7 @@ export function readWaffoCredential(values: Record<string, string>): WaffoCreden
 export async function requestWaffoJson(input: WaffoRequestInput): Promise<Record<string, unknown>> {
   const body = JSON.stringify(input.body);
   const headers = new Headers({
-    accept: "application/json",
+    "accept": "application/json",
     "content-type": "application/json",
     "user-agent": providerUserAgent,
   });

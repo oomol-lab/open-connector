@@ -200,8 +200,8 @@ async function requestGlobalpingJson(input: GlobalpingRequestInput): Promise<{ r
 
 function buildGlobalpingHeaders(apiKey: string, hasBody: boolean): Record<string, string> {
   const headers: Record<string, string> = {
-    accept: "application/json",
-    authorization: `Bearer ${apiKey}`,
+    "accept": "application/json",
+    "authorization": `Bearer ${apiKey}`,
     "user-agent": providerUserAgent,
   };
   if (hasBody) {

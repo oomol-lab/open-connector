@@ -28,9 +28,9 @@ export const knockActionHandlers: ProviderActionHandlers<"knock", KnockActionHan
         method: "GET",
         path: "/users",
         query: compactObject({
-          after: optionalString(input.after),
-          before: optionalString(input.before),
-          page_size: typeof input.pageSize === "number" ? String(input.pageSize) : undefined,
+          "after": optionalString(input.after),
+          "before": optionalString(input.before),
+          "page_size": typeof input.pageSize === "number" ? String(input.pageSize) : undefined,
           "include[]": optionalStringArray(input.include),
         }),
       },
@@ -196,8 +196,8 @@ function buildKnockUrl(path: string, query: Record<string, string | string[] | u
 
 function knockHeaders(apiKey: string): Record<string, string> {
   return {
-    accept: "application/json",
-    authorization: `Bearer ${apiKey}`,
+    "accept": "application/json",
+    "authorization": `Bearer ${apiKey}`,
     "content-type": "application/json",
     "user-agent": providerUserAgent,
   };

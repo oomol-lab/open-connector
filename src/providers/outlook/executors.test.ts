@@ -129,9 +129,9 @@ describe("outlook list_messages delta", () => {
     vi.stubGlobal("fetch", async (input: RequestInfo | URL, init?: RequestInit) => {
       request = input instanceof Request ? input : new Request(input, init);
       return Response.json({
-        value: [
+        "value": [
           { id: "msg-1", subject: "Hello" },
-          { id: "msg-2", "@removed": { reason: "deleted" } },
+          { "id": "msg-2", "@removed": { reason: "deleted" } },
         ],
         "@odata.deltaLink": deltaLink,
       });
@@ -148,7 +148,7 @@ describe("outlook list_messages delta", () => {
       output: {
         messages: [
           { id: "msg-1", subject: "Hello" },
-          { id: "msg-2", "@removed": { reason: "deleted" } },
+          { "id": "msg-2", "@removed": { reason: "deleted" } },
         ],
         nextLink: null,
         deltaLink,
@@ -165,7 +165,7 @@ describe("outlook list_messages delta", () => {
     let request: Request | undefined;
     vi.stubGlobal("fetch", async (input: RequestInfo | URL, init?: RequestInit) => {
       request = input instanceof Request ? input : new Request(input, init);
-      return Response.json({ value: [{ id: "msg-1" }], "@odata.nextLink": nextLink });
+      return Response.json({ "value": [{ id: "msg-1" }], "@odata.nextLink": nextLink });
     });
 
     const result = await execute("list_messages", { mailFolderId: "AQMkADAwATM3ZmYtRFRM", delta: true });
@@ -193,7 +193,7 @@ describe("outlook list_messages delta", () => {
     let request: Request | undefined;
     vi.stubGlobal("fetch", async (input: RequestInfo | URL, init?: RequestInit) => {
       request = input instanceof Request ? input : new Request(input, init);
-      return Response.json({ value: [], "@odata.deltaLink": `${deltaLink}0` });
+      return Response.json({ "value": [], "@odata.deltaLink": `${deltaLink}0` });
     });
 
     const result = await execute("list_messages", { deltaLink, top: 5, bodyContentType: "text" });

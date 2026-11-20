@@ -142,7 +142,7 @@ async function requestMingdao(input: MingdaoRequest): Promise<{ data: unknown }>
       headers: {
         "HAP-Appkey": input.apiKey,
         "HAP-Sign": input.sign,
-        accept: "application/json",
+        "accept": "application/json",
         "content-type": "application/json",
         "user-agent": providerUserAgent,
       },

@@ -127,9 +127,7 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
   baseUrl: axiomApiBaseUrl,
   auth: { type: "api_key_authorization", prefix: "Bearer " },
   skipDnsValidation: true,
-  customizeRequest({ headers }) {
-    if (!headers.has("accept")) headers.set("accept", "application/json");
-  },
+  defaultHeaders: { accept: "application/json" },
 });
 
 export const credentialValidators: CredentialValidators = {
@@ -205,8 +203,8 @@ function buildAxiomUrl(path: string, query?: Record<string, string | undefined>)
 
 function buildAxiomHeaders(apiKey: string, hasBody: boolean): Headers {
   const headers = new Headers({
-    accept: "application/json",
-    authorization: `Bearer ${apiKey}`,
+    "accept": "application/json",
+    "authorization": `Bearer ${apiKey}`,
     "user-agent": providerUserAgent,
   });
   if (hasBody) {

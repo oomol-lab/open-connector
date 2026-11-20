@@ -268,7 +268,7 @@ async function awsListBuckets(input: Record<string, unknown>, context: AwsAction
   const client = createClientForAction(input, context);
   const response = await awsS3Request(client, {
     query: compactObject({
-      prefix: optionalString(input.prefix),
+      "prefix": optionalString(input.prefix),
       "continuation-token": optionalString(input.marker),
       "max-buckets": asOptionalPositiveInteger(input.maxKeys),
     }),
@@ -293,8 +293,8 @@ async function awsListObjects(input: Record<string, unknown>, context: AwsAction
     query: compactObject({
       "list-type": 2,
       "encoding-type": "url",
-      prefix: optionalString(input.prefix),
-      delimiter: optionalString(input.delimiter),
+      "prefix": optionalString(input.prefix),
+      "delimiter": optionalString(input.delimiter),
       "continuation-token": optionalString(input.continuationToken),
       "start-after": optionalString(input.startAfter),
       "fetch-owner": input.fetchOwner === true ? "true" : undefined,

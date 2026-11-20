@@ -153,7 +153,7 @@ async function requestInsites(input: {
   }
 
   const headers: Record<string, string> = {
-    accept: "application/json",
+    "accept": "application/json",
     "api-key": input.apiKey,
     "user-agent": providerUserAgent,
   };

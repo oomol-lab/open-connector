@@ -22,7 +22,7 @@ const origins: Record<string, string> = {
   au: "https://apiau.samanage.com",
 };
 const defaultHeaders = {
-  accept: "application/vnd.samanage.v2.1+json",
+  "accept": "application/vnd.samanage.v2.1+json",
   "content-type": "application/json",
   "user-agent": providerUserAgent,
 };
@@ -185,7 +185,5 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
     headers: [{ name: "X-Samanage-Authorization", source: { type: "api_key" }, prefix: "Bearer " }],
   },
   allowedOrigins: Object.values(origins),
-  customizeRequest({ headers }) {
-    for (const [name, value] of Object.entries(defaultHeaders)) if (!headers.has(name)) headers.set(name, value);
-  },
+  defaultHeaders,
 });

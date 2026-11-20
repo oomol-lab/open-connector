@@ -221,8 +221,8 @@ function buildUrl(baseUrl: string, path: string): string {
 
 function buildHeaders(apiKey: string, hasBody: boolean): Headers {
   const headers = new Headers({
-    authorization: `Bearer ${apiKey}`,
-    accept: "application/json",
+    "authorization": `Bearer ${apiKey}`,
+    "accept": "application/json",
     "user-agent": providerUserAgent,
   });
   if (hasBody) {

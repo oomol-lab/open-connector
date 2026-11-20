@@ -1126,7 +1126,7 @@ async function requestPostmanResponse(
     response = await fetcher(url.toString(), {
       method: input.method,
       headers: {
-        accept: input.headers?.accept ?? postmanDefaultAccept,
+        "accept": input.headers?.accept ?? postmanDefaultAccept,
         "user-agent": providerUserAgent,
         "x-api-key": input.apiKey,
         ...(input.body === undefined ? {} : { "content-type": "application/json" }),

@@ -163,7 +163,7 @@ async function cardlyPostJson(
     response = await context.fetcher(url, {
       method: "POST",
       headers: cardlyHeaders(context.apiKey, {
-        accept: "application/json",
+        "accept": "application/json",
         "content-type": "application/json",
       }),
       body: JSON.stringify(body),
@@ -229,8 +229,8 @@ function isSensitiveHeaderName(name: string): boolean {
 
 function buildListQuery(input: Record<string, unknown>): Record<string, string | number | undefined> {
   return {
-    limit: optionalInteger(input.limit),
-    offset: optionalInteger(input.offset),
+    "limit": optionalInteger(input.limit),
+    "offset": optionalInteger(input.offset),
     "effectiveTime.lt": optionalString(input.effectiveTimeLt),
     "effectiveTime.lte": optionalString(input.effectiveTimeLte),
     "effectiveTime.gt": optionalString(input.effectiveTimeGt),

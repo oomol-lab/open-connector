@@ -11,9 +11,7 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
   service,
   baseUrl: freeastroapiBaseUrl,
   auth: { type: "api_key_header", name: "x-api-key" },
-  customizeRequest({ headers }) {
-    if (!headers.has("accept")) headers.set("accept", "application/json");
-  },
+  defaultHeaders: { accept: "application/json" },
 });
 export const credentialValidators: CredentialValidators = {
   apiKey(input, { fetcher, signal }) {

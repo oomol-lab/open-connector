@@ -38,7 +38,7 @@ try {
       return Response.json(hook ? [hook] : []);
     };
     try {
-      const adminHeaders = { authorization: "Bearer smoke-admin", "content-type": "application/json" };
+      const adminHeaders = { "authorization": "Bearer smoke-admin", "content-type": "application/json" };
       const connection = await runtime.fetch(
         new Request("https://host.example/v1/connections/github/connect/api-key", {
           method: "POST",
@@ -68,7 +68,7 @@ try {
         new Request("https://host.example/v1/providers/github/triggers/github.on_repo_event/execute", {
           method: "POST",
           headers: {
-            authorization: `Bearer ${token}`,
+            "authorization": `Bearer ${token}`,
             "content-type": "application/json",
             "x-oo-connector-app-id": id,
           },

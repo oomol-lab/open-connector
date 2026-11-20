@@ -125,9 +125,9 @@ async function requestCoresignal(
     response = await input.context.fetcher(url, {
       method: input.method,
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "content-type": "application/json",
-        apikey: input.context.apiKey,
+        "apikey": input.context.apiKey,
         "user-agent": providerUserAgent,
       },
       body: input.body === undefined ? undefined : JSON.stringify(input.body),

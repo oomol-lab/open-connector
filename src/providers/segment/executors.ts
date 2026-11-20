@@ -118,7 +118,7 @@ async function requestSegment(
   const response = await context.fetcher(`${segmentApiBaseUrl}/${endpoint}`, {
     method: "POST",
     headers: {
-      accept: "application/json",
+      "accept": "application/json",
       "content-type": "application/json",
       "user-agent": providerUserAgent,
     },

@@ -44,11 +44,7 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
   baseUrl: screenshotFyiApiBaseUrl,
   auth: { type: "api_key_query", name: "accessKey" },
   skipDnsValidation: true,
-  customizeRequest({ headers }) {
-    if (!headers.has("accept")) {
-      headers.set("accept", "application/json");
-    }
-  },
+  defaultHeaders: { accept: "application/json" },
 });
 
 export const credentialValidators: CredentialValidators = {
@@ -103,7 +99,7 @@ async function requestScreenshotFyiJson(input: {
     const response = await input.context.fetcher(buildScreenshotFyiUrl(input.apiKey, input.query), {
       method: "GET",
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "user-agent": providerUserAgent,
       },
       signal: timeout.signal,

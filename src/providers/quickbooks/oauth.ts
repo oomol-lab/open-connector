@@ -79,8 +79,8 @@ async function requestQuickbooksToken(input: QuickbooksTokenRequest): Promise<OA
       response = await input.fetcher(input.tokenUrl, {
         method: "POST",
         headers: {
-          accept: "application/json",
-          authorization: basicAuthorizationHeader(`${input.clientId}:${input.clientSecret}`),
+          "accept": "application/json",
+          "authorization": basicAuthorizationHeader(`${input.clientId}:${input.clientSecret}`),
           "content-type": "application/x-www-form-urlencoded",
           "user-agent": providerUserAgent,
         },

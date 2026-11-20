@@ -113,8 +113,8 @@ async function requestGatherupJson(input: GatherupRequestInput) {
     const response = await input.fetcher(buildGatherupUrl(input), {
       method: "GET",
       headers: {
-        accept: "application/json",
-        authorization: `Bearer ${input.apiKey}`,
+        "accept": "application/json",
+        "authorization": `Bearer ${input.apiKey}`,
         "user-agent": providerUserAgent,
       },
       signal,

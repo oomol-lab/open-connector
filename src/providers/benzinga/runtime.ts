@@ -97,8 +97,8 @@ function buildCalendarParams(input: Record<string, unknown>): Record<string, str
     "parameters[tickers]": optionalString(input.symbol),
     "parameters[date_from]": optionalString(input.dateFrom),
     "parameters[date_to]": optionalString(input.dateTo),
-    page: readOptionalNumberString(input.page),
-    pagesize: readOptionalNumberString(input.limit),
+    "page": readOptionalNumberString(input.page),
+    "pagesize": readOptionalNumberString(input.limit),
   });
 }
 
@@ -112,7 +112,7 @@ async function requestBenzingaJson(input: {
     const response = await input.context.fetcher(buildBenzingaUrl(input.path, input.context.apiKey, input.params), {
       method: "GET",
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "user-agent": providerUserAgent,
       },
       signal,

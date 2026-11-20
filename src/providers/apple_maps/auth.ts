@@ -168,8 +168,8 @@ async function exchangeAccessToken(
     const response = await fetcher(`${appleMapsApiOrigin}${appleMapsTokenPath}`, {
       method: "GET",
       headers: {
-        accept: "application/json",
-        authorization: `Bearer ${authToken}`,
+        "accept": "application/json",
+        "authorization": `Bearer ${authToken}`,
         "user-agent": providerUserAgent,
       },
       signal,

@@ -330,8 +330,8 @@ function buildBugHerdUrl(path: string, query: BugHerdQuery = {}): string {
 
 function buildBugHerdHeaders(apiKey: string, hasBody: boolean): Record<string, string> {
   const headers: Record<string, string> = {
-    Accept: "application/json",
-    Authorization: `Basic ${Buffer.from(`${apiKey}:x`).toString("base64")}`,
+    "Accept": "application/json",
+    "Authorization": `Basic ${Buffer.from(`${apiKey}:x`).toString("base64")}`,
     "User-Agent": providerUserAgent,
   };
   if (hasBody) {

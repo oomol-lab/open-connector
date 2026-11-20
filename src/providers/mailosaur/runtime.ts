@@ -218,8 +218,8 @@ async function mailosaurRequest(
   }
 
   const headers: Record<string, string> = {
-    accept: "application/json",
-    authorization: buildMailosaurAuthorization(context.apiKey),
+    "accept": "application/json",
+    "authorization": buildMailosaurAuthorization(context.apiKey),
     "user-agent": providerUserAgent,
   };
   const init: RequestInit = {

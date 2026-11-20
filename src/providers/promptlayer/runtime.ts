@@ -194,7 +194,7 @@ export async function validatePromptLayerCredential(
 async function requestPromptLayerJson(input: PromptLayerRequestInput): Promise<Record<string, unknown>> {
   return runProviderRequest({ signal: input.context.signal, label: "PromptLayer" }, async (signal) => {
     const headers: Record<string, string> = {
-      accept: "application/json",
+      "accept": "application/json",
       "user-agent": providerUserAgent,
       "X-API-KEY": input.context.apiKey,
     };

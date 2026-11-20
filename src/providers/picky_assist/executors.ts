@@ -44,7 +44,7 @@ async function request(
   return runProviderRequest({ signal: parentSignal, label: "Picky Assist" }, async (signal) => {
     const response = await fetcher(`${baseUrl}/${endpoint}`, {
       method: "POST",
-      headers: { accept: "application/json", "content-type": "application/json" },
+      headers: { "accept": "application/json", "content-type": "application/json" },
       body: JSON.stringify({ ...body, token: apiKey }),
       signal,
     });
@@ -101,8 +101,5 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
   baseUrl,
   auth: { type: "api_key_json_body", name: "token" },
   skipDnsValidation: true,
-  customizeRequest({ headers }) {
-    if (!headers.has("accept")) headers.set("accept", "application/json");
-    if (!headers.has("content-type")) headers.set("content-type", "application/json");
-  },
+  defaultHeaders: { "accept": "application/json", "content-type": "application/json" },
 });

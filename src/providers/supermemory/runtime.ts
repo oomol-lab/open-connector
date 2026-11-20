@@ -139,8 +139,8 @@ async function supermemoryRequest(path: string, input: SupermemoryRequestInput, 
 
 function supermemoryRawRequest(path: string, input: SupermemoryRequestInput, apiKey: string, fetcher: typeof fetch) {
   const headers = new Headers({
-    authorization: `Bearer ${apiKey}`,
-    accept: "application/json",
+    "authorization": `Bearer ${apiKey}`,
+    "accept": "application/json",
     "user-agent": supermemoryUserAgent,
   });
   let body: string | undefined;

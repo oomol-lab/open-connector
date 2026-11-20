@@ -197,8 +197,8 @@ async function requestVecteraJson(input: VecteraRequestInput): Promise<VecteraJs
   const timeout = createProviderTimeout(input.context.signal);
   try {
     const headers = new Headers({
-      accept: "application/json",
-      authorization: `Token ${input.context.apiKey}`,
+      "accept": "application/json",
+      "authorization": `Token ${input.context.apiKey}`,
       "user-agent": providerUserAgent,
     });
     if (input.body != null) headers.set("content-type", "application/json");

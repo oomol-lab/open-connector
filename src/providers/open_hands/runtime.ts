@@ -149,8 +149,8 @@ async function openHandsRequest(
     response = await context.fetcher(url, {
       method: options.method ?? "GET",
       headers: {
-        accept: "application/json",
-        authorization: `Bearer ${token}`,
+        "accept": "application/json",
+        "authorization": `Bearer ${token}`,
         ...(options.body ? { "content-type": "application/json" } : {}),
         "user-agent": providerUserAgent,
       },

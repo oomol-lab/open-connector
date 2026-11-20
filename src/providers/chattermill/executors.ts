@@ -131,9 +131,7 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
   baseUrl: apiBaseUrl,
   auth: { type: "api_key_authorization", prefix: "Bearer " },
   skipDnsValidation: true,
-  customizeRequest({ headers }) {
-    if (!headers.has("accept")) headers.set("accept", "application/json");
-  },
+  defaultHeaders: { accept: "application/json" },
 });
 
 export const credentialValidators: CredentialValidators = {
@@ -243,8 +241,8 @@ async function requestJson(
   const response = await context.fetcher(url, {
     method: options.method ?? "GET",
     headers: {
-      accept: "application/json",
-      authorization: `Bearer ${context.apiKey}`,
+      "accept": "application/json",
+      "authorization": `Bearer ${context.apiKey}`,
       "user-agent": providerUserAgent,
       ...(options.body !== undefined ? { "content-type": "application/json" } : {}),
     },

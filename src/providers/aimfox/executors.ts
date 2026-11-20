@@ -275,8 +275,8 @@ async function requestAimfoxJson(input: {
   }
 
   const headers: Record<string, string> = {
-    accept: "application/json",
-    authorization: `Bearer ${input.context.apiKey}`,
+    "accept": "application/json",
+    "authorization": `Bearer ${input.context.apiKey}`,
     "user-agent": providerUserAgent,
   };
   const init: RequestInit = {

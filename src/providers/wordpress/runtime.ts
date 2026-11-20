@@ -645,8 +645,8 @@ async function requestWordpressResponse(options: WordpressRequestOptions) {
   const apiBaseUrl = options.apiBaseUrl;
   const url = buildWordpressUrl(apiBaseUrl, options.path, options.query);
   const headers: Record<string, string> = {
-    accept: "application/json",
-    authorization: buildWordpressAuthorization(options),
+    "accept": "application/json",
+    "authorization": buildWordpressAuthorization(options),
     "user-agent": providerUserAgent,
   };
   const init: RequestInit = {

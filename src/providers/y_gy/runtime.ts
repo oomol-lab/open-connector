@@ -203,7 +203,7 @@ async function requestYGy(
     if (value !== undefined) url.searchParams.set(name, String(value));
   }
   const headers: Record<string, string> = {
-    accept: "application/json",
+    "accept": "application/json",
     "api-key": context.apiKey,
     "user-agent": providerUserAgent,
   };

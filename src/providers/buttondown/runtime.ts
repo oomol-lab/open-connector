@@ -339,9 +339,9 @@ function buttondownFetch(path: string, input: ButtondownFetchInput): Promise<Res
   return input.fetcher(new URL(path, buttondownApiBaseUrl), {
     ...input,
     headers: {
-      accept: "application/json",
+      "accept": "application/json",
       "user-agent": providerUserAgent,
-      Authorization: `Token ${input.apiKey}`,
+      "Authorization": `Token ${input.apiKey}`,
       ...input.headers,
     },
     signal: input.signal ?? undefined,

@@ -183,8 +183,8 @@ async function requestDeepgramJson(input: {
 
 function buildDeepgramHeaders(apiKey: string) {
   return {
-    accept: "application/json",
-    authorization: `Token ${apiKey}`,
+    "accept": "application/json",
+    "authorization": `Token ${apiKey}`,
     "user-agent": providerUserAgent,
   };
 }

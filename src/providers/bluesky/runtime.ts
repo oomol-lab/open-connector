@@ -282,9 +282,9 @@ function buildBlueskyUrl(path: string, query?: Record<string, unknown>): URL {
 
 function blueskyHeaders(accessJwt: string | undefined, hasBody: boolean): Record<string, string> {
   return compactObject({
-    accept: "application/json",
+    "accept": "application/json",
     "content-type": hasBody ? "application/json" : undefined,
-    authorization: accessJwt ? `Bearer ${accessJwt}` : undefined,
+    "authorization": accessJwt ? `Bearer ${accessJwt}` : undefined,
     "user-agent": providerUserAgent,
   });
 }

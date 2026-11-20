@@ -223,8 +223,8 @@ async function requestCyberimpactJson(input: {
     if (value !== undefined && value !== null && value !== "") url.searchParams.set(key, String(value));
   }
   const headers = new Headers({
-    accept: "application/json",
-    authorization: `Bearer ${input.apiKey}`,
+    "accept": "application/json",
+    "authorization": `Bearer ${input.apiKey}`,
     "user-agent": providerUserAgent,
   });
   const init: RequestInit = { method: input.method ?? "GET", headers, signal: input.signal };

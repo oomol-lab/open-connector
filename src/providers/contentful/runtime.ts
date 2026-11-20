@@ -338,9 +338,9 @@ function buildContentfulHeaders(
   includeJsonContentType = false,
 ): Record<string, string> {
   return compactObject({
-    authorization: `Bearer ${apiKey}`,
+    "authorization": `Bearer ${apiKey}`,
     "user-agent": providerUserAgent,
-    accept: contentfulJsonContentType,
+    "accept": contentfulJsonContentType,
     "content-type": includeJsonContentType ? contentfulJsonContentType : undefined,
     ...extraHeaders,
   }) as Record<string, string>;

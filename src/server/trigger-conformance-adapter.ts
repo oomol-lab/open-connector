@@ -140,7 +140,7 @@ export const createHarness: CreateHarness = async (upstream) => {
       return connector.app.request(`/v1/providers/${service}/triggers/${triggerId}/execute`, {
         method: "POST",
         headers: {
-          authorization: `Bearer ${owner === "other" ? otherRuntime.token : runtime.token}`,
+          "authorization": `Bearer ${owner === "other" ? otherRuntime.token : runtime.token}`,
           "content-type": "application/json",
           "x-oo-connector-app-id": connections.get(service)!,
         },

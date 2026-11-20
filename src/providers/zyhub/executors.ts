@@ -64,7 +64,7 @@ const operations: Record<string, Operation> = {
     code: "cnStockValuationDetail",
     query: (i) => ({
       symbol: i.symbol,
-      rank: map(i.period, { "1y": "y1", "3y": "y3", "5y": "y5", "10y": "y10", all: "all" }),
+      rank: map(i.period, { "1y": "y1", "3y": "y3", "5y": "y5", "10y": "y10", "all": "all" }),
       type: map(i.metric, { pe_ttm: "syl", pb: "sjl", pcf: "sxl", dividend_yield: "gxl", market_cap: "zsz" }),
     }),
   },
@@ -201,7 +201,7 @@ async function request(
     const url = new URL(code, baseUrl);
     for (const [key, value] of Object.entries(query)) if (value != null) url.searchParams.set(key, String(value));
     const response = await fetcher(url, {
-      headers: { accept: "application/json", "user-agent": providerUserAgent, "X-Auth-Token": apiKey },
+      headers: { "accept": "application/json", "user-agent": providerUserAgent, "X-Auth-Token": apiKey },
       signal,
     });
     const text =

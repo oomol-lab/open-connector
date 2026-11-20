@@ -152,7 +152,7 @@ async function validateAdyntelRemoteCredential(input: AdyntelRemoteCredentialVal
     const response = await input.fetcher(adyntelMcpSseUrl, {
       method: "GET",
       headers: {
-        accept: "text/event-stream",
+        "accept": "text/event-stream",
         "user-agent": providerUserAgent,
         "x-adyntel-api-key": input.apiKey,
         "x-adyntel-email": input.email,
@@ -206,7 +206,7 @@ async function requestAdyntelJson(options: AdyntelRequestOptions): Promise<unkno
       const response = await options.context.fetcher(new URL(options.path, adyntelApiBaseUrl), {
         method: "POST",
         headers: {
-          accept: "application/json",
+          "accept": "application/json",
           "content-type": "application/json",
           "user-agent": providerUserAgent,
         },

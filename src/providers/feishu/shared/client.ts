@@ -78,8 +78,8 @@ export function createFeishuJsonRequest(input: CreateFeishuJsonRequestInput): Fe
       const response = await input.fetcher(url, {
         method: request.method ?? "GET",
         headers: {
-          accept: "application/json",
-          authorization: `Bearer ${input.accessToken}`,
+          "accept": "application/json",
+          "authorization": `Bearer ${input.accessToken}`,
           "content-type": "application/json; charset=utf-8",
           "user-agent": providerUserAgent,
         },
@@ -118,8 +118,8 @@ export async function requestFeishuMultipart(input: FeishuMultipartRequestInput)
     const response = await input.fetcher(`${input.openBaseUrl}${input.path}`, {
       method: "POST",
       headers: {
-        accept: "application/json",
-        authorization: `Bearer ${input.accessToken}`,
+        "accept": "application/json",
+        "authorization": `Bearer ${input.accessToken}`,
         "user-agent": providerUserAgent,
       },
       body: input.body,
@@ -160,7 +160,7 @@ export async function withFeishuRawResponse<T>(
   try {
     const response = await input.fetcher(url, {
       headers: {
-        authorization: `Bearer ${input.accessToken}`,
+        "authorization": `Bearer ${input.accessToken}`,
         "user-agent": providerUserAgent,
       },
       signal: timeout.signal,

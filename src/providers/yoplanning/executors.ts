@@ -170,8 +170,8 @@ async function requestYoplanningJson(input: YoplanningRequestInput): Promise<unk
     const response = await input.context.fetcher(url, {
       method: "GET",
       headers: {
-        accept: "application/json",
-        authorization: `Token ${input.context.apiKey}`,
+        "accept": "application/json",
+        "authorization": `Token ${input.context.apiKey}`,
         "user-agent": providerUserAgent,
       },
       signal: timeout.signal,

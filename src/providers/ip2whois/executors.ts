@@ -97,7 +97,7 @@ async function requestIp2whoisJson(input: Ip2whoisRequestInput, context: ApiKeyP
     response = await context.fetcher(url, {
       method: "GET",
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "user-agent": providerUserAgent,
       },
       signal: context.signal,

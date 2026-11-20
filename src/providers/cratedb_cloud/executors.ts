@@ -227,8 +227,8 @@ async function requestCratedbCloudJson(input: {
     const response = await input.fetcher(url, {
       method: input.method,
       headers: {
-        accept: "application/json",
-        authorization: buildCratedbCloudAuthorizationHeader(input.key, input.apiSecret),
+        "accept": "application/json",
+        "authorization": buildCratedbCloudAuthorizationHeader(input.key, input.apiSecret),
         "user-agent": providerUserAgent,
       },
       signal: timeout.signal,

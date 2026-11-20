@@ -194,7 +194,7 @@ function buildBettercontactUrl(input: BettercontactRequestInput, apiKey: string)
 
 function buildBettercontactHeaders(apiKey: string, hasBody: boolean): Headers {
   const headers = new Headers({
-    accept: "application/json",
+    "accept": "application/json",
     "user-agent": providerUserAgent,
     "x-api-key": apiKey,
   });

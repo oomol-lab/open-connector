@@ -101,8 +101,8 @@ async function requestZyteApiJson(
     response = await context.fetcher(`${zyteApiBaseUrl}${zyteApiExtractPath}`, {
       method: "POST",
       headers: {
-        accept: "application/json",
-        authorization: buildBasicAuthorization(context.apiKey),
+        "accept": "application/json",
+        "authorization": buildBasicAuthorization(context.apiKey),
         "content-type": "application/json",
         "user-agent": providerUserAgent,
       },

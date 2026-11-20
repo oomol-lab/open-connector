@@ -55,7 +55,7 @@ interface HonoApp {
 async function createManualClient(app: HonoApp): Promise<string> {
   const response = await app.request(`${ISSUER}/api/oauth-clients`, {
     method: "POST",
-    headers: { "content-type": "application/json", authorization: `Bearer ${ADMIN_TOKEN}` },
+    headers: { "content-type": "application/json", "authorization": `Bearer ${ADMIN_TOKEN}` },
     body: JSON.stringify({
       clientName: "ChatGPT",
       redirectUris: [REDIRECT],
@@ -146,7 +146,7 @@ describe("consent origin check", () => {
 
     const approved = await app.request("http://internal:3000/oauth/mcp/authorize", {
       method: "POST",
-      headers: { "content-type": "application/x-www-form-urlencoded", origin: ISSUER },
+      headers: { "content-type": "application/x-www-form-urlencoded", "origin": ISSUER },
       body: new URLSearchParams({ handle: handle ?? "", decision: "approve", admin_token: ADMIN_TOKEN }).toString(),
       redirect: "manual",
     });
@@ -158,7 +158,7 @@ describe("consent origin check", () => {
     const { app } = await setup();
     const response = await app.request(`${ISSUER}/oauth/mcp/authorize`, {
       method: "POST",
-      headers: { "content-type": "application/x-www-form-urlencoded", origin: "https://evil.example" },
+      headers: { "content-type": "application/x-www-form-urlencoded", "origin": "https://evil.example" },
       body: new URLSearchParams({ handle: "whatever", decision: "approve", admin_token: ADMIN_TOKEN }).toString(),
     });
     expect(response.status).toBe(403);
@@ -245,7 +245,7 @@ describe("admin client scope validation", () => {
     const { app } = await setup();
     const response = await app.request(`${ISSUER}/api/oauth-clients`, {
       method: "POST",
-      headers: { "content-type": "application/json", authorization: `Bearer ${ADMIN_TOKEN}` },
+      headers: { "content-type": "application/json", "authorization": `Bearer ${ADMIN_TOKEN}` },
       body: JSON.stringify({
         clientName: "ChatGPT",
         redirectUris: [REDIRECT],
@@ -268,7 +268,7 @@ describe("admin client scope validation", () => {
     const clientId = await createManualClient(app);
     const response = await app.request(`${ISSUER}/api/oauth-clients/${clientId}`, {
       method: "PUT",
-      headers: { "content-type": "application/json", authorization: `Bearer ${ADMIN_TOKEN}` },
+      headers: { "content-type": "application/json", "authorization": `Bearer ${ADMIN_TOKEN}` },
       body: JSON.stringify({ scopes: ["offline_access", "catalog:write"] }),
     });
     expect(response.status).toBe(400);

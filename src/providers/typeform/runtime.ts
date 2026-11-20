@@ -215,8 +215,8 @@ async function requestTypeformJson(input: {
     const response = await input.fetcher(url, {
       method: "GET",
       headers: {
-        Accept: "application/json",
-        Authorization: `Bearer ${input.accessToken}`,
+        "Accept": "application/json",
+        "Authorization": `Bearer ${input.accessToken}`,
         "User-Agent": providerUserAgent,
       },
       signal: timeoutHandle.signal,

@@ -183,7 +183,7 @@ async function requestPayrexxJson(input: {
   }
 
   const headers = new Headers({
-    Accept: "application/json",
+    "Accept": "application/json",
     "User-Agent": providerUserAgent,
     "X-API-KEY": input.apiKey,
   });

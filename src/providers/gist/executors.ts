@@ -19,10 +19,7 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
   baseUrl: gistApiBaseUrl,
   auth: { type: "bearer" },
   skipDnsValidation: true,
-  customizeRequest({ headers }) {
-    if (!headers.has("accept")) headers.set("accept", gistDefaultAcceptHeader);
-    if (!headers.has("x-github-api-version")) headers.set("x-github-api-version", gistApiVersion);
-  },
+  defaultHeaders: { "accept": gistDefaultAcceptHeader, "x-github-api-version": gistApiVersion },
 });
 
 export const executors: ProviderExecutors = defineProviderExecutors<GistActionContext>({

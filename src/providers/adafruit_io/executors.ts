@@ -252,7 +252,7 @@ async function requestAdafruitIoJson(input: {
 }): Promise<unknown> {
   return runProviderRequest({ signal: input.signal, label: "Adafruit IO" }, async (signal) => {
     const headers: Record<string, string> = {
-      accept: "application/json",
+      "accept": "application/json",
       "user-agent": providerUserAgent,
       "x-aio-key": input.apiKey,
     };

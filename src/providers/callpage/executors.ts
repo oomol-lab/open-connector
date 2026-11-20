@@ -298,7 +298,7 @@ async function callpagePostJson(
     {
       method: "POST",
       headers: callpageHeaders(context.apiKey, {
-        accept: "application/json",
+        "accept": "application/json",
         "content-type": "application/json",
       }),
       body: JSON.stringify(body),
@@ -399,7 +399,7 @@ function createCallpageError(
 
 function callpageHeaders(apiKey: string, extraHeaders: Record<string, string>): Record<string, string> {
   return {
-    Authorization: apiKey,
+    "Authorization": apiKey,
     "user-agent": providerUserAgent,
     ...extraHeaders,
   };

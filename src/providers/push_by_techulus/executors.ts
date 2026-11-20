@@ -125,7 +125,7 @@ async function requestPushByTechulusJson(input: {
     response = await input.context.fetcher(new URL(input.path, `${pushByTechulusApiBaseUrl}/`), {
       method: "POST",
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "content-type": "application/json",
         "user-agent": providerUserAgent,
         "x-api-key": input.apiKey,

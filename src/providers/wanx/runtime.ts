@@ -167,8 +167,8 @@ async function requestJson(
     const response = await context.fetcher(new URL(path, `${wanxApiBaseUrl}/`), {
       method,
       headers: compactHeaders({
-        accept: "application/json",
-        authorization: `Bearer ${context.apiKey}`,
+        "accept": "application/json",
+        "authorization": `Bearer ${context.apiKey}`,
         "content-type": body ? "application/json" : undefined,
         "user-agent": providerUserAgent,
         "x-dashscope-async": asynchronous ? "enable" : undefined,

@@ -58,7 +58,7 @@ async function request(
   const url = new URL(`${handelsregisterAiApiBaseUrl}${path}`);
   if (query) url.search = query.toString();
   const response = await context.fetcher(url, {
-    headers: { accept: "application/json", "user-agent": providerUserAgent, "x-api-key": context.apiKey },
+    headers: { "accept": "application/json", "user-agent": providerUserAgent, "x-api-key": context.apiKey },
     signal: context.signal,
   });
   const text = await response.text();

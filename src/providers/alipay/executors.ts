@@ -105,7 +105,7 @@ export const proxy: ProviderProxyExecutor = async (input, context) => {
     return await runProviderRequest({ label: "Alipay", signal: context.signal }, async (signal) => {
       const response = await createProviderFetch({ skipDnsValidation: true })(credential.gateway, {
         method: "POST",
-        headers: { accept: "application/json", "content-type": "application/x-www-form-urlencoded;charset=UTF-8" },
+        headers: { "accept": "application/json", "content-type": "application/x-www-form-urlencoded;charset=UTF-8" },
         body: signAlipayParameters(credential, method, business, common).toString(),
         signal,
         redirect: "manual",

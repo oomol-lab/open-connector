@@ -184,8 +184,8 @@ async function customerioRequest(input: {
 }): Promise<unknown> {
   const timeoutHandle = createProviderTimeout(input.context.signal);
   const headers: Record<string, string> = {
-    accept: "application/json",
-    authorization: buildCustomerioAuthorization(input.context.siteId, input.context.apiKey),
+    "accept": "application/json",
+    "authorization": buildCustomerioAuthorization(input.context.siteId, input.context.apiKey),
     "user-agent": providerUserAgent,
   };
   if (input.body !== undefined) {

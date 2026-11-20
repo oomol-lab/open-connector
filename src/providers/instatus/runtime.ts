@@ -226,8 +226,8 @@ async function requestInstatusJson(
 
 function instatusHeaders(apiKey: string, hasBody: boolean) {
   return {
-    accept: "application/json",
-    authorization: `Bearer ${apiKey}`,
+    "accept": "application/json",
+    "authorization": `Bearer ${apiKey}`,
     "user-agent": providerUserAgent,
     ...(hasBody ? { "content-type": "application/json" } : {}),
   };

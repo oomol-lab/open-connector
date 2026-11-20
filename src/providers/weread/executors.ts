@@ -15,7 +15,7 @@ import { wereadActions } from "./actions.ts";
 
 const baseUrl = "https://i.weread.qq.com";
 const skillVersion = "1.0.5";
-const defaultHeaders = { accept: "application/json", "content-type": "application/json" };
+const defaultHeaders = { "accept": "application/json", "content-type": "application/json" };
 const routes: Record<string, string> = {
   search: "/store/search",
   get_book: "/book/info",
@@ -121,10 +121,7 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
   baseUrl,
   auth: { type: "api_key_authorization", prefix: "Bearer " },
   skipDnsValidation: true,
-  customizeRequest({ headers }) {
-    for (const [name, value] of Object.entries({ accept: "application/json", "content-type": "application/json" }))
-      if (!headers.has(name)) headers.set(name, value);
-  },
+  defaultHeaders: { "accept": "application/json", "content-type": "application/json" },
   async readError(response) {
     return new ProviderRequestError(
       response.status,

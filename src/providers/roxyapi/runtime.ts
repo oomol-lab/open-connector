@@ -244,7 +244,7 @@ export async function requestRoxyapiJson(
     const response = await fetcher(url, {
       method: body === undefined ? "GET" : "POST",
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "content-type": "application/json",
         "user-agent": providerUserAgent,
         "X-API-Key": apiKey,

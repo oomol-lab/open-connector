@@ -231,8 +231,8 @@ async function senderRequest(
   }
 
   const headers = new Headers({
-    accept: "application/json",
-    authorization: `Bearer ${context.apiKey}`,
+    "accept": "application/json",
+    "authorization": `Bearer ${context.apiKey}`,
     "user-agent": providerUserAgent,
   });
   const init: RequestInit = {

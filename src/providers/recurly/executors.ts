@@ -219,8 +219,8 @@ async function requestRecurlyJson(input: {
     response = await input.context.fetcher(buildRecurlyUrl(input.path, input.query), {
       method: input.method ?? "GET",
       headers: {
-        accept: "application/json",
-        authorization: buildBasicAuthHeader(input.context.apiKey),
+        "accept": "application/json",
+        "authorization": buildBasicAuthHeader(input.context.apiKey),
         ...(input.body !== undefined ? { "content-type": "application/json" } : {}),
         "user-agent": providerUserAgent,
       },

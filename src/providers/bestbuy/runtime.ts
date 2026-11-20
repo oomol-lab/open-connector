@@ -444,7 +444,7 @@ function pickFirstCollectionItem(
 
 function bestbuyHeaders(): Record<string, string> {
   return {
-    accept: "application/json",
+    "accept": "application/json",
     "user-agent": providerUserAgent,
   };
 }

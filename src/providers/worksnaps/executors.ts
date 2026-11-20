@@ -177,11 +177,7 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
   baseUrl: worksnapsApiBaseUrl,
   auth: { type: "api_key_basic", suffix: ":ignored" },
   skipDnsValidation: true,
-  customizeRequest({ headers }) {
-    if (!headers.has("accept")) {
-      headers.set("accept", "application/xml");
-    }
-  },
+  defaultHeaders: { accept: "application/xml" },
 });
 
 export const credentialValidators: CredentialValidators = {
@@ -250,8 +246,8 @@ function buildWorksnapsUrl(path: string, query?: Record<string, string | undefin
 
 function buildWorksnapsHeaders(apiKey: string): Headers {
   return new Headers({
-    accept: "application/xml",
-    authorization: `Basic ${Buffer.from(`${apiKey}:ignored`).toString("base64")}`,
+    "accept": "application/xml",
+    "authorization": `Basic ${Buffer.from(`${apiKey}:ignored`).toString("base64")}`,
     "user-agent": providerUserAgent,
   });
 }

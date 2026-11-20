@@ -164,8 +164,8 @@ export async function exchangeAccessToken(
     response = await fetcher(`${walmartMarketplaceApiBaseUrl}${tokenPath}`, {
       method: "POST",
       headers: {
-        accept: "application/json",
-        authorization: `Basic ${Buffer.from(`${credential.clientId}:${credential.clientSecret}`).toString("base64")}`,
+        "accept": "application/json",
+        "authorization": `Basic ${Buffer.from(`${credential.clientId}:${credential.clientSecret}`).toString("base64")}`,
         "content-type": "application/x-www-form-urlencoded",
         "user-agent": connectorUserAgent,
         "WM_QOS.CORRELATION_ID": randomUUIDv7(),
@@ -198,7 +198,7 @@ async function requestWalmartJson(input: WalmartRequestInput) {
     if (value != null) url.searchParams.set(name, String(value));
   }
   const headers = new Headers({
-    accept: "application/json",
+    "accept": "application/json",
     "content-type": "application/json",
     "user-agent": connectorUserAgent,
   });

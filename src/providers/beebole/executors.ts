@@ -52,14 +52,7 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
   service,
   baseUrl: beeboleApiBaseUrl,
   auth: { type: "api_key_header", name: "apikey" },
-  customizeRequest({ headers }) {
-    if (!headers.has("accept")) {
-      headers.set("accept", "application/json");
-    }
-    if (!headers.has("content-type")) {
-      headers.set("content-type", "application/json");
-    }
-  },
+  defaultHeaders: { "accept": "application/json", "content-type": "application/json" },
 });
 
 export const credentialValidators: CredentialValidators = {
@@ -97,8 +90,8 @@ async function requestBeeboleGraphql(input: BeeboleGraphqlRequestOptions): Promi
     const response = await input.context.fetcher(beeboleGraphqlEndpoint, {
       method: "POST",
       headers: {
-        accept: "application/json",
-        apikey: input.apiKey,
+        "accept": "application/json",
+        "apikey": input.apiKey,
         "content-type": "application/json",
         "user-agent": providerUserAgent,
       },

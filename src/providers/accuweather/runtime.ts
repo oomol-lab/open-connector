@@ -191,9 +191,9 @@ function accuweatherUrl(input: { path: string; query?: Record<string, Accuweathe
 
 function accuweatherHeaders(apiKey: string): Record<string, string> {
   return {
-    accept: "application/json",
+    "accept": "application/json",
     "accept-encoding": "gzip,deflate",
-    authorization: `Bearer ${apiKey}`,
+    "authorization": `Bearer ${apiKey}`,
     "user-agent": providerUserAgent,
   };
 }

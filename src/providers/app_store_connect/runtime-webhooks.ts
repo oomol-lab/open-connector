@@ -101,7 +101,7 @@ export const appStoreConnectWebhookHandlers: AppStoreConnectHandlers = {
         "filter[deliveryState]": readCommaSeparatedList(input.deliveryStates),
         "filter[createdDateGreaterThanOrEqualTo]": pickOptionalString(input, "createdSince"),
         "filter[createdDateLessThan]": pickOptionalString(input, "createdBefore"),
-        include: "event",
+        "include": "event",
       },
     });
     return {

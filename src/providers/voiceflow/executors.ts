@@ -351,8 +351,8 @@ function resolveProxyBaseUrl(endpoint: string): string {
 
 function buildVoiceflowHeaders(apiKey: string, hasBody: boolean): Record<string, string> {
   const headers: Record<string, string> = {
-    accept: "application/json",
-    authorization: apiKey,
+    "accept": "application/json",
+    "authorization": apiKey,
     "user-agent": providerUserAgent,
   };
   if (hasBody) {

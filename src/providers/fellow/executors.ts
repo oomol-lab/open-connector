@@ -275,7 +275,7 @@ async function requestFellowJson(input: {
     response = await input.context.fetcher(url, {
       method: input.method,
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "x-api-key": input.context.apiKey,
         ...(input.body === undefined ? {} : { "content-type": "application/json" }),
         "user-agent": providerUserAgent,

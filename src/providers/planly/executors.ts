@@ -33,8 +33,8 @@ async function requestPlanly(
     const response = await fetcher(`${baseUrl}${endpoint}`, {
       method: "POST",
       headers: {
-        accept: "application/json",
-        authorization: `Bearer ${apiKey}`,
+        "accept": "application/json",
+        "authorization": `Bearer ${apiKey}`,
         "content-type": "application/json",
       },
       body: body === undefined ? undefined : JSON.stringify(body),
@@ -117,8 +117,5 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
   baseUrl,
   auth: { type: "api_key_authorization", prefix: "Bearer " },
   skipDnsValidation: true,
-  customizeRequest({ headers }) {
-    for (const [key, value] of Object.entries({ accept: "application/json" }))
-      if (!headers.has(key)) headers.set(key, value);
-  },
+  defaultHeaders: { accept: "application/json" },
 });

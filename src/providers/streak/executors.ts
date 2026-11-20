@@ -114,8 +114,8 @@ async function requestStreakJson(
   const response = await context.fetcher(url, {
     method: "GET",
     headers: {
-      accept: "application/json",
-      authorization: buildStreakAuthorizationHeader(context.apiKey),
+      "accept": "application/json",
+      "authorization": buildStreakAuthorizationHeader(context.apiKey),
       "content-type": "application/json",
       "user-agent": providerUserAgent,
     },

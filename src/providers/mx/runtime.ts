@@ -202,9 +202,9 @@ async function requestMxJson(input: MxRequestInput) {
 
 function mxHeaders(clientId: string, apiKey: string, includeContentType: boolean) {
   return {
-    accept: "application/vnd.mx.api.v1+json",
+    "accept": "application/vnd.mx.api.v1+json",
     "accept-version": mxVersion,
-    authorization: buildBasicAuthorizationHeader(clientId, apiKey),
+    "authorization": buildBasicAuthorizationHeader(clientId, apiKey),
     ...(includeContentType ? { "content-type": "application/json" } : {}),
     "user-agent": providerUserAgent,
   };

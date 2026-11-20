@@ -127,9 +127,7 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
   baseUrl: stripeApiBaseUrl,
   auth: { type: "api_key_authorization", prefix: "Bearer " },
   skipDnsValidation: true,
-  customizeRequest({ headers }) {
-    if (!headers.has("stripe-version")) headers.set("stripe-version", stripeApiVersion);
-  },
+  defaultHeaders: { "stripe-version": stripeApiVersion },
 });
 
 export const credentialValidators: CredentialValidators = {
@@ -292,7 +290,7 @@ async function stripeRequest(path: string, input: StripeRequestInput): Promise<u
   appendStripeParams(url.searchParams, input.query);
 
   const headers: Record<string, string> = {
-    authorization: `Bearer ${input.apiKey}`,
+    "authorization": `Bearer ${input.apiKey}`,
     "stripe-version": stripeApiVersion,
     "user-agent": providerUserAgent,
   };

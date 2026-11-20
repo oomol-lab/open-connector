@@ -177,8 +177,8 @@ async function requestEraser(input: EraserRequestInput) {
     const response = await input.fetcher(url, {
       method: input.method ?? "GET",
       headers: {
-        accept: "application/json",
-        authorization: `Bearer ${input.apiKey}`,
+        "accept": "application/json",
+        "authorization": `Bearer ${input.apiKey}`,
         "content-type": "application/json",
         "user-agent": providerUserAgent,
       },

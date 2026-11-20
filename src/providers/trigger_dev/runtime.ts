@@ -190,8 +190,8 @@ async function triggerDevFetch(options: TriggerDevRequestOptions, context: ApiKe
 
 function triggerDevHeaders(apiKey: string, hasBody: boolean): Record<string, string> {
   return {
-    accept: "application/json",
-    authorization: `Bearer ${apiKey}`,
+    "accept": "application/json",
+    "authorization": `Bearer ${apiKey}`,
     ...(hasBody ? { "content-type": "application/json" } : {}),
     "user-agent": providerUserAgent,
   };

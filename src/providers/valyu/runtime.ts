@@ -108,7 +108,7 @@ async function valyuRequest(input: {
 
 function valyuHeaders(apiKey: string, hasBody: boolean): Record<string, string> {
   const headers: Record<string, string> = {
-    accept: "application/json",
+    "accept": "application/json",
     "x-api-key": apiKey,
     "user-agent": providerUserAgent,
   };

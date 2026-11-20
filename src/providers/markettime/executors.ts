@@ -121,7 +121,7 @@ async function requestMarkettime(input: MarkettimeRequestInput): Promise<unknown
     const response = await input.context.fetcher(url, {
       method: input.method ?? "GET",
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "content-type": "application/json",
         "user-agent": providerUserAgent,
         "x-api-key": input.context.apiKey,

@@ -238,8 +238,8 @@ function buildContactBody(input: Record<string, unknown>): Record<string, unknow
 
 function featurebaseHeaders(apiKey: string): Record<string, string> {
   return {
-    authorization: `Bearer ${apiKey}`,
-    accept: "application/json",
+    "authorization": `Bearer ${apiKey}`,
+    "accept": "application/json",
     "user-agent": providerUserAgent,
   };
 }

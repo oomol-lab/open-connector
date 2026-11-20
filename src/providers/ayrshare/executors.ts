@@ -410,8 +410,8 @@ async function requestAyrshareJson(
   }
 
   const headers = new Headers({
-    accept: "application/json",
-    authorization: `Bearer ${input.context.apiKey}`,
+    "accept": "application/json",
+    "authorization": `Bearer ${input.context.apiKey}`,
     "user-agent": providerUserAgent,
   });
   if (input.body) {

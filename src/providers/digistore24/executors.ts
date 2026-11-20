@@ -283,7 +283,7 @@ async function digistore24Request(
     response = await fetcher(buildDigistore24Url(input), {
       method: "GET",
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "user-agent": providerUserAgent,
         "X-DS-API-KEY": apiKey,
       },

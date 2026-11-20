@@ -49,9 +49,7 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
     return buildSpeedtestTrackerProxyBaseUrl(normalizeSpeedtestTrackerBaseUrl(value));
   },
   auth: { type: "api_key_authorization", prefix: "Bearer " },
-  customizeRequest({ headers }) {
-    if (!headers.has("accept")) headers.set("accept", "application/json");
-  },
+  defaultHeaders: { accept: "application/json" },
   allowPrivateNetwork: isPrivateNetworkAccessAllowed,
 });
 

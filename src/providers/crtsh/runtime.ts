@@ -74,7 +74,7 @@ async function requestCrtsh(request: CrtshRequest): Promise<unknown> {
   return runProviderRequest({ label: "crt.sh", signal: request.context.signal }, async (signal) => {
     const response = await request.context.fetcher(url, {
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "user-agent": providerUserAgent,
       },
       signal,

@@ -145,7 +145,7 @@ async function requestUnipileJson(input: UnipileRequestInput): Promise<unknown> 
     const response = await input.fetcher(buildUnipileUrl(input.dsn, input.path, input.query), {
       method: "GET",
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "user-agent": providerUserAgent,
         "X-API-KEY": input.apiKey,
       },

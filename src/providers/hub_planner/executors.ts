@@ -211,8 +211,8 @@ async function requestHubPlannerJson<T>(input: {
     const response = await input.fetcher(url, {
       method: input.method,
       headers: {
-        accept: "application/json",
-        authorization: input.apiKey,
+        "accept": "application/json",
+        "authorization": input.apiKey,
         "content-type": "application/json",
         "user-agent": providerUserAgent,
       },

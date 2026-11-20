@@ -126,7 +126,7 @@ async function openExchangeRatesRequest(input: {
       {
         method: "GET",
         headers: {
-          accept: "application/json",
+          "accept": "application/json",
           "user-agent": providerUserAgent,
         },
         signal: input.context.signal,

@@ -237,7 +237,7 @@ function buildFormbricksUrl(path: string, query: Record<string, string | number 
 
 function buildFormbricksHeaders(apiKey: string, hasBody: boolean): Record<string, string> {
   const headers: Record<string, string> = {
-    accept: "application/json",
+    "accept": "application/json",
     "user-agent": providerUserAgent,
     "x-api-key": apiKey,
   };

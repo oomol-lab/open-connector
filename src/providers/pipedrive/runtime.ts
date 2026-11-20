@@ -220,7 +220,7 @@ async function requestPipedriveJson(
     response = await context.fetcher(buildUrl(context.origin, options.path, options.query), {
       method: options.method ?? "GET",
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "content-type": "application/json",
         "user-agent": providerUserAgent,
         ...context.authHeaders,

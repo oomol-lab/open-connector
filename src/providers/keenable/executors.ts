@@ -21,8 +21,6 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
   baseUrl: keenableApiBaseUrl,
   auth: { type: "optional_api_key_header", name: "X-API-Key" },
   skipDnsValidation: true,
-  customizeRequest({ headers }) {
-    if (!headers.has("x-keenable-title")) headers.set("x-keenable-title", keenableAppTitle);
-  },
+  defaultHeaders: { "x-keenable-title": keenableAppTitle },
 });
 export const credentialValidators: CredentialValidators = { apiKey: validateKeenableCredential };

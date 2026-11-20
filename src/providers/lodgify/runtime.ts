@@ -160,8 +160,8 @@ async function getQuote(input: Record<string, unknown>, context: ApiKeyProviderC
     context,
     phase: "execute",
     query: {
-      from: requireDateString(input.from, "from"),
-      to: requireDateString(input.to, "to"),
+      "from": requireDateString(input.from, "from"),
+      "to": requireDateString(input.to, "to"),
       "roomTypes[0].Id": String(readPositiveInteger(input.roomTypeId, "roomTypeId")),
       "guest_breakdown[adults]": String(readPositiveInteger(input.adults, "adults")),
     },
@@ -216,7 +216,7 @@ async function requestLodgifyJson(input: LodgifyRequestInput): Promise<unknown> 
     const response = await input.context.fetcher(buildLodgifyUrl(input.path, input.query), {
       method: "GET",
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "user-agent": providerUserAgent,
         "X-ApiKey": input.context.apiKey,
       },

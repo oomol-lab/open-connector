@@ -205,7 +205,7 @@ async function requestSubvisoryJson(input: SubvisoryRequestInput): Promise<Recor
 
 function subvisoryHeaders(apiKey: string, hasBody: boolean): Record<string, string> {
   return {
-    accept: "application/json",
+    "accept": "application/json",
     "X-API-Key": apiKey,
     ...(hasBody ? { "content-type": "application/json" } : {}),
     "user-agent": providerUserAgent,

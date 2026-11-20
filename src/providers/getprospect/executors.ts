@@ -200,9 +200,9 @@ async function requestGetProspect(input: {
   let response: Response;
   try {
     const headers = new Headers({
-      accept: "application/json",
+      "accept": "application/json",
       "user-agent": providerUserAgent,
-      apiKey: input.apiKey,
+      "apiKey": input.apiKey,
     });
     if (input.body) {
       headers.set("content-type", "application/json");

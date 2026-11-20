@@ -97,7 +97,7 @@ export async function login(
         method: "POST",
         redirect: "manual",
         signal,
-        headers: { "content-type": "application/json", accept: "application/json" },
+        headers: { "content-type": "application/json", "accept": "application/json" },
         body: JSON.stringify({
           parameters: [
             credential.dataCenterId,

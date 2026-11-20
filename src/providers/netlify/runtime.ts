@@ -420,8 +420,8 @@ function netlifyHeaders(
   extraHeaders?: Record<string, string | undefined>,
 ): Record<string, string> {
   const headers: Record<string, string> = {
-    accept: "application/json",
-    authorization: `Bearer ${accessToken}`,
+    "accept": "application/json",
+    "authorization": `Bearer ${accessToken}`,
     "user-agent": providerUserAgent,
   };
   if (contentType) {

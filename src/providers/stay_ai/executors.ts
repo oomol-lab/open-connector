@@ -156,7 +156,7 @@ async function requestStayAi(input: {
     return await input.context.fetcher(url, {
       method: "GET",
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "user-agent": providerUserAgent,
         "x-retextion-access-token": input.context.apiKey,
       },

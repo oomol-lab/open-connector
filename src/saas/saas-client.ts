@@ -356,7 +356,10 @@ export class SaasClient {
           label: "SaaS",
           timeoutMs: execution ? 300_000 : 30_000,
           fetcher: this.fetcher,
-          init: { ...init, headers: { authorization: `Bearer ${project.apiKey}`, "content-type": "application/json" } },
+          init: {
+            ...init,
+            headers: { "authorization": `Bearer ${project.apiKey}`, "content-type": "application/json" },
+          },
         },
         async (response, signal) => {
           const json = await readRemoteJson(response, {

@@ -186,7 +186,7 @@ function buildStartonUrl(path: string, query: Record<string, string | boolean | 
 
 function startonHeaders(apiKey: string, hasBody: boolean): Record<string, string> {
   return compactUndefined({
-    accept: "application/json",
+    "accept": "application/json",
     "user-agent": providerUserAgent,
     "x-api-key": apiKey,
     "content-type": hasBody ? "application/json" : undefined,

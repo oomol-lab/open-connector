@@ -81,7 +81,7 @@ async function requestChatpdf(input: ChatpdfRequestInput): Promise<unknown> {
     response = await input.context.fetcher(new URL(`${chatpdfApiBaseUrl}${input.path}`), {
       method: "POST",
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "content-type": "application/json",
         "user-agent": providerUserAgent,
         "x-api-key": input.context.apiKey,

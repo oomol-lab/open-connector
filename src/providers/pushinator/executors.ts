@@ -26,10 +26,10 @@ export const executors: ProviderExecutors = defineApiKeyProviderExecutors(
         const response = await fetcher(`${apiBaseUrl}${path}`, {
           method: "POST",
           headers: {
-            accept: "application/json",
+            "accept": "application/json",
             "content-type": "application/json",
             "user-agent": providerUserAgent,
-            authorization: `Bearer ${apiKey}`,
+            "authorization": `Bearer ${apiKey}`,
           },
           body: JSON.stringify(input),
           signal,
@@ -81,7 +81,5 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
   baseUrl: apiBaseUrl,
   auth: { type: "api_key_authorization", prefix: "Bearer " },
   skipDnsValidation: true,
-  customizeRequest({ headers }) {
-    if (!headers.has("accept")) headers.set("accept", "application/json");
-  },
+  defaultHeaders: { accept: "application/json" },
 });

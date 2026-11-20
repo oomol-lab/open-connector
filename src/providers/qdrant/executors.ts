@@ -32,9 +32,7 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
     return normalizeQdrantClusterUrl(credential.metadata.clusterUrl).origin;
   },
   auth: { type: "custom_credential_header", field: "apiKey", name: "api-key" },
-  customizeRequest({ headers }) {
-    if (!headers.has("accept")) headers.set("accept", "application/json");
-  },
+  defaultHeaders: { accept: "application/json" },
 });
 
 export const credentialValidators: CredentialValidators = {

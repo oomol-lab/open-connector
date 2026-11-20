@@ -163,7 +163,7 @@ async function route4meRequest(
     response = await fetcher(url, {
       method,
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         ...(body ? { "content-type": "application/json" } : {}),
         "user-agent": providerUserAgent,
       },

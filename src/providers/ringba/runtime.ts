@@ -106,7 +106,7 @@ function requiredInput(input: Record<string, unknown>, field: string): string {
 
 async function requestJson(path: string, apiKey: string, fetcher: typeof fetch, phase: Phase): Promise<unknown> {
   const response = await fetcher(new URL(`${ringbaApiBaseUrl}${path}`), {
-    headers: { accept: "application/json", authorization: `Token ${apiKey}`, "user-agent": providerUserAgent },
+    headers: { "accept": "application/json", "authorization": `Token ${apiKey}`, "user-agent": providerUserAgent },
   });
   const text = await response.text();
   let payload: unknown = null;

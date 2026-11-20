@@ -140,7 +140,7 @@ async function requestJson(
   const timeout = createProviderTimeout(parentSignal, requestTimeoutMs);
   try {
     const headers = new Headers({
-      accept: "application/json",
+      "accept": "application/json",
       "x-api-key": apiKey,
       "user-agent": providerUserAgent,
     });

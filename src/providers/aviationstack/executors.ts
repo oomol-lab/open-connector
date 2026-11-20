@@ -229,7 +229,7 @@ async function requestAviationstackJson(input: {
     response = await input.context.fetcher(buildAviationstackUrl(input.path, input.query, input.context.apiKey), {
       method: "GET",
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "user-agent": providerUserAgent,
       },
       signal: input.context.signal,

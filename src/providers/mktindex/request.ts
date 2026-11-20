@@ -26,7 +26,7 @@ export async function requestMktindexEnvelope(input: RequestInput): Promise<Reco
   const url = new URL(input.path.replace(/^\//u, ""), `${input.baseUrl ?? mktindexApiBaseUrl}/`);
   for (const [k, v] of Object.entries(input.query ?? {})) if (v !== undefined) url.searchParams.set(k, v);
   const headers = new Headers({
-    accept: "application/json",
+    "accept": "application/json",
     "MOOJING-APIKEY": input.apiKey,
     "user-agent": providerUserAgent,
   });

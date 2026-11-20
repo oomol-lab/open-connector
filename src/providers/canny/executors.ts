@@ -304,7 +304,7 @@ async function cannyRequest(path: string, body: Record<string, unknown>, context
   const response = await context.fetcher(`${cannyApiBaseUrl}${path}`, {
     method: "POST",
     headers: {
-      accept: "application/json",
+      "accept": "application/json",
       "content-type": "application/json",
       "user-agent": providerUserAgent,
     },

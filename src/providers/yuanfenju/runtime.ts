@@ -31,7 +31,7 @@ export async function requestYuanfenju(
     const response = await context.fetcher(new URL(path, yuanfenjuApiBaseUrl), {
       method: "POST",
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "content-type": "application/x-www-form-urlencoded",
         "user-agent": providerUserAgent,
       },

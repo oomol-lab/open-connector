@@ -549,7 +549,7 @@ async function fetchLinkedArticles(
 
 async function requestNcbiJson(url: URL, source: string, context: PubmedActionContext): Promise<unknown> {
   const headers = new Headers({
-    accept: "application/json",
+    "accept": "application/json",
     "user-agent": providerUserAgent,
   });
   const text = await requestNcbiText(

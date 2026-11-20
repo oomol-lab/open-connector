@@ -50,8 +50,5 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
   baseUrl: "https://mcp.wind.com.cn",
   auth: { type: "api_key_authorization", prefix: "Bearer " },
   skipDnsValidation: true,
-  customizeRequest({ headers }) {
-    if (!headers.has("accept")) headers.set("accept", "application/json, text/event-stream");
-    if (!headers.has("content-type")) headers.set("content-type", "application/json");
-  },
+  defaultHeaders: { "accept": "application/json, text/event-stream", "content-type": "application/json" },
 });

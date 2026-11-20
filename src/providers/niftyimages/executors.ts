@@ -162,8 +162,8 @@ async function requestNiftyimagesJson(
     const response = await context.fetcher(buildNiftyimagesUrl(input.path, input.params), {
       method: "GET",
       headers: {
-        accept: "application/json",
-        ApiKey: context.apiKey,
+        "accept": "application/json",
+        "ApiKey": context.apiKey,
         "user-agent": providerUserAgent,
       },
       signal: timeout.signal,

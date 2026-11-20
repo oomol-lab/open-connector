@@ -277,8 +277,8 @@ async function requestHomeAssistant(input: HomeAssistantRequest): Promise<Respon
     const response = await input.context.fetcher(buildHomeAssistantUrl(input), {
       method: input.method,
       headers: {
-        accept: "application/json",
-        authorization: `Bearer ${input.context.apiKey}`,
+        "accept": "application/json",
+        "authorization": `Bearer ${input.context.apiKey}`,
         "content-type": "application/json",
         "user-agent": providerUserAgent,
       },

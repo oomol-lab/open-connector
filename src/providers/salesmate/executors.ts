@@ -180,10 +180,10 @@ function buildSalesmateUrl(input: SalesmateRequestInput, linkName: string): URL 
 
 function buildSalesmateHeaders(context: SalesmateRequestContext, hasBody: boolean): Record<string, string> {
   return compactObject({
-    accept: "application/json",
+    "accept": "application/json",
     "content-type": hasBody ? "application/json" : undefined,
     "user-agent": providerUserAgent,
-    accessToken: context.apiKey,
+    "accessToken": context.apiKey,
     "x-linkname": normalizeSalesmateLinkName(context.linkName),
   }) as Record<string, string>;
 }

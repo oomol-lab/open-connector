@@ -74,8 +74,8 @@ async function requestTrentChatJson(input: {
     response = await input.fetcher(new URL(trentChatPath, trentChatApiBaseUrl), {
       method: "POST",
       headers: {
-        accept: "text/event-stream, application/json",
-        authorization: input.apiKey,
+        "accept": "text/event-stream, application/json",
+        "authorization": input.apiKey,
         "content-type": "application/json",
         "user-agent": providerUserAgent,
       },

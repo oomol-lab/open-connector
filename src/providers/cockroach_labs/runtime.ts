@@ -36,7 +36,7 @@ export const cockroachLabsActionHandlers: ProviderActionHandlers<"cockroach_labs
       context,
       path: "/api/v1/clusters",
       query: buildQueryParams({
-        show_inactive: input.showInactive,
+        "show_inactive": input.showInactive,
         "pagination.page": input.page,
         "pagination.limit": input.limit,
         "pagination.as_of_time": input.asOfTime,
@@ -70,8 +70,8 @@ export const cockroachLabsActionHandlers: ProviderActionHandlers<"cockroach_labs
       context,
       path: "/api/v1/clusters/available-regions",
       query: buildQueryParams({
-        provider: input.provider,
-        serverless: input.serverless,
+        "provider": input.provider,
+        "serverless": input.serverless,
         "pagination.page": input.page,
         "pagination.limit": input.limit,
         "pagination.as_of_time": input.asOfTime,
@@ -93,7 +93,7 @@ export const cockroachLabsActionHandlers: ProviderActionHandlers<"cockroach_labs
       context,
       path: `/api/v1/clusters/${encodeURIComponent(clusterId)}/nodes`,
       query: buildQueryParams({
-        region_name: input.regionName,
+        "region_name": input.regionName,
         "pagination.page": input.page,
         "pagination.limit": input.limit,
         "pagination.as_of_time": input.asOfTime,
@@ -203,8 +203,8 @@ async function requestCockroachLabsJson(input: {
     const response = await input.context.fetcher(buildCockroachLabsUrl(input.path, input.query), {
       method: "GET",
       headers: {
-        accept: "application/json",
-        authorization: `Bearer ${input.context.apiKey}`,
+        "accept": "application/json",
+        "authorization": `Bearer ${input.context.apiKey}`,
         "cc-version": cockroachLabsApiVersion,
         "user-agent": providerUserAgent,
       },

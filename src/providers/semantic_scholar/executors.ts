@@ -370,7 +370,7 @@ async function requestSemanticScholarJson(input: {
 
 function buildSemanticScholarHeaders(input: { method: "GET" | "POST"; apiKey: string }) {
   const headers: Record<string, string> = {
-    accept: "application/json",
+    "accept": "application/json",
     "user-agent": providerUserAgent,
     "x-api-key": input.apiKey,
   };

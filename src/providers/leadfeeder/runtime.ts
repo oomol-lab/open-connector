@@ -166,7 +166,7 @@ async function requestLeadfeederJson(input: {
     response = await input.context.fetcher(url, {
       method: input.method ?? "GET",
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "user-agent": providerUserAgent,
         "X-Api-Key": input.apiKey,
         ...(input.body === undefined ? {} : { "content-type": "application/json" }),

@@ -500,7 +500,7 @@ async function requestGladiaJson(input: GladiaRequestInput): Promise<unknown> {
 async function requestGladiaResponse(input: GladiaRequestInput): Promise<Response> {
   try {
     const headers: Record<string, string> = {
-      accept: input.accept ?? "application/json",
+      "accept": input.accept ?? "application/json",
       "user-agent": providerUserAgent,
       "x-gladia-key": input.apiKey,
     };

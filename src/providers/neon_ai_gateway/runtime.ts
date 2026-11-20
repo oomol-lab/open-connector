@@ -223,8 +223,8 @@ function gatewayRequest(input: NeonAiGatewayRequestInput, context: NeonAiGateway
     { signal: context.signal, label: requestLabel, timeoutMs: input.timeoutMs },
     async (signal) => {
       const headers = new Headers({
-        accept: "application/json",
-        authorization: `Bearer ${context.apiKey}`,
+        "accept": "application/json",
+        "authorization": `Bearer ${context.apiKey}`,
         "user-agent": providerUserAgent,
         ...input.headers,
       });

@@ -171,7 +171,7 @@ async function requestCiscoMerakiResponse(
   try {
     return await context.fetcher(url, {
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "content-type": "application/json",
         "user-agent": providerUserAgent,
         "X-Cisco-Meraki-API-Key": context.apiKey,

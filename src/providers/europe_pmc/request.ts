@@ -63,7 +63,7 @@ export async function requestEuropePmcText(input: {
 }): Promise<{ body: string; contentType: string | null }> {
   return runProviderRequest({ timeoutMs: requestTimeoutMs, label: "Europe PMC" }, async (signal) => {
     const headers = new Headers({
-      accept: input.accept,
+      "accept": input.accept,
       "user-agent": providerUserAgent,
     });
     if (input.jsonBody !== undefined) {

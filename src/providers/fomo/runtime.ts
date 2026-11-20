@@ -186,9 +186,9 @@ async function requestFomoJson(
 
 function buildFomoHeaders(apiKey: string, hasBody: boolean): Record<string, string> {
   const headers: Record<string, string> = {
-    accept: "application/json",
+    "accept": "application/json",
     "user-agent": providerUserAgent,
-    authorization: `Token ${apiKey}`,
+    "authorization": `Token ${apiKey}`,
   };
   if (hasBody) {
     headers["content-type"] = "application/json";

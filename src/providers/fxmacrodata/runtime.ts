@@ -181,7 +181,7 @@ async function requestFxmacrodata(input: FxmacrodataRequest): Promise<Record<str
   for (const [key, value] of Object.entries(queryParams(input.query ?? {}))) {
     url.searchParams.set(key, value);
   }
-  const headers = new Headers({ accept: "application/json", "user-agent": providerUserAgent });
+  const headers = new Headers({ "accept": "application/json", "user-agent": providerUserAgent });
   if (context.apiKey) headers.set("x-api-key", apiKeyHeaderValue(context.apiKey));
   return runProviderRequest({ signal: context.signal, label: "FXMacroData" }, async (signal) => {
     // context.fetcher follows redirects itself and drops X-API-Key on any change of origin or scheme.

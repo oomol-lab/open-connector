@@ -116,7 +116,7 @@ async function requestHyperbrowserJson(input: HyperbrowserRequestInput): Promise
     response = await input.fetcher(buildHyperbrowserUrl(input.path, input.query), {
       method: input.method,
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "content-type": "application/json",
         "user-agent": providerUserAgent,
         "x-api-key": input.apiKey,

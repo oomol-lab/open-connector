@@ -234,7 +234,7 @@ async function speechmaticsRequest(
 ): Promise<unknown> {
   const timeout = createProviderTimeout(context.signal, speechmaticsRequestTimeoutMs);
   const headers = new Headers({
-    accept: options.accept ?? "application/json",
+    "accept": options.accept ?? "application/json",
     "user-agent": providerUserAgent,
   });
   if (options.authenticated !== false) {

@@ -194,7 +194,7 @@ async function fetchSearchApi(
     return await fetcher(buildSearchApiUrl(path, query, apiKey), {
       method: "GET",
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "user-agent": providerUserAgent,
       },
       signal,

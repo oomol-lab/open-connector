@@ -266,8 +266,8 @@ async function requestMuxJson(options: MuxRequestOptions): Promise<unknown> {
     response = await options.context.fetcher(url, {
       method: options.method ?? "GET",
       headers: {
-        accept: "application/json",
-        authorization: createMuxAuthorization(options.context),
+        "accept": "application/json",
+        "authorization": createMuxAuthorization(options.context),
         ...(options.body === undefined ? {} : { "content-type": "application/json" }),
         "user-agent": providerUserAgent,
       },

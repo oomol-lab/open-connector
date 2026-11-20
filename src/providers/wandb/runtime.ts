@@ -167,7 +167,7 @@ async function listWandbMcpTools(context: WandbMcpContext): Promise<string[]> {
 
 async function withWandbMcpClient<T>(context: WandbMcpContext, run: (client: Client) => Promise<T>): Promise<T> {
   const headers = new Headers({
-    authorization: `Bearer ${context.apiKey}`,
+    "authorization": `Bearer ${context.apiKey}`,
     "user-agent": providerUserAgent,
   });
   return withMcpClient(

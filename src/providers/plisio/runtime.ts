@@ -187,7 +187,7 @@ async function fetchPlisio(
     return await fetcher(url, {
       method: "GET",
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "user-agent": providerUserAgent,
       },
     });

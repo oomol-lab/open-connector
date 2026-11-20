@@ -180,7 +180,7 @@ async function requestSoftrJson(options: SoftrRequestOptions): Promise<unknown> 
     url.searchParams.set(key, value);
   }
   const headers: Record<string, string> = {
-    accept: "application/json",
+    "accept": "application/json",
     "softr-api-key": options.context.apiKey,
     "user-agent": providerUserAgent,
   };

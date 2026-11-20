@@ -220,7 +220,7 @@ async function requestTailscaleAccessToken(
   const response = await context.fetcher(tailscaleOAuthTokenUrl, {
     method: "POST",
     headers: {
-      accept: "application/json",
+      "accept": "application/json",
       "content-type": "application/x-www-form-urlencoded",
     },
     body,

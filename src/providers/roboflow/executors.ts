@@ -398,8 +398,8 @@ async function roboflowRequestJson(
 
 function roboflowHeaders(contentType?: string): Record<string, string> {
   return contentType
-    ? { accept: "application/json", "content-type": contentType, "user-agent": providerUserAgent }
-    : { accept: "application/json", "user-agent": providerUserAgent };
+    ? { "accept": "application/json", "content-type": contentType, "user-agent": providerUserAgent }
+    : { "accept": "application/json", "user-agent": providerUserAgent };
 }
 
 async function readRoboflowPayload(response: Response): Promise<unknown> {

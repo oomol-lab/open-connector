@@ -245,9 +245,9 @@ async function requestBitlyJson(context: BitlyRequestContext, input: BitlyReques
 
 function bitlyHeaders(apiKey: string, hasBody: boolean): Record<string, string> {
   const headers: Record<string, string> = {
-    authorization: `Bearer ${apiKey}`,
+    "authorization": `Bearer ${apiKey}`,
     "user-agent": providerUserAgent,
-    accept: "application/json",
+    "accept": "application/json",
   };
   if (hasBody) {
     headers["content-type"] = "application/json";

@@ -78,7 +78,7 @@ async function duneRequest(
   }
 
   const headers = new Headers({
-    accept: "application/json",
+    "accept": "application/json",
     "x-dune-api-key": context.apiKey,
     "user-agent": providerUserAgent,
   });

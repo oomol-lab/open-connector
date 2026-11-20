@@ -203,8 +203,8 @@ function buildFoursquareUrl(path: string, query: Record<string, string | number 
 
 function foursquareHeaders(apiKey: string): Headers {
   return new Headers({
-    accept: "application/json",
-    authorization: `fsq3 ${apiKey}`,
+    "accept": "application/json",
+    "authorization": `fsq3 ${apiKey}`,
     "user-agent": providerUserAgent,
   });
 }

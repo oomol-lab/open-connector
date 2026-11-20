@@ -132,7 +132,7 @@ async function requestShotstackJson(input: {
 }): Promise<unknown> {
   const timeout = createProviderTimeout(input.signal);
   const headers: Record<string, string> = {
-    accept: "application/json",
+    "accept": "application/json",
     "x-api-key": input.apiKey,
     "user-agent": providerUserAgent,
   };

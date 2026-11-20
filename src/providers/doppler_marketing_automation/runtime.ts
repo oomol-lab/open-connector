@@ -242,8 +242,8 @@ async function requestDopplerMarketingJson(input: DopplerMarketingRequest) {
     const response = await input.fetcher(url, {
       method,
       headers: {
-        accept: "application/json",
-        authorization: `token ${input.apiKey}`,
+        "accept": "application/json",
+        "authorization": `token ${input.apiKey}`,
         ...(input.body === undefined ? {} : { "content-type": "application/json" }),
         "user-agent": providerUserAgent,
       },

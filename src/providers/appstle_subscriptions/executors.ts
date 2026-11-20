@@ -144,7 +144,7 @@ async function requestAppstleSubscriptions(input: {
     return await input.context.fetcher(url, {
       method: "GET",
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "user-agent": providerUserAgent,
         "X-API-Key": input.context.apiKey,
       },

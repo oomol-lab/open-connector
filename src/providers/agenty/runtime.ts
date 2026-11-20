@@ -763,7 +763,7 @@ async function requestAgentyJson(input: {
 function agentyHeaders(apiKey: string) {
   return {
     "X-Agenty-ApiKey": apiKey,
-    Accept: "application/json",
+    "Accept": "application/json",
     "User-Agent": providerUserAgent,
   };
 }

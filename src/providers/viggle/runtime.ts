@@ -277,7 +277,7 @@ async function requestViggleJson(
   }
 
   const headers = new Headers({
-    accept: "application/json",
+    "accept": "application/json",
     "user-agent": providerUserAgent,
   });
   if (request.auth !== false) {

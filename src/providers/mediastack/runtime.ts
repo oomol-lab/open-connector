@@ -127,7 +127,7 @@ async function requestMediastackJson(input: MediastackRequestInput): Promise<Rec
     const response = await input.fetcher(buildMediastackUrl(input.path, input.query, input.apiKey), {
       method: "GET",
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "user-agent": providerUserAgent,
       },
       signal: timeout.signal,

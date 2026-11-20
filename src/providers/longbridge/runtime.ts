@@ -390,8 +390,8 @@ export async function requestLongbridgeJson(input: LongbridgeRequestOptions): Pr
 
 function buildLongbridgeRequestInit(input: LongbridgeRequestOptions, signal: AbortSignal): RequestInit {
   const headers: Record<string, string> = {
-    accept: "application/json",
-    authorization: `Bearer ${input.context.accessToken}`,
+    "accept": "application/json",
+    "authorization": `Bearer ${input.context.accessToken}`,
     "user-agent": providerUserAgent,
   };
   if ((input.method === "POST" || input.method === "PUT") && input.body !== undefined) {

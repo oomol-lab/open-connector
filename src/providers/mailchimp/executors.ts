@@ -354,8 +354,8 @@ function buildMailchimpUrl(apiBaseUrl: string, path: string, query?: MailchimpRe
 
 function mailchimpHeaders(context: MailchimpActionContext, hasBody: boolean): Record<string, string> {
   return {
-    accept: "application/json",
-    authorization: context.authorization,
+    "accept": "application/json",
+    "authorization": context.authorization,
     ...(hasBody ? { "content-type": "application/json" } : {}),
     "user-agent": providerUserAgent,
   };
@@ -508,8 +508,8 @@ async function requestMailchimpOAuthMetadata(
 ): Promise<MailchimpJsonObject> {
   const response = await fetcher(mailchimpOAuthMetadataUrl, {
     headers: {
-      accept: "application/json",
-      authorization: `OAuth ${accessToken}`,
+      "accept": "application/json",
+      "authorization": `OAuth ${accessToken}`,
       "user-agent": providerUserAgent,
     },
     signal,

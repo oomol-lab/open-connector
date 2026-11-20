@@ -189,7 +189,7 @@ async function uniswapApiRequest(
       const response = await context.fetcher(buildUniswapApiUrl(input.path), {
         method: input.method,
         headers: {
-          accept: "application/json",
+          "accept": "application/json",
           "content-type": "application/json",
           "user-agent": providerUserAgent,
           "x-api-key": context.apiKey,

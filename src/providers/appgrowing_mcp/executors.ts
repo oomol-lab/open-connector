@@ -11,7 +11,7 @@ import { appgrowingMcpActions } from "./actions.ts";
 const origin = "https://api-appgrowing-global.youcloud.com";
 const endpoint = `${origin}/mcp`;
 const defaultHeaders = {
-  accept: "application/json, text/event-stream",
+  "accept": "application/json, text/event-stream",
   "content-type": "application/json",
   "accept-language": "en",
 };
@@ -63,13 +63,13 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
   auth: { type: "api_key_authorization", prefix: "Bearer " },
   skipDnsValidation: true,
   redirect: "manual",
-  customizeRequest({ url, headers }) {
+  defaultHeaders,
+  customizeRequest({ url }) {
     if (url.href !== endpoint)
       throw new ProviderRequestError(
         400,
         "AppGrowing proxy only supports the official /mcp endpoint without query parameters",
       );
-    for (const [name, value] of Object.entries(defaultHeaders)) if (!headers.has(name)) headers.set(name, value);
   },
   async readError(response) {
     return new ProviderRequestError(

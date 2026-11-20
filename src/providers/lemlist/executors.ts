@@ -189,8 +189,8 @@ async function requestLemlistJson(input: {
     response = await input.context.fetcher(url, {
       method: "GET",
       headers: {
-        accept: "application/json",
-        authorization: buildBasicAuthHeader(input.context.apiKey),
+        "accept": "application/json",
+        "authorization": buildBasicAuthHeader(input.context.apiKey),
         "user-agent": providerUserAgent,
       },
       signal: timeout.signal,

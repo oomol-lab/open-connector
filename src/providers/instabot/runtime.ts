@@ -199,8 +199,8 @@ async function requestInstabotJson(input: InstabotRequestInput) {
     const response = await input.fetcher(url, {
       method: input.method,
       headers: {
-        accept: "application/json",
-        authorization: `X-Instabot-Master-Api-Key ${input.credential.masterApiKey}`,
+        "accept": "application/json",
+        "authorization": `X-Instabot-Master-Api-Key ${input.credential.masterApiKey}`,
         ...(input.body ? { "content-type": "application/json" } : {}),
         "user-agent": providerUserAgent,
         "x-instabot-api-key": input.credential.apiKey,

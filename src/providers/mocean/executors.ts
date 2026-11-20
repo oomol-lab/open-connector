@@ -19,9 +19,7 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
   baseUrl: moceanApiBaseUrl,
   auth: { type: "api_key_authorization", prefix: "Bearer " },
   skipDnsValidation: true,
-  customizeRequest({ headers }) {
-    if (!headers.has("accept")) headers.set("accept", "application/json");
-  },
+  defaultHeaders: { accept: "application/json" },
 });
 
 type MoceanRequestPhase = "validate" | "execute";
@@ -158,8 +156,8 @@ async function requestMocean(
 
 function moceanHeaders(apiKey: string, method: "GET" | "POST"): Record<string, string> {
   return {
-    accept: "application/json",
-    authorization: `Bearer ${apiKey}`,
+    "accept": "application/json",
+    "authorization": `Bearer ${apiKey}`,
     "user-agent": providerUserAgent,
     ...(method === "POST" ? { "content-type": "application/x-www-form-urlencoded;charset=UTF-8" } : {}),
   };

@@ -236,8 +236,8 @@ async function requestBooqableJson(input: BooqableRequestInput): Promise<JsonObj
     const response = await input.context.fetcher(buildBooqableUrl(input.context.companySlug, input.path, input.query), {
       method: input.method,
       headers: {
-        accept: "application/json",
-        authorization: `Bearer ${input.context.apiKey}`,
+        "accept": "application/json",
+        "authorization": `Bearer ${input.context.apiKey}`,
         "content-type": "application/json",
         "user-agent": providerUserAgent,
       },

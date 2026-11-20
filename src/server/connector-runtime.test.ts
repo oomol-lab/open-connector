@@ -230,7 +230,7 @@ describe("headless runtime", () => {
       new Request(`${publicOrigin}/v1/actions/ninjapear.get_credit_balance`, {
         method: "POST",
         headers: {
-          authorization: "Bearer runtime-token",
+          "authorization": "Bearer runtime-token",
           "content-type": "application/json",
           "x-oo-connector-alias": accounts[0].alias,
         },
@@ -275,7 +275,7 @@ describe("headless runtime", () => {
         new Request(`${publicOrigin}${route}`, {
           method: "POST",
           headers: {
-            authorization: "Bearer runtime-token",
+            "authorization": "Bearer runtime-token",
             "content-type": "application/json",
             "x-oo-connector-alias": accounts[0].alias,
           },
@@ -326,7 +326,7 @@ describe("headless runtime", () => {
       new Request(`${publicOrigin}/v1/actions/github.get_current_user`, {
         method: "POST",
         headers: {
-          authorization: "Bearer runtime-token",
+          "authorization": "Bearer runtime-token",
           "content-type": "application/json",
           "x-oo-connector-alias": alias,
         },
@@ -480,7 +480,7 @@ describe("headless runtime", () => {
       new Request(`${publicOrigin}/v1/proxy/github`, {
         method: "POST",
         headers: {
-          authorization: "Bearer runtime-token",
+          "authorization": "Bearer runtime-token",
           "content-type": "application/json",
           "x-oo-connector-alias": accounts[0].alias,
         },
@@ -517,7 +517,7 @@ describe("headless runtime", () => {
       target.fetch(
         new Request(`${publicOrigin}/api/connections/github`, {
           method: "PUT",
-          headers: { authorization: "Bearer admin-token", "content-type": "application/json" },
+          headers: { "authorization": "Bearer admin-token", "content-type": "application/json" },
           body: JSON.stringify({ authType: "api_key", values: { apiKey: "fixture-secret" } }),
         }),
       );
@@ -552,7 +552,7 @@ describe("headless runtime", () => {
       target.fetch(
         new Request(`${publicOrigin}/api/connections/kobotoolbox`, {
           method: "PUT",
-          headers: { authorization: "Bearer admin-token", "content-type": "application/json" },
+          headers: { "authorization": "Bearer admin-token", "content-type": "application/json" },
           body: JSON.stringify({
             authType: "api_key",
             values: { apiKey: "fixture-secret", baseUrl: "https://10.0.0.5" },
@@ -661,7 +661,7 @@ function request(
   return runtime!.fetch(
     new Request(`${publicOrigin}${path}`, {
       method,
-      headers: { authorization: `Bearer ${token}`, "content-type": "application/json" },
+      headers: { "authorization": `Bearer ${token}`, "content-type": "application/json" },
       body: body === undefined ? undefined : JSON.stringify(body),
     }),
   );

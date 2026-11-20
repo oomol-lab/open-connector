@@ -79,7 +79,5 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
   service: "streamwish",
   baseUrl,
   auth: { type: "api_key_query", name: "key" },
-  customizeRequest({ headers }) {
-    if (!headers.has("accept")) headers.set("accept", "application/json");
-  },
+  defaultHeaders: { accept: "application/json" },
 });

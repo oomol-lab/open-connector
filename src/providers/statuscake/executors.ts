@@ -281,8 +281,8 @@ async function statuscakeFetch(input: {
 
 function buildStatuscakeHeaders(apiKey: string, body?: URLSearchParams): Record<string, string> {
   return {
-    Authorization: `Bearer ${apiKey}`,
-    Accept: "application/json",
+    "Authorization": `Bearer ${apiKey}`,
+    "Accept": "application/json",
     "User-Agent": providerUserAgent,
     ...(body ? { "content-type": "application/x-www-form-urlencoded" } : {}),
   };

@@ -285,7 +285,7 @@ async function requestRoamScimJson(input: RoamScimRequestInput): Promise<unknown
 
 function buildRoamScimHeaders(apiKey: string, hasBody: boolean, authenticated: boolean): Record<string, string> {
   const headers: Record<string, string> = {
-    accept: "application/scim+json, application/json",
+    "accept": "application/scim+json, application/json",
     "user-agent": providerUserAgent,
   };
   if (authenticated) {

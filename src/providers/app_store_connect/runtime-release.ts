@@ -382,7 +382,7 @@ export const appStoreConnectReleaseHandlers: AppStoreConnectHandlers = {
         "filter[app]": readAppStoreConnectId(input.appId, "appId"),
         "filter[platform]": pickOptionalString(input, "platform"),
         "filter[state]": readCommaSeparatedList(input.states),
-        include: "appStoreVersionForReview",
+        "include": "appStoreVersionForReview",
       },
     });
     return {

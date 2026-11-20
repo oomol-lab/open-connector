@@ -208,9 +208,9 @@ async function requestRebrandlyJson(input: {
     response = await input.context.fetcher(url, {
       method: input.method ?? "GET",
       headers: {
-        apikey: input.context.apiKey,
+        "apikey": input.context.apiKey,
         ...(input.workspaceId ? { Workspace: input.workspaceId } : {}),
-        accept: "application/json",
+        "accept": "application/json",
         ...(input.body !== undefined ? { "content-type": "application/json" } : {}),
         "user-agent": providerUserAgent,
       },

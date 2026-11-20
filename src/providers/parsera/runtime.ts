@@ -118,7 +118,7 @@ async function parseraPostJson(
 
 function parseraHeaders(apiKey: string, hasBody: boolean) {
   const headers: Record<string, string> = {
-    accept: "application/json",
+    "accept": "application/json",
     "user-agent": providerUserAgent,
     "X-API-KEY": apiKey,
   };

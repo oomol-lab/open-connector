@@ -424,7 +424,7 @@ async function requestWangdian(input: WangdianRequest): Promise<Record<string, u
     const response = await input.context.fetcher(`${wangdianApiBaseUrl}/${input.endpoint}`, {
       method: "POST",
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "content-type": "application/x-www-form-urlencoded;charset=UTF-8",
         "user-agent": providerUserAgent,
       },

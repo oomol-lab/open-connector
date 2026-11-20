@@ -140,8 +140,8 @@ async function requestNgrokJson(input: {
     const response = await input.context.fetcher(url.toString(), {
       method: "GET",
       headers: {
-        authorization: `Bearer ${input.context.apiKey}`,
-        accept: "application/json",
+        "authorization": `Bearer ${input.context.apiKey}`,
+        "accept": "application/json",
         "user-agent": providerUserAgent,
         "ngrok-version": ngrokApiVersion,
       },

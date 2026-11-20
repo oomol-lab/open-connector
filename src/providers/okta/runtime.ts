@@ -420,7 +420,7 @@ function buildOktaUrl(input: OktaRequestInput): URL {
 
 function buildOktaHeaders(authorization: string, hasBody: boolean): Record<string, string> {
   const headers: Record<string, string> = {
-    accept: "application/json",
+    "accept": "application/json",
     authorization,
     "user-agent": providerUserAgent,
   };

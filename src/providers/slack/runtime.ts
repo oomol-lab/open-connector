@@ -898,7 +898,7 @@ async function slackDownloadFile(input: Record<string, unknown>, context: SlackA
     }
 
     const response = await context.fetcher(url, {
-      headers: { authorization: `Bearer ${context.accessToken}`, "user-agent": providerUserAgent },
+      headers: { "authorization": `Bearer ${context.accessToken}`, "user-agent": providerUserAgent },
       signal,
     });
     try {
@@ -1460,7 +1460,7 @@ function slackApiUrl(method: string): URL {
 
 function slackHeaders(accessToken: string): Record<string, string> {
   return {
-    authorization: `Bearer ${accessToken}`,
+    "authorization": `Bearer ${accessToken}`,
     "content-type": "application/json",
     "user-agent": providerUserAgent,
   };

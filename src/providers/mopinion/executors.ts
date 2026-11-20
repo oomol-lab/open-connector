@@ -313,8 +313,8 @@ async function requestMopinionJson(input: {
     response = await input.fetcher(url, {
       method: "GET",
       headers: {
-        accept: "application/json",
-        version: mopinionApiVersion,
+        "accept": "application/json",
+        "version": mopinionApiVersion,
         "user-agent": providerUserAgent,
         "x-auth-token": createMopinionAuthToken({
           ...input.credentials,

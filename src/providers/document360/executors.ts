@@ -175,9 +175,9 @@ async function requestJson(input: {
     const response = await input.fetcher(buildUrl(input.path, input.query), {
       method: "GET",
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "content-type": "application/json",
-        api_token: input.apiKey,
+        "api_token": input.apiKey,
         "user-agent": providerUserAgent,
       },
       signal,

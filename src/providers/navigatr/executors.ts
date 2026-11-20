@@ -88,9 +88,7 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
   baseUrl: apiBaseUrl,
   auth: { type: "api_key_header", name: "X-Access-Token" },
   skipDnsValidation: true,
-  customizeRequest({ headers }) {
-    if (!headers.has("accept")) headers.set("accept", "application/json");
-  },
+  defaultHeaders: { accept: "application/json" },
 });
 async function requestNavigatr(
   apiKey: string,
@@ -110,7 +108,7 @@ async function requestNavigatr(
       method,
       headers: {
         "X-Access-Token": apiKey,
-        accept: "application/json",
+        "accept": "application/json",
         "content-type": "application/json",
         "user-agent": providerUserAgent,
       },

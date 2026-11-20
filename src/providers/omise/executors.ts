@@ -121,8 +121,8 @@ async function request(
   const response = await context.fetcher(url, {
     method,
     headers: {
-      accept: "application/json",
-      authorization: basicAuthorizationHeader(`${context.apiKey}:`),
+      "accept": "application/json",
+      "authorization": basicAuthorizationHeader(`${context.apiKey}:`),
       "user-agent": providerUserAgent,
       "content-type": "application/x-www-form-urlencoded",
     },

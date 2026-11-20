@@ -424,8 +424,8 @@ async function flexmailRequest(input: FlexmailRequestInput) {
 async function flexmailRawRequest(input: FlexmailRequestInput) {
   const timeoutHandle = createProviderTimeout(input.context.signal);
   const headers: Record<string, string> = {
-    accept: "application/hal+json, application/json",
-    authorization: buildFlexmailAuthorization(input.context.accountId, input.context.personalAccessToken),
+    "accept": "application/hal+json, application/json",
+    "authorization": buildFlexmailAuthorization(input.context.accountId, input.context.personalAccessToken),
     "user-agent": providerUserAgent,
   };
   if (input.body !== undefined) {

@@ -124,8 +124,8 @@ async function requestStorecensusJson(input: {
 }): Promise<unknown> {
   return runProviderRequest({ signal: input.context.signal, label: "StoreCensus" }, async (signal) => {
     const headers: Record<string, string> = {
-      accept: "application/json",
-      authorization: `Bearer ${input.context.apiKey}`,
+      "accept": "application/json",
+      "authorization": `Bearer ${input.context.apiKey}`,
       "user-agent": providerUserAgent,
     };
     let body: BodyInit | undefined;

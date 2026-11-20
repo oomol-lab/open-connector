@@ -150,8 +150,8 @@ async function executeWebexAction(
     response = await fetcher(url, {
       method: descriptor.method,
       headers: {
-        accept: descriptor.response === "text" ? "text/vtt, text/plain" : "application/json",
-        authorization: `Bearer ${accessToken}`,
+        "accept": descriptor.response === "text" ? "text/vtt, text/plain" : "application/json",
+        "authorization": `Bearer ${accessToken}`,
         ...(descriptor.bodyFields ? { "content-type": descriptor.contentType ?? "application/json" } : {}),
         "user-agent": providerUserAgent,
       },

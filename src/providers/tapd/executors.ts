@@ -46,8 +46,8 @@ async function request({ path, query, auth, fetcher, parentSignal }: TapdRequest
     const response = await fetcher(url.toString(), {
       method: "GET",
       headers: {
-        authorization: auth,
-        accept: "application/json",
+        "authorization": auth,
+        "accept": "application/json",
         "user-agent": providerUserAgent,
       },
       signal,

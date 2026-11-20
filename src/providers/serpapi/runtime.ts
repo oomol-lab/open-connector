@@ -139,7 +139,7 @@ async function requestSerpApiJson(
     response = await context.fetcher(buildSerpApiUrl(query, context.apiKey), {
       method: "GET",
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "user-agent": providerUserAgent,
       },
       signal: context.signal,

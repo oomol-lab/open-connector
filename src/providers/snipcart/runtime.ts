@@ -118,8 +118,8 @@ async function requestSnipcartJson(input: {
     const response = await input.fetcher(url, {
       method: "GET",
       headers: {
-        accept: "application/json",
-        authorization: `Basic ${Buffer.from(`${input.apiKey}:`).toString("base64")}`,
+        "accept": "application/json",
+        "authorization": `Basic ${Buffer.from(`${input.apiKey}:`).toString("base64")}`,
         "user-agent": providerUserAgent,
       },
       signal: timeoutHandle.signal,

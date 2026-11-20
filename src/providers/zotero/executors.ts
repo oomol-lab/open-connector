@@ -159,10 +159,7 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
   baseUrl,
   auth: { type: "api_key_header", name: "Zotero-API-Key" },
   skipDnsValidation: true,
-  customizeRequest({ headers }) {
-    if (!headers.has("accept")) headers.set("accept", "application/json");
-    if (!headers.has("zotero-api-version")) headers.set("zotero-api-version", apiVersion);
-  },
+  defaultHeaders: { "accept": "application/json", "zotero-api-version": apiVersion },
 });
 export const credentialValidators: CredentialValidators = {
   async apiKey(input, { fetcher, signal }) {
@@ -192,7 +189,7 @@ async function request(
   for (const [name, value] of Object.entries(options.query ?? {}))
     if (value !== undefined && value !== "") url.searchParams.set(name, String(value));
   const headers = new Headers({
-    accept: "application/json",
+    "accept": "application/json",
     "user-agent": providerUserAgent,
     "zotero-api-key": context.apiKey,
     "zotero-api-version": apiVersion,

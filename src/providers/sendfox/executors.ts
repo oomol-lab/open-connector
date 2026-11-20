@@ -256,8 +256,8 @@ async function sendfoxRequestJson(
 
 function sendfoxHeaders(apiKey: string, extraHeaders: Record<string, string>): Record<string, string> {
   return {
-    accept: "application/json",
-    authorization: `Bearer ${apiKey}`,
+    "accept": "application/json",
+    "authorization": `Bearer ${apiKey}`,
     "user-agent": providerUserAgent,
     ...extraHeaders,
   };

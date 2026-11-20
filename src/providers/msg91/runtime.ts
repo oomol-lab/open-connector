@@ -197,7 +197,7 @@ async function requestMsg91Json(input: Msg91RequestInput, context: ApiKeyProvide
   }
 
   const headers: Record<string, string> = {
-    accept: "application/json",
+    "accept": "application/json",
     "user-agent": providerUserAgent,
   };
   if (input.authPlacement === "header") {

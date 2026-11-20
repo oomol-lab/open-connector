@@ -103,7 +103,7 @@ async function edenaiRequest(context: ApiKeyProviderContext, request: EdenAiRequ
 
 function edenaiHeaders(apiKey: string): Headers {
   return new Headers({
-    authorization: `Bearer ${apiKey}`,
+    "authorization": `Bearer ${apiKey}`,
     "content-type": "application/json",
     "user-agent": providerUserAgent,
   });

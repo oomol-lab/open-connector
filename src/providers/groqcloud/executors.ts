@@ -138,8 +138,8 @@ async function groqcloudRequest(input: {
 
 function groqcloudHeaders(apiKey: string, hasBody: boolean): Record<string, string> {
   return {
-    authorization: `Bearer ${apiKey}`,
-    accept: "application/json",
+    "authorization": `Bearer ${apiKey}`,
+    "accept": "application/json",
     ...(hasBody ? { "content-type": "application/json" } : {}),
     "user-agent": providerUserAgent,
   };

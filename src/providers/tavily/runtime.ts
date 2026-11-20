@@ -93,7 +93,7 @@ async function tavilyRawRequest(context: ApiKeyProviderContext, input: TavilyReq
     return await context.fetcher(new URL(input.path, tavilyApiBaseUrl), {
       method: input.method ?? "POST",
       headers: {
-        authorization: `Bearer ${context.apiKey}`,
+        "authorization": `Bearer ${context.apiKey}`,
         "content-type": "application/json",
         "user-agent": providerUserAgent,
       },

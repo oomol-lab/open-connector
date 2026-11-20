@@ -390,9 +390,9 @@ async function requestGleapJson(input: GleapRequestInput): Promise<unknown> {
 
 function gleapHeaders(context: GleapActionContext, hasBody: boolean): HeadersInit {
   return {
-    accept: "application/json",
-    authorization: `Bearer ${context.apiKey}`,
-    Project: context.projectId,
+    "accept": "application/json",
+    "authorization": `Bearer ${context.apiKey}`,
+    "Project": context.projectId,
     "user-agent": providerUserAgent,
     ...(hasBody ? { "content-type": "application/json" } : {}),
   };

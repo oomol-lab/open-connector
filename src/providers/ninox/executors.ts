@@ -326,8 +326,8 @@ async function requestNinoxJson(input: NinoxRequestInput): Promise<unknown> {
     const response = await input.context.fetcher(buildNinoxUrl(input.path, input.query), {
       method: input.method ?? "GET",
       headers: {
-        accept: "application/json",
-        authorization: `Bearer ${input.context.apiKey}`,
+        "accept": "application/json",
+        "authorization": `Bearer ${input.context.apiKey}`,
         "content-type": "application/json",
         "user-agent": providerUserAgent,
       },

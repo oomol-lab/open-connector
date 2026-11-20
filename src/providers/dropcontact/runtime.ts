@@ -102,7 +102,7 @@ async function requestDropcontactJson(
     const response = await context.fetcher(url, {
       method: input.method,
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "content-type": "application/json",
         "x-access-token": context.apiKey,
         "user-agent": providerUserAgent,

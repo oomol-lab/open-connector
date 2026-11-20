@@ -72,12 +72,5 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
   baseUrl,
   auth: { type: "api_key_header", name: "clay-api-key" },
   skipDnsValidation: true,
-  customizeRequest({ headers }) {
-    for (const [name, value] of Object.entries({
-      accept: "application/json",
-      "content-type": "application/json",
-      "user-agent": providerUserAgent,
-    }))
-      if (!headers.has(name)) headers.set(name, value);
-  },
+  defaultHeaders: { "accept": "application/json", "content-type": "application/json", "user-agent": providerUserAgent },
 });

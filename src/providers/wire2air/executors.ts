@@ -72,8 +72,8 @@ async function requestWire2Air(
     const response = await context.fetcher(url, {
       method: isSend ? "POST" : "GET",
       headers: {
-        accept: "application/json",
-        apikey: context.apiKey,
+        "accept": "application/json",
+        "apikey": context.apiKey,
         "content-type": "application/json",
         "user-agent": providerUserAgent,
       },

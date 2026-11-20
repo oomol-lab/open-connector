@@ -10,9 +10,7 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
   service,
   baseUrl: xingpanApiBaseUrl,
   auth: { type: "api_key_query_or_form_body", name: "access_token" },
-  customizeRequest({ headers }) {
-    if (!headers.has("accept")) headers.set("accept", "application/json");
-  },
+  defaultHeaders: { accept: "application/json" },
 });
 export const credentialValidators: CredentialValidators = {
   apiKey(input, { fetcher, signal }) {

@@ -235,8 +235,8 @@ async function requestClicksendJson(input: ClicksendRequestInput): Promise<Recor
 
 function clicksendHeaders(input: ClicksendRequestInput): Record<string, string> {
   return compactObject({
-    accept: "application/json",
-    authorization: buildBasicAuthorizationHeader(input.username, input.apiKey),
+    "accept": "application/json",
+    "authorization": buildBasicAuthorizationHeader(input.username, input.apiKey),
     "content-type": input.body === undefined ? undefined : "application/json",
     "user-agent": providerUserAgent,
   }) as Record<string, string>;

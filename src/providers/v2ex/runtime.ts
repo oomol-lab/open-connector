@@ -225,7 +225,7 @@ async function requestV2exLegacyJson(input: {
   try {
     response = await input.fetcher(url, {
       method: "GET",
-      headers: { accept: "application/json", "user-agent": providerUserAgent },
+      headers: { "accept": "application/json", "user-agent": providerUserAgent },
       signal: timeout.signal,
     });
     payload = await readV2exPayload(response);
@@ -305,8 +305,8 @@ function buildV2exUrl(path: string, query?: Record<string, unknown>): URL {
 
 function buildV2exHeaders(apiKey: string, hasJsonBody: boolean): Record<string, string> {
   const headers: Record<string, string> = {
-    accept: "application/json",
-    authorization: `Bearer ${apiKey}`,
+    "accept": "application/json",
+    "authorization": `Bearer ${apiKey}`,
     "user-agent": providerUserAgent,
   };
   if (hasJsonBody) headers["content-type"] = "application/json";

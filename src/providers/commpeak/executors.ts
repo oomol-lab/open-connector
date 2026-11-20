@@ -283,7 +283,7 @@ async function commpeakPostJson(
     {
       method: "POST",
       headers: commpeakHeaders(token, {
-        accept: "application/json",
+        "accept": "application/json",
         "content-type": "application/json",
       }),
       body: JSON.stringify(body),
@@ -329,7 +329,7 @@ function commpeakTextPeakUrl(path: string) {
 
 function commpeakHeaders(token: string, extraHeaders: Record<string, string>) {
   return {
-    Authorization: token,
+    "Authorization": token,
     "user-agent": providerUserAgent,
     ...extraHeaders,
   };

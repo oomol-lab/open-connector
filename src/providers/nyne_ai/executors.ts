@@ -322,7 +322,7 @@ function buildNyneAiUrl(input: NyneAiRequestInput): URL {
 
 function buildNyneAiHeaders(context: NyneAiActionContext, hasBody: boolean): Record<string, string> {
   return compactObject({
-    accept: "application/json",
+    "accept": "application/json",
     "content-type": hasBody ? "application/json" : undefined,
     "user-agent": providerUserAgent,
     "X-API-Key": context.apiKey,

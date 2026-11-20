@@ -232,8 +232,8 @@ async function requestInfluxdbCloud(input: {
 
 function requestHeaders(apiKey: string, hasTextBody: boolean): Headers {
   const headers = new Headers({
-    accept: "application/json",
-    authorization: `Token ${apiKey}`,
+    "accept": "application/json",
+    "authorization": `Token ${apiKey}`,
     "user-agent": providerUserAgent,
   });
   if (hasTextBody) {

@@ -53,9 +53,7 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
   baseUrl: apiBaseUrl,
   auth: { type: "api_key_query", name: "apikey" },
   skipDnsValidation: true,
-  customizeRequest({ headers }) {
-    if (!headers.has("accept")) headers.set("accept", "application/json");
-  },
+  defaultHeaders: { accept: "application/json" },
 });
 async function requestNationalize(
   apiKey: string,
@@ -69,7 +67,7 @@ async function requestNationalize(
   url.searchParams.set("apikey", apiKey);
   return runProviderRequest({ label: "Nationalize", signal: parentSignal }, async (signal) => {
     const response = await fetcher(url, {
-      headers: { accept: "application/json", "user-agent": providerUserAgent },
+      headers: { "accept": "application/json", "user-agent": providerUserAgent },
       signal,
     });
     let payload: unknown;

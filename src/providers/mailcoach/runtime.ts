@@ -53,8 +53,8 @@ export const mailcoachActionHandlers: ProviderActionHandlers<
       query: compactObject({
         "filter[search]": optionalString(input.search),
         "filter[name]": optionalString(input.name),
-        sort: optionalString(input.sort),
-        page: asOptionalPositiveInteger(input.page),
+        "sort": optionalString(input.sort),
+        "page": asOptionalPositiveInteger(input.page),
       }),
       mode: "execute",
     });
@@ -105,8 +105,8 @@ export const mailcoachActionHandlers: ProviderActionHandlers<
         "filter[email]": optionalString(input.email),
         "filter[search]": optionalString(input.search),
         "filter[status]": optionalString(input.status),
-        sort: optionalString(input.sort),
-        page: asOptionalPositiveInteger(input.page),
+        "sort": optionalString(input.sort),
+        "page": asOptionalPositiveInteger(input.page),
       }),
       mode: "execute",
       notFoundAsInvalidInput: true,
@@ -315,8 +315,8 @@ function mailcoachFetch(input: MailcoachRequestOptions): Promise<Response> {
   }
 
   const headers = new Headers({
-    accept: "application/json",
-    authorization: `Bearer ${input.apiKey}`,
+    "accept": "application/json",
+    "authorization": `Bearer ${input.apiKey}`,
     "user-agent": providerUserAgent,
   });
   if (input.body !== undefined) {

@@ -220,7 +220,7 @@ export async function exchangeCaptainBiAccessToken(
     init: {
       method: "POST",
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "user-agent": connectorUserAgent,
       },
       body: createCaptainBiTokenForm(credential.clientId, credential.clientSecret),
@@ -280,8 +280,8 @@ async function requestCaptainBiPage(input: {
     }
   }
   const headers = new Headers({
-    accept: "application/json",
-    authorization: `Bearer ${input.accessToken}`,
+    "accept": "application/json",
+    "authorization": `Bearer ${input.accessToken}`,
     "user-agent": connectorUserAgent,
   });
   if (input.openChannelId) {

@@ -61,7 +61,7 @@ async function request(path: string, context: ApiKeyProviderContext, phase: "val
   const timeout = createProviderTimeout(context.signal);
   try {
     const response = await context.fetcher(`${workizApiBaseUrl}/${encodeURIComponent(context.apiKey)}${path}`, {
-      headers: { accept: "application/json", "user-agent": providerUserAgent },
+      headers: { "accept": "application/json", "user-agent": providerUserAgent },
       signal: timeout.signal,
     });
     const text = await response.text();

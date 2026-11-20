@@ -299,8 +299,8 @@ function appendAffindaQueryValue(url: URL, key: string, value: unknown): void {
 
 function buildAffindaHeaders(apiKey: string, body?: BodyInit): Record<string, string> {
   return {
-    accept: "application/json",
-    authorization: `Bearer ${apiKey}`,
+    "accept": "application/json",
+    "authorization": `Bearer ${apiKey}`,
     "user-agent": providerUserAgent,
     ...(body && !(body instanceof FormData) ? { "content-type": "application/json" } : {}),
   };

@@ -168,7 +168,7 @@ async function teltelRequest<T>(input: {
   let payload: unknown;
   try {
     const headers: Record<string, string> = {
-      accept: "application/json",
+      "accept": "application/json",
       "X-API-KEY": input.apiKey,
     };
     if (input.body) {

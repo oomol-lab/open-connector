@@ -185,8 +185,8 @@ async function requestAssemblyaiJson(input: {
 
 function buildAssemblyaiHeaders(apiKey: string, hasBody: boolean): Record<string, string> {
   return compactObject({
-    accept: "application/json",
-    authorization: apiKey,
+    "accept": "application/json",
+    "authorization": apiKey,
     "content-type": hasBody ? "application/json" : undefined,
     "user-agent": providerUserAgent,
   }) as Record<string, string>;

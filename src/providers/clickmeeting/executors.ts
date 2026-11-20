@@ -12,11 +12,7 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
   service,
   baseUrl: clickMeetingApiBaseUrl,
   auth: { type: "api_key_header", name: "X-Api-Key" },
-  customizeRequest({ headers }) {
-    if (!headers.has("accept")) {
-      headers.set("accept", "application/json");
-    }
-  },
+  defaultHeaders: { accept: "application/json" },
 });
 
 export const credentialValidators: CredentialValidators = {

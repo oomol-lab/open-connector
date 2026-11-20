@@ -50,7 +50,7 @@ async function request({
   signal: parentSignal,
 }: TopazRequestOptions): Promise<Record<string, unknown>> {
   return runProviderRequest({ signal: parentSignal, label: "Topaz" }, async (signal) => {
-    const headers = new Headers({ "X-API-Key": apiKey, accept: "application/json" });
+    const headers = new Headers({ "X-API-Key": apiKey, "accept": "application/json" });
     if (typeof body === "string") headers.set("content-type", "application/json");
     const response = await fetcher(new URL(path, baseUrl), { method, headers, body, signal });
     if (response.status === 204 && allowEmpty) return {};
@@ -308,7 +308,5 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
   service: "topaz",
   baseUrl,
   auth: { type: "api_key_header", name: "X-API-Key" },
-  customizeRequest({ headers }) {
-    if (!headers.has("accept")) headers.set("accept", "application/json");
-  },
+  defaultHeaders: { accept: "application/json" },
 });

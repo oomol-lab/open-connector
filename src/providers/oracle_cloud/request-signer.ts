@@ -44,8 +44,8 @@ export function parseOracleApiPrivateKey(pem: string, passphrase?: string): KeyO
 export function signOracleApiRequest(identity: OracleApiSigningIdentity, input: OracleApiSigningInput): Headers {
   const method = input.method.toUpperCase();
   const headers = new Headers({
-    accept: "application/json",
-    host: input.url.host,
+    "accept": "application/json",
+    "host": input.url.host,
     "x-date": (input.now ?? new Date()).toUTCString(),
   });
   const signedHeaderNames = ["(request-target)", "host", "x-date"];

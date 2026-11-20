@@ -159,8 +159,8 @@ async function requestTerminusApp(input: RequestInput): Promise<unknown> {
     const response = await input.fetcher(url, {
       method: input.method ?? "GET",
       headers: {
-        accept: "application/json",
-        authorization: basicAuthorizationHeader(`${input.apiKey}:`),
+        "accept": "application/json",
+        "authorization": basicAuthorizationHeader(`${input.apiKey}:`),
         "content-type": "application/json",
         "user-agent": providerUserAgent,
       },

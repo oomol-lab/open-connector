@@ -208,8 +208,8 @@ function appendQuery(url: URL, query: Record<string, HarmonicAiQueryValue> | und
 
 function harmonicAiHeaders(apiKey: string): Record<string, string> {
   return {
-    accept: "application/json",
-    apikey: apiKey,
+    "accept": "application/json",
+    "apikey": apiKey,
     "user-agent": providerUserAgent,
   };
 }

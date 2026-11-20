@@ -566,8 +566,8 @@ async function requestMixpanel(input: MixpanelRequestInput): Promise<{ text: str
     let response: Response;
     try {
       const headers: Record<string, string> = {
-        Authorization: `Basic ${Buffer.from(`${input.serviceAccountUsername}:${input.apiKey}`).toString("base64")}`,
-        Accept: input.accept ?? "application/json",
+        "Authorization": `Basic ${Buffer.from(`${input.serviceAccountUsername}:${input.apiKey}`).toString("base64")}`,
+        "Accept": input.accept ?? "application/json",
         "User-Agent": providerUserAgent,
       };
       if (input.form) {

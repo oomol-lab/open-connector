@@ -160,8 +160,8 @@ async function requestJson(input: {
 
 function requestHeaders(apiKey: string): Record<string, string> {
   return {
-    Accept: "application/json",
-    Authorization: `Bearer ${apiKey}`,
+    "Accept": "application/json",
+    "Authorization": `Bearer ${apiKey}`,
     "User-Agent": providerUserAgent,
   };
 }
@@ -207,16 +207,16 @@ function createRequestError(
 
 function searchQuery(input: Record<string, unknown>): Record<string, QueryValue> {
   return compactObject({
-    address: optionalString(input.address),
-    postcode: optionalString(input.postcode),
-    uprn: scalarQueryValue(input.uprn),
+    "address": optionalString(input.address),
+    "postcode": optionalString(input.postcode),
+    "uprn": scalarQueryValue(input.uprn),
     "council[]": stringArrayQueryValue(input.councils),
     "constituency[]": stringArrayQueryValue(input.constituencies),
     "efficiency_rating[]": stringArrayQueryValue(input.energyRatings),
-    date_start: optionalString(input.dateStart),
-    date_end: optionalString(input.dateEnd),
-    page_size: numberQueryValue(input.pageSize),
-    current_page: numberQueryValue(input.currentPage),
+    "date_start": optionalString(input.dateStart),
+    "date_end": optionalString(input.dateEnd),
+    "page_size": numberQueryValue(input.pageSize),
+    "current_page": numberQueryValue(input.currentPage),
   });
 }
 

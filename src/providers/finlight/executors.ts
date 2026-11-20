@@ -43,7 +43,7 @@ async function request(
       method: body === undefined ? "GET" : "POST",
       headers: {
         "X-API-KEY": apiKey,
-        accept: "application/json",
+        "accept": "application/json",
         "content-type": "application/json",
         "user-agent": providerUserAgent,
       },
@@ -134,12 +134,5 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
   baseUrl,
   auth: { type: "api_key_header", name: "X-API-KEY" },
   skipDnsValidation: true,
-  customizeRequest({ headers }) {
-    for (const [key, value] of Object.entries({
-      accept: "application/json",
-      "content-type": "application/json",
-      "user-agent": providerUserAgent,
-    }))
-      if (!headers.has(key)) headers.set(key, value);
-  },
+  defaultHeaders: { "accept": "application/json", "content-type": "application/json", "user-agent": providerUserAgent },
 });

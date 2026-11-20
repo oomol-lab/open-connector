@@ -258,8 +258,8 @@ async function requestPartnerstackJson<T>(input: {
   const url = new URL(`${partnerstackApiBaseUrl}${input.path}`);
   appendQuery(url, input.query);
   const headers: Record<string, string> = {
-    accept: "application/json",
-    authorization: buildBasicAuthHeader(input.publicKey, input.secretKey),
+    "accept": "application/json",
+    "authorization": buildBasicAuthHeader(input.publicKey, input.secretKey),
     "user-agent": providerUserAgent,
   };
   if (input.body) {

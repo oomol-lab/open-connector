@@ -287,7 +287,7 @@ function buildMotionUrl(path: string, query?: Record<string, string>): URL {
 
 function buildMotionHeaders(apiKey: string, body?: Record<string, unknown>): Record<string, string> {
   return {
-    accept: "application/json",
+    "accept": "application/json",
     "user-agent": providerUserAgent,
     "x-api-key": apiKey,
     ...(body ? { "content-type": "application/json" } : {}),

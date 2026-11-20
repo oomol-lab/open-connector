@@ -28,7 +28,7 @@ async function execute(
   const response = await context.fetcher(url, {
     method: config.method,
     headers: {
-      accept: "application/json",
+      "accept": "application/json",
       "X-API-KEY": context.apiKey,
       "content-type": "application/json",
       "user-agent": providerUserAgent,

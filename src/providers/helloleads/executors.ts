@@ -512,7 +512,7 @@ function nullableString(value: unknown): string | null {
 
 function helloleadsHeaders(extraHeaders: Record<string, string> = {}): Record<string, string> {
   return {
-    accept: "application/json",
+    "accept": "application/json",
     "user-agent": providerUserAgent,
     ...extraHeaders,
   };

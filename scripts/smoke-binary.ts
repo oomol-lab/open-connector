@@ -366,7 +366,7 @@ async function checkProviderExecutor(baseUrl: string): Promise<void> {
 async function checkMcp(baseUrl: string): Promise<void> {
   const response = await fetch(`${baseUrl}/mcp`, {
     method: "POST",
-    headers: { "content-type": "application/json", accept: "application/json, text/event-stream" },
+    headers: { "content-type": "application/json", "accept": "application/json, text/event-stream" },
     body: JSON.stringify({
       jsonrpc: "2.0",
       id: 1,

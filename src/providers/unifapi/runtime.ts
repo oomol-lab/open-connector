@@ -121,8 +121,8 @@ async function requestUnifapiJson(input: UnifapiRequestInput): Promise<Record<st
 
 function buildHeaders(apiKey: string, body: Record<string, unknown> | undefined): Record<string, string> {
   const headers: Record<string, string> = {
-    accept: "application/json",
-    authorization: `Bearer ${apiKey}`,
+    "accept": "application/json",
+    "authorization": `Bearer ${apiKey}`,
     "unifapi-version": unifapiApiVersion,
     "user-agent": providerUserAgent,
   };

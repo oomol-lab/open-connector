@@ -159,8 +159,8 @@ async function requestData(input: RequestInput): Promise<unknown> {
     const response = await input.fetcher(url, {
       method: input.method ?? "GET",
       headers: {
-        accept: "application/json",
-        ApiKey: input.apiKey,
+        "accept": "application/json",
+        "ApiKey": input.apiKey,
         "content-type": "application/json",
         "user-agent": providerUserAgent,
       },

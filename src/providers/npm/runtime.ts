@@ -277,7 +277,7 @@ async function requestNpmJson(input: {
   signal?: AbortSignal;
 }) {
   const headers = new Headers({
-    accept: input.accept ?? "application/json",
+    "accept": input.accept ?? "application/json",
     "user-agent": providerUserAgent,
   });
   if (input.apiKey) {

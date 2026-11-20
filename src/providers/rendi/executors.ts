@@ -51,7 +51,7 @@ async function request(
       method,
       headers: {
         "X-API-KEY": apiKey,
-        accept: "application/json",
+        "accept": "application/json",
         "content-type": "application/json",
         "user-agent": providerUserAgent,
       },

@@ -41,9 +41,7 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
   },
   auth: { type: "none" },
   allowPrivateNetwork: isPrivateNetworkAccessAllowed,
-  customizeRequest({ headers }) {
-    if (!headers.has("accept")) headers.set("accept", "application/json, text/event-stream");
-  },
+  defaultHeaders: { accept: "application/json, text/event-stream" },
 });
 
 export const credentialValidators: CredentialValidators = {

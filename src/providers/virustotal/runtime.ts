@@ -300,7 +300,7 @@ function buildVirustotalRequestInit(input: {
   signal?: AbortSignal;
 }): RequestInit {
   const headers = new Headers({
-    accept: "application/json",
+    "accept": "application/json",
     "user-agent": providerUserAgent,
     "x-apikey": input.apiKey,
   });

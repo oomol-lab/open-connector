@@ -201,7 +201,7 @@ async function callJsonRpc(input: JsonRpcRequestInput): Promise<unknown> {
 
 function buildJsonRpcHeaders(companyLogin: string | undefined, token: string | undefined): Record<string, string> {
   const headers: Record<string, string> = {
-    accept: "application/json",
+    "accept": "application/json",
     "content-type": "application/json",
     "user-agent": providerUserAgent,
   };

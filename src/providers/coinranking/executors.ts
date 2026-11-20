@@ -206,7 +206,7 @@ async function coinrankingFetch(
     return await context.fetcher(url, {
       method: "GET",
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "user-agent": providerUserAgent,
         "x-access-token": context.apiKey,
       },

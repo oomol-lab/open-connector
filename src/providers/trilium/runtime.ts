@@ -489,8 +489,8 @@ async function requestTriliumResponse<TResult>(
 ): Promise<TResult> {
   const timeout = createProviderTimeout(input.context.signal, triliumRequestTimeoutMs);
   const headers = new Headers({
-    accept: input.accept ?? "application/json",
-    authorization: `Bearer ${input.context.apiToken}`,
+    "accept": input.accept ?? "application/json",
+    "authorization": `Bearer ${input.context.apiToken}`,
     "user-agent": providerUserAgent,
   });
   let body = input.body;

@@ -211,7 +211,7 @@ async function requestAutoboundJson(input: AutoboundRequestInput): Promise<Recor
     response = await input.context.fetcher(url, {
       method: input.method ?? "GET",
       headers: compactObject({
-        accept: "application/json",
+        "accept": "application/json",
         "content-type": input.body ? "application/json" : undefined,
         "user-agent": providerUserAgent,
         "x-api-key": input.context.apiKey,

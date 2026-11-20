@@ -98,8 +98,8 @@ async function requestNimble(context: NimbleContext, request: NimbleRequest): Pr
     response = await context.fetcher(url, {
       method: request.method ?? "GET",
       headers: {
-        accept: "application/json",
-        authorization: `Bearer ${context.apiKey}`,
+        "accept": "application/json",
+        "authorization": `Bearer ${context.apiKey}`,
         ...(request.body ? { "content-type": "application/json" } : {}),
         "user-agent": providerUserAgent,
       },

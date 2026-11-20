@@ -146,8 +146,8 @@ async function requestAshbyJson(input: {
     response = await input.context.fetcher(new URL(input.endpoint, `${ashbyApiBaseUrl}/`), {
       method: "POST",
       headers: {
-        accept: "application/json; version=1",
-        authorization: createAshbyAuthorization(input.context.apiKey),
+        "accept": "application/json; version=1",
+        "authorization": createAshbyAuthorization(input.context.apiKey),
         "content-type": "application/json",
         "user-agent": providerUserAgent,
       },

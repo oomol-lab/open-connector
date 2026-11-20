@@ -261,8 +261,8 @@ async function requestBusinessmapJson(input: BusinessmapRequestInput): Promise<u
     const response = await input.fetcher(buildBusinessmapUrl(input), {
       method: input.method ?? "GET",
       headers: {
-        apikey: input.apiKey,
-        accept: "application/json",
+        "apikey": input.apiKey,
+        "accept": "application/json",
         "user-agent": providerUserAgent,
         ...(input.body === undefined ? {} : { "content-type": "application/json" }),
       },

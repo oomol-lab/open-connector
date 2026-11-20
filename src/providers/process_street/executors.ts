@@ -184,7 +184,7 @@ async function requestProcessStreet(input: {
     response = await input.context.fetcher(buildUrl(input.path, input.params), {
       method: input.method,
       headers: compactObject({
-        accept: "application/json",
+        "accept": "application/json",
         "content-type": input.body ? "application/json" : undefined,
         "user-agent": providerUserAgent,
         "x-api-key": input.context.apiKey,

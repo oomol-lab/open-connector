@@ -39,9 +39,7 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
   baseUrl,
   auth: { type: "api_key_json_body", name: "token" },
   skipDnsValidation: true,
-  customizeRequest({ headers }) {
-    if (!headers.has("accept")) headers.set("accept", "application/json");
-  },
+  defaultHeaders: { accept: "application/json" },
 });
 async function requestDynalist(
   endpoint: string,
@@ -54,7 +52,7 @@ async function requestDynalist(
   return runProviderRequest({ label: "Dynalist", signal: parentSignal }, async (signal) => {
     const response = await fetcher(`${baseUrl}${endpoint}`, {
       method: "POST",
-      headers: { accept: "application/json", "content-type": "application/json" },
+      headers: { "accept": "application/json", "content-type": "application/json" },
       body: JSON.stringify({ ...body, token: apiKey }),
       signal,
     });

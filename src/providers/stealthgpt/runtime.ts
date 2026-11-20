@@ -180,7 +180,7 @@ async function stealthgptJsonRequest(
     const response = await fetcher(new URL(path, stealthgptApiBaseUrl), {
       ...init,
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "api-token": apiKey,
         "content-type": "application/json",
         "user-agent": providerUserAgent,

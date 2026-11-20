@@ -59,7 +59,7 @@ async function request(
   const url = new URL(path, ticketSourceApiBaseUrl);
   for (const [key, value] of Object.entries(query)) url.searchParams.set(key, value);
   const response = await fetcher(url, {
-    headers: { accept: "application/json", authorization: `Bearer ${apiKey}`, "user-agent": providerUserAgent },
+    headers: { "accept": "application/json", "authorization": `Bearer ${apiKey}`, "user-agent": providerUserAgent },
   });
   const text = await response.text();
   let payload: unknown = {};

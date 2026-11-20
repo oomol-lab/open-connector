@@ -235,8 +235,8 @@ async function requestOpsgenieJson<T>(input: OpsgenieRequestInput): Promise<T> {
   const timeout = createProviderTimeout(input.context.signal);
   try {
     const headers = compactObject({
-      accept: "application/json",
-      authorization: `GenieKey ${input.context.apiKey}`,
+      "accept": "application/json",
+      "authorization": `GenieKey ${input.context.apiKey}`,
       "content-type": input.body === undefined ? undefined : "application/json",
       "user-agent": providerUserAgent,
     }) as Record<string, string>;

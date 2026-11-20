@@ -238,8 +238,8 @@ async function requestChaserJson(
   }
   const response = await context.fetcher(url, {
     headers: {
-      accept: "application/json",
-      authorization: `Basic ${Buffer.from(`${context.apiKey}:${context.apiSecret}`).toString("base64")}`,
+      "accept": "application/json",
+      "authorization": `Basic ${Buffer.from(`${context.apiKey}:${context.apiSecret}`).toString("base64")}`,
       "user-agent": providerUserAgent,
     },
     signal: context.signal,

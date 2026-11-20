@@ -222,8 +222,8 @@ async function requestChatbotkit(
   const response = await context.fetcher(url, {
     method: options.method ?? "GET",
     headers: {
-      accept: "application/json",
-      authorization: `Bearer ${context.apiKey}`,
+      "accept": "application/json",
+      "authorization": `Bearer ${context.apiKey}`,
       "user-agent": providerUserAgent,
       ...(options.body !== undefined ? { "content-type": "application/json" } : {}),
     },

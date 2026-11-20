@@ -390,7 +390,7 @@ async function shortcutRequest(input: {
 
 function shortcutHeaders(apiKey: string, extraHeaders: Record<string, string>) {
   return {
-    accept: "application/json",
+    "accept": "application/json",
     "user-agent": providerUserAgent,
     "Shortcut-Token": apiKey,
     ...extraHeaders,

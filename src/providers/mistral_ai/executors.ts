@@ -509,7 +509,7 @@ async function readRemoteUploadSource(
   const url = readPublicFileUrl(fileUrl, "file.url");
   const response = await context.fetcher(url, {
     headers: {
-      accept: "*/*",
+      "accept": "*/*",
       "user-agent": providerUserAgent,
     },
     signal: context.signal,
@@ -566,7 +566,7 @@ function serializeMultipartValue(value: unknown): string {
 
 function mistralHeaders(apiKey: string, includeJsonContentType = true): Record<string, string> {
   return compactObject({
-    authorization: `Bearer ${apiKey}`,
+    "authorization": `Bearer ${apiKey}`,
     "content-type": includeJsonContentType ? "application/json" : undefined,
     "user-agent": providerUserAgent,
   }) as Record<string, string>;
@@ -574,7 +574,7 @@ function mistralHeaders(apiKey: string, includeJsonContentType = true): Record<s
 
 function mistralMultipartHeaders(apiKey: string): Record<string, string> {
   return {
-    authorization: `Bearer ${apiKey}`,
+    "authorization": `Bearer ${apiKey}`,
     "user-agent": providerUserAgent,
   };
 }

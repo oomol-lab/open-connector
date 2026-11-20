@@ -529,7 +529,7 @@ async function requestTwitterApiIo(input: {
   const method = input.method ?? "GET";
   const body = input.body ? compactObject(input.body) : undefined;
   const headers: Record<string, string> = {
-    accept: "application/json",
+    "accept": "application/json",
     "user-agent": providerUserAgent,
     "x-api-key": input.apiKey,
   };

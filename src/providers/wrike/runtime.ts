@@ -230,8 +230,8 @@ async function wrikeRequest(input: WrikeRequestOptions): Promise<Record<string, 
     response = await input.fetcher(url, {
       method: input.method,
       headers: {
-        accept: "application/json",
-        authorization: `Bearer ${input.apiKey}`,
+        "accept": "application/json",
+        "authorization": `Bearer ${input.apiKey}`,
         "user-agent": providerUserAgent,
       },
       signal: timeout.signal,

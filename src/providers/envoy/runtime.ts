@@ -243,7 +243,7 @@ async function requestEnvoy(input: EnvoyRequestInput): Promise<Record<string, un
     response = await input.fetcher(url, {
       method: "GET",
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "user-agent": providerUserAgent,
         "x-api-key": input.apiKey,
       },

@@ -69,7 +69,7 @@ async function requestDiffbotArticle(
   const response = await context.fetcher(buildDiffbotArticleUrl(input, context.apiKey), {
     method: "GET",
     headers: {
-      accept: "application/json",
+      "accept": "application/json",
       "user-agent": providerUserAgent,
     },
     signal: context.signal,

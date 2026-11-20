@@ -20,7 +20,7 @@ async function request(
   const response = await context.fetcher(url, {
     method,
     headers: {
-      accept: "application/json",
+      "accept": "application/json",
       "x-simplelocalize-token": context.apiKey,
       "content-type": "application/json",
       "user-agent": providerUserAgent,
@@ -89,10 +89,7 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
   baseUrl,
   auth: { type: "api_key_header", name: "X-SimpleLocalize-Token" },
   skipDnsValidation: true,
-  customizeRequest({ headers }) {
-    if (!headers.has("accept")) headers.set("accept", "application/json");
-    if (!headers.has("user-agent")) headers.set("user-agent", providerUserAgent);
-  },
+  defaultHeaders: { "accept": "application/json", "user-agent": providerUserAgent },
 });
 
 export const credentialValidators: CredentialValidators = {

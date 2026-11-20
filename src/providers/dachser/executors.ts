@@ -81,10 +81,7 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
   baseUrl: apiBaseUrl,
   auth: { type: "api_key_header", name: "X-API-Key" },
   skipDnsValidation: true,
-  customizeRequest({ headers }) {
-    if (!headers.has("accept")) headers.set("accept", "application/json");
-    if (!headers.has("user-agent")) headers.set("user-agent", providerUserAgent);
-  },
+  defaultHeaders: { "accept": "application/json", "user-agent": providerUserAgent },
 });
 
 export const credentialValidators: CredentialValidators = {
@@ -144,7 +141,7 @@ async function requestDachser(
   const timeoutSignal = AbortSignal.timeout(defaultProviderRequestTimeoutMs);
   const signal = context.signal ? AbortSignal.any([context.signal, timeoutSignal]) : timeoutSignal;
   const headers = new Headers({
-    accept: "application/json",
+    "accept": "application/json",
     "user-agent": providerUserAgent,
     "x-api-key": context.apiKey,
   });

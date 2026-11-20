@@ -144,8 +144,8 @@ const orgInsightsSummarySchema = s.looseObject("CircleCI Insights organization s
   all_projects: s.nullable(s.stringArray("All project names available in the organization.")),
 });
 const envVarSchema = s.looseObject("CircleCI environment variable.", {
-  name: s.nonEmptyString("The environment variable name."),
-  value: s.string("The masked environment variable value returned by CircleCI."),
+  "name": s.nonEmptyString("The environment variable name."),
+  "value": s.string("The masked environment variable value returned by CircleCI."),
   "created-at": s.string("The creation timestamp payload returned by CircleCI, when present."),
 });
 const envVarListSchema = s.object("Paginated CircleCI environment variable list.", {

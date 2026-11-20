@@ -103,8 +103,8 @@ async function requestTpscheckJson(
     response = await context.fetcher(url.toString(), {
       method: input.method,
       headers: {
-        accept: "application/json",
-        authorization: `Token ${context.apiKey}`,
+        "accept": "application/json",
+        "authorization": `Token ${context.apiKey}`,
         "user-agent": providerUserAgent,
         ...(input.body ? { "content-type": "application/json" } : {}),
       },

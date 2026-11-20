@@ -40,7 +40,7 @@ async function requestCronlytic({
       headers: {
         "X-API-Key": apiKey,
         "X-User-ID": userId,
-        accept: "application/json",
+        "accept": "application/json",
         "content-type": "application/json",
         "user-agent": providerUserAgent,
       },
@@ -188,12 +188,5 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
       response.status === 429 ? "rate_limited" : "provider_error",
     );
   },
-  customizeRequest({ headers }) {
-    for (const [name, value] of Object.entries({
-      accept: "application/json",
-      "content-type": "application/json",
-      "user-agent": providerUserAgent,
-    }))
-      if (!headers.has(name)) headers.set(name, value);
-  },
+  defaultHeaders: { "accept": "application/json", "content-type": "application/json", "user-agent": providerUserAgent },
 });

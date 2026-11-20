@@ -536,8 +536,8 @@ async function vimeoRequestJson(input: VimeoRequestInput): Promise<unknown> {
   const timeout = createProviderTimeout(input.signal);
   try {
     const headers: Record<string, string> = {
-      authorization: `Bearer ${input.accessToken}`,
-      accept: "application/vnd.vimeo.*+json;version=3.4",
+      "authorization": `Bearer ${input.accessToken}`,
+      "accept": "application/vnd.vimeo.*+json;version=3.4",
       "user-agent": providerUserAgent,
     };
     if (input.body !== undefined) {

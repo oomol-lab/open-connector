@@ -152,7 +152,7 @@ async function readSupadataPayload(response: Response): Promise<unknown> {
 
 function supadataHeaders(apiKey: string): Record<string, string> {
   return {
-    accept: "application/json",
+    "accept": "application/json",
     "user-agent": providerUserAgent,
     "x-api-key": apiKey,
   };

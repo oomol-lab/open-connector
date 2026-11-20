@@ -120,7 +120,7 @@ describe("Gmail attachment HTTP and transit file boundary", () => {
     async (failure) => {
       const fixture = await createFixture((response) => {
         const endings: Record<string, string> = {
-          truncated: "",
+          "truncated": "",
           "size mismatch": '","size":1}',
           "invalid base64": '!","size":49152}',
           "duplicate data": '","data":"","size":49152}',

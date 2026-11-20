@@ -132,7 +132,7 @@ async function pendoRequest(path: string, input: PendoRequestInput): Promise<unk
     response = await input.fetcher(url, {
       method: "GET",
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "content-type": "application/json",
         "user-agent": providerUserAgent,
         "x-pendo-integration-key": input.apiKey,

@@ -144,8 +144,8 @@ async function requestTinyurl(
     response = await input.fetcher(url, {
       method: input.method,
       headers: {
-        authorization: `Bearer ${input.apiKey}`,
-        accept: "application/json",
+        "authorization": `Bearer ${input.apiKey}`,
+        "accept": "application/json",
         "user-agent": providerUserAgent,
         ...(input.body ? { "content-type": "application/json" } : {}),
       },

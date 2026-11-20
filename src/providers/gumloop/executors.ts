@@ -350,8 +350,8 @@ function buildGumloopUrl(path: string, query: Record<string, GumloopQueryValue> 
 
 function buildGumloopHeaders(apiKey: string, userId: string, hasJsonBody: boolean): Record<string, string> {
   return compactObject({
-    accept: "application/json",
-    authorization: `Bearer ${apiKey}`,
+    "accept": "application/json",
+    "authorization": `Bearer ${apiKey}`,
     "x-auth-key": userId,
     "user-agent": providerUserAgent,
     "content-type": hasJsonBody ? "application/json" : undefined,

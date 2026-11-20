@@ -289,8 +289,8 @@ function sendKubernetesRequest<T>(
   setSearchParams(url, request.query ?? {});
   return runProviderRequest({ signal: context.signal, label: "Kubernetes" }, async (signal) => {
     const headers: Record<string, string> = {
-      accept: "application/json",
-      authorization: `Bearer ${context.token}`,
+      "accept": "application/json",
+      "authorization": `Bearer ${context.token}`,
       "user-agent": providerUserAgent,
     };
     if (request.body !== undefined) headers["content-type"] = request.contentType ?? "application/json";

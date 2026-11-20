@@ -223,9 +223,9 @@ async function metronomeRequestJson(
 
 function metronomeHeaders(apiKey: string, extraHeaders?: HeadersInit): Record<string, string> {
   return {
-    accept: "application/json",
+    "accept": "application/json",
     "user-agent": providerUserAgent,
-    authorization: `Bearer ${apiKey}`,
+    "authorization": `Bearer ${apiKey}`,
     ...Object.fromEntries(new Headers(extraHeaders).entries()),
   };
 }

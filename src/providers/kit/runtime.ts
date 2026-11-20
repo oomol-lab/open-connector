@@ -224,7 +224,7 @@ async function requestKitJson(input: {
 }): Promise<Record<string, unknown>> {
   return runProviderRequest({ signal: input.signal, label: "Kit" }, async (signal) => {
     const headers: Record<string, string> = {
-      accept: "application/json",
+      "accept": "application/json",
       "user-agent": providerUserAgent,
       "X-Kit-Api-Key": input.apiKey,
     };

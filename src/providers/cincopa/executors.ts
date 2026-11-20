@@ -177,7 +177,7 @@ async function requestJson(input: {
   try {
     response = await input.context.fetcher(buildUrl(input.path, input.query ?? {}, input.context.apiKey), {
       method: "GET",
-      headers: { accept: "application/json", "user-agent": providerUserAgent },
+      headers: { "accept": "application/json", "user-agent": providerUserAgent },
       signal,
     });
     payload = await readJson(response);

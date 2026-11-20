@@ -529,8 +529,8 @@ async function getnoteRequest(context: GetnoteContext, request: GetnoteRequest) 
 
 function getnoteHeaders(context: GetnoteContext, hasBody: boolean) {
   return {
-    accept: "application/json",
-    authorization: context.apiKey,
+    "accept": "application/json",
+    "authorization": context.apiKey,
     "x-client-id": context.clientId,
     "user-agent": providerUserAgent,
     ...(hasBody ? { "content-type": "application/json" } : {}),

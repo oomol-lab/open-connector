@@ -154,7 +154,7 @@ async function requestPdl(input: PdlRequestInput): Promise<unknown> {
     response = await input.fetcher(url.toString(), {
       method: input.method,
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "content-type": "application/json",
         "x-api-key": input.apiKey,
         "user-agent": providerUserAgent,

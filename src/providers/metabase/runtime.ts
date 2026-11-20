@@ -30,13 +30,13 @@ export const metabaseActionHandlers: ProviderActionHandlerSubset<"metabase", Met
       context,
       phase: "execute",
       query: {
-        include: optionalString(input.include),
-        include_analytics: input.includeAnalytics,
-        saved: input.saved,
-        include_editable_data_model: input.includeEditableDataModel,
-        exclude_uneditable_details: input.excludeUneditableDetails,
-        include_only_uploadable: input.includeOnlyUploadable,
-        router_database_id: input.routerDatabaseId,
+        "include": optionalString(input.include),
+        "include_analytics": input.includeAnalytics,
+        "saved": input.saved,
+        "include_editable_data_model": input.includeEditableDataModel,
+        "exclude_uneditable_details": input.excludeUneditableDetails,
+        "include_only_uploadable": input.includeOnlyUploadable,
+        "router_database_id": input.routerDatabaseId,
         "can-query": input.canQuery,
         "can-write-metadata": input.canWriteMetadata,
       },
@@ -62,9 +62,9 @@ export const metabaseActionHandlers: ProviderActionHandlerSubset<"metabase", Met
       context,
       phase: "execute",
       query: {
-        archived: input.archived,
+        "archived": input.archived,
         "exclude-other-user-collections": input.excludeOtherUserCollections,
-        namespace: optionalString(input.namespace),
+        "namespace": optionalString(input.namespace),
         "personal-only": input.personalOnly,
       },
     });
@@ -200,7 +200,7 @@ async function requestMetabaseJson(options: {
     response = await options.context.fetcher(url, {
       method: "GET",
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "user-agent": providerUserAgent,
         "x-api-key": options.context.apiKey,
       },

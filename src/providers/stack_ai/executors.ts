@@ -196,8 +196,8 @@ async function stackAiJsonRequest(
     const response = await context.fetcher(url, {
       method: input.method ?? "GET",
       headers: compactObject({
-        accept: "application/json",
-        authorization: `Bearer ${context.apiKey}`,
+        "accept": "application/json",
+        "authorization": `Bearer ${context.apiKey}`,
         "user-agent": providerUserAgent,
         "content-type": input.body ? "application/json" : undefined,
       }) as Record<string, string>,

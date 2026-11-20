@@ -202,7 +202,7 @@ async function requestTheDogApiJson(input: {
     const response = await input.context.fetcher(url, {
       method: input.method,
       headers: compactObject({
-        accept: "application/json",
+        "accept": "application/json",
         "content-type": input.body ? "application/json" : undefined,
         "user-agent": providerUserAgent,
         "x-api-key": input.context.apiKey,

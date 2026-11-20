@@ -140,7 +140,7 @@ async function requestFlagsmithJson(input: {
   const timeout = createProviderTimeout(input.context.signal);
   try {
     const headers = new Headers({
-      accept: "application/json",
+      "accept": "application/json",
       "user-agent": providerUserAgent,
       "x-environment-key": input.context.apiKey,
     });

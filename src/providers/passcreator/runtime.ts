@@ -128,8 +128,8 @@ async function requestPasscreatorJson(input: {
       const response = await input.fetcher(input.url, {
         method: input.method,
         headers: {
-          accept: "application/json",
-          authorization: input.apiKey,
+          "accept": "application/json",
+          "authorization": input.apiKey,
           ...(input.body ? { "content-type": "application/json" } : {}),
           "user-agent": providerUserAgent,
         },

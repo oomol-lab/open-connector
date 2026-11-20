@@ -170,8 +170,8 @@ export async function validateRaiselyCredential(
   const { response, payload } = await fetchRaiselyJson(fetcher, `${raiselyApiBaseUrl}/authenticate`, {
     method: "GET",
     headers: {
-      accept: "application/json",
-      authorization: `Bearer ${apiKey}`,
+      "accept": "application/json",
+      "authorization": `Bearer ${apiKey}`,
       "user-agent": providerUserAgent,
     },
     signal,
@@ -223,8 +223,8 @@ async function requestRaiselyJson(input: {
     url.search = input.query.toString();
   }
   const headers: Record<string, string> = {
-    accept: "application/json",
-    authorization: `Bearer ${input.context.apiKey}`,
+    "accept": "application/json",
+    "authorization": `Bearer ${input.context.apiKey}`,
     "user-agent": providerUserAgent,
   };
   if (input.body) {

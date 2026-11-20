@@ -109,7 +109,7 @@ async function request(
   url.searchParams.set("siteID", context.siteId);
   for (const [name, value] of Object.entries(spec.query(input))) if (value != null) url.searchParams.set(name, value);
   const response = await context.fetcher(url, {
-    headers: { accept: "application/json", "user-agent": providerUserAgent },
+    headers: { "accept": "application/json", "user-agent": providerUserAgent },
     signal: context.signal,
   });
   const text = await response.text();

@@ -39,7 +39,7 @@ async function request(
       method: route.method,
       headers: {
         "x-api-key": apiKey,
-        accept: "application/json",
+        "accept": "application/json",
         "content-type": "application/json",
       },
       body: route.method === "POST" ? JSON.stringify(input) : undefined,

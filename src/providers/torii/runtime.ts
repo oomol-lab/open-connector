@@ -211,8 +211,8 @@ async function requestToriiObject(
 async function requestToriiJson(options: ToriiRequestOptions, context: ApiKeyProviderContext): Promise<unknown> {
   return runProviderRequest({ signal: context.signal, label: "Torii" }, async (signal) => {
     const headers: Record<string, string> = {
-      accept: "application/json",
-      authorization: `Bearer ${context.apiKey}`,
+      "accept": "application/json",
+      "authorization": `Bearer ${context.apiKey}`,
       "user-agent": providerUserAgent,
     };
     if (options.apiVersion) {

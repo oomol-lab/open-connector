@@ -182,7 +182,7 @@ async function youRequest(input: {
 
 function youHeaders(apiKey: string, hasBody: boolean): Record<string, string> {
   return compactObject({
-    accept: "application/json",
+    "accept": "application/json",
     "x-api-key": apiKey,
     "user-agent": providerUserAgent,
     "content-type": hasBody ? "application/json" : undefined,

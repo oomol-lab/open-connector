@@ -166,8 +166,8 @@ async function requestRiddle(
       if (value !== undefined) url.searchParams.set(key, String(value));
     const hasBody = request.body !== undefined;
     const headers = new Headers({
-      accept: "application/json",
-      authorization: `Bearer ${context.apiKey}`,
+      "accept": "application/json",
+      "authorization": `Bearer ${context.apiKey}`,
       "user-agent": providerUserAgent,
     });
     if (hasBody) headers.set("content-type", "application/json");

@@ -272,7 +272,7 @@ function buildTemplatefoxUrl(path: string, query: Record<string, string | number
 
 function buildTemplatefoxHeaders(apiKey: string, hasBody: boolean): Record<string, string> {
   const headers: Record<string, string> = {
-    accept: "application/json",
+    "accept": "application/json",
     "user-agent": providerUserAgent,
     "x-api-key": apiKey,
   };

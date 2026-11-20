@@ -139,7 +139,7 @@ async function requestCompanyenrich(input: CompanyenrichRequest): Promise<unknow
   const response = await input.context.fetcher(url.toString(), {
     method: input.method ?? "GET",
     headers: {
-      Authorization: `Bearer ${input.context.apiKey}`,
+      "Authorization": `Bearer ${input.context.apiKey}`,
       "user-agent": providerUserAgent,
       ...(input.body ? { "content-type": "application/json" } : {}),
     },

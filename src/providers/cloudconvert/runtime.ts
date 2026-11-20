@@ -205,8 +205,8 @@ async function listJobs(input: Record<string, unknown>, context: ApiKeyProviderC
     query: compactObject({
       "filter[status]": optionalString(input.status),
       "filter[tag]": optionalString(input.tag),
-      page: readOptionalPositiveInteger(input.page, "page"),
-      per_page: readOptionalPositiveInteger(input.perPage, "perPage"),
+      "page": readOptionalPositiveInteger(input.page, "page"),
+      "per_page": readOptionalPositiveInteger(input.perPage, "perPage"),
     }),
   });
   return { jobs: items, links, meta };
@@ -249,8 +249,8 @@ async function listTasks(input: Record<string, unknown>, context: ApiKeyProvider
       "filter[job_id]": optionalString(input.jobId),
       "filter[status]": optionalString(input.status),
       "filter[operation]": optionalString(input.operation),
-      page: readOptionalPositiveInteger(input.page, "page"),
-      per_page: readOptionalPositiveInteger(input.perPage, "perPage"),
+      "page": readOptionalPositiveInteger(input.page, "page"),
+      "per_page": readOptionalPositiveInteger(input.perPage, "perPage"),
     }),
   });
   return { tasks: items, links, meta };
@@ -381,8 +381,8 @@ function buildConversionTypeQuery(input: Record<string, unknown>): Record<string
     "filter[output_format]": optionalString(input.outputFormat),
     "filter[engine]": optionalString(input.engine),
     "filter[engine_version]": optionalString(input.engineVersion),
-    alternatives: typeof input.alternatives === "boolean" ? input.alternatives : undefined,
-    include: include.length > 0 ? include : undefined,
+    "alternatives": typeof input.alternatives === "boolean" ? input.alternatives : undefined,
+    "include": include.length > 0 ? include : undefined,
   });
 }
 
@@ -535,8 +535,8 @@ async function cloudconvertFetch(input: CloudconvertRequestInput): Promise<Respo
     url.searchParams.set(key, String(value));
   }
   const headers = new Headers({
-    accept: "application/json",
-    authorization: `Bearer ${input.apiKey}`,
+    "accept": "application/json",
+    "authorization": `Bearer ${input.apiKey}`,
     "user-agent": providerUserAgent,
   });
   let body: string | undefined;

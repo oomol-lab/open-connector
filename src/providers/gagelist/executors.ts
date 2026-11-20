@@ -421,7 +421,7 @@ async function exchangeGagelistAccessToken(
     init: {
       method: "POST",
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "content-type": "application/x-www-form-urlencoded",
         "user-agent": providerUserAgent,
       },
@@ -458,8 +458,8 @@ async function requestGagelistJson(input: GagelistRequestInput & { phase?: Gagel
   }
 
   const headers = new Headers({
-    accept: "application/json",
-    authorization: `Bearer ${input.accessToken}`,
+    "accept": "application/json",
+    "authorization": `Bearer ${input.accessToken}`,
     "user-agent": providerUserAgent,
   });
   if (input.body != null) {

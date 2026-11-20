@@ -13,11 +13,7 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
   service,
   baseUrl: webOfScienceApiBaseUrl,
   auth: { type: "api_key_header", name: "X-ApiKey" },
-  customizeRequest({ headers }) {
-    if (!headers.has("accept")) {
-      headers.set("accept", "application/json");
-    }
-  },
+  defaultHeaders: { accept: "application/json" },
 });
 
 export const credentialValidators: CredentialValidators = {

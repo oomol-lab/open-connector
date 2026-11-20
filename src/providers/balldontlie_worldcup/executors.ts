@@ -122,7 +122,7 @@ export const credentialValidators: CredentialValidators = {
   async apiKey(input, { fetcher, signal }) {
     const payload = await balldontlieRequestJson({
       path: "/teams",
-      query: { "seasons[]": "2026", per_page: "1" },
+      query: { "seasons[]": "2026", "per_page": "1" },
       context: {
         apiKey: input.apiKey,
         fetcher,
@@ -162,19 +162,19 @@ function createListHandler(actionName: keyof typeof balldontlieListEndpoints): B
 function pagedQuery(input: Record<string, unknown>): Record<string, string | string[] | undefined> {
   return compactObject({
     "seasons[]": numberParam(input.season),
-    page: numberParam(input.page),
-    per_page: numberParam(input.perPage),
+    "page": numberParam(input.page),
+    "per_page": numberParam(input.perPage),
   });
 }
 
 function filteredQuery(input: Record<string, unknown>): Record<string, string | string[] | undefined> {
   return compactObject({
     ...pagedQuery(input),
-    match_id: numberParam(input.matchId),
-    team_id: numberParam(input.teamId),
-    player_id: numberParam(input.playerId),
-    search: stringParam(input.search),
-    prop_type: stringParam(input.propType),
+    "match_id": numberParam(input.matchId),
+    "team_id": numberParam(input.teamId),
+    "player_id": numberParam(input.playerId),
+    "search": stringParam(input.search),
+    "prop_type": stringParam(input.propType),
     "match_ids[]": numberArrayParam(input.matchIds),
     "team_ids[]": numberArrayParam(input.teamIds),
     "player_ids[]": numberArrayParam(input.playerIds),
@@ -205,8 +205,8 @@ async function balldontlieRequestJson(input: {
     response = await input.context.fetcher(url, {
       method: "GET",
       headers: {
-        accept: "application/json",
-        authorization: input.context.apiKey,
+        "accept": "application/json",
+        "authorization": input.context.apiKey,
         "user-agent": providerUserAgent,
       },
       signal: input.context.signal,

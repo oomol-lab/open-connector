@@ -100,8 +100,8 @@ async function validateConfluenceOAuthCredential(
   try {
     resourcesResponse = await fetcher(confluenceAccessibleResourcesUrl, {
       headers: {
-        authorization: `${credential.tokenType} ${credential.accessToken}`,
-        accept: "application/json",
+        "authorization": `${credential.tokenType} ${credential.accessToken}`,
+        "accept": "application/json",
         "user-agent": providerUserAgent,
       },
       signal: timeout.signal,

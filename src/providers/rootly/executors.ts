@@ -120,8 +120,8 @@ async function rootlyGetJson(
   try {
     response = await context.fetcher(url, {
       headers: {
-        accept: jsonApiContentType,
-        authorization: `Bearer ${context.apiKey}`,
+        "accept": jsonApiContentType,
+        "authorization": `Bearer ${context.apiKey}`,
         "content-type": jsonApiContentType,
         "user-agent": providerUserAgent,
       },
@@ -181,7 +181,7 @@ function buildIncidentQuery(input: Record<string, unknown>): Record<string, stri
     "filter[created_at][gte]": optionalString(input.createdAtGte),
     "filter[created_at][lt]": optionalString(input.createdAtLt),
     "filter[created_at][lte]": optionalString(input.createdAtLte),
-    sort: optionalString(input.sort),
+    "sort": optionalString(input.sort),
   });
 }
 
@@ -203,7 +203,7 @@ function buildConfigurationQuery(
     "filter[created_at][gte]": optionalString(input.createdAtGte),
     "filter[created_at][lt]": optionalString(input.createdAtLt),
     "filter[created_at][lte]": optionalString(input.createdAtLte),
-    sort: optionalString(input.sort),
+    "sort": optionalString(input.sort),
   });
 }
 

@@ -48,7 +48,7 @@ export async function validatePingbellCredential(
 
 async function listSources(apiKey: string, fetcher: typeof fetch, signal?: AbortSignal, validating = false) {
   const response = await fetcher(new URL("/userPingbells", pingbellApiBaseUrl), {
-    headers: { accept: "application/json", "x-api-key": apiKey },
+    headers: { "accept": "application/json", "x-api-key": apiKey },
     signal,
   });
   const text = await response.text();

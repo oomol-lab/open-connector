@@ -96,7 +96,7 @@ async function executeJungleScoutAction(
 
 export function jungleScoutHeaders(authorization: string): Record<string, string> {
   return {
-    accept: "application/vnd.junglescout.v1+json",
+    "accept": "application/vnd.junglescout.v1+json",
     authorization,
     "content-type": "application/vnd.api+json",
     "user-agent": providerUserAgent,

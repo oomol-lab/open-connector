@@ -166,8 +166,8 @@ async function requestChorusJson(input: {
     const response = await input.context.fetcher(buildChorusUrl(input.path, input.query), {
       method: "GET",
       headers: {
-        accept: input.accept,
-        authorization: input.apiKey,
+        "accept": input.accept,
+        "authorization": input.apiKey,
         "user-agent": providerUserAgent,
       },
       signal,

@@ -218,7 +218,7 @@ async function requestPayhipJson(options: PayhipRequestOptions) {
 
   const body = options.form ? new URLSearchParams(stringifyForm(options.form)) : undefined;
   const headers: Record<string, string> = {
-    accept: "application/json",
+    "accept": "application/json",
     "user-agent": providerUserAgent,
   };
   if (options.apiKey) {

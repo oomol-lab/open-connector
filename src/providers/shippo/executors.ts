@@ -211,8 +211,8 @@ async function requestShippoJson(input: ShippoRequestInput): Promise<unknown> {
     const response = await input.fetcher(url, {
       method: input.method ?? "GET",
       headers: {
-        accept: "application/json",
-        authorization: `ShippoToken ${input.apiKey}`,
+        "accept": "application/json",
+        "authorization": `ShippoToken ${input.apiKey}`,
         "content-type": "application/json",
         "shippo-api-version": shippoApiVersion,
         "user-agent": providerUserAgent,

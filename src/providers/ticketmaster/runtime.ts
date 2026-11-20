@@ -389,7 +389,7 @@ async function getSectionMapImage(input: Record<string, unknown>, context: Ticke
 
   const response = await context.fetcher(url.toString(), {
     headers: {
-      accept: "image/*, application/json",
+      "accept": "image/*, application/json",
       "user-agent": providerUserAgent,
     },
     signal: context.signal,
@@ -431,9 +431,9 @@ async function executeSeasonTicketingCommand(input: Record<string, unknown>, con
       {
         method: "POST",
         headers: {
-          accept: "application/json",
+          "accept": "application/json",
           "content-type": "application/json",
-          apikey: context.apiKey,
+          "apikey": context.apiKey,
           "user-agent": providerUserAgent,
           ...(Object.keys(cookieJar).length > 0 ? { cookie: buildCookieHeader(cookieJar) } : {}),
         },
@@ -486,7 +486,7 @@ async function ticketmasterGetJson(
 
   const response = await fetcher(requestUrl.toString(), {
     headers: {
-      accept: "application/json",
+      "accept": "application/json",
       "user-agent": providerUserAgent,
     },
     signal,

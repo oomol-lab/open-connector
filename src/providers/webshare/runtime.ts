@@ -186,8 +186,8 @@ function buildWebshareUrl(path: string, query?: Record<string, WebshareQueryValu
 
 function webshareHeaders(apiKey: string): Record<string, string> {
   return {
-    accept: "application/json",
-    authorization: `Token ${apiKey}`,
+    "accept": "application/json",
+    "authorization": `Token ${apiKey}`,
     "user-agent": providerUserAgent,
   };
 }

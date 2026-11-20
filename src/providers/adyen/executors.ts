@@ -279,7 +279,7 @@ function buildAdyenUrl(environment: AdyenEnvironment, path: string, query: Recor
 
 function adyenHeaders(apiKey: string): Record<string, string> {
   return {
-    accept: "application/json",
+    "accept": "application/json",
     "user-agent": providerUserAgent,
     "x-api-key": apiKey,
   };

@@ -672,7 +672,7 @@ function n8nFetch(input: N8nRequestOptions): Promise<Response> {
 
   validatePublicN8nInstanceUrl(url.toString());
   const headers = new Headers({
-    accept: "application/json",
+    "accept": "application/json",
     "user-agent": providerUserAgent,
     "x-n8n-api-key": input.context.apiKey,
   });

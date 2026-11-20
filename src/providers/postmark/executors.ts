@@ -119,7 +119,7 @@ async function requestPostmarkJson<T = unknown>(input: {
     response = await input.context.fetcher(url, {
       method: input.method ?? "GET",
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         ...(input.body !== undefined ? { "content-type": "application/json" } : {}),
         "x-postmark-server-token": input.context.apiKey,
         "user-agent": providerUserAgent,

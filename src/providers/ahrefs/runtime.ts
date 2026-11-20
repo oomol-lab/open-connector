@@ -92,8 +92,8 @@ async function requestAhrefs(
     response = await fetcher(buildAhrefsUrl(path, query), {
       method: "GET",
       headers: {
-        accept: "application/json",
-        authorization: `Bearer ${apiKey}`,
+        "accept": "application/json",
+        "authorization": `Bearer ${apiKey}`,
         "user-agent": providerUserAgent,
       },
       signal,

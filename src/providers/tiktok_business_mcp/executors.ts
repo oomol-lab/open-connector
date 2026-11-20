@@ -20,7 +20,7 @@ async function withTikTokMcpClient<T>(context: OAuthProviderContext, run: (clien
       transport: "streamable_http",
       fetcher: context.fetcher,
       headers: new Headers({
-        authorization: `Bearer ${context.accessToken}`,
+        "authorization": `Bearer ${context.accessToken}`,
         "user-agent": providerUserAgent,
       }),
       signal: context.signal,

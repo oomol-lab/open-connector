@@ -254,9 +254,9 @@ async function executePlainOperation(
     response = await fetcher(plainApiUrl, {
       method: "POST",
       headers: {
-        authorization: `Bearer ${input.apiKey}`,
+        "authorization": `Bearer ${input.apiKey}`,
         "content-type": "application/json",
-        accept: "application/json",
+        "accept": "application/json",
         "user-agent": providerUserAgent,
       },
       body: JSON.stringify({

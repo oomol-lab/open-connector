@@ -539,8 +539,8 @@ async function send(
   }
 
   const headers: Record<string, string> = {
-    accept: init.accept ?? "application/json",
-    authorization: `Bearer ${await signRequestToken(path, init.method, context)}`,
+    "accept": init.accept ?? "application/json",
+    "authorization": `Bearer ${await signRequestToken(path, init.method, context)}`,
     "user-agent": providerUserAgent,
   };
   let body: string | undefined;

@@ -200,7 +200,7 @@ async function withClient<T>(
       endpoint: new URL(endpointByServerType[serverType]),
       transport: "streamable_http",
       fetcher: createLimitedFetch(context.fetcher),
-      headers: { authorization: `Bearer ${context.apiKey}`, "user-agent": providerUserAgent },
+      headers: { "authorization": `Bearer ${context.apiKey}`, "user-agent": providerUserAgent },
       signal: context.signal,
       mapError: mapAifinMarketMcpError,
     },

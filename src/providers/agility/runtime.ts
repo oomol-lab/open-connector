@@ -237,8 +237,8 @@ async function requestAgilityJson(input: {
     const response = await input.fetcher(buildAgilityUrl(input.path, input.params), {
       method: "GET",
       headers: {
-        accept: "application/json",
-        APIKey: input.apiKey,
+        "accept": "application/json",
+        "APIKey": input.apiKey,
         "user-agent": providerUserAgent,
       },
       signal,

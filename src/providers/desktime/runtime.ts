@@ -146,7 +146,7 @@ async function requestDeskTimeJson(input: {
     response = await input.context.fetcher(buildDeskTimeUrl(input.path, input.apiKey, input.params), {
       method: input.method,
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "user-agent": providerUserAgent,
       },
       signal: timeout.signal,

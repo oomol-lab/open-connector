@@ -177,7 +177,7 @@ async function requestGosquaredJson(options: GosquaredRequestOptions): Promise<R
     const response = await options.fetcher(buildGosquaredUrl(options), {
       method: "GET",
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "user-agent": providerUserAgent,
       },
       signal,

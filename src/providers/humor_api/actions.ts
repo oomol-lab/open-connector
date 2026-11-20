@@ -14,7 +14,7 @@ const jokeFilters = {
   "max-length": s.integer("Maximum joke length in letters."),
 };
 const memeFilters = {
-  keywords: s.string("Comma-separated words that must occur in the meme."),
+  "keywords": s.string("Comma-separated words that must occur in the meme."),
   "keywords-in-image": s.boolean("Whether keywords must occur in the image."),
   "media-type": s.string("Media type such as image, video, jpg, png, or gif."),
   "min-rating": rating,

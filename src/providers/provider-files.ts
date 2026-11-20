@@ -86,7 +86,7 @@ export async function uploadProviderUrlToTransitFile(
   try {
     response = await context.fetcher(input.url, {
       headers: {
-        accept: "*/*",
+        "accept": "*/*",
         "user-agent": providerUserAgent,
       },
       signal: context.signal,

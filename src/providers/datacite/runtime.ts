@@ -66,26 +66,26 @@ export async function executeDataciteAction(
 
 function buildListParams(input: Record<string, unknown>): Record<string, string | undefined> {
   return compactObject({
-    query: readOptionalString(input.query),
-    prefix: readOptionalString(input.prefix),
+    "query": readOptionalString(input.query),
+    "prefix": readOptionalString(input.prefix),
     "client-id": readOptionalString(input.clientId),
     "provider-id": readOptionalString(input.providerId),
     "consortium-id": readOptionalString(input.consortiumId),
     "resource-type-id": readStringArray(input.resourceTypeIds),
-    subject: readOptionalString(input.subject),
+    "subject": readOptionalString(input.subject),
     "user-id": readOptionalString(input.userId),
     "affiliation-id": readOptionalString(input.affiliationId),
     "funder-id": readOptionalString(input.funderId),
-    published: readOptionalString(input.published),
-    created: readOptionalString(input.created),
-    registered: readOptionalString(input.registered),
-    state: readStringArray(input.states),
+    "published": readOptionalString(input.published),
+    "created": readOptionalString(input.created),
+    "registered": readOptionalString(input.registered),
+    "state": readStringArray(input.states),
     "has-citations": readOptionalIntegerString(input.hasCitations),
     "has-references": readOptionalIntegerString(input.hasReferences),
-    sort: readOptionalString(input.sort),
-    detail: booleanString(input.detail),
-    affiliation: booleanString(input.affiliation),
-    publisher: booleanString(input.publisher),
+    "sort": readOptionalString(input.sort),
+    "detail": booleanString(input.detail),
+    "affiliation": booleanString(input.affiliation),
+    "publisher": booleanString(input.publisher),
     "page[number]": readOptionalIntegerString(input.pageNumber),
     "page[size]": readOptionalIntegerString(input.pageSize),
     "page[cursor]": readOptionalString(input.pageCursor),
@@ -102,7 +102,7 @@ async function requestDataciteJson(input: DataciteRequestInput) {
   }
 
   const headers: Record<string, string> = {
-    accept: "application/vnd.api+json",
+    "accept": "application/vnd.api+json",
     "user-agent": providerUserAgent,
   };
   if (input.apiKey) {

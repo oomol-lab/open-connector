@@ -43,7 +43,7 @@ export const oncehubActionHandlers: ProviderActionHandlers<"oncehub", OncehubAct
       query: {
         ...input,
         "last_updated_time.gt": input.lastUpdatedTimeGt,
-        lastUpdatedTimeGt: undefined,
+        "lastUpdatedTimeGt": undefined,
       },
       phase: "execute",
     });
@@ -145,7 +145,7 @@ async function requestOncehubResponse(input: OncehubRequestInput): Promise<Respo
     return await input.context.fetcher(buildOncehubUrl(input.path, input.query), {
       method: "GET",
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "api-key": input.context.apiKey,
         "user-agent": providerUserAgent,
       },

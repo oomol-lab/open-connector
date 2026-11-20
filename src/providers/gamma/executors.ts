@@ -332,7 +332,7 @@ async function gammaRequest(input: GammaRequestInput): Promise<unknown> {
 
 function gammaHeaders(apiKey: string): Record<string, string> {
   return {
-    accept: "application/json",
+    "accept": "application/json",
     "content-type": "application/json",
     "user-agent": providerUserAgent,
     "x-api-key": apiKey,

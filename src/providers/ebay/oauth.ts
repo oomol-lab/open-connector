@@ -60,9 +60,9 @@ async function exchangeToken(
     const response = await fetcher(`${ebayApiBaseUrl}/identity/v1/oauth2/token`, {
       method: "POST",
       headers: {
-        authorization: basicAuthorizationHeader(`${clientConfig.clientId}:${clientConfig.clientSecret}`),
+        "authorization": basicAuthorizationHeader(`${clientConfig.clientId}:${clientConfig.clientSecret}`),
         "content-type": "application/x-www-form-urlencoded",
-        accept: "application/json",
+        "accept": "application/json",
       },
       body: new URLSearchParams(fields),
       signal,

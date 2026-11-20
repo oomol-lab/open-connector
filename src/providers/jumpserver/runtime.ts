@@ -125,7 +125,7 @@ async function withJumpServerMcpClient<T>(
   run: (client: Client) => Promise<T>,
 ): Promise<T> {
   const headers = new Headers({
-    Authorization: `Bearer ${context.token}`,
+    "Authorization": `Bearer ${context.token}`,
     "user-agent": providerUserAgent,
   });
   return withMcpClient(

@@ -959,8 +959,8 @@ async function requestCalendlyJson(input: CalendlyRequestOptions) {
   }
 
   const headers = new Headers({
-    accept: "application/json",
-    authorization: `Bearer ${input.accessToken}`,
+    "accept": "application/json",
+    "authorization": `Bearer ${input.accessToken}`,
     "user-agent": providerUserAgent,
   });
 

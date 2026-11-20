@@ -151,11 +151,11 @@ async function requestChengxin(
     const response = await fetcher(new URL(`${chengxinApiBaseUrl}${path}`), {
       method: "POST",
       headers: {
-        accept: "application/json, text/plain, */*",
-        authorization: `Bearer ${apiKey}`,
+        "accept": "application/json, text/plain, */*",
+        "authorization": `Bearer ${apiKey}`,
         "content-type": "application/json",
-        origin: "https://www.ly.com",
-        referer: "https://www.ly.com/",
+        "origin": "https://www.ly.com",
+        "referer": "https://www.ly.com/",
         "user-agent": providerUserAgent,
       },
       body: JSON.stringify({

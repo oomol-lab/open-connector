@@ -50,7 +50,7 @@ async function execute(
   }
   const response = await context.fetcher(url, {
     method: config.method,
-    headers: { accept: "application/json", "user-agent": providerUserAgent },
+    headers: { "accept": "application/json", "user-agent": providerUserAgent },
     signal: context.signal,
   });
   const payload = (await response.json().catch(() => null)) as Record<string, unknown> | null;
@@ -81,10 +81,7 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
   baseUrl,
   auth: { type: "api_key_query", name: "key" },
   skipDnsValidation: true,
-  customizeRequest({ headers }) {
-    if (!headers.has("accept")) headers.set("accept", "application/json");
-    if (!headers.has("user-agent")) headers.set("user-agent", providerUserAgent);
-  },
+  defaultHeaders: { "accept": "application/json", "user-agent": providerUserAgent },
 });
 
 export const credentialValidators: CredentialValidators = {

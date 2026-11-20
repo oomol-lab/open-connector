@@ -157,9 +157,7 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
   },
   auth: { type: "api_key_authorization", prefix: "Bearer " },
   allowPrivateNetwork: isPrivateNetworkAccessAllowed,
-  customizeRequest({ headers }) {
-    if (!headers.has("accept")) headers.set("accept", "application/json");
-  },
+  defaultHeaders: { accept: "application/json" },
 });
 
 export const credentialValidators: CredentialValidators = {
@@ -209,8 +207,8 @@ async function requestWeaviateJson(input: {
     response = await input.fetcher(buildWeaviateUrl(input.baseUrl, input.path, input.query), {
       method: "GET",
       headers: compactObject({
-        accept: "application/json",
-        authorization: `Bearer ${input.apiKey}`,
+        "accept": "application/json",
+        "authorization": `Bearer ${input.apiKey}`,
         "user-agent": providerUserAgent,
         ...input.headers,
       }),

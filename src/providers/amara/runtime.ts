@@ -738,7 +738,7 @@ async function amaraRequestText(input: AmaraRequestInput, context: AmaraActionCo
 async function amaraRequest(input: AmaraRequestInput, context: AmaraActionContext, mode: "validate" | "execute") {
   const url = buildAmaraUrl(input.path, input.query);
   const headers: Record<string, string> = {
-    accept: input.responseType === "text" ? "text/plain, application/json" : "application/json",
+    "accept": input.responseType === "text" ? "text/plain, application/json" : "application/json",
     "x-api-key": context.apiKey,
   };
   if (input.body) {

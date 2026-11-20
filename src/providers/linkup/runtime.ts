@@ -133,8 +133,8 @@ async function linkupRequest(context: ApiKeyProviderContext, input: LinkupReques
     const response = await context.fetcher(new URL(input.path, linkupApiBaseUrl), {
       method: input.method,
       headers: {
-        authorization: `Bearer ${context.apiKey}`,
-        accept: "application/json",
+        "authorization": `Bearer ${context.apiKey}`,
+        "accept": "application/json",
         "content-type": "application/json",
         "user-agent": providerUserAgent,
       },

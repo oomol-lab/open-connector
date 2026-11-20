@@ -157,14 +157,7 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
   baseUrl: apiBaseUrl,
   auth: { type: "bearer" },
   skipDnsValidation: true,
-  customizeRequest({ headers }) {
-    if (!headers.has("accept")) {
-      headers.set("accept", "application/json");
-    }
-    if (!headers.has("content-type")) {
-      headers.set("content-type", "application/json");
-    }
-  },
+  defaultHeaders: { "accept": "application/json", "content-type": "application/json" },
 });
 
 export const credentialValidators: CredentialValidators = {
@@ -224,8 +217,8 @@ async function requestRespondIoJson(input: RespondIoRequest): Promise<unknown> {
     const response = await input.context.fetcher(url, {
       method: input.method,
       headers: {
-        accept: "application/json",
-        authorization: `Bearer ${input.context.apiKey.trim()}`,
+        "accept": "application/json",
+        "authorization": `Bearer ${input.context.apiKey.trim()}`,
         "user-agent": providerUserAgent,
         ...(input.body === undefined ? {} : { "content-type": "application/json" }),
       },

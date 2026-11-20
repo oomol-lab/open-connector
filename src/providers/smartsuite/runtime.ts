@@ -168,8 +168,8 @@ async function requestSmartsuite(input: SmartsuiteRequestInput) {
     const response = await input.fetcher(url, {
       method: input.method ?? "GET",
       headers: {
-        accept: "application/json",
-        authorization: `Token ${input.apiKey}`,
+        "accept": "application/json",
+        "authorization": `Token ${input.apiKey}`,
         "account-id": input.workspaceId,
         "content-type": "application/json",
         "user-agent": providerUserAgent,

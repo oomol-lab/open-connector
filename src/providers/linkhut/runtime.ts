@@ -228,7 +228,7 @@ function buildLinkhutUrl(path: string, query?: Record<string, string | number | 
 
 function buildLinkhutHeaders(accessToken: string, accept: string): Record<string, string> {
   return {
-    authorization: `Bearer ${accessToken}`,
+    "authorization": `Bearer ${accessToken}`,
     accept,
     "user-agent": providerUserAgent,
   };

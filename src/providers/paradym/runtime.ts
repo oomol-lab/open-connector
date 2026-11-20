@@ -294,7 +294,7 @@ async function requestParadymJson(input: {
   }
 
   const headers = {
-    accept: "application/json",
+    "accept": "application/json",
     "content-type": "application/json",
     "user-agent": providerUserAgent,
     "X-Access-Token": input.apiKey,
@@ -458,7 +458,7 @@ function normalizeCredential(value: unknown) {
 function buildCursorQuery(input: Record<string, unknown>, extraKeys: string[]) {
   const extras = Object.fromEntries(extraKeys.map((key) => [mapParadymQueryKey(key), input[key]]));
   return compactObject({
-    sort: input.sort,
+    "sort": input.sort,
     "filter[id]": input.filterId,
     "page[size]": input.pageSize,
     "page[after]": input.pageAfter,

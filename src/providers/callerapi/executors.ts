@@ -91,7 +91,7 @@ async function requestCallerapi(input: {
     response = await input.context.fetcher(url, {
       method: "GET",
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "user-agent": providerUserAgent,
         "x-auth": input.context.apiKey,
       },

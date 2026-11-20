@@ -244,8 +244,8 @@ async function fetchZixflow(input: ZixflowRequestOptions): Promise<Response> {
   const timeout = createProviderTimeout(input.context.signal);
   try {
     const headers: Record<string, string> = {
-      accept: "application/json",
-      authorization: `Bearer ${input.context.apiKey}`,
+      "accept": "application/json",
+      "authorization": `Bearer ${input.context.apiKey}`,
       "user-agent": providerUserAgent,
     };
     const init: RequestInit = {

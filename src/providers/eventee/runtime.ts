@@ -74,8 +74,8 @@ async function requestEventeeJson(options: EventeeRequestOptions, context: ApiKe
     response = await context.fetcher(`${eventeeApiBaseUrl}${options.path}`, {
       method: "GET",
       headers: {
-        accept: "application/json",
-        authorization: `Bearer ${context.apiKey}`,
+        "accept": "application/json",
+        "authorization": `Bearer ${context.apiKey}`,
         "user-agent": providerUserAgent,
       },
       signal: context.signal,

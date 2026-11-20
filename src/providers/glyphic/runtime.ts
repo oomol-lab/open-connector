@@ -180,7 +180,7 @@ async function requestGlyphicJson(
     const response = await context.fetcher(buildGlyphicUrl(input.path, input.query), {
       method: input.method,
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "user-agent": providerUserAgent,
         "X-API-Key": context.apiKey,
       },

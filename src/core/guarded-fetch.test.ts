@@ -81,7 +81,7 @@ describe("resolveGuardedEgressTarget", () => {
 // here instead of silently breaking a provider mid-upload, and a widening fails
 // here instead of silently re-opening the leak.
 const crossOriginSafeHeaderFixture: Record<string, string> = {
-  accept: "application/json",
+  "accept": "application/json",
   "accept-charset": "utf-8",
   "accept-encoding": "gzip",
   "accept-language": "en-US",
@@ -93,13 +93,13 @@ const crossOriginSafeHeaderFixture: Record<string, string> = {
   "content-md5": "1B2M2Y8AsgTpgAmY7PhCfg==",
   "content-range": "bytes 0-9/100",
   "content-type": "application/octet-stream",
-  dnt: "1",
+  "dnt": "1",
   "idempotency-key": "abc",
   "if-match": '"etag-1"',
   "if-modified-since": "Wed, 21 Oct 2015 07:28:00 GMT",
   "if-none-match": '"etag-2"',
   "if-unmodified-since": "Wed, 21 Oct 2015 07:28:00 GMT",
-  range: "bytes=0-9",
+  "range": "bytes=0-9",
   "user-agent": "oomol-connect/0.1",
   "x-correlation-id": "cid",
   "x-request-id": "req-1",
@@ -271,8 +271,8 @@ describe("createGuardedFetch redirects", () => {
 
     await guarded("https://api.example.com/", {
       headers: {
-        authorization: "Bearer secret",
-        cookie: "sid=1",
+        "authorization": "Bearer secret",
+        "cookie": "sid=1",
         "x-api-key": "provider-secret",
         "x-auth-token": "tok",
         "x-seq-apikey": "seq-secret",
@@ -285,7 +285,7 @@ describe("createGuardedFetch redirects", () => {
         "client-token": "client-secret",
         "x-session-key": "session-secret",
         "x-redmine-api-key": "redmine-secret",
-        authkey: "authkey-secret",
+        "authkey": "authkey-secret",
         "x-oksign-authorization": "oksign-secret",
         "x-filesapi-key": "files-secret",
         "x-trace": "keep",
@@ -347,13 +347,13 @@ describe("createGuardedFetch redirects", () => {
         // Provider credential headers no name list enumerated ahead of time.
         "x-esri-authorization": "Bearer esri-secret",
         "x-els-insttoken": "insttoken-secret",
-        secret: "autotask-secret",
-        session: "tanium-secret",
-        web_api_key: "finerworks-secret",
+        "secret": "autotask-secret",
+        "session": "tanium-secret",
+        "web_api_key": "finerworks-secret",
         // A real stored credential (autotask) whose name matches no credential
         // word, plus a header that is neither safe-listed nor credential-shaped.
         // Both pin the rule as deny-by-default rather than a smarter heuristic.
-        apiintegrationcode: "autotask-integration-code",
+        "apiintegrationcode": "autotask-integration-code",
         "x-vendor-quirk": "anything",
         // Non-credential headers that must survive a cross-origin hop.
         "x-trace": "keep",

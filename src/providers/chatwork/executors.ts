@@ -212,7 +212,7 @@ async function requestPayload(
   const response = await context.fetcher(url, {
     method: options.method ?? "GET",
     headers: {
-      accept: "application/json",
+      "accept": "application/json",
       "x-chatworktoken": context.apiKey,
       "user-agent": providerUserAgent,
       ...(body ? { "content-type": "application/x-www-form-urlencoded" } : {}),

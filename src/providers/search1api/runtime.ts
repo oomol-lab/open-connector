@@ -51,7 +51,7 @@ export function requestSearch1api(
       const response = await fetcher(url, {
         method,
         headers: {
-          accept: "application/json",
+          "accept": "application/json",
           "content-type": "application/json",
           ...(action === "health" ? {} : { authorization: `Bearer ${token}` }),
         },

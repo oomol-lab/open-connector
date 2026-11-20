@@ -254,8 +254,8 @@ async function requestSwaggerhubPayload<T>(input: {
 
 function swaggerhubHeaders(apiKey: string, accept?: string): Record<string, string> {
   return {
-    accept: accept ?? "application/json",
-    authorization: apiKey,
+    "accept": accept ?? "application/json",
+    "authorization": apiKey,
     "user-agent": providerUserAgent,
   };
 }

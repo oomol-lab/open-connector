@@ -176,7 +176,7 @@ async function requestDemioJson(input: {
     const response = await input.fetcher(url, {
       method: input.method,
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "api-key": input.apiKey,
         "api-secret": input.apiSecret,
         "user-agent": providerUserAgent,

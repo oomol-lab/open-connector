@@ -246,7 +246,7 @@ function buildWebscraperIoUrl(path: string, apiKey: string, query?: Record<strin
 
 function buildHeaders(hasBody: boolean): Record<string, string> {
   const headers: Record<string, string> = {
-    accept: "application/json",
+    "accept": "application/json",
     "user-agent": providerUserAgent,
   };
   if (hasBody) headers["content-type"] = "application/json";

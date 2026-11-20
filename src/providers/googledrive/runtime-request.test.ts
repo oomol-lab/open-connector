@@ -114,7 +114,7 @@ describe("googleRequest rate limit classification", () => {
         code: 403,
         message: "Quota exceeded",
         status: "PERMISSION_DENIED",
-        details: [{ "@type": "type.googleapis.com/google.rpc.ErrorInfo", reason: "RATE_LIMIT_EXCEEDED" }],
+        details: [{ "@type": "type.googleapis.com/google.rpc.ErrorInfo", "reason": "RATE_LIMIT_EXCEEDED" }],
       },
     });
     const error = await errorOf(googleRequest(url, { accessToken, fetcher: respondWith(403, body) }));
@@ -142,7 +142,7 @@ describe("googleRequest rate limit classification", () => {
         code: 403,
         message: "App not authorized to file.",
         status: "PERMISSION_DENIED",
-        details: [{ "@type": "type.googleapis.com/google.rpc.ErrorInfo", reason: "appNotAuthorizedToFile" }],
+        details: [{ "@type": "type.googleapis.com/google.rpc.ErrorInfo", "reason": "appNotAuthorizedToFile" }],
       },
     });
     const error = await errorOf(googleRequest(url, { accessToken, fetcher: respondWith(403, body) }));

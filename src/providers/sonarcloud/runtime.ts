@@ -172,8 +172,8 @@ async function requestSonarCloudJson(input: SonarCloudRequest): Promise<unknown>
     const response = await input.context.fetcher(buildSonarCloudUrl(input), {
       method: "GET",
       headers: {
-        accept: "application/json",
-        authorization: `Bearer ${input.context.apiKey}`,
+        "accept": "application/json",
+        "authorization": `Bearer ${input.context.apiKey}`,
         "user-agent": providerUserAgent,
       },
       signal,

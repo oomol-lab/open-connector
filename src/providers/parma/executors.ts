@@ -75,8 +75,8 @@ async function execute(name: string, input: Record<string, unknown>, context: Co
   const response = await context.fetcher(url, {
     method: route.method,
     headers: {
-      accept: "application/json",
-      authorization: `Bearer ${context.apiKey}`,
+      "accept": "application/json",
+      "authorization": `Bearer ${context.apiKey}`,
       "content-type": "application/json",
       "user-agent": providerUserAgent,
     },

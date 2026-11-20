@@ -197,8 +197,8 @@ async function requestGorgiasJson(input: GorgiasRequestInput): Promise<unknown> 
     response = await input.fetcher(buildGorgiasUrl(input.baseUrl, input.path, input.query), {
       method: "GET",
       headers: {
-        authorization: buildGorgiasAuthorizationHeader(input.email, input.apiKey),
-        accept: "application/json",
+        "authorization": buildGorgiasAuthorizationHeader(input.email, input.apiKey),
+        "accept": "application/json",
         "user-agent": providerUserAgent,
       },
       signal: input.signal,

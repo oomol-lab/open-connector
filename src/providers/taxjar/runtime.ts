@@ -187,8 +187,8 @@ async function taxjarRequest(
     response = await context.fetcher(buildTaxjarUrl(input), {
       method: input.method,
       headers: {
-        accept: "application/json",
-        authorization: `Bearer ${context.apiKey}`,
+        "accept": "application/json",
+        "authorization": `Bearer ${context.apiKey}`,
         "content-type": "application/json",
         "user-agent": providerUserAgent,
         "x-api-version": "2022-01-24",

@@ -205,8 +205,8 @@ function buildSevenShiftsUrl(path: string, query?: Record<string, string | undef
 
 function buildSevenShiftsHeaders(options: SevenShiftsRequestOptions) {
   const headers = new Headers({
-    accept: "application/json",
-    authorization: `Bearer ${options.apiKey}`,
+    "accept": "application/json",
+    "authorization": `Bearer ${options.apiKey}`,
     "user-agent": providerUserAgent,
   });
 

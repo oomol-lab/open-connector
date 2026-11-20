@@ -256,8 +256,8 @@ async function lessonspaceRequestJson(
 
   try {
     const headers: Record<string, string> = {
-      accept: "application/json",
-      authorization: `Organisation ${input.context.apiKey}`,
+      "accept": "application/json",
+      "authorization": `Organisation ${input.context.apiKey}`,
       "user-agent": providerUserAgent,
     };
     if (input.body) {

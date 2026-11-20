@@ -64,8 +64,8 @@ export async function quickbooksRequest(
   const url = new URL(`${context.baseUrl}/v3/company/${encodePathSegment(context.realmId)}/${request.path}`);
   setSearchParams(url, { ...request.query, minorversion: quickbooksMinorVersion });
   const headers: Record<string, string> = {
-    accept: request.responseText ? "*/*" : "application/json",
-    authorization: `${context.tokenType} ${context.accessToken}`,
+    "accept": request.responseText ? "*/*" : "application/json",
+    "authorization": `${context.tokenType} ${context.accessToken}`,
     "user-agent": providerUserAgent,
   };
   let body: string | FormData | undefined = request.formData;

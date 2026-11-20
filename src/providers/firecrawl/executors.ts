@@ -558,7 +558,7 @@ async function firecrawlRequest(
 
 function buildFirecrawlHeaders(apiKey: string, hasBody: boolean): Headers {
   const headers = new Headers({
-    authorization: `Bearer ${apiKey}`,
+    "authorization": `Bearer ${apiKey}`,
     "user-agent": providerUserAgent,
   });
   if (hasBody) {

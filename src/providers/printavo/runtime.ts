@@ -402,10 +402,10 @@ async function printavoGraphql(
     const response = await context.fetcher(printavoApiBaseUrl, {
       method: "POST",
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "content-type": "application/json",
-        email: context.email,
-        token: context.token,
+        "email": context.email,
+        "token": context.token,
         "user-agent": providerUserAgent,
       },
       signal: timeout.signal,

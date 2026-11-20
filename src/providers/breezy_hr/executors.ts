@@ -212,8 +212,8 @@ async function requestBreezyHrJson(input: BreezyHrRequestInput) {
     const response = await input.fetcher(url, {
       method: "GET",
       headers: {
-        accept: "application/json",
-        authorization: input.apiKey,
+        "accept": "application/json",
+        "authorization": input.apiKey,
         "user-agent": providerUserAgent,
       },
       signal: timeout.signal,

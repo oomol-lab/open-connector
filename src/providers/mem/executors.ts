@@ -114,8 +114,8 @@ async function requestMemJson(
 ): Promise<unknown> {
   const timeout = createProviderTimeout(context.signal);
   const headers = new Headers({
-    accept: "application/json",
-    authorization: `Bearer ${context.apiKey}`,
+    "accept": "application/json",
+    "authorization": `Bearer ${context.apiKey}`,
     "user-agent": providerUserAgent,
   });
   if (body !== undefined) {

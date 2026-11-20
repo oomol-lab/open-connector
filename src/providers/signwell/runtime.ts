@@ -306,7 +306,7 @@ async function requestSignwellJson<T>(input: {
 
 function buildHeaders(apiKey: string, extraHeaders: Record<string, string>): Record<string, string> {
   return {
-    accept: "application/json",
+    "accept": "application/json",
     "x-api-key": apiKey,
     "user-agent": providerUserAgent,
     ...extraHeaders,

@@ -212,8 +212,8 @@ async function zeplinRequestJson<T>(input: {
   try {
     response = await input.fetcher(url, {
       headers: {
-        accept: "application/json",
-        authorization: `Bearer ${input.accessToken}`,
+        "accept": "application/json",
+        "authorization": `Bearer ${input.accessToken}`,
         "user-agent": providerUserAgent,
       },
       signal: input.signal,

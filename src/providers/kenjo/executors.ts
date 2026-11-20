@@ -26,7 +26,7 @@ function tokenRequest(baseUrl: string, apiKey: string) {
     url: `${baseUrl}/auth/login`,
     init: {
       method: "POST",
-      headers: { accept: "application/json", "content-type": "application/json" },
+      headers: { "accept": "application/json", "content-type": "application/json" },
       body: JSON.stringify({ apiKey }),
     },
   };
@@ -108,9 +108,9 @@ const handlers = mapProviderActionHandlers(
           method: route.method,
           signal,
           headers: {
-            accept: "application/json",
+            "accept": "application/json",
             "content-type": "application/json",
-            authorization: `Bearer ${token}`,
+            "authorization": `Bearer ${token}`,
           },
           body: route.method === "POST" || route.method === "PUT" ? JSON.stringify(fields) : undefined,
         },
@@ -160,7 +160,5 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
       };
     },
   },
-  customizeRequest({ headers }) {
-    if (!headers.has("accept")) headers.set("accept", "application/json");
-  },
+  defaultHeaders: { accept: "application/json" },
 });

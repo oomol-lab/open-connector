@@ -181,7 +181,7 @@ async function requestMixmaxJson(input: MixmaxRequestOptions, context: MixmaxCon
     const response = await context.fetcher(url, {
       method,
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "x-api-token": context.apiKey,
         ...(input.body !== undefined ? { "content-type": "application/json" } : {}),
         "user-agent": providerUserAgent,

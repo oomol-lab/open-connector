@@ -150,8 +150,8 @@ async function requestMobileTextAlertsJson(options: RequestOptions): Promise<unk
     response = await options.fetcher(url, {
       method: options.method ?? "GET",
       headers: {
-        accept: "application/json",
-        authorization: `Bearer ${options.apiKey}`,
+        "accept": "application/json",
+        "authorization": `Bearer ${options.apiKey}`,
         "content-type": "application/json",
         "user-agent": providerUserAgent,
       },

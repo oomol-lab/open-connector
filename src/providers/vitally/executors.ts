@@ -86,11 +86,7 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
     return baseUrl;
   },
   auth: { type: "api_key_basic", suffix: ":" },
-  customizeRequest({ headers }) {
-    if (!headers.has("accept")) {
-      headers.set("accept", "application/json");
-    }
-  },
+  defaultHeaders: { accept: "application/json" },
 });
 
 export const credentialValidators: CredentialValidators = {
@@ -221,8 +217,8 @@ async function requestVitally(input: VitallyRequestOptions): Promise<unknown> {
     }
 
     const headers: Record<string, string> = {
-      accept: "application/json",
-      authorization: `Basic ${Buffer.from(`${input.apiKey}:`).toString("base64")}`,
+      "accept": "application/json",
+      "authorization": `Basic ${Buffer.from(`${input.apiKey}:`).toString("base64")}`,
       "user-agent": providerUserAgent,
     };
     if (input.body !== undefined) {

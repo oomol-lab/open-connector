@@ -176,8 +176,8 @@ function buildBunnyUrl(path: string, query?: Record<string, BunnyQueryValue>): s
 
 function bunnyHeaders(apiKey: string, hasJsonBody: boolean): Record<string, string> {
   const headers: Record<string, string> = {
-    Accept: "application/json",
-    AccessKey: apiKey,
+    "Accept": "application/json",
+    "AccessKey": apiKey,
     "User-Agent": providerUserAgent,
   };
   if (hasJsonBody) {

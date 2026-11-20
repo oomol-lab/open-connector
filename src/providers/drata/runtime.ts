@@ -226,8 +226,8 @@ async function requestDrataJson(options: DrataRequestOptions) {
   const response = await options.fetcher(url, {
     method: "GET",
     headers: {
-      accept: "application/json",
-      authorization: `Bearer ${options.apiKey}`,
+      "accept": "application/json",
+      "authorization": `Bearer ${options.apiKey}`,
       "user-agent": providerUserAgent,
     },
     signal: options.signal,
@@ -272,11 +272,11 @@ async function readJson(response: Response) {
 
 function commonListQuery(input: Record<string, unknown>) {
   return compactObject({
-    cursor: asOptionalString(input.cursor),
-    size: asOptionalIntegerString(input.size),
-    sort: asOptionalString(input.sort),
-    sortDir: asOptionalString(input.sortDir),
-    includeTotalCount: booleanString(input.includeTotalCount),
+    "cursor": asOptionalString(input.cursor),
+    "size": asOptionalIntegerString(input.size),
+    "sort": asOptionalString(input.sort),
+    "sortDir": asOptionalString(input.sortDir),
+    "includeTotalCount": booleanString(input.includeTotalCount),
     "expand[]": asOptionalStringArray(input.expand),
   });
 }

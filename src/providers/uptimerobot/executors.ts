@@ -197,7 +197,7 @@ async function uptimerobotFetch(input: {
     return await input.context.fetcher(new URL(input.endpoint, `${uptimerobotApiBaseUrl}/`), {
       method: "POST",
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "content-type": "application/x-www-form-urlencoded",
         "user-agent": providerUserAgent,
       },

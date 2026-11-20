@@ -79,8 +79,8 @@ async function requestTypesafeAiJson(
 ): Promise<unknown> {
   return runProviderRequest({ label: "TypeSafe AI", signal: context.signal }, async (signal) => {
     const headers = new Headers({
-      accept: "application/json",
-      authorization: `Bearer ${context.apiKey}`,
+      "accept": "application/json",
+      "authorization": `Bearer ${context.apiKey}`,
       "user-agent": providerUserAgent,
     });
     if (options.body) {

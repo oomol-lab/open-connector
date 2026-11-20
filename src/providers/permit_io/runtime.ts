@@ -222,8 +222,8 @@ async function requestPermitIoJson(options: PermitIoRequestOptions): Promise<unk
     response = await options.fetcher(url, {
       method: options.method,
       headers: {
-        accept: "application/json",
-        authorization: `Bearer ${options.apiKey}`,
+        "accept": "application/json",
+        "authorization": `Bearer ${options.apiKey}`,
         "content-type": "application/json",
         "user-agent": providerUserAgent,
       },

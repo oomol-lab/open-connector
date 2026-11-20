@@ -70,7 +70,7 @@ export const snappyActions: ActionDefinition[] = [
       "Snappy request parameters.",
       {
         "filter[name]": s.string("Case-insensitive substring filter on account name."),
-        fields: s.array(
+        "fields": s.array(
           "Comma-separated field projection. Valid values: id, name.",
           s.stringEnum("Requested field or filter value.", ["id", "name"]),
           { minItems: 1, uniqueItems: true },
@@ -107,7 +107,7 @@ export const snappyActions: ActionDefinition[] = [
         "filter[search]": s.string("Free-text search on collection name (max 100 characters).", {
           maxLength: 100,
         }),
-        fields: s.array(
+        "fields": s.array(
           "Optional fields to include.",
           s.stringEnum("Requested field or filter value.", [
             "priceRange",
@@ -117,7 +117,7 @@ export const snappyActions: ActionDefinition[] = [
             "createdVia",
           ]),
         ),
-        sort: s.stringEnum("Sort field. Prefix with `-` for descending. Defaults to `rank`.", [
+        "sort": s.stringEnum("Sort field. Prefix with `-` for descending. Defaults to `rank`.", [
           "rank",
           "name",
           "-name",
@@ -129,7 +129,7 @@ export const snappyActions: ActionDefinition[] = [
           minimum: 1,
           maximum: 150,
         }),
-        accountId: s.string("Required. Account identifier.", { minLength: 1 }),
+        "accountId": s.string("Required. Account identifier.", { minLength: 1 }),
       },
       {
         optional: [
@@ -154,7 +154,7 @@ export const snappyActions: ActionDefinition[] = [
     inputSchema: s.object(
       "Snappy request parameters.",
       {
-        collectionId: s.string("Collection identifier.", { pattern: "^[A-Za-z0-9]{8,}$" }),
+        "collectionId": s.string("Collection identifier.", { pattern: "^[A-Za-z0-9]{8,}$" }),
         "filter[location]": s.string(
           "Comma-separated ISO 3166-1 alpha-2 country codes. Thumbnails and budget data use the first location.",
           { pattern: "^[A-Z]{2}(,[A-Z]{2})*$" },
@@ -162,11 +162,11 @@ export const snappyActions: ActionDefinition[] = [
         "filter[maxPrice]": s.nullable(
           s.number("Budget bucket selector for thumbnails.", { minimum: 0, maximum: 99999 }),
         ),
-        fields: s.array(
+        "fields": s.array(
           "Optional fields: `priceRange`, `createdVia`.",
           s.stringEnum("Requested field or filter value.", ["priceRange", "createdVia"]),
         ),
-        accountId: s.string("Required. Account identifier.", { minLength: 1 }),
+        "accountId": s.string("Required. Account identifier.", { minLength: 1 }),
       },
       { optional: ["filter[location]", "filter[maxPrice]", "fields"] },
     ),
@@ -180,7 +180,7 @@ export const snappyActions: ActionDefinition[] = [
     inputSchema: s.object(
       "Snappy request parameters.",
       {
-        collectionId: s.string("Collection identifier.", { pattern: "^[A-Za-z0-9]{8,}$" }),
+        "collectionId": s.string("Collection identifier.", { pattern: "^[A-Za-z0-9]{8,}$" }),
         "filter[catalog]": s.stringEnum(
           "Which product catalog to search. Required on product list/search endpoints. Defaults to marketplace.",
           ["marketplace", "swag", "giftCards", "donations"],
@@ -190,12 +190,12 @@ export const snappyActions: ActionDefinition[] = [
         }),
         "filter[price][gte]": s.nullable(s.number("Inclusive minimum price filter.", { minimum: 0 })),
         "filter[price][lte]": s.nullable(s.number("Inclusive maximum price filter.", { minimum: 0 })),
-        location: s.string("ISO 3166-1 alpha-2 country code.", { pattern: "^[A-Z]{2}$" }),
-        include: s.array(
+        "location": s.string("ISO 3166-1 alpha-2 country code.", { pattern: "^[A-Z]{2}$" }),
+        "include": s.array(
           "Related entities to include.",
           s.stringEnum("Requested field or filter value.", ["brand", "tags"]),
         ),
-        fields: s.array(
+        "fields": s.array(
           "Computed or expanded product fields for list responses.",
           s.stringEnum("Requested field or filter value.", ["priceRange", "variantsCount"]),
         ),
@@ -204,10 +204,10 @@ export const snappyActions: ActionDefinition[] = [
           minimum: 1,
           maximum: 300,
         }),
-        sort: s.string("JSON:API sort parameter. Single field; prefix with `-` for descending.", {
+        "sort": s.string("JSON:API sort parameter. Single field; prefix with `-` for descending.", {
           pattern: "^-?(minPrice|createdAt)$",
         }),
-        accountId: s.string("Must be provided to retrieve swag products.", { minLength: 1 }),
+        "accountId": s.string("Must be provided to retrieve swag products.", { minLength: 1 }),
       },
       {
         optional: [
@@ -244,12 +244,12 @@ export const snappyActions: ActionDefinition[] = [
         }),
         "filter[price][gte]": s.nullable(s.number("Inclusive minimum price filter.", { minimum: 0 })),
         "filter[price][lte]": s.nullable(s.number("Inclusive maximum price filter.", { minimum: 0 })),
-        location: s.string("ISO 3166-1 alpha-2 country code.", { pattern: "^[A-Z]{2}$" }),
-        include: s.array(
+        "location": s.string("ISO 3166-1 alpha-2 country code.", { pattern: "^[A-Z]{2}$" }),
+        "include": s.array(
           "Related entities to include.",
           s.stringEnum("Requested field or filter value.", ["brand", "tags"]),
         ),
-        fields: s.array(
+        "fields": s.array(
           "Computed or expanded product fields for list responses.",
           s.stringEnum("Requested field or filter value.", ["priceRange", "variantsCount"]),
         ),
@@ -258,7 +258,7 @@ export const snappyActions: ActionDefinition[] = [
           minimum: 1,
           maximum: 300,
         }),
-        sort: s.string("JSON:API sort parameter. Single field; prefix with `-` for descending.", {
+        "sort": s.string("JSON:API sort parameter. Single field; prefix with `-` for descending.", {
           pattern: "^-?(minPrice|createdAt)$",
         }),
         "filter[brandId]": s.array(
@@ -270,7 +270,7 @@ export const snappyActions: ActionDefinition[] = [
           "Comma-separated list of tag ids (OR semantics).",
           s.string("Requested field or filter value."),
         ),
-        accountId: s.string("Must be provided to retrieve swag products.", { minLength: 1 }),
+        "accountId": s.string("Must be provided to retrieve swag products.", { minLength: 1 }),
       },
       {
         optional: [
@@ -301,21 +301,21 @@ export const snappyActions: ActionDefinition[] = [
     inputSchema: s.object(
       "Snappy request parameters.",
       {
-        productId: s.string("Stable product ID.", {
+        "productId": s.string("Stable product ID.", {
           pattern: "^(?:^[A-Za-z0-9]{8,}$|^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$)$",
         }),
-        location: s.string("ISO 3166-1 alpha-2 country code.", { pattern: "^[A-Z]{2}$" }),
+        "location": s.string("ISO 3166-1 alpha-2 country code.", { pattern: "^[A-Z]{2}$" }),
         "filter[price][gte]": s.nullable(s.number("Inclusive minimum variant price filter.", { minimum: 0 })),
         "filter[price][lte]": s.nullable(s.number("Inclusive maximum variant price filter.", { minimum: 0 })),
-        include: s.array(
+        "include": s.array(
           "Related entities to include.",
           s.stringEnum("Requested field or filter value.", ["brand", "tags"]),
         ),
-        fields: s.array(
+        "fields": s.array(
           "Computed or expanded product fields.",
           s.stringEnum("Requested field or filter value.", ["options", "priceRange", "variantsCount"]),
         ),
-        accountId: s.string("Must be provided to retrieve swag products.", { minLength: 1 }),
+        "accountId": s.string("Must be provided to retrieve swag products.", { minLength: 1 }),
       },
       {
         optional: ["location", "filter[price][gte]", "filter[price][lte]", "include", "fields", "accountId"],
@@ -331,14 +331,14 @@ export const snappyActions: ActionDefinition[] = [
     inputSchema: s.object(
       "Snappy request parameters.",
       {
-        productId: s.string("Stable product ID.", {
+        "productId": s.string("Stable product ID.", {
           pattern: "^(?:^[A-Za-z0-9]{8,}$|^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$)$",
         }),
-        location: s.string("ISO 3166-1 alpha-2 country code.", { pattern: "^[A-Z]{2}$" }),
+        "location": s.string("ISO 3166-1 alpha-2 country code.", { pattern: "^[A-Z]{2}$" }),
         "filter[price][gte]": s.nullable(s.number("Inclusive minimum variant price filter.", { minimum: 0 })),
         "filter[price][lte]": s.nullable(s.number("Inclusive maximum variant price filter.", { minimum: 0 })),
-        include: s.array("Related entities to include.", s.stringEnum("Requested field or filter value.", ["brand"])),
-        fields: s.array(
+        "include": s.array("Related entities to include.", s.stringEnum("Requested field or filter value.", ["brand"])),
+        "fields": s.array(
           "Comma-separated list of variant-level field expansions.\n\n- `pricing` - includes `price` and `priceBreakdown`.\n- `details` - includes the variant `details` wrapper.\n\nUse `include=brand` to include the variant's `brand` object (nullable).\n\nWhen omitted, `price`, `priceBreakdown`, and `details` are not returned in the public response.",
           s.stringEnum("Requested field or filter value.", ["pricing", "details"]),
         ),
@@ -347,7 +347,7 @@ export const snappyActions: ActionDefinition[] = [
           minimum: 1,
           maximum: 300,
         }),
-        accountId: s.string("Must be provided to retrieve swag products.", { minLength: 1 }),
+        "accountId": s.string("Must be provided to retrieve swag products.", { minLength: 1 }),
       },
       {
         optional: [
@@ -433,7 +433,7 @@ export const snappyActions: ActionDefinition[] = [
           minimum: 1,
           maximum: 100,
         }),
-        accountId: s.string("Must be provided to retrieve swag products.", { minLength: 1 }),
+        "accountId": s.string("Must be provided to retrieve swag products.", { minLength: 1 }),
       },
       { optional: ["filter[name]", "page[number]", "page[size]", "accountId"] },
     ),

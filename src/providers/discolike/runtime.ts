@@ -163,7 +163,7 @@ async function requestDiscolikeJson(input: {
     const response = await input.context.fetcher(buildDiscolikeUrl(input.path, input.query), {
       method: "GET",
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "user-agent": providerUserAgent,
         "X-API-Key": input.context.apiKey,
       },

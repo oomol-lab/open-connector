@@ -330,7 +330,7 @@ async function requestEmailListVerifyApi(
     const response = await input.fetcher(url, {
       method: input.method ?? "GET",
       headers: {
-        accept: input.responseType === "binary" ? "*/*" : "application/json, text/plain",
+        "accept": input.responseType === "binary" ? "*/*" : "application/json, text/plain",
         "user-agent": providerUserAgent,
       },
       body: input.body,

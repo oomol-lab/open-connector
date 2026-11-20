@@ -109,7 +109,7 @@ async function requestWootJson(input: WootJsonRequest): Promise<unknown> {
     const response = await input.context.fetcher(input.url, {
       method: input.method,
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         ...(input.body === undefined ? {} : { "content-type": "application/json" }),
         "user-agent": providerUserAgent,
         "x-api-key": input.context.apiKey,

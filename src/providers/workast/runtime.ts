@@ -184,8 +184,8 @@ async function requestWorkastJson(options: WorkastRequestOptions) {
   const url = new URL(`${workastApiBaseUrl}${options.path}`);
   appendQuery(url, options.query);
   const headers: Record<string, string> = {
-    accept: "application/json",
-    authorization: `Bearer ${options.apiKey}`,
+    "accept": "application/json",
+    "authorization": `Bearer ${options.apiKey}`,
     "user-agent": providerUserAgent,
   };
   if (options.body !== undefined) headers["content-type"] = "application/json";

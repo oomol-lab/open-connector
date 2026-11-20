@@ -126,7 +126,7 @@ export async function requestEnvelope(
 
 function headers(authHeaders: Record<string, string>, request: CloudflareR2RequestInput): Record<string, string> {
   const headers: Record<string, string> = {
-    accept: "application/json",
+    "accept": "application/json",
     ...authHeaders,
     "user-agent": providerUserAgent,
   };

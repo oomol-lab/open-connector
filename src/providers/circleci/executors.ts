@@ -36,7 +36,7 @@ export const circleciActionHandlers: ProviderActionHandlers<"circleci", Circleci
       apiKey: context.apiKey,
       path: `/project/${encodeURIComponent(normalizeProjectSlugField(input.projectSlug))}/pipeline`,
       query: compactObject({
-        branch: optionalString(input.branch),
+        "branch": optionalString(input.branch),
         "page-token": optionalString(input.pageToken),
       }),
       context,
@@ -74,7 +74,7 @@ export const circleciActionHandlers: ProviderActionHandlers<"circleci", Circleci
         `${encodeURIComponent(requiredInputString(input.workflowName, "workflowName"))}/summary`,
       query: compactObject({
         "all-branches": typeof input.allBranches === "boolean" ? String(input.allBranches) : undefined,
-        branch: optionalString(input.branch),
+        "branch": optionalString(input.branch),
       }),
       context,
       phase: "execute",
@@ -226,7 +226,7 @@ async function requestCircleciJson<T>(input: {
 function buildCircleciHeaders(apiKey: string, hasBody: boolean): Headers {
   const headers = new Headers({
     "Circle-Token": apiKey,
-    accept: "application/json",
+    "accept": "application/json",
     "user-agent": providerUserAgent,
   });
   if (hasBody) {

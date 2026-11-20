@@ -205,8 +205,8 @@ function buildStatuspageUrl(path: string, query?: Record<string, unknown>): URL 
 
 function statuspageHeaders(apiKey: string, extraHeaders: Record<string, string> = {}): Record<string, string> {
   return {
-    Authorization: `OAuth ${apiKey}`,
-    accept: "application/json",
+    "Authorization": `OAuth ${apiKey}`,
+    "accept": "application/json",
     "user-agent": providerUserAgent,
     ...extraHeaders,
   };

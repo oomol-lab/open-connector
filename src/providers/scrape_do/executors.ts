@@ -210,7 +210,7 @@ async function requestScrapeDoRaw(
     const response = await context.fetcher(url, {
       method: "GET",
       headers: {
-        accept: "*/*",
+        "accept": "*/*",
         "user-agent": providerUserAgent,
       },
       signal,

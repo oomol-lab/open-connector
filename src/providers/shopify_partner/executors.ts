@@ -315,7 +315,7 @@ async function requestShopifyPartnerGraphQL(
     response = await context.fetcher(buildShopifyPartnerGraphQLUrl(context.organizationId), {
       method: "POST",
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "content-type": "application/json",
         "user-agent": providerUserAgent,
         "x-shopify-access-token": context.apiKey,

@@ -98,8 +98,8 @@ async function giteeRequestJson<T = unknown>(
   try {
     response = await context.fetcher(url, {
       headers: {
-        accept: "application/json",
-        authorization: `Bearer ${context.accessToken}`,
+        "accept": "application/json",
+        "authorization": `Bearer ${context.accessToken}`,
         "user-agent": providerUserAgent,
       },
       signal: context.signal,

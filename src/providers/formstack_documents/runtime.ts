@@ -168,8 +168,8 @@ async function request(options: {
     const response = await options.fetcher(url, {
       method: options.method,
       headers: {
-        accept: "application/json",
-        authorization: `Basic ${Buffer.from(`${options.credentials.apiKey}:${options.credentials.apiSecret}`).toString("base64")}`,
+        "accept": "application/json",
+        "authorization": `Basic ${Buffer.from(`${options.credentials.apiKey}:${options.credentials.apiSecret}`).toString("base64")}`,
         ...(options.body ? { "content-type": "application/json" } : {}),
         "user-agent": providerUserAgent,
       },

@@ -288,9 +288,9 @@ function shortIoFetch(input: ShortIoRequestOptions): Promise<Response> {
 
 function shortIoHeaders(apiKey: string, hasBody: boolean): Record<string, string> {
   return {
-    accept: "application/json",
+    "accept": "application/json",
     ...(hasBody ? { "content-type": "application/json" } : {}),
-    authorization: apiKey,
+    "authorization": apiKey,
     "user-agent": providerUserAgent,
   };
 }

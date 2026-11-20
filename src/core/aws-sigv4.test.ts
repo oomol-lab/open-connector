@@ -108,9 +108,9 @@ describe("AWS SigV4 presign helper", () => {
 
   it("sorts canonical headers and query parameters by code point", () => {
     const headers = new Headers({
-      content_type: "underscore",
+      "content_type": "underscore",
       "content-type": "hyphen",
-      host: "example.com",
+      "host": "example.com",
     });
 
     // Code point order puts "-" (0x2D) before "_" (0x5F); `localeCompare` reverses them.
@@ -181,7 +181,7 @@ describe("AWS SigV4 authorization header helper", () => {
       method: "GET",
       url: new URL("https://examplebucket.s3.amazonaws.com/test.txt"),
       region: "us-east-1",
-      headers: { range: "bytes=0-9", "x-amz-content-sha256": emptyPayloadSha256 },
+      headers: { "range": "bytes=0-9", "x-amz-content-sha256": emptyPayloadSha256 },
       payloadHash: emptyPayloadSha256,
       now,
     });
@@ -207,7 +207,7 @@ describe("AWS SigV4 authorization header helper", () => {
       url,
       region: "us-east-1",
       headers: {
-        date: "Fri, 24 May 2013 00:00:00 GMT",
+        "date": "Fri, 24 May 2013 00:00:00 GMT",
         "x-amz-storage-class": "REDUCED_REDUNDANCY",
         "x-amz-content-sha256": payloadHash,
       },

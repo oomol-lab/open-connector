@@ -99,7 +99,7 @@ function buildPiHoleApiUrl(
 async function performPiHoleRequest(options: PiHoleRequestOptions & { sid: string | null }): Promise<Response> {
   const { context } = options;
   const url = buildPiHoleApiUrl(context, options.path, options.query);
-  const headers = new Headers({ accept: "application/json", "user-agent": providerUserAgent });
+  const headers = new Headers({ "accept": "application/json", "user-agent": providerUserAgent });
   if (options.sid) {
     headers.set("x-ftl-sid", options.sid);
   }

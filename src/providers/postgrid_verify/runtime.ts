@@ -121,7 +121,7 @@ async function requestPostgridVerifyJson(input: PostgridVerifyRequest): Promise<
     response = await input.context.fetcher(buildPostgridVerifyUrl(input.path, input.query ?? {}), {
       method: "POST",
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "content-type": "application/json",
         "user-agent": providerUserAgent,
         "x-api-key": input.context.apiKey,

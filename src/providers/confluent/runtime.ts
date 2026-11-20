@@ -165,8 +165,8 @@ export async function requestConfluentJson(context: ConfluentContext, input: Req
     const response = await context.fetcher(url, {
       method: input.method ?? "GET",
       headers: compactObject({
-        accept: "application/json",
-        authorization: buildConfluentAuthorizationHeader(context.apiKeyId, context.apiSecret),
+        "accept": "application/json",
+        "authorization": buildConfluentAuthorizationHeader(context.apiKeyId, context.apiSecret),
         "content-type": input.body ? "application/json" : undefined,
         "user-agent": providerUserAgent,
       }) as Record<string, string>,

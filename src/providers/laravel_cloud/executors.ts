@@ -149,9 +149,7 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
   baseUrl: laravelCloudApiBaseUrl,
   auth: { type: "api_key_authorization", prefix: "Bearer " },
   skipDnsValidation: true,
-  customizeRequest({ headers }) {
-    if (!headers.has("accept")) headers.set("accept", "application/json");
-  },
+  defaultHeaders: { accept: "application/json" },
 });
 
 export const credentialValidators: CredentialValidators = {
@@ -196,8 +194,8 @@ async function requestLaravelCloud(request: LaravelCloudRequest, context: ApiKey
     response = await context.fetcher(url, {
       method: "GET",
       headers: {
-        accept: "application/json",
-        authorization: `Bearer ${context.apiKey}`,
+        "accept": "application/json",
+        "authorization": `Bearer ${context.apiKey}`,
         "user-agent": providerUserAgent,
       },
       signal: context.signal,

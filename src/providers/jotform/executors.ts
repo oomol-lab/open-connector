@@ -20,10 +20,10 @@ type JotformQueryValue = string | number | undefined;
 type JotformActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
 
 interface JotformEnvelope {
-  responseCode?: unknown;
-  message?: unknown;
-  content?: unknown;
-  resultSet?: unknown;
+  "responseCode"?: unknown;
+  "message"?: unknown;
+  "content"?: unknown;
+  "resultSet"?: unknown;
   "limit-left"?: unknown;
 }
 
@@ -245,8 +245,8 @@ async function requestJotformEnvelope(input: JotformRequestInput): Promise<Jotfo
   }
 
   const headers = new Headers({
-    accept: "application/json",
-    APIKEY: input.apiKey,
+    "accept": "application/json",
+    "APIKEY": input.apiKey,
     "user-agent": providerUserAgent,
   });
   if (input.body) {

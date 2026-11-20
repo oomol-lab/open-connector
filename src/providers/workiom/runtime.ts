@@ -143,7 +143,7 @@ async function requestWorkiom(
     response = await context.fetcher(url, {
       method: input.method ?? "GET",
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "user-agent": providerUserAgent,
         "X-Api-Key": input.apiKey,
         ...(body ? { "content-type": "application/json" } : {}),

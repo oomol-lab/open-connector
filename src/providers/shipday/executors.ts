@@ -230,8 +230,8 @@ function buildShipdayUrl(path: string, query?: Record<string, ShipdayQueryValue>
 
 function shipdayHeaders(apiKey: string, hasJsonBody: boolean): Record<string, string> {
   const headers: Record<string, string> = {
-    Accept: "application/json",
-    Authorization: `Basic ${apiKey}`,
+    "Accept": "application/json",
+    "Authorization": `Basic ${apiKey}`,
     "User-Agent": providerUserAgent,
   };
   if (hasJsonBody) {

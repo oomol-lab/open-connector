@@ -1828,7 +1828,7 @@ export const dimensionsDefinitions: DefillamaDefinition[] = [
                     additionalProperties: s.object(
                       "Value for this key.",
                       {
-                        value: s.number("Total USD value for this line item in the period"),
+                        "value": s.number("Total USD value for this line item in the period"),
                         "by-label": s.nullable(
                           s.object(
                             "Breakdown by label (e.g. Borrow Interest, Liquidation Fees, Flash Loans). Not present for all line items.",
@@ -1856,7 +1856,7 @@ export const dimensionsDefinitions: DefillamaDefinition[] = [
                     additionalProperties: s.object(
                       "Value for this key.",
                       {
-                        value: s.number("Total USD value for this line item in the period"),
+                        "value": s.number("Total USD value for this line item in the period"),
                         "by-label": s.nullable(
                           s.object(
                             "Breakdown by label. Not present for all line items.",
@@ -1884,7 +1884,7 @@ export const dimensionsDefinitions: DefillamaDefinition[] = [
                     additionalProperties: s.object(
                       "Value for this key.",
                       {
-                        value: s.number("Total USD value for this line item in the period"),
+                        "value": s.number("Total USD value for this line item in the period"),
                         "by-label": s.nullable(
                           s.object(
                             "Breakdown by label. Not present for all line items.",

@@ -294,8 +294,8 @@ async function requestNovuJson(input: NovuRequestInput): Promise<unknown> {
 
 function buildNovuHeaders(apiKey: string, idempotencyKey?: string): Record<string, string> {
   const headers: Record<string, string> = {
-    accept: "application/json",
-    authorization: `ApiKey ${apiKey}`,
+    "accept": "application/json",
+    "authorization": `ApiKey ${apiKey}`,
     "content-type": "application/json",
     "user-agent": providerUserAgent,
   };

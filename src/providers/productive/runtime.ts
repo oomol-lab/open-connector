@@ -264,8 +264,8 @@ function buildListPath(resource: string, input: Record<string, unknown>) {
   const query: Record<string, string | number | boolean | undefined> = {
     "page[number]": input.pageNumber as number | undefined,
     "page[size]": input.pageSize as number | undefined,
-    sort: optionalString(input.sort),
-    include: optionalString(input.include),
+    "sort": optionalString(input.sort),
+    "include": optionalString(input.include),
   };
   const filter = optionalRecord(input.filter);
   if (filter) {
@@ -315,7 +315,7 @@ async function productiveRequestJson(
       method: init.method,
       headers: new Headers(
         compactObject<Record<string, string | undefined>>({
-          accept: "application/vnd.api+json",
+          "accept": "application/vnd.api+json",
           "content-type": init.body ? "application/vnd.api+json" : undefined,
           "user-agent": providerUserAgent,
           "x-auth-token": context.apiKey,

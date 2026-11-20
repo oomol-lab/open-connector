@@ -332,8 +332,8 @@ async function requestMapleBillingJson(input: MapleBillingRequestInput): Promise
 function mapleBillingFetch(input: MapleBillingRequestInput): Promise<Response> {
   const url = new URL(pathWithoutLeadingSlash(input.path), `${buildMapleBillingApiBaseUrl(input.companyId)}/`);
   const headers = new Headers({
-    accept: "application/json",
-    authorization: `Bearer ${input.apiKey}`,
+    "accept": "application/json",
+    "authorization": `Bearer ${input.apiKey}`,
     "content-type": "application/json",
     "user-agent": providerUserAgent,
   });

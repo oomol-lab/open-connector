@@ -552,7 +552,7 @@ async function trelloRequest<T>(input: TrelloRequestInput): Promise<T> {
   const response = await input.fetcher(url.toString(), {
     method: input.method ?? "GET",
     headers: {
-      accept: "application/json",
+      "accept": "application/json",
       "user-agent": providerUserAgent,
       ...(auth.type === "bearer" ? { authorization: `${auth.tokenType} ${auth.accessToken}` } : {}),
       ...(input.body ? { "content-type": "application/json" } : {}),

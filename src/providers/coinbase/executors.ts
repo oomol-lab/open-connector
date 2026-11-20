@@ -144,8 +144,8 @@ async function coinbaseGetJson(
     response = await context.fetcher(url, {
       method: "GET",
       headers: {
-        accept: "application/json",
-        authorization: context.authorization("GET", requestPath),
+        "accept": "application/json",
+        "authorization": context.authorization("GET", requestPath),
         "user-agent": providerUserAgent,
       },
       signal: context.signal,

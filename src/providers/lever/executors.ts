@@ -187,8 +187,8 @@ async function requestLeverJson(input: {
     const response = await input.context.fetcher(url, {
       method: input.method ?? "GET",
       headers: {
-        accept: "application/json",
-        authorization: createLeverAuthorization(input.context.apiKey),
+        "accept": "application/json",
+        "authorization": createLeverAuthorization(input.context.apiKey),
         ...(input.body ? { "content-type": "application/json" } : {}),
         "user-agent": providerUserAgent,
       },

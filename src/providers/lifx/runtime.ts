@@ -231,8 +231,8 @@ async function requestLifxUrl(input: Omit<LifxRequestInput, "path"> & { url: URL
 
 function lifxHeaders(apiKey: string, extraHeaders: Record<string, string> = {}): Record<string, string> {
   return {
-    accept: "application/json",
-    authorization: `Bearer ${apiKey}`,
+    "accept": "application/json",
+    "authorization": `Bearer ${apiKey}`,
     "user-agent": providerUserAgent,
     ...extraHeaders,
   };

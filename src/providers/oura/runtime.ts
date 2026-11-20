@@ -193,8 +193,8 @@ async function requestOuraObject(input: OuraRequestInput): Promise<Record<string
     const response = await input.fetcher(url, {
       method: "GET",
       headers: {
-        Accept: "application/json",
-        Authorization: `Bearer ${input.accessToken}`,
+        "Accept": "application/json",
+        "Authorization": `Bearer ${input.accessToken}`,
         "User-Agent": providerUserAgent,
       },
       signal: timeout.signal,

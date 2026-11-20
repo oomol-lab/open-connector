@@ -302,8 +302,8 @@ function buildLabelStudioUrl(
 
 function buildLabelStudioHeaders(apiKey: string, hasBody: boolean): Headers {
   const headers = new Headers({
-    accept: "application/json",
-    authorization: `Token ${apiKey}`,
+    "accept": "application/json",
+    "authorization": `Token ${apiKey}`,
     "user-agent": providerUserAgent,
   });
   if (hasBody) {

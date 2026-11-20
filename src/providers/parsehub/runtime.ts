@@ -104,7 +104,7 @@ async function requestParsehubJson(input: {
     response = await input.fetcher(url, {
       method: "GET",
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "user-agent": providerUserAgent,
       },
     });

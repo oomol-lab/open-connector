@@ -58,7 +58,7 @@ async function search(
   const timeout = createProviderTimeout(context.signal);
   try {
     const response = await context.fetcher(url, {
-      headers: { accept: "application/json", "user-agent": providerUserAgent, "x-api-key": context.apiKey },
+      headers: { "accept": "application/json", "user-agent": providerUserAgent, "x-api-key": context.apiKey },
       signal: timeout.signal,
     });
     const payload = await readPayload(response);

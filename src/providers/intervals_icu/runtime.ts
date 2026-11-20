@@ -211,8 +211,8 @@ async function getIntervalsIcu(context: ApiKeyProviderContext, request: Interval
   return runProviderRequest({ label: "Intervals.icu", signal: context.signal }, async (signal) => {
     const response = await context.fetcher(url, {
       headers: {
-        accept: "application/json",
-        authorization: intervalsIcuAuthorization(context.apiKey),
+        "accept": "application/json",
+        "authorization": intervalsIcuAuthorization(context.apiKey),
         "user-agent": providerUserAgent,
       },
       signal,

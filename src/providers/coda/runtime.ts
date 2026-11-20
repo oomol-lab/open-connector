@@ -337,8 +337,8 @@ async function requestCodaJson(input: {
 
 function codaHeaders(apiKey: string, contentType?: string): Record<string, string> {
   const headers: Record<string, string> = {
-    accept: "application/json",
-    authorization: `Bearer ${apiKey}`,
+    "accept": "application/json",
+    "authorization": `Bearer ${apiKey}`,
     "user-agent": providerUserAgent,
   };
   if (contentType) {

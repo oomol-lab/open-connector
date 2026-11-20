@@ -256,7 +256,7 @@ function trimLeadingSlash(value: string): string {
 
 function buildHeaders(apiKey: string, hasBody: boolean): Headers {
   const headers = new Headers({
-    Accept: "application/json",
+    "Accept": "application/json",
     "User-Agent": providerUserAgent,
     "X-Api-Key": apiKey,
   });

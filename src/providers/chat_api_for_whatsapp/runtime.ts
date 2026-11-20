@@ -246,7 +246,7 @@ async function requestChatApiForWhatsapp(input: {
     const response = await input.context.fetcher(url, {
       method: input.method ?? "GET",
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         ...(input.body ? { "content-type": "application/json" } : {}),
         "user-agent": providerUserAgent,
       },

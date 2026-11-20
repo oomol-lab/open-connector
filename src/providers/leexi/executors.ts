@@ -304,8 +304,8 @@ async function requestLeexiJson(input: {
     response = await input.context.fetcher(url, {
       method: input.method,
       headers: {
-        accept: "application/json",
-        authorization: buildBasicAuthorizationHeader(input.context.keyId, input.context.keySecret),
+        "accept": "application/json",
+        "authorization": buildBasicAuthorizationHeader(input.context.keyId, input.context.keySecret),
         "user-agent": providerUserAgent,
       },
       signal: timeout.signal,

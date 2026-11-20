@@ -224,8 +224,8 @@ async function requestHtmlCssToImage(input: HtmlCssToImageRequestInput): Promise
     response = await input.fetcher(buildHtmlCssToImageUrl(input.path, input.query), {
       method: input.method ?? (input.body === undefined ? "GET" : "POST"),
       headers: {
-        accept: "application/json",
-        authorization: buildHtmlCssToImageAuthorization(input.credential),
+        "accept": "application/json",
+        "authorization": buildHtmlCssToImageAuthorization(input.credential),
         "content-type": "application/json",
         "user-agent": providerUserAgent,
       },

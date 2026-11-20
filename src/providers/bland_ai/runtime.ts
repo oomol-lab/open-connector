@@ -143,8 +143,8 @@ async function requestBlandAiJson(options: BlandAiRequestOptions): Promise<unkno
     const response = await options.fetcher(url.toString(), {
       method: "GET",
       headers: {
-        accept: "application/json",
-        authorization: options.apiKey,
+        "accept": "application/json",
+        "authorization": options.apiKey,
         "user-agent": providerUserAgent,
       },
       signal: options.signal,

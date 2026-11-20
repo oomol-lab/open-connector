@@ -87,9 +87,7 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
   baseUrl,
   auth: { type: "api_key_header", name: "apikey" },
   skipDnsValidation: true,
-  customizeRequest({ headers }) {
-    if (!headers.has("accept")) headers.set("accept", "application/json");
-  },
+  defaultHeaders: { accept: "application/json" },
 });
 
 interface RequestOptions {
@@ -112,8 +110,8 @@ async function request(
     const response = await context.fetcher(url, {
       method: options.method,
       headers: {
-        accept: "application/json",
-        apikey: context.apiKey,
+        "accept": "application/json",
+        "apikey": context.apiKey,
         "content-type": "application/json",
         "user-agent": providerUserAgent,
       },

@@ -164,7 +164,7 @@ function requestOdooRpc(
   return runProviderRequest({ signal: connection.signal, label: "Odoo" }, async (signal) => {
     const response = await connection.fetcher(connection.endpoint, {
       method: "POST",
-      headers: { "content-type": "application/json", accept: "application/json", "user-agent": providerUserAgent },
+      headers: { "content-type": "application/json", "accept": "application/json", "user-agent": providerUserAgent },
       body: JSON.stringify({ jsonrpc: "2.0", method: "call", params: { service, method, args }, id: 1 }),
       // RPC credentials are in the body and must not be forwarded to a redirect target.
       redirect: "manual",

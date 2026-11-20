@@ -375,8 +375,8 @@ async function requestClickhouseJson(input: ClickhouseRequestInput): Promise<Cli
     const response = await input.context.fetcher(url.toString(), {
       method: "POST",
       headers: {
-        accept: "application/json",
-        authorization: buildBasicAuthorizationHeader(input.context.username, input.context.password),
+        "accept": "application/json",
+        "authorization": buildBasicAuthorizationHeader(input.context.username, input.context.password),
         "content-type": "text/plain; charset=utf-8",
         "user-agent": providerUserAgent,
       },

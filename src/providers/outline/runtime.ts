@@ -277,8 +277,8 @@ async function requestOutlineJson(options: OutlineRequestOptions): Promise<unkno
 
 function buildOutlineHeaders(apiKey: string) {
   return {
-    accept: "application/json",
-    authorization: `Bearer ${apiKey}`,
+    "accept": "application/json",
+    "authorization": `Bearer ${apiKey}`,
     "content-type": "application/json",
     "user-agent": providerUserAgent,
   };

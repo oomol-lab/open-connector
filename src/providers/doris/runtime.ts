@@ -109,8 +109,8 @@ export async function requestDoris(
     const response = await context.fetcher(url, {
       method: "POST",
       headers: {
-        accept: "application/json",
-        authorization: context.authorization,
+        "accept": "application/json",
+        "authorization": context.authorization,
         "content-type": "application/json",
         "user-agent": providerUserAgent,
         "x-doris-stream": "false",

@@ -215,7 +215,7 @@ async function requestDemodeskTranscript(
 async function fetchDemodesk(input: DemodeskRequestInput, accept: string): Promise<Response> {
   const headers: Record<string, string> = {
     accept,
-    authorization: `Bearer ${input.apiKey}`,
+    "authorization": `Bearer ${input.apiKey}`,
     "user-agent": providerUserAgent,
   };
   let body: string | undefined;

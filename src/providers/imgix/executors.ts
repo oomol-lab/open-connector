@@ -45,9 +45,7 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
   baseUrl: imgixApiBaseUrl,
   auth: { type: "api_key_authorization", prefix: "Bearer " },
   skipDnsValidation: true,
-  customizeRequest({ headers }) {
-    if (!headers.has("accept")) headers.set("accept", "application/vnd.api+json, application/json");
-  },
+  defaultHeaders: { accept: "application/vnd.api+json, application/json" },
 });
 
 export const credentialValidators: CredentialValidators = {
@@ -175,7 +173,7 @@ async function executePurgeAsset(input: Record<string, unknown>, context: ApiKey
 
 function buildListSourcesQuery(input: Record<string, unknown>): Record<string, string | undefined> {
   return compactObject({
-    sort: optionalString(input.sort),
+    "sort": optionalString(input.sort),
     "page[size]": stringifyOptionalNumber(input.pageSize),
     "page[number]": stringifyOptionalNumber(input.pageNumber),
     "fields[sources]": optionalString(input.fieldsSources),
@@ -233,8 +231,8 @@ async function imgixRequestJson(input: ImgixRequestInput, context: ApiKeyProvide
 
 function imgixHeaders(apiKey: string, hasBody: boolean): Record<string, string> {
   const headers: Record<string, string> = {
-    accept: "application/vnd.api+json, application/json",
-    authorization: `Bearer ${apiKey}`,
+    "accept": "application/vnd.api+json, application/json",
+    "authorization": `Bearer ${apiKey}`,
     "user-agent": providerUserAgent,
   };
   if (hasBody) {

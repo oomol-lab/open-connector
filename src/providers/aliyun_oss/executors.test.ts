@@ -50,7 +50,7 @@ describe("Alibaba Cloud OSS download_object", () => {
       new Response(content, {
         headers: {
           "content-type": "application/pdf",
-          etag: '"etag-1"',
+          "etag": '"etag-1"',
         },
       }),
     ]);

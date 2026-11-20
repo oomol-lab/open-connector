@@ -185,7 +185,7 @@ async function requestBrowserUseJson(input: BrowserUseRequestInput): Promise<unk
     const response = await input.fetcher(buildBrowserUseUrl(input.path, input.query), {
       method: input.method,
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "content-type": "application/json",
         "user-agent": providerUserAgent,
         "X-Browser-Use-API-Key": input.apiKey,

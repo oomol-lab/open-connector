@@ -197,9 +197,9 @@ async function requestLeigaJson(
     const response = await input.context.fetcher(buildLeigaUrl(input.path, input.query ?? {}), {
       method: input.method,
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "content-type": "application/json",
-        accessToken: input.context.apiKey,
+        "accessToken": input.context.apiKey,
         "user-agent": providerUserAgent,
       },
       body: input.body ? JSON.stringify(input.body) : undefined,

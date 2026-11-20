@@ -83,7 +83,7 @@ async function requestMagileads(
     const response = await context.fetcher(new URL(path, `${magileadsApiBaseUrl}/`), {
       method,
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         ...(body ? { "content-type": "application/json" } : {}),
         "user-agent": providerUserAgent,
         "x-api-key": context.apiKey,

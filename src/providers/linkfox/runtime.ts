@@ -550,8 +550,8 @@ async function requestLinkfoxPayload(
       const response = await fetcher(new URL(path, linkfoxApiBaseUrl), {
         method: options.method,
         headers: {
-          accept: "application/json",
-          authorization: apiKey,
+          "accept": "application/json",
+          "authorization": apiKey,
           ...(options.body ? { "content-type": "application/json" } : {}),
           "user-agent": providerUserAgent,
         },

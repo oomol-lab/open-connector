@@ -163,8 +163,8 @@ function buildSquareUrl(path: string, query?: Record<string, unknown>): string {
 
 function squareHeaders(apiKey: string, hasBody: boolean): Record<string, string> {
   const headers: Record<string, string> = {
-    accept: "application/json",
-    authorization: `Bearer ${apiKey}`,
+    "accept": "application/json",
+    "authorization": `Bearer ${apiKey}`,
     "square-version": squareApiVersion,
     "user-agent": providerUserAgent,
   };

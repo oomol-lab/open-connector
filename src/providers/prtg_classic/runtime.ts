@@ -184,7 +184,7 @@ async function requestPrtgClassicTableJson(options: PrtgClassicRequestOptions): 
     const response = await options.context.fetcher(url, {
       method: "GET",
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "user-agent": providerUserAgent,
       },
       signal,

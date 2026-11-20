@@ -139,8 +139,8 @@ async function requestNorthbeamJson(options: NorthbeamRequestOptions): Promise<R
       response = await options.context.fetcher(buildNorthbeamUrl(options.path, options.params), {
         method: "GET",
         headers: {
-          accept: "application/json",
-          authorization: options.context.apiKey,
+          "accept": "application/json",
+          "authorization": options.context.apiKey,
           "data-client-id": options.context.clientId,
           "user-agent": providerUserAgent,
         },

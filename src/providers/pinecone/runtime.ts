@@ -319,7 +319,7 @@ function buildPineconeUrl(baseUrl: string, path: string, query?: Record<string, 
 
 function buildPineconeHeaders(apiKey: string, hasBody: boolean) {
   const headers = new Headers({
-    accept: "application/json",
+    "accept": "application/json",
     "api-key": apiKey,
     "user-agent": providerUserAgent,
     "x-pinecone-api-version": pineconeApiVersion,

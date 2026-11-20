@@ -285,7 +285,7 @@ async function elasticemailFetch(input: ElasticemailRequestOptions) {
 
 function elasticemailHeaders(apiKey: string, hasBody: boolean) {
   return {
-    accept: "application/json",
+    "accept": "application/json",
     "X-ElasticEmail-ApiKey": apiKey,
     ...(hasBody ? { "content-type": "application/json" } : {}),
     "user-agent": providerUserAgent,

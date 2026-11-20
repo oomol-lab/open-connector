@@ -93,7 +93,7 @@ it("uses Global API Key headers in proxy requests and removes caller auth header
       {
         method: "GET",
         endpoint: "/zones/zone/email/routing/rules",
-        headers: { "x-auth-key": "untrusted", authorization: "Bearer untrusted" },
+        headers: { "x-auth-key": "untrusted", "authorization": "Bearer untrusted" },
       },
       context,
     ),

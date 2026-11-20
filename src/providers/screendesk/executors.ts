@@ -14,9 +14,7 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
   service,
   baseUrl: screendeskApiBaseUrl,
   auth: { type: "api_key_authorization", prefix: "Bearer " },
-  customizeRequest({ headers }) {
-    if (!headers.has("accept")) headers.set("accept", "application/json");
-  },
+  defaultHeaders: { accept: "application/json" },
   skipDnsValidation: true,
 });
 

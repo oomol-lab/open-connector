@@ -124,7 +124,7 @@ async function requestPredictLeads(
       if (value !== undefined) url.searchParams.set(key, String(value));
     const response = await fetcher(url, {
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "user-agent": providerUserAgent,
         "X-Api-Key": apiKey,
         "X-Api-Token": apiToken,

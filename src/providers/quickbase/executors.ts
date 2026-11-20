@@ -208,7 +208,7 @@ function quickbaseRequest(
     body: requestOptions.body,
     phase,
     headers: {
-      authorization: `QB-USER-TOKEN ${context.apiKey}`,
+      "authorization": `QB-USER-TOKEN ${context.apiKey}`,
       "QB-Realm-Hostname": context.realmHostname,
     },
   });

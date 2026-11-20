@@ -344,7 +344,7 @@ function buildBrevoUrl(path: string, query?: Record<string, BrevoQueryValue>): U
 
 function buildBrevoHeaders(apiKey: string, hasJsonBody: boolean): Record<string, string> {
   const headers: Record<string, string> = {
-    accept: "application/json",
+    "accept": "application/json",
     "api-key": apiKey,
     "user-agent": providerUserAgent,
   };

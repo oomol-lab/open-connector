@@ -1,20 +1,20 @@
 export const chatterFeedRoutes = {
-  favorites: {
+  "favorites": {
     path: "/chatter/feeds/favorites/{userId}/{favoriteId}/feed-elements",
     communityRequired: false,
     parameters: ["elementsPerBundle", "page", "pageSize", "recentCommentCount", "sort"],
   },
-  filter: {
+  "filter": {
     path: "/chatter/feeds/filter/{userId}/{keyPrefix}/feed-elements",
     communityRequired: false,
     parameters: ["density", "elementsPerBundle", "page", "pageSize", "q", "recentCommentCount", "sort", "updatedSince"],
   },
-  bookmarks: {
+  "bookmarks": {
     path: "/chatter/feeds/bookmarks/{userId}/feed-elements",
     communityRequired: false,
     parameters: ["density", "elementsPerBundle", "page", "pageSize", "q", "recentCommentCount", "sort"],
   },
-  company: {
+  "company": {
     path: "/chatter/feeds/company/feed-elements",
     communityRequired: false,
     parameters: ["density", "elementsPerBundle", "page", "pageSize", "q", "recentCommentCount", "sort", "updatedSince"],
@@ -24,32 +24,32 @@ export const chatterFeedRoutes = {
     communityRequired: false,
     parameters: ["page", "pageSize", "recentCommentCount", "sort"],
   },
-  draft: {
+  "draft": {
     path: "/chatter/feeds/draft/{userId}/feed-elements",
     communityRequired: false,
     parameters: ["density", "elementsPerBundle", "page", "pageSize", "q", "recentCommentCount", "sort"],
   },
-  files: {
+  "files": {
     path: "/chatter/feeds/files/{userId}/feed-elements",
     communityRequired: false,
     parameters: ["density", "elementsPerBundle", "page", "pageSize", "q", "recentCommentCount", "sort", "updatedSince"],
   },
-  groups: {
+  "groups": {
     path: "/chatter/feeds/groups/{userId}/feed-elements",
     communityRequired: false,
     parameters: ["density", "elementsPerBundle", "page", "pageSize", "q", "recentCommentCount", "sort", "updatedSince"],
   },
-  isolated: {
+  "isolated": {
     path: "/chatter/feeds/isolated/feed-elements",
     communityRequired: false,
     parameters: ["page", "pageSize", "q", "sort"],
   },
-  mute: {
+  "mute": {
     path: "/chatter/feeds/mute/{userId}/feed-elements",
     communityRequired: false,
     parameters: ["density", "elementsPerBundle", "page", "pageSize", "q", "recentCommentCount", "sort"],
   },
-  news: {
+  "news": {
     path: "/chatter/feeds/news/{userId}/feed-elements",
     communityRequired: false,
     parameters: [
@@ -69,12 +69,12 @@ export const chatterFeedRoutes = {
     communityRequired: false,
     parameters: ["page", "pageSize", "q", "sort"],
   },
-  people: {
+  "people": {
     path: "/chatter/feeds/people/{userId}/feed-elements",
     communityRequired: false,
     parameters: ["density", "elementsPerBundle", "page", "pageSize", "q", "recentCommentCount", "sort", "updatedSince"],
   },
-  record: {
+  "record": {
     path: "/chatter/feeds/record/{recordId}/feed-elements",
     communityRequired: false,
     parameters: [
@@ -92,17 +92,17 @@ export const chatterFeedRoutes = {
       "updatedSince",
     ],
   },
-  streams: {
+  "streams": {
     path: "/chatter/feeds/streams/{streamId}/feed-elements",
     communityRequired: false,
     parameters: ["density", "elementsPerBundle", "page", "pageSize", "recentCommentCount", "sort", "updatedSince"],
   },
-  to: {
+  "to": {
     path: "/chatter/feeds/to/{userId}/feed-elements",
     communityRequired: false,
     parameters: ["density", "elementsPerBundle", "page", "pageSize", "q", "recentCommentCount", "sort"],
   },
-  topics: {
+  "topics": {
     path: "/chatter/feeds/topics/{topicId}/feed-elements",
     communityRequired: false,
     parameters: ["filter", "page", "pageSize", "sort"],
@@ -127,12 +127,12 @@ export const chatterFeedRoutes = {
     communityRequired: true,
     parameters: ["page", "pageSize", "q", "sort"],
   },
-  home: {
+  "home": {
     path: "/chatter/feeds/home/feed-elements",
     communityRequired: true,
     parameters: ["filter", "page", "pageSize", "q", "sort", "threadedCommentsCollapsed"],
   },
-  moderation: {
+  "moderation": {
     path: "/chatter/feeds/moderation/feed-elements",
     communityRequired: true,
     parameters: ["page", "pageSize", "q", "sort"],

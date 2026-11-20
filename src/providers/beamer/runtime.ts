@@ -229,7 +229,7 @@ function beamerUrl(path: string): URL {
 
 function beamerHeaders(apiKey: string): Record<string, string> {
   return {
-    accept: "application/json",
+    "accept": "application/json",
     "user-agent": providerUserAgent,
     "Beamer-Api-Key": apiKey,
   };

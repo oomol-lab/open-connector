@@ -545,8 +545,8 @@ async function fetchEchoTikEnvelope(input: EchoTikRequestInput, signal: AbortSig
   const response = await input.fetcher(url, {
     method: "GET",
     headers: {
-      accept: "application/json",
-      authorization: `Basic ${createBasicAuthToken(input.credential)}`,
+      "accept": "application/json",
+      "authorization": `Basic ${createBasicAuthToken(input.credential)}`,
       "user-agent": providerUserAgent,
     },
     signal,

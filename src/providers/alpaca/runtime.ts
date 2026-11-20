@@ -579,14 +579,14 @@ function buildAlpacaUrl(
 export function alpacaCredentialHeaders(credential: Credential): Record<string, string> {
   if (credential.authType === "oauth2") {
     return {
-      accept: "application/json",
-      authorization: `${credential.tokenType} ${credential.accessToken}`,
+      "accept": "application/json",
+      "authorization": `${credential.tokenType} ${credential.accessToken}`,
       "user-agent": providerUserAgent,
     };
   }
 
   return {
-    accept: "application/json",
+    "accept": "application/json",
     "APCA-API-KEY-ID": credential.apiKeyId,
     "APCA-API-SECRET-KEY": credential.apiSecretKey,
     "user-agent": providerUserAgent,

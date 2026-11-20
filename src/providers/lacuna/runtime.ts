@@ -194,7 +194,7 @@ async function requestLacunaJson(
 
     for (let attempt = 0; ; attempt += 1) {
       const response = await context.fetcher(url, {
-        headers: { accept: "application/json", "user-agent": providerUserAgent },
+        headers: { "accept": "application/json", "user-agent": providerUserAgent },
         signal,
       });
       if (retryableStatuses.has(response.status) && attempt < maxRetries) {

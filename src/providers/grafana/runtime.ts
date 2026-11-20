@@ -424,8 +424,8 @@ async function grafanaRequestJson(
 
 function grafanaHeaders(apiKey: string, hasJsonBody: boolean): Record<string, string> {
   return {
-    authorization: `Bearer ${apiKey}`,
-    accept: "application/json",
+    "authorization": `Bearer ${apiKey}`,
+    "accept": "application/json",
     "user-agent": providerUserAgent,
     ...(hasJsonBody ? { "content-type": "application/json" } : {}),
   };

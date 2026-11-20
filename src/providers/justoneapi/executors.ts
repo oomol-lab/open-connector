@@ -82,7 +82,7 @@ const handlers = mapProviderActionHandlers(
       }
     }
     parameters.set("token", token);
-    const headers = new Headers({ accept: "application/json", "user-agent": providerUserAgent });
+    const headers = new Headers({ "accept": "application/json", "user-agent": providerUserAgent });
     let body: string | undefined;
     if (endpoint.bodyEncoding === "json") {
       headers.set("content-type", "application/json");

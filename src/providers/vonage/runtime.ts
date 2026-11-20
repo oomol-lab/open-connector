@@ -141,8 +141,8 @@ async function requestVonage(input: VonageRequestInput): Promise<unknown> {
     const response = await input.context.fetcher(url.toString(), {
       method: input.method ?? "GET",
       headers: {
-        accept: "application/json",
-        authorization: `Basic ${Buffer.from(`${input.context.apiKey}:${input.context.apiSecret}`).toString("base64")}`,
+        "accept": "application/json",
+        "authorization": `Basic ${Buffer.from(`${input.context.apiKey}:${input.context.apiSecret}`).toString("base64")}`,
         ...(input.body ? { "content-type": "application/x-www-form-urlencoded" } : {}),
         "user-agent": providerUserAgent,
       },

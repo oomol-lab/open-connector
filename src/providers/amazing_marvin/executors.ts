@@ -37,7 +37,7 @@ async function request(
     const url = new URL(`${baseUrl}${endpoint}`);
     const headers = new Headers({
       "X-API-Token": apiKey,
-      accept: "application/json",
+      "accept": "application/json",
       "user-agent": providerUserAgent,
     });
     const { autoComplete, ...body } = input;
@@ -130,12 +130,5 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
   baseUrl,
   auth: { type: "api_key_header", name: "X-API-Token" },
   skipDnsValidation: true,
-  customizeRequest({ headers }) {
-    for (const [key, value] of Object.entries({
-      accept: "application/json",
-      "content-type": "application/json",
-      "user-agent": providerUserAgent,
-    }))
-      if (!headers.has(key)) headers.set(key, value);
-  },
+  defaultHeaders: { "accept": "application/json", "content-type": "application/json", "user-agent": providerUserAgent },
 });

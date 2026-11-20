@@ -121,7 +121,7 @@ interface RosetteRequestInput {
 async function requestRosette(input: RosetteRequestInput): Promise<unknown> {
   const url = new URL(`${rosetteTextAnalyticsApiBaseUrl}${input.path}`);
   const headers: Record<string, string> = {
-    accept: "application/json",
+    "accept": "application/json",
     [rosetteTextAnalyticsApiKeyHeader]: input.apiKey,
     "user-agent": providerUserAgent,
   };

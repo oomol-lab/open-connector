@@ -301,7 +301,7 @@ async function requestTianapiResult(input: TianapiRequest) {
     return await runProviderRequest({ signal: input.signal, label: "TianAPI" }, async (signal) => {
       const response = await input.fetcher(url, {
         method: "GET",
-        headers: { accept: "application/json", "user-agent": providerUserAgent },
+        headers: { "accept": "application/json", "user-agent": providerUserAgent },
         signal,
       });
       const text = await readProviderTextBody(response, "TianAPI response");

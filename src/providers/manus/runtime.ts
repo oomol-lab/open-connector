@@ -243,7 +243,7 @@ function buildMessage(input: Record<string, unknown>): Record<string, unknown> {
 
 function buildManusHeaders(apiKey: string, hasBody: boolean): Record<string, string> {
   return {
-    accept: "application/json",
+    "accept": "application/json",
     "x-manus-api-key": apiKey,
     "user-agent": providerUserAgent,
     ...(hasBody ? { "content-type": "application/json" } : {}),

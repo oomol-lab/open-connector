@@ -111,8 +111,8 @@ async function requestPdfApiIo(input: {
   body?: Record<string, unknown>;
 }): Promise<unknown> {
   const headers: Record<string, string> = {
-    authorization: `Bearer ${input.apiKey}`,
-    accept: "application/json",
+    "authorization": `Bearer ${input.apiKey}`,
+    "accept": "application/json",
     "user-agent": providerUserAgent,
   };
   if (input.body) {

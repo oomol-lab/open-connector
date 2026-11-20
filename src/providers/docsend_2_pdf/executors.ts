@@ -66,7 +66,7 @@ async function convert(input: Record<string, unknown>, context: Docsend2PdfConte
   const response = await context.fetcher(convertUrl, {
     method: "POST",
     headers: {
-      accept: "application/pdf, application/json",
+      "accept": "application/pdf, application/json",
       "content-type": "application/json",
       "user-agent": providerUserAgent,
     },

@@ -259,8 +259,8 @@ async function requestKlazifyJson(input: {
     const response = await input.fetcher(buildKlazifyUrl(input.path), {
       method: "POST",
       headers: {
-        authorization: `Bearer ${input.apiKey}`,
-        accept: "application/json",
+        "authorization": `Bearer ${input.apiKey}`,
+        "accept": "application/json",
         "content-type": "application/json",
         "user-agent": providerUserAgent,
       },

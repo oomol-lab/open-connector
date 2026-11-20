@@ -154,7 +154,7 @@ async function requestCrustdataJson(input: {
     response = await input.context.fetcher(new URL(input.path, crustdataApiBaseUrl), {
       method: "POST",
       headers: {
-        authorization: `Bearer ${input.context.apiKey}`,
+        "authorization": `Bearer ${input.context.apiKey}`,
         "content-type": "application/json",
         "user-agent": providerUserAgent,
         "x-api-version": crustdataApiVersion,

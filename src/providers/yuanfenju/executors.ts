@@ -13,9 +13,7 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
   baseUrl: yuanfenjuApiBaseUrl,
   auth: { type: "api_key_query_or_form_body", name: "api_key", bodyMethods: ["POST"] },
   redirect: "manual",
-  customizeRequest({ headers }) {
-    if (!headers.has("accept")) headers.set("accept", "application/json");
-  },
+  defaultHeaders: { accept: "application/json" },
 });
 export const credentialValidators: CredentialValidators = {
   async apiKey(input, { fetcher, signal }) {

@@ -309,7 +309,7 @@ async function requestAbyssaleJson(
 function abyssaleHeaders(apiKey: string, mode: "read" | "write"): Record<string, string> {
   return {
     "x-api-key": apiKey,
-    accept: "application/json",
+    "accept": "application/json",
     "user-agent": providerUserAgent,
     ...(mode === "write" ? { "content-type": "application/json" } : {}),
   };

@@ -135,7 +135,7 @@ async function requestLinuxDoRss(
   try {
     response = await context.fetcher(url, {
       headers: {
-        accept: "application/rss+xml, application/xml;q=0.9",
+        "accept": "application/rss+xml, application/xml;q=0.9",
         "user-agent": providerUserAgent,
       },
       signal: context.signal,

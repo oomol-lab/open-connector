@@ -136,7 +136,7 @@ async function requestWebinarjam(input: {
     response = await input.context.fetcher(url, {
       method: "POST",
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "content-type": "application/x-www-form-urlencoded;charset=UTF-8",
         "user-agent": providerUserAgent,
       },

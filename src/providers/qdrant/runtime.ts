@@ -205,7 +205,7 @@ async function requestQdrantJson(
     const response = await context.fetcher(new URL(path, `${context.clusterUrl.origin}/`), {
       method,
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "api-key": context.apiKey,
         "user-agent": providerUserAgent,
         ...(body === undefined ? {} : { "content-type": "application/json" }),

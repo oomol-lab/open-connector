@@ -84,11 +84,11 @@ export const acuitySchedulingActionHandlers: ProviderActionHandlers<
     const payload = await requestAcuityScheduling({
       path: "/availability/dates",
       query: {
-        month: optionalString(input.month),
-        appointmentTypeID: optionalInteger(input.appointmentTypeId),
-        calendarID: optionalInteger(input.calendarId),
+        "month": optionalString(input.month),
+        "appointmentTypeID": optionalInteger(input.appointmentTypeId),
+        "calendarID": optionalInteger(input.calendarId),
         "addonIDs[]": readNumberArray(input.addonIds),
-        timezone: optionalString(input.timezone),
+        "timezone": optionalString(input.timezone),
       },
       ...context,
       phase: "execute",
@@ -103,11 +103,11 @@ export const acuitySchedulingActionHandlers: ProviderActionHandlers<
     const payload = await requestAcuityScheduling({
       path: "/availability/times",
       query: {
-        date: optionalString(input.date),
-        appointmentTypeID: optionalInteger(input.appointmentTypeId),
-        calendarID: optionalInteger(input.calendarId),
+        "date": optionalString(input.date),
+        "appointmentTypeID": optionalInteger(input.appointmentTypeId),
+        "calendarID": optionalInteger(input.calendarId),
         "addonIDs[]": readNumberArray(input.addonIds),
-        timezone: optionalString(input.timezone),
+        "timezone": optionalString(input.timezone),
         "ignoreAppointmentIDs[]": readNumberArray(input.ignoreAppointmentIds),
       },
       ...context,
@@ -278,8 +278,8 @@ async function requestAcuityScheduling(input: {
 }) {
   const timeoutHandle = createProviderTimeout(input.signal);
   const headers = new Headers({
-    accept: "application/json",
-    authorization: `Basic ${Buffer.from(`${input.credential.userId}:${input.credential.apiKey}`).toString("base64")}`,
+    "accept": "application/json",
+    "authorization": `Basic ${Buffer.from(`${input.credential.userId}:${input.credential.apiKey}`).toString("base64")}`,
     "user-agent": providerUserAgent,
   });
   if (input.body !== undefined) {

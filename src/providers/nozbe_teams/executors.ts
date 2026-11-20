@@ -181,8 +181,8 @@ async function requestNozbeJson(
     const response = await context.fetcher(url, {
       method: input.method,
       headers: {
-        accept: "application/json",
-        authorization: `apikey ${context.apiKey}`,
+        "accept": "application/json",
+        "authorization": `apikey ${context.apiKey}`,
         ...(input.body === undefined ? {} : { "content-type": "application/json" }),
         "user-agent": providerUserAgent,
       },

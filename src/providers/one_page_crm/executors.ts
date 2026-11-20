@@ -259,8 +259,8 @@ async function requestOnePageCrmJson(options: OnePageCrmRequestOptions): Promise
   }
 
   const headers: Record<string, string> = {
-    accept: "application/json",
-    authorization: buildOnePageCrmAuthorizationHeader(options.credential),
+    "accept": "application/json",
+    "authorization": buildOnePageCrmAuthorizationHeader(options.credential),
     "user-agent": providerUserAgent,
   };
   if (options.body !== undefined) {

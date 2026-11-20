@@ -145,7 +145,7 @@ async function requestPlanetScale(
     response = await fetcher(url, {
       method: endpoint.method,
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         authorization,
         "content-type": "application/json",
         "user-agent": providerUserAgent,

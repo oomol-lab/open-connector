@@ -133,8 +133,8 @@ async function requestProjectmanager(input: {
   const response = await input.fetcher(url.toString(), {
     method: "GET",
     headers: {
-      accept: "application/json",
-      authorization: `Bearer ${input.apiKey}`,
+      "accept": "application/json",
+      "authorization": `Bearer ${input.apiKey}`,
       "user-agent": providerUserAgent,
       "x-integration-name": integrationName,
     },

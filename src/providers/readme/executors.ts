@@ -12,9 +12,7 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
   baseUrl: readmeApiBaseUrl,
   auth: { type: "api_key_basic", suffix: ":" },
   skipDnsValidation: true,
-  customizeRequest({ headers }) {
-    if (!headers.has("accept")) headers.set("accept", "application/json");
-  },
+  defaultHeaders: { accept: "application/json" },
 });
 
 const readmeExecutorHandlers = mapProviderActionSources(

@@ -47,7 +47,7 @@ async function request(
   const response = await context.fetcher(new URL(path, myOtpAppApiBaseUrl), {
     method: "POST",
     headers: {
-      accept: "application/json",
+      "accept": "application/json",
       "content-type": "application/json",
       "user-agent": providerUserAgent,
       "X-API-Key": context.apiKey,

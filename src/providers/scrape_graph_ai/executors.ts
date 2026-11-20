@@ -165,7 +165,7 @@ async function requestScrapeGraphAiJson(input: ScrapeGraphAiRequestInput): Promi
 
 function buildScrapeGraphAiHeaders(input: ScrapeGraphAiRequestInput): Record<string, string> {
   const headers: Record<string, string> = {
-    accept: "application/json",
+    "accept": "application/json",
     "user-agent": providerUserAgent,
     "SGAI-APIKEY": input.apiKey,
   };

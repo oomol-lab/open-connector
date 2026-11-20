@@ -88,8 +88,8 @@ async function requestQuantDataJson(input: {
     const response = await input.fetcher(`${quantDataApiBaseUrl}${input.path}`, {
       method: "POST",
       headers: {
-        accept: "application/json",
-        authorization: `Bearer ${input.apiKey}`,
+        "accept": "application/json",
+        "authorization": `Bearer ${input.apiKey}`,
         "content-type": "application/json",
         "user-agent": providerUserAgent,
       },

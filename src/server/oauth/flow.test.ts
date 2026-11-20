@@ -62,7 +62,7 @@ async function createManualClient(
 ): Promise<{ clientId: string; clientSecret?: string }> {
   const response = await app.request(`${ISSUER}/api/oauth-clients`, {
     method: "POST",
-    headers: { "content-type": "application/json", authorization: `Bearer ${ADMIN_TOKEN}` },
+    headers: { "content-type": "application/json", "authorization": `Bearer ${ADMIN_TOKEN}` },
     body: JSON.stringify({
       clientName: "ChatGPT",
       redirectUris: [REDIRECT, "https://chatgpt.com/connector_platform_oauth_redirect"],
@@ -104,7 +104,7 @@ async function authorizeAndApprove(
   expect(handle).toBeTruthy();
   const approved = await app.request(`${ISSUER}/oauth/mcp/authorize`, {
     method: "POST",
-    headers: { "content-type": "application/x-www-form-urlencoded", origin: ISSUER },
+    headers: { "content-type": "application/x-www-form-urlencoded", "origin": ISSUER },
     body: new URLSearchParams({ handle: handle ?? "", decision: "approve", admin_token: ADMIN_TOKEN }).toString(),
     redirect: "manual",
   });
@@ -161,7 +161,7 @@ describe("oauth discovery", () => {
     const holder = withClientLock(clientId, () => unblock);
     const approvePromise = app.request(`${ISSUER}/oauth/mcp/authorize`, {
       method: "POST",
-      headers: { "content-type": "application/x-www-form-urlencoded", origin: ISSUER },
+      headers: { "content-type": "application/x-www-form-urlencoded", "origin": ISSUER },
       body: new URLSearchParams({ handle, decision: "approve", admin_token: ADMIN_TOKEN }).toString(),
       redirect: "manual",
     });
@@ -209,7 +209,7 @@ describe("authorization code flow", () => {
     // The access token authenticates /mcp (empty catalog, so not a 401).
     const mcpResponse = await app.request(`${ISSUER}/mcp`, {
       method: "POST",
-      headers: { authorization: `Bearer ${String(tokens.access_token)}`, "content-type": "application/json" },
+      headers: { "authorization": `Bearer ${String(tokens.access_token)}`, "content-type": "application/json" },
       body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "tools/list" }),
     });
     expect(mcpResponse.status).not.toBe(401);
@@ -311,7 +311,7 @@ describe("refresh and revocation", () => {
 
     const mcp = await app.request(`${ISSUER}/mcp`, {
       method: "POST",
-      headers: { authorization: `Bearer ${String(refreshedBody.access_token)}`, "content-type": "application/json" },
+      headers: { "authorization": `Bearer ${String(refreshedBody.access_token)}`, "content-type": "application/json" },
       body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "tools/list" }),
     });
     expect(mcp.status).toBe(401);
@@ -361,7 +361,7 @@ describe("auth modes", () => {
     const token = await createRuntimeToken(mixed.database);
     const mixedResponse = await mixed.app.request(`${ISSUER}/mcp`, {
       method: "POST",
-      headers: { authorization: `Bearer ${token}`, "content-type": "application/json" },
+      headers: { "authorization": `Bearer ${token}`, "content-type": "application/json" },
       body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "tools/list" }),
     });
     expect(mixedResponse.status).not.toBe(401);
@@ -370,7 +370,7 @@ describe("auth modes", () => {
     const oauthToken = await createRuntimeToken(oauthOnly.database);
     const oauthResponse = await oauthOnly.app.request(`${ISSUER}/mcp`, {
       method: "POST",
-      headers: { authorization: `Bearer ${oauthToken}`, "content-type": "application/json" },
+      headers: { "authorization": `Bearer ${oauthToken}`, "content-type": "application/json" },
       body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "tools/list" }),
     });
     expect(oauthResponse.status).toBe(401);
@@ -384,7 +384,7 @@ describe("auth modes", () => {
     const tokens = await exchangeAndRead(app, clientId);
     const response = await app.request(`${ISSUER}/mcp`, {
       method: "POST",
-      headers: { authorization: `Bearer ${String(tokens.access_token)}`, "content-type": "application/json" },
+      headers: { "authorization": `Bearer ${String(tokens.access_token)}`, "content-type": "application/json" },
       body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "tools/list" }),
     });
     expect(response.status).toBe(401);
@@ -432,7 +432,7 @@ describe("admin client management", () => {
 
     const mcp = await app.request(`${ISSUER}/mcp`, {
       method: "POST",
-      headers: { authorization: `Bearer ${String(tokens.access_token)}`, "content-type": "application/json" },
+      headers: { "authorization": `Bearer ${String(tokens.access_token)}`, "content-type": "application/json" },
       body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "tools/list" }),
     });
     expect(mcp.status).toBe(401);
@@ -488,13 +488,13 @@ describe("consent scope enforcement", () => {
     const handle = /name="handle" value="([^"]+)"/.exec(page)?.[1] ?? "";
     const updated = await app.request(`${ISSUER}/api/oauth-clients/${clientId}`, {
       method: "PUT",
-      headers: { "content-type": "application/json", authorization: `Bearer ${ADMIN_TOKEN}` },
+      headers: { "content-type": "application/json", "authorization": `Bearer ${ADMIN_TOKEN}` },
       body: JSON.stringify({ scopes: ["mcp:access"] }),
     });
     expect(updated.status).toBe(200);
     const approved = await app.request(`${ISSUER}/oauth/mcp/authorize`, {
       method: "POST",
-      headers: { "content-type": "application/x-www-form-urlencoded", origin: ISSUER },
+      headers: { "content-type": "application/x-www-form-urlencoded", "origin": ISSUER },
       body: new URLSearchParams({ handle, decision: "approve", admin_token: ADMIN_TOKEN }),
     });
     expect(approved.status).toBe(302);

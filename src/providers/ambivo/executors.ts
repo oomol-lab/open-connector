@@ -235,8 +235,8 @@ async function requestAmbivoJson(options: AmbivoRequestOptions) {
   }
 
   const headers: Record<string, string> = {
-    accept: "application/json",
-    authorization: buildAmbivoAuthorizationHeader(options.apiKey),
+    "accept": "application/json",
+    "authorization": buildAmbivoAuthorizationHeader(options.apiKey),
     "user-agent": providerUserAgent,
   };
   if (options.body !== undefined) {

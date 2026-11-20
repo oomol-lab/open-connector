@@ -189,7 +189,7 @@ async function requestWebscrapingAiRaw(
     response = await context.fetcher(url, {
       method: "GET",
       headers: {
-        accept: input.accept,
+        "accept": input.accept,
         "user-agent": providerUserAgent,
       },
       signal: context.signal,

@@ -166,9 +166,7 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
   baseUrl: baserowApiBaseUrl,
   auth: { type: "api_key_authorization", prefix: "Token " },
   skipDnsValidation: true,
-  customizeRequest({ headers }) {
-    if (!headers.has("accept")) headers.set("accept", "application/json");
-  },
+  defaultHeaders: { accept: "application/json" },
 });
 
 export const credentialValidators: CredentialValidators = {
@@ -245,8 +243,8 @@ async function requestBaserowJson(input: {
 
 function baserowHeaders(apiKey: string, hasBody: boolean): Headers {
   const headers = new Headers({
-    Authorization: `Token ${apiKey}`,
-    Accept: "application/json",
+    "Authorization": `Token ${apiKey}`,
+    "Accept": "application/json",
     "User-Agent": providerUserAgent,
   });
   if (hasBody) {

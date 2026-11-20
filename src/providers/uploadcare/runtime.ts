@@ -169,7 +169,7 @@ async function requestUploadcareJson(
   setSearchParams(url, request.query ?? {});
 
   const headers = new Headers({
-    accept: uploadcareRestAcceptHeader,
+    "accept": uploadcareRestAcceptHeader,
     "content-type": uploadcareJsonContentType,
     "user-agent": providerUserAgent,
   });

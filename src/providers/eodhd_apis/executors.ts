@@ -172,7 +172,7 @@ async function getEod(input: Record<string, unknown>, context: ApiKeyProviderCon
 
 async function getIdMapping(input: Record<string, unknown>, context: ApiKeyProviderContext): Promise<unknown> {
   const query = compactObject({
-    fmt: "json",
+    "fmt": "json",
     "filter[symbol]": optionalString(input.filterSymbol),
     "filter[ex]": optionalString(input.filterExchange),
     "filter[isin]": optionalString(input.filterIsin),
@@ -217,9 +217,9 @@ async function getUstYieldRates(input: Record<string, unknown>, context: ApiKeyP
   const payload = await eodhdApisGet(
     "/ust/yield-rates",
     compactObject({
-      fmt: "json",
-      from: optionalString(input.dateFrom),
-      to: optionalString(input.dateTo),
+      "fmt": "json",
+      "from": optionalString(input.dateFrom),
+      "to": optionalString(input.dateTo),
       "filter[year]": optionalInteger(input.filterYear),
       "page[limit]": optionalInteger(input.pageLimit),
       "page[offset]": optionalInteger(input.pageOffset),
@@ -254,7 +254,7 @@ async function eodhdApisGet(
     response = await fetcher(buildEodhdApisUrl(path, query, apiKey), {
       method: "GET",
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "user-agent": providerUserAgent,
       },
       signal: timeout.signal,

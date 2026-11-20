@@ -254,7 +254,7 @@ async function requestRocketChat(options: {
     ? AbortSignal.any([options.signal, AbortSignal.timeout(defaultProviderRequestTimeoutMs)])
     : AbortSignal.timeout(defaultProviderRequestTimeoutMs);
   const headers = new Headers({
-    accept: "application/json",
+    "accept": "application/json",
     "user-agent": providerUserAgent,
     "X-Auth-Token": options.credential.authToken,
     "X-User-Id": options.credential.userId,

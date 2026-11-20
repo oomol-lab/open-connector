@@ -151,7 +151,7 @@ async function requestFaktooraJson(input: FaktooraRequestInput): Promise<unknown
   }
 
   const headers = new Headers({
-    accept: "application/json",
+    "accept": "application/json",
     "user-agent": providerUserAgent,
     "x-api-key": input.apiKey,
   });

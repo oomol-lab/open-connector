@@ -226,7 +226,7 @@ async function fetchResponseJson(
 function headers(apiKey: string, extraHeaders: Record<string, string>): HeadersInit {
   return {
     "X-API-Key": apiKey,
-    accept: "application/json",
+    "accept": "application/json",
     "user-agent": providerUserAgent,
     ...extraHeaders,
   };

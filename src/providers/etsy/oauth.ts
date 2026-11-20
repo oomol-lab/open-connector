@@ -63,7 +63,7 @@ async function exchangeToken(
   return runProviderRequest({ label: "Etsy OAuth" }, async (signal) => {
     const response = await fetcher(etsyTokenUrl, {
       method: "POST",
-      headers: { "content-type": "application/x-www-form-urlencoded", accept: "application/json" },
+      headers: { "content-type": "application/x-www-form-urlencoded", "accept": "application/json" },
       body: new URLSearchParams({ ...fields, client_id: clientConfig.clientId }),
       signal,
       redirect: "manual",

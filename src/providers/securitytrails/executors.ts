@@ -164,7 +164,7 @@ async function securitytrailsRawRequest(
     return await context.fetcher(url, {
       method: "GET",
       headers: {
-        APIKEY: apiKey,
+        "APIKEY": apiKey,
         "user-agent": providerUserAgent,
       },
       signal: context.signal,

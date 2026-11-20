@@ -333,8 +333,8 @@ async function requestMemosJson(
     if (value != null) url.searchParams.set(key, String(value));
   }
   const headers = new Headers({
-    accept: "application/json",
-    authorization: `Bearer ${context.apiKey}`,
+    "accept": "application/json",
+    "authorization": `Bearer ${context.apiKey}`,
     "user-agent": providerUserAgent,
   });
   if (options.body) headers.set("content-type", "application/json");

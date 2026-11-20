@@ -119,7 +119,5 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
       response.status === 429 ? "rate_limited" : "provider_error",
     );
   },
-  customizeRequest({ headers }) {
-    if (!headers.has("accept")) headers.set("accept", "application/json");
-  },
+  defaultHeaders: { accept: "application/json" },
 });

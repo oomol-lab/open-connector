@@ -172,8 +172,8 @@ async function requestNylasJson(options: NylasRequestOptions): Promise<Record<st
     const response = await options.context.fetcher(buildNylasUrl(options.path, options.params ?? {}), {
       method: "GET",
       headers: {
-        accept: "application/json",
-        authorization: `Bearer ${options.context.apiKey}`,
+        "accept": "application/json",
+        "authorization": `Bearer ${options.context.apiKey}`,
         "user-agent": providerUserAgent,
       },
       signal,

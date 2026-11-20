@@ -22,7 +22,7 @@ export async function executeWhoGhoAction(
   try {
     response = await fetcher(url, {
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "user-agent": providerUserAgent,
       },
     });

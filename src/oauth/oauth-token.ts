@@ -152,7 +152,7 @@ export async function requestTokenRevocation(input: TokenRevocationRequest): Pro
   }
   const fields: Record<string, string> = { token: input.token, token_type_hint: input.tokenTypeHint };
   const headers: Record<string, string> = {
-    accept: "application/json",
+    "accept": "application/json",
     "content-type": "application/x-www-form-urlencoded",
     "user-agent": providerUserAgent,
   };
@@ -240,7 +240,7 @@ async function requestToken(input: TokenRequest): Promise<OAuthTokenResult> {
     fields[clientIdField ?? "client_id"] = input.clientId;
   }
   const headers: Record<string, string> = {
-    accept: "application/json",
+    "accept": "application/json",
     "user-agent": providerUserAgent,
   };
   let body: BodyInit;

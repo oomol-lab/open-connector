@@ -163,8 +163,8 @@ function taskPath(taskId: unknown) {
 
 function onfleetHeaders(apiKey: string, hasBody: boolean) {
   const headers: Record<string, string> = {
-    Accept: "application/json",
-    Authorization: `Basic ${Buffer.from(`${apiKey}:`).toString("base64")}`,
+    "Accept": "application/json",
+    "Authorization": `Basic ${Buffer.from(`${apiKey}:`).toString("base64")}`,
     "User-Agent": providerUserAgent,
   };
   if (hasBody) headers["Content-Type"] = "application/json";

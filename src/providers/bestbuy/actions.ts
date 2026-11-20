@@ -259,15 +259,15 @@ const categoryDetailsInputSchema = s.object(
 const productsInputSchema = s.object(
   "The input payload for listing Best Buy products.",
   {
-    sku: skuInputSchema,
-    upc: nonEmptyString("The product UPC to filter by."),
-    name: nonEmptyString(
+    "sku": skuInputSchema,
+    "upc": nonEmptyString("The product UPC to filter by."),
+    "name": nonEmptyString(
       "The product name filter. Plain values are converted into a name clause, and raw Best Buy name expressions are also accepted.",
     ),
-    salePrice: nonEmptyString(
+    "salePrice": nonEmptyString(
       "The salePrice filter. Values such as >100 are converted into a Best Buy comparison clause, and raw salePrice expressions are also accepted.",
     ),
-    categoryPathId: nonEmptyString("The Best Buy category identifier to filter products by."),
+    "categoryPathId": nonEmptyString("The Best Buy category identifier to filter products by."),
     "categoryPath.id": nonEmptyString(
       "The Best Buy category identifier alias used by the toolkit to filter products by.",
     ),

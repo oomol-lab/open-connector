@@ -110,7 +110,7 @@ async function rawEnchargeRequest(options: EnchargeRequestOptions): Promise<Resp
         method: options.method ?? "GET",
         signal,
         headers: {
-          accept: "application/json",
+          "accept": "application/json",
           "content-type": "application/json",
           "user-agent": providerUserAgent,
           "X-Encharge-Token": options.context.apiKey,

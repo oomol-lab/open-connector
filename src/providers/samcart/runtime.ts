@@ -59,7 +59,7 @@ async function request(
   const url = new URL(path.startsWith("/") ? path.slice(1) : path, `${samcartApiBaseUrl}/`);
   for (const [key, value] of Object.entries(compactObject(query))) url.searchParams.set(key, String(value));
   const response = await context.fetcher(url, {
-    headers: { accept: "application/json", "sc-api": context.apiKey, "user-agent": providerUserAgent },
+    headers: { "accept": "application/json", "sc-api": context.apiKey, "user-agent": providerUserAgent },
     signal: context.signal,
   });
   const text = await response.text();

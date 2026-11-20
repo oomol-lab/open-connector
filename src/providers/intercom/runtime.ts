@@ -555,8 +555,8 @@ async function intercomRequestJson<T>(input: IntercomJsonRequestInput): Promise<
   const timeout = createProviderTimeout(input.signal);
   try {
     const headers = new Headers({
-      accept: "application/json",
-      authorization: `Bearer ${input.accessToken}`,
+      "accept": "application/json",
+      "authorization": `Bearer ${input.accessToken}`,
       "Intercom-Version": input.apiVersion ?? intercomApiVersion,
       "user-agent": providerUserAgent,
     });

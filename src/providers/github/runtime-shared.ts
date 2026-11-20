@@ -153,8 +153,8 @@ export function buildRepoContentsPath(owner: string, repo: string, path?: string
 
 export function githubHeaders(accessToken: string, hasJsonBody: boolean): Record<string, string> {
   const headers: Record<string, string> = {
-    accept: githubDefaultAcceptHeader,
-    authorization: `Bearer ${accessToken}`,
+    "accept": githubDefaultAcceptHeader,
+    "authorization": `Bearer ${accessToken}`,
     "x-github-api-version": githubApiVersion,
     "user-agent": githubUserAgent,
   };

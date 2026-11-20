@@ -68,8 +68,8 @@ async function requestTalenthrJson(input: TalenthrRequestInput): Promise<unknown
   const url = new URL(`${talenthrApiBaseUrl}${input.path}`);
   setSearchParams(url, input.query ?? {});
   const headers: Record<string, string> = {
-    accept: "application/json",
-    authorization: `Basic ${Buffer.from(`${input.context.apiKey}:`).toString("base64")}`,
+    "accept": "application/json",
+    "authorization": `Basic ${Buffer.from(`${input.context.apiKey}:`).toString("base64")}`,
     "user-agent": providerUserAgent,
   };
   if (input.body !== undefined) {

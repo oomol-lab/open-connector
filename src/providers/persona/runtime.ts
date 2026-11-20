@@ -141,8 +141,8 @@ async function personaRequest(url: URL, context: ApiKeyProviderContext, init: Re
 
 function personaHeaders(apiKey: string, extraHeaders?: HeadersInit): Record<string, string> {
   return {
-    accept: "application/json",
-    authorization: `Bearer ${apiKey}`,
+    "accept": "application/json",
+    "authorization": `Bearer ${apiKey}`,
     "content-type": "application/json",
     "user-agent": providerUserAgent,
     ...(extraHeaders as Record<string, string> | undefined),

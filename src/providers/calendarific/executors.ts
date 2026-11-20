@@ -122,7 +122,7 @@ async function requestCalendarificJson(input: {
     const response = await input.context.fetcher(buildCalendarificUrl(input.path, input.context.apiKey, input.params), {
       method: "GET",
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "user-agent": providerUserAgent,
       },
       signal,

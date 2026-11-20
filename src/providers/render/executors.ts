@@ -53,11 +53,7 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
   baseUrl: renderApiBaseUrl,
   auth: { type: "api_key_authorization", prefix: "Bearer " },
   skipDnsValidation: true,
-  customizeRequest({ headers }) {
-    if (!headers.has("accept")) {
-      headers.set("accept", "application/json");
-    }
-  },
+  defaultHeaders: { accept: "application/json" },
 });
 
 export const credentialValidators = {
@@ -311,8 +307,8 @@ function appendQueryValue(url: URL, key: string, value: RenderQueryValue): void 
 
 function renderHeaders(apiKey: string, hasBody: boolean): Record<string, string> {
   const headers: Record<string, string> = {
-    Accept: "application/json",
-    Authorization: `Bearer ${apiKey}`,
+    "Accept": "application/json",
+    "Authorization": `Bearer ${apiKey}`,
     "User-Agent": providerUserAgent,
   };
   if (hasBody) {

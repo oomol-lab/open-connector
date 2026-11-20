@@ -153,7 +153,7 @@ export async function requestAisa(
     url.search = query.toString();
     const headers: Record<string, string> = {
       ...extraHeaders,
-      accept: responseFormat?.type === "semicolon" ? "text/plain, application/json;q=0.9" : "application/json",
+      "accept": responseFormat?.type === "semicolon" ? "text/plain, application/json;q=0.9" : "application/json",
       "user-agent": providerUserAgent,
     };
     if (body) {

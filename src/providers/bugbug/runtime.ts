@@ -266,7 +266,7 @@ function buildBugbugUrl(path: string, query: Record<string, BugbugQueryValue> = 
 
 function buildBugbugHeaders(apiKey: string, hasJsonBody = false): Record<string, string> {
   const headers: Record<string, string> = {
-    authorization: `Token ${apiKey}`,
+    "authorization": `Token ${apiKey}`,
     "user-agent": providerUserAgent,
   };
   if (hasJsonBody) {

@@ -5,7 +5,7 @@ import { optionalRecord, optionalRawString } from "../../core/cast.ts";
 import { defineApiKeyProviderExecutors, mapProviderActionHandlers } from "../provider-executors.ts";
 import { defineProviderProxy, readProviderProxyErrorMessage } from "../provider-proxy.ts";
 import {
-  providerInputError,
+  encodeNonDotPathSegment,
   providerResponseError,
   requiredInputString,
   requiredResponseRecord,
@@ -16,12 +16,6 @@ import {
 } from "../provider-runtime.ts";
 import { growsurfActions } from "./actions.ts";
 const baseUrl = "https://api.growsurf.com/v2";
-function encodePathSegment(value: string) {
-  if (value === "." || value === "..") {
-    throw providerInputError("GrowSurf path identifiers cannot be dot segments");
-  }
-  return encodeURIComponent(value);
-}
 interface GrowSurfRequest extends ApiKeyProviderContext {
   endpoint: string;
   method: string;
@@ -33,8 +27,8 @@ async function request({ endpoint, method, apiKey, body, query, fetcher, signal:
     const url = new URL(`${baseUrl}${endpoint}`);
     if (query) url.search = query.toString();
     const headers = new Headers({
-      authorization: `Bearer ${apiKey}`,
-      accept: "application/json",
+      "authorization": `Bearer ${apiKey}`,
+      "accept": "application/json",
       "user-agent": providerUserAgent,
     });
     if (body !== undefined) headers.set("content-type", "application/json");
@@ -81,7 +75,7 @@ const handlers = mapProviderActionHandlers(
     } else if (action.name === "list_campaigns") {
       endpoint = "/campaigns";
     } else {
-      endpoint = `/campaign/${encodePathSegment(requiredInputString(values.campaignId, "campaignId"))}`;
+      endpoint = `/campaign/${encodePathSegment(values.campaignId, "campaignId")}`;
       switch (action.name) {
         case "get_campaign":
           break;
@@ -101,7 +95,7 @@ const handlers = mapProviderActionHandlers(
           body = values.participant;
           break;
         default:
-          endpoint += `/participant/${encodePathSegment(requiredInputString(values.participantIdOrEmail, "participantIdOrEmail"))}`;
+          endpoint += `/participant/${encodePathSegment(values.participantIdOrEmail, "participantIdOrEmail")}`;
           if (action.name === "update_participant") {
             method = "POST";
             body = values.participant;
@@ -155,8 +149,9 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
       response.status === 429 ? "rate_limited" : "provider_error",
     );
   },
-  customizeRequest({ headers }) {
-    for (const [name, value] of Object.entries({ accept: "application/json", "user-agent": providerUserAgent }))
-      if (!headers.has(name)) headers.set(name, value);
-  },
+  defaultHeaders: { "accept": "application/json", "user-agent": providerUserAgent },
 });
+
+function encodePathSegment(value: unknown, fieldName: string): string {
+  return encodeNonDotPathSegment(requiredInputString(value, fieldName));
+}

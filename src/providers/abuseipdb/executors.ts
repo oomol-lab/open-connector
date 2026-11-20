@@ -237,8 +237,8 @@ async function requestAbuseipdbJson<T>(input: {
     response = await input.context.fetcher(buildAbuseipdbUrl(input.path, input.query ?? {}), {
       method: "GET",
       headers: {
-        Key: input.apiKey,
-        Accept: "application/json",
+        "Key": input.apiKey,
+        "Accept": "application/json",
         "User-Agent": providerUserAgent,
       },
       signal,

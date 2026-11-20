@@ -94,11 +94,7 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
     ],
   },
   skipDnsValidation: true,
-  customizeRequest({ headers }) {
-    if (!headers.has("accept")) {
-      headers.set("accept", "application/json");
-    }
-  },
+  defaultHeaders: { accept: "application/json" },
 });
 
 export const credentialValidators: CredentialValidators = {
@@ -154,7 +150,7 @@ async function requestClariCopilotJson(input: {
     const response = await input.context.fetcher(buildClariCopilotUrl(input.path, input.query), {
       method: "GET",
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "x-api-key": input.context.apiKey,
         "x-api-password": input.context.apiPassword,
         "user-agent": providerUserAgent,

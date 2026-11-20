@@ -207,8 +207,8 @@ async function requestLapostaJson(
     }
   }
   const headers = new Headers({
-    accept: "application/json",
-    authorization: `Basic ${Buffer.from(`${input.apiKey}:`, "utf8").toString("base64")}`,
+    "accept": "application/json",
+    "authorization": `Basic ${Buffer.from(`${input.apiKey}:`, "utf8").toString("base64")}`,
     "user-agent": providerUserAgent,
   });
   if (input.body) {

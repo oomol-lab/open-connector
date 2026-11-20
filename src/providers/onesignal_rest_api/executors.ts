@@ -118,9 +118,7 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
   baseUrl: onesignalRestApiBaseUrl,
   auth: { type: "api_key_authorization", prefix: "Key " },
   skipDnsValidation: true,
-  customizeRequest({ headers }) {
-    if (!headers.has("accept")) headers.set("accept", "application/json");
-  },
+  defaultHeaders: { accept: "application/json" },
 });
 
 export const credentialValidators: CredentialValidators = {
@@ -164,8 +162,8 @@ async function requestOneSignalJson(input: OneSignalRequestInput): Promise<Recor
 
   try {
     const headers = new Headers({
-      accept: "application/json",
-      authorization: `Key ${input.context.apiKey}`,
+      "accept": "application/json",
+      "authorization": `Key ${input.context.apiKey}`,
       "user-agent": providerUserAgent,
     });
     if (input.body) {

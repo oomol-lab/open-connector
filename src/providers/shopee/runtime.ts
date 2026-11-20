@@ -744,7 +744,7 @@ async function requestShopee(input: ShopeeRequestInput & { now?: Date }): Promis
       requestBody = JSON.stringify(input.body);
     }
     const headers: Record<string, string> = {
-      accept: "application/json",
+      "accept": "application/json",
       "user-agent": providerUserAgent,
     };
     if (!isFormData && input.body) {

@@ -388,7 +388,7 @@ export const appStoreConnectTestFlightBuildHandlers: AppStoreConnectHandlers = {
       label: "App Store Connect build list",
       query: {
         "filter[betaGroups]": readAppStoreConnectId(input.betaGroupId, "betaGroupId"),
-        include: "preReleaseVersion",
+        "include": "preReleaseVersion",
       },
     });
     return {

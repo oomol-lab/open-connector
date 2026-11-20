@@ -143,8 +143,8 @@ async function requestUserflow(
 
 function userflowHeaders(apiKey: string, hasBody = false): Headers {
   const headers = new Headers({
-    accept: "application/json",
-    authorization: `Bearer ${apiKey}`,
+    "accept": "application/json",
+    "authorization": `Bearer ${apiKey}`,
     "user-agent": providerUserAgent,
     "userflow-version": userflowApiVersion,
   });

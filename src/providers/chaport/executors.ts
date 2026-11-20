@@ -36,8 +36,8 @@ async function request({ path, query, apiKey, fetcher, parentSignal }: ChaportRe
       method: "GET",
       signal,
       headers: {
-        accept: "application/json",
-        authorization: `Bearer ${apiKey}`,
+        "accept": "application/json",
+        "authorization": `Bearer ${apiKey}`,
         "user-agent": providerUserAgent,
       },
     });
@@ -142,13 +142,7 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
   baseUrl,
   auth: { type: "api_key_authorization", prefix: "Bearer " },
   skipDnsValidation: true,
-  customizeRequest({ headers }) {
-    for (const [name, value] of Object.entries({
-      accept: "application/json",
-      "user-agent": providerUserAgent,
-    }))
-      if (!headers.has(name)) headers.set(name, value);
-  },
+  defaultHeaders: { "accept": "application/json", "user-agent": providerUserAgent },
   async readError(response) {
     return new ProviderRequestError(
       response.status,

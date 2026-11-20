@@ -179,7 +179,7 @@ async function requestAppleDb<T>(context: AppleDbActionContext, request: AppleDb
   return runProviderRequest({ signal: context.signal, label: "AppleDB" }, async (signal) => {
     const response = await context.fetcher(`${appledbApiBaseUrl}${request.path}`, {
       headers: {
-        accept: request.accept,
+        "accept": request.accept,
         "user-agent": providerUserAgent,
       },
       signal,

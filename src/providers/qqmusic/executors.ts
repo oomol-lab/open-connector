@@ -105,10 +105,7 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
   baseUrl,
   auth: { type: "api_key_authorization", prefix: "Bearer " },
   skipDnsValidation: true,
-  customizeRequest({ headers }) {
-    for (const [name, value] of Object.entries({ "content-type": "application/json" }))
-      if (!headers.has(name)) headers.set(name, value);
-  },
+  defaultHeaders: { "content-type": "application/json" },
   async readError(response) {
     return new ProviderRequestError(
       response.status,

@@ -94,7 +94,7 @@ async function requestWejamAiJson(input: {
     response = await input.fetcher(buildWejamAiUrl(input), {
       method: "GET",
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "user-agent": providerUserAgent,
         "x-api-key": input.apiKey,
       },

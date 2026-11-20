@@ -97,7 +97,7 @@ async function requestOzon(
   const response = await context.fetcher(new URL(path, baseUrl), {
     method: "POST",
     headers: {
-      accept: "application/json",
+      "accept": "application/json",
       "content-type": "application/json",
       "Api-Key": context.apiKey,
       "Client-Id": context.clientId,

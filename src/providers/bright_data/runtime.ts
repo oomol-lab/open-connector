@@ -237,8 +237,8 @@ async function requestBrightDataJson(input: BrightDataRequestOptions): Promise<u
 
 function brightDataHeaders(apiKey: string): Record<string, string> {
   return {
-    accept: "application/json",
-    authorization: `Bearer ${apiKey}`,
+    "accept": "application/json",
+    "authorization": `Bearer ${apiKey}`,
     "user-agent": providerUserAgent,
   };
 }

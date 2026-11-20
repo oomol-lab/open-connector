@@ -742,7 +742,7 @@ async function figmaRequest(input: FigmaRequestOptions): Promise<FigmaResponse> 
 
 function createFigmaHeaders(auth: FigmaAuth, hasJsonBody: boolean): Headers {
   const headers = new Headers({
-    accept: "application/json",
+    "accept": "application/json",
     "user-agent": providerUserAgent,
   });
   if (auth.type === "api_key") {

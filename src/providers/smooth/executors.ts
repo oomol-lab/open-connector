@@ -28,7 +28,7 @@ async function request({ url, method, apiKey, body, fetcher, parentSignal }: Smo
   return runProviderRequest({ signal: parentSignal, label: "Smooth" }, async (signal) => {
     const response = await fetcher(url.toString(), {
       method,
-      headers: { ...defaultHeaders, apikey: apiKey, "content-type": "application/json" },
+      headers: { ...defaultHeaders, "apikey": apiKey, "content-type": "application/json" },
       body: body ? JSON.stringify(body) : undefined,
       signal,
     });
@@ -125,10 +125,7 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
   baseUrl,
   auth: { type: "api_key_header", name: "apikey" },
   skipDnsValidation: true,
-  customizeRequest({ headers }) {
-    for (const [name, value] of Object.entries({ accept: "application/json" }))
-      if (!headers.has(name)) headers.set(name, value);
-  },
+  defaultHeaders: { accept: "application/json" },
   async readError(response) {
     return new ProviderRequestError(
       response.status,

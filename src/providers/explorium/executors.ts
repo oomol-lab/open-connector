@@ -40,7 +40,7 @@ async function request({ endpoint, values, apiKey, fetcher, autocomplete, signal
     }
     const response = await fetcher(url, {
       method: autocomplete ? "GET" : "POST",
-      headers: { accept: "application/json", "content-type": "application/json", api_key: apiKey },
+      headers: { "accept": "application/json", "content-type": "application/json", "api_key": apiKey },
       body: autocomplete ? undefined : JSON.stringify(values),
       signal,
     });
@@ -124,7 +124,5 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
       response.status === 429 ? "rate_limited" : "provider_error",
     );
   },
-  customizeRequest({ headers }) {
-    if (!headers.has("accept")) headers.set("accept", "application/json");
-  },
+  defaultHeaders: { accept: "application/json" },
 });

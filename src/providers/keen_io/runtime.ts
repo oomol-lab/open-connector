@@ -142,9 +142,9 @@ async function requestKeen(input: {
     response = await input.fetcher(new URL(path, `${keenIoApiBaseUrl}/`), {
       method: input.method ?? "GET",
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "content-type": "application/json",
-        authorization: input.apiKey,
+        "authorization": input.apiKey,
         "user-agent": providerUserAgent,
       },
       body: input.body ? JSON.stringify(input.body) : undefined,

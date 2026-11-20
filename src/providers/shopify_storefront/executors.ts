@@ -472,7 +472,7 @@ async function requestShopifyStorefrontGraphQL(
     response = await context.fetcher(buildShopifyStorefrontGraphQLUrl(context.shopDomain), {
       method: "POST",
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "content-type": "application/json",
         "user-agent": providerUserAgent,
         "x-shopify-storefront-access-token": context.apiKey,

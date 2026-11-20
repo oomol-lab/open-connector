@@ -62,9 +62,9 @@ export const openseaActionHandlers: ProviderActionHandlers<"opensea", OpenseaAct
     const payload = await requestOpensea({
       path: `/api/v2/collection/${encodeURIComponent(slug)}/nfts`,
       query: compactObject({
-        traits: input.traits === undefined ? undefined : JSON.stringify(input.traits),
-        has_agent_binding: input.hasAgentBinding,
-        limit: optionalNumber(input.limit),
+        "traits": input.traits === undefined ? undefined : JSON.stringify(input.traits),
+        "has_agent_binding": input.hasAgentBinding,
+        "limit": optionalNumber(input.limit),
         "next.value": optionalString(input.next),
       }),
       context,
@@ -95,7 +95,7 @@ export const openseaActionHandlers: ProviderActionHandlers<"opensea", OpenseaAct
     const payload = await requestOpensea({
       path: `/api/v2/offers/collection/${encodeURIComponent(slug)}`,
       query: compactObject({
-        limit: optionalNumber(input.limit),
+        "limit": optionalNumber(input.limit),
         "next.value": optionalString(input.next),
       }),
       context,
@@ -222,7 +222,7 @@ async function requestOpensea(input: {
   try {
     response = await input.context.fetcher(url, {
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "user-agent": providerUserAgent,
         "x-api-key": input.context.apiKey,
       },

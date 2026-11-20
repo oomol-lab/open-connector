@@ -177,8 +177,8 @@ async function requestJuniperMistJson(input: {
     const response = await input.fetcher(buildJuniperMistUrl(input), {
       method: "GET",
       headers: {
-        accept: "application/json",
-        authorization: `Token ${input.apiKey}`,
+        "accept": "application/json",
+        "authorization": `Token ${input.apiKey}`,
         "user-agent": providerUserAgent,
       },
       signal: timeout.signal,

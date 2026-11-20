@@ -242,7 +242,7 @@ export const oauth: ProviderOAuthRuntime = {
     const response = await input.fetcher("https://api.miro.com/v1/oauth/token", {
       method: "POST",
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "content-type": "application/x-www-form-urlencoded",
         "user-agent": providerUserAgent,
       },
@@ -365,8 +365,8 @@ async function requestMiroJson(input: MiroRequestOptions): Promise<unknown> {
   const url = new URL(input.path.replace(/^\//u, ""), `${miroApiBaseUrl}/`);
   setSearchParams(url, input.query ?? {});
   const headers: Record<string, string> = {
-    authorization: `${input.tokenType ?? "Bearer"} ${input.accessToken}`,
-    accept: "application/json",
+    "authorization": `${input.tokenType ?? "Bearer"} ${input.accessToken}`,
+    "accept": "application/json",
     "user-agent": providerUserAgent,
   };
   if (input.body !== undefined) {

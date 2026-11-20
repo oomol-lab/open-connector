@@ -252,8 +252,8 @@ async function dnsFilterFetch(input: {
 
 function buildDnsFilterHeaders(apiKey: string): Record<string, string> {
   return {
-    Authorization: apiKey,
-    Accept: "application/json",
+    "Authorization": apiKey,
+    "Accept": "application/json",
     "User-Agent": providerUserAgent,
   };
 }

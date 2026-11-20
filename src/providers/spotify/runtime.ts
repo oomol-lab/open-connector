@@ -688,8 +688,8 @@ export async function spotifyJsonRequest<T = unknown>(path: string, input: Spoti
   }
 
   const headers = new Headers({
-    accept: "application/json",
-    authorization: `Bearer ${input.accessToken}`,
+    "accept": "application/json",
+    "authorization": `Bearer ${input.accessToken}`,
     "user-agent": providerUserAgent,
   });
   let body: string | undefined;

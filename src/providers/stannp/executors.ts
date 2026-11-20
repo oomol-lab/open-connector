@@ -40,9 +40,5 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
     return buildStannpApiBaseUrl(readStannpRegion(credential.metadata.region ?? credential.values.region));
   },
   auth: { type: "api_key_basic", suffix: ":" },
-  customizeRequest({ headers }) {
-    if (!headers.has("accept")) {
-      headers.set("accept", "application/json");
-    }
-  },
+  defaultHeaders: { accept: "application/json" },
 });

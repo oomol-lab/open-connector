@@ -403,7 +403,7 @@ async function apiSportsGet<T extends ApiSportsResponsePayload>(
     const response = await context.fetcher(buildApiSportsUrl(path, query), {
       method: "GET",
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "user-agent": providerUserAgent,
         "x-apisports-key": context.apiKey,
       },

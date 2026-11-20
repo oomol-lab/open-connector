@@ -385,8 +385,8 @@ async function requestAuth0ManagementJson(input: Auth0ManagementRequest): Promis
     response = await input.fetcher(buildAuth0ManagementUrl(input), {
       method: input.method ?? "GET",
       headers: {
-        accept: "application/json",
-        authorization: `Bearer ${input.apiKey.trim()}`,
+        "accept": "application/json",
+        "authorization": `Bearer ${input.apiKey.trim()}`,
         ...(input.body !== undefined ? { "content-type": "application/json" } : {}),
         "user-agent": providerUserAgent,
       },

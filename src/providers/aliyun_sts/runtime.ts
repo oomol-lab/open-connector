@@ -66,7 +66,7 @@ export async function assumeAliyunRole(
     response = await fetcher(aliyunStsEndpoint, {
       method: "POST",
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "content-type": "application/x-www-form-urlencoded",
         "user-agent": providerUserAgent,
       },

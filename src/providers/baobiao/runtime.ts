@@ -42,7 +42,7 @@ export async function requestBaobiao(
       method: "POST",
       headers: request.form
         ? { accept: "application/json" }
-        : { accept: "application/json", "content-type": "application/json" },
+        : { "accept": "application/json", "content-type": "application/json" },
       body: request.form ? formBody(request.body) : JSON.stringify(request.body),
       signal,
     });

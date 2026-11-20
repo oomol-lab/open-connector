@@ -127,7 +127,7 @@ async function requestTripleWhale(input: {
   const normalizedPath = input.path.startsWith("/") ? input.path.slice(1) : input.path;
   const url = new URL(normalizedPath, tripleWhaleApiBaseUrl);
   const headers: Record<string, string> = {
-    accept: "application/json",
+    "accept": "application/json",
     "user-agent": providerUserAgent,
     "x-api-key": input.context.apiKey,
   };

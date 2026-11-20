@@ -86,11 +86,7 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
   baseUrl: slingApiBaseUrl,
   auth: { type: "api_key_header", name: "Authorization" },
   skipDnsValidation: true,
-  customizeRequest({ headers }) {
-    if (!headers.has("accept")) {
-      headers.set("accept", "application/json");
-    }
-  },
+  defaultHeaders: { accept: "application/json" },
 });
 
 export const credentialValidators: CredentialValidators = {
@@ -156,8 +152,8 @@ async function requestSlingJson(input: {
     const response = await input.fetcher(buildSlingUrl(input.path, input.query), {
       method: "GET",
       headers: {
-        Authorization: input.apiKey,
-        Accept: "application/json",
+        "Authorization": input.apiKey,
+        "Accept": "application/json",
         "User-Agent": providerUserAgent,
       },
       signal,

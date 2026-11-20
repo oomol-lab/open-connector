@@ -57,9 +57,7 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
   baseUrl: customgptApiBaseUrl,
   auth: { type: "api_key_authorization", prefix: "Bearer " },
   skipDnsValidation: true,
-  customizeRequest({ headers }) {
-    if (!headers.has("accept")) headers.set("accept", "application/json");
-  },
+  defaultHeaders: { accept: "application/json" },
 });
 
 export const credentialValidators: CredentialValidators = {
@@ -276,8 +274,8 @@ async function customgptRequest(input: {
 
 function customgptHeaders(apiKey: string, body?: Record<string, unknown> | FormData): Record<string, string> {
   const headers: Record<string, string> = {
-    authorization: `Bearer ${apiKey}`,
-    accept: "application/json",
+    "authorization": `Bearer ${apiKey}`,
+    "accept": "application/json",
     "user-agent": providerUserAgent,
   };
 

@@ -47,8 +47,8 @@ export async function requestEbay(
     const response = await fetcher(url, {
       method: body ? "POST" : "GET",
       headers: {
-        authorization: `Bearer ${accessToken}`,
-        accept: "application/json",
+        "authorization": `Bearer ${accessToken}`,
+        "accept": "application/json",
         "content-type": "application/json",
       },
       body: body ? JSON.stringify(body) : undefined,

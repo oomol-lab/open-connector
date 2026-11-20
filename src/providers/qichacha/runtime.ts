@@ -86,9 +86,9 @@ async function requestQichacha(input: QichachaRequestInput) {
     const response = await input.fetcher(url, {
       method: "GET",
       headers: {
-        accept: "application/json",
-        Timespan: timespan,
-        Token: createQichachaToken(input.credentials.appKey, timespan, input.credentials.secretKey),
+        "accept": "application/json",
+        "Timespan": timespan,
+        "Token": createQichachaToken(input.credentials.appKey, timespan, input.credentials.secretKey),
         "user-agent": providerUserAgent,
       },
       signal: timeoutHandle.signal,

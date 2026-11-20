@@ -48,7 +48,7 @@ type ExcelRequestInput = {
 };
 
 type ExcelGraphCollection<T> = {
-  value?: T;
+  "value"?: T;
   "@odata.nextLink"?: unknown;
 } & Record<string, unknown>;
 
@@ -557,7 +557,7 @@ async function createWorkbookFile(
       body: {
         item: {
           "@microsoft.graph.conflictBehavior": "fail",
-          name: input.fileName,
+          "name": input.fileName,
         },
       },
       allowStatuses: [409],
@@ -675,8 +675,8 @@ async function ensureFolderPathExists(folderSegments: string[], driveId: string 
         fetcher: deps.fetcher,
         method: "POST",
         body: {
-          name: segment,
-          folder: {},
+          "name": segment,
+          "folder": {},
           "@microsoft.graph.conflictBehavior": "fail",
         },
         allowStatuses: [409],

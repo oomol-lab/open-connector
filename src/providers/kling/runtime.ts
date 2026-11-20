@@ -397,8 +397,8 @@ async function requestKlingJson(options: KlingRequestOptions): Promise<unknown> 
     const url = new URL(options.path, klingApiBaseUrl);
     if (options.query) url.search = options.query.toString();
     const headers = new Headers({
-      accept: "application/json",
-      authorization: `Bearer ${options.context.apiKey}`,
+      "accept": "application/json",
+      "authorization": `Bearer ${options.context.apiKey}`,
       "user-agent": providerUserAgent,
     });
     if (options.body) headers.set("content-type", "application/json");

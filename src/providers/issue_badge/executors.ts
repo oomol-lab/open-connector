@@ -34,7 +34,7 @@ async function request(
     for (const [key, value] of Object.entries(options.query ?? {})) {
       if (value !== undefined) url.searchParams.set(key, String(value));
     }
-    const headers = new Headers({ accept: "application/json", "user-agent": providerUserAgent });
+    const headers = new Headers({ "accept": "application/json", "user-agent": providerUserAgent });
     if (!options.validate) headers.set("authorization", `Bearer ${apiKey}`);
     if (options.body) headers.set("content-type", "application/json");
     const response = await fetcher(url, {
@@ -126,8 +126,5 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
   baseUrl: apiBaseUrl,
   auth: { type: "bearer" },
   skipDnsValidation: true,
-  customizeRequest({ headers }) {
-    if (!headers.has("accept")) headers.set("accept", "application/json");
-    if (!headers.has("user-agent")) headers.set("user-agent", providerUserAgent);
-  },
+  defaultHeaders: { "accept": "application/json", "user-agent": providerUserAgent },
 });

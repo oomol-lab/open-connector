@@ -16,7 +16,7 @@ import {
 import { numverifyActions } from "./actions.ts";
 
 const baseUrl = "https://apilayer.net/api";
-const headers = { accept: "application/json", "user-agent": providerUserAgent };
+const headers = { "accept": "application/json", "user-agent": providerUserAgent };
 
 async function requestNumverify(
   endpoint: string,
@@ -111,7 +111,5 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
   service: "numverify",
   baseUrl: baseUrl,
   auth: { type: "api_key_query", name: "access_key" },
-  async customizeRequest({ headers: proxyHeaders }) {
-    for (const [name, value] of Object.entries(headers)) if (!proxyHeaders.has(name)) proxyHeaders.set(name, value);
-  },
+  defaultHeaders: headers,
 });

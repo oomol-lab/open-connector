@@ -101,8 +101,8 @@ async function request(
   const response = await c.fetcher(url, {
     method,
     headers: {
-      accept: "application/json",
-      authorization: `Token ${c.apiKey}`,
+      "accept": "application/json",
+      "authorization": `Token ${c.apiKey}`,
       "content-type": "application/json",
       "user-agent": providerUserAgent,
     },

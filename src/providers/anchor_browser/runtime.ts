@@ -147,7 +147,7 @@ async function requestAnchorBrowserJson<T>(
 
 function anchorBrowserHeaders(apiKey: string, hasBody: boolean) {
   return {
-    accept: "application/json",
+    "accept": "application/json",
     ...(hasBody ? { "content-type": "application/json" } : {}),
     "user-agent": providerUserAgent,
     "anchor-api-key": apiKey,

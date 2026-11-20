@@ -184,9 +184,9 @@ function buildHiggsfieldAiUrl(path: string, query?: Record<string, unknown>): UR
 
 function buildHiggsfieldAiHeaders(context: HiggsfieldAiContext): Record<string, string> {
   return {
-    accept: "application/json",
+    "accept": "application/json",
     "content-type": "application/json",
-    authorization: `Key ${context.apiKey}:${context.apiSecret}`,
+    "authorization": `Key ${context.apiKey}:${context.apiSecret}`,
     "user-agent": providerUserAgent,
   };
 }

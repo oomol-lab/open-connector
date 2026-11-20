@@ -161,7 +161,7 @@ async function outputImage(input: Record<string, unknown>, context: ApiKeyProvid
 
 function tinypngHeaders(apiKey: string, input: { contentType?: string } = {}) {
   return {
-    authorization: buildTinypngAuthorizationHeader(apiKey),
+    "authorization": buildTinypngAuthorizationHeader(apiKey),
     "user-agent": providerUserAgent,
     ...(input.contentType ? { "content-type": input.contentType } : {}),
   };

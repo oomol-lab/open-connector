@@ -187,8 +187,8 @@ export const pdfmonkeyActionHandlers: ProviderActionHandlers<"pdfmonkey", Pdfmon
       query: compactObject({
         "q[workspace_id]": readRequiredString(input.workspaceId, "workspaceId"),
         "q[folders]": optionalString(input.folders),
-        page: optionalInteger(input.page),
-        sort: optionalString(input.sort),
+        "page": optionalInteger(input.page),
+        "sort": optionalString(input.sort),
       }),
       apiKey: context.apiKey,
       fetcher: context.fetcher,
@@ -273,8 +273,8 @@ async function requestPdfmonkey(input: {
   }
 
   const headers: Record<string, string> = {
-    authorization: `Bearer ${input.apiKey}`,
-    accept: "application/json",
+    "authorization": `Bearer ${input.apiKey}`,
+    "accept": "application/json",
     "user-agent": providerUserAgent,
   };
   if (input.body) {

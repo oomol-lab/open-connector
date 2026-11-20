@@ -123,7 +123,7 @@ async function requestArcgisOnline(input: {
     const response = await input.context.fetcher(buildArcgisOnlineUrl(input.path, input.query, input.context.apiKey), {
       method: "GET",
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "user-agent": providerUserAgent,
       },
       signal: timeout.signal,

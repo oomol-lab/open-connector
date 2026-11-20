@@ -249,8 +249,8 @@ function buildStabilityAiHeaders(input: {
   hasJsonBody: boolean;
 }): Record<string, string> {
   return {
-    Authorization: `Bearer ${input.apiKey}`,
-    Accept: input.accept,
+    "Authorization": `Bearer ${input.apiKey}`,
+    "Accept": input.accept,
     "User-Agent": providerUserAgent,
     ...(input.hasJsonBody ? { "Content-Type": "application/json" } : {}),
   };

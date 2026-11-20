@@ -169,28 +169,28 @@ function buildTestListQuery(input: Record<string, unknown>) {
     "sub-autofilter-value": optionalString(input.subAutoFilterValue),
     "filter-user-id": optionalString(input.filterUserId),
     "display-ids": displayIds,
-    name_exact: optionalString(input.nameExact),
-    name_like: optionalString(input.nameLike),
-    relationships: stringifyBoolean(input.relationships),
+    "name_exact": optionalString(input.nameExact),
+    "name_like": optionalString(input.nameLike),
+    "relationships": stringifyBoolean(input.relationships),
   });
 }
 
 function buildTestBody(input: Record<string, unknown>, includeSteps: boolean) {
   const attributes = jsonObject({
-    name: input.name,
+    "name": input.name,
     "author-id": input.authorId,
-    description: input.description,
+    "description": input.description,
     "test-type": input.testType,
     "assigned-to-id": input.assignedToId,
     "assigned-to-type": input.assignedToType,
     "planned-execution": input.plannedExecution,
-    status: input.status,
-    version: input.version,
-    priority: input.priority,
+    "status": input.status,
+    "version": input.version,
+    "priority": input.priority,
     "duration-estimate": input.durationEstimate,
     "custom-fields": input.customFields,
     "automated-fields": input.automatedFields,
-    tags: input.tags,
+    "tags": input.tags,
   });
   const steps =
     includeSteps && Array.isArray(input.steps)
@@ -198,8 +198,8 @@ function buildTestBody(input: Record<string, unknown>, includeSteps: boolean) {
           data: input.steps.map((step) => {
             const value = optionalRecord(step) ?? {};
             return jsonObject({
-              name: value.name,
-              description: value.description,
+              "name": value.name,
+              "description": value.description,
               "expected-results": value.expectedResults,
             });
           }),
@@ -218,10 +218,10 @@ async function requestPractitest(options: PractitestRequestOptions): Promise<unk
     const response = await options.fetcher(url, {
       method: options.method,
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "content-type": "application/json",
         "user-agent": providerUserAgent,
-        PTToken: options.apiKey,
+        "PTToken": options.apiKey,
       },
       body: options.body === undefined ? undefined : JSON.stringify(options.body),
       signal: timeout.signal,

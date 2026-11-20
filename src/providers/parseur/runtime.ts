@@ -108,7 +108,7 @@ async function parseurRequest(
   let payload: unknown;
   try {
     response = await context.fetcher(url, {
-      headers: { accept: "application/json", authorization: context.apiKey, "user-agent": providerUserAgent },
+      headers: { "accept": "application/json", "authorization": context.apiKey, "user-agent": providerUserAgent },
       signal: context.signal,
     });
     payload = await readJson(response);

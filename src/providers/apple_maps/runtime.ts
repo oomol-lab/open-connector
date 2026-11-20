@@ -334,8 +334,8 @@ async function sendAppleMapsRequest(
     const response = await fetcher(url, {
       method: "GET",
       headers: {
-        accept: "application/json",
-        authorization: `Bearer ${accessToken}`,
+        "accept": "application/json",
+        "authorization": `Bearer ${accessToken}`,
         "user-agent": providerUserAgent,
       },
       signal,

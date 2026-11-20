@@ -124,9 +124,7 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
   },
   auth: { type: "api_key_authorization", prefix: "Bearer " },
   allowPrivateNetwork: isPrivateNetworkAccessAllowed,
-  customizeRequest({ headers }) {
-    if (!headers.has("accept")) headers.set("accept", "application/json");
-  },
+  defaultHeaders: { accept: "application/json" },
 });
 
 export const credentialValidators: CredentialValidators = {
@@ -172,8 +170,8 @@ async function requestFlowiseJson(input: FlowiseaiRequestInput): Promise<unknown
     const response = await input.fetcher(buildFlowiseUrl(input.baseUrl, input.path), {
       method: input.method ?? "GET",
       headers: {
-        accept: "application/json",
-        authorization: `Bearer ${input.apiKey}`,
+        "accept": "application/json",
+        "authorization": `Bearer ${input.apiKey}`,
         "content-type": "application/json",
         "user-agent": providerUserAgent,
       },

@@ -67,8 +67,8 @@ export async function validateWizaCredential(
 
 async function requestWizaJson(options: WizaRequestOptions, context: ApiKeyProviderContext): Promise<unknown> {
   const headers: Record<string, string> = {
-    accept: "application/json",
-    authorization: `Bearer ${context.apiKey}`,
+    "accept": "application/json",
+    "authorization": `Bearer ${context.apiKey}`,
     "user-agent": providerUserAgent,
   };
   if (options.body !== undefined) headers["content-type"] = "application/json";

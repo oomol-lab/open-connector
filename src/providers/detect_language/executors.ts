@@ -123,8 +123,8 @@ export const credentialValidators: CredentialValidators = {
 
 async function requestDetectLanguage(input: DetectLanguageRequestInput): Promise<unknown> {
   const headers: Record<string, string> = {
-    accept: "application/json",
-    authorization: `Bearer ${input.context.apiKey}`,
+    "accept": "application/json",
+    "authorization": `Bearer ${input.context.apiKey}`,
     "user-agent": providerUserAgent,
   };
   if (input.body) {

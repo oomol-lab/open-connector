@@ -1453,7 +1453,7 @@ async function requestPosthogJson<T>(input: PosthogRequestOptions): Promise<T> {
 
 function buildPosthogHeaders(bearerToken: string) {
   return {
-    authorization: `Bearer ${bearerToken}`,
+    "authorization": `Bearer ${bearerToken}`,
     "content-type": "application/json",
     "user-agent": posthogUserAgent,
   };

@@ -312,8 +312,8 @@ async function requestTimelinkJson(input: {
     const response = await input.fetcher(buildTimelinkUrl(input.path, input.query), {
       method: "GET",
       headers: {
-        accept: "application/json",
-        authorization: `Bearer ${input.token}`,
+        "accept": "application/json",
+        "authorization": `Bearer ${input.token}`,
         "user-agent": providerUserAgent,
       },
       signal,

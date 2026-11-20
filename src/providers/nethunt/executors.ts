@@ -307,8 +307,8 @@ async function nethuntRequestJson(
 
 function nethuntHeaders(context: NethuntContext, hasBody: boolean): Record<string, string> {
   const headers: Record<string, string> = {
-    authorization: nethuntBasicAuthorization(context.email, context.apiKey),
-    accept: "application/json",
+    "authorization": nethuntBasicAuthorization(context.email, context.apiKey),
+    "accept": "application/json",
     "user-agent": providerUserAgent,
   };
   if (hasBody) {

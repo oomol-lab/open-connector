@@ -121,7 +121,7 @@ async function orttoPostJson(
     response = await context.fetcher(new URL(path, orttoRegionBaseUrls[readOrttoRegion(context.region)]), {
       method: "POST",
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "content-type": "application/json",
         "user-agent": providerUserAgent,
         "x-api-key": requireOrttoApiKey(context.apiKey),

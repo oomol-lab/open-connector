@@ -387,8 +387,8 @@ async function buildkiteFetch(input: {
   }
 
   const headers = new Headers({
-    accept: "application/json",
-    authorization: `Bearer ${input.apiKey}`,
+    "accept": "application/json",
+    "authorization": `Bearer ${input.apiKey}`,
     "user-agent": providerUserAgent,
   });
 

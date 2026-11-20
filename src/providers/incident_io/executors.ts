@@ -51,10 +51,7 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
   baseUrl: incidentIoApiBaseUrl,
   auth: { type: "api_key_authorization", prefix: "Bearer " },
   skipDnsValidation: true,
-  customizeRequest({ headers }) {
-    if (!headers.has("accept")) headers.set("accept", "application/json");
-    if (!headers.has("content-type")) headers.set("content-type", "application/json");
-  },
+  defaultHeaders: { "accept": "application/json", "content-type": "application/json" },
 });
 
 export const credentialValidators: CredentialValidators = {
@@ -180,10 +177,10 @@ async function listIncidentStatuses(context: ApiKeyProviderContext): Promise<unk
 
 function buildListIncidentsQuery(input: Record<string, unknown>): Record<string, string | undefined> {
   const query: Record<string, string | undefined> = compactObject({
-    page_size: stringifyOptionalNumber(optionalInteger(input.pageSize)),
-    after: optionalString(input.after),
-    sort_by: optionalString(input.sortBy),
-    filter_mode: optionalString(input.filterMode),
+    "page_size": stringifyOptionalNumber(optionalInteger(input.pageSize)),
+    "after": optionalString(input.after),
+    "sort_by": optionalString(input.sortBy),
+    "filter_mode": optionalString(input.filterMode),
     "status_category[one_of]": optionalString(input.statusCategoryOneOf),
     "status_category[not_in]": optionalString(input.statusCategoryNotIn),
     "severity[one_of]": optionalString(input.severityOneOf),
@@ -203,8 +200,8 @@ async function requestJson(input: IncidentIoRequestInput, context: ApiKeyProvide
     const response = await context.fetcher(buildUrl(input.path, input.query), {
       method: "GET",
       headers: {
-        accept: "application/json",
-        authorization: `Bearer ${context.apiKey}`,
+        "accept": "application/json",
+        "authorization": `Bearer ${context.apiKey}`,
         "user-agent": providerUserAgent,
       },
       signal: timeout.signal,

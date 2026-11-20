@@ -80,8 +80,8 @@ export async function requestOomolConsoleWithResponse(input: {
 
   const timeout = createProviderTimeout(undefined, input.timeoutMs ?? defaultRequestTimeoutMs);
   const headers = new Headers({
-    accept: "application/json",
-    authorization: `Bearer ${input.apiKey}`,
+    "accept": "application/json",
+    "authorization": `Bearer ${input.apiKey}`,
     "user-agent": providerUserAgent,
   });
   for (const [name, value] of new Headers(input.headers)) {

@@ -16,7 +16,7 @@ const servers: Record<PkulawMcpServerId, { displayName: string; invokePath: stri
   "case-semantic": { displayName: "检索司法案例-语义", invokePath: "/mcp-case-search-service/mcp" },
   "case-number": { displayName: "案号识别与溯源", invokePath: "/case_number_recognition/mcp" },
   "law-recognition": { displayName: "法条识别与溯源", invokePath: "/law_recognition/mcp" },
-  fatiao: { displayName: "精准查找法条-关键词", invokePath: "/mcp-fatiao/mcp" },
+  "fatiao": { displayName: "精准查找法条-关键词", invokePath: "/mcp-fatiao/mcp" },
   "doc-link": { displayName: "法宝超链", invokePath: "/add-doc-link/mcp" },
   "citation-validator": { displayName: "修正生成幻觉-法条", invokePath: "/pku_citation_validator/mcp" },
 };
@@ -68,7 +68,7 @@ async function withClient<T>(
 ): Promise<T> {
   const endpoint = new URL(servers[serverId].invokePath, pkulawMcpGateway);
   const headers = new Headers({
-    authorization: `Bearer ${context.apiKey.trim()}`,
+    "authorization": `Bearer ${context.apiKey.trim()}`,
     "user-agent": providerUserAgent,
   });
   return withMcpClient(

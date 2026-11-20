@@ -108,7 +108,7 @@ async function requestBraveSearchJson(
     response = await context.fetcher(buildBraveSearchUrl(path, query), {
       method: "GET",
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "user-agent": providerUserAgent,
         "x-subscription-token": context.apiKey,
       },

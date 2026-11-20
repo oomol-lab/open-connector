@@ -446,8 +446,8 @@ async function affinityRequest(
     response = await fetcher(url, {
       method: "GET",
       headers: {
-        accept: "application/json",
-        authorization: `Bearer ${apiKey}`,
+        "accept": "application/json",
+        "authorization": `Bearer ${apiKey}`,
         "user-agent": providerUserAgent,
       },
       signal: requestSignal,

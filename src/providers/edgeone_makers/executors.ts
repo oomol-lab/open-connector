@@ -265,7 +265,7 @@ async function makersRequest(input: {
       method: "POST",
       redirect: "manual",
       headers: {
-        authorization: `Bearer ${input.apiKey}`,
+        "authorization": `Bearer ${input.apiKey}`,
         "content-type": "application/json",
         "user-agent": providerUserAgent,
       },
@@ -493,7 +493,5 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
   allowedOrigins: Object.values(edgeOneMakersApiBaseUrls),
   auth: { type: "api_key_authorization", prefix: "Bearer " },
   skipDnsValidation: true,
-  customizeRequest({ headers }) {
-    if (!headers.has("accept")) headers.set("accept", "application/json");
-  },
+  defaultHeaders: { accept: "application/json" },
 });

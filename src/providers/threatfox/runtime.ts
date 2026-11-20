@@ -90,7 +90,7 @@ async function requestThreatfox(context: ThreatfoxRuntimeContext, query: Record<
       method: "POST",
       headers: {
         "Auth-Key": context.apiKey,
-        accept: "application/json",
+        "accept": "application/json",
         // ThreatFox expects a JSON body (see threatfox.abuse.ch/api docs); a
         // form-encoded body is rejected with query_status "no_json".
         "content-type": "application/json",

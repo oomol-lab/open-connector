@@ -50,7 +50,7 @@ describe("AWS S3 download_object", () => {
       new Response(content, {
         headers: {
           "content-type": "application/pdf",
-          etag: '"etag-1"',
+          "etag": '"etag-1"',
         },
       }),
     ]);
@@ -218,7 +218,7 @@ describe("AWS S3 SigV4 golden vectors", () => {
       bucket: "documents",
       objectKey: "test.txt",
       contentText: "hello",
-      metadata: { "file-name": "a", file_name: "b" },
+      metadata: { "file-name": "a", "file_name": "b" },
     });
 
     expect(result).toEqual({

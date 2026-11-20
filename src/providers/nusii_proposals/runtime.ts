@@ -298,8 +298,8 @@ async function requestNusiiJson(input: {
     response = await input.fetcher(url, {
       method: input.method,
       headers: {
-        accept: "application/json",
-        authorization: `Token token=${input.apiKey}`,
+        "accept": "application/json",
+        "authorization": `Token token=${input.apiKey}`,
         ...(input.body === undefined ? {} : { "content-type": "application/json" }),
         "user-agent": providerUserAgent,
       },

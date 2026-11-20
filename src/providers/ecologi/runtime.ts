@@ -157,7 +157,7 @@ async function requestEcologiJson(input: {
   signal?: AbortSignal;
 }): Promise<unknown> {
   const headers = new Headers({
-    accept: "application/json",
+    "accept": "application/json",
     "content-type": "application/json",
     "user-agent": providerUserAgent,
   });

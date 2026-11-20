@@ -159,8 +159,8 @@ async function getJson(
     response = await context.fetcher(url, {
       method: "GET",
       headers: {
-        accept: "application/json",
-        Bptoken: context.apiKey,
+        "accept": "application/json",
+        "Bptoken": context.apiKey,
         "user-agent": providerUserAgent,
       },
       signal: context.signal,

@@ -136,7 +136,7 @@ async function requestVtexJson(context: VtexContext, request: VtexRequestInput):
     response = await context.fetcher(url.toString(), {
       method: "GET",
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "content-type": "application/json",
         "user-agent": providerUserAgent,
         "x-vtex-api-appkey": context.appKey,

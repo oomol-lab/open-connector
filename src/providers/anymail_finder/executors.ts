@@ -120,8 +120,8 @@ async function request(
     response = await context.fetcher(`${apiBaseUrl}${path}`, {
       ...init,
       headers: {
-        accept: "application/json",
-        authorization: context.apiKey,
+        "accept": "application/json",
+        "authorization": context.apiKey,
         "content-type": "application/json",
         "user-agent": providerUserAgent,
         ...init.headers,

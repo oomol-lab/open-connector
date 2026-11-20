@@ -166,8 +166,8 @@ async function requestDynapicturesJson(
 ) {
   const timeout = createProviderTimeout(input.signal, dynapicturesRequestTimeoutMs);
   const headers = new Headers({
-    accept: "application/json",
-    authorization: `Bearer ${input.apiKey}`,
+    "accept": "application/json",
+    "authorization": `Bearer ${input.apiKey}`,
     "user-agent": providerUserAgent,
   });
   let body: string | undefined;

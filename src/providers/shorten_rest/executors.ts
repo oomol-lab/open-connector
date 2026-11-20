@@ -158,7 +158,7 @@ async function shortenRestRequest(input: ShortenRestRequestInput): Promise<unkno
       method: input.method,
       headers: {
         "x-api-key": input.context.apiKey,
-        accept: "application/json",
+        "accept": "application/json",
         "user-agent": providerUserAgent,
         ...(input.body ? { "content-type": "application/json" } : {}),
       },

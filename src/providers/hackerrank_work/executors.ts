@@ -203,8 +203,8 @@ function buildHackerrankWorkUrl(path: string, query: Record<string, string | num
 
 function hackerrankWorkHeaders(apiKey: string): Record<string, string> {
   return {
-    Authorization: `Bearer ${apiKey}`,
-    Accept: "application/json",
+    "Authorization": `Bearer ${apiKey}`,
+    "Accept": "application/json",
     "User-Agent": providerUserAgent,
   };
 }

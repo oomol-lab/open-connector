@@ -242,7 +242,7 @@ async function knackRequest(
     response = await context.fetcher(url, {
       ...init,
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         ...(init.body ? { "content-type": "application/json" } : {}),
         "user-agent": providerUserAgent,
         "X-Knack-Application-Id": context.appId,

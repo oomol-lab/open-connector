@@ -22,7 +22,7 @@ async function setup() {
     worker.fetch(
       new Request("https://maintenance.example/reset-instance", {
         method: "POST",
-        headers: { authorization: "Bearer temporary-secret", "content-type": "application/json" },
+        headers: { "authorization": "Bearer temporary-secret", "content-type": "application/json" },
         body: JSON.stringify(input),
       }),
       env,

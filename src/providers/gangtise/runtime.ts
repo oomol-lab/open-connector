@@ -999,10 +999,10 @@ async function postGangtiseJson(input: {
     response = await input.fetcher(new URL(input.path, gangtiseApiBaseUrl), {
       method: "POST",
       headers: compactObject({
-        accept: "application/json",
+        "accept": "application/json",
         "content-type": "application/json",
         "user-agent": providerUserAgent,
-        Authorization: input.authorization,
+        "Authorization": input.authorization,
       }) as Record<string, string>,
       body: JSON.stringify(input.body),
       signal: timeout.signal,

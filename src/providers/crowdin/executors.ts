@@ -85,9 +85,7 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
     return resolveCrowdinApiBaseUrl(credential && "metadata" in credential ? credential.metadata : undefined);
   },
   auth: { type: "bearer" },
-  customizeRequest({ headers }) {
-    if (!headers.has("accept")) headers.set("accept", "application/json");
-  },
+  defaultHeaders: { accept: "application/json" },
 });
 
 export const credentialValidators: CredentialValidators = {

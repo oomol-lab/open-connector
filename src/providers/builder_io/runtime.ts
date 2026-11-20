@@ -145,8 +145,8 @@ async function requestBuilderIoJson(input: {
   context: ProviderRequestContext;
 }): Promise<unknown> {
   const headers: Record<string, string> = {
-    accept: "application/json",
-    authorization: `Bearer ${input.apiKey}`,
+    "accept": "application/json",
+    "authorization": `Bearer ${input.apiKey}`,
     "user-agent": providerUserAgent,
   };
   if (input.body !== undefined) {

@@ -16,7 +16,7 @@ import {
 import { chatraActions } from "./actions.ts";
 
 const baseUrl = "https://app.chatra.io/api";
-const defaultHeaders = { accept: "application/json", "content-type": "application/json" };
+const defaultHeaders = { "accept": "application/json", "content-type": "application/json" };
 
 interface Route {
   method: string;
@@ -113,9 +113,8 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
   service: "chatra",
   baseUrl: baseUrl,
   auth: { type: "none" },
+  defaultHeaders,
   async customizeRequest({ headers: proxyHeaders, context, service }) {
-    for (const [name, value] of Object.entries(defaultHeaders))
-      if (!proxyHeaders.has(name)) proxyHeaders.set(name, value);
     const c = await requireApiKeyCredential(context, service);
     proxyHeaders.set(
       "authorization",

@@ -127,7 +127,7 @@ export function createBilibiliSignedHeaders(input: BilibiliSignedHeadersInput): 
   ];
   const authorization = createHmac("sha256", input.appSecret).update(signedLines.join("\n")).digest("hex");
   return {
-    accept: "application/json",
+    "accept": "application/json",
     "access-token": input.accessToken,
     authorization,
     "x-bili-accesskeyid": input.clientId,
@@ -296,7 +296,7 @@ export async function requestBilibiliOAuthToken(input: BilibiliOAuthTokenRequest
     response = await input.fetcher(url.toString(), {
       method: "POST",
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "content-type": "application/x-www-form-urlencoded",
         "user-agent": providerUserAgent,
       },

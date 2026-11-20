@@ -310,9 +310,9 @@ function buildContentstackUrl(
 
 function buildContentstackHeaders(stackApiKey: string, deliveryToken: string, branch?: string): Record<string, string> {
   const headers: Record<string, string> = {
-    accept: "application/json",
-    api_key: stackApiKey,
-    access_token: deliveryToken,
+    "accept": "application/json",
+    "api_key": stackApiKey,
+    "access_token": deliveryToken,
     "user-agent": providerUserAgent,
   };
   if (branch) {

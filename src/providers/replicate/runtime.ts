@@ -239,8 +239,8 @@ async function replicateRequest(
   }
 
   const headers = new Headers({
-    accept: "application/json",
-    authorization: `Bearer ${options.context.apiKey}`,
+    "accept": "application/json",
+    "authorization": `Bearer ${options.context.apiKey}`,
     "user-agent": providerUserAgent,
     ...options.headers,
   });

@@ -152,7 +152,7 @@ async function requestUnioneJson(options: UnioneRequestOptions): Promise<UnioneJ
 
 function unioneHeaders(apiKey: string): Record<string, string> {
   return {
-    accept: "application/json",
+    "accept": "application/json",
     "content-type": "application/json",
     "user-agent": providerUserAgent,
     "X-API-KEY": apiKey,

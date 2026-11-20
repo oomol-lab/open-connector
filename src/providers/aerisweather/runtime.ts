@@ -139,7 +139,7 @@ async function requestAerisWeatherJson(input: {
   try {
     const response = await input.context.fetcher(url, {
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "user-agent": providerUserAgent,
       },
       signal: timeout.signal,

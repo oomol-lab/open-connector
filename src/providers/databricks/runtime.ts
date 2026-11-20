@@ -694,9 +694,9 @@ async function databricksFetch(
 
 function buildHeaders(apiKey: string, hasBody: boolean): Record<string, string> {
   return compactObject({
-    authorization: `Bearer ${apiKey}`,
+    "authorization": `Bearer ${apiKey}`,
     "user-agent": providerUserAgent,
-    accept: "application/json",
+    "accept": "application/json",
     "content-type": hasBody ? "application/json" : undefined,
   }) as Record<string, string>;
 }

@@ -76,7 +76,7 @@ async function mindbodyGetJson(input: {
     response = await input.context.fetcher(url, {
       method: "GET",
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "api-key": input.context.apiKey,
         "user-agent": providerUserAgent,
       },

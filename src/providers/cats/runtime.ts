@@ -193,8 +193,8 @@ async function catsRequest(input: {
 
 function catsHeaders(apiKey: string): HeadersInit {
   return {
-    accept: "application/json",
-    authorization: `Token ${apiKey}`,
+    "accept": "application/json",
+    "authorization": `Token ${apiKey}`,
     "content-type": "application/json",
     "user-agent": providerUserAgent,
   };

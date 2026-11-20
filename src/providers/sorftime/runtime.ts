@@ -487,9 +487,9 @@ async function requestSorftime(input: {
 
 function sorftimeHeaders(apiKey: string) {
   return {
-    accept: "application/json",
-    authorization: `BasicAuth ${apiKey}`,
-    browser: "Cli",
+    "accept": "application/json",
+    "authorization": `BasicAuth ${apiKey}`,
+    "browser": "Cli",
     "content-type": "application/json",
     "user-agent": providerUserAgent,
   };

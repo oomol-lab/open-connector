@@ -336,9 +336,9 @@ async function requestPylonJson(input: {
     const response = await input.fetcher(buildPylonUrl(input.path, input.query), {
       method: input.method ?? "GET",
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "content-type": "application/json",
-        authorization: `Bearer ${input.apiKey}`,
+        "authorization": `Bearer ${input.apiKey}`,
         "user-agent": providerUserAgent,
       },
       body: input.body ? JSON.stringify(input.body) : undefined,

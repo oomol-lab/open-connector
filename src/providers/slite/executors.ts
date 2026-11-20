@@ -274,7 +274,7 @@ async function requestSliteJson(options: SliteRequestOptions): Promise<unknown> 
 function sliteHeaders(apiKey: string, includeJsonContentType: boolean): Record<string, string> {
   return {
     "x-slite-api-key": apiKey,
-    Accept: "application/json",
+    "Accept": "application/json",
     "User-Agent": providerUserAgent,
     ...(includeJsonContentType ? { "Content-Type": "application/json" } : {}),
   };

@@ -133,8 +133,8 @@ async function requestTimebuzzer(
     const response = await context.fetcher(url, {
       method: options.method ?? "GET",
       headers: {
-        accept: "application/json",
-        authorization: `APIKey ${context.apiKey}`,
+        "accept": "application/json",
+        "authorization": `APIKey ${context.apiKey}`,
         "user-agent": providerUserAgent,
         ...(options.body ? { "content-type": "application/json" } : {}),
       },

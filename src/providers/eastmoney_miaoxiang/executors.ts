@@ -13,7 +13,7 @@ import {
 import { eastmoneyMiaoxiangActions } from "./actions.ts";
 
 const baseUrl = "https://mkapi2.dfcfs.com/finskillshub";
-const defaultHeaders = { accept: "application/json", "content-type": "application/json" };
+const defaultHeaders = { "accept": "application/json", "content-type": "application/json" };
 const routes: Record<string, string> = {
   query_financial_data: "/api/claw/query",
   search_news: "/api/claw/news-search",
@@ -92,10 +92,7 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
   baseUrl,
   auth: { type: "api_key_header", name: "apikey" },
   skipDnsValidation: true,
-  customizeRequest({ headers }) {
-    for (const [name, value] of Object.entries({ accept: "application/json", "content-type": "application/json" }))
-      if (!headers.has(name)) headers.set(name, value);
-  },
+  defaultHeaders: { "accept": "application/json", "content-type": "application/json" },
   async readError(response) {
     return new ProviderRequestError(
       response.status,

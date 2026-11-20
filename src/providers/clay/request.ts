@@ -26,7 +26,7 @@ export function requestClay(
       method,
       headers: {
         "clay-api-key": context.apiKey,
-        accept: "application/json",
+        "accept": "application/json",
         "content-type": "application/json",
         "user-agent": providerUserAgent,
       },

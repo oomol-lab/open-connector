@@ -131,7 +131,7 @@ async function orcarouterRequest(
 
 function buildOrcarouterHeaders(apiKey: string, includeJsonContentType: boolean, anthropicVersion?: string): Headers {
   const headers = new Headers({
-    authorization: `Bearer ${apiKey}`,
+    "authorization": `Bearer ${apiKey}`,
     "user-agent": providerUserAgent,
   });
 

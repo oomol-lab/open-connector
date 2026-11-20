@@ -16,7 +16,7 @@ async function request(
   const url = new URL(path, baseUrl);
   for (const [key, value] of Object.entries(query)) if (value !== undefined) url.searchParams.set(key, String(value));
   const response = await context.fetcher(url, {
-    headers: { accept: "application/json", "X-API-Key": context.apiKey, "user-agent": providerUserAgent },
+    headers: { "accept": "application/json", "X-API-Key": context.apiKey, "user-agent": providerUserAgent },
     signal: context.signal,
   });
   const payload = await response.json().catch(() => null);
@@ -106,10 +106,7 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
   baseUrl,
   auth: { type: "api_key_header", name: "X-API-Key" },
   skipDnsValidation: true,
-  customizeRequest({ headers }) {
-    if (!headers.has("accept")) headers.set("accept", "application/json");
-    if (!headers.has("user-agent")) headers.set("user-agent", providerUserAgent);
-  },
+  defaultHeaders: { "accept": "application/json", "user-agent": providerUserAgent },
 });
 
 export const credentialValidators: CredentialValidators = {
@@ -117,7 +114,7 @@ export const credentialValidators: CredentialValidators = {
     let response: Response;
     try {
       response = await fetcher(new URL("/open/v1/auth/verify", baseUrl), {
-        headers: { accept: "application/json", "X-API-Key": input.apiKey, "user-agent": providerUserAgent },
+        headers: { "accept": "application/json", "X-API-Key": input.apiKey, "user-agent": providerUserAgent },
         signal,
       });
     } catch (error) {

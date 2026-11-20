@@ -39,9 +39,7 @@ export const executors: ProviderExecutors = defineApiKeyProviderExecutors(
   { skipDnsValidation: true },
 );
 export const proxy: ProviderProxyExecutor = defineProviderProxy({
-  customizeRequest({ headers }) {
-    if (!headers.has("accept")) headers.set("accept", "application/json");
-  },
+  defaultHeaders: { accept: "application/json" },
   service: "mamo_business",
   baseUrl,
   auth: { type: "api_key_authorization", prefix: "Bearer " },

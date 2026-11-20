@@ -58,7 +58,7 @@ export const oauth: ProviderOAuthRuntime = {
         method: "POST",
         headers: {
           "content-type": "application/x-www-form-urlencoded",
-          accept: "application/json",
+          "accept": "application/json",
         },
         body,
         signal,

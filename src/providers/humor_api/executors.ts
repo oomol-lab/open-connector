@@ -35,7 +35,7 @@ const handlers = mapProviderActionHandlers(
       const response = await context.fetcher(url, {
         headers: {
           "x-api-key": apiKey,
-          accept: "application/json",
+          "accept": "application/json",
           "user-agent": providerUserAgent,
         },
         signal,
@@ -82,13 +82,7 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
   baseUrl,
   auth: { type: "api_key_header", name: "x-api-key" },
   skipDnsValidation: true,
-  customizeRequest({ headers }) {
-    for (const [name, value] of Object.entries({
-      accept: "application/json",
-      "user-agent": providerUserAgent,
-    }))
-      if (!headers.has(name)) headers.set(name, value);
-  },
+  defaultHeaders: { "accept": "application/json", "user-agent": providerUserAgent },
   async readError(response) {
     return new ProviderRequestError(
       response.status,

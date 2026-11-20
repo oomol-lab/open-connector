@@ -94,7 +94,7 @@ async function request(context: MailWizzContext, requestPath: string, options: R
   if (body) for (const [key, value] of Object.entries(options.form ?? {})) body.set(key, String(value));
   const response = await context.fetcher(url, {
     method: options.method ?? "GET",
-    headers: { accept: "application/json", "x-api-key": context.apiKey },
+    headers: { "accept": "application/json", "x-api-key": context.apiKey },
     body,
     signal: context.signal,
   });

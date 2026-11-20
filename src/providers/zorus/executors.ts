@@ -119,7 +119,7 @@ function zorusRequest(
     phase,
     headers: {
       "Zorus-Api-Version": apiVersion,
-      authorization: `Impersonation ${context.apiKey}`,
+      "authorization": `Impersonation ${context.apiKey}`,
     },
   });
 }

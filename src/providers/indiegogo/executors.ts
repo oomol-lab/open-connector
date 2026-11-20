@@ -18,7 +18,7 @@ async function execute(input: Record<string, unknown>, context: Context, name: s
   const url = new URL(path, "https://www.indiegogo.com");
   if (input.urlName !== undefined) url.searchParams.set("urlName", String(input.urlName));
   const response = await context.fetcher(url, {
-    headers: { accept: "application/json", "user-agent": providerUserAgent },
+    headers: { "accept": "application/json", "user-agent": providerUserAgent },
     redirect: "manual",
   });
   const payload = await response.json().catch(() => null);

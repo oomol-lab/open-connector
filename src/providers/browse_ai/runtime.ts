@@ -265,8 +265,8 @@ async function requestBrowseAiJson(input: BrowseAiRequestInput): Promise<unknown
   let payload: unknown;
   try {
     const headers = new Headers({
-      accept: "application/json",
-      authorization: `Bearer ${input.apiKey}`,
+      "accept": "application/json",
+      "authorization": `Bearer ${input.apiKey}`,
       "user-agent": providerUserAgent,
     });
     if (input.body !== undefined) {

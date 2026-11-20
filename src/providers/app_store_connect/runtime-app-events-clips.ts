@@ -587,7 +587,7 @@ export const appStoreConnectAppEventClipHandlers: AppStoreConnectHandlers = {
         "filter[type]": readCommaSeparatedList(input.types),
         "filter[relatedApps]": readCommaSeparatedList(input.relatedAppIds),
         "filter[hasInAppEvents]": booleanString(input.hasInAppEvents),
-        sort: pickOptionalString(input, "sort"),
+        "sort": pickOptionalString(input, "sort"),
       },
     });
     return { nominations: page.items, nextCursor: page.nextCursor, total: page.total };
@@ -668,7 +668,7 @@ export const appStoreConnectAppEventClipHandlers: AppStoreConnectHandlers = {
 
 const defaultExperienceInclude = { include: "releaseWithAppStoreVersion" };
 
-const advancedExperienceInclude = { include: "localizations", "limit[localizations]": "50" };
+const advancedExperienceInclude = { "include": "localizations", "limit[localizations]": "50" };
 
 function readObjectList(value: unknown): Array<Record<string, unknown>> | undefined {
   return Array.isArray(value) ? looseArray(value).map((item) => recordOrEmpty(item)) : undefined;

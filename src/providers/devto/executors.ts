@@ -188,7 +188,7 @@ async function readDevtoResponse(response: Response): Promise<unknown> {
 function devtoHeaders(apiKey: string): Record<string, string> {
   return {
     "api-key": apiKey,
-    accept: "application/vnd.forem.api-v1+json",
+    "accept": "application/vnd.forem.api-v1+json",
     "content-type": "application/json",
     "user-agent": providerUserAgent,
   };

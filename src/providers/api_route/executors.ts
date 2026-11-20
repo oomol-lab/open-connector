@@ -75,7 +75,7 @@ function requestApiRoute(input: ApiRouteRequest, context: ApiKeyProviderContext)
       const response = await context.fetcher(`${apiBaseUrl}${input.path}`, {
         method: input.body === undefined ? "GET" : "POST",
         headers: {
-          authorization: `Bearer ${context.apiKey}`,
+          "authorization": `Bearer ${context.apiKey}`,
           "content-type": "application/json",
           "user-agent": providerUserAgent,
         },

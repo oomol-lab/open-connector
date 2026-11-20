@@ -8,7 +8,7 @@ import { zhCN } from "./zh-CN.ts";
 export type CatalogLocale = "en" | "zh-CN";
 
 export const catalogSetupLabels: Record<CatalogLocale, ProviderSetupLabels | undefined> = {
-  en: undefined,
+  "en": undefined,
   "zh-CN": zhCN.labels,
 };
 

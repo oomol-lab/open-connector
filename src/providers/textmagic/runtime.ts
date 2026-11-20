@@ -180,8 +180,8 @@ async function requestTextmagicJson(
     response = await context.fetcher(url, {
       method: input.method ?? "GET",
       headers: {
-        accept: "application/json",
-        authorization: textmagicAuthorization(context.username, context.apiKey),
+        "accept": "application/json",
+        "authorization": textmagicAuthorization(context.username, context.apiKey),
         ...(input.body ? { "content-type": "application/json" } : {}),
         "user-agent": providerUserAgent,
       },

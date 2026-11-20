@@ -258,8 +258,8 @@ async function requestMaintainxJson(options: MaintainxRequestOptions): Promise<u
   appendQuery(url, options.query);
 
   const headers = compactObject({
-    accept: "application/json",
-    authorization: `Bearer ${options.apiKey}`,
+    "accept": "application/json",
+    "authorization": `Bearer ${options.apiKey}`,
     "user-agent": providerUserAgent,
     ...options.headers,
     ...(options.body === undefined ? {} : { "content-type": "application/json" }),

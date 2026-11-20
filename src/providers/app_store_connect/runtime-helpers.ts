@@ -8,6 +8,7 @@ import {
   optionalBoolean,
   pickOptionalString,
 } from "../../core/cast.ts";
+import { encodePathSegment } from "../../core/request.ts";
 import { ProviderRequestError } from "../provider-runtime.ts";
 import {
   providerUserAgent,
@@ -85,8 +86,8 @@ export async function requestAppStoreConnect(
 
   return runProviderRequest({ label: providerLabel, signal: context.signal }, async (signal) => {
     const headers: Record<string, string> = {
-      accept: "application/json",
-      authorization: await context.authorization(),
+      "accept": "application/json",
+      "authorization": await context.authorization(),
       "user-agent": providerUserAgent,
     };
     if (input.body !== undefined) {
@@ -560,8 +561,4 @@ export function toOptionalOneLinkage(
 
 export function toManyLinkage(type: string, ids: readonly string[]): { data: Array<{ type: string; id: string }> } {
   return { data: ids.map((id) => ({ type, id })) };
-}
-
-export function encodePathSegment(value: string): string {
-  return encodeURIComponent(value);
 }

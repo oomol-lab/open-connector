@@ -143,10 +143,10 @@ export async function mondayGraphqlRequest<TData>(
     response = await fetcher(mondayApiUrl, {
       method: "POST",
       headers: {
-        Authorization: apiKey,
+        "Authorization": apiKey,
         "Content-Type": "application/json",
         "API-Version": mondayApiVersion,
-        Accept: "application/json",
+        "Accept": "application/json",
         "User-Agent": mondayUserAgent,
       },
       body: JSON.stringify({

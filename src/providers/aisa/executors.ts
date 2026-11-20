@@ -25,9 +25,7 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
   service,
   baseUrl: aisaApiOrigin,
   auth: { type: "bearer" },
-  customizeRequest({ headers }) {
-    if (!headers.has("accept")) headers.set("accept", "application/json, text/plain;q=0.9, */*;q=0.8");
-  },
+  defaultHeaders: { accept: "application/json, text/plain;q=0.9, */*;q=0.8" },
   skipDnsValidation: true,
 });
 

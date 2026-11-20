@@ -218,7 +218,7 @@ async function requestHrPartnerJson(options: HrPartnerRequestOptions): Promise<u
     response = await options.fetcher(url, {
       method: "GET",
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "user-agent": providerUserAgent,
         "x-api-key": options.apiKey,
       },

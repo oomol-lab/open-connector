@@ -125,8 +125,8 @@ export const headoutActionHandlers: ProviderActionHandlers<"headout", HeadoutAct
       context,
       path: `/product/get/${encodeURIComponent(productId)}`,
       query: compactObject({
-        currencyCode: optionalString(input.currencyCode),
-        language: optionalString(input.language),
+        "currencyCode": optionalString(input.currencyCode),
+        "language": optionalString(input.language),
         "fetch-variants": optionalBoolean(input.fetchVariants),
       }),
       phase: "execute",
@@ -261,7 +261,7 @@ async function requestHeadoutJson(input: {
     const response = await input.context.fetcher(url, {
       method: "GET",
       headers: {
-        Accept: "application/json",
+        "Accept": "application/json",
         "Headout-Auth": input.context.apiKey,
         "User-Agent": providerUserAgent,
       },

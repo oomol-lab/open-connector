@@ -196,7 +196,7 @@ async function downloadSource(url: string, fieldName: string, signal?: AbortSign
   let response: Response;
   try {
     response = await providerFetch(url, {
-      headers: { accept: "image/jpeg, image/png, image/webp", "user-agent": providerUserAgent },
+      headers: { "accept": "image/jpeg, image/png, image/webp", "user-agent": providerUserAgent },
       signal,
     });
   } catch (error) {
@@ -239,8 +239,8 @@ async function requestJsonWith(input: {
     response = await input.fetcher(new URL(input.path, apiBaseUrl), {
       method: input.body ? "POST" : "GET",
       headers: {
-        accept: "application/json",
-        authorization: `Bearer ${input.apiKey}`,
+        "accept": "application/json",
+        "authorization": `Bearer ${input.apiKey}`,
         "user-agent": providerUserAgent,
       },
       body: input.body,

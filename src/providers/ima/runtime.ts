@@ -714,7 +714,7 @@ async function uploadImaFileToCos(
   const pathname = `/${credential.cosKey}`;
   const signHeaders = {
     "content-length": String(bytes.byteLength),
-    host: hostname,
+    "host": hostname,
   };
   const authorization = buildImaCosAuthorization({
     secretId: credential.secretId,

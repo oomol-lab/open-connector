@@ -151,8 +151,8 @@ async function currencyapiRequest(
     response = await context.fetcher(buildCurrencyapiUrl(input), {
       method: "GET",
       headers: {
-        accept: "application/json",
-        apikey: context.apiKey,
+        "accept": "application/json",
+        "apikey": context.apiKey,
         "user-agent": providerUserAgent,
       },
       signal: context.signal,

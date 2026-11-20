@@ -208,9 +208,9 @@ async function requestProxiedmailJson(input: {
     const response = await input.fetcher(buildProxiedmailUrl(input.path), {
       method: input.method,
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         ...(input.body ? { "content-type": "application/json" } : {}),
-        Token: input.apiKey,
+        "Token": input.apiKey,
         "user-agent": providerUserAgent,
       },
       body: input.body ? JSON.stringify(input.body) : undefined,

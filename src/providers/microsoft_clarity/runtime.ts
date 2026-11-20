@@ -99,8 +99,8 @@ async function requestMicrosoftClarity(input: {
     response = await input.fetcher(buildMicrosoftClarityUrl(input.query), {
       method: "GET",
       headers: {
-        accept: "application/json",
-        authorization: `Bearer ${input.apiKey}`,
+        "accept": "application/json",
+        "authorization": `Bearer ${input.apiKey}`,
         "content-type": "application/json",
         "user-agent": providerUserAgent,
       },

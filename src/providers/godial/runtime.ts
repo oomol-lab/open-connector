@@ -190,7 +190,7 @@ async function godialRequest(input: GodialRequestInput): Promise<unknown> {
     response = await input.fetcher(url.toString(), {
       method: input.method,
       headers: {
-        accept: "application/json, multipart/form-data, application/x-www-form-urlencoded",
+        "accept": "application/json, multipart/form-data, application/x-www-form-urlencoded",
         ...(input.body
           ? {
               "content-type": "application/x-www-form-urlencoded;charset=UTF-8",

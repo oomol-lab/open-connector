@@ -227,8 +227,8 @@ function buildFreshsalesUrl(input: FreshsalesRequestInput): URL {
 
 function buildFreshsalesHeaders(apiKey: string, hasBody: boolean): Record<string, string> {
   const headers: Record<string, string> = {
-    Authorization: `Token token=${apiKey}`,
-    Accept: "application/json",
+    "Authorization": `Token token=${apiKey}`,
+    "Accept": "application/json",
     "User-Agent": providerUserAgent,
   };
   if (hasBody) {

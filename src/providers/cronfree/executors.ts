@@ -94,7 +94,7 @@ async function requestCronfree(input: {
     const response = await input.context.fetcher(`${cronfreeApiBaseUrl}${input.path}`, {
       method: "POST",
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "content-type": "application/json",
         "user-agent": providerUserAgent,
       },

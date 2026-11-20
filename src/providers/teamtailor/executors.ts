@@ -41,7 +41,7 @@ export const teamtailorActionHandlers: ProviderActionHandlers<"teamtailor", Team
       "filter[department]": optionalString(input.departmentId),
       "filter[location]": optionalString(input.locationId),
       "filter[status]": optionalString(input.status),
-      sort: optionalString(input.sort),
+      "sort": optionalString(input.sort),
     });
   },
   async retrieve_job(input, context): Promise<unknown> {
@@ -146,7 +146,7 @@ async function listResources(
       "page[size]": readOptionalPositiveIntegerString(input.pageSize, "pageSize"),
       "page[after]": optionalString(input.pageAfter),
       "page[before]": optionalString(input.pageBefore),
-      include: readOptionalInclude(input.include),
+      "include": readOptionalInclude(input.include),
       ...extraQuery,
     }),
     context,
@@ -171,8 +171,8 @@ async function requestTeamtailorJson(input: {
     const response = await input.context.fetcher(url.toString(), {
       method: "GET",
       headers: {
-        accept: "application/vnd.api+json",
-        authorization: `Token token=${input.apiKey}`,
+        "accept": "application/vnd.api+json",
+        "authorization": `Token token=${input.apiKey}`,
         "user-agent": providerUserAgent,
         "x-api-version": teamtailorApiVersion,
       },

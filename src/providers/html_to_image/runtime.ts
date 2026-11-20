@@ -118,7 +118,7 @@ async function postHtmlToImageJson(input: {
     response = await input.fetcher(new URL(input.path, htmlToImageApiBaseUrl), {
       method: "POST",
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "content-type": "application/json",
         "user-agent": providerUserAgent,
         "x-api-key": input.apiKey,

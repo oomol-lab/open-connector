@@ -325,7 +325,7 @@ function buildGiphyUrl(path: string, query: Record<string, QueryValue>): string 
 
 function giphyHeaders(): Record<string, string> {
   return {
-    accept: "application/json",
+    "accept": "application/json",
     "user-agent": providerUserAgent,
   };
 }

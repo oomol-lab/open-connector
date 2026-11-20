@@ -303,8 +303,8 @@ async function btcpayFetch(input: {
 }): Promise<Response> {
   const url = buildBtcpayApiUrl(input.baseUrl, input.path, input.query);
   const headers = new Headers({
-    Accept: "application/json",
-    Authorization: `token ${input.apiKey}`,
+    "Accept": "application/json",
+    "Authorization": `token ${input.apiKey}`,
     "User-Agent": providerUserAgent,
   });
 

@@ -79,10 +79,7 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
   baseUrl: kontentAiApiBaseUrl,
   auth: { type: "api_key_authorization", prefix: "Bearer " },
   skipDnsValidation: true,
-  customizeRequest({ headers }) {
-    if (!headers.has("accept")) headers.set("accept", "application/json");
-    if (!headers.has("content-type")) headers.set("content-type", "application/json");
-  },
+  defaultHeaders: { "accept": "application/json", "content-type": "application/json" },
 });
 
 export const credentialValidators: CredentialValidators = {
@@ -273,8 +270,8 @@ async function requestKontentAiJson(input: {
   let payload: unknown;
   try {
     const headers: Record<string, string> = {
-      accept: "application/json",
-      authorization: `Bearer ${input.apiKey}`,
+      "accept": "application/json",
+      "authorization": `Bearer ${input.apiKey}`,
       "content-type": "application/json",
       "user-agent": providerUserAgent,
     };

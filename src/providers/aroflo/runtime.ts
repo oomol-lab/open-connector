@@ -134,8 +134,8 @@ async function request(
   try {
     response = await context.fetcher(url, {
       headers: {
-        accept: "application/json",
-        authorization: `Bearer ${context.apiKey}`,
+        "accept": "application/json",
+        "authorization": `Bearer ${context.apiKey}`,
         "user-agent": providerUserAgent,
       },
       signal: context.signal,

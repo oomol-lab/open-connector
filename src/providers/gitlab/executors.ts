@@ -606,9 +606,9 @@ async function gitlabRequest(
 
 function gitlabHeaders(accessToken: string, tokenType: string, hasBody: boolean): Record<string, string> {
   const headers: Record<string, string> = {
-    accept: "application/json",
+    "accept": "application/json",
     "user-agent": providerUserAgent,
-    authorization: `${tokenType} ${accessToken}`,
+    "authorization": `${tokenType} ${accessToken}`,
   };
   if (hasBody) {
     headers["content-type"] = "application/json";

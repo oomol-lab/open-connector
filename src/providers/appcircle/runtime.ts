@@ -171,8 +171,8 @@ async function requestAppcircleJsonWithToken(input: {
   const response = await input.fetcher(url, {
     method: "GET",
     headers: {
-      accept: "application/json",
-      authorization: `Bearer ${input.accessToken}`,
+      "accept": "application/json",
+      "authorization": `Bearer ${input.accessToken}`,
       "user-agent": providerUserAgent,
     },
   });
@@ -198,7 +198,7 @@ async function exchangeAppcircleAccessToken(
   const response = await fetcher(appcircleAuthTokenUrl, {
     method: "POST",
     headers: {
-      accept: "application/json",
+      "accept": "application/json",
       "content-type": "application/x-www-form-urlencoded",
       "user-agent": providerUserAgent,
     },

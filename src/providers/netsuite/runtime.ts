@@ -279,7 +279,7 @@ function netsuiteFetch(input: NetsuiteRequestOptions, signal: AbortSignal): Prom
   const url = buildNetsuiteUrl(input.context.restBaseUrl, input.path, input.query);
   const method = input.method ?? "GET";
   const headers = new Headers({
-    accept: "application/json",
+    "accept": "application/json",
     "user-agent": providerUserAgent,
     ...input.extraHeaders,
   });

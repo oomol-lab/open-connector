@@ -321,9 +321,9 @@ export function createPayPalAccessTokenRequest(input: {
     init: {
       method: "POST",
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "accept-language": "en_US",
-        authorization: basicAuthorizationHeader(`${input.clientId}:${input.clientSecret}`),
+        "authorization": basicAuthorizationHeader(`${input.clientId}:${input.clientSecret}`),
         "content-type": "application/x-www-form-urlencoded",
         "user-agent": providerUserAgent,
       },
@@ -361,8 +361,8 @@ async function paypalApiRequest(input: PayPalApiRequestInput) {
   }
 
   const headers: Record<string, string> = {
-    accept: "application/json",
-    authorization: `Bearer ${input.accessToken}`,
+    "accept": "application/json",
+    "authorization": `Bearer ${input.accessToken}`,
     "user-agent": providerUserAgent,
   };
   if (input.body !== undefined) {

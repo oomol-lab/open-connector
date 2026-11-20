@@ -219,8 +219,8 @@ async function requestTickJson(input: TickRequestInput): Promise<unknown> {
     const response = await input.fetcher(url, {
       method: input.method ?? "GET",
       headers: {
-        accept: "application/json",
-        authorization: `Token token=${input.credential.apiKey}`,
+        "accept": "application/json",
+        "authorization": `Token token=${input.credential.apiKey}`,
         "content-type": "application/json; charset=utf-8",
         "user-agent": `oomol-connect (${input.credential.email})`,
       },

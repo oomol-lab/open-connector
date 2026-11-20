@@ -133,7 +133,7 @@ async function requestShortpixelJson(
     const response = await context.fetcher(input.url, {
       method: input.method,
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "user-agent": providerUserAgent,
       },
       signal,

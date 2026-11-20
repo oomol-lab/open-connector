@@ -232,8 +232,8 @@ function readPageTotal(response: Record<string, unknown>): number | null {
 
 function lumosHeaders(apiKey: string): Record<string, string> {
   return {
-    accept: "application/json",
-    authorization: `Bearer ${apiKey}`,
+    "accept": "application/json",
+    "authorization": `Bearer ${apiKey}`,
     "user-agent": providerUserAgent,
   };
 }

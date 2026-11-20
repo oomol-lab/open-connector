@@ -129,8 +129,8 @@ async function u301Request(input: U301RequestInput): Promise<unknown> {
     const response = await input.fetcher(url, {
       method: input.method,
       headers: compactObject({
-        Authorization: `Bearer ${input.apiKey}`,
-        accept: "application/json",
+        "Authorization": `Bearer ${input.apiKey}`,
+        "accept": "application/json",
         "user-agent": providerUserAgent,
         "content-type": input.body === undefined ? undefined : "application/json",
       }) as HeadersInit,

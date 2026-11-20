@@ -187,8 +187,8 @@ async function requestSignpathJson(
 
 function buildSignpathHeaders(apiKey: string, body?: BodyInit) {
   return {
-    authorization: `Bearer ${apiKey}`,
-    accept: "application/json",
+    "authorization": `Bearer ${apiKey}`,
+    "accept": "application/json",
     ...(body instanceof FormData ? {} : { "content-type": "application/json" }),
     "user-agent": providerUserAgent,
   };

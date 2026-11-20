@@ -73,9 +73,9 @@ async function requestRedfox({ endpoint, input, apiKey, fetcher, parentSignal }:
       const response = await fetcher(url, {
         method,
         headers: {
-          accept: "application/json",
+          "accept": "application/json",
           "content-type": "application/json",
-          REDFOX_API_KEY: apiKey,
+          "REDFOX_API_KEY": apiKey,
           "user-agent": providerUserAgent,
         },
         body: method === "POST" ? JSON.stringify(input) : undefined,

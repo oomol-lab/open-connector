@@ -406,8 +406,8 @@ async function birdRequest(
 
 function birdHeaders(apiKey: string, hasJsonBody: boolean): Headers {
   const headers = new Headers({
-    accept: "application/json",
-    authorization: `AccessKey ${apiKey}`,
+    "accept": "application/json",
+    "authorization": `AccessKey ${apiKey}`,
     "user-agent": providerUserAgent,
   });
   if (hasJsonBody) {

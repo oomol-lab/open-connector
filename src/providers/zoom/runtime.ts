@@ -175,8 +175,8 @@ export async function fetchZoomCurrentAccount(
 async function requestZoomJson(input: ZoomRequestInput): Promise<Record<string, unknown>> {
   return runProviderRequest({ signal: input.context.signal, label: "Zoom" }, async (signal) => {
     const headers: Record<string, string> = {
-      accept: "application/json",
-      authorization: `Bearer ${input.context.accessToken}`,
+      "accept": "application/json",
+      "authorization": `Bearer ${input.context.accessToken}`,
       "user-agent": providerUserAgent,
     };
     if (input.body) {

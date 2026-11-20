@@ -243,7 +243,7 @@ async function dropboxSignRequest(
 
 function dropboxSignHeaders(authorization: string) {
   return {
-    accept: "application/json",
+    "accept": "application/json",
     authorization,
     "user-agent": providerUserAgent,
   };

@@ -251,8 +251,8 @@ async function guruGetJson(path: string, context: GuruActionContext, phase: Guru
 
 function guruHeaders(context: GuruActionContext): Record<string, string> {
   return {
-    accept: "application/json",
-    authorization: `Basic ${Buffer.from(`${context.username}:${context.apiKey}`).toString("base64")}`,
+    "accept": "application/json",
+    "authorization": `Basic ${Buffer.from(`${context.username}:${context.apiKey}`).toString("base64")}`,
     "user-agent": providerUserAgent,
   };
 }

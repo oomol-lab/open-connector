@@ -142,8 +142,8 @@ async function requestTemplateDocsJson(input: TemplateDocsRequest): Promise<unkn
 async function requestTemplateDocs(input: TemplateDocsRequest): Promise<Response> {
   return runProviderRequest({ label: "TemplateDocs", signal: input.signal }, async (signal) => {
     const headers = new Headers({
-      accept: "application/json",
-      authorization: `Bearer ${input.apiKey}`,
+      "accept": "application/json",
+      "authorization": `Bearer ${input.apiKey}`,
       "user-agent": providerUserAgent,
     });
     if (input.body != null) headers.set("content-type", "application/json");

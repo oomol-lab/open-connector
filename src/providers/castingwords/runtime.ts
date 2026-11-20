@@ -180,7 +180,7 @@ async function requestCastingwords(input: {
     response = await input.context.fetcher(url, {
       method,
       headers: {
-        accept: input.accept ?? "application/json",
+        "accept": input.accept ?? "application/json",
         ...(body ? { "content-type": "application/json" } : {}),
         "user-agent": providerUserAgent,
       },

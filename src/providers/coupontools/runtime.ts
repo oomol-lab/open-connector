@@ -124,7 +124,7 @@ async function requestCoupontoolsJson(input: CoupontoolsRequestInput) {
     const response = await input.fetcher(`${coupontoolsApiBaseUrl}${input.path}`, {
       method: "POST",
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "content-type": "application/json",
         "user-agent": providerUserAgent,
         "x-client-id": input.clientId,

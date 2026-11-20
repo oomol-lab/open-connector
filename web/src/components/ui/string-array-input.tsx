@@ -7,13 +7,13 @@ import { normalizeStringItems } from "@/lib/string-items";
 
 interface StringArrayInputProps {
   "aria-describedby"?: string;
-  autoComplete?: React.HTMLInputAutoCompleteAttribute;
-  id?: string;
-  onChange: (value: string[]) => void;
-  removeLabel: (value: string) => string;
-  readOnly?: boolean;
-  placeholder?: string;
-  value: string[];
+  "autoComplete"?: React.HTMLInputAutoCompleteAttribute;
+  "id"?: string;
+  "onChange": (value: string[]) => void;
+  "removeLabel": (value: string) => string;
+  "readOnly"?: boolean;
+  "placeholder"?: string;
+  "value": string[];
 }
 
 export function StringArrayInput({

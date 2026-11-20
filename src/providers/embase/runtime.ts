@@ -145,7 +145,7 @@ function buildEmbaseUrl(path: string, params: Record<string, string | undefined>
 
 function buildEmbaseHeaders(credentials: EmbaseCredentials) {
   const headers: Record<string, string> = {
-    accept: "application/json",
+    "accept": "application/json",
     "user-agent": providerUserAgent,
     "x-els-apikey": credentials.apiKey,
   };

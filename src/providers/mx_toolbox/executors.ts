@@ -140,8 +140,8 @@ async function executeMxToolboxRequest(
     response = await context.fetcher(url, {
       method: "GET",
       headers: {
-        accept: "application/json",
-        authorization: context.apiKey,
+        "accept": "application/json",
+        "authorization": context.apiKey,
         "user-agent": providerUserAgent,
       },
       signal: context.signal,

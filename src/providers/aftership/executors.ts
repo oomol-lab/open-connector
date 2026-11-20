@@ -144,14 +144,7 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
   baseUrl: aftershipApiBaseUrl,
   auth: { type: "api_key_header", name: "as-api-key" },
   skipDnsValidation: true,
-  customizeRequest({ headers }) {
-    if (!headers.has("accept")) {
-      headers.set("accept", "application/json");
-    }
-    if (!headers.has("content-type")) {
-      headers.set("content-type", "application/json");
-    }
-  },
+  defaultHeaders: { "accept": "application/json", "content-type": "application/json" },
 });
 
 export const credentialValidators: CredentialValidators = {
@@ -230,7 +223,7 @@ function normalizePath(path: string): string {
 
 function aftershipHeaders(apiKey: string, hasBody: boolean): Record<string, string> {
   const headers: Record<string, string> = {
-    accept: "application/json",
+    "accept": "application/json",
     "as-api-key": apiKey,
     "user-agent": providerUserAgent,
   };

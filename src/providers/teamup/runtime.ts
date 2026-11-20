@@ -227,7 +227,7 @@ async function requestTeamupJson(options: TeamupRequestOptions) {
     response = await options.fetcher(url, {
       method: options.method ?? "GET",
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "content-type": "application/json",
         "teamup-token": options.apiKey,
         "user-agent": providerUserAgent,

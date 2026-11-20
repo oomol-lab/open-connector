@@ -131,7 +131,7 @@ function buildProjectListQuery(input: Record<string, unknown>) {
   return compactObject({
     "filter[name]": optionalString(input.name),
     "filter[status]": optionalString(input.status),
-    page: optionalInteger(input.page),
+    "page": optionalInteger(input.page),
   });
 }
 
@@ -143,7 +143,7 @@ function buildTestCaseListQuery(input: Record<string, unknown>) {
     "filter[key]": optionalString(input.key),
     "filter[testCaseType]": optionalString(input.testCaseType),
     "filter[name]": optionalString(input.name),
-    page: optionalInteger(input.page),
+    "page": optionalInteger(input.page),
     ...flattenCustomFieldFilters(input.customFields),
   });
 }
@@ -155,7 +155,7 @@ function buildTestRunListQuery(input: Record<string, unknown>) {
     "filter[key]": optionalString(input.key),
     "filter[status]": optionalString(input.status),
     "filter[assignedTo]": optionalString(input.assignedTo),
-    page: optionalInteger(input.page),
+    "page": optionalInteger(input.page),
   });
 }
 

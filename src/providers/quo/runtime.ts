@@ -187,8 +187,8 @@ async function quoRequest(input: QuoRequestInput, context: QuoActionContext) {
     response = await context.fetcher(buildQuoUrl(input), {
       method,
       headers: {
-        accept: "application/json",
-        authorization: context.apiKey,
+        "accept": "application/json",
+        "authorization": context.apiKey,
         ...(input.body ? { "content-type": "application/json" } : {}),
         "user-agent": providerUserAgent,
       },

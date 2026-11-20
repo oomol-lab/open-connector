@@ -123,8 +123,8 @@ async function wisburgRequest(
     setSearchParams(url, input.query ?? {});
     const response = await context.fetcher(url, {
       headers: {
-        accept: "application/json",
-        authorization: `Bearer ${context.apiKey}`,
+        "accept": "application/json",
+        "authorization": `Bearer ${context.apiKey}`,
         "user-agent": providerUserAgent,
       },
       signal,

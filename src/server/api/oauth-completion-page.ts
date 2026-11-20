@@ -5,7 +5,7 @@ const oauthCompletedType = "oauth.completed";
 // markup below, so the page stays meaningful without JavaScript. The copy stays
 // host-neutral because this runtime can be embedded by more than one product.
 export const oauthCompletionStrings = {
-  en: {
+  "en": {
     badge: "Connected",
     title: "Connection complete",
     body: "Close this window to continue where you started.",
@@ -78,7 +78,7 @@ export const oauthCompletionStrings = {
     refusedTitle: "授權未完成",
     refusedBody: "未建立任何連線。關閉此視窗即可返回剛才的應用。",
   },
-  ja: {
+  "ja": {
     badge: "接続済み",
     title: "接続が完了しました",
     body: "元のアプリに戻って続行できます。",
@@ -102,7 +102,7 @@ export const oauthCompletionStrings = {
     refusedTitle: "認可は完了しませんでした",
     refusedBody: "接続は作成されていません。このウィンドウを閉じて元のアプリに戻ってください。",
   },
-  fr: {
+  "fr": {
     badge: "Connecté",
     title: "Connexion terminée",
     body: "Vous pouvez revenir à l’application de départ.",
@@ -126,7 +126,7 @@ export const oauthCompletionStrings = {
     refusedTitle: "Autorisation non terminée",
     refusedBody: "Aucune connexion n’a été créée. Fermez cette fenêtre pour revenir à l’application de départ.",
   },
-  ru: {
+  "ru": {
     badge: "Подключено",
     title: "Подключение завершено",
     body: "Можно вернуться в исходное приложение.",

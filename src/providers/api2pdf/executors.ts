@@ -143,8 +143,8 @@ async function requestApi2pdfJson(input: {
 
 function api2pdfHeaders(apiKey: string, hasBody: boolean): Record<string, string> {
   const headers: Record<string, string> = {
-    accept: "application/json",
-    Authorization: apiKey,
+    "accept": "application/json",
+    "Authorization": apiKey,
     "user-agent": providerUserAgent,
   };
   if (hasBody) {

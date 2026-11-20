@@ -148,8 +148,8 @@ async function requestCensysJson(
 
 function buildCensysHeaders(apiKey: string) {
   return {
-    accept: "application/json",
-    authorization: `Bearer ${apiKey}`,
+    "accept": "application/json",
+    "authorization": `Bearer ${apiKey}`,
     "user-agent": providerUserAgent,
   };
 }

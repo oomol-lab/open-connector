@@ -409,7 +409,7 @@ function withQuery(url: string, params: Record<string, number | undefined>) {
 
 function textrazorHeaders(apiKey: string) {
   return {
-    accept: "application/json",
+    "accept": "application/json",
     "user-agent": providerUserAgent,
     "x-textrazor-key": apiKey,
   };

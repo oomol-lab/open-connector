@@ -39,11 +39,11 @@ const feedSchema = s.looseObject("The DealNews RSS channel metadata.", {
 });
 
 const itemSchema = s.looseObject("A DealNews RSS item with original content and referral-coded links preserved.", {
-  title: s.string("The original item title."),
-  link: s.string("The original DealNews link, including its referral code."),
-  description: s.string("The original HTML description from the RSS item."),
-  guid: s.string("The original RSS item GUID."),
-  pubDate: s.string("The original RSS item publication date."),
+  "title": s.string("The original item title."),
+  "link": s.string("The original DealNews link, including its referral code."),
+  "description": s.string("The original HTML description from the RSS item."),
+  "guid": s.string("The original RSS item GUID."),
+  "pubDate": s.string("The original RSS item publication date."),
   "dealnews:retailer": s.string("The original DealNews retailer value."),
   "dealnews:expires": s.string("The original DealNews expiration value."),
   "dealnews:dealType": s.string("The original DealNews deal type."),

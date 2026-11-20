@@ -100,7 +100,7 @@ async function createResponse(model: string, tools: OpenAiFunctionTool[], input:
   const response = await fetch("https://api.openai.com/v1/responses", {
     method: "POST",
     headers: {
-      authorization: `Bearer ${apiKey}`,
+      "authorization": `Bearer ${apiKey}`,
       "content-type": "application/json",
     },
     body: JSON.stringify({

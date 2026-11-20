@@ -252,9 +252,9 @@ async function requestKlaviyo(
   }
 
   const headers: Record<string, string> = {
-    authorization: `Klaviyo-API-Key ${input.apiKey}`,
-    accept: "application/vnd.api+json",
-    revision: klaviyoApiRevision,
+    "authorization": `Klaviyo-API-Key ${input.apiKey}`,
+    "accept": "application/vnd.api+json",
+    "revision": klaviyoApiRevision,
     "user-agent": providerUserAgent,
   };
   if (input.body) {

@@ -97,7 +97,7 @@ function buildJsonRequestUrl(baseUrl: string, path: string, query: Record<string
 
 function buildJsonRequestHeaders(headers: Record<string, string> = {}, body: unknown): Record<string, string> {
   const output: Record<string, string> = {
-    accept: "application/json",
+    "accept": "application/json",
     "user-agent": providerUserAgent,
     ...headers,
   };

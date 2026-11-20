@@ -49,12 +49,12 @@ export const xOperations: readonly UnifapiOperationDefinition[] = [
     inputSchema: {
       type: "object",
       properties: {
-        id: {
+        "id": {
           type: "string",
           minLength: 1,
           description: "X resource id.",
         },
-        expansions: {
+        "expansions": {
           type: "string",
           description: "The expansions value.",
         },
@@ -78,15 +78,15 @@ export const xOperations: readonly UnifapiOperationDefinition[] = [
           type: "string",
           description: "The poll.fields value.",
         },
-        pagination_token: {
+        "pagination_token": {
           type: "string",
           description: "The pagination_token value.",
         },
-        next_token: {
+        "next_token": {
           type: "string",
           description: "The next_token value.",
         },
-        max_results: {
+        "max_results": {
           type: "integer",
           minimum: 1,
           maximum: 100,
@@ -122,12 +122,12 @@ export const xOperations: readonly UnifapiOperationDefinition[] = [
     inputSchema: {
       type: "object",
       properties: {
-        id: {
+        "id": {
           type: "string",
           minLength: 1,
           description: "X resource id.",
         },
-        expansions: {
+        "expansions": {
           type: "string",
           description: "The expansions value.",
         },
@@ -151,15 +151,15 @@ export const xOperations: readonly UnifapiOperationDefinition[] = [
           type: "string",
           description: "The poll.fields value.",
         },
-        pagination_token: {
+        "pagination_token": {
           type: "string",
           description: "The pagination_token value.",
         },
-        next_token: {
+        "next_token": {
           type: "string",
           description: "The next_token value.",
         },
-        max_results: {
+        "max_results": {
           type: "integer",
           minimum: 1,
           maximum: 100,
@@ -196,12 +196,12 @@ export const xOperations: readonly UnifapiOperationDefinition[] = [
     inputSchema: {
       type: "object",
       properties: {
-        id: {
+        "id": {
           type: "string",
           minLength: 1,
           description: "X resource id.",
         },
-        expansions: {
+        "expansions": {
           type: "string",
           description: "The expansions value.",
         },
@@ -225,21 +225,21 @@ export const xOperations: readonly UnifapiOperationDefinition[] = [
           type: "string",
           description: "The poll.fields value.",
         },
-        pagination_token: {
+        "pagination_token": {
           type: "string",
           description: "The pagination_token value.",
         },
-        next_token: {
+        "next_token": {
           type: "string",
           description: "The next_token value.",
         },
-        max_results: {
+        "max_results": {
           type: "integer",
           minimum: 1,
           maximum: 100,
           description: "The max_results value.",
         },
-        query: {
+        "query": {
           type: "string",
           minLength: 1,
           description: "The query value.",
@@ -274,12 +274,12 @@ export const xOperations: readonly UnifapiOperationDefinition[] = [
     inputSchema: {
       type: "object",
       properties: {
-        id: {
+        "id": {
           type: "string",
           minLength: 1,
           description: "X resource id.",
         },
-        expansions: {
+        "expansions": {
           type: "string",
           description: "The expansions value.",
         },
@@ -303,15 +303,15 @@ export const xOperations: readonly UnifapiOperationDefinition[] = [
           type: "string",
           description: "The poll.fields value.",
         },
-        pagination_token: {
+        "pagination_token": {
           type: "string",
           description: "The pagination_token value.",
         },
-        next_token: {
+        "next_token": {
           type: "string",
           description: "The next_token value.",
         },
-        max_results: {
+        "max_results": {
           type: "integer",
           minimum: 1,
           maximum: 100,
@@ -347,12 +347,12 @@ export const xOperations: readonly UnifapiOperationDefinition[] = [
     inputSchema: {
       type: "object",
       properties: {
-        id: {
+        "id": {
           type: "string",
           minLength: 1,
           description: "X resource id.",
         },
-        expansions: {
+        "expansions": {
           type: "string",
           description: "The expansions value.",
         },
@@ -376,15 +376,15 @@ export const xOperations: readonly UnifapiOperationDefinition[] = [
           type: "string",
           description: "The poll.fields value.",
         },
-        pagination_token: {
+        "pagination_token": {
           type: "string",
           description: "The pagination_token value.",
         },
-        next_token: {
+        "next_token": {
           type: "string",
           description: "The next_token value.",
         },
-        max_results: {
+        "max_results": {
           type: "integer",
           minimum: 1,
           maximum: 100,
@@ -410,7 +410,7 @@ export const xOperations: readonly UnifapiOperationDefinition[] = [
     inputSchema: {
       type: "object",
       properties: {
-        id: {
+        "id": {
           type: "string",
           minLength: 1,
           description: "X resource id.",
@@ -449,12 +449,12 @@ export const xOperations: readonly UnifapiOperationDefinition[] = [
     inputSchema: {
       type: "object",
       properties: {
-        id: {
+        "id": {
           type: "string",
           minLength: 1,
           description: "X resource id.",
         },
-        expansions: {
+        "expansions": {
           type: "string",
           description: "The expansions value.",
         },
@@ -478,15 +478,15 @@ export const xOperations: readonly UnifapiOperationDefinition[] = [
           type: "string",
           description: "The poll.fields value.",
         },
-        pagination_token: {
+        "pagination_token": {
           type: "string",
           description: "The pagination_token value.",
         },
-        next_token: {
+        "next_token": {
           type: "string",
           description: "The next_token value.",
         },
-        max_results: {
+        "max_results": {
           type: "integer",
           minimum: 1,
           maximum: 100,
@@ -524,7 +524,7 @@ export const xOperations: readonly UnifapiOperationDefinition[] = [
     inputSchema: {
       type: "object",
       properties: {
-        expansions: {
+        "expansions": {
           type: "string",
           description: "The expansions value.",
         },
@@ -548,21 +548,21 @@ export const xOperations: readonly UnifapiOperationDefinition[] = [
           type: "string",
           description: "The poll.fields value.",
         },
-        pagination_token: {
+        "pagination_token": {
           type: "string",
           description: "The pagination_token value.",
         },
-        next_token: {
+        "next_token": {
           type: "string",
           description: "The next_token value.",
         },
-        max_results: {
+        "max_results": {
           type: "integer",
           minimum: 1,
           maximum: 100,
           description: "The max_results value.",
         },
-        query: {
+        "query": {
           type: "string",
           minLength: 1,
           description: "The query value.",
@@ -636,12 +636,12 @@ export const xOperations: readonly UnifapiOperationDefinition[] = [
     inputSchema: {
       type: "object",
       properties: {
-        id: {
+        "id": {
           type: "string",
           minLength: 1,
           description: "X resource id.",
         },
-        expansions: {
+        "expansions": {
           type: "string",
           description: "The expansions value.",
         },
@@ -665,15 +665,15 @@ export const xOperations: readonly UnifapiOperationDefinition[] = [
           type: "string",
           description: "The poll.fields value.",
         },
-        pagination_token: {
+        "pagination_token": {
           type: "string",
           description: "The pagination_token value.",
         },
-        next_token: {
+        "next_token": {
           type: "string",
           description: "The next_token value.",
         },
-        max_results: {
+        "max_results": {
           type: "integer",
           minimum: 1,
           maximum: 100,
@@ -709,12 +709,12 @@ export const xOperations: readonly UnifapiOperationDefinition[] = [
     inputSchema: {
       type: "object",
       properties: {
-        id: {
+        "id": {
           type: "string",
           minLength: 1,
           description: "X resource id.",
         },
-        expansions: {
+        "expansions": {
           type: "string",
           description: "The expansions value.",
         },
@@ -738,15 +738,15 @@ export const xOperations: readonly UnifapiOperationDefinition[] = [
           type: "string",
           description: "The poll.fields value.",
         },
-        pagination_token: {
+        "pagination_token": {
           type: "string",
           description: "The pagination_token value.",
         },
-        next_token: {
+        "next_token": {
           type: "string",
           description: "The next_token value.",
         },
-        max_results: {
+        "max_results": {
           type: "integer",
           minimum: 1,
           maximum: 100,
@@ -782,12 +782,12 @@ export const xOperations: readonly UnifapiOperationDefinition[] = [
     inputSchema: {
       type: "object",
       properties: {
-        id: {
+        "id": {
           type: "string",
           minLength: 1,
           description: "X resource id.",
         },
-        expansions: {
+        "expansions": {
           type: "string",
           description: "The expansions value.",
         },
@@ -811,15 +811,15 @@ export const xOperations: readonly UnifapiOperationDefinition[] = [
           type: "string",
           description: "The poll.fields value.",
         },
-        pagination_token: {
+        "pagination_token": {
           type: "string",
           description: "The pagination_token value.",
         },
-        next_token: {
+        "next_token": {
           type: "string",
           description: "The next_token value.",
         },
-        max_results: {
+        "max_results": {
           type: "integer",
           minimum: 1,
           maximum: 100,
@@ -856,7 +856,7 @@ export const xOperations: readonly UnifapiOperationDefinition[] = [
     inputSchema: {
       type: "object",
       properties: {
-        expansions: {
+        "expansions": {
           type: "string",
           description: "The expansions value.",
         },
@@ -880,21 +880,21 @@ export const xOperations: readonly UnifapiOperationDefinition[] = [
           type: "string",
           description: "The poll.fields value.",
         },
-        pagination_token: {
+        "pagination_token": {
           type: "string",
           description: "The pagination_token value.",
         },
-        next_token: {
+        "next_token": {
           type: "string",
           description: "The next_token value.",
         },
-        max_results: {
+        "max_results": {
           type: "integer",
           minimum: 1,
           maximum: 100,
           description: "The max_results value.",
         },
-        query: {
+        "query": {
           type: "string",
           minLength: 1,
           description: "The query value.",
@@ -919,12 +919,12 @@ export const xOperations: readonly UnifapiOperationDefinition[] = [
     inputSchema: {
       type: "object",
       properties: {
-        woeid: {
+        "woeid": {
           type: "string",
           pattern: "^\\d+$",
           description: "The woeid value.",
         },
-        max_trends: {
+        "max_trends": {
           type: "integer",
           minimum: 1,
           maximum: 50,
@@ -954,12 +954,12 @@ export const xOperations: readonly UnifapiOperationDefinition[] = [
     inputSchema: {
       type: "object",
       properties: {
-        id: {
+        "id": {
           type: "string",
           minLength: 1,
           description: "X resource id.",
         },
-        expansions: {
+        "expansions": {
           type: "string",
           description: "The expansions value.",
         },
@@ -1013,12 +1013,12 @@ export const xOperations: readonly UnifapiOperationDefinition[] = [
     inputSchema: {
       type: "object",
       properties: {
-        id: {
+        "id": {
           type: "string",
           minLength: 1,
           description: "X resource id.",
         },
-        expansions: {
+        "expansions": {
           type: "string",
           description: "The expansions value.",
         },
@@ -1042,15 +1042,15 @@ export const xOperations: readonly UnifapiOperationDefinition[] = [
           type: "string",
           description: "The poll.fields value.",
         },
-        pagination_token: {
+        "pagination_token": {
           type: "string",
           description: "The pagination_token value.",
         },
-        next_token: {
+        "next_token": {
           type: "string",
           description: "The next_token value.",
         },
-        max_results: {
+        "max_results": {
           type: "integer",
           minimum: 1,
           maximum: 100,
@@ -1086,12 +1086,12 @@ export const xOperations: readonly UnifapiOperationDefinition[] = [
     inputSchema: {
       type: "object",
       properties: {
-        id: {
+        "id": {
           type: "string",
           minLength: 1,
           description: "X resource id.",
         },
-        expansions: {
+        "expansions": {
           type: "string",
           description: "The expansions value.",
         },
@@ -1115,15 +1115,15 @@ export const xOperations: readonly UnifapiOperationDefinition[] = [
           type: "string",
           description: "The poll.fields value.",
         },
-        pagination_token: {
+        "pagination_token": {
           type: "string",
           description: "The pagination_token value.",
         },
-        next_token: {
+        "next_token": {
           type: "string",
           description: "The next_token value.",
         },
-        max_results: {
+        "max_results": {
           type: "integer",
           minimum: 1,
           maximum: 100,
@@ -1159,12 +1159,12 @@ export const xOperations: readonly UnifapiOperationDefinition[] = [
     inputSchema: {
       type: "object",
       properties: {
-        id: {
+        "id": {
           type: "string",
           minLength: 1,
           description: "X resource id.",
         },
-        expansions: {
+        "expansions": {
           type: "string",
           description: "The expansions value.",
         },
@@ -1188,15 +1188,15 @@ export const xOperations: readonly UnifapiOperationDefinition[] = [
           type: "string",
           description: "The poll.fields value.",
         },
-        pagination_token: {
+        "pagination_token": {
           type: "string",
           description: "The pagination_token value.",
         },
-        next_token: {
+        "next_token": {
           type: "string",
           description: "The next_token value.",
         },
-        max_results: {
+        "max_results": {
           type: "integer",
           minimum: 1,
           maximum: 100,
@@ -1222,12 +1222,12 @@ export const xOperations: readonly UnifapiOperationDefinition[] = [
     inputSchema: {
       type: "object",
       properties: {
-        id: {
+        "id": {
           type: "string",
           minLength: 1,
           description: "X resource id.",
         },
-        expansions: {
+        "expansions": {
           type: "string",
           description: "The expansions value.",
         },
@@ -1301,7 +1301,7 @@ export const xOperations: readonly UnifapiOperationDefinition[] = [
     inputSchema: {
       type: "object",
       properties: {
-        expansions: {
+        "expansions": {
           type: "string",
           description: "The expansions value.",
         },
@@ -1325,7 +1325,7 @@ export const xOperations: readonly UnifapiOperationDefinition[] = [
           type: "string",
           description: "The poll.fields value.",
         },
-        ids: {
+        "ids": {
           type: "string",
           minLength: 1,
           description: "Comma-separated resource ids.",
@@ -1361,7 +1361,7 @@ export const xOperations: readonly UnifapiOperationDefinition[] = [
     inputSchema: {
       type: "object",
       properties: {
-        expansions: {
+        "expansions": {
           type: "string",
           description: "The expansions value.",
         },
@@ -1385,21 +1385,21 @@ export const xOperations: readonly UnifapiOperationDefinition[] = [
           type: "string",
           description: "The poll.fields value.",
         },
-        pagination_token: {
+        "pagination_token": {
           type: "string",
           description: "The pagination_token value.",
         },
-        next_token: {
+        "next_token": {
           type: "string",
           description: "The next_token value.",
         },
-        max_results: {
+        "max_results": {
           type: "integer",
           minimum: 1,
           maximum: 100,
           description: "The max_results value.",
         },
-        query: {
+        "query": {
           type: "string",
           minLength: 1,
           description: "Recent search query.",
@@ -1434,12 +1434,12 @@ export const xOperations: readonly UnifapiOperationDefinition[] = [
     inputSchema: {
       type: "object",
       properties: {
-        id: {
+        "id": {
           type: "string",
           minLength: 1,
           description: "X resource id.",
         },
-        expansions: {
+        "expansions": {
           type: "string",
           description: "The expansions value.",
         },
@@ -1463,15 +1463,15 @@ export const xOperations: readonly UnifapiOperationDefinition[] = [
           type: "string",
           description: "The poll.fields value.",
         },
-        pagination_token: {
+        "pagination_token": {
           type: "string",
           description: "The pagination_token value.",
         },
-        next_token: {
+        "next_token": {
           type: "string",
           description: "The next_token value.",
         },
-        max_results: {
+        "max_results": {
           type: "integer",
           minimum: 1,
           maximum: 100,
@@ -1507,12 +1507,12 @@ export const xOperations: readonly UnifapiOperationDefinition[] = [
     inputSchema: {
       type: "object",
       properties: {
-        id: {
+        "id": {
           type: "string",
           minLength: 1,
           description: "X resource id.",
         },
-        expansions: {
+        "expansions": {
           type: "string",
           description: "The expansions value.",
         },
@@ -1536,15 +1536,15 @@ export const xOperations: readonly UnifapiOperationDefinition[] = [
           type: "string",
           description: "The poll.fields value.",
         },
-        pagination_token: {
+        "pagination_token": {
           type: "string",
           description: "The pagination_token value.",
         },
-        next_token: {
+        "next_token": {
           type: "string",
           description: "The next_token value.",
         },
-        max_results: {
+        "max_results": {
           type: "integer",
           minimum: 1,
           maximum: 100,
@@ -1580,12 +1580,12 @@ export const xOperations: readonly UnifapiOperationDefinition[] = [
     inputSchema: {
       type: "object",
       properties: {
-        id: {
+        "id": {
           type: "string",
           minLength: 1,
           description: "X resource id.",
         },
-        expansions: {
+        "expansions": {
           type: "string",
           description: "The expansions value.",
         },
@@ -1609,15 +1609,15 @@ export const xOperations: readonly UnifapiOperationDefinition[] = [
           type: "string",
           description: "The poll.fields value.",
         },
-        pagination_token: {
+        "pagination_token": {
           type: "string",
           description: "The pagination_token value.",
         },
-        next_token: {
+        "next_token": {
           type: "string",
           description: "The next_token value.",
         },
-        max_results: {
+        "max_results": {
           type: "integer",
           minimum: 1,
           maximum: 100,
@@ -1653,12 +1653,12 @@ export const xOperations: readonly UnifapiOperationDefinition[] = [
     inputSchema: {
       type: "object",
       properties: {
-        id: {
+        "id": {
           type: "string",
           minLength: 1,
           description: "X resource id.",
         },
-        expansions: {
+        "expansions": {
           type: "string",
           description: "The expansions value.",
         },
@@ -1682,15 +1682,15 @@ export const xOperations: readonly UnifapiOperationDefinition[] = [
           type: "string",
           description: "The poll.fields value.",
         },
-        pagination_token: {
+        "pagination_token": {
           type: "string",
           description: "The pagination_token value.",
         },
-        next_token: {
+        "next_token": {
           type: "string",
           description: "The next_token value.",
         },
-        max_results: {
+        "max_results": {
           type: "integer",
           minimum: 1,
           maximum: 100,
@@ -1726,12 +1726,12 @@ export const xOperations: readonly UnifapiOperationDefinition[] = [
     inputSchema: {
       type: "object",
       properties: {
-        id: {
+        "id": {
           type: "string",
           minLength: 1,
           description: "X resource id.",
         },
-        expansions: {
+        "expansions": {
           type: "string",
           description: "The expansions value.",
         },
@@ -1755,15 +1755,15 @@ export const xOperations: readonly UnifapiOperationDefinition[] = [
           type: "string",
           description: "The poll.fields value.",
         },
-        pagination_token: {
+        "pagination_token": {
           type: "string",
           description: "The pagination_token value.",
         },
-        next_token: {
+        "next_token": {
           type: "string",
           description: "The next_token value.",
         },
-        max_results: {
+        "max_results": {
           type: "integer",
           minimum: 1,
           maximum: 100,
@@ -1819,12 +1819,12 @@ export const xOperations: readonly UnifapiOperationDefinition[] = [
     inputSchema: {
       type: "object",
       properties: {
-        id: {
+        "id": {
           type: "string",
           minLength: 1,
           description: "X resource id.",
         },
-        expansions: {
+        "expansions": {
           type: "string",
           description: "The expansions value.",
         },
@@ -1879,12 +1879,12 @@ export const xOperations: readonly UnifapiOperationDefinition[] = [
     inputSchema: {
       type: "object",
       properties: {
-        id: {
+        "id": {
           type: "string",
           minLength: 1,
           description: "X resource id.",
         },
-        expansions: {
+        "expansions": {
           type: "string",
           description: "The expansions value.",
         },
@@ -1908,21 +1908,21 @@ export const xOperations: readonly UnifapiOperationDefinition[] = [
           type: "string",
           description: "The poll.fields value.",
         },
-        pagination_token: {
+        "pagination_token": {
           type: "string",
           description: "The pagination_token value.",
         },
-        next_token: {
+        "next_token": {
           type: "string",
           description: "The next_token value.",
         },
-        max_results: {
+        "max_results": {
           type: "integer",
           minimum: 1,
           maximum: 100,
           description: "The max_results value.",
         },
-        exclude: {
+        "exclude": {
           type: "string",
           description: "Comma-separated X timeline exclusions, e.g. `replies`.",
         },
@@ -1956,12 +1956,12 @@ export const xOperations: readonly UnifapiOperationDefinition[] = [
     inputSchema: {
       type: "object",
       properties: {
-        id: {
+        "id": {
           type: "string",
           minLength: 1,
           description: "X resource id.",
         },
-        expansions: {
+        "expansions": {
           type: "string",
           description: "The expansions value.",
         },
@@ -1985,15 +1985,15 @@ export const xOperations: readonly UnifapiOperationDefinition[] = [
           type: "string",
           description: "The poll.fields value.",
         },
-        pagination_token: {
+        "pagination_token": {
           type: "string",
           description: "The pagination_token value.",
         },
-        next_token: {
+        "next_token": {
           type: "string",
           description: "The next_token value.",
         },
-        max_results: {
+        "max_results": {
           type: "integer",
           minimum: 1,
           maximum: 100,
@@ -2027,7 +2027,7 @@ export const xOperations: readonly UnifapiOperationDefinition[] = [
     inputSchema: {
       type: "object",
       properties: {
-        expansions: {
+        "expansions": {
           type: "string",
           description: "The expansions value.",
         },
@@ -2051,7 +2051,7 @@ export const xOperations: readonly UnifapiOperationDefinition[] = [
           type: "string",
           description: "The poll.fields value.",
         },
-        usernames: {
+        "usernames": {
           type: "string",
           minLength: 1,
           description: "Comma-separated usernames.",
@@ -2076,12 +2076,12 @@ export const xOperations: readonly UnifapiOperationDefinition[] = [
     inputSchema: {
       type: "object",
       properties: {
-        username: {
+        "username": {
           type: "string",
           minLength: 1,
           description: "X handle without the leading `@`.",
         },
-        expansions: {
+        "expansions": {
           type: "string",
           description: "The expansions value.",
         },
@@ -2125,7 +2125,7 @@ export const xOperations: readonly UnifapiOperationDefinition[] = [
     inputSchema: {
       type: "object",
       properties: {
-        expansions: {
+        "expansions": {
           type: "string",
           description: "The expansions value.",
         },
@@ -2149,7 +2149,7 @@ export const xOperations: readonly UnifapiOperationDefinition[] = [
           type: "string",
           description: "The poll.fields value.",
         },
-        ids: {
+        "ids": {
           type: "string",
           minLength: 1,
           description: "Comma-separated resource ids.",

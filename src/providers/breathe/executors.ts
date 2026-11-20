@@ -152,7 +152,7 @@ async function requestBreatheJson(input: {
     response = await input.context.fetcher(buildBreatheUrl(input.path, input.params), {
       method: "GET",
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "user-agent": providerUserAgent,
         "X-API-KEY": input.context.apiKey,
       },

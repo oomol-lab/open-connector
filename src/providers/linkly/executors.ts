@@ -157,9 +157,7 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
   baseUrl: linklyApiBaseUrl,
   auth: { type: "api_key_authorization", prefix: "Bearer " },
   skipDnsValidation: true,
-  customizeRequest({ headers }) {
-    if (!headers.has("accept")) headers.set("accept", "application/json");
-  },
+  defaultHeaders: { accept: "application/json" },
 });
 
 export const credentialValidators: CredentialValidators = {
@@ -253,8 +251,8 @@ function buildLinklyUrl(path: string, query: LinklyQuery = {}): URL {
 
 function buildLinklyHeaders(apiKey: string, hasBody: boolean): Record<string, string> {
   return compactObject({
-    accept: "application/json",
-    authorization: `Bearer ${apiKey}`,
+    "accept": "application/json",
+    "authorization": `Bearer ${apiKey}`,
     "content-type": hasBody ? "application/json" : undefined,
     "user-agent": providerUserAgent,
   }) as Record<string, string>;

@@ -616,7 +616,7 @@ async function enigmaVerifyBusinessV2(
     response = await context.fetcher(enigmaKybApiUrl, {
       method: "POST",
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "content-type": "application/json",
         "x-api-key": context.apiKey,
       },
@@ -653,7 +653,7 @@ async function enigmaGraphqlRequest<TData>(
     response = await fetcher(enigmaGraphqlApiUrl, {
       method: "POST",
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "content-type": "application/json",
         "x-api-key": apiKey,
       },

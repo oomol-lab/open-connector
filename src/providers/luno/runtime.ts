@@ -114,8 +114,8 @@ async function request(
   for (const [key, values] of arrays ?? []) for (const value of values ?? []) url.searchParams.append(key, value);
   const response = await context.fetcher(url, {
     headers: {
-      accept: "application/json",
-      authorization: `Basic ${Buffer.from(`${context.keyId}:${context.keySecret}`).toString("base64")}`,
+      "accept": "application/json",
+      "authorization": `Basic ${Buffer.from(`${context.keyId}:${context.keySecret}`).toString("base64")}`,
       "user-agent": providerUserAgent,
     },
     signal: context.signal,

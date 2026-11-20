@@ -502,7 +502,7 @@ function signVolcRequest(input: {
   const payloadHash = sha256Hex(input.body);
   const headers = compactObject({
     "content-type": "application/json",
-    host: jimengApiHost,
+    "host": jimengApiHost,
     "x-content-sha256": payloadHash,
     "x-date": xDate,
     "x-security-token": input.credentials.sessionToken,
@@ -527,7 +527,7 @@ function signVolcRequest(input: {
 
   return {
     headers: {
-      accept: "application/json",
+      "accept": "application/json",
       "user-agent": providerUserAgent,
       ...headers,
       authorization,

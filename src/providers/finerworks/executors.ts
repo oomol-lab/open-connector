@@ -16,10 +16,10 @@ async function request(path: string, body: Record<string, unknown>, context: Con
   const response = await context.fetcher(new URL(path, "https://v2.api.finerworks.com"), {
     method: "POST",
     headers: {
-      accept: "application/json",
+      "accept": "application/json",
       "content-type": "application/json",
-      web_api_key: context.webApiKey,
-      app_key: context.appKey,
+      "web_api_key": context.webApiKey,
+      "app_key": context.appKey,
       "user-agent": providerUserAgent,
     },
     body: JSON.stringify(body),

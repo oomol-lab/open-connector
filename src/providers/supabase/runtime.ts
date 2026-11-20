@@ -530,8 +530,8 @@ async function supabaseDownloadStorageObject(
     `https://${projectRef}${supabaseProjectHostSuffix}${supabaseStorageAuthenticatedObjectPath}/${encodeURIComponent(bucketId)}/${encodeStorageObjectPath(objectPath)}`,
   );
   const headers: Record<string, string> = {
-    accept: "*/*",
-    apikey: storageKey.value,
+    "accept": "*/*",
+    "apikey": storageKey.value,
     "user-agent": providerUserAgent,
   };
   if (storageKey.authorizationBearer) {
@@ -598,7 +598,7 @@ async function supabaseUploadStorageObject(
     `https://${projectRef}${supabaseProjectHostSuffix}/storage/v1/object/${encodeURIComponent(bucketId)}/${encodeStorageObjectPath(objectPath)}`,
   );
   const headers: Record<string, string> = {
-    apikey: storageKey.value,
+    "apikey": storageKey.value,
     "content-type": mime,
     "user-agent": providerUserAgent,
   };
@@ -802,8 +802,8 @@ async function requestSupabaseJson(options: {
 
 function supabaseHeaders(accessToken: string, hasBody: boolean): Record<string, string> {
   const headers: Record<string, string> = {
-    authorization: `Bearer ${accessToken}`,
-    accept: "application/json",
+    "authorization": `Bearer ${accessToken}`,
+    "accept": "application/json",
     "user-agent": providerUserAgent,
   };
   if (hasBody) {

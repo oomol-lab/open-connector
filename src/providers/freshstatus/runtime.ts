@@ -210,8 +210,8 @@ async function requestFreshstatus(input: FreshstatusRequestInput): Promise<unkno
     const response = await input.context.fetcher(new URL(input.path, freshstatusApiBaseUrl), {
       method: input.method ?? "GET",
       headers: {
-        authorization: freshstatusAuthorization(input.context),
-        accept: "application/json",
+        "authorization": freshstatusAuthorization(input.context),
+        "accept": "application/json",
         "content-type": "application/json",
         "user-agent": providerUserAgent,
       },

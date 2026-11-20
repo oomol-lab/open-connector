@@ -280,8 +280,8 @@ function buildAvomaUrl(path: string, query?: Record<string, string | undefined>)
 
 function avomaHeaders(apiKey: string): Record<string, string> {
   return {
-    accept: "application/json",
-    authorization: `Bearer ${apiKey}`,
+    "accept": "application/json",
+    "authorization": `Bearer ${apiKey}`,
     "user-agent": providerUserAgent,
   };
 }

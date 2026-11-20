@@ -78,7 +78,7 @@ async function jinaPost(
     const response = await context.fetcher(`${apiBaseUrl}${path}`, {
       method: "POST",
       headers: {
-        authorization: `Bearer ${context.apiKey}`,
+        "authorization": `Bearer ${context.apiKey}`,
         "content-type": "application/json",
         "user-agent": providerUserAgent,
       },

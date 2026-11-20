@@ -177,8 +177,8 @@ async function requestWorkdayJson(input: WorkdayRequestInput): Promise<unknown> 
     response = await input.fetcher(url, {
       method: input.method ?? "GET",
       headers: {
-        accept: "application/json",
-        authorization: `Bearer ${input.accessToken}`,
+        "accept": "application/json",
+        "authorization": `Bearer ${input.accessToken}`,
         "user-agent": providerUserAgent,
         ...(input.body !== undefined ? { "content-type": "application/json" } : {}),
       },

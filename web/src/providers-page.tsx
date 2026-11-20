@@ -222,14 +222,14 @@ const providerCardStyle = {
   containIntrinsicSize: "64px",
 } satisfies CSSProperties;
 const scenarioIconById: Record<ProviderDiscoveryScenario, ComponentType<{ className?: string }>> = {
-  ai: Bot,
+  "ai": Bot,
   "cross-border-ecommerce": ShoppingBag,
-  investment: TrendingUp,
-  communication: MessagesSquare,
-  productivity: SquareKanban,
-  marketing: Megaphone,
+  "investment": TrendingUp,
+  "communication": MessagesSquare,
+  "productivity": SquareKanban,
+  "marketing": Megaphone,
   "data-storage": Database,
-  developer: Cloud,
+  "developer": Cloud,
 };
 
 export function ProvidersPage(props: ProvidersPageProps): ReactNode {

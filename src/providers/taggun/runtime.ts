@@ -130,8 +130,8 @@ async function taggunRequestJson(
 
 function taggunHeaders(apiKey: string, extraHeaders: Record<string, string>): Record<string, string> {
   return {
-    accept: "application/json",
-    apikey: apiKey,
+    "accept": "application/json",
+    "apikey": apiKey,
     "user-agent": providerUserAgent,
     ...extraHeaders,
   };

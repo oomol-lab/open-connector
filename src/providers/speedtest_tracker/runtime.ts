@@ -50,7 +50,7 @@ export const speedtestTrackerActionHandlers: Record<string, ActionHandler> = {
     const payload = await requestSpeedtestTrackerJson(context, "v1/results", {
       query: {
         ...buildResultFilterQuery(input),
-        sort: optionalString(input.sort),
+        "sort": optionalString(input.sort),
         "page[number]": readOptionalInteger(input.page),
         "page[size]": readOptionalInteger(input.pageSize),
       },
@@ -246,8 +246,8 @@ async function fetchSpeedtestTracker(
     const response = await context.fetcher(url, {
       method: options.method ?? "GET",
       headers: {
-        accept: "application/json",
-        authorization: `Bearer ${context.apiKey}`,
+        "accept": "application/json",
+        "authorization": `Bearer ${context.apiKey}`,
         "user-agent": providerUserAgent,
       },
       signal,

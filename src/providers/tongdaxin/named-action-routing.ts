@@ -42,11 +42,11 @@ const klinePeriods = {
   "15_MINUTES": "1",
   "30_MINUTES": "2",
   "1_HOUR": "3",
-  DAILY: "4",
-  WEEKLY: "5",
-  MONTHLY: "6",
-  QUARTERLY: "10",
-  YEARLY: "11",
+  "DAILY": "4",
+  "WEEKLY": "5",
+  "MONTHLY": "6",
+  "QUARTERLY": "10",
+  "YEARLY": "11",
 } as const;
 
 const adjustments = {

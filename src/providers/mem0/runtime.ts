@@ -257,8 +257,8 @@ function mem0RawRequest(context: ApiKeyProviderContext, input: Mem0RequestInput)
   appendQuery(url, input.query);
 
   const headers = new Headers({
-    authorization: `Token ${context.apiKey}`,
-    accept: "application/json",
+    "authorization": `Token ${context.apiKey}`,
+    "accept": "application/json",
     "user-agent": providerUserAgent,
   });
   let body: string | undefined;

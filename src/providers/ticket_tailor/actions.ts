@@ -26,7 +26,7 @@ const paginationInputSchema = s.object(
 );
 
 const timestampFilterShape = {
-  created_at: s.integer("Filter resources created at this Unix timestamp."),
+  "created_at": s.integer("Filter resources created at this Unix timestamp."),
   "created_at.gt": s.integer("Filter resources created after this Unix timestamp."),
   "created_at.gte": s.integer("Filter resources created at or after this Unix timestamp."),
   "created_at.lt": s.integer("Filter resources created before this Unix timestamp."),
@@ -37,19 +37,19 @@ const eventListInputSchema = s.object(
   "Filters and cursor pagination for listing Ticket Tailor events.",
   {
     ...paginationShape,
-    start_at: s.integer("Filter events starting at this Unix timestamp."),
+    "start_at": s.integer("Filter events starting at this Unix timestamp."),
     "start_at.gt": s.integer("Filter events starting after this Unix timestamp."),
     "start_at.gte": s.integer("Filter events starting at or after this Unix timestamp."),
     "start_at.lt": s.integer("Filter events starting before this Unix timestamp."),
     "start_at.lte": s.integer("Filter events starting at or before this Unix timestamp."),
-    end_at: s.integer("Filter events ending at this Unix timestamp."),
+    "end_at": s.integer("Filter events ending at this Unix timestamp."),
     "end_at.gt": s.integer("Filter events ending after this Unix timestamp."),
     "end_at.gte": s.integer("Filter events ending at or after this Unix timestamp."),
     "end_at.lt": s.integer("Filter events ending before this Unix timestamp."),
     "end_at.lte": s.integer("Filter events ending at or before this Unix timestamp."),
-    status: s.nonEmptyString("A comma-separated list of event statuses: published, draft, or sales_closed."),
-    name: s.nonEmptyString("Filter events by name."),
-    venue: s.nonEmptyString("Filter events by venue."),
+    "status": s.nonEmptyString("A comma-separated list of event statuses: published, draft, or sales_closed."),
+    "name": s.nonEmptyString("Filter events by name."),
+    "venue": s.nonEmptyString("Filter events by venue."),
   },
   {
     optional: [

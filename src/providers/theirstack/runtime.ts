@@ -76,8 +76,8 @@ async function theirstackRequestJson(
     response = await context.fetcher(`${theirstackApiBaseUrl}${path}`, {
       method,
       headers: compactObject({
-        accept: "application/json",
-        authorization: `Bearer ${context.apiKey}`,
+        "accept": "application/json",
+        "authorization": `Bearer ${context.apiKey}`,
         "user-agent": providerUserAgent,
         "content-type": body !== undefined ? "application/json" : undefined,
       }) as HeadersInit,

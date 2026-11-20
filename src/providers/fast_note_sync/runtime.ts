@@ -314,8 +314,8 @@ async function requestFastNoteSyncResponse<TResult>(
     if (value != null) url.searchParams.set(key, String(value));
   }
   const headers = new Headers({
-    accept: options.accept ?? "application/json",
-    authorization: `Bearer ${context.apiKey}`,
+    "accept": options.accept ?? "application/json",
+    "authorization": `Bearer ${context.apiKey}`,
     "user-agent": providerUserAgent,
   });
   let body: BodyInit | undefined = options.formData;

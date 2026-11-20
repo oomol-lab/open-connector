@@ -146,7 +146,7 @@ async function requestKadoaObject(input: {
     const response = await input.fetcher(buildKadoaUrl(input.path, input.query), {
       method: "GET",
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "user-agent": providerUserAgent,
         "x-api-key": input.apiKey,
       },

@@ -92,7 +92,7 @@ async function requestPoper(
     const response = await fetcher(`${baseUrl}${path}`, {
       method: "POST",
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "content-type": "application/x-www-form-urlencoded;charset=UTF-8",
         "user-agent": providerUserAgent,
       },

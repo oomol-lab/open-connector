@@ -370,7 +370,7 @@ async function postLivespaceForm(
     response = await context.fetcher(new URL(methodPath, buildLivespaceApiBaseUrl(context.subdomain)), {
       method: "POST",
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "content-type": "application/x-www-form-urlencoded;charset=UTF-8",
         "user-agent": providerUserAgent,
       },

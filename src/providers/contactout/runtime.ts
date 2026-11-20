@@ -165,10 +165,10 @@ async function requestContactout(input: {
     response = await input.fetcher(url.toString(), {
       method: input.method,
       headers: {
-        Accept: "application/json",
+        "Accept": "application/json",
         "Content-Type": "application/json",
-        authorization: "basic",
-        token: input.apiKey,
+        "authorization": "basic",
+        "token": input.apiKey,
         "user-agent": providerUserAgent,
       },
       body: input.body === undefined ? undefined : JSON.stringify(input.body),

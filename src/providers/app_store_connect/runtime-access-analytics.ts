@@ -109,7 +109,7 @@ export const appStoreConnectAccessAnalyticsHandlers: AppStoreConnectHandlers = {
         "filter[email]": pickOptionalString(input, "email"),
         "filter[roles]": readCommaSeparatedList(input.roles),
         "filter[visibleApps]": pickOptionalString(input, "visibleAppId"),
-        sort: pickOptionalString(input, "sort"),
+        "sort": pickOptionalString(input, "sort"),
       },
     });
     return { userInvitations: page.items, nextCursor: page.nextCursor, total: page.total };

@@ -108,7 +108,7 @@ async function request(
 ): Promise<Response> {
   return app.app.request(path, {
     method,
-    headers: { authorization: `Bearer ${token}`, "content-type": "application/json", ...headers },
+    headers: { "authorization": `Bearer ${token}`, "content-type": "application/json", ...headers },
     body: body === undefined ? undefined : JSON.stringify(body),
   });
 }

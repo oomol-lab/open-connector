@@ -280,8 +280,8 @@ async function requestMauticJson(input: MauticRequest): Promise<Record<string, u
     const response = await input.fetcher(url, {
       method: input.method ?? "GET",
       headers: {
-        accept: "application/json",
-        authorization: basicAuthorizationHeader(`${input.credential.username}:${input.credential.password}`),
+        "accept": "application/json",
+        "authorization": basicAuthorizationHeader(`${input.credential.username}:${input.credential.password}`),
         "user-agent": providerUserAgent,
         ...(input.jsonBody ? { "content-type": "application/json" } : {}),
       },

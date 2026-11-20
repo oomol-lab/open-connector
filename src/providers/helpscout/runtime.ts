@@ -392,8 +392,8 @@ async function requestHelpscout(options: HelpscoutRequestOptions) {
   }
 
   const headers = new Headers({
-    accept: "application/hal+json, application/json",
-    authorization: `Bearer ${options.accessToken}`,
+    "accept": "application/hal+json, application/json",
+    "authorization": `Bearer ${options.accessToken}`,
     "user-agent": providerUserAgent,
   });
   if (options.body !== undefined) {

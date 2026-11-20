@@ -36,11 +36,11 @@ export const feedierActionHandlers: Record<string, FeedierHandler> = {
       ...context,
       path: "/v3/reports",
       query: {
-        page: optionalNumber(input.page),
+        "page": optionalNumber(input.page),
         "filter[name]": optionalString(input.name),
         "filter[user_id]": optionalNumber(input.user_id),
         "filter[team_id]": optionalNumber(input.team_id),
-        sort: optionalString(input.sort),
+        "sort": optionalString(input.sort),
       },
       phase: "execute",
     });
@@ -152,8 +152,8 @@ async function requestFeedierJson(input: FeedierRequestInput): Promise<unknown> 
   try {
     const requestBody = encodeRequestBody(input.body, input.bodyEncoding);
     const headers = new Headers({
-      accept: "application/json",
-      authorization: `Bearer ${input.apiKey}`,
+      "accept": "application/json",
+      "authorization": `Bearer ${input.apiKey}`,
       "user-agent": providerUserAgent,
     });
     if (requestBody) headers.set("content-type", requestBody.contentType);

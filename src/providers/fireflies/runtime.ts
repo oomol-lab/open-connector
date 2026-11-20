@@ -964,7 +964,7 @@ async function firefliesGraphqlRequest<T>(
     response = await context.fetcher(firefliesGraphqlUrl, {
       method: "POST",
       headers: {
-        authorization: `Bearer ${context.apiKey}`,
+        "authorization": `Bearer ${context.apiKey}`,
         "content-type": "application/json",
         "user-agent": providerUserAgent,
       },

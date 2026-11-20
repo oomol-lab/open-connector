@@ -228,7 +228,7 @@ describe("createLocalAuthMiddleware", () => {
         await app.request("/v1/actions/example.echo", {
           method: "POST",
           headers: {
-            authorization: "Bearer oct_valid",
+            "authorization": "Bearer oct_valid",
             "content-type": "application/json",
           },
           body: JSON.stringify({ input: {} }),
@@ -318,7 +318,7 @@ describe("createLocalAuthMiddleware", () => {
         await app.request("/v1/actions/example.echo", {
           method: "POST",
           headers: {
-            authorization: "Bearer admin-secret",
+            "authorization": "Bearer admin-secret",
             "content-type": "application/json",
           },
           body: JSON.stringify({ input: {} }),

@@ -76,8 +76,8 @@ export function gistHeaders(
   mediaType: GistMediaType = "json",
 ): Record<string, string> {
   const headers: Record<string, string> = {
-    accept: gistAcceptHeader(mediaType),
-    authorization: `Bearer ${accessToken}`,
+    "accept": gistAcceptHeader(mediaType),
+    "authorization": `Bearer ${accessToken}`,
     "x-github-api-version": gistApiVersion,
     "user-agent": providerUserAgent,
   };

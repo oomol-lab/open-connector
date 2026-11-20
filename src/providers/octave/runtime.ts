@@ -236,8 +236,8 @@ async function requestOctaveJson(options: OctaveRequestOptions): Promise<unknown
   }
 
   const headers: Record<string, string> = {
-    accept: "application/json",
-    api_key: options.context.apiKey,
+    "accept": "application/json",
+    "api_key": options.context.apiKey,
     "user-agent": providerUserAgent,
   };
   if (options.body !== undefined) {

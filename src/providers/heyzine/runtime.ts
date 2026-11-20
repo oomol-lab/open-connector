@@ -299,8 +299,8 @@ async function heyzineRequest(input: HeyzineRequestInput): Promise<unknown> {
 
 function heyzineHeaders(apiKey: string): Headers {
   return new Headers({
-    accept: "application/json",
-    authorization: `Bearer ${apiKey}`,
+    "accept": "application/json",
+    "authorization": `Bearer ${apiKey}`,
     "user-agent": providerUserAgent,
   });
 }

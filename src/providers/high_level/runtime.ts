@@ -177,9 +177,9 @@ async function requestHighLevelJson(input: HighLevelRequestInput): Promise<Recor
 
 function highLevelHeaders(apiKey: string, hasBody: boolean): Record<string, string> {
   const headers: Record<string, string> = {
-    accept: "application/json",
-    authorization: `Bearer ${apiKey}`,
-    version: highLevelApiVersion,
+    "accept": "application/json",
+    "authorization": `Bearer ${apiKey}`,
+    "version": highLevelApiVersion,
     "user-agent": providerUserAgent,
   };
   if (hasBody) {

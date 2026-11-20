@@ -71,9 +71,7 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
   },
   auth: { type: "api_key_header", name: "Authorization" },
   allowPrivateNetwork: isPrivateNetworkAccessAllowed,
-  customizeRequest({ headers }) {
-    if (!headers.has("accept")) headers.set("accept", "application/json");
-  },
+  defaultHeaders: { accept: "application/json" },
 });
 
 export const credentialValidators: CredentialValidators = {
@@ -116,8 +114,8 @@ async function request(context: PostizActionContext, path: string, options: Requ
       if (value !== undefined) url.searchParams.set(key, value);
     }
     const headers = new Headers({
-      accept: "application/json",
-      authorization: context.apiKey,
+      "accept": "application/json",
+      "authorization": context.apiKey,
       "user-agent": providerUserAgent,
     });
     if (options.body !== undefined) headers.set("content-type", "application/json");

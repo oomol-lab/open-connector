@@ -403,8 +403,8 @@ async function fetchDataForSeo(input: DataForSeoRequestInput) {
     return await input.fetcher(new URL(normalizeDataForSeoPath(input.path), dataForSeoApiBase), {
       method: input.body === undefined ? "GET" : "POST",
       headers: {
-        accept: "application/json",
-        authorization: `Basic ${createBasicAuthToken(input.credential)}`,
+        "accept": "application/json",
+        "authorization": `Basic ${createBasicAuthToken(input.credential)}`,
         "content-type": "application/json",
         "user-agent": providerUserAgent,
       },

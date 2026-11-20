@@ -30,8 +30,8 @@ async function request(
     const response = await context.fetcher(url, {
       signal,
       headers: {
-        authorization: basicAuthorizationHeader(`${context.apiKey}:`),
-        accept: "application/json",
+        "authorization": basicAuthorizationHeader(`${context.apiKey}:`),
+        "accept": "application/json",
         "user-agent": providerUserAgent,
       },
     });
@@ -139,7 +139,5 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
   baseUrl,
   auth: { type: "api_key_basic", suffix: ":" },
   skipDnsValidation: true,
-  customizeRequest({ headers }) {
-    if (!headers.has("accept")) headers.set("accept", "application/json");
-  },
+  defaultHeaders: { accept: "application/json" },
 });

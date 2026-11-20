@@ -169,7 +169,7 @@ async function request(
   try {
     const response = await context.fetcher(`${megaventoryApiBaseUrl}${path}`, {
       method: "POST",
-      headers: { accept: "application/json", "content-type": "application/json", "user-agent": providerUserAgent },
+      headers: { "accept": "application/json", "content-type": "application/json", "user-agent": providerUserAgent },
       body: JSON.stringify({ APIKEY: context.apiKey, ...body }),
       signal: timeout.signal,
     });

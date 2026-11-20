@@ -205,7 +205,7 @@ async function requestAutobloggerWithStatus(input: AutobloggerRequestInput): Pro
     response = await input.context.fetcher(`${autobloggerApiBaseUrl}${articlesPath}`, {
       method: "POST",
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "content-type": "application/json",
         "user-agent": providerUserAgent,
       },

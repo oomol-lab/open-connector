@@ -114,7 +114,7 @@ export async function requestSendcloud(
     const body = await buildBody(input, credentials.apiUser, credentials.apiKey, fetcher, signal);
     const response = await fetcher(`${sendcloudBaseUrl}/${endpoint}`, {
       method: "POST",
-      headers: { accept: "application/json", "user-agent": providerUserAgent },
+      headers: { "accept": "application/json", "user-agent": providerUserAgent },
       body,
       signal,
     });

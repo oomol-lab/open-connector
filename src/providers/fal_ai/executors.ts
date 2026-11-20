@@ -447,7 +447,7 @@ async function falAiFetch(input: FalAiRequestInput, fetcher: typeof fetch): Prom
   return fetcher(url.toString(), {
     method: input.method ?? (input.body ? "POST" : "GET"),
     headers: {
-      authorization: `Key ${input.apiKey}`,
+      "authorization": `Key ${input.apiKey}`,
       "content-type": "application/json",
       "user-agent": providerUserAgent,
       ...input.headers,

@@ -144,7 +144,7 @@ async function requestClinicalKeyJson(input: {
     const response = await input.fetcher(buildClinicalKeyUrl(input.path, input.query, input.credentials), {
       method: "GET",
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "user-agent": providerUserAgent,
       },
       signal,

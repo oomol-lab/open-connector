@@ -122,7 +122,7 @@ async function withClient<T>(context: OAuthProviderContext, run: (client: Client
       endpoint: new URL(helium10McpEndpoint),
       transport: "streamable_http",
       fetcher: context.fetcher,
-      headers: { authorization: `Bearer ${context.accessToken}`, "user-agent": providerUserAgent },
+      headers: { "authorization": `Bearer ${context.accessToken}`, "user-agent": providerUserAgent },
       signal: context.signal,
       mapError: mapHelium10McpError,
     },

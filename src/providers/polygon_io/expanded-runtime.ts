@@ -77,7 +77,7 @@ function resolveRequest(actionName: string, input: Record<string, unknown>) {
     case "get_unified_snapshot":
       return list("/v3/snapshot", {
         "ticker.any_of": readStringArray(input.tickers)?.join(","),
-        type: readText(input.assetType),
+        "type": readText(input.assetType),
         ...pagingQuery(input),
       });
     case "get_stock_movers":
@@ -108,7 +108,7 @@ function resolveRequest(actionName: string, input: Record<string, unknown>) {
       return list(
         "/v2/reference/news",
         compactObject({
-          ticker: readText(input.ticker),
+          "ticker": readText(input.ticker),
           "published_utc.gte": readText(input.publishedUtcGte),
           "published_utc.lte": readText(input.publishedUtcLte),
           ...pagingQuery(input),
@@ -118,8 +118,8 @@ function resolveRequest(actionName: string, input: Record<string, unknown>) {
       return list(
         "/stocks/v1/dividends",
         compactObject({
-          ticker: readText(input.ticker),
-          ex_dividend_date: readText(input.exDividendDate),
+          "ticker": readText(input.ticker),
+          "ex_dividend_date": readText(input.exDividendDate),
           "ex_dividend_date.gte": readText(input.exDividendDateGte),
           "ex_dividend_date.lte": readText(input.exDividendDateLte),
           ...pagingQuery(input),
@@ -129,8 +129,8 @@ function resolveRequest(actionName: string, input: Record<string, unknown>) {
       return list(
         "/stocks/v1/splits",
         compactObject({
-          ticker: readText(input.ticker),
-          execution_date: readText(input.executionDate),
+          "ticker": readText(input.ticker),
+          "execution_date": readText(input.executionDate),
           "execution_date.gte": readText(input.executionDateGte),
           "execution_date.lte": readText(input.executionDateLte),
           ...pagingQuery(input),
@@ -148,8 +148,8 @@ function resolveRequest(actionName: string, input: Record<string, unknown>) {
       return list(
         "/stocks/v1/short-interest",
         compactObject({
-          ticker: readText(input.ticker),
-          settlement_date: readText(input.settlementDate),
+          "ticker": readText(input.ticker),
+          "settlement_date": readText(input.settlementDate),
           "settlement_date.gte": readText(input.settlementDateGte),
           "settlement_date.lte": readText(input.settlementDateLte),
           ...pagingQuery(input),
@@ -208,7 +208,7 @@ function pagingQuery(input: Record<string, unknown>) {
 
 function timestampQuery(input: Record<string, unknown>) {
   return compactObject({
-    timestamp: readText(input.timestamp),
+    "timestamp": readText(input.timestamp),
     "timestamp.gte": readText(input.timestampGte),
     "timestamp.lte": readText(input.timestampLte),
     ...pagingQuery(input),
@@ -217,8 +217,8 @@ function timestampQuery(input: Record<string, unknown>) {
 
 function datedListQuery(input: Record<string, unknown>) {
   return compactObject({
-    ticker: readText(input.ticker),
-    date: readText(input.date),
+    "ticker": readText(input.ticker),
+    "date": readText(input.date),
     "date.gte": readText(input.dateGte),
     "date.lte": readText(input.dateLte),
     ...pagingQuery(input),
@@ -227,12 +227,12 @@ function datedListQuery(input: Record<string, unknown>) {
 
 function financialsQuery(input: Record<string, unknown>) {
   return compactObject({
-    tickers: readStringArray(input.tickers)?.join(","),
-    cik: readText(input.cik),
-    timeframe: readText(input.timeframe),
-    fiscal_year: readIntegerString(input.fiscalYear),
-    fiscal_quarter: readIntegerString(input.fiscalQuarter),
-    period_end: readText(input.periodEnd),
+    "tickers": readStringArray(input.tickers)?.join(","),
+    "cik": readText(input.cik),
+    "timeframe": readText(input.timeframe),
+    "fiscal_year": readIntegerString(input.fiscalYear),
+    "fiscal_quarter": readIntegerString(input.fiscalQuarter),
+    "period_end": readText(input.periodEnd),
     "period_end.gte": readText(input.periodEndGte),
     "period_end.lte": readText(input.periodEndLte),
     "filing_date.gte": readText(input.filingDateGte),
@@ -243,28 +243,28 @@ function financialsQuery(input: Record<string, unknown>) {
 
 function optionFilters(input: Record<string, unknown>) {
   return compactObject({
-    underlying_ticker: readText(input.underlyingTicker),
-    contract_type: readText(input.contractType),
-    expiration_date: readText(input.expirationDate),
+    "underlying_ticker": readText(input.underlyingTicker),
+    "contract_type": readText(input.contractType),
+    "expiration_date": readText(input.expirationDate),
     "expiration_date.gte": readText(input.expirationDateGte),
     "expiration_date.lte": readText(input.expirationDateLte),
-    strike_price: readNumberString(input.strikePrice),
+    "strike_price": readNumberString(input.strikePrice),
     "strike_price.gte": readNumberString(input.strikePriceGte),
     "strike_price.lte": readNumberString(input.strikePriceLte),
-    expired: optionalBoolean(input.expired),
-    as_of: readText(input.asOf),
+    "expired": optionalBoolean(input.expired),
+    "as_of": readText(input.asOf),
     ...pagingQuery(input),
   });
 }
 
 function indicatorQuery(input: Record<string, unknown>) {
   return compactObject({
-    timespan: readText(input.timespan),
-    window: readIntegerString(input.window),
-    adjusted: optionalBoolean(input.adjusted),
-    expand_underlying: optionalBoolean(input.expandUnderlying),
-    series_type: readText(input.seriesType),
-    timestamp: readText(input.timestamp),
+    "timespan": readText(input.timespan),
+    "window": readIntegerString(input.window),
+    "adjusted": optionalBoolean(input.adjusted),
+    "expand_underlying": optionalBoolean(input.expandUnderlying),
+    "series_type": readText(input.seriesType),
+    "timestamp": readText(input.timestamp),
     "timestamp.gte": readText(input.timestampGte),
     "timestamp.lte": readText(input.timestampLte),
     ...pagingQuery(input),

@@ -140,7 +140,7 @@ async function requestSkyfireJson(input: {
 
 function skyfireHeaders(apiKey: string, extraHeaders: Record<string, string>): Record<string, string> {
   return {
-    accept: "application/json",
+    "accept": "application/json",
     "skyfire-api-key": apiKey,
     "user-agent": providerUserAgent,
     ...extraHeaders,

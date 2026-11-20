@@ -302,8 +302,8 @@ async function requestFormsiteJson(
 async function formsiteFetch(context: FormsiteActionContext, input: FormsiteRequestInput): Promise<Response> {
   const url = buildFormsiteUrl(context.apiBaseUrl, input.path, input.query);
   const headers = new Headers({
-    accept: "application/json",
-    authorization: `bearer ${context.apiKey}`,
+    "accept": "application/json",
+    "authorization": `bearer ${context.apiKey}`,
     "user-agent": providerUserAgent,
   });
   if (input.body) {

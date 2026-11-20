@@ -390,7 +390,7 @@ async function requestPerigonJson(
 
 function perigonHeaders(apiKey: string, includeJsonBody: boolean): Record<string, string> {
   const headers: Record<string, string> = {
-    accept: "application/json",
+    "accept": "application/json",
     "user-agent": providerUserAgent,
     "x-api-key": apiKey,
   };

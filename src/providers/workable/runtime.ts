@@ -169,8 +169,8 @@ async function rawWorkableRequest(input: WorkableRequestInput): Promise<Response
     return await input.fetcher(url, {
       method: "GET",
       headers: {
-        accept: "application/json",
-        authorization: `Bearer ${input.apiKey}`,
+        "accept": "application/json",
+        "authorization": `Bearer ${input.apiKey}`,
         "user-agent": providerUserAgent,
       },
       signal: timeout.signal,

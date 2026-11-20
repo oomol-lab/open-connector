@@ -88,7 +88,7 @@ async function requestLatest(base: string, context: AllRatesTodayRuntimeContext)
   const payload = await runProviderRequest({ label: "AllRatesToday", signal: context.signal }, async (signal) => {
     const response = await context.fetcher(url, {
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "user-agent": providerUserAgent,
       },
       signal,

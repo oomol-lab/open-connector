@@ -225,7 +225,7 @@ async function requestBoldSignJson(input: BoldSignRequestInput) {
     const url = new URL(input.path, `${input.apiBaseUrl}/`);
     appendQuery(url, input.query);
     const headers: Record<string, string> = {
-      accept: "application/json",
+      "accept": "application/json",
       "user-agent": providerUserAgent,
       "X-API-KEY": input.apiKey,
     };

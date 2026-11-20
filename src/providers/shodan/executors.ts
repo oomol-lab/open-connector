@@ -147,7 +147,7 @@ async function requestShodanJson(
     const response = await context.fetcher(buildShodanUrl(input, context.apiKey), {
       method: "GET",
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "user-agent": providerUserAgent,
       },
       signal: timeout.signal,

@@ -92,7 +92,7 @@ export async function requestLeadboxerJson(input: {
     const response = await input.fetcher(buildLeadboxerUrl(input.path, input.query), {
       method: "GET",
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "user-agent": providerUserAgent,
         "x-api-key": input.apiKey,
       },

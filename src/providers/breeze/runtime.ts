@@ -191,7 +191,7 @@ async function requestBreezeJson(
     response = await context.fetcher(url, {
       method: "GET",
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "api-key": context.apiKey,
         "user-agent": providerUserAgent,
       },

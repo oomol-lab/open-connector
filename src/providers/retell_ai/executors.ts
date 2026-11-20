@@ -182,8 +182,8 @@ async function requestRetellAiJson(input: RetellAiRequest): Promise<unknown> {
 
   const method = input.method ?? "GET";
   const headers: Record<string, string> = {
-    accept: "application/json",
-    authorization: `Bearer ${input.context.apiKey}`,
+    "accept": "application/json",
+    "authorization": `Bearer ${input.context.apiKey}`,
     "user-agent": providerUserAgent,
   };
   const init: RequestInit = {

@@ -154,7 +154,7 @@ async function requestStatsig(options: StatsigRequestOptions): Promise<Record<st
     response = await options.fetcher(buildStatsigUrl(options.path, options.query), {
       method: options.method ?? "GET",
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "statsig-api-key": options.apiKey,
         "statsig-api-version": statsigApiVersion,
         "user-agent": providerUserAgent,

@@ -236,7 +236,7 @@ async function exchangeTheColonyToken(context: ApiKeyProviderContext, phase: The
     init: {
       method: "POST",
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "content-type": "application/json",
         "user-agent": providerUserAgent,
       },
@@ -308,8 +308,8 @@ function buildTheColonyHeaders(
   input: { hasJsonBody: boolean; idempotencyKey?: string },
 ): Record<string, string> {
   const headers: Record<string, string> = {
-    accept: "application/json",
-    authorization: `Bearer ${accessToken}`,
+    "accept": "application/json",
+    "authorization": `Bearer ${accessToken}`,
     "user-agent": providerUserAgent,
   };
   if (input.hasJsonBody) {

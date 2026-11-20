@@ -135,7 +135,7 @@ async function requestVidaJson(input: {
     const response = await input.fetcher(buildVidaUrl(input.path, input.apiKey, input.params), {
       method: "GET",
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "user-agent": providerUserAgent,
       },
       signal,

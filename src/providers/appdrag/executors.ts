@@ -212,7 +212,7 @@ function buildFunctionRoute(input: { folder: string; functionName: string; envir
 
 function buildRequest(route: URL, method: AppdragHttpMethod, parameters: Record<string, unknown>): RequestInit {
   const headers: Record<string, string> = {
-    accept: "application/json, text/plain;q=0.9, */*;q=0.8",
+    "accept": "application/json, text/plain;q=0.9, */*;q=0.8",
     "user-agent": providerUserAgent,
   };
 

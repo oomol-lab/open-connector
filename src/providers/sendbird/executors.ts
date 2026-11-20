@@ -644,7 +644,7 @@ function buildSendbirdApiBaseUrl(applicationId: string) {
 
 function buildSendbirdHeaders(apiKey: string, hasBody: boolean) {
   const headers: Record<string, string> = {
-    accept: "application/json",
+    "accept": "application/json",
     "Api-Token": apiKey,
     "User-Agent": sendbirdUserAgent,
   };

@@ -402,7 +402,7 @@ function buildDiscourseUrl(baseUrl: string, path: string, query?: Record<string,
 
 function buildDiscourseHeaders(credential: DiscourseCredential, hasBody: boolean) {
   const headers = new Headers({
-    accept: "application/json",
+    "accept": "application/json",
     "api-key": credential.apiKey,
     "api-username": credential.apiUsername,
     "user-agent": providerUserAgent,

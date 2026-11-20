@@ -20,7 +20,7 @@ async function request(path: string, context: Context): Promise<unknown> {
   url.searchParams.set("key", context.apiKey);
   url.searchParams.set("secret", context.apiSecret);
   const response = await context.fetcher(url, {
-    headers: { accept: "application/json", "user-agent": providerUserAgent },
+    headers: { "accept": "application/json", "user-agent": providerUserAgent },
     signal: context.signal,
   });
   const text = await response.text();

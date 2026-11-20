@@ -240,8 +240,8 @@ async function requestCodegenJson(input: {
     const response = await input.context.fetcher(new URL(input.path, codegenApiBaseUrl), {
       method: input.method,
       headers: {
-        accept: "application/json",
-        authorization: `Bearer ${input.apiKey}`,
+        "accept": "application/json",
+        "authorization": `Bearer ${input.apiKey}`,
         "user-agent": providerUserAgent,
       },
       signal,

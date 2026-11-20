@@ -119,7 +119,7 @@ async function requestHumanitix(input: HumanitixRequestInput): Promise<unknown> 
     response = await input.fetcher(url.toString(), {
       method: "GET",
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "user-agent": providerUserAgent,
         "x-api-key": input.apiKey,
       },

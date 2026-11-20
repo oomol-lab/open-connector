@@ -309,10 +309,10 @@ function buildContentstackHeaders(
   branch?: string,
 ): Record<string, string> {
   const headers: Record<string, string> = {
-    accept: "application/json",
+    "accept": "application/json",
     "content-type": "application/json",
-    authorization: managementToken,
-    api_key: stackApiKey,
+    "authorization": managementToken,
+    "api_key": stackApiKey,
     "user-agent": providerUserAgent,
   };
   if (branch) {

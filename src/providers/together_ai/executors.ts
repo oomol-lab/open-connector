@@ -100,7 +100,7 @@ async function togetherAiRequest(
 
 function togetherAiHeaders(apiKey: string): Headers {
   return new Headers({
-    authorization: `Bearer ${apiKey}`,
+    "authorization": `Bearer ${apiKey}`,
     "content-type": "application/json",
     "user-agent": providerUserAgent,
   });

@@ -157,7 +157,7 @@ function withWpsClient<T>(
       endpoint: new URL(wpsMcpEndpoint),
       transport: "streamable_http",
       fetcher,
-      headers: { authorization: `Bearer ${apiKey.trim()}`, "user-agent": providerUserAgent },
+      headers: { "authorization": `Bearer ${apiKey.trim()}`, "user-agent": providerUserAgent },
       signal,
       protocolVersion: "legacy",
       mapError(error) {

@@ -310,8 +310,8 @@ function confluenceHeaders(input: ConfluenceRequestInput): Record<string, string
       ? `${input.auth.tokenType} ${input.auth.accessToken}`
       : `Basic ${Buffer.from(`${resolveConfluenceEmail(input.auth)}:${input.auth.apiToken}`).toString("base64")}`;
   const headers: Record<string, string> = {
-    Authorization: authorization,
-    Accept: "application/json",
+    "Authorization": authorization,
+    "Accept": "application/json",
     "User-Agent": providerUserAgent,
   };
   if (input.body !== undefined) {

@@ -38,8 +38,8 @@ async function request(
     }
     const hasBody = method !== "GET" && method !== "DELETE" && Object.keys(fields).length > 0;
     const headers = new Headers({
-      authorization: `Token ${apiKey}`,
-      accept: "application/json",
+      "authorization": `Token ${apiKey}`,
+      "accept": "application/json",
       "user-agent": providerUserAgent,
     });
     if (hasBody) headers.set("content-type", "application/json");
@@ -185,8 +185,5 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
   service: "securityscorecard",
   baseUrl: baseUrl,
   auth: { type: "api_key_authorization", prefix: "Token " },
-  async customizeRequest({ headers: proxyHeaders }) {
-    for (const [name, value] of Object.entries({ accept: "application/json", "user-agent": providerUserAgent }))
-      if (!proxyHeaders.has(name)) proxyHeaders.set(name, value);
-  },
+  defaultHeaders: { "accept": "application/json", "user-agent": providerUserAgent },
 });

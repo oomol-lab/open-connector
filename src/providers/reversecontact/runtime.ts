@@ -86,8 +86,8 @@ async function requestReversecontact(
     response = await fetcher(new URL(path, reversecontactApiBaseUrl), {
       method,
       headers: {
-        accept: "application/json",
-        authorization: `Bearer ${apiKey}`,
+        "accept": "application/json",
+        "authorization": `Bearer ${apiKey}`,
         ...(body ? { "content-type": "application/json" } : {}),
         "user-agent": providerUserAgent,
       },

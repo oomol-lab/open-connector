@@ -276,9 +276,7 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
   baseUrl: featheryApiBaseUrl,
   auth: { type: "api_key_authorization", prefix: "Token " },
   skipDnsValidation: true,
-  customizeRequest({ headers }) {
-    if (!headers.has("accept")) headers.set("accept", "application/json");
-  },
+  defaultHeaders: { accept: "application/json" },
 });
 
 export const credentialValidators: CredentialValidators = {
@@ -352,8 +350,8 @@ async function requestFeatheryJson(input: FeatheryRequestInput, fetcher: typeof 
 
 function featheryHeaders(apiKey: string, bodyType?: "json"): Record<string, string> {
   return {
-    accept: "application/json",
-    authorization: `Token ${apiKey}`,
+    "accept": "application/json",
+    "authorization": `Token ${apiKey}`,
     "user-agent": providerUserAgent,
     ...(bodyType === "json" ? { "content-type": "application/json" } : {}),
   };

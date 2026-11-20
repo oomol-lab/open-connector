@@ -1,6 +1,7 @@
 import type { AppleAdsPhase } from "./auth.ts";
 
 import { looseArray, optionalBoolean, optionalInteger, pickOptionalString, recordOrEmpty } from "../../core/cast.ts";
+import { encodePathSegment } from "../../core/request.ts";
 import {
   ProviderRequestError,
   providerUserAgent,
@@ -72,8 +73,8 @@ export async function requestAppleAds(context: AppleAdsContext, input: AppleAdsR
 
   return runProviderRequest({ label: providerLabel, signal: context.signal }, async (signal) => {
     const headers: Record<string, string> = {
-      accept: "application/json",
-      authorization: await context.authorization(),
+      "accept": "application/json",
+      "authorization": await context.authorization(),
       "user-agent": providerUserAgent,
     };
     if (input.adAccountId !== undefined) {
@@ -312,10 +313,6 @@ export function readAppleAdsNumericId(value: unknown, fieldName: string): number
 
 export function resourcePath(base: string, id: string, suffix?: string): string {
   return `${base}/${encodePathSegment(id)}${suffix ? `/${suffix}` : ""}`;
-}
-
-export function encodePathSegment(value: string): string {
-  return encodeURIComponent(value);
 }
 
 export function requireAnyAttribute(attributes: Record<string, unknown>, message: string): void {

@@ -167,7 +167,7 @@ async function requestCryptoApis(
     response = await context.fetcher(url, {
       method: "GET",
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "user-agent": providerUserAgent,
         "x-api-key": context.apiKey,
         "x-api-version": cryptoApisApiVersion,

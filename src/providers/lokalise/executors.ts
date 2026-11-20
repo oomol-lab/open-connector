@@ -340,7 +340,7 @@ async function requestLokalise(
   }
 
   const headers: Record<string, string> = {
-    accept: "application/json",
+    "accept": "application/json",
     "user-agent": providerUserAgent,
     "x-api-token": context.apiKey,
   };

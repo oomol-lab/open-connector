@@ -74,8 +74,8 @@ async function request(body: HarpaRequest, context: ApiKeyProviderContext, timeo
     const response = await context.fetcher(`${harpaAiApiBaseUrl}/grid`, {
       method: "POST",
       headers: {
-        accept: "application/json",
-        authorization: `Bearer ${context.apiKey}`,
+        "accept": "application/json",
+        "authorization": `Bearer ${context.apiKey}`,
         "content-type": "application/json",
         "user-agent": providerUserAgent,
       },

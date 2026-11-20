@@ -318,7 +318,7 @@ async function exchangeApiKey(apiKey: string, fetcher: ProviderFetch): Promise<G
   return runProviderRequest({ label: "Garmin Connect token" }, async (signal) => {
     const response = await fetcher(new URL(tokenPath, garminConnectApiBaseUrl), {
       method: "POST",
-      headers: { accept: "*/*", authorization: `ApiKey ${apiKey}`, "user-agent": providerUserAgent },
+      headers: { "accept": "*/*", "authorization": `ApiKey ${apiKey}`, "user-agent": providerUserAgent },
       signal,
     });
     if (!response.ok) {
@@ -371,7 +371,11 @@ async function getGarminConnect(context: ApiKeyProviderContext, request: GarminC
 async function sendGarminConnectGet(url: URL, accessToken: string, context: ProviderRequestContext): Promise<unknown> {
   return runProviderRequest({ label: "Garmin Connect", signal: context.signal }, async (signal) => {
     const response = await context.fetcher(url, {
-      headers: { accept: "application/json", authorization: `Bearer ${accessToken}`, "user-agent": providerUserAgent },
+      headers: {
+        "accept": "application/json",
+        "authorization": `Bearer ${accessToken}`,
+        "user-agent": providerUserAgent,
+      },
       signal,
     });
     if (!response.ok) {

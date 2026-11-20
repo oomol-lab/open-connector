@@ -47,7 +47,7 @@ type OneDriveRequestInput = {
 type OneDriveNextLinkPolicy = "children" | "search" | "permissions";
 
 type OneDriveGraphCollection<T> = {
-  value?: T;
+  "value"?: T;
   "@odata.nextLink"?: unknown;
 } & Record<string, unknown>;
 
@@ -501,8 +501,8 @@ async function createFolder(input: Record<string, unknown>, deps: OneDriveRuntim
       fetcher: deps.fetcher,
       method: "POST",
       body: {
-        name: requireString(input.name, "name"),
-        folder: {},
+        "name": requireString(input.name, "name"),
+        "folder": {},
         "@microsoft.graph.conflictBehavior": readOptionalString(input.conflictBehavior) ?? "rename",
       },
     }),
@@ -816,8 +816,8 @@ async function ensureFolderPathExists(folderPath: string, driveId: string | unde
           fetcher: deps.fetcher,
           method: "POST",
           body: {
-            name: segment,
-            folder: {},
+            "name": segment,
+            "folder": {},
             "@microsoft.graph.conflictBehavior": "fail",
           },
         },
@@ -866,10 +866,10 @@ async function createEmptyFile(
           "if-match": input.ifMatch,
         }),
         body: compactObject({
-          name: input.fileName,
-          file: {},
-          description: input.description,
-          fileSystemInfo: input.fileSystemInfo,
+          "name": input.fileName,
+          "file": {},
+          "description": input.description,
+          "fileSystemInfo": input.fileSystemInfo,
           "@microsoft.graph.conflictBehavior": input.conflictBehavior,
         }),
       },
@@ -1014,12 +1014,12 @@ function buildUploadSessionRequestBody(input: {
   return {
     item: compactObject({
       "@microsoft.graph.conflictBehavior": input.conflictBehavior,
-      description: input.description,
-      driveItemSource: input.driveItemSource,
-      fileSize: input.fileSize,
-      fileSystemInfo: input.fileSystemInfo,
-      mediaSource: input.mediaSource,
-      name: input.name,
+      "description": input.description,
+      "driveItemSource": input.driveItemSource,
+      "fileSize": input.fileSize,
+      "fileSystemInfo": input.fileSystemInfo,
+      "mediaSource": input.mediaSource,
+      "name": input.name,
     }),
   };
 }

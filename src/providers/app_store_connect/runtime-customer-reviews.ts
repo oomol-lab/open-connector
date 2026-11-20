@@ -26,8 +26,8 @@ export const appStoreConnectCustomerReviewHandlers: AppStoreConnectHandlers = {
         "filter[rating]": readIntegerQuery(input.rating),
         "filter[territory]": pickOptionalString(input, "territory"),
         "exists[publishedResponse]": booleanString(input.hasResponse),
-        sort: pickOptionalString(input, "sort"),
-        include: "response",
+        "sort": pickOptionalString(input, "sort"),
+        "include": "response",
       },
     });
     return {

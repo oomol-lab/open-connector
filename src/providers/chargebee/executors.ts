@@ -160,16 +160,16 @@ async function listWrapped(
 
 function buildListQuery(input: Record<string, unknown>): Record<string, unknown> {
   return compactObject({
-    limit: optionalInteger(input.limit),
-    offset: optionalString(input.offset),
+    "limit": optionalInteger(input.limit),
+    "offset": optionalString(input.offset),
     "id[is]": optionalString(input.id),
     "customer_id[is]": optionalString(input.customerId),
     "subscription_id[is]": optionalString(input.subscriptionId),
     "email[is]": optionalString(input.email),
     "status[is]": optionalString(input.status),
     "item_id[is]": optionalString(input.itemId),
-    sort_by: optionalString(input.sortBy),
-    sort_order: optionalString(input.sortOrder),
+    "sort_by": optionalString(input.sortBy),
+    "sort_order": optionalString(input.sortOrder),
   });
 }
 
@@ -209,8 +209,8 @@ async function requestChargebeeJson(
   const response = await context.fetcher(url, {
     method: options.method ?? "GET",
     headers: {
-      accept: "application/json",
-      authorization: `Basic ${Buffer.from(`${context.apiKey}:`).toString("base64")}`,
+      "accept": "application/json",
+      "authorization": `Basic ${Buffer.from(`${context.apiKey}:`).toString("base64")}`,
       "user-agent": providerUserAgent,
       ...(body ? { "content-type": "application/x-www-form-urlencoded" } : {}),
     },

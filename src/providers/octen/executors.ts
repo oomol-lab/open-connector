@@ -40,7 +40,7 @@ async function request(
       headers: {
         "x-api-key": apiKey,
         "content-type": "application/json",
-        accept: name === "research" ? "text/event-stream" : "application/json",
+        "accept": name === "research" ? "text/event-stream" : "application/json",
       },
       body: route.method === "POST" ? JSON.stringify(input) : undefined,
       signal,

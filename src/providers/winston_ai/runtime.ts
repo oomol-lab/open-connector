@@ -98,8 +98,8 @@ async function requestWinstonAiJson(input: WinstonAiRequestInput, context: ApiKe
       const response = await context.fetcher(new URL(input.path, winstonAiApiBaseUrl), {
         method: "POST",
         headers: {
-          accept: "application/json",
-          authorization: `Bearer ${context.apiKey}`,
+          "accept": "application/json",
+          "authorization": `Bearer ${context.apiKey}`,
           "content-type": "application/json",
           "user-agent": providerUserAgent,
         },

@@ -434,8 +434,8 @@ function requestContext(context: BearerProviderContext): Omit<TodoistRequestOpti
 
 function buildTodoistHeaders(accessToken: string, hasBody: boolean): Record<string, string> {
   return {
-    authorization: `Bearer ${accessToken}`,
-    accept: "application/json",
+    "authorization": `Bearer ${accessToken}`,
+    "accept": "application/json",
     "user-agent": providerUserAgent,
     ...(hasBody ? { "content-type": "application/json" } : {}),
   };

@@ -67,9 +67,9 @@ export async function getKaonaviToken(
       method: "POST",
       signal: requestSignal,
       headers: {
-        authorization: basicAuthorizationHeader(`${key}:${secret}`),
+        "authorization": basicAuthorizationHeader(`${key}:${secret}`),
         "content-type": "application/x-www-form-urlencoded;charset=UTF-8",
-        accept: "application/json",
+        "accept": "application/json",
       },
       body: new URLSearchParams({ grant_type: "client_credentials" }).toString(),
     });

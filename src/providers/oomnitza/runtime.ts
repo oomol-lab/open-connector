@@ -137,8 +137,8 @@ async function requestOomnitzaJson(input: OomnitzaRequestInput): Promise<unknown
     const response = await input.fetcher(buildOomnitzaUrl(input.baseUrl, input.path, input.query), {
       method: "GET",
       headers: {
-        accept: "application/json",
-        Authorization2: input.apiKey,
+        "accept": "application/json",
+        "Authorization2": input.apiKey,
         "user-agent": providerUserAgent,
       },
       signal: timeout.signal,

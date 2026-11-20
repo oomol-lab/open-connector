@@ -385,8 +385,8 @@ async function baremetricsRequestJson(
 
 function baremetricsHeaders(apiKey: string, extraHeaders?: HeadersInit): Record<string, string> {
   return {
-    accept: "application/json",
-    authorization: `Bearer ${apiKey}`,
+    "accept": "application/json",
+    "authorization": `Bearer ${apiKey}`,
     "user-agent": providerUserAgent,
     ...Object.fromEntries(new Headers(extraHeaders).entries()),
   };

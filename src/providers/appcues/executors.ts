@@ -18,7 +18,11 @@ async function request(suffix: string, method: string, context: Context): Promis
     new URL(`/v2/accounts/${encodeURIComponent(context.accountId)}/${suffix}`, context.baseUrl),
     {
       method,
-      headers: { accept: "application/json", authorization: context.authorization, "user-agent": providerUserAgent },
+      headers: {
+        "accept": "application/json",
+        "authorization": context.authorization,
+        "user-agent": providerUserAgent,
+      },
       signal: context.signal,
     },
   );

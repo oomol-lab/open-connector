@@ -44,7 +44,7 @@ async function request({
         method,
         signal,
         headers: {
-          accept: "application/json",
+          "accept": "application/json",
           "content-type": "application/json",
           "user-agent": providerUserAgent,
           "sb-api-key-id": apiKey,
@@ -183,12 +183,5 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
       response.status === 429 ? "rate_limited" : "provider_error",
     );
   },
-  customizeRequest({ headers }) {
-    for (const [name, value] of Object.entries({
-      accept: "application/json",
-      "content-type": "application/json",
-      "user-agent": providerUserAgent,
-    }))
-      if (!headers.has(name)) headers.set(name, value);
-  },
+  defaultHeaders: { "accept": "application/json", "content-type": "application/json", "user-agent": providerUserAgent },
 });

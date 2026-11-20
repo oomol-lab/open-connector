@@ -141,8 +141,8 @@ async function requestXataJson(context: XataContext, path: string, phase: XataPh
     response = await context.fetcher(new URL(path, xataApiBaseUrl), {
       method: "GET",
       headers: {
-        accept: "application/json",
-        authorization: `Bearer ${context.apiKey}`,
+        "accept": "application/json",
+        "authorization": `Bearer ${context.apiKey}`,
         "user-agent": providerUserAgent,
       },
       signal: timeout.signal,

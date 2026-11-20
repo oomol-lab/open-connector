@@ -107,8 +107,8 @@ async function writerRequest(context: ApiKeyProviderContext, input: WriterReques
 
 function writerHeaders(apiKey: string): Record<string, string> {
   return {
-    authorization: `Bearer ${apiKey}`,
-    accept: "application/json",
+    "authorization": `Bearer ${apiKey}`,
+    "accept": "application/json",
     "content-type": "application/json",
     "user-agent": providerUserAgent,
   };

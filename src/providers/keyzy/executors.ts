@@ -15,11 +15,14 @@ import {
   withRetryAfterSeconds,
 } from "../provider-runtime.ts";
 import { keyzyActions } from "./actions.ts";
+
 const baseUrl = "https://api.keyzy.io/v2";
+
 interface LicenseEndpoint {
   method: string;
   path: string;
 }
+
 const endpoints: Record<string, LicenseEndpoint> = {
   register_license: { method: "POST", path: "/licenses/register" },
   get_license: { method: "GET", path: "/licenses/show-license" },
@@ -27,11 +30,13 @@ const endpoints: Record<string, LicenseEndpoint> = {
   update_license_time: { method: "POST", path: "/licenses/update-time" },
   delete_license: { method: "DELETE", path: "/licenses/destroy-serial" },
 };
+
 const defaultHeaders = {
-  accept: "application/json",
+  "accept": "application/json",
   "content-type": "application/json",
   "user-agent": providerUserAgent,
 };
+
 const handlers = mapProviderActionHandlers(
   "keyzy",
   keyzyActions,
@@ -52,12 +57,7 @@ const handlers = mapProviderActionHandlers(
       body = JSON.stringify({ ...values, app_id: appId, api_key: apiKey });
     }
     return runProviderRequest({ label: "KEYZY", signal: context.signal }, async (signal) => {
-      const response = await context.fetcher(url, {
-        method: endpoint.method,
-        headers: defaultHeaders,
-        body,
-        signal,
-      });
+      const response = await context.fetcher(url, { method: endpoint.method, headers: defaultHeaders, body, signal });
       const text = await response.text();
       let payload: unknown = undefined;
       try {
@@ -84,6 +84,7 @@ const handlers = mapProviderActionHandlers(
     });
   },
 );
+
 export const credentialValidators: CredentialValidators = {
   async apiKey(input) {
     requiredInputString(input.apiKey, "apiKey");
@@ -98,9 +99,11 @@ export const credentialValidators: CredentialValidators = {
     };
   },
 };
+
 interface CredentialContext extends ApiKeyProviderContext {
   appId: string;
 }
+
 export const executors: ProviderExecutors = defineProviderExecutors({
   service: "keyzy",
   handlers,
@@ -115,6 +118,7 @@ export const executors: ProviderExecutors = defineProviderExecutors({
     };
   },
 });
+
 export const proxy: ProviderProxyExecutor = defineProviderProxy({
   service: "keyzy",
   baseUrl,
@@ -128,8 +132,8 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
       response.status === 429 ? "rate_limited" : "provider_error",
     );
   },
-  customizeRequest({ headers, credential, method, url, body, setBody }) {
-    for (const [name, value] of Object.entries(defaultHeaders)) if (!headers.has(name)) headers.set(name, value);
+  defaultHeaders,
+  customizeRequest({ credential, method, url, body, setBody }) {
     const appId = requiredInputString(
       credential && "values" in credential ? credential.values.appId : undefined,
       "appId",

@@ -91,7 +91,7 @@ async function requestVeriphone(input: VeriphoneRequestInput): Promise<Record<st
     response = await input.fetcher(url.toString(), {
       method: "GET",
       headers: {
-        authorization: `Bearer ${input.apiKey}`,
+        "authorization": `Bearer ${input.apiKey}`,
         "user-agent": providerUserAgent,
       },
       signal: input.signal,

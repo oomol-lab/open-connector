@@ -111,8 +111,8 @@ export async function zerotierRequest(
     const response = await context.fetcher(url, {
       method: options.method ?? "GET",
       headers: {
-        accept: "application/json",
-        authorization: zerotierAuthorizationHeader(context),
+        "accept": "application/json",
+        "authorization": zerotierAuthorizationHeader(context),
         "content-type": "application/json",
         "user-agent": providerUserAgent,
       },

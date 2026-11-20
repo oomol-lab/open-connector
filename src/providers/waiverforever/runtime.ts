@@ -194,7 +194,7 @@ async function waiverforeverPostJson(
     {
       method: "POST",
       headers: waiverforeverHeaders(context.apiKey, {
-        accept: "application/json",
+        "accept": "application/json",
         "content-type": "application/json",
       }),
       body: JSON.stringify(body),

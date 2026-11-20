@@ -173,7 +173,7 @@ async function agentqlPostJson(
     {
       method: "POST",
       headers: agentqlHeaders(context.apiKey, {
-        accept: "application/json",
+        "accept": "application/json",
         "content-type": "application/json",
         "x-tf-request-origin": "rest-api-data",
       }),

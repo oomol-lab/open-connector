@@ -41,9 +41,7 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
     return resolveOnePasswordEventsBaseUrl(credential.values, credential.metadata);
   },
   auth: { type: "api_key_authorization", prefix: "Bearer " },
-  customizeRequest({ headers }) {
-    if (!headers.has("accept")) headers.set("accept", "application/json");
-  },
+  defaultHeaders: { accept: "application/json" },
 });
 
 export const credentialValidators: CredentialValidators = {

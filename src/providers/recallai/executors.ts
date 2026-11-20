@@ -174,8 +174,8 @@ async function requestRecallAi(input: {
     response = await input.context.fetcher(new URL(input.path, input.context.apiBaseUrl), {
       method: input.method ?? "GET",
       headers: {
-        authorization: `Token ${input.context.apiKey}`,
-        accept: "application/json",
+        "authorization": `Token ${input.context.apiKey}`,
+        "accept": "application/json",
         ...(input.body ? { "content-type": "application/json" } : {}),
         "user-agent": providerUserAgent,
       },

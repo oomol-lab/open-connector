@@ -25,9 +25,9 @@ export const mailerliteActionHandlers: ProviderActionHandlers<"mailerlite", Mail
       path: "/subscribers",
       query: compactObject({
         "filter[status]": optionalString(input.status),
-        limit: optionalInteger(input.limit),
-        cursor: optionalString(input.cursor),
-        include: input.include_groups === true ? "groups" : undefined,
+        "limit": optionalInteger(input.limit),
+        "cursor": optionalString(input.cursor),
+        "include": input.include_groups === true ? "groups" : undefined,
       }),
       context,
       mode: "execute",
@@ -91,10 +91,10 @@ export const mailerliteActionHandlers: ProviderActionHandlers<"mailerlite", Mail
     return requestMailerliteJson({
       path: "/groups",
       query: compactObject({
-        limit: optionalInteger(input.limit),
-        page: optionalInteger(input.page),
+        "limit": optionalInteger(input.limit),
+        "page": optionalInteger(input.page),
         "filter[name]": optionalString(input.name),
-        sort: optionalString(input.sort),
+        "sort": optionalString(input.sort),
       }),
       context,
       mode: "execute",
@@ -132,9 +132,9 @@ export const mailerliteActionHandlers: ProviderActionHandlers<"mailerlite", Mail
       path: `/groups/${encodeURIComponent(requiredInputString(input.group_id, "group_id"))}/subscribers`,
       query: compactObject({
         "filter[status]": optionalString(input.status),
-        limit: optionalInteger(input.limit),
-        cursor: optionalString(input.cursor),
-        include: input.include_groups === true ? "groups" : undefined,
+        "limit": optionalInteger(input.limit),
+        "cursor": optionalString(input.cursor),
+        "include": input.include_groups === true ? "groups" : undefined,
       }),
       context,
       mode: "execute",
@@ -161,11 +161,11 @@ export const mailerliteActionHandlers: ProviderActionHandlers<"mailerlite", Mail
     return requestMailerliteJson({
       path: "/fields",
       query: compactObject({
-        limit: optionalInteger(input.limit),
-        page: optionalInteger(input.page),
+        "limit": optionalInteger(input.limit),
+        "page": optionalInteger(input.page),
         "filter[keyword]": optionalString(input.keyword),
         "filter[type]": optionalString(input.type),
-        sort: optionalString(input.sort),
+        "sort": optionalString(input.sort),
       }),
       context,
       mode: "execute",
@@ -250,8 +250,8 @@ async function mailerliteFetch(input: MailerliteRequestOptions): Promise<Respons
 
 function mailerliteHeaders(apiKey: string, hasBody: boolean): Record<string, string> {
   return {
-    accept: "application/json",
-    authorization: `Bearer ${apiKey}`,
+    "accept": "application/json",
+    "authorization": `Bearer ${apiKey}`,
     ...(hasBody ? { "content-type": "application/json" } : {}),
     "user-agent": providerUserAgent,
   };

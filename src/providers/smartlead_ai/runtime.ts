@@ -138,7 +138,7 @@ async function smartleadAiRequest(
     response = await context.fetcher(buildSmartleadAiUrl(input, context.apiKey), {
       method: "GET",
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "user-agent": providerUserAgent,
       },
       signal: context.signal,

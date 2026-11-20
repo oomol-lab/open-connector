@@ -15,7 +15,7 @@ import {
 } from "../provider-runtime.ts";
 import { pointagramActions } from "./actions.ts";
 const baseUrl = "https://app.pointagram.com/api/20";
-const defaultHeaders = { accept: "application/json", "content-type": "application/json" };
+const defaultHeaders = { "accept": "application/json", "content-type": "application/json" };
 const routes: Record<
   string,
   {
@@ -152,7 +152,5 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
     ],
   },
   skipDnsValidation: true,
-  customizeRequest({ headers }) {
-    for (const [name, value] of Object.entries(defaultHeaders)) if (!headers.has(name)) headers.set(name, value);
-  },
+  defaultHeaders,
 });

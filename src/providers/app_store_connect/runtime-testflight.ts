@@ -87,7 +87,7 @@ export const appStoreConnectTestFlightHandlers: AppStoreConnectHandlers = {
         "filter[apps]": pickOptionalString(input, "appId"),
         "filter[betaGroups]": pickOptionalString(input, "betaGroupId"),
         "filter[builds]": pickOptionalString(input, "buildId"),
-        sort: pickOptionalString(input, "sort"),
+        "sort": pickOptionalString(input, "sort"),
       },
     });
     return { betaTesters: page.items, nextCursor: page.nextCursor, total: page.total };
@@ -193,7 +193,7 @@ export const appStoreConnectTestFlightHandlers: AppStoreConnectHandlers = {
 
     const existing = await requestAppStoreConnect(context, {
       path: "/v1/betaBuildLocalizations",
-      query: { "filter[build]": buildId, "filter[locale]": locale, limit: "1" },
+      query: { "filter[build]": buildId, "filter[locale]": locale, "limit": "1" },
     });
     const localizationId = readLocalizationId(existing.payload);
     if (localizationId) {

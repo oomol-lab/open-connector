@@ -96,7 +96,7 @@ async function exchangeToken(
   return runProviderRequest({ label: "Amazon LWA", signal: callerSignal }, async (signal) => {
     const response = await fetcher("https://api.amazon.com/auth/o2/token", {
       method: "POST",
-      headers: { "content-type": "application/x-www-form-urlencoded", accept: "application/json" },
+      headers: { "content-type": "application/x-www-form-urlencoded", "accept": "application/json" },
       body: new URLSearchParams({
         ...parameters,
         client_id: clientConfig.clientId,

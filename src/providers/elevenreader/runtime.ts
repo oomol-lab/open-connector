@@ -278,7 +278,7 @@ function elevenreaderHeaders(apiKey: string): Record<string, string> {
 function elevenreaderBinaryHeaders(apiKey: string): Record<string, string> {
   return {
     "xi-api-key": apiKey,
-    accept: "audio/mpeg",
+    "accept": "audio/mpeg",
     "user-agent": providerUserAgent,
   };
 }
@@ -286,7 +286,7 @@ function elevenreaderBinaryHeaders(apiKey: string): Record<string, string> {
 function elevenreaderJsonHeaders(apiKey: string): Record<string, string> {
   return {
     ...elevenreaderHeaders(apiKey),
-    accept: "application/json",
+    "accept": "application/json",
     "content-type": "application/json",
   };
 }

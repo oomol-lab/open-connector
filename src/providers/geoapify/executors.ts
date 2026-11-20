@@ -201,7 +201,7 @@ function buildGeoapifyUrl(path: string, query: Record<string, string | number | 
 
 function geoapifyHeaders(contentType?: string): Record<string, string> {
   const headers: Record<string, string> = {
-    accept: "application/json",
+    "accept": "application/json",
     "user-agent": providerUserAgent,
   };
   if (contentType) {

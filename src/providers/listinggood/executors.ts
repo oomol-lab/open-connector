@@ -22,7 +22,7 @@ const paths: Record<string, string> = {
   fill_from_sentence: "/fill-from-sentence",
   generate_listing: "/generate",
 };
-const defaultHeaders = { accept: "application/json", "user-agent": providerUserAgent };
+const defaultHeaders = { "accept": "application/json", "user-agent": providerUserAgent };
 interface ListinggoodRequest {
   path: string;
   apiKey: string;
@@ -37,7 +37,7 @@ async function request({ path, apiKey, body, fetcher, parentSignal }: Listinggoo
       headers: {
         ...defaultHeaders,
         "content-type": "application/json",
-        authorization: `Bearer ${apiKey}`,
+        "authorization": `Bearer ${apiKey}`,
       },
       body: body ? JSON.stringify(body) : undefined,
       signal,
@@ -116,13 +116,7 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
   baseUrl,
   auth: { type: "api_key_authorization", prefix: "Bearer " },
   skipDnsValidation: true,
-  customizeRequest({ headers }) {
-    for (const [name, value] of Object.entries({
-      accept: "application/json",
-      "user-agent": providerUserAgent,
-    }))
-      if (!headers.has(name)) headers.set(name, value);
-  },
+  defaultHeaders: { "accept": "application/json", "user-agent": providerUserAgent },
   async readError(response) {
     return new ProviderRequestError(
       response.status,

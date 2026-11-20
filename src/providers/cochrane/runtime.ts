@@ -141,7 +141,7 @@ async function requestCochraneJson(input: CochraneRequestInput) {
 async function requestCochrane(input: CochraneRequestInput) {
   const timeoutHandle = createProviderTimeout(undefined);
   const headers = new Headers({
-    accept: input.phase == "validate" ? "application/xml;charset=utf-8" : "application/json",
+    "accept": input.phase == "validate" ? "application/xml;charset=utf-8" : "application/json",
     "user-agent": providerUserAgent,
   });
   applyCochraneAuthorization(headers, credentialValues(input.credential));

@@ -27,12 +27,12 @@ describe("action idempotency", () => {
     const left = hashActionRequest({
       actionId: "example.echo",
       connectionName: "work",
-      input: { query: "hello", nested: { first: 1, second: 2, 界: 3, "!": 4 } },
+      input: { query: "hello", nested: { "first": 1, "second": 2, "界": 3, "!": 4 } },
     });
     const right = hashActionRequest({
       actionId: "example.echo",
       connectionName: "work",
-      input: { nested: { "!": 4, 界: 3, second: 2, first: 1 }, query: "hello" },
+      input: { nested: { "!": 4, "界": 3, "second": 2, "first": 1 }, query: "hello" },
     });
 
     expect(left).toBe(right);
@@ -41,7 +41,7 @@ describe("action idempotency", () => {
       hashActionRequest({
         actionId: "example.echo",
         connectionName: "personal",
-        input: { query: "hello", nested: { first: 1, second: 2, 界: 3, "!": 4 } },
+        input: { query: "hello", nested: { "first": 1, "second": 2, "界": 3, "!": 4 } },
       }),
     );
     expect(hashIdempotencyKey("request-1")).not.toBe("request-1");

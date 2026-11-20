@@ -61,8 +61,8 @@ async function requestSmartHr(options: RequestOptions) {
     const response = await options.fetcher(url, {
       method: options.method ?? "GET",
       headers: {
-        accept: "application/json",
-        authorization: `Bearer ${apiKey}`,
+        "accept": "application/json",
+        "authorization": `Bearer ${apiKey}`,
         "content-type": "application/json",
         "user-agent": providerUserAgent,
       },

@@ -213,7 +213,7 @@ async function requestCoupangJson(input: CoupangRequestInput) {
   }
   const method = input.method ?? "GET";
   const headers = new Headers({
-    accept: "application/json",
+    "accept": "application/json",
     "content-type": "application/json;charset=UTF-8",
     "user-agent": connectorUserAgent,
     "x-market": input.credential.market,

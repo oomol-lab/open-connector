@@ -91,7 +91,7 @@ async function downloadSource(url: string, signal?: AbortSignal): Promise<{ byte
   let response: Response;
   try {
     response = await providerFetch(url, {
-      headers: { accept: "image/jpeg, image/png, image/webp", "user-agent": providerUserAgent },
+      headers: { "accept": "image/jpeg, image/png, image/webp", "user-agent": providerUserAgent },
       signal,
     });
   } catch (error) {
@@ -122,8 +122,8 @@ async function requestTranslation(
     response = await context.fetcher(new URL(translatePath, apiBaseUrl), {
       method: "POST",
       headers: {
-        accept: "application/json",
-        authorization: `Bearer ${context.apiKey}`,
+        "accept": "application/json",
+        "authorization": `Bearer ${context.apiKey}`,
         "content-type": "application/json",
         "idempotency-key": idempotencyKey,
         "user-agent": providerUserAgent,

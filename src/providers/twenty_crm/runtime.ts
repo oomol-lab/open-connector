@@ -216,8 +216,8 @@ async function requestTwentyCrmJson(
   const response = await context.fetcher(url.toString(), {
     method: options.method,
     headers: {
-      accept: "application/json",
-      authorization: `Bearer ${context.apiKey}`,
+      "accept": "application/json",
+      "authorization": `Bearer ${context.apiKey}`,
       "content-type": "application/json",
       "user-agent": providerUserAgent,
     },

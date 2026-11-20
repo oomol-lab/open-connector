@@ -234,9 +234,9 @@ function buildAgiledUrl(path: string, apiKey: string) {
 
 function buildAgiledHeaders(brand: string): HeadersInit {
   return {
-    accept: "application/json",
+    "accept": "application/json",
     "content-type": "application/json",
-    Brand: brand,
+    "Brand": brand,
     "user-agent": providerUserAgent,
   };
 }

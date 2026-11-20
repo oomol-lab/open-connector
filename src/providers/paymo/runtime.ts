@@ -257,8 +257,8 @@ async function requestPaymoJson(input: PaymoRequestInput) {
     response = await input.fetcher(url, {
       method: input.method ?? "GET",
       headers: {
-        accept: "application/json",
-        authorization: `Basic ${Buffer.from(`${input.apiKey}:x`).toString("base64")}`,
+        "accept": "application/json",
+        "authorization": `Basic ${Buffer.from(`${input.apiKey}:x`).toString("base64")}`,
         "content-type": "application/json",
         "user-agent": providerUserAgent,
       },

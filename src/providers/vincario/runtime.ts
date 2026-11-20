@@ -98,7 +98,7 @@ function vinFrom(input: Record<string, unknown>): string {
 async function request(definition: Definition, context: VincarioContext, phase: "validate" | "execute") {
   return runProviderRequest({ label: "Vincario", signal: context.signal }, async (signal) => {
     const response = await context.fetcher(buildUrl(definition, context.apiKey, context.secretKey), {
-      headers: { accept: "application/json", "user-agent": providerUserAgent },
+      headers: { "accept": "application/json", "user-agent": providerUserAgent },
       signal,
     });
     const text = await response.text();

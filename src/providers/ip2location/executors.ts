@@ -114,7 +114,7 @@ async function requestIp2locationJson(
     response = await context.fetcher(buildIp2locationUrl(input, context.apiKey), {
       method: "GET",
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "user-agent": providerUserAgent,
       },
       signal: context.signal,

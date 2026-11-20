@@ -5,6 +5,7 @@ import { optionalRecord, optionalRawString } from "../../core/cast.ts";
 import { defineApiKeyProviderExecutors, mapProviderActionHandlers } from "../provider-executors.ts";
 import { defineProviderProxy } from "../provider-proxy.ts";
 import {
+  encodeNonDotPathSegment,
   readProviderTextBody,
   ProviderRequestError,
   providerUserAgent,
@@ -14,12 +15,6 @@ import {
 } from "../provider-runtime.ts";
 import { mementoDatabaseActions } from "./actions.ts";
 const baseUrl = "https://api.mementodatabase.com/v1";
-function encodePathSegment(value: string) {
-  if (value === "." || value === "..") {
-    throw new ProviderRequestError(400, "resource IDs cannot be dot path segments", undefined, "invalid_input");
-  }
-  return encodeURIComponent(value);
-}
 async function request(
   path: string,
   method: string,
@@ -37,7 +32,7 @@ async function request(
       method,
       signal,
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "user-agent": providerUserAgent,
         "content-type": "application/json",
       },
@@ -87,13 +82,13 @@ export const executors: ProviderExecutors = defineApiKeyProviderExecutors(
       let body: Record<string, unknown> | undefined;
       const query = new URLSearchParams();
       if (action.name !== "list_libraries") {
-        path += `/${encodePathSegment(requiredInputString(data.libraryId, "libraryId"))}`;
+        path += `/${encodePathSegment(data.libraryId, "libraryId")}`;
       }
       if (["list_entries", "create_entry", "get_entry", "update_entry", "delete_entry"].includes(action.name)) {
         path += "/entries";
       }
       if (["get_entry", "update_entry", "delete_entry"].includes(action.name)) {
-        path += `/${encodePathSegment(requiredInputString(data.entryId, "entryId"))}`;
+        path += `/${encodePathSegment(data.entryId, "entryId")}`;
       }
       if (action.name === "search_entries") {
         path += "/search";
@@ -130,11 +125,9 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
   baseUrl,
   auth: { type: "api_key_query", name: "token" },
   skipDnsValidation: true,
-  customizeRequest({ headers }) {
-    for (const [key, value] of Object.entries({
-      accept: "application/json",
-      "user-agent": providerUserAgent,
-    }))
-      if (!headers.has(key)) headers.set(key, value);
-  },
+  defaultHeaders: { "accept": "application/json", "user-agent": providerUserAgent },
 });
+
+function encodePathSegment(value: unknown, fieldName: string): string {
+  return encodeNonDotPathSegment(requiredInputString(value, fieldName));
+}

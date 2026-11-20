@@ -598,7 +598,7 @@ function buildElevenlabsUrl(
 function elevenlabsHeaders(apiKey: string) {
   return {
     "xi-api-key": apiKey,
-    accept: "application/json",
+    "accept": "application/json",
     "user-agent": elevenlabsUserAgent,
   };
 }
@@ -606,7 +606,7 @@ function elevenlabsHeaders(apiKey: string) {
 function elevenlabsBinaryHeaders(apiKey: string) {
   return {
     "xi-api-key": apiKey,
-    accept: "*/*",
+    "accept": "*/*",
     "user-agent": elevenlabsUserAgent,
   };
 }

@@ -282,8 +282,8 @@ async function cartesRequest(
     response = await context.fetcher(url, {
       method,
       headers: {
-        accept: "application/json",
-        authorization: context.apiKey,
+        "accept": "application/json",
+        "authorization": context.apiKey,
         "content-type": "application/json",
         "user-agent": providerUserAgent,
       },

@@ -37,8 +37,8 @@ export const itGlueActionHandlers: ProviderActionHandlers<"it_glue", ProviderRun
       path: "/organizations",
       phase: "execute",
       query: compactItGlueQuery({
-        sort: optionalString(input.sort),
-        include: readOptionalCommaList(input.include),
+        "sort": optionalString(input.sort),
+        "include": readOptionalCommaList(input.include),
         "filter[name]": optionalString(input.name),
         "filter[organization_type_id]": input.organizationTypeId,
         "filter[organization_status_id]": input.organizationStatusId,
@@ -67,7 +67,7 @@ export const itGlueActionHandlers: ProviderActionHandlers<"it_glue", ProviderRun
       path: "/users",
       phase: "execute",
       query: compactItGlueQuery({
-        sort: optionalString(input.sort),
+        "sort": optionalString(input.sort),
         "filter[name]": optionalString(input.name),
         "filter[email]": optionalString(input.email),
         "filter[role_name]": optionalString(input.roleName),
@@ -91,8 +91,8 @@ export const itGlueActionHandlers: ProviderActionHandlers<"it_glue", ProviderRun
       path: "/configurations",
       phase: "execute",
       query: compactItGlueQuery({
-        sort: optionalString(input.sort),
-        include: readOptionalCommaList(input.include),
+        "sort": optionalString(input.sort),
+        "include": readOptionalCommaList(input.include),
         "filter[organization_id]": organizationId,
         "filter[name]": optionalString(input.name),
         "filter[serial_number]": optionalString(input.serialNumber),
@@ -127,8 +127,8 @@ export const itGlueActionHandlers: ProviderActionHandlers<"it_glue", ProviderRun
       path: "/contacts",
       phase: "execute",
       query: compactItGlueQuery({
-        sort: optionalString(input.sort),
-        include: readOptionalCommaList(input.include),
+        "sort": optionalString(input.sort),
+        "include": readOptionalCommaList(input.include),
         "filter[organization_id]": organizationId,
         "filter[first_name]": optionalString(input.firstName),
         "filter[last_name]": optionalString(input.lastName),
@@ -207,7 +207,7 @@ async function requestItGlueJson(options: ItGlueRequestOptions): Promise<unknown
     response = await options.fetcher(url, {
       method: "GET",
       headers: {
-        accept: "application/vnd.api+json",
+        "accept": "application/vnd.api+json",
         "content-type": "application/vnd.api+json",
         "user-agent": providerUserAgent,
         "x-api-key": options.apiKey,

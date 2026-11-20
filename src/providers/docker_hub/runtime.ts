@@ -418,8 +418,8 @@ async function removeDockerHubTeamMember(input: Record<string, unknown>, context
 
 function dockerHubHeaders(bearerToken: string, hasJsonBody: boolean) {
   const headers: Record<string, string> = {
-    accept: "application/json",
-    authorization: `Bearer ${bearerToken}`,
+    "accept": "application/json",
+    "authorization": `Bearer ${bearerToken}`,
     "user-agent": dockerHubUserAgent,
   };
   if (hasJsonBody) {
@@ -450,7 +450,7 @@ async function exchangeDockerHubAccessToken(
     response = await fetcher(buildDockerHubUrl(dockerHubAccessTokenPath), {
       method: "POST",
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "content-type": "application/json",
         "user-agent": dockerHubUserAgent,
       },

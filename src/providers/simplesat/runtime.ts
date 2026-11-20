@@ -236,7 +236,7 @@ async function requestSimplesatJson(input: SimplesatRequestInput): Promise<unkno
 
 function buildSimplesatHeaders(apiKey: string, body: Record<string, unknown> | undefined): Record<string, string> {
   return {
-    accept: "application/json",
+    "accept": "application/json",
     "x-simplesat-token": apiKey,
     "user-agent": providerUserAgent,
     ...(body === undefined ? {} : { "content-type": "application/json" }),

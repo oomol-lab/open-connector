@@ -31,9 +31,7 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
   baseUrl,
   auth: { type: "api_key_basic", suffix: ":" },
   skipDnsValidation: true,
-  customizeRequest({ headers }) {
-    if (!headers.has("accept")) headers.set("accept", "application/json");
-  },
+  defaultHeaders: { accept: "application/json" },
 });
 
 export const credentialValidators: CredentialValidators = {
@@ -76,8 +74,8 @@ async function request(path: string, body: Record<string, unknown>, context: Api
   const response = await context.fetcher(new URL(path, baseUrl), {
     method: "POST",
     headers: {
-      authorization: basicAuthorizationHeader(`${context.apiKey}:`),
-      accept: "application/json",
+      "authorization": basicAuthorizationHeader(`${context.apiKey}:`),
+      "accept": "application/json",
       "content-type": "application/json",
       "user-agent": providerUserAgent,
     },

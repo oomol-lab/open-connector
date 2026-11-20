@@ -637,8 +637,8 @@ async function instagramRequestJson(request: InstagramRequest, context: Instagra
   const url = new URL(`/${instagramApiVersion}${request.path}`, baseUrl);
   setSearchParams(url, request.query ?? {});
   const headers: Record<string, string> = {
-    accept: "application/json",
-    authorization: `Bearer ${context.accessToken}`,
+    "accept": "application/json",
+    "authorization": `Bearer ${context.accessToken}`,
     "user-agent": providerUserAgent,
   };
   let body: BodyInit | undefined;

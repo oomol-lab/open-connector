@@ -113,8 +113,8 @@ async function requestPlacekey(
     response = await context.fetcher(url, {
       method: "POST",
       headers: {
-        accept: "application/json",
-        apikey: context.apiKey,
+        "accept": "application/json",
+        "apikey": context.apiKey,
         "content-type": "application/json",
         "user-agent": providerUserAgent,
       },

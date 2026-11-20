@@ -134,7 +134,7 @@ async function requestGenderapiIo(
     response = await context.fetcher(buildGenderapiIoUrl(path, query, context.apiKey), {
       method: "GET",
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "user-agent": providerUserAgent,
       },
       signal: context.signal,

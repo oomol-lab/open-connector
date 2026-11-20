@@ -79,8 +79,8 @@ async function requestMintlifyJson(input: {
     const response = await input.fetcher(new URL(`${mintlifyApiBaseUrl}${input.path}`), {
       method: input.method,
       headers: {
-        accept: "application/json",
-        authorization: `Bearer ${input.apiKey}`,
+        "accept": "application/json",
+        "authorization": `Bearer ${input.apiKey}`,
         ...(input.body ? { "content-type": "application/json" } : {}),
         "user-agent": providerUserAgent,
       },

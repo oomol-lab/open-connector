@@ -268,8 +268,8 @@ function buildUrl(path: string, params?: Record<string, unknown>) {
 
 function buildHeaders(apiKey: string, hasBody: boolean) {
   const headers: Record<string, string> = {
-    accept: "application/json",
-    authorization: `Bearer ${apiKey}`,
+    "accept": "application/json",
+    "authorization": `Bearer ${apiKey}`,
     "user-agent": providerUserAgent,
   };
   if (hasBody) headers["content-type"] = "application/json";

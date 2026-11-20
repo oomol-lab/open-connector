@@ -80,7 +80,7 @@ export async function googleRequest(
   }
 
   const headers = {
-    authorization: `Bearer ${input.accessToken}`,
+    "authorization": `Bearer ${input.accessToken}`,
     "user-agent": providerUserAgent,
     ...(input.headers ?? {}),
   };

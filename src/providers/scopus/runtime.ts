@@ -295,7 +295,7 @@ function buildScopusUrl(path: string, query: Record<string, string | undefined>)
 
 function buildScopusHeaders(context: ScopusContext): Record<string, string> {
   const headers: Record<string, string> = {
-    accept: "application/json",
+    "accept": "application/json",
     "user-agent": providerUserAgent,
     "x-els-apikey": context.apiKey,
   };

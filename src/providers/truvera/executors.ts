@@ -20,9 +20,7 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
     return resolveTruveraApiBaseUrl(credential.values.apiBaseUrl ?? credential.metadata.apiBaseUrl);
   },
   auth: { type: "api_key_authorization", prefix: "Bearer " },
-  customizeRequest({ headers }) {
-    if (!headers.has("accept")) headers.set("accept", "application/json");
-  },
+  defaultHeaders: { accept: "application/json" },
 });
 
 export const executors: ProviderExecutors = defineProviderExecutors<TruveraActionContext>({

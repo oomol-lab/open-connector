@@ -40,7 +40,7 @@ export const appStoreConnectSigningHandlers: AppStoreConnectHandlers = {
         "filter[name]": pickOptionalString(input, "name"),
         "filter[platform]": pickOptionalString(input, "platform"),
         "filter[seedId]": pickOptionalString(input, "seedId"),
-        sort: pickOptionalString(input, "sort"),
+        "sort": pickOptionalString(input, "sort"),
       },
     });
     return { bundleIds: page.items, nextCursor: page.nextCursor, total: page.total };
@@ -233,7 +233,7 @@ export const appStoreConnectSigningHandlers: AppStoreConnectHandlers = {
         "filter[name]": pickOptionalString(input, "name"),
         "filter[profileType]": pickOptionalString(input, "profileType"),
         "filter[profileState]": pickOptionalString(input, "profileState"),
-        sort: pickOptionalString(input, "sort"),
+        "sort": pickOptionalString(input, "sort"),
       },
     });
     return { profiles: page.items, nextCursor: page.nextCursor, total: page.total };
@@ -313,7 +313,7 @@ export const appStoreConnectSigningHandlers: AppStoreConnectHandlers = {
         "filter[platform]": pickOptionalString(input, "platform"),
         "filter[udid]": pickOptionalString(input, "udid"),
         "filter[status]": pickOptionalString(input, "status"),
-        sort: pickOptionalString(input, "sort"),
+        "sort": pickOptionalString(input, "sort"),
       },
     });
     return { devices: page.items, nextCursor: page.nextCursor, total: page.total };
@@ -367,7 +367,7 @@ export const appStoreConnectSigningHandlers: AppStoreConnectHandlers = {
       query: {
         "filter[name]": pickOptionalString(input, "name"),
         "filter[identifier]": pickOptionalString(input, "identifier"),
-        sort: pickOptionalString(input, "sort"),
+        "sort": pickOptionalString(input, "sort"),
       },
     });
     return { merchantIds: page.items, nextCursor: page.nextCursor, total: page.total };
@@ -433,7 +433,7 @@ export const appStoreConnectSigningHandlers: AppStoreConnectHandlers = {
       query: {
         "filter[name]": pickOptionalString(input, "name"),
         "filter[identifier]": pickOptionalString(input, "identifier"),
-        sort: pickOptionalString(input, "sort"),
+        "sort": pickOptionalString(input, "sort"),
       },
     });
     return { passTypeIds: page.items, nextCursor: page.nextCursor, total: page.total };
@@ -501,7 +501,7 @@ async function listCertificates(context: AppStoreConnectContext, input: Record<s
       "filter[displayName]": pickOptionalString(input, "displayName"),
       "filter[certificateType]": pickOptionalString(input, "certificateType"),
       "filter[serialNumber]": pickOptionalString(input, "serialNumber"),
-      sort: pickOptionalString(input, "sort"),
+      "sort": pickOptionalString(input, "sort"),
     },
   });
   return { certificates: page.items, nextCursor: page.nextCursor, total: page.total };

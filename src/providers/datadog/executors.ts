@@ -412,12 +412,12 @@ async function datadogRequestJson(
 
 function datadogHeaders(context: DatadogActionContext): Record<string, string> {
   return compactObject({
-    accept: "application/json",
+    "accept": "application/json",
     "content-type": "application/json",
     "user-agent": providerUserAgent,
     "DD-API-KEY": context.apiKey,
     "DD-APPLICATION-KEY": context.applicationKey,
-    authorization: context.authorization,
+    "authorization": context.authorization,
   }) as Record<string, string>;
 }
 

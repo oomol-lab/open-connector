@@ -185,7 +185,7 @@ function buildSensiboUrl(path: string, apiKey: string, query?: Record<string, st
 
 function buildSensiboHeaders(method: "GET" | "POST"): Record<string, string> {
   return compactObject({
-    accept: "application/json",
+    "accept": "application/json",
     "accept-encoding": "gzip",
     "content-type": method === "POST" ? "application/json" : undefined,
     "user-agent": providerUserAgent,

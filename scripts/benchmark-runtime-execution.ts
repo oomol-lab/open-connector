@@ -198,7 +198,7 @@ async function benchmark(directory: string, scenario: Scenario, concurrency: num
             const request = new Request(`${origin}/v1/actions/${action.id}`, {
               method: "POST",
               headers: {
-                authorization: `Bearer ${scenario === "unauthorized" ? "oct_invalid" : token.token}`,
+                "authorization": `Bearer ${scenario === "unauthorized" ? "oct_invalid" : token.token}`,
                 "content-type": "application/json",
                 "x-oo-connector-app-id": selected.id,
               },

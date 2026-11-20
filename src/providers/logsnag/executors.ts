@@ -34,9 +34,7 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
   baseUrl: logsnagApiBaseUrl,
   auth: { type: "api_key_authorization", prefix: "Bearer " },
   skipDnsValidation: true,
-  customizeRequest({ headers }) {
-    if (!headers.has("accept")) headers.set("accept", "application/json");
-  },
+  defaultHeaders: { accept: "application/json" },
 });
 
 export const credentialValidators: CredentialValidators = {
@@ -67,8 +65,8 @@ async function requestLogsnag(
   const response = await context.fetcher(new URL(path, `${logsnagApiBaseUrl}/`), {
     method,
     headers: {
-      accept: "application/json",
-      authorization: `Bearer ${context.apiKey}`,
+      "accept": "application/json",
+      "authorization": `Bearer ${context.apiKey}`,
       "content-type": "application/json",
       "user-agent": providerUserAgent,
     },

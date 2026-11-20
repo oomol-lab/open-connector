@@ -120,8 +120,8 @@ async function requestDataForB2B(input: DataForB2BRequestInput): Promise<unknown
     const response = await input.fetcher(url, {
       method: input.request.method,
       headers: {
-        accept: "application/json",
-        api_key: input.apiKey,
+        "accept": "application/json",
+        "api_key": input.apiKey,
         ...(input.request.method == "POST" ? { "content-type": "application/json" } : {}),
         "user-agent": providerUserAgent,
       },

@@ -171,8 +171,8 @@ async function requestCheckJson(input: {
     response = await input.context.fetcher(buildUrl(input.context.apiBaseUrl, input.path, input.query), {
       method: input.method,
       headers: {
-        accept: "application/json",
-        authorization: `Bearer ${input.context.apiKey}`,
+        "accept": "application/json",
+        "authorization": `Bearer ${input.context.apiKey}`,
         "user-agent": providerUserAgent,
         ...(input.body ? { "content-type": "application/json" } : {}),
       },

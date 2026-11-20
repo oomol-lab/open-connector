@@ -185,7 +185,7 @@ async function request(context: FundzwatchContext, input: RequestInput): Promise
   const url = new URL(input.path, baseUrl);
   for (const [key, value] of Object.entries(input.query ?? {}))
     if (value !== undefined) url.searchParams.set(key, String(value));
-  const headers = new Headers({ accept: "application/json", "user-agent": providerUserAgent });
+  const headers = new Headers({ "accept": "application/json", "user-agent": providerUserAgent });
   if (context.apiKey) headers.set("authorization", `Bearer ${context.apiKey}`);
   if (input.body) headers.set("content-type", "application/json");
   const response = await context.fetcher(url, {

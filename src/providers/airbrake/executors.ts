@@ -290,7 +290,7 @@ function buildAirbrakeUrl(path: string, apiKey: string, query: Record<string, Ai
 
 function buildAirbrakeHeaders(hasBody: boolean): Record<string, string> {
   const headers = compactObject({
-    accept: "application/json",
+    "accept": "application/json",
     "user-agent": providerUserAgent,
     "content-type": hasBody ? "application/json" : undefined,
   });

@@ -71,7 +71,7 @@ async function request(path: string, query: Record<string, string | undefined>, 
   url.searchParams.set("email", context.email);
   for (const [key, value] of Object.entries(query)) if (value !== undefined) url.searchParams.set(key, value);
   const response = await context.fetcher(url, {
-    headers: { accept: "application/json", "user-agent": providerUserAgent },
+    headers: { "accept": "application/json", "user-agent": providerUserAgent },
     signal: context.signal,
   });
   const text = await response.text();

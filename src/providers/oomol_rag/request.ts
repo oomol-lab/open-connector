@@ -30,9 +30,9 @@ export async function requestOomolRag(
   }
   return runProviderRequest({ signal: context.signal, label: "OOMOL RAG" }, async (signal) => {
     const headers = new Headers({
-      authorization: `Bearer ${context.apiKey}`,
+      "authorization": `Bearer ${context.apiKey}`,
       "x-oo-team-id": context.teamId,
-      accept: "application/json",
+      "accept": "application/json",
       "user-agent": providerUserAgent,
     });
     if (input.body !== undefined) headers.set("content-type", "application/json");

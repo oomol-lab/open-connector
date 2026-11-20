@@ -146,8 +146,8 @@ async function getGeneration(input: Record<string, unknown>, context: ApiKeyProv
 async function leonardoAiRequest(options: LeonardoAiRequestOptions, context: ApiKeyProviderContext): Promise<unknown> {
   const url = new URL(`${options.baseUrl ?? leonardoAiV2ApiBaseUrl}${options.path}`);
   const headers = new Headers({
-    accept: "application/json",
-    authorization: `Bearer ${context.apiKey}`,
+    "accept": "application/json",
+    "authorization": `Bearer ${context.apiKey}`,
     "user-agent": providerUserAgent,
   });
   const init: RequestInit = {

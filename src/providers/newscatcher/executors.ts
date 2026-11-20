@@ -25,7 +25,7 @@ async function request(
   const response = await fetcher(new URL(path, baseUrl), {
     method: "POST",
     headers: {
-      accept: "application/json",
+      "accept": "application/json",
       "content-type": "application/json",
       "user-agent": providerUserAgent,
       "x-api-token": apiKey,

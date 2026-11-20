@@ -150,7 +150,7 @@ async function requestBotsonic(input: {
 
 function buildBotsonicHeaders(apiKey: string, hasBody: boolean): Headers {
   const headers = new Headers({
-    accept: "application/json",
+    "accept": "application/json",
     "user-agent": providerUserAgent,
     [botsonicAuthHeader]: apiKey,
   });

@@ -150,8 +150,8 @@ async function requestPredisAi(input: PredisAiRequest): Promise<{ payload: unkno
     const response = await input.context.fetcher(url, {
       method: input.method,
       headers: {
-        accept: "application/json",
-        Authorization: input.context.apiKey,
+        "accept": "application/json",
+        "Authorization": input.context.apiKey,
         "user-agent": providerUserAgent,
       },
       body: input.body,

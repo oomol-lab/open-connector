@@ -114,7 +114,7 @@ async function requestAssuredPlatformJson(
     }
     const response = await context.fetcher(url, {
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "user-agent": providerUserAgent,
         "x-api-key": context.apiKey,
       },

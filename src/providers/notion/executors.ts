@@ -970,7 +970,7 @@ async function notionRequest<T>(accessToken: string, input: NotionRequestInput, 
 
 function buildNotionHeaders(accessToken: string, path: string, hasBody: boolean) {
   const headers: Record<string, string> = {
-    authorization: `Bearer ${accessToken}`,
+    "authorization": `Bearer ${accessToken}`,
     "notion-version": notionCoreVersion,
   };
   if (hasBody) {

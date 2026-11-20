@@ -137,8 +137,8 @@ async function requestGenderApi(input: {
   body?: Record<string, unknown>;
 }): Promise<unknown> {
   const headers: Record<string, string> = {
-    accept: "application/json",
-    authorization: `Bearer ${input.context.apiKey}`,
+    "accept": "application/json",
+    "authorization": `Bearer ${input.context.apiKey}`,
     "user-agent": providerUserAgent,
   };
   if (input.body) {

@@ -15,7 +15,7 @@ import {
 } from "../provider-runtime.ts";
 import actions from "./actions.ts";
 const baseUrl = "https://storerocket.io/api/v2";
-const headers = { accept: "application/json", "user-agent": providerUserAgent };
+const headers = { "accept": "application/json", "user-agent": providerUserAgent };
 function encodeId(value: unknown, name: string) {
   const id = requiredInputString(value, name);
   if (id === "." || id === "..") throw providerInputError(`${name} must be a public ID`);
@@ -121,7 +121,5 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
   service: "storerocket",
   baseUrl,
   auth: { type: "api_key_authorization", prefix: "Bearer " },
-  customizeRequest({ headers }) {
-    if (!headers.has("accept")) headers.set("accept", "application/json");
-  },
+  defaultHeaders: { accept: "application/json" },
 });

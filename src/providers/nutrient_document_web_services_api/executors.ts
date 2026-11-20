@@ -139,8 +139,8 @@ async function nutrientJsonRequest(
     const response = await context.fetcher(new URL(path, nutrientApiBaseUrl), {
       method: input.method,
       headers: {
-        accept: "application/json",
-        authorization: `Bearer ${context.apiKey}`,
+        "accept": "application/json",
+        "authorization": `Bearer ${context.apiKey}`,
         "user-agent": providerUserAgent,
         ...(input.body ? { "content-type": "application/json" } : {}),
       },

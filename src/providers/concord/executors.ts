@@ -107,11 +107,7 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
   service,
   baseUrl: concordApiBaseUrl,
   auth: { type: "api_key_header", name: "X-API-KEY" },
-  customizeRequest({ headers }) {
-    if (!headers.has("accept")) headers.set("accept", "application/json");
-    if (!headers.has("content-type")) headers.set("content-type", "application/json");
-    if (!headers.has("user-agent")) headers.set("user-agent", providerUserAgent);
-  },
+  defaultHeaders: { "accept": "application/json", "content-type": "application/json", "user-agent": providerUserAgent },
 });
 
 async function requestConcordObject(
@@ -127,7 +123,7 @@ async function requestConcordJson(path: string, context: ApiKeyProviderContext, 
   return runProviderRequest({ signal: context.signal, label: "Concord" }, async (signal) => {
     const response = await context.fetcher(`${concordApiBaseUrl}${path}`, {
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "user-agent": providerUserAgent,
         "X-API-KEY": context.apiKey,
       },

@@ -183,7 +183,7 @@ async function requestParallel(input: {
 
 function buildParallelHeaders(apiKey: string, hasBody: boolean, parallelBeta?: string) {
   const headers = new Headers({
-    accept: "application/json",
+    "accept": "application/json",
     "user-agent": providerUserAgent,
     "x-api-key": apiKey,
   });

@@ -76,10 +76,10 @@ function buildListConversationsQuery(
   input: Record<string, unknown>,
 ): Record<string, string | number | boolean | undefined> {
   return compactObject({
-    fromDateTime: optionalString(input.fromDateTime),
-    toDateTime: optionalString(input.toDateTime),
-    page: optionalInteger(input.page),
-    size: optionalInteger(input.size),
+    "fromDateTime": optionalString(input.fromDateTime),
+    "toDateTime": optionalString(input.toDateTime),
+    "page": optionalInteger(input.page),
+    "size": optionalInteger(input.size),
     "filter[owner.id]": readOptionalStringArray(input.ownerIds)?.join(","),
     "filter[owner.email]": readOptionalStringArray(input.ownerEmails)?.join(","),
     "filter[title]": optionalString(input.title),
@@ -97,19 +97,19 @@ function buildListConversationsQuery(
     "filter[include_internal_participants]": optionalBoolean(input.includeInternalParticipants),
     "filter[include_zoom_metadata]": optionalBoolean(input.includeZoomMetadata),
     "filter[include_import_metadata]": optionalBoolean(input.includeImportMetadata),
-    detailedTranscript: optionalBoolean(input.detailedTranscript),
-    withCrmRecords: optionalBoolean(input.withCrmRecords),
-    withIntelligenceItems: optionalBoolean(input.withIntelligenceItems),
+    "detailedTranscript": optionalBoolean(input.detailedTranscript),
+    "withCrmRecords": optionalBoolean(input.withCrmRecords),
+    "withIntelligenceItems": optionalBoolean(input.withIntelligenceItems),
   });
 }
 
 function buildGetConversationQuery(input: Record<string, unknown>): Record<string, string | boolean | undefined> {
   return compactObject({
-    by: optionalString(input.by),
+    "by": optionalString(input.by),
     "filter[include_internal_participants]": optionalBoolean(input.includeInternalParticipants),
     "filter[include_zoom_metadata]": optionalBoolean(input.includeZoomMetadata),
     "filter[include_import_metadata]": optionalBoolean(input.includeImportMetadata),
-    detailedTranscript: optionalBoolean(input.detailedTranscript),
+    "detailedTranscript": optionalBoolean(input.detailedTranscript),
   });
 }
 
@@ -117,8 +117,8 @@ function buildListUsersQuery(input: Record<string, unknown>): Record<string, str
   return compactObject({
     "filter[id]": readOptionalStringArray(input.ids)?.join(","),
     "filter[email]": readOptionalStringArray(input.emails)?.join(","),
-    teamUUID: optionalString(input.teamUUID),
-    includeDeleted: optionalBoolean(input.includeDeleted),
+    "teamUUID": optionalString(input.teamUUID),
+    "includeDeleted": optionalBoolean(input.includeDeleted),
   });
 }
 
@@ -192,8 +192,8 @@ async function attentionRequestJson(
 
 function attentionHeaders(apiKey: string, hasBody: boolean): Record<string, string> {
   const headers: Record<string, string> = {
-    authorization: `Bearer ${apiKey}`,
-    accept: "application/json",
+    "authorization": `Bearer ${apiKey}`,
+    "accept": "application/json",
     "user-agent": providerUserAgent,
   };
   if (hasBody) {

@@ -43,9 +43,7 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
     return normalizeDatalustBaseUrl(value);
   },
   auth: { type: "api_key_header", name: seqApiKeyHeader },
-  customizeRequest({ headers }) {
-    if (!headers.has("accept")) headers.set("accept", seqAcceptHeader);
-  },
+  defaultHeaders: { accept: seqAcceptHeader },
   allowPrivateNetwork: isPrivateNetworkAccessAllowed,
 });
 

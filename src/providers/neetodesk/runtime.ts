@@ -129,7 +129,7 @@ async function requestNeetodesk(input: NeetodeskRequest): Promise<unknown> {
     const response = await input.context.fetcher(url, {
       method: input.method,
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         ...(input.body ? { "content-type": "application/json" } : {}),
         "user-agent": providerUserAgent,
         "x-api-key": input.context.apiKey,

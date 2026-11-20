@@ -74,8 +74,8 @@ async function request(
     const response = await fetcher(url, {
       method: operation.method,
       headers: {
-        authorization: `Bearer ${apiKey}`,
-        accept: "application/json",
+        "authorization": `Bearer ${apiKey}`,
+        "accept": "application/json",
         "content-type": "application/json",
       },
       body: operation.method === "POST" || operation.method === "PATCH" ? JSON.stringify(payload) : undefined,

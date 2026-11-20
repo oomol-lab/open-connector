@@ -142,7 +142,7 @@ async function withTongdaxinClient<T>(
       transport: "streamable_http",
       fetcher: createTongdaxinFetcher(context.fetcher),
       headers: {
-        authorization: `Bearer ${context.apiKey}`,
+        "authorization": `Bearer ${context.apiKey}`,
         "user-agent": providerUserAgent,
       },
       redirect: "manual",

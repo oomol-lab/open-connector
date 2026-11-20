@@ -54,14 +54,14 @@ async function listZones(input: Record<string, unknown>, context: CloudflareCont
     {
       path: "/zones",
       query: {
-        page: optionalInteger(input.page),
-        per_page: optionalInteger(input.perPage),
-        name: optionalString(input.name),
-        status: optionalString(input.status),
+        "page": optionalInteger(input.page),
+        "per_page": optionalInteger(input.perPage),
+        "name": optionalString(input.name),
+        "status": optionalString(input.status),
         "account.id": optionalString(input.accountId),
-        match: optionalString(input.match),
-        order: optionalString(input.order),
-        direction: optionalString(input.direction),
+        "match": optionalString(input.match),
+        "order": optionalString(input.order),
+        "direction": optionalString(input.direction),
       },
     },
     "execute",
@@ -231,7 +231,7 @@ function buildCloudflareUrl(path: string, query?: Record<string, string | number
 
 function cloudflareHeaders(authHeaders: Record<string, string>, hasBody: boolean): Record<string, string> {
   const headers: Record<string, string> = {
-    accept: "application/json",
+    "accept": "application/json",
     ...authHeaders,
     "user-agent": providerUserAgent,
   };

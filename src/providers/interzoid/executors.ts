@@ -203,7 +203,7 @@ async function requestInterzoidJson(
     const response = await context.fetcher(buildInterzoidUrl(input, context.apiKey), {
       method: "GET",
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "user-agent": providerUserAgent,
       },
       signal: timeout.signal,

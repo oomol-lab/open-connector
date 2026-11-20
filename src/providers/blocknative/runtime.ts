@@ -121,8 +121,8 @@ async function blocknativeFetch(
     return await context.fetcher(url.toString(), {
       method: "GET",
       headers: {
-        accept: "application/json",
-        authorization: context.apiKey,
+        "accept": "application/json",
+        "authorization": context.apiKey,
         "user-agent": providerUserAgent,
       },
       signal: context.signal,

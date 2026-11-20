@@ -5,6 +5,7 @@ import { optionalRecord, optionalRawString } from "../../core/cast.ts";
 import { defineApiKeyProviderExecutors, mapProviderActionHandlers } from "../provider-executors.ts";
 import { defineProviderProxy } from "../provider-proxy.ts";
 import {
+  encodeNonDotPathSegment,
   readProviderTextBody,
   ProviderRequestError,
   providerUserAgent,
@@ -15,19 +16,9 @@ import {
   withRetryAfterSeconds,
 } from "../provider-runtime.ts";
 import { thesportsdbActions } from "./actions.ts";
+
 const baseUrl = "https://www.thesportsdb.com/api/v2/json";
-function encodePathSegment(value: string) {
-  const trimmed = value.trim();
-  if (!trimmed || trimmed === "." || trimmed === "..") {
-    throw new ProviderRequestError(
-      400,
-      "TheSportsDB path value must not be empty or a dot segment",
-      undefined,
-      "invalid_input",
-    );
-  }
-  return encodeURIComponent(trimmed);
-}
+
 async function request(
   endpoint: string,
   envelope: string,
@@ -40,7 +31,7 @@ async function request(
       signal,
       headers: {
         "X-API-KEY": apiKey,
-        accept: "application/json",
+        "accept": "application/json",
         "user-agent": providerUserAgent,
       },
     });
@@ -78,19 +69,19 @@ async function request(
     return { items };
   });
 }
+
 export const executors: ProviderExecutors = defineApiKeyProviderExecutors(
   "thesportsdb",
   mapProviderActionHandlers(
     "thesportsdb",
     thesportsdbActions,
-    (action) => async (input: Record<string, unknown>, context: ApiKeyProviderContext) => {
-      const data = input;
-      const segment = (name: string) => encodePathSegment(requiredInputString(data[name], name));
+    (action) => async (data: Record<string, unknown>, context: ApiKeyProviderContext) => {
+      const segment = (name: string, value = data[name]) => encodeNonDotPathSegment(requiredInputString(value, name));
       let endpoint: string;
       let envelope: string;
       switch (action.name) {
         case "search_entities":
-          endpoint = `/search/${data.entity}/${encodePathSegment(requiredInputString(data.query, "query").replaceAll(" ", "_"))}`;
+          endpoint = `/search/${data.entity}/${segment("query").replaceAll(" ", "_")}`;
           envelope = "search";
           break;
         case "lookup_entity":
@@ -118,7 +109,7 @@ export const executors: ProviderExecutors = defineApiKeyProviderExecutors(
           envelope = "schedule";
           break;
         case "get_livescores":
-          endpoint = `/livescore/${encodePathSegment(optionalRawString(data.filter) ?? "all")}`;
+          endpoint = `/livescore/${segment("filter", optionalRawString(data.filter) ?? "all")}`;
           envelope = "livescore";
           break;
         default:
@@ -129,6 +120,7 @@ export const executors: ProviderExecutors = defineApiKeyProviderExecutors(
   ),
   { skipDnsValidation: true },
 );
+
 export const credentialValidators: CredentialValidators = {
   async apiKey(input, { fetcher }) {
     await request("/all/sports", "all", requiredInputString(input.apiKey, "API Key"), fetcher);
@@ -144,11 +136,5 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
   baseUrl,
   auth: { type: "api_key_header", name: "X-API-KEY" },
   skipDnsValidation: true,
-  customizeRequest({ headers }) {
-    for (const [key, value] of Object.entries({
-      accept: "application/json",
-      "user-agent": providerUserAgent,
-    }))
-      if (!headers.has(key)) headers.set(key, value);
-  },
+  defaultHeaders: { "accept": "application/json", "user-agent": providerUserAgent },
 });

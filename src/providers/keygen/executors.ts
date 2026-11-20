@@ -399,9 +399,7 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
     return `${keygenApiBaseUrl}/${encodeURIComponent(account)}`;
   },
   auth: { type: "api_key_authorization", prefix: "Bearer " },
-  customizeRequest({ headers }) {
-    if (!headers.has("accept")) headers.set("accept", "application/vnd.api+json");
-  },
+  defaultHeaders: { accept: "application/vnd.api+json" },
 });
 
 export const credentialValidators: CredentialValidators = {
@@ -670,7 +668,7 @@ function appendQueryValue(searchParams: URLSearchParams, key: string, value: unk
 
 function keygenHeaders(apiKey: string, options: { auth: boolean; hasBody: boolean }) {
   return {
-    accept: "application/vnd.api+json",
+    "accept": "application/vnd.api+json",
     "user-agent": providerUserAgent,
     ...(options.hasBody ? { "content-type": "application/vnd.api+json" } : {}),
     ...(options.auth ? { authorization: `Bearer ${apiKey}` } : {}),
@@ -742,7 +740,7 @@ function buildListQuery(input: Record<string, unknown>) {
   const query: Record<string, unknown> = compactObject({
     "page[number]": input.pageNumber,
     "page[size]": input.pageSize,
-    include: input.include,
+    "include": input.include,
   });
 
   for (const [key, value] of Object.entries(filter ?? {})) {
@@ -754,7 +752,7 @@ function buildListQuery(input: Record<string, unknown>) {
 
 function buildRelationshipListQuery(input: Record<string, unknown>) {
   return compactObject({
-    limit: input.limit,
+    "limit": input.limit,
     "page[size]": input.pageSize,
     "page[cursor]": input.pageCursor,
   });

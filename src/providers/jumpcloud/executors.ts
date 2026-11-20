@@ -270,7 +270,7 @@ async function jumpcloudGetJson(input: JumpcloudRequestInput): Promise<unknown> 
 
 function jumpcloudHeaders(apiKey: string, orgId?: string): Record<string, string> {
   const headers: Record<string, string> = {
-    accept: "application/json",
+    "accept": "application/json",
     "content-type": "application/json",
     "user-agent": providerUserAgent,
     "x-api-key": apiKey,

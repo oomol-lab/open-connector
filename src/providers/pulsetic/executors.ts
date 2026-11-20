@@ -120,7 +120,7 @@ async function request(
     const url = new URL(path.replace(/^\//, ""), `${baseUrl}/`);
     url.search = params?.toString() ?? "";
     const response = await context.fetcher(url, {
-      headers: { accept: "application/json", authorization: context.apiKey, "user-agent": providerUserAgent },
+      headers: { "accept": "application/json", "authorization": context.apiKey, "user-agent": providerUserAgent },
       signal,
     });
     const payload = await readProviderJsonBody(response, {

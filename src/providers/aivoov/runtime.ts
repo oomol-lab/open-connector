@@ -135,7 +135,7 @@ function formatSsmlControl(value: unknown): string {
 function aivoovHeaders(apiKey: string): Record<string, string> {
   return {
     "x-api-key": apiKey,
-    accept: "application/json",
+    "accept": "application/json",
   };
 }
 

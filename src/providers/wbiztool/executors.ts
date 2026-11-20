@@ -18,7 +18,7 @@ import {
 import { wbiztoolActions } from "./actions.ts";
 const baseUrl = "https://wbiztool.com/api/v1/";
 const headers = {
-  accept: "application/json",
+  "accept": "application/json",
   "content-type": "application/json",
   "user-agent": providerUserAgent,
 };

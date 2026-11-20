@@ -54,8 +54,8 @@ async function request(
   const response = await context.fetcher(`${deutschlandgptApiBaseUrl}${path}`, {
     method,
     headers: {
-      accept: "application/json",
-      authorization: `Bearer ${context.apiKey}`,
+      "accept": "application/json",
+      "authorization": `Bearer ${context.apiKey}`,
       "content-type": "application/json",
     },
     body: body ? JSON.stringify(body) : undefined,

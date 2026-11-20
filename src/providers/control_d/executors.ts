@@ -243,8 +243,8 @@ async function requestControlD(input: {
   body?: Record<string, unknown>;
 }): Promise<Record<string, unknown>> {
   const headers = new Headers({
-    authorization: `Bearer ${input.context.apiKey}`,
-    accept: "application/json",
+    "authorization": `Bearer ${input.context.apiKey}`,
+    "accept": "application/json",
     "user-agent": providerUserAgent,
   });
   if (input.forceOrgId) {

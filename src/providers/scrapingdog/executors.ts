@@ -221,7 +221,7 @@ async function requestScrapingdogRaw(
     return await context.fetcher(buildScrapingdogUrl(path, query, context.apiKey), {
       method: "GET",
       headers: {
-        accept: "*/*",
+        "accept": "*/*",
         "user-agent": providerUserAgent,
       },
       signal: context.signal,

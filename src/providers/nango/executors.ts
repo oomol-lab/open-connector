@@ -27,9 +27,7 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
   baseUrl: nangoApiBaseUrl,
   auth: { type: "api_key_authorization", prefix: "Bearer " },
   skipDnsValidation: true,
-  customizeRequest({ headers }) {
-    if (!headers.has("accept")) headers.set("accept", "application/json");
-  },
+  defaultHeaders: { accept: "application/json" },
 });
 
 type NangoMethod = "GET" | "POST" | "PATCH" | "DELETE";
@@ -171,8 +169,8 @@ async function requestNangoJson(input: {
     response = await input.context.fetcher(buildNangoUrl(input.path, input.query), {
       method: input.method,
       headers: {
-        accept: "application/json",
-        authorization: `Bearer ${input.context.apiKey}`,
+        "accept": "application/json",
+        "authorization": `Bearer ${input.context.apiKey}`,
         "user-agent": providerUserAgent,
         ...(input.body ? { "content-type": "application/json" } : {}),
       },

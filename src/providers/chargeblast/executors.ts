@@ -215,7 +215,7 @@ async function requestChargeblastJson(
     const response = await context.fetcher(new URL(path, chargeblastApiBaseUrl), {
       ...init,
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "content-type": "application/json",
         "user-agent": providerUserAgent,
         "x-api-key": context.apiKey,

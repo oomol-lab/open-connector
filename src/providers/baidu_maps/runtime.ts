@@ -572,7 +572,7 @@ async function baiduMapsGet(
     const response = await fetcher(url, {
       method: "GET",
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "user-agent": providerUserAgent,
       },
       signal,

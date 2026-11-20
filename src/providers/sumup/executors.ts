@@ -17,8 +17,8 @@ async function request(
   const response = await context.fetcher(url, {
     method,
     headers: {
-      accept: "application/json",
-      authorization: `Bearer ${context.apiKey}`,
+      "accept": "application/json",
+      "authorization": `Bearer ${context.apiKey}`,
       "content-type": "application/json",
       "user-agent": providerUserAgent,
     },
@@ -106,8 +106,8 @@ export const credentialValidators: CredentialValidators = {
     url.searchParams.set("checkout_reference", "open-connector-credential-validation");
     const response = await fetcher(url, {
       headers: {
-        accept: "application/json",
-        authorization: `Bearer ${input.apiKey}`,
+        "accept": "application/json",
+        "authorization": `Bearer ${input.apiKey}`,
         "user-agent": providerUserAgent,
       },
       signal,

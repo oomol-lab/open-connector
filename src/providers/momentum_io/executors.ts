@@ -149,7 +149,7 @@ async function requestMomentumIoJson(
     response = await context.fetcher(new URL(path, momentumIoApiBaseUrl), {
       method: "GET",
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "user-agent": providerUserAgent,
         "x-api-key": context.apiKey,
       },

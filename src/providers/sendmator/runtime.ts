@@ -164,7 +164,7 @@ async function requestSendmatorJson(input: {
   }
 
   const headers: Record<string, string> = {
-    accept: "application/json",
+    "accept": "application/json",
     "user-agent": providerUserAgent,
     "X-API-Key": input.apiKey,
   };

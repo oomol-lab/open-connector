@@ -206,8 +206,8 @@ async function requestCertSpotterJson(input: {
 
 function buildCertSpotterHeaders(apiKey: string, contentType?: string): Headers {
   const headers = new Headers({
-    authorization: `Bearer ${apiKey}`,
-    accept: "application/json",
+    "authorization": `Bearer ${apiKey}`,
+    "accept": "application/json",
     "user-agent": providerUserAgent,
   });
   if (contentType) {

@@ -172,8 +172,8 @@ function buildKaleidoUrl(baseUrl: string, path: string): string {
 
 function kaleidoHeaders(apiKey: string): Record<string, string> {
   return {
-    authorization: `Bearer ${apiKey}`,
-    accept: "application/json",
+    "authorization": `Bearer ${apiKey}`,
+    "accept": "application/json",
     "user-agent": providerUserAgent,
   };
 }

@@ -682,7 +682,7 @@ function buildOpenweatherUrl(baseUrl: string, path: string, apiKey: string, quer
 
 function openweatherHeaders(withJsonBody: boolean): Headers {
   const headers = new Headers({
-    accept: "application/json",
+    "accept": "application/json",
     "user-agent": providerUserAgent,
   });
   if (withJsonBody) {

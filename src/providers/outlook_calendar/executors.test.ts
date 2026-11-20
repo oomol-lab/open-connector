@@ -65,9 +65,9 @@ describe("Outlook Calendar execution", () => {
     vi.stubGlobal("fetch", async (input: RequestInfo | URL, init?: RequestInit) => {
       request = input instanceof Request ? input : new Request(input, init);
       return Response.json({
-        value: [
+        "value": [
           { id: "event-1", subject: "Planning" },
-          { id: "event-2", "@removed": { reason: "deleted" } },
+          { "id": "event-2", "@removed": { reason: "deleted" } },
         ],
         "@odata.deltaLink": deltaLink,
       });
@@ -85,7 +85,7 @@ describe("Outlook Calendar execution", () => {
       output: {
         events: [
           { id: "event-1", subject: "Planning" },
-          { id: "event-2", "@removed": { reason: "deleted" } },
+          { "id": "event-2", "@removed": { reason: "deleted" } },
         ],
         nextLink: null,
         deltaLink,
@@ -101,7 +101,7 @@ describe("Outlook Calendar execution", () => {
     let request: Request | undefined;
     vi.stubGlobal("fetch", async (input: RequestInfo | URL, init?: RequestInit) => {
       request = input instanceof Request ? input : new Request(input, init);
-      return Response.json({ value: [{ id: "event-1" }], "@odata.nextLink": nextLink });
+      return Response.json({ "value": [{ id: "event-1" }], "@odata.nextLink": nextLink });
     });
 
     const result = await execute("list_calendar_view", {
@@ -120,7 +120,7 @@ describe("Outlook Calendar execution", () => {
     let request: Request | undefined;
     vi.stubGlobal("fetch", async (input: RequestInfo | URL, init?: RequestInit) => {
       request = input instanceof Request ? input : new Request(input, init);
-      return Response.json({ value: [], "@odata.deltaLink": `${deltaLink}0` });
+      return Response.json({ "value": [], "@odata.deltaLink": `${deltaLink}0` });
     });
 
     const result = await execute("list_calendar_view", {

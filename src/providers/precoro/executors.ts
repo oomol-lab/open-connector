@@ -108,10 +108,10 @@ async function precoroGetJson(path: string, context: PrecoroContext, phase: "val
     response = await context.fetcher(new URL(path, context.baseUrl), {
       method: "GET",
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "user-agent": providerUserAgent,
         "x-auth-token": context.apiKey,
-        email: context.email,
+        "email": context.email,
       },
       signal: context.signal,
     });

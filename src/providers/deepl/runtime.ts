@@ -139,8 +139,8 @@ async function requestDeepl(apiKey: string, input: DeeplRequestInput, fetcher: t
   }
 
   const headers = new Headers({
-    authorization: `DeepL-Auth-Key ${apiKey}`,
-    accept: "application/json",
+    "authorization": `DeepL-Auth-Key ${apiKey}`,
+    "accept": "application/json",
     "user-agent": providerUserAgent,
   });
   if (input.body !== undefined) {

@@ -76,9 +76,7 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
     return normalizePaperlessBaseUrl(value);
   },
   auth: { type: "api_key_authorization", prefix: "Token " },
-  customizeRequest({ headers }) {
-    if (!headers.has("accept")) headers.set("accept", paperlessAcceptHeader);
-  },
+  defaultHeaders: { accept: paperlessAcceptHeader },
   allowPrivateNetwork: isPrivateNetworkAccessAllowed,
 });
 

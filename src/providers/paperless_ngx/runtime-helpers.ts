@@ -219,8 +219,8 @@ async function performPaperlessRequest<T>(
 ): Promise<T> {
   const url = buildPaperlessUrl(input.baseUrl, input.path, input.query);
   const headers = new Headers({
-    accept: paperlessAcceptHeader,
-    authorization: `Token ${input.apiKey}`,
+    "accept": paperlessAcceptHeader,
+    "authorization": `Token ${input.apiKey}`,
     "user-agent": providerUserAgent,
   });
   if (input.contentType) {

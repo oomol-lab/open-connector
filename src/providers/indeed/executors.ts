@@ -143,7 +143,7 @@ async function requestGraphQl(input: GraphQlRequest, context: OAuthProviderConte
   const response = await context.fetcher(graphQlUrl, {
     method: "POST",
     headers: {
-      authorization: `${context.tokenType ?? "Bearer"} ${context.accessToken}`,
+      "authorization": `${context.tokenType ?? "Bearer"} ${context.accessToken}`,
       "content-type": "application/json",
     },
     body: JSON.stringify(input),

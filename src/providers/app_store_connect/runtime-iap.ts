@@ -60,7 +60,7 @@ export const appStoreConnectInAppPurchaseHandlers: AppStoreConnectHandlers = {
         "filter[state]": pickOptionalString(input, "state"),
         "filter[name]": pickOptionalString(input, "name"),
         "filter[productId]": pickOptionalString(input, "productId"),
-        sort: pickOptionalString(input, "sort"),
+        "sort": pickOptionalString(input, "sort"),
       },
     });
     return { inAppPurchases: page.items, nextCursor: page.nextCursor, total: page.total };
@@ -191,7 +191,7 @@ export const appStoreConnectInAppPurchaseHandlers: AppStoreConnectHandlers = {
     const page = await listResources(context, input, {
       path: inAppPurchasePath(input.inAppPurchaseId, "pricePoints"),
       label: `${pricePointLabel} list`,
-      query: { "filter[territory]": pickOptionalString(input, "territory"), include: "territory" },
+      query: { "filter[territory]": pickOptionalString(input, "territory"), "include": "territory" },
     });
     return {
       pricePoints: page.resources.map((resource) => readPricePoint(resource, page.included)),
@@ -211,7 +211,7 @@ export const appStoreConnectInAppPurchaseHandlers: AppStoreConnectHandlers = {
       query: {
         "filter[territory]": pickOptionalString(input, "territory"),
         "filter[inAppPurchaseV2]": readOptionalAppStoreConnectId(input.inAppPurchaseId, "inAppPurchaseId"),
-        include: "territory",
+        "include": "territory",
       },
     });
     return {
@@ -534,7 +534,7 @@ export const appStoreConnectInAppPurchaseHandlers: AppStoreConnectHandlers = {
       label: `${offerPriceLabel} list`,
       query: {
         "filter[territory]": pickOptionalString(input, "territory"),
-        include: "territory,pricePoint",
+        "include": "territory,pricePoint",
       },
     });
     return {
@@ -799,7 +799,7 @@ async function listScheduledPrices(
     label: `${priceLabel} list`,
     query: {
       "filter[territory]": pickOptionalString(input, "territory"),
-      include: "inAppPurchasePricePoint,territory",
+      "include": "inAppPurchasePricePoint,territory",
     },
   });
   return {

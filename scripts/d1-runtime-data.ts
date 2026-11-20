@@ -29,10 +29,10 @@ const operationSchema = z.strictObject({
 const { positionals, values } = parseArgs({
   allowPositionals: true,
   options: {
-    config: { type: "string" },
-    env: { type: "string" },
-    remote: { type: "boolean" },
-    yes: { type: "boolean" },
+    "config": { type: "string" },
+    "env": { type: "string" },
+    "remote": { type: "boolean" },
+    "yes": { type: "boolean" },
     "operation-file": { type: "string" },
   },
 });
@@ -182,7 +182,7 @@ async function callWorker(origin: string, path: string, body?: unknown): Promise
   const response = await fetch(`${origin}${path}`, {
     method: body ? "POST" : "GET",
     redirect: "error",
-    headers: { authorization: `Bearer ${operation.token}`, "content-type": "application/json" },
+    headers: { "authorization": `Bearer ${operation.token}`, "content-type": "application/json" },
     body: body ? JSON.stringify(body) : undefined,
     signal: AbortSignal.timeout(30_000),
   });

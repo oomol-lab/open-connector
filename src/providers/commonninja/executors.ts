@@ -5,8 +5,8 @@ import { optionalRecord, optionalRawString } from "../../core/cast.ts";
 import { defineApiKeyProviderExecutors } from "../provider-executors.ts";
 import { defineProviderProxy } from "../provider-proxy.ts";
 import {
+  encodeNonDotPathSegment,
   ProviderRequestError,
-  providerInputError,
   providerResponseError,
   requiredInputString,
   requiredResponseRecord,
@@ -16,15 +16,7 @@ import {
 } from "../provider-runtime.ts";
 
 const baseUrl = "https://api.commoninja.com/platform/api/v1";
-const defaultHeaders = { accept: "application/json", "user-agent": providerUserAgent };
-
-function encodePathSegment(input: unknown) {
-  const value = requiredInputString(input, "id");
-  if (value === "." || value === "..") {
-    throw providerInputError("id cannot be a dot path segment");
-  }
-  return encodeURIComponent(value);
-}
+const defaultHeaders = { "accept": "application/json", "user-agent": providerUserAgent };
 
 interface RequestOptions {
   method?: string;
@@ -141,7 +133,9 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
   baseUrl,
   auth: { type: "api_key_header", name: "CN-API-Token" },
   skipDnsValidation: true,
-  customizeRequest({ headers }) {
-    for (const [name, value] of Object.entries(defaultHeaders)) if (!headers.has(name)) headers.set(name, value);
-  },
+  defaultHeaders,
 });
+
+function encodePathSegment(value: unknown): string {
+  return encodeNonDotPathSegment(requiredInputString(value, "id"));
+}

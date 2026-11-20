@@ -123,7 +123,7 @@ async function executeRunPipeline(input: Record<string, unknown>, context: ApiKe
     buildVectorshiftUrl(`/pipeline/${encodeURIComponent(pipelineId)}/run`),
     {
       method: "POST",
-      headers: vectorshiftHeaders(context.apiKey, { accept: "application/json", "content-type": "application/json" }),
+      headers: vectorshiftHeaders(context.apiKey, { "accept": "application/json", "content-type": "application/json" }),
       body: JSON.stringify({ inputs }),
       signal: context.signal,
     },
@@ -150,7 +150,7 @@ async function executeBulkRunPipeline(
     buildVectorshiftUrl(`/pipeline/${encodeURIComponent(pipelineId)}/bulk_run`),
     {
       method: "POST",
-      headers: vectorshiftHeaders(context.apiKey, { accept: "application/json", "content-type": "application/json" }),
+      headers: vectorshiftHeaders(context.apiKey, { "accept": "application/json", "content-type": "application/json" }),
       body: JSON.stringify({ runs }),
       signal: context.signal,
     },
@@ -165,7 +165,7 @@ function buildVectorshiftUrl(path: string): URL {
 
 function vectorshiftHeaders(apiKey: string, extraHeaders: Record<string, string>): Record<string, string> {
   return {
-    authorization: `Bearer ${apiKey}`,
+    "authorization": `Bearer ${apiKey}`,
     "user-agent": providerUserAgent,
     ...extraHeaders,
   };

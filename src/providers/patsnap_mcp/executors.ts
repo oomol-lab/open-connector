@@ -119,7 +119,7 @@ async function withClient<T>(
       endpoint: new URL(patsnapMcpEndpoints[server]),
       transport: "streamable_http",
       fetcher: context.fetcher,
-      headers: { authorization: `Bearer ${context.apiKey}`, "user-agent": providerUserAgent },
+      headers: { "authorization": `Bearer ${context.apiKey}`, "user-agent": providerUserAgent },
       redirect: "manual",
       signal: context.signal,
       mapError: mapMcpError,

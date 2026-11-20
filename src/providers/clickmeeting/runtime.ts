@@ -370,7 +370,7 @@ function buildClickMeetingUrl(path: string, query: Record<string, string | undef
 
 function buildClickMeetingHeaders(apiKey: string, body?: URLSearchParams): Record<string, string> {
   const headers: Record<string, string> = {
-    accept: "application/json",
+    "accept": "application/json",
     "user-agent": providerUserAgent,
     "X-Api-Key": apiKey,
   };

@@ -483,7 +483,7 @@ async function vapiRequest(
 
 function vapiHeaders(apiKey: string, includeJsonContentType: boolean): Record<string, string> {
   const headers: Record<string, string> = {
-    authorization: `Bearer ${apiKey}`,
+    "authorization": `Bearer ${apiKey}`,
     "user-agent": providerUserAgent,
   };
   if (includeJsonContentType) headers["content-type"] = "application/json";

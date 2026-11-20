@@ -232,8 +232,8 @@ async function requestFormstack(options: {
     const response = await options.fetcher(url, {
       method: options.method,
       headers: {
-        accept: "application/json",
-        authorization: `Bearer ${requireApiKey(options.apiKey)}`,
+        "accept": "application/json",
+        "authorization": `Bearer ${requireApiKey(options.apiKey)}`,
         ...(options.body ? { "content-type": "application/json" } : {}),
         ...options.headers,
         "user-agent": providerUserAgent,

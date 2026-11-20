@@ -424,7 +424,7 @@ async function sendWecomMcpRequest(
     endpoint,
     {
       method: "POST",
-      headers: { accept: "application/json", "content-type": "application/json" },
+      headers: { "accept": "application/json", "content-type": "application/json" },
       body: JSON.stringify({
         jsonrpc: "2.0",
         id: `mcp_rpc_${randomUUID()}`,

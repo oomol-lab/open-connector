@@ -70,11 +70,7 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
   baseUrl: endpoint,
   auth: { type: "api_key_header", name: "x-api-key" },
   skipDnsValidation: true,
-  customizeRequest({ headers }) {
-    if (!headers.has("accept")) {
-      headers.set("accept", "application/json, text/event-stream");
-    }
-  },
+  defaultHeaders: { accept: "application/json, text/event-stream" },
 });
 export const credentialValidators: CredentialValidators = {
   async apiKey(input, { fetcher, signal }) {

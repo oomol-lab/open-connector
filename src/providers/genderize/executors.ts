@@ -120,7 +120,7 @@ async function requestGenderize(input: {
     response = await input.context.fetcher(url.toString(), {
       method: "GET",
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "user-agent": providerUserAgent,
       },
       signal: input.context.signal,

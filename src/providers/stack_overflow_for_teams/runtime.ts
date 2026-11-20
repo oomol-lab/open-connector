@@ -114,8 +114,8 @@ async function requestJson(input: RequestInput): Promise<unknown> {
   return runProviderRequest({ signal: input.signal, label: "Stack Internal" }, async (signal) => {
     const response = await input.fetcher(url, {
       headers: {
-        accept: "application/json",
-        authorization: `Bearer ${input.apiKey}`,
+        "accept": "application/json",
+        "authorization": `Bearer ${input.apiKey}`,
         "user-agent": providerUserAgent,
       },
       signal,

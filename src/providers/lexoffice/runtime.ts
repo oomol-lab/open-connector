@@ -234,8 +234,8 @@ function buildLexofficeUrl(path: string, query?: Record<string, string | undefin
 
 function buildLexofficeHeaders(apiKey: string, hasJsonBody: boolean): Record<string, string> {
   return {
-    authorization: `Bearer ${apiKey}`,
-    accept: "application/json",
+    "authorization": `Bearer ${apiKey}`,
+    "accept": "application/json",
     ...(hasJsonBody ? { "content-type": "application/json" } : {}),
     "user-agent": providerUserAgent,
   };

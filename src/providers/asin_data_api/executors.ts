@@ -224,7 +224,7 @@ async function requestAsinDataApiJson(input: {
     response = await input.context.fetcher(buildAsinDataApiUrl(input.path, input.context.apiKey, input.params), {
       method: input.method,
       headers: compactHeaders({
-        accept: "application/json",
+        "accept": "application/json",
         "content-type": input.body ? "application/json" : undefined,
         "user-agent": providerUserAgent,
       }),

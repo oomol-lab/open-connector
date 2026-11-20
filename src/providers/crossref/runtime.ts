@@ -84,10 +84,10 @@ export const crossrefActionHandlers: ProviderActionHandlers<"crossref", Crossref
       path: "/works",
       params: compactObject({
         "query.bibliographic": readRequiredString(input.reference, "reference"),
-        sort: "score",
-        order: "desc",
-        rows: readOptionalIntegerParam(input.rows),
-        mailto: readOptionalString(input.mailto),
+        "sort": "score",
+        "order": "desc",
+        "rows": readOptionalIntegerParam(input.rows),
+        "mailto": readOptionalString(input.mailto),
       }),
       fetcher,
       apiKey,
@@ -281,7 +281,7 @@ async function requestCrossref(input: {
 }) {
   return runProviderRequest({ label: "Crossref" }, async (signal) => {
     const headers = new Headers({
-      accept: input.accept,
+      "accept": input.accept,
       "user-agent": providerUserAgent,
     });
     if (input.apiKey) {
@@ -390,20 +390,20 @@ function buildIdentityParams(input: Record<string, unknown>) {
 
 function buildWorksParams(input: Record<string, unknown>) {
   return compactObject({
-    query: readOptionalString(input.query),
+    "query": readOptionalString(input.query),
     "query.bibliographic": readOptionalString(input.queryBibliographic),
     "query.title": readOptionalString(input.queryTitle),
     "query.author": readOptionalString(input.queryAuthor),
     "query.container-title": readOptionalString(input.queryContainerTitle),
-    filter: readOptionalString(input.filter),
-    sort: readOptionalString(input.sort),
-    order: readOptionalString(input.order),
-    facet: readOptionalString(input.facet),
-    rows: readOptionalIntegerParam(input.rows),
-    offset: readOptionalIntegerParam(input.offset),
-    cursor: readOptionalString(input.cursor),
-    sample: readOptionalIntegerParam(input.sample),
-    mailto: readOptionalString(input.mailto),
+    "filter": readOptionalString(input.filter),
+    "sort": readOptionalString(input.sort),
+    "order": readOptionalString(input.order),
+    "facet": readOptionalString(input.facet),
+    "rows": readOptionalIntegerParam(input.rows),
+    "offset": readOptionalIntegerParam(input.offset),
+    "cursor": readOptionalString(input.cursor),
+    "sample": readOptionalIntegerParam(input.sample),
+    "mailto": readOptionalString(input.mailto),
   });
 }
 

@@ -37,7 +37,7 @@ export const executors: ProviderExecutors = defineProviderExecutors<KaonaviConte
             : JSON.stringify(definition.bodyWrapper ? { [definition.bodyWrapper]: bodyValue } : bodyValue);
         const token = await getKaonaviToken(context.values, context.fetcher, context.signal);
         return runProviderRequest({ label: "Kaonavi", signal: context.signal }, async (signal) => {
-          const headers = new Headers({ "Kaonavi-Token": token, accept: "application/json" });
+          const headers = new Headers({ "Kaonavi-Token": token, "accept": "application/json" });
           if (body !== undefined) headers.set("content-type", "application/json");
           if (data.dryRun !== undefined) headers.set("Dry-Run", data.dryRun ? "1" : "0");
           const response = await context.fetcher(url, { method: definition.method ?? "GET", headers, body, signal });

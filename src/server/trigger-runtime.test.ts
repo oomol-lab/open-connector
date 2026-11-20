@@ -207,7 +207,7 @@ function request(
 ) {
   return connector.app.request(`/v1/providers/${service}/triggers/${trigger}/execute`, {
     method: "POST",
-    headers: { authorization: `Bearer ${bearer}`, "content-type": "application/json", "x-oo-connector-app-id": id },
+    headers: { "authorization": `Bearer ${bearer}`, "content-type": "application/json", "x-oo-connector-app-id": id },
     body: JSON.stringify(body),
   });
 }
@@ -309,7 +309,7 @@ describe("Trigger runtime HTTP boundary", () => {
         await connector.app.request("/v1/actions/github.get_current_user", {
           method: "POST",
           headers: {
-            authorization: `Bearer ${token}`,
+            "authorization": `Bearer ${token}`,
             "content-type": "application/json",
             "x-oo-connector-app-id": connectionId,
           },
@@ -321,7 +321,7 @@ describe("Trigger runtime HTTP boundary", () => {
       (
         await connector.app.request("/v1/proxy/github", {
           method: "POST",
-          headers: { authorization: `Bearer ${token}`, "content-type": "application/json" },
+          headers: { "authorization": `Bearer ${token}`, "content-type": "application/json" },
           body: '{"method":"GET","endpoint":"/user"}',
         })
       ).status,
@@ -332,7 +332,7 @@ describe("Trigger runtime HTTP boundary", () => {
       {
         method: "POST",
         headers: {
-          authorization: `Bearer ${token}`,
+          "authorization": `Bearer ${token}`,
           "content-type": "application/json",
           "x-oo-connector-app-id": connectionId,
         },

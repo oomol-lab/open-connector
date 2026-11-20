@@ -177,8 +177,8 @@ async function quriiriRequest(context: QuriiriContext, options: QuriiriRequestOp
   const timeout = createProviderTimeout(context.signal, quriiriRequestTimeoutMs);
   try {
     const headers: Record<string, string> = {
-      accept: "application/json",
-      authorization: `Bearer ${context.apiKey}`,
+      "accept": "application/json",
+      "authorization": `Bearer ${context.apiKey}`,
       "user-agent": providerUserAgent,
     };
     const body = options.body === undefined ? undefined : JSON.stringify(options.body);

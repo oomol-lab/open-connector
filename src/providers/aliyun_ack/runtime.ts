@@ -93,7 +93,7 @@ export function signAliyunAckRequest(input: {
   nonce: string;
 }): { canonicalQuery: string; headers: Record<string, string> } {
   const headers: Record<string, string> = {
-    host: input.endpoint,
+    "host": input.endpoint,
     "user-agent": providerUserAgent,
     "x-acs-action": "DescribeClusterUserKubeconfig",
     "x-acs-content-sha256": emptyPayloadHash,

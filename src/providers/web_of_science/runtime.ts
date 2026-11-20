@@ -131,7 +131,7 @@ async function requestWebOfScienceJson(
     const response = await context.fetcher(buildWebOfScienceUrl(input.path, input.query), {
       method: "GET",
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "user-agent": providerUserAgent,
         "X-ApiKey": context.apiKey,
       },

@@ -39,9 +39,7 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
     return normalizePretixBaseUrl(value);
   },
   auth: { type: "api_key_authorization", prefix: "Token " },
-  customizeRequest({ headers }) {
-    if (!headers.has("accept")) headers.set("accept", "application/json");
-  },
+  defaultHeaders: { accept: "application/json" },
   allowPrivateNetwork: isPrivateNetworkAccessAllowed,
 });
 

@@ -150,8 +150,8 @@ async function requestMendeley(
   options: MendeleyRequestOptions,
 ) {
   const headers = new Headers({
-    accept: options.accept,
-    authorization: `Bearer ${accessToken}`,
+    "accept": options.accept,
+    "authorization": `Bearer ${accessToken}`,
     "user-agent": providerUserAgent,
   });
   if (options.contentType) headers.set("content-type", options.contentType);

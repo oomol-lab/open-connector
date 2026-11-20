@@ -328,8 +328,8 @@ function buildAblyControlUrl(path: string, query?: URLSearchParams): URL {
 
 function buildAblyControlHeaders(apiKey: string, hasBody: boolean): Headers {
   const headers = new Headers({
-    accept: "application/json",
-    authorization: `Bearer ${apiKey}`,
+    "accept": "application/json",
+    "authorization": `Bearer ${apiKey}`,
     "user-agent": providerUserAgent,
   });
   if (hasBody) {

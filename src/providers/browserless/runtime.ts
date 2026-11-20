@@ -175,7 +175,7 @@ async function requestBrowserless(input: BrowserlessRequestInput): Promise<Brows
     const response = await input.fetcher(buildBrowserlessUrl(input.path, input.apiKey), {
       method: "POST",
       headers: {
-        accept: input.responseType === "binary" ? "*/*" : "text/html",
+        "accept": input.responseType === "binary" ? "*/*" : "text/html",
         "cache-control": "no-cache",
         "content-type": "application/json",
         "user-agent": providerUserAgent,

@@ -67,8 +67,8 @@ async function requestOrimonJson(options: RequestOptions) {
     const response = await options.fetcher(new URL(`${orimonApiBaseUrl}${orimonMessagePath}`), {
       method: "POST",
       headers: {
-        accept: "application/json",
-        authorization: `apiKey ${options.apiKey}`,
+        "accept": "application/json",
+        "authorization": `apiKey ${options.apiKey}`,
         "content-type": "application/json",
         "user-agent": providerUserAgent,
       },

@@ -260,7 +260,7 @@ function buildHealthchecksIoUrl(path: string, query?: Record<string, string | un
 
 function buildHealthchecksIoHeaders(apiKey: string, body?: Record<string, unknown>): Record<string, string> {
   return {
-    accept: "application/json",
+    "accept": "application/json",
     "user-agent": providerUserAgent,
     "x-api-key": apiKey,
     ...(body ? { "content-type": "application/json" } : {}),

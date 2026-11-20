@@ -152,8 +152,8 @@ async function requestMattermostJson(options: {
   const url = new URL(`${options.context.apiBaseUrl}${options.path}`);
   appendQuery(url, options.query);
   const headers = new Headers({
-    accept: "application/json",
-    authorization: `Bearer ${options.context.apiKey}`,
+    "accept": "application/json",
+    "authorization": `Bearer ${options.context.apiKey}`,
     "user-agent": providerUserAgent,
   });
   if (options.body !== undefined) {

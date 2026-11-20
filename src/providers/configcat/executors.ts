@@ -237,8 +237,8 @@ async function requestConfigcatJson(input: {
     response = await input.fetcher(url, {
       method: input.method,
       headers: {
-        accept: "application/json",
-        authorization: buildConfigcatAuthorization(input.credentials),
+        "accept": "application/json",
+        "authorization": buildConfigcatAuthorization(input.credentials),
         "user-agent": providerUserAgent,
       },
       signal: input.signal,

@@ -156,8 +156,8 @@ async function requestHoldedJson(input: HoldedRequestInput): Promise<unknown> {
     const response = await input.context.fetcher(buildHoldedUrl(input.path, input.query), {
       method: input.method,
       headers: {
-        accept: "application/json",
-        authorization: `Bearer ${input.context.apiKey}`,
+        "accept": "application/json",
+        "authorization": `Bearer ${input.context.apiKey}`,
         "content-type": "application/json",
         "user-agent": providerUserAgent,
       },

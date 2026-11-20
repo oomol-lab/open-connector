@@ -207,8 +207,8 @@ async function requestFullContactJson(
 
 function buildFullContactHeaders(apiKey: string) {
   return {
-    accept: "application/json",
-    authorization: `Bearer ${apiKey}`,
+    "accept": "application/json",
+    "authorization": `Bearer ${apiKey}`,
     "content-type": "application/json",
     "user-agent": providerUserAgent,
   };

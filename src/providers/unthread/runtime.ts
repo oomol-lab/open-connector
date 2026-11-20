@@ -128,7 +128,7 @@ async function requestUnthread(options: UnthreadRequestOptions): Promise<unknown
     const response = await options.fetcher(`${unthreadApiBaseUrl}${options.path}`, {
       method: options.method,
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "content-type": "application/json",
         "user-agent": providerUserAgent,
         "X-Api-Key": options.apiKey,

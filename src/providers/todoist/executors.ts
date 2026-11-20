@@ -18,9 +18,7 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
   baseUrl: todoistApiBaseUrl,
   auth: { type: "bearer" },
   skipDnsValidation: true,
-  customizeRequest({ headers }) {
-    if (!headers.has("accept")) headers.set("accept", "application/json");
-  },
+  defaultHeaders: { accept: "application/json" },
 });
 
 export const credentialValidators: CredentialValidators = {

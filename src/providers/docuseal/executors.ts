@@ -151,7 +151,7 @@ async function requestJson(input: {
     response = await input.fetcher(url, {
       method: input.method ?? "GET",
       headers: compactObject({
-        accept: "application/json",
+        "accept": "application/json",
         "content-type": input.method === "POST" ? "application/json" : undefined,
         "user-agent": providerUserAgent,
         "X-Auth-Token": input.apiKey,

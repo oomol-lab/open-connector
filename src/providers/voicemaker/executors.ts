@@ -13,8 +13,8 @@ async function post(
   const response = await context.fetcher(new URL(path, "https://developer.voicemaker.in"), {
     method: "POST",
     headers: {
-      accept: "application/json",
-      authorization: `Bearer ${context.apiKey}`,
+      "accept": "application/json",
+      "authorization": `Bearer ${context.apiKey}`,
       "content-type": "application/json",
       "user-agent": providerUserAgent,
     },

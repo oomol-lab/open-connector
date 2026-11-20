@@ -174,7 +174,7 @@ async function shortMenuFetch(input: ShortMenuRequestOptions) {
 
 function shortMenuHeaders(apiKey: string, hasBody: boolean) {
   return {
-    accept: "application/json",
+    "accept": "application/json",
     ...(hasBody ? { "content-type": "application/json" } : {}),
     "user-agent": providerUserAgent,
     "x-api-key": apiKey,

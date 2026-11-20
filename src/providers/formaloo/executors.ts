@@ -147,8 +147,8 @@ async function requestFormaloo(input: FormalooRequestInput): Promise<unknown> {
     const response = await input.fetcher(url, {
       method: input.method ?? "GET",
       headers: {
-        Accept: "application/json",
-        Authorization: `JWT ${token}`,
+        "Accept": "application/json",
+        "Authorization": `JWT ${token}`,
         "Content-Type": "application/json",
         "User-Agent": providerUserAgent,
         "x-api-key": input.credentials.apiKey,
@@ -177,8 +177,8 @@ async function obtainAuthorizationToken(
     const response = await fetcher(`${formalooApiBaseUrl}/oauth2/authorization-token/`, {
       method: "POST",
       headers: {
-        Accept: "application/json",
-        Authorization: `Basic ${credentials.apiSecret}`,
+        "Accept": "application/json",
+        "Authorization": `Basic ${credentials.apiSecret}`,
         "Content-Type": "application/json",
         "User-Agent": providerUserAgent,
         "x-api-key": credentials.apiKey,

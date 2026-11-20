@@ -110,7 +110,7 @@ async function requestSportsdata(
 ): Promise<unknown[]> {
   return runProviderRequest({ signal, label: "SportsDataIO" }, async (signal) => {
     const response = await fetcher(new URL(path, sportsdataApiBaseUrl), {
-      headers: { accept: "application/json", [apiKeyHeader]: apiKey, "user-agent": providerUserAgent },
+      headers: { "accept": "application/json", [apiKeyHeader]: apiKey, "user-agent": providerUserAgent },
       signal,
     });
     const payload = await readProviderJsonBody(response, {

@@ -144,7 +144,7 @@ async function requestWalletapData(input: WalletapRequestInput): Promise<{ data:
     const response = await input.fetcher(url, {
       method: input.method ?? "GET",
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "content-type": "application/json",
         "user-agent": providerUserAgent,
         "x-api-key": input.apiKey,

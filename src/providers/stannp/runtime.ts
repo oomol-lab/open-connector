@@ -288,8 +288,8 @@ function buildStannpUrl(path: string, region: StannpRegion, query: Record<string
 
 function stannpHeaders(apiKey: string, extraHeaders?: HeadersInit): Record<string, string> {
   return {
-    authorization: basicAuthorizationHeader(`${apiKey}:`),
-    accept: "application/json",
+    "authorization": basicAuthorizationHeader(`${apiKey}:`),
+    "accept": "application/json",
     "user-agent": providerUserAgent,
     ...Object.fromEntries(new Headers(extraHeaders).entries()),
   };

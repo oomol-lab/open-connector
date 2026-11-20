@@ -141,8 +141,8 @@ async function requestMailsoftly(input: {
     response = await input.fetcher(url, {
       method: input.method,
       headers: {
-        accept: "application/json",
-        authorization: input.apiKey,
+        "accept": "application/json",
+        "authorization": input.apiKey,
         ...(input.json ? { "content-type": "application/json" } : {}),
         "user-agent": providerUserAgent,
       },

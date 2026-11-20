@@ -169,8 +169,8 @@ async function northflankRequest(
     response = await context.fetcher(buildNorthflankUrl(input), {
       method: "GET",
       headers: {
-        accept: "application/json",
-        authorization: `Bearer ${context.apiKey}`,
+        "accept": "application/json",
+        "authorization": `Bearer ${context.apiKey}`,
         "content-type": "application/json",
         "user-agent": providerUserAgent,
       },

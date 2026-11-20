@@ -127,8 +127,8 @@ async function postDocraptorJson(input: {
       const response = await input.fetcher(new URL(input.path, docraptorApiBaseUrl), {
         method: "POST",
         headers: {
-          accept: "application/json",
-          authorization: buildDocraptorAuthorizationHeader(input.apiKey),
+          "accept": "application/json",
+          "authorization": buildDocraptorAuthorizationHeader(input.apiKey),
           "content-type": "application/json",
           "user-agent": providerUserAgent,
         },

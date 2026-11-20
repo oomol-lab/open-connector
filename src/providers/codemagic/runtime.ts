@@ -332,7 +332,7 @@ async function codemagicFetch(input: {
 
 function buildCodemagicHeaders(apiKey: string, hasBody: boolean): Headers {
   const headers = new Headers({
-    accept: "application/json",
+    "accept": "application/json",
     "user-agent": providerUserAgent,
     "x-auth-token": apiKey,
   });

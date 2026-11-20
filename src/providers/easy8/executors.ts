@@ -51,7 +51,7 @@ async function request(
   const response = await context.fetcher(url, {
     method: options.method ?? "GET",
     headers: {
-      accept: "application/json",
+      "accept": "application/json",
       "x-redmine-api-key": context.apiKey,
       "user-agent": providerUserAgent,
       ...(options.body === undefined ? {} : { "content-type": "application/json" }),

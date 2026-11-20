@@ -136,8 +136,8 @@ async function metatextaiRequestJson(input: {
     const response = await input.context.fetcher(buildUrl(input.path), {
       method: input.method,
       headers: {
-        accept: "application/json",
-        authorization: `Bearer ${input.context.apiKey}`,
+        "accept": "application/json",
+        "authorization": `Bearer ${input.context.apiKey}`,
         "content-type": "application/json",
         "user-agent": providerUserAgent,
       },

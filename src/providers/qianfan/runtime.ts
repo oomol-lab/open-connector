@@ -331,8 +331,8 @@ async function qianfanListVideoGenerationTasks(input: ApiKeyProviderActionInput,
       path: withQianfanQuery(
         "/video/generations/list",
         compactObject({
-          page_num: input.input.page_num,
-          page_size: input.input.page_size,
+          "page_num": input.input.page_num,
+          "page_size": input.input.page_size,
           "filter.status": input.input.status,
           "filter.task_ids": Array.isArray(input.input.task_ids)
             ? (input.input.task_ids as Array<unknown>).join(",")
@@ -563,8 +563,8 @@ async function qianfanTextRequest(apiKey: string, input: QianfanRequestInput, fe
 
 function qianfanHeaders(apiKey: string, includeJsonContentType = true) {
   return {
-    authorization: `Bearer ${apiKey}`,
-    accept: "application/json",
+    "authorization": `Bearer ${apiKey}`,
+    "accept": "application/json",
     ...(includeJsonContentType ? { "content-type": "application/json" } : {}),
     "user-agent": qianfanUserAgent,
   };

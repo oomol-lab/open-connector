@@ -157,8 +157,8 @@ async function requestDocsbotAiJson(input: {
   const timeout = createProviderTimeout(input.context.signal);
   try {
     const headers: Record<string, string> = {
-      authorization: `Bearer ${input.context.apiKey}`,
-      accept: "application/json",
+      "authorization": `Bearer ${input.context.apiKey}`,
+      "accept": "application/json",
       "user-agent": providerUserAgent,
     };
     if (input.body) {

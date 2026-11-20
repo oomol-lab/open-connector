@@ -161,8 +161,8 @@ async function helpscoutDocsGetJson(
 
 function helpscoutDocsHeaders(apiKey: string): Headers {
   return new Headers({
-    accept: "application/json",
-    authorization: helpscoutDocsAuthorization(apiKey),
+    "accept": "application/json",
+    "authorization": helpscoutDocsAuthorization(apiKey),
     "user-agent": providerUserAgent,
   });
 }

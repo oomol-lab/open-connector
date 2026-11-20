@@ -84,7 +84,7 @@ async function requestIp2proxyJson(
     response = await context.fetcher(buildIp2proxyUrl(context.apiKey, query), {
       method: "GET",
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "user-agent": providerUserAgent,
       },
       signal: context.signal,

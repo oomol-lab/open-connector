@@ -149,7 +149,7 @@ async function requestRollbarJson(input: {
     response = await input.context.fetcher(buildRollbarUrl(input.path, input.query), {
       method: "GET",
       headers: {
-        Accept: "application/json",
+        "Accept": "application/json",
         "User-Agent": providerUserAgent,
         "X-Rollbar-Access-Token": input.context.apiKey,
       },

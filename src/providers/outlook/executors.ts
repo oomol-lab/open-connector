@@ -233,7 +233,7 @@ async function listMailFolders(input: Record<string, unknown>, { accessToken, fe
         });
 
   const payload = await outlookJsonRequest<{
-    value?: unknown[];
+    "value"?: unknown[];
     "@odata.nextLink"?: unknown;
   }>(pathOrUrl, {
     accessToken,
@@ -285,7 +285,7 @@ async function listMessages(input: Record<string, unknown>, { accessToken, fetch
       : undefined;
 
   const payload = await outlookJsonRequest<{
-    value?: unknown[];
+    "value"?: unknown[];
     "@odata.nextLink"?: unknown;
     "@odata.deltaLink"?: unknown;
   }>(pathOrUrl, {

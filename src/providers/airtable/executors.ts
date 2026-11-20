@@ -108,9 +108,7 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
   baseUrl: airtableApiBaseUrl,
   auth: { type: "bearer" },
   skipDnsValidation: true,
-  customizeRequest({ headers }) {
-    if (!headers.has("accept")) headers.set("accept", "application/json");
-  },
+  defaultHeaders: { accept: "application/json" },
 });
 
 export const credentialValidators: CredentialValidators = {
@@ -460,8 +458,8 @@ function buildAirtableUrl(path: string, query?: ReadonlyArray<readonly [string, 
 
 function airtableHeaders(auth: AirtableAuth, contentType?: string): Record<string, string> {
   const headers: Record<string, string> = {
-    Accept: "application/json",
-    Authorization: `${auth.tokenType ?? "Bearer"} ${auth.accessToken}`,
+    "Accept": "application/json",
+    "Authorization": `${auth.tokenType ?? "Bearer"} ${auth.accessToken}`,
     "User-Agent": providerUserAgent,
   };
   if (contentType) {

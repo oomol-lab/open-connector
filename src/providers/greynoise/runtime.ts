@@ -58,7 +58,7 @@ async function requestGreynoise(request: GreynoiseRequest): Promise<unknown> {
   return runProviderRequest({ label: "GreyNoise", signal: request.context.signal }, async (signal) => {
     const response = await request.context.fetcher(url, {
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "user-agent": providerUserAgent,
       },
       signal,

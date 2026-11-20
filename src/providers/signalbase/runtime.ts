@@ -113,8 +113,8 @@ function buildSignalbaseUrl(path: string): URL {
 
 function signalbaseHeaders(apiKey: string): Record<string, string> {
   return {
-    Accept: "application/json",
-    Authorization: `Bearer ${apiKey}`,
+    "Accept": "application/json",
+    "Authorization": `Bearer ${apiKey}`,
     "User-Agent": providerUserAgent,
   };
 }

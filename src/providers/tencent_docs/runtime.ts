@@ -427,7 +427,7 @@ async function requestTencentDocsOpenApi(
   }
 
   const headers = new Headers({
-    accept: "application/json",
+    "accept": "application/json",
     "Access-Token": context.accessToken,
     "Client-Id": context.clientId,
     "Open-Id": context.openID,

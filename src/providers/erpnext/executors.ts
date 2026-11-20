@@ -315,8 +315,8 @@ function buildUrl(baseUrl: string, path: string, query?: Record<string, string |
 
 function buildHeaders(apiKey: string, apiSecret: string, hasBody: boolean): Headers {
   const headers = new Headers({
-    Accept: "application/json",
-    Authorization: `token ${apiKey}:${apiSecret}`,
+    "Accept": "application/json",
+    "Authorization": `token ${apiKey}:${apiSecret}`,
     "User-Agent": providerUserAgent,
   });
   if (hasBody) {

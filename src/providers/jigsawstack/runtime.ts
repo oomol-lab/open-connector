@@ -173,7 +173,7 @@ async function requestJigsawstackJson(
 
 function jigsawstackHeaders(apiKey: string): Record<string, string> {
   return {
-    accept: "application/json",
+    "accept": "application/json",
     "content-type": "application/json",
     "user-agent": providerUserAgent,
     "x-api-key": apiKey,

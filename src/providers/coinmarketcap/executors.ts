@@ -185,7 +185,7 @@ async function coinmarketcapFetch(
     return await context.fetcher(url, {
       method: "GET",
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "user-agent": providerUserAgent,
         "X-CMC_PRO_API_KEY": context.apiKey,
       },

@@ -248,7 +248,7 @@ export async function exchangeKrispCallAccessToken(
     init: {
       method: "POST",
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "content-type": "application/x-www-form-urlencoded",
         "user-agent": providerUserAgent,
       },
@@ -285,8 +285,8 @@ async function requestKrispCallJson(input: KrispCallRequestInput) {
   }
 
   const headers = new Headers({
-    accept: "application/json",
-    authorization: `JWT ${input.accessToken}`,
+    "accept": "application/json",
+    "authorization": `JWT ${input.accessToken}`,
     "user-agent": providerUserAgent,
   });
   if (input.body != null) {

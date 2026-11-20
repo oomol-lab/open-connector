@@ -229,8 +229,8 @@ async function request(input: {
     response = await input.fetcher(url, {
       method: input.method ?? "GET",
       headers: compactObject({
-        accept: "application/json",
-        authorization: `Bearer ${input.apiKey}`,
+        "accept": "application/json",
+        "authorization": `Bearer ${input.apiKey}`,
         "content-type": input.body === undefined ? undefined : "application/json",
         "user-agent": providerUserAgent,
       }) as Record<string, string>,

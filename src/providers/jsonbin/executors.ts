@@ -154,7 +154,7 @@ async function deleteBin(input: Record<string, unknown>, context: JsonbinActionC
 function jsonbinHeaders(apiKey: string, extraHeaders: Record<string, string | undefined> = {}): Record<string, string> {
   return pruneHeaders({
     "X-Master-Key": apiKey,
-    accept: "application/json",
+    "accept": "application/json",
     "user-agent": providerUserAgent,
     ...extraHeaders,
   });

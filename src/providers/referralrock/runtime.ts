@@ -70,8 +70,8 @@ async function request(path: string, query: Record<string, string>, context: Con
   try {
     const response = await context.fetcher(url, {
       headers: {
-        accept: "application/json",
-        authorization: buildReferralRockAuthorization(context.publicKey, context.privateKey),
+        "accept": "application/json",
+        "authorization": buildReferralRockAuthorization(context.publicKey, context.privateKey),
         "user-agent": providerUserAgent,
       },
       signal: timeout.signal,

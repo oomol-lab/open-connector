@@ -160,7 +160,7 @@ async function requestAnydb(
     response = await context.fetcher(url, {
       method: options.method ?? "GET",
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "content-type": "application/json",
         "user-agent": providerUserAgent,
         "x-anydb-api-key": context.apiKey,

@@ -5,6 +5,7 @@ import { optionalRecord, optionalRawString, requiredRawString } from "../../core
 import { defineApiKeyProviderExecutors, mapProviderActionHandlers } from "../provider-executors.ts";
 import { defineProviderProxy } from "../provider-proxy.ts";
 import {
+  encodeNonDotPathSegment,
   readProviderTextBody,
   ProviderRequestError,
   providerInputError,
@@ -15,12 +16,6 @@ import {
 } from "../provider-runtime.ts";
 import { flotiqActions } from "./actions.ts";
 const baseUrl = "https://api.flotiq.com";
-function encodePathSegment(value: string) {
-  if (value === "." || value === "..") {
-    throw new ProviderRequestError(400, "Flotiq path identifiers cannot be dot segments", undefined, "invalid_input");
-  }
-  return encodeURIComponent(value);
-}
 async function requestFlotiq(
   apiKey: string,
   fetcher: typeof fetch,
@@ -37,7 +32,7 @@ async function requestFlotiq(
   }
   return runProviderRequest({ signal: parentSignal, label: "Flotiq" }, async (signal) => {
     const headers = new Headers({
-      accept: "application/json",
+      "accept": "application/json",
       "X-AUTH-TOKEN": apiKey,
       "user-agent": providerUserAgent,
     });
@@ -92,7 +87,7 @@ export const executors: ProviderExecutors = defineApiKeyProviderExecutors(
     flotiqActions,
     (action) => async (input: Record<string, unknown>, context: ApiKeyProviderContext) => {
       const data = input;
-      const name = encodePathSegment(requiredRawString(data.contentType, "contentType", providerInputError));
+      const name = encodePathSegment(data.contentType, "contentType");
       const apiKey = context.apiKey;
       const fetcher = context.fetcher;
       if (action.name === "get_content_type") {
@@ -137,7 +132,7 @@ export const executors: ProviderExecutors = defineApiKeyProviderExecutors(
           object: await requestFlotiq(apiKey, fetcher, collection, "POST", {}, data.content, undefined, context.signal),
         };
       }
-      const objectPath = `${collection}/${encodePathSegment(requiredRawString(data.id, "id", providerInputError))}`;
+      const objectPath = `${collection}/${encodePathSegment(data.id, "id")}`;
       if (action.name === "delete_content_object") {
         await requestFlotiq(apiKey, fetcher, objectPath, "DELETE", undefined, undefined, undefined, context.signal);
         return { deleted: true };
@@ -187,11 +182,9 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
   baseUrl,
   auth: { type: "api_key_header", name: "X-AUTH-TOKEN" },
   skipDnsValidation: true,
-  customizeRequest({ headers }) {
-    for (const [key, value] of Object.entries({
-      accept: "application/json",
-      "user-agent": providerUserAgent,
-    }))
-      if (!headers.has(key)) headers.set(key, value);
-  },
+  defaultHeaders: { "accept": "application/json", "user-agent": providerUserAgent },
 });
+
+function encodePathSegment(value: unknown, fieldName: string): string {
+  return encodeNonDotPathSegment(requiredRawString(value, fieldName, providerInputError));
+}

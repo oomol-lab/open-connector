@@ -223,8 +223,8 @@ async function requestChartmogulJson(input: {
 
 function chartmogulHeaders(apiKey: string): Record<string, string> {
   return {
-    accept: "application/json",
-    authorization: buildChartmogulAuthorizationHeader(apiKey),
+    "accept": "application/json",
+    "authorization": buildChartmogulAuthorizationHeader(apiKey),
     "user-agent": providerUserAgent,
   };
 }

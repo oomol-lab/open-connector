@@ -148,8 +148,8 @@ async function requestByteformsJson<T>(input: {
 
 function byteformsHeaders(apiKey: string): Record<string, string> {
   return {
-    accept: "application/json",
-    authorization: apiKey,
+    "accept": "application/json",
+    "authorization": apiKey,
     "user-agent": providerUserAgent,
   };
 }

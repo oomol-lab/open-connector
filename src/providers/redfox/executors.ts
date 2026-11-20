@@ -33,9 +33,7 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
   baseUrl: redfoxApiBaseUrl,
   auth: { type: "api_key_header", name: "REDFOX_API_KEY" },
   skipDnsValidation: true,
-  customizeRequest({ headers }) {
-    if (!headers.has("accept")) headers.set("accept", "application/json");
-  },
+  defaultHeaders: { accept: "application/json" },
   async readError(response) {
     return new ProviderRequestError(
       response.status,

@@ -114,7 +114,7 @@ export const jiraProject: EventSourceDefinition<
       operation: "sourceReceive",
       config: { ...source.config, webhookId: source.state.resource.webhookId },
       headers: {
-        authorization: headers.get("authorization") ?? "",
+        "authorization": headers.get("authorization") ?? "",
         "x-atlassian-webhook-identifier": headers.get("x-atlassian-webhook-identifier") ?? "",
       },
       rawBody: new TextDecoder("utf-8", { fatal: true }).decode(bytes),

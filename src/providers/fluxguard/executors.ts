@@ -215,7 +215,7 @@ async function requestFluxguardJson(context: FluxguardActionContext, input: Flux
 
   try {
     const headers: Record<string, string> = {
-      accept: "application/json",
+      "accept": "application/json",
       "user-agent": providerUserAgent,
       "x-api-key": context.apiKey,
     };

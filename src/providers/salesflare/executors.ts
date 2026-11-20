@@ -226,8 +226,8 @@ async function salesflareRequestJson(input: SalesflareRequestInput): Promise<unk
 
 function salesflareHeaders(apiKey: string, hasBody: boolean): Record<string, string> {
   return {
-    authorization: `Bearer ${apiKey}`,
-    accept: "application/json",
+    "authorization": `Bearer ${apiKey}`,
+    "accept": "application/json",
     "user-agent": providerUserAgent,
     ...(hasBody ? { "content-type": "application/json" } : {}),
   };

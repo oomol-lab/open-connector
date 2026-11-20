@@ -298,7 +298,7 @@ async function requestForemJson<T>(context: ForemActionContext, input: ForemRequ
 
 function buildForemHeaders(apiKey: string, hasBody: boolean): Record<string, string> {
   const headers: Record<string, string> = {
-    accept: "application/vnd.forem.api-v1+json",
+    "accept": "application/vnd.forem.api-v1+json",
     "api-key": apiKey,
     "user-agent": providerUserAgent,
   };

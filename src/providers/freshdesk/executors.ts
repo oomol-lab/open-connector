@@ -227,9 +227,9 @@ async function requestFreshdeskJson(input: FreshdeskActionContext & FreshdeskReq
     response = await input.fetcher(buildFreshdeskUrl(input.baseUrl, input.path, input.query), {
       method: "GET",
       headers: {
-        authorization: buildFreshdeskAuthorizationHeader(input.apiKey),
+        "authorization": buildFreshdeskAuthorizationHeader(input.apiKey),
         "user-agent": providerUserAgent,
-        accept: "application/json",
+        "accept": "application/json",
       },
       signal,
     });

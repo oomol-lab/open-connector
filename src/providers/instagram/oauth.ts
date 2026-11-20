@@ -101,7 +101,7 @@ async function requestInstagramToken(input: InstagramTokenRequest): Promise<Inst
     response = await input.fetcher(input.url, {
       ...input.init,
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "user-agent": providerUserAgent,
         ...input.init?.headers,
       },

@@ -113,8 +113,8 @@ async function sendlaneRequest(
   const url = new URL(`${sendlaneApiBaseUrl}${request.path}`);
   for (const [key, value] of Object.entries(request.query ?? {})) url.searchParams.set(key, value);
   const headers = new Headers({
-    accept: "application/json",
-    authorization: `Bearer ${apiKey}`,
+    "accept": "application/json",
+    "authorization": `Bearer ${apiKey}`,
     "user-agent": providerUserAgent,
   });
   const init: RequestInit = { method: request.method ?? "GET", headers };

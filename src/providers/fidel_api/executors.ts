@@ -171,7 +171,7 @@ async function requestFidelJson(input: {
     const response = await input.fetcher(buildFidelUrl(input.path, input.query), {
       method: "GET",
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "content-type": "application/json",
         "Fidel-Key": input.apiKey,
         "user-agent": providerUserAgent,

@@ -201,7 +201,7 @@ async function guardedRequest(
   const response = await fetcher(url, {
     ...init,
     headers: {
-      accept: "application/json",
+      "accept": "application/json",
       "content-type": "application/json",
       "user-agent": providerUserAgent,
       ...init.headers,

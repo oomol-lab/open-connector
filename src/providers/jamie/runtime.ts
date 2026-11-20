@@ -134,7 +134,7 @@ async function jamieGetJson(
     response = await context.fetcher(url.toString(), {
       method: "GET",
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "user-agent": providerUserAgent,
         "x-api-key": context.apiKey,
       },

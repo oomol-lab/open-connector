@@ -157,7 +157,7 @@ function fetchToken(
     context.fetcher(path instanceof URL ? path : `${apiBaseUrl}${path}`, {
       method: init.method,
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "content-type": "application/json",
         "user-agent": providerUserAgent,
         "x-speakai-key": context.apiKey,

@@ -209,8 +209,8 @@ async function requestAgoraJson(input: AgoraRequestOptions): Promise<unknown> {
   const url = new URL(input.path, agoraApiBaseUrl);
   appendQuery(url, input.query);
   const headers: Record<string, string> = {
-    accept: "application/json",
-    authorization: buildBasicAuthHeader(input.customerId, input.customerSecret),
+    "accept": "application/json",
+    "authorization": buildBasicAuthHeader(input.customerId, input.customerSecret),
     "user-agent": providerUserAgent,
   };
   if (input.body) {

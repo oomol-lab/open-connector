@@ -141,7 +141,7 @@ async function requestPinpoint(input: PinpointRequestInput) {
   try {
     const response = await guardedFetch(url, {
       headers: {
-        accept: "application/vnd.api+json",
+        "accept": "application/vnd.api+json",
         "user-agent": providerUserAgent,
         "x-api-key": input.apiKey,
       },

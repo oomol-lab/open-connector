@@ -212,11 +212,7 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
   baseUrl: identityBaseUrl,
   auth: { type: "oauth_bearer" },
   skipDnsValidation: true,
-  customizeRequest({ headers }) {
-    if (!headers.has("accept")) {
-      headers.set("accept", "application/json");
-    }
-  },
+  defaultHeaders: { accept: "application/json" },
 });
 
 export const credentialValidators: CredentialValidators = {
@@ -316,7 +312,7 @@ function defaultDueDate(date: string | undefined): string | undefined {
 
 function bearerHeaders(accessToken: string, tenantId?: string): Record<string, string> {
   return {
-    authorization: `Bearer ${accessToken}`,
+    "authorization": `Bearer ${accessToken}`,
     "xero-api-package": apiPackage,
     ...(tenantId ? { "xero-tenant-id": tenantId } : {}),
   };

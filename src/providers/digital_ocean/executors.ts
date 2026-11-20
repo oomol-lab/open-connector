@@ -263,9 +263,9 @@ async function digitalOceanFetch(input: {
   const timeout = createProviderTimeout(input.signal);
   try {
     const headers = jsonObject({
-      accept: "application/json",
+      "accept": "application/json",
       "content-type": input.body === undefined ? undefined : "application/json",
-      authorization: `Bearer ${input.apiKey}`,
+      "authorization": `Bearer ${input.apiKey}`,
       "user-agent": providerUserAgent,
     }) as Record<string, string>;
     return await input.fetcher(url, {

@@ -153,8 +153,8 @@ async function post(path: string, body: unknown, context: { apiKey: string; fetc
 
 async function requestInfolobby(options: RequestOptions) {
   const headers: Record<string, string> = {
-    accept: "application/json",
-    authorization: `Bearer ${options.apiKey}`,
+    "accept": "application/json",
+    "authorization": `Bearer ${options.apiKey}`,
     "user-agent": providerUserAgent,
   };
   if (options.method === "POST") {

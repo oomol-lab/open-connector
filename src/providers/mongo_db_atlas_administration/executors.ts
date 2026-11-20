@@ -303,7 +303,7 @@ function buildAtlasUrl(path: string, query: Record<string, string | undefined> =
 
 function buildAtlasHeaders(): Record<string, string> {
   return {
-    accept: atlasAcceptHeader,
+    "accept": atlasAcceptHeader,
     "content-type": "application/json",
     "user-agent": providerUserAgent,
   };

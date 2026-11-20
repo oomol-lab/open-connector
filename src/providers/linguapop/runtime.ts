@@ -55,7 +55,7 @@ async function sendInvitation(input: Record<string, unknown>, context: Linguapop
     {
       method: "POST",
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "content-type": "application/json",
         "user-agent": providerUserAgent,
       },
@@ -93,7 +93,7 @@ async function fetchAvailableLanguages(
     {
       method: "GET",
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "user-agent": providerUserAgent,
       },
       signal,

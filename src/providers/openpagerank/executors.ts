@@ -87,7 +87,7 @@ async function openPageRankGetJson(
       method: "GET",
       headers: {
         "API-OPR": context.apiKey,
-        accept: "application/json",
+        "accept": "application/json",
         "user-agent": providerUserAgent,
       },
       signal: context.signal,

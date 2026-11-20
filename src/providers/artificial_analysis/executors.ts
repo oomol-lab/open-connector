@@ -27,7 +27,7 @@ async function request(
       if (key !== "slug" && value !== undefined) url.searchParams.set(key, String(value));
     }
     const response = await fetcher(url, {
-      headers: { "x-api-key": apiKey, accept: "application/json" },
+      headers: { "x-api-key": apiKey, "accept": "application/json" },
       signal,
     });
     const body: unknown = await response.json().catch((error: unknown) => {
@@ -81,7 +81,5 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
   service: "artificial_analysis",
   baseUrl,
   auth: { type: "api_key_header", name: "x-api-key" },
-  customizeRequest({ headers }) {
-    if (!headers.has("accept")) headers.set("accept", "application/json");
-  },
+  defaultHeaders: { accept: "application/json" },
 });

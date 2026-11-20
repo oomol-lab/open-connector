@@ -98,6 +98,8 @@ export interface ProviderProxyDefinition {
   baseUrl: ProviderProxyBaseUrl;
   auth: ProviderProxyAuth;
   allowedEndpoint?: (endpoint: string) => boolean;
+  /** Fallback values for headers absent after caller headers and proxy auth are applied. */
+  defaultHeaders?: Readonly<Record<string, string>>;
   customizeRequest?: (input: ProviderProxyRequestCustomizationInput) => Promise<void> | void;
   /** Parse a failed HTTP response using the same provider error rules as actions. */
   readError?: (response: Response) => Promise<ProviderRequestError>;
@@ -353,6 +355,11 @@ export function defineProviderProxy(input: ProviderProxyDefinition): ProviderPro
         proxyInput.body,
         egressFetch,
       );
+      if (input.defaultHeaders) {
+        for (const [name, value] of Object.entries(input.defaultHeaders)) {
+          if (!headers.has(name)) headers.set(name, value);
+        }
+      }
       let requestBody = authResult.body;
       await input.customizeRequest?.({
         context,

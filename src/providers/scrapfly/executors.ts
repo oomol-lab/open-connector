@@ -152,7 +152,7 @@ async function requestScrapflyRaw(
     const response = await context.fetcher(buildScrapflyUrl(url, query, context.apiKey), {
       ...init,
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "user-agent": providerUserAgent,
         ...init.headers,
       },

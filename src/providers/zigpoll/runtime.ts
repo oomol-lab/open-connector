@@ -141,8 +141,8 @@ async function requestZigpollJson(
     response = await context.fetcher(url, {
       method: input.method ?? "GET",
       headers: {
-        accept: "application/json",
-        authorization: context.apiKey,
+        "accept": "application/json",
+        "authorization": context.apiKey,
         "user-agent": providerUserAgent,
         ...(hasBody ? { "content-type": "application/json" } : {}),
       },

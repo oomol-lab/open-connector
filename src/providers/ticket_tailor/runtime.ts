@@ -146,8 +146,8 @@ async function requestTicketTailorJson(input: RequestInput): Promise<unknown> {
     const response = await input.fetcher(url, {
       method: "GET",
       headers: {
-        accept: "application/json",
-        authorization: basicAuthorizationHeader(`${input.apiKey}:`),
+        "accept": "application/json",
+        "authorization": basicAuthorizationHeader(`${input.apiKey}:`),
         "user-agent": providerUserAgent,
       },
       signal,

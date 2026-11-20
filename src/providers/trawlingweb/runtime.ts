@@ -63,7 +63,7 @@ async function requestNews(
   const timeout = createProviderTimeout(context.signal);
   try {
     const response = await context.fetcher(url, {
-      headers: { accept: "application/json", "user-agent": providerUserAgent },
+      headers: { "accept": "application/json", "user-agent": providerUserAgent },
       signal: timeout.signal,
     });
     const payload = await readProviderJsonBody(response, {

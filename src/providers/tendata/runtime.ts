@@ -99,7 +99,7 @@ export async function executeTendataAction(
     signal,
     method: endpoint.method,
     headers: {
-      accept: "application/json",
+      "accept": "application/json",
       "content-type": "application/json",
       "user-agent": providerUserAgent,
     },
@@ -171,7 +171,7 @@ async function fetchAccessToken(apiKey: string, fetcher: typeof fetch): Promise<
     const startedAt = Date.now();
     const response = await fetcher(url, {
       method: "GET",
-      headers: { accept: "application/json", "user-agent": providerUserAgent },
+      headers: { "accept": "application/json", "user-agent": providerUserAgent },
       redirect: "manual",
       signal,
     });

@@ -67,9 +67,9 @@ export const koboToolboxActionHandlers: Record<string, Handler> = {
 
   async create_project(input, fetcher) {
     const settings = compactObject({
-      description: optionalString(input.input.description),
-      sector: optionalString(input.input.sector),
-      country: optionalString(input.input.country),
+      "description": optionalString(input.input.description),
+      "sector": optionalString(input.input.sector),
+      "country": optionalString(input.input.country),
       "share-metadata": pickOptionalBoolean(input.input, "shareMetadata"),
     });
     return {
@@ -286,8 +286,8 @@ export async function requestKoboToolboxJson(input: {
     const response = await input.fetcher(url, {
       method: input.method ?? "GET",
       headers: {
-        accept: "application/json",
-        authorization: `Token ${input.apiKey}`,
+        "accept": "application/json",
+        "authorization": `Token ${input.apiKey}`,
         "user-agent": providerUserAgent,
         ...(input.body === undefined ? {} : { "content-type": "application/json" }),
       },

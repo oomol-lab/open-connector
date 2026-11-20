@@ -215,8 +215,8 @@ async function requestAdobeCommerce(options: AdobeCommerceRequestOptions): Promi
     return await options.context.fetcher(url, {
       method: "GET",
       headers: {
-        accept: "application/json",
-        authorization: `Bearer ${options.context.apiKey}`,
+        "accept": "application/json",
+        "authorization": `Bearer ${options.context.apiKey}`,
         "user-agent": providerUserAgent,
       },
       signal: options.context.signal,

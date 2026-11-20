@@ -166,8 +166,8 @@ async function requestTursoJson(input: TursoRequestInput, context: ApiKeyProvide
     const response = await context.fetcher(new URL(input.path, tursoApiBaseUrl), {
       method: input.method,
       headers: compactObject({
-        authorization: `Bearer ${context.apiKey}`,
-        accept: "application/json",
+        "authorization": `Bearer ${context.apiKey}`,
+        "accept": "application/json",
         "content-type": input.body ? "application/json" : undefined,
         "user-agent": providerUserAgent,
       }) as Record<string, string>,

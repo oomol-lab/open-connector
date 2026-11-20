@@ -75,17 +75,17 @@ export const hoopActionHandlers: ProviderActionHandlers<"hoop", HoopActionHandle
       signal: context.signal,
       phase: "execute",
       query: compactObject({
-        user: optionalString(input.user),
-        connection: optionalString(input.connectionName),
-        type: optionalString(input.type),
+        "user": optionalString(input.user),
+        "connection": optionalString(input.connectionName),
+        "type": optionalString(input.type),
         "review.approver": optionalString(input.reviewApprover),
         "review.status": optionalString(input.reviewStatus),
-        correlation_id: optionalString(input.correlationId),
-        jira_issue_key: optionalString(input.jiraIssueKey),
-        start_date: optionalString(input.startDate),
-        end_date: optionalString(input.endDate),
-        limit: optionalInteger(input.limit),
-        offset: optionalInteger(input.offset),
+        "correlation_id": optionalString(input.correlationId),
+        "jira_issue_key": optionalString(input.jiraIssueKey),
+        "start_date": optionalString(input.startDate),
+        "end_date": optionalString(input.endDate),
+        "limit": optionalInteger(input.limit),
+        "offset": optionalInteger(input.offset),
       }),
     });
     const sessions = readCollection(payload, "sessions").map((item) => normalizeSession(item));
@@ -134,8 +134,8 @@ async function requestHoopJson(input: HoopRequestInput): Promise<unknown> {
     response = await input.fetcher(buildHoopUrl(input.path, input.query), {
       method: "GET",
       headers: {
-        authorization: `Bearer ${input.apiKey}`,
-        accept: "application/json",
+        "authorization": `Bearer ${input.apiKey}`,
+        "accept": "application/json",
         "user-agent": providerUserAgent,
       },
       signal: timeout.signal,

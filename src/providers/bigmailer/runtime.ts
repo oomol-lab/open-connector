@@ -326,7 +326,7 @@ function buildBigmailerUrl(path: string, query: Record<string, string | number |
 
 function bigmailerHeaders(apiKey: string, hasJsonBody: boolean) {
   const headers: Record<string, string> = {
-    accept: "application/json",
+    "accept": "application/json",
     "user-agent": providerUserAgent,
     "x-api-key": apiKey,
   };

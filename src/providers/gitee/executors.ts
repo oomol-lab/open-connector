@@ -11,9 +11,7 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
   baseUrl: giteeApiBaseUrl,
   auth: { type: "bearer" },
   skipDnsValidation: true,
-  customizeRequest({ headers }) {
-    if (!headers.has("accept")) headers.set("accept", "application/json");
-  },
+  defaultHeaders: { accept: "application/json" },
 });
 
 export const executors: ProviderExecutors = defineBearerProviderExecutors(service, giteeActionHandlers);

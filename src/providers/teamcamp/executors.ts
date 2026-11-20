@@ -196,7 +196,7 @@ function buildTeamcampUrl(path: string, query: Record<string, TeamcampQueryValue
 
 function buildTeamcampHeaders(apiKey: string, hasJsonBody: boolean): Record<string, string> {
   const headers: Record<string, string> = {
-    accept: "application/json",
+    "accept": "application/json",
     apiKey,
     "user-agent": providerUserAgent,
   };

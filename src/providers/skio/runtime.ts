@@ -141,8 +141,8 @@ async function requestSkioJson(input: {
     const response = await input.context.fetcher(buildSkioUrl(input.path, input.query), {
       method: "GET",
       headers: {
-        accept: "application/json",
-        authorization: `API ${input.apiKey}`,
+        "accept": "application/json",
+        "authorization": `API ${input.apiKey}`,
         "user-agent": providerUserAgent,
       },
       signal,

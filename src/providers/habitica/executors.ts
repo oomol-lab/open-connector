@@ -431,7 +431,7 @@ function buildHabiticaUrl(path: string, query?: Record<string, string | undefine
 
 function buildHabiticaHeaders(credential: HabiticaCredential, hasJsonBody: boolean): Record<string, string> {
   return compactObject({
-    accept: "application/json",
+    "accept": "application/json",
     "content-type": hasJsonBody ? "application/json" : undefined,
     "user-agent": providerUserAgent,
     "x-api-key": credential.apiKey,

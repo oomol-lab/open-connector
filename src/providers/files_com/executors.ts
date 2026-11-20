@@ -212,7 +212,7 @@ async function downloadFilesComFile(
   try {
     const response = await providerFetch(downloadUrl, {
       headers: {
-        accept: "*/*",
+        "accept": "*/*",
         "user-agent": providerUserAgent,
       },
       signal: downloadSignal,
@@ -317,7 +317,7 @@ async function requestFilesComJson(input: FilesComRequestInput): Promise<unknown
     const response = await input.fetcher(url, {
       method: input.method ?? "GET",
       headers: {
-        accept: "application/json",
+        "accept": "application/json",
         "content-type": "application/json",
         "user-agent": providerUserAgent,
         "x-filesapi-key": input.apiKey,

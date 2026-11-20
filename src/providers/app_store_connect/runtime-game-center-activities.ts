@@ -115,14 +115,14 @@ function readChallengeFilterQuery(input: Record<string, unknown>): Record<string
 
 function readAppMatchmakingRequestQuery(input: Record<string, unknown>): Record<string, string | undefined> {
   return {
-    groupBy: readCommaSeparatedList(input.groupBy),
+    "groupBy": readCommaSeparatedList(input.groupBy),
     "filter[result]": pickOptionalString(input, "result"),
   };
 }
 
 function readQueueMatchmakingRequestQuery(input: Record<string, unknown>): Record<string, string | undefined> {
   return {
-    groupBy: readCommaSeparatedList(input.groupBy),
+    "groupBy": readCommaSeparatedList(input.groupBy),
     "filter[result]": pickOptionalString(input, "result"),
     "filter[gameCenterDetail]": readOptionalAppStoreConnectId(input.gameCenterDetailId, "gameCenterDetailId"),
   };
@@ -130,7 +130,7 @@ function readQueueMatchmakingRequestQuery(input: Record<string, unknown>): Recor
 
 function readMatchmakingRuleQuery(input: Record<string, unknown>): Record<string, string | undefined> {
   return {
-    groupBy: readCommaSeparatedList(input.groupBy),
+    "groupBy": readCommaSeparatedList(input.groupBy),
     "filter[gameCenterMatchmakingQueue]": readOptionalAppStoreConnectId(
       input.gameCenterMatchmakingQueueId,
       "gameCenterMatchmakingQueueId",

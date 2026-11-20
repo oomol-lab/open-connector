@@ -545,8 +545,8 @@ function classifyTeredoIpv6(ipv6: Uint8Array): IpAddressClass | undefined {
 
 function stricterIpAddressClass(left: IpAddressClass, right: IpAddressClass): IpAddressClass {
   const rank: Record<IpAddressClass, number> = {
-    public: 0,
-    private: 1,
+    "public": 0,
+    "private": 1,
     "vpn-mapped": 2,
     "always-blocked": 3,
   };

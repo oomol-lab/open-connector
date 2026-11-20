@@ -199,7 +199,7 @@ export async function processIlovepdfFiles(
     { label: "iLovePDF download", timeoutMs: 300000, signal: context.signal },
     async (signal) => {
       const response = await context.fetcher(`${baseUrl}/download/${encodeURIComponent(task)}`, {
-        headers: { authorization: `Bearer ${token}`, "user-agent": providerUserAgent },
+        headers: { "authorization": `Bearer ${token}`, "user-agent": providerUserAgent },
         signal,
         redirect: "manual",
       });
@@ -257,9 +257,9 @@ async function requestJson(
     const response = await fetcher(url, {
       method: body ? "POST" : "GET",
       headers: {
-        authorization: `Bearer ${token}`,
+        "authorization": `Bearer ${token}`,
         "content-type": "application/json",
-        accept: "application/json",
+        "accept": "application/json",
         "user-agent": providerUserAgent,
       },
       body: body ? JSON.stringify(body) : undefined,

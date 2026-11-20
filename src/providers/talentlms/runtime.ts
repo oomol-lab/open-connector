@@ -256,7 +256,7 @@ async function talentlmsRequest(options: TalentlmsRequestOptions): Promise<unkno
 
 function buildTalentlmsHeaders(apiKey: string, hasBody: boolean): Record<string, string> {
   const headers: Record<string, string> = {
-    accept: "application/json",
+    "accept": "application/json",
     "user-agent": providerUserAgent,
     "x-api-key": apiKey,
     "x-api-version": talentlmsApiVersion,

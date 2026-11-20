@@ -181,8 +181,8 @@ async function requestShipBobJson(options: ShipBobRequestOptions): Promise<unkno
     const response = await options.context.fetcher(url, {
       method: "GET",
       headers: {
-        accept: "application/json",
-        authorization: `Bearer ${options.context.apiKey}`,
+        "accept": "application/json",
+        "authorization": `Bearer ${options.context.apiKey}`,
         "user-agent": providerUserAgent,
       },
       signal: timeout.signal,

@@ -13,11 +13,7 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
   baseUrl: webinarjamApiBaseUrl,
   auth: { type: "api_key_query_or_form_body", name: "api_key", bodyMethods: ["POST"] },
   skipDnsValidation: true,
-  customizeRequest({ headers }) {
-    if (!headers.has("accept")) {
-      headers.set("accept", "application/json");
-    }
-  },
+  defaultHeaders: { accept: "application/json" },
 });
 
 export const credentialValidators: CredentialValidators = {

@@ -179,8 +179,8 @@ async function requestCeligoJson(input: CeligoRequestOptions): Promise<unknown> 
   try {
     response = await input.fetcher(buildCeligoUrl(input.apiBaseUrl, input.path), {
       headers: {
-        Authorization: `Bearer ${input.apiKey}`,
-        Accept: "application/json",
+        "Authorization": `Bearer ${input.apiKey}`,
+        "Accept": "application/json",
         "User-Agent": providerUserAgent,
       },
       signal: input.signal,

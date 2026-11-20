@@ -375,8 +375,8 @@ async function docparserRequest(
 
 function buildDocparserHeaders(apiKey: string, body?: URLSearchParams | FormData): Headers {
   const headers = new Headers({
-    accept: "application/json",
-    api_key: apiKey,
+    "accept": "application/json",
+    "api_key": apiKey,
     "user-agent": providerUserAgent,
   });
 
