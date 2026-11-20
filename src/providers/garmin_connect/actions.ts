@@ -139,6 +139,45 @@ const heartRateDaySchema = s.looseObject("One day of heart rate.", {
   ),
 });
 
+const wellnessActivityMeasurementSchema = s.looseObject("One measurement taken during a wellness activity.", {
+  summaryType: s.string(
+    "The measurement: HEART_RATE, WRIST_HEART_RATE, STRESS, RESPIRATION, SPO2, or RMSSD_HRV and SDRR_HRV for heart rate variability.",
+  ),
+  minValue: s.nullableNumber("The lowest value. Absent for the heart rate variability measurements."),
+  maxValue: s.nullableNumber("The highest value. Absent for the heart rate variability measurements."),
+  avgValue: s.nullableNumber("The average value."),
+});
+
+const wellnessActivitySchema = s.looseObject(
+  "One wellness activity. A Health Snapshot, which records heart rate, heart rate variability, stress, respiration and pulse oximetry while the user holds still for two minutes, has the type HEALTH_MONITORING.",
+  {
+    activityUuid: s.looseObject("The identifier of the wellness activity.", {
+      uuid: s.uuid("The wellness activity UUID."),
+    }),
+    calendarDate: s.date("The calendar date of the wellness activity."),
+    activityName: s.nullableString("The name Garmin gave the activity, such as Health Snapshot - Evening."),
+    wellnessActivityType: s.nullableString("The type of wellness activity: HEALTH_MONITORING or UNKNOWN."),
+    notes: s.nullableString("Notes the user added to the activity."),
+    startTimestampGMT: s.string("The start time in GMT, without an offset, such as 2026-03-15T16:59:23.0."),
+    endTimestampGMT: s.string("The end time in GMT, without an offset, such as 2026-03-15T17:01:23.145."),
+    startTimestampLocal: s.string("The start time on the user's local clock, without an offset."),
+    endTimestampLocal: s.string("The end time on the user's local clock, without an offset."),
+    summaryTypeDataList: s.array(
+      "One summary per measurement taken: the lowest, highest and average value, or only the average for heart rate variability.",
+      wellnessActivityMeasurementSchema,
+    ),
+    timeInZoneList: s.array(
+      "The time spent in each heart rate zone during the activity.",
+      s.looseObject("The time spent in one heart rate zone.", {
+        zoneNumber: s.integer("The zone number; zone 0 is below zone 1."),
+        millisInZone: s.integer("The time spent in the zone, in milliseconds."),
+        zoneLowBoundary: s.integer("The lowest heart rate of the zone, in beats per minute."),
+      }),
+    ),
+    deviceMetaData: s.unknown("The device that recorded the activity."),
+  },
+);
+
 const heartRateZoneSchema = s.looseObject("The heart rate zones for one sport.", {
   sport: s.string("The sport the zones apply to; DEFAULT applies to every sport without zones of its own."),
   trainingMethod: s.string("How the zones are set, such as HR_MAX for percentages of the maximum heart rate."),
@@ -362,6 +401,16 @@ export const garminConnectActions: ActionDefinition[] = [
     inputSchema: calendarDateInputSchema,
     outputSchema: s.object("The heart rate day returned by Garmin Connect.", {
       heartRate: s.nullable(heartRateDaySchema),
+    }),
+  }),
+  defineProviderAction(service, {
+    name: "list_wellness_activities",
+    operationType: "read",
+    description:
+      "List the user's wellness activities for a range of days, such as Health Snapshot sessions, with a summary of each measurement taken (heart rate, stress, respiration, heart rate variability and, when recorded, pulse oximetry) and the time spent in each heart rate zone.",
+    inputSchema: dateRangeInputSchema(),
+    outputSchema: s.object("The wellness activities returned by Garmin Connect.", {
+      activities: s.array("One entry per wellness activity.", wellnessActivitySchema),
     }),
   }),
   defineProviderAction(service, {
