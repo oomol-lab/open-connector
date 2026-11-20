@@ -322,6 +322,10 @@ describe("TransitFileService", () => {
     // A missing side-car is a legacy unscoped file; a malformed one has an unknown scope, so only the operator sees it.
     await expect(service.read(missing.fileId, {})).resolves.toMatchObject({ sizeBytes: 11 });
     await expect(service.read(malformed.fileId, {})).rejects.toMatchObject({ code: "file_not_found" });
+    // An empty side-car is malformed, not missing.
+    await writeFile(join(rootDir, `${malformed.fileId}.meta.json`), "");
+    await expect(service.read(malformed.fileId, {})).rejects.toMatchObject({ code: "file_not_found" });
+    await expect(service.read(malformed.fileId)).resolves.toMatchObject({ name: malformed.fileId });
   });
 
   it("deletes a stored file with its side-car and reports an unknown id as no deletion", async () => {

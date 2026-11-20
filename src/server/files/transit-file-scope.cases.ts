@@ -32,6 +32,19 @@ export async function expectScopeIsolation(service: ITransitFileService): Promis
   await expect(bound.read(plain.fileId)).rejects.toMatchObject(missing);
   await expect(bindTransitFilesToScope(service, "tenant-b").read(made.fileId)).rejects.toMatchObject(missing);
 
+  // The binding's scope wins over one the caller passes, including an unscoped binding.
+  const unbound = bindTransitFilesToScope(service, undefined);
+  if (unbound.createFromStream) {
+    const streamed = await unbound.createFromStream({
+      body: new Blob(["streamed"]).stream(),
+      name: "s.txt",
+      mimeType: "text/plain",
+      scope: "tenant-b",
+    });
+    await expect((await unbound.read(streamed.fileId)).file.text()).resolves.toBe("streamed");
+    await expect(service.delete(streamed.fileId)).resolves.toBe(true);
+  }
+
   // Deleting a scope removes exactly its files.
   await expect(service.deleteByScope("tenant-a")).resolves.toBe(2);
   await expect(service.read(a.fileId)).rejects.toMatchObject(missing);

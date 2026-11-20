@@ -600,6 +600,7 @@ export class ConnectionService {
       stored.id,
       stored.connectionName,
       stored.credential,
+      stored.scope,
     );
     await this.onConnected(summary, stored.credential);
   }

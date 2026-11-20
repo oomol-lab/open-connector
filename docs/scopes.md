@@ -63,8 +63,9 @@ that hands a scoped `downloadUrl` to a browser must therefore proxy the download
 
 ## Deleting a scope
 
-`DELETE /api/scopes/:scope` (admin) revokes the scope's runtime tokens, fails its open OAuth requests (a callback
-already in flight cannot store its connection, and the grant it obtained is revoked), cancels its trigger
+`DELETE /api/scopes/:scope` (admin) revokes the scope's runtime tokens, fails its open OAuth requests, including console
+reconnects of its connections (a callback already in flight cannot store its connection, and the grant it obtained is
+revoked), cancels its trigger
 subscriptions, disconnects its stored connections (revoking OAuth grants, including connections whose provider has
 left the catalog), purges its runs and deletes its transit files. It answers `200` with the
 counts, or `207` with a `failures` list when a step failed; call it again to finish. Nothing outside the scope is touched.
@@ -75,7 +76,8 @@ counts, or `207` with a `failures` list when a step failed; call it again to fin
 - Proxy calls are not recorded as runs, and runs carry no trace id.
 - Deleting a scope leaves its idempotency records, which expire on their own.
 - The console is an operator view and is not filtered by scope.
-- Deleting a scope does not wait for actions already running with a revoked token; a run or file they write after the
-  purge stays until the next call or the file TTL. Call the endpoint again once they have finished.
+- Deleting a scope does not wait for requests already running with a revoked token: a run or file an action writes
+  after the purge, or a connection request a start inserts after the cancel, stays until the next call (or the file
+  TTL). Call the endpoint again once they have finished. Closing this fully needs a durable record of deleted scopes.
 - A scoped token cannot subscribe to triggers of a provider used without a connection (`no_auth`): such a subscription
   would belong to no scope, so it could be neither confined nor removed with the scope.

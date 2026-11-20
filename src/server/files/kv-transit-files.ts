@@ -62,12 +62,18 @@ export class KVTransitFileService implements ITransitFileService {
     };
     const buffer = await file.arrayBuffer();
     // KV applies its native TTL when the entry is written, so no cleanup pass is needed.
-    await this.namespace.put(objectKey(fileId), buffer, {
-      expirationTtl: this.ttlSeconds,
-    });
+    // The scope marker goes first, so a payload never exists without it: deleteByScope finds every scoped upload.
     await this.namespace.put(metadataKey(fileId), JSON.stringify(metadata), {
       expirationTtl: this.ttlSeconds,
     });
+    try {
+      await this.namespace.put(objectKey(fileId), buffer, {
+        expirationTtl: this.ttlSeconds,
+      });
+    } catch (error) {
+      await this.namespace.delete(metadataKey(fileId)).catch(() => undefined);
+      throw error;
+    }
     return uploadResult(this.publicOrigin, fileId, metadata);
   }
 

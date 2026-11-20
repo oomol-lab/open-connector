@@ -220,6 +220,13 @@ export class ConnectionRequestStore {
         };
     const results = await this.transaction([
       lockRetirement(pending.service, pending.connectionName, pending.retirementGeneration),
+      // Lock the request row before the connection write. A concurrent cancelPending (scope deletion) then either
+      // commits first, so `active` below no longer matches and nothing is stored, or waits for this transaction and
+      // finds the request completed, in which case the deletion's later sweep sees the stored connection.
+      {
+        sql: "update connection_requests set updated_at = updated_at where kind = 'local' and id = ? and phase = 'processing'",
+        values: [pending.connectionRequestId],
+      },
       { sql: "update connections set revision = revision where id = ?", values: [id] },
       queueSaasConnections(`id = ? and revision = ? and ${active}`, [
         id,
@@ -234,7 +241,7 @@ export class ConnectionRequestStore {
         values: [id, now.getTime(), pending.connectionRequestId, id, revision],
       },
     ]);
-    return results[3].length ? id : undefined;
+    return results[4].length ? id : undefined;
   }
 
   private retireRequests(

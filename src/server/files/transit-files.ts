@@ -103,7 +103,6 @@ export class TransitFileService implements IStagedTransitFileService {
 
     const fileId = `${randomHex(16)}${safeExtension(file.name)}`;
     const path = join(this.rootDir, fileId);
-    await rename(file.path, path);
     const metadata = {
       ...normalizeDescriptor({
         name: file.name || fileId,
@@ -111,7 +110,14 @@ export class TransitFileService implements IStagedTransitFileService {
       }),
       ...(file.scope === undefined ? {} : { scope: file.scope }),
     };
+    // The side-car goes first, as in createFromStream, so published data never lacks its scope.
     await writeFile(metadataPath(path), JSON.stringify(metadata), { flag: "wx" });
+    try {
+      await rename(file.path, path);
+    } catch (error) {
+      await unlink(metadataPath(path)).catch(() => undefined);
+      throw error;
+    }
 
     return uploadResult(this.publicOrigin, fileId, { ...metadata, sizeBytes: file.sizeBytes });
   }
@@ -279,7 +285,8 @@ export class TransitFileService implements IStagedTransitFileService {
       if (isMissingFile(error)) return undefined;
       throw error;
     });
-    if (!text) {
+    // An empty side-car is not a missing one: it falls through to the parse failure below.
+    if (text === undefined) {
       return fallback;
     }
     let parsed: Partial<StoredDescriptor>;

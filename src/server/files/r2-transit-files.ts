@@ -51,10 +51,16 @@ export class R2TransitFileService implements ITransitFileService {
       ...(options?.scope === undefined ? {} : { scope: options.scope }),
     };
 
-    await this.bucket.put(objectKey(fileId), file.stream(), {
-      httpMetadata: { contentType: metadata.mimeType },
-    });
+    // The scope marker goes first, so a payload never exists without it: deleteByScope finds every scoped upload.
     await this.bucket.put(metadataKey(fileId), JSON.stringify(metadata));
+    try {
+      await this.bucket.put(objectKey(fileId), file.stream(), {
+        httpMetadata: { contentType: metadata.mimeType },
+      });
+    } catch (error) {
+      await this.bucket.delete(metadataKey(fileId)).catch(() => undefined);
+      throw error;
+    }
 
     return uploadResult(this.publicOrigin, fileId, metadata);
   }

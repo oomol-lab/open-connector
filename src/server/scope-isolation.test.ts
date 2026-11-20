@@ -387,6 +387,31 @@ describe("tenant connect tokens", () => {
     const cancelled = await (await call(`/v1/connection-requests/${connectionRequestId}`)).json();
     expect(cancelled.data).toMatchObject({ status: "failed", errorCode: "scope_deleted" });
   });
+
+  it("gives a console OAuth start the scope of the connection it replaces, so deleting the scope cancels it", async () => {
+    runtime = await createConnectorRuntime(await fixture());
+    await call("/api/oauth/configs/github", { clientId: "client", clientSecret: "secret" }, "admin-token", "PUT");
+    vi.stubGlobal(
+      "fetch",
+      vi.fn<typeof fetch>(async () => Response.json({ id: 1, login: "octocat" })),
+    );
+    const connected = await call("/v1/connections/github/connect/api-key", { apiKey: "k", scope: "tenant-a" });
+    expect(connected.status).toBe(200);
+    const app = (await connected.json()).data;
+    vi.unstubAllGlobals();
+
+    const started = await call("/api/oauth/connection-requests", {
+      service: "github",
+      connectionName: app.alias,
+    });
+    expect(started.status).toBe(200);
+    const { connectionRequestId } = await started.json();
+
+    const removed = await (await call("/api/scopes/tenant-a", undefined, "admin-token", "DELETE")).json();
+    expect(removed.deleted.connectionRequests).toBe(1);
+    const cancelled = await (await call(`/v1/connection-requests/${connectionRequestId}`)).json();
+    expect(cancelled.data).toMatchObject({ status: "failed", errorCode: "scope_deleted" });
+  });
 });
 
 async function upload(name: string, content: string, scope?: string): Promise<string> {

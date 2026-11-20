@@ -74,7 +74,8 @@ export function bindTransitFilesToScope(store: TransitFileStore, scope: string |
   };
   if (store.createFromStream) {
     const createFromStream = store.createFromStream.bind(store);
-    bound.createFromStream = (file) => createFromStream(scope === undefined ? file : { ...file, scope });
+    // The binding's scope always wins, so an unscoped binding cannot store a file under a scope either.
+    bound.createFromStream = (file) => createFromStream({ ...file, scope });
   }
   if (store.response) {
     const response = store.response.bind(store);
