@@ -462,6 +462,7 @@ const cashFlowStatementsAction = defineProviderAction(service, {
         minimum: 1,
         description: "The maximum number of records to return.",
       },
+      market: s.stringEnum("The company listing market.", ["US", "UK", "FR"]),
       period: {
         type: "string",
         enum: ["annual", "quarterly", "ttm"],
@@ -586,6 +587,7 @@ const financialMetricsAction = defineProviderAction(service, {
         minimum: 1,
         description: "The maximum number of records to return.",
       },
+      market: s.stringEnum("The company listing market.", ["US", "UK", "FR"]),
       period: {
         type: "string",
         enum: ["annual", "quarterly", "ttm"],
@@ -872,10 +874,10 @@ const filingsAction = defineProviderAction(service, {
           "Opaque pagination cursor from a previous response's next_page_url. When provided, all other query parameters are ignored: the cursor carries the original request's filters. Treat it as opaque; do not construct or modify it.",
         minLength: 1,
       },
-      filingType: {
-        type: "string",
-        description: "The SEC filing type, such as 10-K or 10-Q.",
-      },
+      filingType: s.array(
+        "The SEC filing types to retrieve.",
+        s.stringEnum("One SEC filing type.", ["10-K", "10-Q", "20-F", "6-K", "8-K"]),
+      ),
       limit: {
         type: "integer",
         minimum: 1,
