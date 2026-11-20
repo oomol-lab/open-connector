@@ -93,6 +93,7 @@ describe("SqliteRuntimeDatabase", () => {
       "0021_oauth_refresh_replay.sql",
       "0022_custom_mcp.sql",
       "0023_scope.sql",
+      "0024_tenant_connect.sql",
     ];
     expect(entries.filter((entry) => entry.message === "sqlite migration started")).toEqual(
       migrations.map((migration) => ({ fields: { migration }, message: "sqlite migration started" })),
@@ -587,6 +588,7 @@ describe("SqliteRuntimeDatabase", () => {
       "0010_connection_revision.sql",
       "0011_runtime_token_connection_scope.sql",
       "0023_scope.sql",
+      "0024_tenant_connect.sql",
     ]) {
       raw.exec(readFileSync(new URL(`../../../../migrations/${migration}`, import.meta.url), "utf8"));
     }

@@ -204,7 +204,7 @@ export class D1RuntimeTokenStore implements IRuntimeTokenStore {
         insert into runtime_tokens (
           ${runtimeTokenColumns}
         )
-        values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `,
       )
       .bind(
@@ -219,6 +219,7 @@ export class D1RuntimeTokenStore implements IRuntimeTokenStore {
         record.createdAt,
         record.lastUsedAt ?? null,
         record.scope ?? null,
+        record.allowConnect ? 1 : 0,
       )
       .run();
   }

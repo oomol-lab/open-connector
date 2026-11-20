@@ -135,6 +135,8 @@ export class OAuthFlowService {
 
   async startConnectionRequest(input: OAuthConnectionRequestInput): Promise<OAuthConnectionRequestStart> {
     validateReturnUri(input.returnUri);
+    // A SaaS-hosted authorization cannot carry a scope, so a scoped request must stay local instead of silently losing it.
+    if (input.scope !== undefined) await this.saasOAuth?.assertLocalAuthorization(input.service);
     const remote = await this.saasOAuth?.start(input);
     if (remote) return remote;
     const requestedScopes = input.authorizationOptionIds;

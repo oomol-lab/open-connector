@@ -99,6 +99,12 @@ export function createLocalAuthMiddleware(options: LocalAuthOptions): Middleware
       return;
     }
 
+    // A scoped runtime token created with `allowConnect` manages the connections of its own scope. The routes
+    // read the grant and confine every read and write to that scope.
+    if (scope === "admin" && isTenantConnectPath(context.req.path, context.req.method)) {
+      if ((await hasValidRuntimeToken(context, options)) && runtimeGrants.get(context.req.raw)?.allowConnect) return;
+    }
+
     if (scope === "admin" && !adminToken) {
       return writeRuntimeFailure(context, {
         status: 403,
@@ -402,6 +408,22 @@ function readBearerCredential(context: Context): string {
   }
 
   return authorization.slice(separator + 1);
+}
+
+/** The subset of connection management a tenant token may use: start, reconnect, read and poll its own connections. */
+function isTenantConnectPath(path: string, method: string): boolean {
+  if (method === "GET") {
+    return (
+      path === "/v1/connections" ||
+      /^\/v1\/connections\/by-id\/[^/]+$/.test(path) ||
+      /^\/v1\/connection-requests\/[^/]+$/.test(path) ||
+      /^\/v1\/providers\/[^/]+\/setup$/.test(path)
+    );
+  }
+  return (
+    method === "POST" &&
+    /^\/v1\/connections\/(?:by-id\/[^/]+|[^/]+)\/connect(?:\/(?:api-key|custom-credential))?$/.test(path)
+  );
 }
 
 function isConnectionManagementPath(path: string): boolean {

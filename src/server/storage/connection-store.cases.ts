@@ -83,4 +83,28 @@ export function connectionStoreTests(getDatabase: () => RuntimeDatabase): void {
     const replaced = await store.set("example", "tenant-a-app", { ...credential, apiKey: "rotated" }, "tenant-a");
     expect(replaced.scope).toBe("tenant-a");
   });
+
+  it("persists a runtime token's scope and allowConnect flag", async () => {
+    const store = getDatabase().runtimeTokenStore;
+    const base = {
+      name: "tenant",
+      allowedActions: [],
+      blockedActions: [],
+      allowedProxies: [],
+      allowedConnections: [],
+      allowedTriggers: [],
+      createdAt: new Date().toISOString(),
+    };
+    await store.add({ ...base, id: "token-connect", tokenHash: "hash-connect", scope: "tenant-a", allowConnect: true });
+    await store.add({ ...base, id: "token-plain", tokenHash: "hash-plain", scope: "tenant-a" });
+    await store.add({ ...base, id: "token-open", tokenHash: "hash-open" });
+
+    await expect(store.findByHash("hash-connect")).resolves.toMatchObject({ scope: "tenant-a", allowConnect: true });
+    const plain = await store.findById("token-plain");
+    expect(plain?.scope).toBe("tenant-a");
+    expect(plain?.allowConnect).toBeUndefined();
+    const open = await store.findById("token-open");
+    expect(open?.scope).toBeUndefined();
+    expect(open?.allowConnect).toBeUndefined();
+  });
 }

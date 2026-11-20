@@ -236,6 +236,9 @@ const runtimeConnectionProperties: Record<string, JsonSchema> = {
     description: "Provider account identity from the stored credential profile.",
   }),
   service: jsonSchema.string({ description: "Provider service identifier." }),
+  scope: jsonSchema.string({
+    description: "Opaque isolation scope the connection was stored with. Absent for an unscoped connection.",
+  }),
   status: { type: "string", enum: ["active", "disconnected"] },
   alias: jsonSchema.string({ description: namedConnectionDescription }),
   authType: jsonSchema.string({ description: "Connection authentication type." }),
@@ -754,13 +757,14 @@ export function createOpenApiDocument(options: OpenApiDocumentOptions = {}): Ope
     "/api/scopes/{scope}": {
       delete: {
         tags: ["Access"],
-        summary: "Delete a scope: revoke its tokens, cancel its triggers, remove its connections, runs and files.",
+        summary:
+          "Delete a scope: revoke its tokens, cancel its authorizations and triggers, remove its connections, runs and files.",
         parameters: [
           {
             name: "scope",
             in: "path",
             required: true,
-            schema: { type: "string", pattern: "^[A-Za-z0-9._:-]{1,128}$" },
+            schema: scopeSchema,
             description: "The scope to offboard. Other scopes are not touched.",
           },
         ],
@@ -1107,6 +1111,13 @@ export function createOpenApiDocument(options: OpenApiDocumentOptions = {}): Ope
             allowedConnections: connectionIdArraySchema(
               "Stable connection IDs granted to this stored runtime token. An empty list is unrestricted connection access. IDs are opaque values returned by the connection APIs. Virtual no_auth connections do not require grants.",
             ),
+            scope: jsonSchema.string({
+              description: "Immutable isolation scope; see docs/scopes.md.",
+            }),
+            allowConnect: jsonSchema.boolean({
+              description:
+                "A scoped token with this flag can also start, reconnect and read connections of its own scope through /v1/connections without the administrator token.",
+            }),
             createdAt: jsonSchema.string({ description: "Creation timestamp." }),
             lastUsedAt: jsonSchema.string({ description: "Last successful use timestamp." }),
           },
@@ -1136,8 +1147,17 @@ export function createOpenApiDocument(options: OpenApiDocumentOptions = {}): Ope
               "Trigger IDs explicitly granted to this token. Omit or leave empty to deny all Trigger operations.",
             ),
             allowedConnections: connectionIdArraySchema(
-              "Optional stable connection IDs granted to the new token. Omit or leave empty for unrestricted connection access. A non-empty list matches exact opaque IDs returned by the connection APIs. Virtual no_auth connections do not require grants.",
+              "Optional stable connection IDs granted to the new token. Omit or leave empty for unrestricted connection access. A non-empty list matches exact opaque IDs returned by the connection APIs. Virtual no_auth connections do not require grants. Every token is limited to its own scope.",
             ),
+            scope: jsonSchema.string({
+              description:
+                "Optional opaque isolation scope, 1 to 128 characters of letters, digits, '.', '_', ':' and '-'. Fixed for the life of the token.",
+              pattern: scopePattern.source,
+            }),
+            allowConnect: jsonSchema.boolean({
+              description:
+                "Let this scoped token start, reconnect and read connections of its own scope through /v1/connections. Requires scope.",
+            }),
           },
           {
             required: ["name"],
@@ -2429,7 +2449,7 @@ function connectionManagementPaths(): Record<string, unknown> {
           tags: ["Connections"],
           summary: `${reconnect ? "Reconnect" : "Create"} ${suffix || "OAuth"} connection.`,
           description:
-            "Requires administrator credentials. OAuth returns an authorization request; API key and custom credentials return the saved connection synchronously.",
+            "Requires administrator credentials, or a scoped runtime token created with allowConnect, which is confined to its own scope (it cannot name another scope). OAuth returns an authorization request; API key and custom credentials return the saved connection synchronously.",
           parameters: [parameter(reconnect ? "appId" : "service")],
           requestBody: {
             required: Boolean(suffix),

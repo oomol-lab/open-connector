@@ -30,6 +30,9 @@ The open runtime has one administrator identity; its bearer token and authentica
 session act as that same identity. It does not require Hosted Team headers. Hosted deployments
 apply their own user and Team management permissions.
 
+Pass `scope` on these endpoints to store a connection in a [scope](scopes.md). A scoped token created with
+`allowConnect` may also call them for its own scope.
+
 `GET /v1/apps` remains execution discovery and applies execution access policies.
 `GET /v1/connections` returns the administrator's stored connections, including connections
 hidden from execution discovery. It excludes virtual no-auth and Marketplace entries.

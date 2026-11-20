@@ -393,7 +393,7 @@ export class SqliteRuntimeTokenStore implements IRuntimeTokenStore {
         insert into runtime_tokens (
           ${runtimeTokenColumns}
         )
-        values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `,
       )
       .run(
@@ -408,6 +408,7 @@ export class SqliteRuntimeTokenStore implements IRuntimeTokenStore {
         record.createdAt,
         record.lastUsedAt ?? null,
         record.scope ?? null,
+        record.allowConnect ? 1 : 0,
       );
   }
 

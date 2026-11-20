@@ -39,7 +39,14 @@ export function createPolicyRoutes({
     if (scope !== undefined && !isScope(scope)) {
       return jsonError(context, 400, "invalid_input", scopeMessage);
     }
-    const created = await runtimeTokens.createToken(name, readTokenPolicy(body, true), { scope });
+    const allowConnect = body.allowConnect;
+    if (allowConnect !== undefined && typeof allowConnect !== "boolean") {
+      return jsonError(context, 400, "invalid_input", "allowConnect must be a boolean.");
+    }
+    if (allowConnect && scope === undefined) {
+      return jsonError(context, 400, "invalid_input", "allowConnect requires a scope.");
+    }
+    const created = await runtimeTokens.createToken(name, readTokenPolicy(body, true), { scope, allowConnect });
     return context.json({
       token: created.token,
       record: summarizeRuntimeToken(created.record),
@@ -49,8 +56,13 @@ export function createPolicyRoutes({
   app.put("/runtime-tokens/:id", async (context) => {
     const id = context.req.param("id");
     const body = await readJsonBody(context, policyRequestMaxBytes);
-    if (body.scope !== undefined) {
-      return jsonError(context, 400, "invalid_input", "A runtime token's scope cannot be changed; create a new token.");
+    if (body.scope !== undefined || body.allowConnect !== undefined) {
+      return jsonError(
+        context,
+        400,
+        "invalid_input",
+        "A runtime token's scope and allowConnect cannot be changed; create a new token.",
+      );
     }
     const token = await runtimeTokens.updateTokenPolicy(id, readTokenPolicy(body));
     return token
