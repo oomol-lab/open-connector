@@ -16,9 +16,10 @@ import {
 import { cloroActions } from "./actions.ts";
 import { cloroEndpointByName } from "./actions.ts";
 const baseUrl = "https://api.cloro.dev";
-// Bing reads the prompt from a query string, and Cloro rejects it past 3,500 characters
-// once URL-encoded. The schema maxLength counts raw characters, so a non-Latin prompt
-// can pass it and still fail upstream. This count matches the one Cloro uses.
+// Bing reads the Bing AI Mode prompt and the Bing Search query from a query string, and
+// Cloro rejects them past 3,500 characters once URL-encoded. The schema maxLength counts
+// raw characters, so a non-Latin text can pass it and still fail upstream. This count
+// matches the one Cloro uses.
 const bingPromptLimit = 3500;
 function bingPromptTooLong(prompt: unknown): boolean {
   const text = optionalRawString(prompt);
@@ -26,11 +27,16 @@ function bingPromptTooLong(prompt: unknown): boolean {
 }
 function bingPrompts(actionName: string, values: Record<string, unknown>): unknown[] {
   if (actionName === "monitor_bing_aimode") return [values.prompt];
+  if (actionName === "monitor_bing") return [values.query];
   const tasks = actionName === "create_batch_tasks" ? values.tasks : actionName === "create_task" ? [values] : [];
   return looseArray(tasks)
     .map((task) => optionalRecord(task))
-    .filter((task) => task?.taskType === "BING_AIMODE")
-    .map((task) => optionalRecord(task?.payload)?.prompt);
+    .flatMap((task) => {
+      const payload = optionalRecord(task?.payload);
+      if (task?.taskType === "BING_AIMODE") return [payload?.prompt];
+      if (task?.taskType === "BING") return [payload?.query];
+      return [];
+    });
 }
 async function request(
   apiKey: string,
@@ -92,7 +98,7 @@ async function execute(
   if (!endpoint) throw providerInputError(`Unknown Cloro action: ${actionName}`);
   if (bingPrompts(actionName, values).some(bingPromptTooLong)) {
     throw providerInputError(
-      "Bing AI Mode prompt is longer than 3,500 characters after URL encoding. Non-Latin scripts allow fewer characters.",
+      "Bing AI Mode prompt or Bing Search query is longer than 3,500 characters after URL encoding. Non-Latin scripts allow fewer characters.",
     );
   }
   return request(apiKey, endpoint, values, fetcher, undefined, context.signal);
