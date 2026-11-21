@@ -40,6 +40,8 @@ function readStructuredAnswer(value: unknown): Record<string, unknown> | undefin
   const envelope = optionalRecord(value);
   const structured = optionalRecord(envelope?.structuredContent);
   if (structured) return structured;
+  const compatibility = optionalRecord(envelope?.toolResult);
+  if (compatibility) return compatibility;
   if (!Array.isArray(envelope?.content)) return undefined;
   for (const raw of envelope.content) {
     const block = optionalRecord(raw);

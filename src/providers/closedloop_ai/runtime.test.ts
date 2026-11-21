@@ -187,6 +187,37 @@ describe("credential capability discovery without fabricated identity or grant s
   });
 });
 
+it("follows an exact conversation pointer from a supported toolResult compatibility response", async () => {
+  const pointer = { id: "test-only-full-conversation-id", source: "gong" };
+  const wire = protocolFixture({
+    answer: {
+      toolResult: {
+        conversation: pointer,
+        source_complete: false,
+        warning_codes: ["test-only-partial-source"],
+      },
+    },
+  });
+  vi.stubGlobal("fetch", wire.fetcher);
+  vi.stubEnv("CLOSEDLOOP_AI_ACCESS_TOKEN", accessToken);
+  vi.stubEnv("CLOSEDLOOP_AI_QUERY", "test-only topic");
+  vi.stubEnv("CLOSEDLOOP_AI_INSIGHT_ID", "test-only-full-insight-id");
+  const log = vi.spyOn(console, "log").mockImplementation(() => {});
+  try {
+    vi.resetModules();
+    await import("../../../examples/closedloop-ai-evidence.ts");
+    expect(
+      wire.requests
+        .filter((request) => request.body.method === "tools/call")
+        .map((request) => request.body.params)
+        .filter((call) => call.name === "get_conversation"),
+    ).toEqual([{ name: "get_conversation", arguments: pointer }]);
+  } finally {
+    log.mockRestore();
+    vi.unstubAllEnvs();
+  }
+});
+
 it("uses the real OAuth flow for consumer PKCE and resource-bound token exchange, with no registration request", async () => {
   const wire = protocolFixture();
   vi.stubGlobal("fetch", wire.fetcher);
