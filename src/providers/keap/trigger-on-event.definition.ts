@@ -26,7 +26,7 @@ export const snapshot: TriggerKeySnapshot & { readonly type: "integration" } = {
   name: "on_event",
   displayName: "CRM Event",
   description: "Triggers when selected Keap REST hook events occur.",
-  definitionVersion: 1,
+  definitionVersion: 2,
   type: "integration",
   endpoint: {
     methods: ["POST"],

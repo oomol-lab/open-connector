@@ -11,7 +11,7 @@ export const snapshot: TriggerKeySnapshot & { readonly type: "integration" } = {
   name: "on_crm_event",
   displayName: "CRM Record Event",
   description: "Triggers when selected Copper CRM records are created, updated, or deleted.",
-  definitionVersion: 1,
+  definitionVersion: 2,
   type: "integration",
   endpoint: {
     methods: ["POST"],

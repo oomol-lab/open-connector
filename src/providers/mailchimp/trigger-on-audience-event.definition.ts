@@ -10,7 +10,7 @@ export const snapshot: TriggerKeySnapshot & { readonly type: "integration" } = {
   name: "on_audience_event",
   displayName: "Audience Event",
   description: "Triggers when subscriber or campaign events occur in a Mailchimp audience.",
-  definitionVersion: 1,
+  definitionVersion: 2,
   type: "integration",
   endpoint: {
     methods: ["GET", "POST"],

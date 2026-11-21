@@ -31,7 +31,7 @@ export const snapshot: TriggerKeySnapshot & { readonly type: "integration" } = {
   name: "on_repo_event",
   displayName: "Repository Event",
   description: "Triggers when selected Bitbucket Cloud webhook events occur in a repository.",
-  definitionVersion: 1,
+  definitionVersion: 2,
   type: "integration",
   endpoint: {
     methods: ["POST"],

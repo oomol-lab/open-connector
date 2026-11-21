@@ -19,7 +19,7 @@ export const snapshot: TriggerKeySnapshot & { readonly type: "integration" } = {
   name: "on_subscriber_event",
   displayName: "Subscriber Event",
   description: "Triggers when selected Kit (ConvertKit) subscriber webhook events occur.",
-  definitionVersion: 1,
+  definitionVersion: 2,
   type: "integration",
   endpoint: {
     methods: ["POST"],

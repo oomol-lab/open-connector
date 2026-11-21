@@ -8,7 +8,7 @@ export const snapshot: TriggerKeySnapshot & { readonly type: "integration" } = {
   name: "on_form_entry",
   displayName: "Form Entry",
   description: "Triggers when a new entry is submitted to a Wufoo form.",
-  definitionVersion: 1,
+  definitionVersion: 2,
   type: "integration",
   endpoint: {
     methods: ["POST"],

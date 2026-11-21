@@ -25,7 +25,7 @@ export const snapshot: TriggerKeySnapshot & { readonly type: "integration" } = {
   name: "on_event",
   displayName: "PayPal Event",
   description: "Triggers when selected PayPal webhook events occur.",
-  definitionVersion: 1,
+  definitionVersion: 2,
   type: "integration",
   endpoint: {
     methods: ["POST"],

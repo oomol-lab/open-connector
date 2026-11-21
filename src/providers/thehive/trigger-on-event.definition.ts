@@ -10,7 +10,7 @@ export const snapshot: TriggerKeySnapshot & { readonly type: "poll" } = {
   name: "on_event",
   displayName: "Alert or Case Event",
   description: "Polls TheHive for new or updated alerts or cases.",
-  definitionVersion: 1,
+  definitionVersion: 2,
   type: "poll",
   configInputs: [
     {

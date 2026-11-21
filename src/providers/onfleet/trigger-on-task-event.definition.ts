@@ -24,7 +24,7 @@ export const snapshot: TriggerKeySnapshot & { readonly type: "integration" } = {
   name: "on_task_event",
   displayName: "Task or Worker Event",
   description: "Triggers when selected Onfleet delivery task or worker webhook events occur.",
-  definitionVersion: 1,
+  definitionVersion: 2,
   type: "integration",
   endpoint: {
     methods: ["GET", "POST"],

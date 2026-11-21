@@ -24,7 +24,7 @@ export const snapshot: TriggerKeySnapshot & { readonly type: "integration" } = {
   name: "on_model_event",
   displayName: "Board or Card Event",
   description: "Triggers when actions occur on a Trello board, list, or card.",
-  definitionVersion: 1,
+  definitionVersion: 2,
   type: "integration",
   endpoint: {
     methods: ["HEAD", "POST"],

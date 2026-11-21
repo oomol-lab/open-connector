@@ -8,7 +8,7 @@ export const snapshot: TriggerKeySnapshot & { readonly type: "integration" } = {
   name: "on_submission",
   displayName: "Form Submission",
   description: "Triggers when a new submission is received for a Jotform form.",
-  definitionVersion: 1,
+  definitionVersion: 2,
   type: "integration",
   endpoint: {
     methods: ["POST"],

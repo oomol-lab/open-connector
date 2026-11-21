@@ -10,7 +10,7 @@ export const snapshot: TriggerKeySnapshot & { readonly type: "integration" } = {
   name: "on_email_event",
   displayName: "Email Event",
   description: "Triggers when selected Postmark email delivery or engagement events occur.",
-  definitionVersion: 1,
+  definitionVersion: 2,
   type: "integration",
   endpoint: {
     methods: ["POST"],

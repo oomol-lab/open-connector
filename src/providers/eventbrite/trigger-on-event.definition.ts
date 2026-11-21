@@ -21,7 +21,7 @@ export const snapshot: TriggerKeySnapshot & { readonly type: "integration" } = {
   name: "on_event",
   displayName: "Eventbrite Webhook Event",
   description: "Triggers when selected Eventbrite order, attendee, or event webhook actions occur.",
-  definitionVersion: 1,
+  definitionVersion: 2,
   type: "integration",
   endpoint: {
     methods: ["POST"],

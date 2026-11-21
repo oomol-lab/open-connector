@@ -11,7 +11,7 @@ export const snapshot: TriggerKeySnapshot & { readonly type: "integration" } = {
   name: "on_project_event",
   displayName: "Project Event",
   description: "Triggers when selected Taiga project webhook events occur.",
-  definitionVersion: 1,
+  definitionVersion: 2,
   type: "integration",
   endpoint: {
     methods: ["POST"],

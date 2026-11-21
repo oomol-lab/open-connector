@@ -16,7 +16,7 @@ export const snapshot: TriggerKeySnapshot & { readonly type: "integration" } = {
   name: "on_event",
   displayName: "Transfer or Balance Event",
   description: "Triggers when selected Wise webhook subscription events occur for a profile.",
-  definitionVersion: 1,
+  definitionVersion: 2,
   type: "integration",
   endpoint: {
     methods: ["POST"],

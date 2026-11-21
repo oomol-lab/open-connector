@@ -26,7 +26,7 @@ export const snapshot: TriggerKeySnapshot & { readonly type: "poll" } = {
   name: "on_event",
   displayName: "Billing Event",
   description: "Polls Chargebee events for customer, subscription, invoice, and payment changes.",
-  definitionVersion: 1,
+  definitionVersion: 2,
   type: "poll",
   configInputs: [
     {

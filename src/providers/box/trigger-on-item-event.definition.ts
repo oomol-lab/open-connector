@@ -39,7 +39,7 @@ export const snapshot: TriggerKeySnapshot & { readonly type: "integration" } = {
   name: "on_item_event",
   displayName: "File or Folder Event",
   description: "Triggers when selected Box webhook events occur on a file or folder.",
-  definitionVersion: 1,
+  definitionVersion: 2,
   type: "integration",
   endpoint: {
     methods: ["POST"],

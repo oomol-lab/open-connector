@@ -24,7 +24,7 @@ export const snapshot: TriggerKeySnapshot & { readonly type: "integration" } = {
   name: "on_conversation_event",
   displayName: "Conversation Event",
   description: "Triggers when selected Help Scout conversation or customer webhook events occur.",
-  definitionVersion: 1,
+  definitionVersion: 2,
   type: "integration",
   endpoint: {
     methods: ["POST"],
