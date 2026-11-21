@@ -12,6 +12,7 @@ import {
   parseProviderJsonBodyText,
   providerInputError,
   ProviderRequestError,
+  providerResponseError,
   providerUserAgent,
   readProviderErrorTextBody,
   readProviderTextBody,
@@ -56,10 +57,16 @@ export const threatfoxActionHandlers: ProviderActionHandlers<"threatfox", Threat
     if (!Array.isArray(record.data)) {
       throw new ProviderRequestError(502, "ThreatFox returned ok without an entry array");
     }
+    const entries = optionalObjectArray(record.data, "ThreatFox entry", providerResponseError)
+      .map(normalizeIocEntry)
+      .filter((entry) => entry.ioc !== "");
+    if (entries.length === 0) {
+      throw new ProviderRequestError(502, "ThreatFox returned ok without a usable IOC entry");
+    }
     return {
       found: true,
       query_status: queryStatus,
-      entries: optionalObjectArray(record.data).map(normalizeIocEntry),
+      entries,
     };
   },
 };
@@ -139,7 +146,9 @@ function normalizeIocEntry(record: Record<string, unknown>): Record<string, unkn
     reporter: optionalString(record.reporter) ?? "",
     reference: optionalString(record.reference) ?? null,
     tags: optionalStringArray(record.tags) ?? [],
-    malware_samples: (optionalObjectArray(record.malware_samples) ?? []).map(normalizeMalwareSample),
+    malware_samples: optionalObjectArray(record.malware_samples, "ThreatFox malware sample", providerResponseError).map(
+      normalizeMalwareSample,
+    ),
   };
 }
 
