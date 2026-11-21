@@ -5,7 +5,7 @@ import type { Context } from "hono";
 import { Hono } from "hono";
 import { isScope, scopeMessage } from "../../core/scope.ts";
 import { TransitFileError } from "../files/transit-file-store.ts";
-import { hasAdminBearer, readRuntimeGrant } from "./auth.ts";
+import { hasAdminAuth, readRuntimeGrant } from "./auth.ts";
 import { jsonError } from "./http-utils.ts";
 
 export interface TransitFileRoutesOptions {
@@ -25,7 +25,7 @@ function handleTransitFileError(context: Context, error: unknown): Response {
  * anyone else (including an unauthenticated download) sees only files that belong to no scope.
  */
 function readFileAccess(context: Context): TransitFileAccess | undefined {
-  if (hasAdminBearer(context)) return undefined;
+  if (hasAdminAuth(context)) return undefined;
   const scope = readRuntimeGrant(context)?.scope;
   return scope === undefined ? {} : { scope };
 }

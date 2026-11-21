@@ -75,6 +75,7 @@ counts, or `207` with a `failures` list when a step failed; call it again to fin
 - Connection names are unique per service across scopes rather than per scope.
 - Proxy calls are not recorded as runs, and runs carry no trace id.
 - Deleting a scope leaves its idempotency records, which expire on their own.
+- Deleting a scope does not clean up `resource-set` trigger subscriptions or `trigger_source_applications` records.
 - The console is an operator view and is not filtered by scope.
 - Deleting a scope does not wait for requests already running with a revoked token: a run or file an action writes
   after the purge, or a connection request a start inserts after the cancel, stays until the next call (or the file

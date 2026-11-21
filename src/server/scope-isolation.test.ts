@@ -189,6 +189,21 @@ describe("scope isolation", () => {
     expect(await (await download(plain)).text()).toBe("plain");
     expect((await download(plain, a.token)).status).toBe(404);
 
+    // An admin console session cookie can also read and delete scoped transit files.
+    const session = await call("/api/runs", undefined, "admin-token");
+    const cookie = session.headers.get("set-cookie")!.split(";")[0]!;
+    const cookieScoped = await upload("c.txt", "cookie-alpha", "tenant-a");
+    const cookieDownload = await runtime!.fetch(
+      new Request(`${publicOrigin}/api/files/${cookieScoped}`, { headers: { cookie } }),
+    );
+    expect(cookieDownload.status).toBe(200);
+    expect(await cookieDownload.text()).toBe("cookie-alpha");
+    const cookieDelete = await runtime!.fetch(
+      new Request(`${publicOrigin}/api/files/${cookieScoped}`, { method: "DELETE", headers: { cookie } }),
+    );
+    expect(cookieDelete.status).toBe(200);
+    expect(await cookieDelete.json()).toMatchObject({ deleted: true });
+
     // Another scope cannot delete it; its own scope can.
     const remove = (token: string) =>
       runtime!.fetch(
@@ -212,6 +227,9 @@ describe("scope isolation", () => {
     const fileB = await upload("b.txt", "beta", "tenant-b");
 
     expect((await call("/api/scopes/has space", undefined, "admin-token", "DELETE")).status).toBe(400);
+    expect((await call("/api/trigger-subscriptions?scope=has%20space", undefined, "admin-token")).status).toBe(400);
+    expect((await call("/api/trigger-subscriptions?scope=", undefined, "admin-token")).status).toBe(400);
+    expect((await call("/api/trigger-subscriptions?scope=tenant-a", undefined, "admin-token")).status).toBe(200);
     const removed = await call("/api/scopes/tenant-a", undefined, "admin-token", "DELETE");
     expect(removed.status).toBe(200);
     expect(await removed.json()).toEqual({

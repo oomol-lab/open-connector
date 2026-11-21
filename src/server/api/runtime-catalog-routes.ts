@@ -135,19 +135,28 @@ export function createRuntimeCatalogRoutes({
       : undefined;
     const source = oauth ? await saasProject?.getSource(service) : undefined;
     if (oauth && source?.mode === "saas") {
-      const { config } = await saasProject!.resolveConfig(
-        service,
-        source.providerConfigId,
-        source.managedProjectId,
-        context.req.raw.signal,
-      );
-      oauth = {
-        ...oauth,
-        configured: true,
-        customClientAvailable: false,
-        expectedRedirectUri: config.callbackUrl,
-        missingFields: [],
-      };
+      if (readRuntimeGrant(context)?.scope !== undefined) {
+        // SaaS-hosted OAuth cannot carry a scope, so a scoped tenant token cannot start it.
+        oauth = {
+          ...oauth,
+          configured: false,
+          customClientAvailable: false,
+        };
+      } else {
+        const { config } = await saasProject!.resolveConfig(
+          service,
+          source.providerConfigId,
+          source.managedProjectId,
+          context.req.raw.signal,
+        );
+        oauth = {
+          ...oauth,
+          configured: true,
+          customClientAvailable: false,
+          expectedRedirectUri: config.callbackUrl,
+          missingFields: [],
+        };
+      }
     }
     return writeRuntimeSuccess(context, serializeRuntimeProviderSetup(provider, oauth, locale));
   });

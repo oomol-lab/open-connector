@@ -48,9 +48,14 @@ export interface LocalAuthSession {
 type AuthScope = "admin" | "runtime" | "oauth";
 
 const adminBearerRequests = new WeakSet<Request>();
+const adminAuthRequests = new WeakSet<Request>();
 
 export function hasAdminBearer(context: Context): boolean {
   return adminBearerRequests.has(context.req.raw);
+}
+
+export function hasAdminAuth(context: Context): boolean {
+  return adminBearerRequests.has(context.req.raw) || adminAuthRequests.has(context.req.raw);
 }
 
 const runtimeGrants = new WeakMap<Request, RuntimeGrant>();
@@ -83,17 +88,19 @@ export function createLocalAuthMiddleware(options: LocalAuthOptions): Middleware
     const scope = readAuthScope(context.req.path, context.req.method);
     if (adminToken && matchesConfiguredToken(context, adminToken)) adminBearerRequests.add(context.req.raw);
     if (isPublicPath(context.req.path, context.req.method)) {
-      // A download stays open for unscoped files, but a bearer identifies the caller so scoped files can be served.
-      if (
-        isTransitFileDownload(context.req.path, context.req.method) &&
-        readBearerToken(context) &&
-        !hasAdminBearer(context)
-      )
-        await hasValidRuntimeToken(context, options);
+      // A download stays open for unscoped files, but a bearer or admin session identifies the caller so scoped files can be served.
+      if (isTransitFileDownload(context.req.path, context.req.method) && !hasAdminBearer(context)) {
+        if (readBearerToken(context)) {
+          await hasValidRuntimeToken(context, options);
+        } else if (adminToken && (await hasValidAuthCookie(context, adminToken))) {
+          adminAuthRequests.add(context.req.raw);
+        }
+      }
       return;
     }
     if (await hasValidToken(context, options, scope)) {
       if (scope === "admin") {
+        adminAuthRequests.add(context.req.raw);
         await installAdminCookieForBearer(context, options);
       }
       return;
@@ -120,6 +127,7 @@ export function createLocalAuthMiddleware(options: LocalAuthOptions): Middleware
       normalizeToken(options.adminToken) &&
       (await hasValidToken(context, options, "admin"))
     ) {
+      adminAuthRequests.add(context.req.raw);
       await installAdminCookieForBearer(context, options);
       return;
     }

@@ -197,7 +197,7 @@ export class ConnectionService {
       configuredByService.set(connection.service, serviceConnections);
     }
 
-    const preferences = await this.loadProviderPreferences();
+    const preferences = within?.scope === undefined ? await this.loadProviderPreferences() : new Map<string, boolean>();
     return this.catalog.providers.flatMap((provider) =>
       !services || services.has(provider.service)
         ? this.summarizeProviderConnections(provider, configuredByService.get(provider.service) ?? [], preferences)
@@ -208,7 +208,8 @@ export class ConnectionService {
   async listConnectionsByService(service: string, within?: ScopeFilter): Promise<ConnectionSummary[]> {
     const provider = this.getProvider(service);
     const connections = (await this.store.list(within)).filter((connection) => connection.service === service);
-    return this.summarizeProviderConnections(provider, connections, await this.loadProviderPreferences());
+    const preferences = within?.scope === undefined ? await this.loadProviderPreferences() : new Map<string, boolean>();
+    return this.summarizeProviderConnections(provider, connections, preferences);
   }
 
   /**
@@ -260,9 +261,11 @@ export class ConnectionService {
         .filter((connection) => connection.source === "saas" || connection.credential.authType !== "no_auth")
         .map((connection) => connection.service),
     );
-    const preferences = await this.loadProviderPreferences();
-    for (const service of this.marketplace?.getSnapshot()?.actionsByService.keys() ?? []) {
-      if (preferences.get(service) === true) authenticated.add(service);
+    if (within?.scope === undefined) {
+      const preferences = await this.loadProviderPreferences();
+      for (const service of this.marketplace?.getSnapshot()?.actionsByService.keys() ?? []) {
+        if (preferences.get(service) === true) authenticated.add(service);
+      }
     }
     return services.filter((service) => authenticated.has(service));
   }
@@ -276,9 +279,10 @@ export class ConnectionService {
     const provider = this.getProvider(service);
     const stored = await this.selectStoredConnection(service, connectionName, connectionId, within);
     const name = stored?.connectionName ?? normalizeConnectionName(connectionName);
-    const marketplace = connectionId
-      ? undefined
-      : await this.resolveMarketplaceSummary(provider, connectionName, Boolean(stored));
+    const marketplace =
+      connectionId || within?.scope !== undefined
+        ? undefined
+        : await this.resolveMarketplaceSummary(provider, connectionName, Boolean(stored));
     if (marketplace) return marketplace;
     if (!stored && connectionName && !this.supportsAuth(provider, "no_auth")) {
       throw new ConnectionError("connection_not_found", `${service} connection not found: ${name}.`);
@@ -301,9 +305,10 @@ export class ConnectionService {
     const provider = this.getProvider(service);
     const stored = await this.selectStoredConnection(service, connectionName, connectionId, within);
     const name = stored?.connectionName ?? normalizeConnectionName(connectionName);
-    const marketplace = connectionId
-      ? undefined
-      : await this.resolveMarketplaceSummary(provider, connectionName, Boolean(stored));
+    const marketplace =
+      connectionId || within?.scope !== undefined
+        ? undefined
+        : await this.resolveMarketplaceSummary(provider, connectionName, Boolean(stored));
     if (marketplace) return { source: "marketplace", summary: marketplace };
     if (!stored && connectionName && !this.supportsAuth(provider, "no_auth")) {
       throw new ConnectionError("connection_not_found", `${service} connection not found: ${name}.`);
