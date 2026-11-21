@@ -521,6 +521,29 @@ async function addComment(input: Record<string, unknown>, context: JiraActionCon
   };
 }
 
+function resolveJiraServerInstanceScope(providerMetadata: Record<string, unknown> | undefined) {
+  const apiBaseUrl = resolveJiraApiBaseUrl(providerMetadata);
+  const apiBase = new URL(apiBaseUrl);
+  const instancePrefix = apiBase.pathname.replace(/\/rest\/api\/(?:2|3|latest)$/u, "");
+  return {
+    origin: apiBase.origin,
+    baseUrl: `${apiBase.origin}${instancePrefix}/`,
+    expectedPrefix: instancePrefix ? `${instancePrefix}/` : "/",
+  };
+}
+
+function resolveJiraServerAttachmentContentUrl(
+  providerMetadata: Record<string, unknown> | undefined,
+  rawContentUrl: string,
+): string {
+  const scope = resolveJiraServerInstanceScope(providerMetadata);
+  const target = new URL(rawContentUrl, scope.baseUrl);
+  if (target.origin !== scope.origin || !target.pathname.startsWith(scope.expectedPrefix)) {
+    throw new ProviderRequestError(502, "Jira attachment content URL does not match the configured Jira instance.");
+  }
+  return target.toString();
+}
+
 async function downloadAttachment(input: Record<string, unknown>, context: JiraActionContext) {
   const { transitFiles } = context;
   if (!transitFiles) {
@@ -529,8 +552,9 @@ async function downloadAttachment(input: Record<string, unknown>, context: JiraA
   const attachmentId = requireString(input.attachmentId, "attachmentId");
   let fileName = asOptionalString(input.fileName);
   let mimeType = asOptionalString(input.mimeType);
+  let serverContentUrl: string | undefined;
 
-  if (!fileName || !mimeType) {
+  if (context.deployment === "server" || !fileName || !mimeType) {
     const metadata = await jiraJsonRequest<Record<string, unknown>>({
       accessToken: context.accessToken,
       fetcher: context.fetcher,
@@ -541,9 +565,18 @@ async function downloadAttachment(input: Record<string, unknown>, context: JiraA
     });
     fileName = fileName ?? asOptionalString(metadata.filename);
     mimeType = mimeType ?? asOptionalString(metadata.mimeType);
+    serverContentUrl = asOptionalString(metadata.content);
   }
 
-  const url = buildJiraUrl(context.providerMetadata, `/attachment/content/${encodePathSegment(attachmentId)}`);
+  let url: string;
+  if (context.deployment === "server") {
+    if (!serverContentUrl) {
+      throw new ProviderRequestError(502, "Jira attachment metadata is missing a content URL.");
+    }
+    url = resolveJiraServerAttachmentContentUrl(context.providerMetadata, serverContentUrl);
+  } else {
+    url = buildJiraUrl(context.providerMetadata, `/attachment/content/${encodePathSegment(attachmentId)}`);
+  }
   return runProviderRequest({ label: "jira attachment", signal: context.signal }, async (signal) => {
     const response = await context.fetcher(url, {
       headers: {
@@ -588,7 +621,7 @@ async function uploadAttachment(input: Record<string, unknown>, context: JiraAct
     uploadFile =
       resolvedName === inputFile.file.name && resolvedMimeType === inputFile.file.type
         ? inputFile.file
-        : new File([await inputFile.file.arrayBuffer()], resolvedName, { type: resolvedMimeType });
+        : new File([inputFile.file], resolvedName, { type: resolvedMimeType });
   } else {
     const downloaded = await downloadUploadSource({
       url: fileUrl!,

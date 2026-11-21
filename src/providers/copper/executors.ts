@@ -45,15 +45,20 @@ async function copperRequest(
       body: options.body ? JSON.stringify(options.body) : undefined,
       signal,
     });
-    const payload = (await response.json().catch(() => ({}))) as unknown;
     if (!response.ok) {
+      let errorPayload: unknown = {};
+      try {
+        errorPayload = (await response.json()) as unknown;
+      } catch (error) {
+        if (signal.aborted) throw error;
+      }
       throw new ProviderRequestError(
         response.status >= 500 ? 502 : response.status,
         `Copper request failed (${response.status})`,
-        payload,
+        errorPayload,
       );
     }
-    return payload;
+    return (await response.json()) as unknown;
   });
 }
 
@@ -64,8 +69,10 @@ const handlers: ProviderActionHandlers<
   async search_people(input, context) {
     const body: Record<string, unknown> = {};
     const name = optionalString(input.name);
+    const pageNumber = optionalInteger(input.pageNumber);
     const pageSize = optionalInteger(input.pageSize);
     if (name) body.name = name;
+    if (pageNumber != null) body.page_number = pageNumber;
     if (pageSize != null) body.page_size = pageSize;
     const data = await copperRequest(context, "/people/search", { method: "POST", body });
     return { people: Array.isArray(data) ? data : [] };

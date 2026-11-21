@@ -11,8 +11,17 @@ export const eventbriteActions: ActionDefinition[] = [
     name: "list_organizations",
     operationType: "read",
     description: "List organizations accessible to the connected Eventbrite user.",
-    inputSchema: s.actionInput({}, [], "The input payload for this action."),
-    outputSchema: s.actionOutput({ organizations: s.array(objectSchema) }, "Eventbrite organizations."),
+    inputSchema: s.actionInput(
+      {
+        continuation: s.string({ minLength: 1, description: "Optional pagination continuation token." }),
+      },
+      [],
+      "The input payload for this action.",
+    ),
+    outputSchema: s.actionOutput(
+      { organizations: s.array(objectSchema), pagination: objectSchema },
+      "Eventbrite organizations.",
+    ),
   }),
   defineProviderAction(service, {
     name: "list_organization_events",
@@ -22,6 +31,7 @@ export const eventbriteActions: ActionDefinition[] = [
       {
         organizationId: s.string({ minLength: 1, description: "Eventbrite organization ID." }),
         status: s.string({ minLength: 1, description: "Optional event status filter (e.g. live, draft, ended)." }),
+        continuation: s.string({ minLength: 1, description: "Optional pagination continuation token." }),
       },
       ["organizationId"],
       "The input payload for this action.",

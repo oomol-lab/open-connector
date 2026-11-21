@@ -1,7 +1,7 @@
 import type { IntegrationDefinition } from "../../triggers/common/integration.ts";
 import type { ManagedWebhook } from "../../triggers/managed-webhook.ts";
 
-import { TransientIntegrationError } from "../../triggers/common/integration.ts";
+import { PermanentIntegrationError, TransientIntegrationError } from "../../triggers/common/integration.ts";
 import { isJsonObject } from "../../triggers/common/json.ts";
 import { reconcileManagedWebhook, webhookRequest } from "../../triggers/managed-webhook.ts";
 import { sameSecret } from "../../triggers/signature.ts";
@@ -11,6 +11,25 @@ function withCallbackToken(endpointUrl: string, token: string): string {
   const url = new URL(endpointUrl);
   url.searchParams.set("jf_token", token);
   return url.toString();
+}
+
+function normalizeJotformWebhooks(content: unknown): Array<[string, string]> | null {
+  if (Array.isArray(content)) {
+    const entries: Array<[string, string]> = [];
+    for (let i = 0; i < content.length; i++) {
+      const value = content[i];
+      if (typeof value === "string") entries.push([String(i), value]);
+    }
+    return entries;
+  }
+  if (isJsonObject(content)) {
+    const entries: Array<[string, string]> = [];
+    for (const [id, value] of Object.entries(content)) {
+      if (typeof value === "string") entries.push([id, value]);
+    }
+    return entries;
+  }
+  return null;
 }
 
 export const jotformSubmission: IntegrationDefinition = {
@@ -23,14 +42,18 @@ export const jotformSubmission: IntegrationDefinition = {
     return reconcileManagedWebhook(context, {
       async find() {
         const response = await webhookRequest(context, { endpoint: `/form/${formId}/webhooks`, method: "GET" });
-        if (!isJsonObject(response.data) || !isJsonObject(response.data.content)) {
+        const entries = isJsonObject(response.data) ? normalizeJotformWebhooks(response.data.content) : null;
+        if (!entries) {
           throw new TransientIntegrationError("Jotform returned an invalid webhook list.");
         }
         const found: ManagedWebhook[] = [];
-        for (const [id, url] of Object.entries(response.data.content)) {
-          if (typeof url === "string" && url.startsWith(context.endpointUrl)) {
-            found.push({ id, secret: context.callbackSecret });
+        for (const [id, url] of entries) {
+          if (!url.startsWith(context.endpointUrl)) continue;
+          if (url !== webhookUrl) {
+            if (!context.active) continue;
+            throw new PermanentIntegrationError("Jotform webhook callback URL differs from this subscription.");
           }
+          found.push({ id, secret: context.callbackSecret });
         }
         return found;
       },
@@ -40,12 +63,11 @@ export const jotformSubmission: IntegrationDefinition = {
           method: "POST",
           body: { webhookURL: webhookUrl },
         });
-        if (!isJsonObject(response.data) || !isJsonObject(response.data.content)) {
+        const entries = isJsonObject(response.data) ? normalizeJotformWebhooks(response.data.content) : null;
+        if (!entries) {
           throw new TransientIntegrationError("Jotform webhook creation returned no identity.");
         }
-        const match = Object.entries(response.data.content).find(
-          ([, url]) => typeof url === "string" && url.startsWith(context.endpointUrl),
-        );
+        const match = entries.find(([, url]) => url === webhookUrl);
         if (!match) {
           throw new TransientIntegrationError("Jotform webhook creation did not return the registered webhook ID.");
         }

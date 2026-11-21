@@ -15,6 +15,20 @@ function withCallbackToken(endpointUrl: string, token: string): string {
 
 export const keapEvent: IntegrationDefinition = {
   callback: { headers: ["x-hook-secret"], query: ["keap_token"] },
+  handshake(input) {
+    const hookSecret = input.headers["x-hook-secret"];
+    if (!hookSecret) return undefined;
+    if (input.callbackSecret && !sameSecret(input.query?.keap_token, input.callbackSecret)) {
+      return { outcome: "respond", status: 401, body: "", contentType: "text/plain" };
+    }
+    return {
+      outcome: "respond",
+      status: 200,
+      body: "",
+      contentType: "text/plain",
+      headers: { "x-hook-secret": hookSecret },
+    };
+  },
   snapshot,
   initialState: { checkpoint: null, subscription: {} },
   async reconcile(context) {
@@ -30,8 +44,23 @@ export const keapEvent: IntegrationDefinition = {
         for (const item of response.data) {
           if (!isJsonObject(item) || typeof item.hookUrl != "string") continue;
           if (!item.hookUrl.startsWith(context.endpointUrl)) continue;
-          if (typeof item.key != "string" || item.eventKey != eventKey) {
-            throw new PermanentIntegrationError("Keap hook settings differ from this subscription.");
+          if (item.hookUrl !== hookUrl) {
+            if (!context.active) continue;
+            throw new PermanentIntegrationError("Keap hook callback URL differs from this subscription.");
+          }
+          if (typeof item.key != "string") {
+            throw new PermanentIntegrationError("Keap hook entry is missing a key.");
+          }
+          if (context.active) {
+            if (item.eventKey != eventKey) {
+              throw new PermanentIntegrationError("Keap hook settings differ from this subscription.");
+            }
+            if (typeof item.status == "string" && item.status.toLowerCase() !== "verified") {
+              await webhookRequest(context, {
+                endpoint: `/hooks/${encodeURIComponent(item.key)}/verify`,
+                method: "POST",
+              });
+            }
           }
           found.push({ id: item.key, secret: context.callbackSecret });
         }
@@ -75,9 +104,13 @@ export const keapEvent: IntegrationDefinition = {
       return { outcome: "ignored", reason: "Keap event key does not match." };
     }
     const keys = Array.isArray(body.object_keys)
-      ? body.object_keys.map((item) => (isJsonObject(item) ? String(item.id ?? "") : String(item))).join(",")
+      ? body.object_keys
+          .map((item) =>
+            isJsonObject(item) ? `${String(item.id ?? "")}@${String(item.timestamp ?? "")}` : String(item),
+          )
+          .join(",")
       : "";
-    const deliveryId = `${body.event_key}:${keys}:${String(body.timestamp ?? "")}`;
+    const deliveryId = `${body.event_key}:${keys}`;
     return {
       outcome: "event",
       dedupeKey: deliveryId,

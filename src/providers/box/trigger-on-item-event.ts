@@ -26,26 +26,54 @@ export const boxItemEvent: IntegrationDefinition = {
     const webhookUrl = withCallbackToken(context.endpointUrl, context.callbackSecret);
     return reconcileManagedWebhook(context, {
       async find() {
-        const response = await webhookRequest(context, { endpoint: "/webhooks", method: "GET" });
-        if (!isJsonObject(response.data) || !Array.isArray(response.data.entries)) {
-          throw new TransientIntegrationError("Box returned an invalid webhook list.");
+        const entries: unknown[] = [];
+        let marker: string | undefined;
+        for (let page = 0; page < 20; page++) {
+          const query: Record<string, string> = { usemarker: "true" };
+          if (marker) query.marker = marker;
+          const response = await webhookRequest(context, { endpoint: "/webhooks", method: "GET", query });
+          if (!isJsonObject(response.data) || !Array.isArray(response.data.entries)) {
+            throw new TransientIntegrationError("Box returned an invalid webhook list.");
+          }
+          entries.push(...response.data.entries);
+          const nextMarker =
+            typeof response.data.next_marker == "string" && response.data.next_marker.length > 0
+              ? response.data.next_marker
+              : undefined;
+          if (!nextMarker) break;
+          marker = nextMarker;
         }
         const found: ManagedWebhook[] = [];
-        for (const item of response.data.entries) {
-          if (!isJsonObject(item) || typeof item.address != "string") continue;
-          if (!item.address.startsWith(context.endpointUrl)) continue;
-          const target = isJsonObject(item.target) ? item.target : undefined;
-          const itemTriggers = Array.isArray(item.triggers) ? item.triggers.map(String).sort() : [];
-          if (
-            typeof item.id != "string" ||
-            item.address !== webhookUrl ||
-            target?.type != targetType ||
-            String(target?.id ?? "") != targetId ||
-            JSON.stringify(itemTriggers) != JSON.stringify(expected)
-          ) {
-            throw new PermanentIntegrationError("Box webhook settings differ from this subscription.");
+        for (const rawEntry of entries) {
+          if (!isJsonObject(rawEntry) || typeof rawEntry.id != "string") continue;
+          // Box's list endpoint returns mini webhook objects without address/triggers; fetch details when missing.
+          let item = rawEntry;
+          if (typeof item.address != "string" || !Array.isArray(item.triggers)) {
+            const detail = await webhookRequest(context, {
+              endpoint: `/webhooks/${encodePathSegment(rawEntry.id)}`,
+              method: "GET",
+            });
+            if (!isJsonObject(detail.data)) continue;
+            item = detail.data;
           }
-          found.push({ id: item.id, secret: context.callbackSecret });
+          if (typeof item.address != "string") continue;
+          if (!item.address.startsWith(context.endpointUrl)) continue;
+          if (item.address !== webhookUrl) {
+            if (!context.active) continue;
+            throw new PermanentIntegrationError("Box webhook callback URL differs from this subscription.");
+          }
+          if (context.active) {
+            const target = isJsonObject(item.target) ? item.target : undefined;
+            const itemTriggers = Array.isArray(item.triggers) ? item.triggers.map(String).sort() : [];
+            if (
+              target?.type != targetType ||
+              String(target?.id ?? "") != targetId ||
+              JSON.stringify(itemTriggers) != JSON.stringify(expected)
+            ) {
+              throw new PermanentIntegrationError("Box webhook settings differ from this subscription.");
+            }
+          }
+          found.push({ id: rawEntry.id, secret: context.callbackSecret });
         }
         return found;
       },

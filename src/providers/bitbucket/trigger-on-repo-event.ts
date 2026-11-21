@@ -19,21 +19,41 @@ export const bitbucketRepoEvent: IntegrationDefinition = {
     const expected = [...configuredEvents].sort();
     return reconcileManagedWebhook(context, {
       async find() {
-        const response = await webhookRequest(context, { endpoint: hooksPath, method: "GET" });
-        if (!isJsonObject(response.data) || !Array.isArray(response.data.values)) {
-          throw new TransientIntegrationError("Bitbucket returned an invalid webhook list.");
+        const values: unknown[] = [];
+        let nextEndpoint: string | undefined = hooksPath;
+        let nextQuery: Record<string, string> | undefined;
+        for (let page = 0; page < 20 && nextEndpoint; page++) {
+          const response = await webhookRequest(context, {
+            endpoint: nextEndpoint,
+            method: "GET",
+            query: nextQuery,
+          });
+          if (!isJsonObject(response.data) || !Array.isArray(response.data.values)) {
+            throw new TransientIntegrationError("Bitbucket returned an invalid webhook list.");
+          }
+          values.push(...response.data.values);
+          if (typeof response.data.next == "string" && response.data.next.length > 0) {
+            const parsed = new URL(response.data.next);
+            const strippedPath = parsed.pathname.replace(/^\/2\.0(?=\/)/, "");
+            nextEndpoint = strippedPath;
+            nextQuery = Object.fromEntries(parsed.searchParams.entries());
+          } else {
+            nextEndpoint = undefined;
+            nextQuery = undefined;
+          }
         }
         const found: ManagedWebhook[] = [];
-        for (const item of response.data.values) {
+        for (const item of values) {
           if (!isJsonObject(item) || typeof item.url != "string") continue;
           if (item.url != context.endpointUrl) continue;
-          const itemEvents = Array.isArray(item.events) ? item.events.map(String).sort() : [];
-          if (
-            typeof item.uuid != "string" ||
-            item.active !== true ||
-            JSON.stringify(itemEvents) != JSON.stringify(expected)
-          ) {
-            throw new PermanentIntegrationError("Bitbucket webhook settings differ from this subscription.");
+          if (typeof item.uuid != "string") {
+            throw new PermanentIntegrationError("Bitbucket webhook entry is missing a UUID.");
+          }
+          if (context.active) {
+            const itemEvents = Array.isArray(item.events) ? item.events.map(String).sort() : [];
+            if (item.active !== true || JSON.stringify(itemEvents) != JSON.stringify(expected)) {
+              throw new PermanentIntegrationError("Bitbucket webhook settings differ from this subscription.");
+            }
           }
           found.push({ id: item.uuid, secret: context.callbackSecret });
         }

@@ -24,8 +24,19 @@ export const copperCrmEvent: IntegrationDefinition = {
         for (const item of response.data) {
           if (!isJsonObject(item) || typeof item.target != "string") continue;
           if (item.target != context.endpointUrl) continue;
-          if (!["number", "string"].includes(typeof item.id) || item.type != resourceType || item.event != event) {
-            throw new PermanentIntegrationError("Copper webhook settings differ from this subscription.");
+          if (!["number", "string"].includes(typeof item.id)) {
+            throw new PermanentIntegrationError("Copper webhook entry is missing an ID.");
+          }
+          if (context.active) {
+            const secretObj = isJsonObject(item.secret) ? item.secret : undefined;
+            const remoteToken = typeof secretObj?.token == "string" ? secretObj.token : undefined;
+            if (
+              item.type != resourceType ||
+              item.event != event ||
+              (remoteToken !== undefined && !sameSecret(remoteToken, context.callbackSecret))
+            ) {
+              throw new PermanentIntegrationError("Copper webhook settings differ from this subscription.");
+            }
           }
           found.push({ id: String(item.id), secret: context.callbackSecret });
         }

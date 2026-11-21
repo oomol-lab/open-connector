@@ -15,6 +15,13 @@ function withCallbackToken(endpointUrl: string, token: string): string {
 
 export const trelloModelEvent: IntegrationDefinition = {
   callback: { headers: ["x-trello-webhook"], query: ["trello_token"] },
+  handshake(input) {
+    if (input.method.toUpperCase() !== "HEAD") return undefined;
+    if (input.callbackSecret && !sameSecret(input.query?.trello_token, input.callbackSecret)) {
+      return { outcome: "respond", status: 401, body: "", contentType: "text/plain" };
+    }
+    return { outcome: "respond", status: 200, body: "", contentType: "text/plain" };
+  },
   snapshot,
   initialState: { checkpoint: null, subscription: {} },
   async reconcile(context) {
@@ -36,8 +43,15 @@ export const trelloModelEvent: IntegrationDefinition = {
           for (const item of tokenEntry.webhooks) {
             if (!isJsonObject(item) || typeof item.callbackURL != "string") continue;
             if (!item.callbackURL.startsWith(context.endpointUrl)) continue;
-            if (typeof item.id != "string" || item.idModel != modelId || item.active !== true) {
-              throw new PermanentIntegrationError("Trello webhook settings differ from this subscription.");
+            if (typeof item.id != "string") {
+              throw new PermanentIntegrationError("Trello webhook entry is missing an ID.");
+            }
+            if (context.active) {
+              if (item.callbackURL !== callbackURL || item.idModel != modelId || item.active !== true) {
+                throw new PermanentIntegrationError("Trello webhook settings differ from this subscription.");
+              }
+            } else if (item.callbackURL !== callbackURL) {
+              continue;
             }
             found.push({ id: item.id, secret: context.callbackSecret });
           }

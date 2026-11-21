@@ -120,7 +120,7 @@ export async function executeSubscription(
     existing.status === "active" &&
     input.query.connector_subscription === existing.callbackNonce
   ) {
-    const result = definition.handshake?.(input);
+    const result = definition.handshake?.({ ...input, callbackSecret: existing.callbackSecret });
     if (result)
       return { result, checkpoint: existing.checkpoint, subscription: { id }, reconcileAt: existing.reconcileAt };
   }

@@ -17,12 +17,20 @@ function withCallbackToken(endpointUrl: string, token: string): string {
 
 export const mailchimpAudienceEvent: IntegrationDefinition = {
   callback: { headers: [], query: ["mc_token"] },
+  handshake(input) {
+    if (input.method.toUpperCase() !== "GET") return undefined;
+    if (input.callbackSecret && !sameSecret(input.query?.mc_token, input.callbackSecret)) {
+      return { outcome: "respond", status: 401, body: "", contentType: "text/plain" };
+    }
+    return { outcome: "respond", status: 200, body: "ok", contentType: "text/plain" };
+  },
   snapshot,
   initialState: { checkpoint: null, subscription: {} },
   async reconcile(context) {
     const listId = encodeURIComponent(String(context.config.listId));
     const configured = new Set(Array.isArray(context.config.events) ? context.config.events.map(String) : []);
     const eventsPayload = Object.fromEntries(allEventKeys.map((key) => [key, configured.has(key)]));
+    const sourcesPayload = { user: true, admin: true, api: true };
     const webhookUrl = withCallbackToken(context.endpointUrl, context.callbackSecret);
     return reconcileManagedWebhook(context, {
       async find() {
@@ -37,6 +45,23 @@ export const mailchimpAudienceEvent: IntegrationDefinition = {
           if (typeof item.id != "string") {
             throw new PermanentIntegrationError("Mailchimp webhook entry is missing an ID.");
           }
+          if (item.url !== webhookUrl) {
+            if (!context.active) continue;
+            throw new PermanentIntegrationError("Mailchimp webhook callback URL differs from this subscription.");
+          }
+          if (context.active) {
+            const remoteEvents = isJsonObject(item.events) ? item.events : undefined;
+            const remoteSources = isJsonObject(item.sources) ? item.sources : undefined;
+            const eventsMatch =
+              remoteEvents != null &&
+              allEventKeys.every((key) => Boolean(remoteEvents[key]) === Boolean(eventsPayload[key]));
+            const sourcesMatch =
+              remoteSources != null &&
+              Object.entries(sourcesPayload).every(([key, val]) => Boolean(remoteSources[key]) === val);
+            if (!eventsMatch || !sourcesMatch) {
+              throw new PermanentIntegrationError("Mailchimp webhook settings differ from this subscription.");
+            }
+          }
           found.push({ id: item.id, secret: context.callbackSecret });
         }
         return found;
@@ -48,7 +73,7 @@ export const mailchimpAudienceEvent: IntegrationDefinition = {
           body: {
             url: webhookUrl,
             events: eventsPayload,
-            sources: { user: true, admin: true, api: true },
+            sources: sourcesPayload,
           },
         });
         if (!isJsonObject(response.data) || typeof response.data.id != "string") {
@@ -81,7 +106,17 @@ export const mailchimpAudienceEvent: IntegrationDefinition = {
     }
     const data = isJsonObject(body.data) ? body.data : undefined;
     const firedAt = typeof body.fired_at == "string" ? body.fired_at : "";
-    const subjectId = String(data?.id ?? body["data[id]"] ?? data?.email ?? body["data[email]"] ?? "");
+    const subjectId = String(
+      data?.id ??
+        body["data[id]"] ??
+        data?.email ??
+        body["data[email]"] ??
+        data?.new_id ??
+        body["data[new_id]"] ??
+        data?.new_email ??
+        body["data[new_email]"] ??
+        "",
+    );
     const deliveryId = `${body.type}:${subjectId}:${firedAt}`;
     return {
       outcome: "event",

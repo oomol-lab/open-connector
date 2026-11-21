@@ -10,7 +10,7 @@ const events = [
   "subscriber.form_subscribe",
   "subscriber.tag_add",
   "subscriber.tag_remove",
-  "subscriber.purchase_create",
+  "purchase.purchase_create",
 ] as const;
 
 export const snapshot: TriggerKeySnapshot & { readonly type: "integration" } = {
@@ -32,6 +32,24 @@ export const snapshot: TriggerKeySnapshot & { readonly type: "integration" } = {
       jsonSchema: { type: "string", enum: events, title: "Event" },
       nullable: false,
       value: "subscriber.subscriber_activate",
+    },
+    {
+      handle: "tagId",
+      jsonSchema: {
+        type: "string",
+        title: "Tag ID",
+        description: "Required when Event is subscriber.tag_add or subscriber.tag_remove.",
+      },
+      nullable: true,
+    },
+    {
+      handle: "formId",
+      jsonSchema: {
+        type: "string",
+        title: "Form ID",
+        description: "Required when Event is subscriber.form_subscribe.",
+      },
+      nullable: true,
     },
   ],
   outputs: [

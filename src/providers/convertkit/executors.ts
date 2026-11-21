@@ -27,14 +27,20 @@ async function kitRequest(
       body: options.body ? JSON.stringify(options.body) : undefined,
       signal,
     });
-    const payload = (await response.json().catch(() => ({}))) as unknown;
     if (!response.ok) {
+      let errorPayload: unknown = {};
+      try {
+        errorPayload = (await response.json()) as unknown;
+      } catch (error) {
+        if (signal.aborted) throw error;
+      }
       throw new ProviderRequestError(
         response.status >= 500 ? 502 : response.status,
         `Kit request failed (${response.status})`,
-        payload,
+        errorPayload,
       );
     }
+    const payload = (await response.json()) as unknown;
     return optionalRecord(payload) ?? {};
   });
 }
@@ -84,7 +90,7 @@ export const credentialValidators: CredentialValidators = {
     const inner = optionalRecord(account.account) ?? account;
     return {
       profile: {
-        accountId: optionalString(inner.id) ?? "convertkit",
+        accountId: typeof inner.id === "number" ? String(inner.id) : (optionalString(inner.id) ?? "convertkit"),
         displayName: optionalString(inner.name) ?? "Kit Account",
       },
     };

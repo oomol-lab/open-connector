@@ -26,14 +26,20 @@ async function eventbriteRequest(
       },
       signal: reqSignal,
     });
-    const payload = (await response.json().catch(() => ({}))) as unknown;
     if (!response.ok) {
+      let errorPayload: unknown = {};
+      try {
+        errorPayload = (await response.json()) as unknown;
+      } catch (error) {
+        if (reqSignal.aborted) throw error;
+      }
       throw new ProviderRequestError(
         response.status >= 500 ? 502 : response.status,
         `Eventbrite request failed (${response.status})`,
-        payload,
+        errorPayload,
       );
     }
+    const payload = (await response.json()) as unknown;
     return optionalRecord(payload) ?? {};
   });
 }
@@ -41,14 +47,28 @@ async function eventbriteRequest(
 export const executors: ProviderExecutors = defineApiKeyProviderExecutors(
   service,
   {
-    async list_organizations(_input, context) {
-      const data = await eventbriteRequest(context.apiKey, "/users/me/organizations/", context.fetcher, context.signal);
-      return { organizations: Array.isArray(data.organizations) ? data.organizations : [] };
+    async list_organizations(input, context) {
+      const continuation = optionalString(input.continuation);
+      const query = continuation ? `?continuation=${encodeURIComponent(continuation)}` : "";
+      const data = await eventbriteRequest(
+        context.apiKey,
+        `/users/me/organizations/${query}`,
+        context.fetcher,
+        context.signal,
+      );
+      return {
+        organizations: Array.isArray(data.organizations) ? data.organizations : [],
+        pagination: optionalRecord(data.pagination) ?? {},
+      };
     },
     async list_organization_events(input, context) {
       const organizationId = requiredInputString(input.organizationId, "organizationId");
       const status = optionalString(input.status);
-      const query = status ? `?status=${encodeURIComponent(status)}` : "";
+      const continuation = optionalString(input.continuation);
+      const params = new URLSearchParams();
+      if (status) params.set("status", status);
+      if (continuation) params.set("continuation", continuation);
+      const query = params.size > 0 ? `?${params.toString()}` : "";
       const data = await eventbriteRequest(
         context.apiKey,
         `/organizations/${encodePathSegment(organizationId)}/events/${query}`,

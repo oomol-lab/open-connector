@@ -7,6 +7,14 @@ import { reconcileManagedWebhook, webhookRequest } from "../../triggers/managed-
 import { sameSecret } from "../../triggers/signature.ts";
 import { snapshot } from "./trigger-on-event.definition.ts";
 
+const wiseSchemaVersionByEvent: Record<string, string> = {
+  "swift-in#credit": "3.0.0",
+};
+
+function resolveWiseSchemaVersion(triggerOn: string): string {
+  return wiseSchemaVersionByEvent[triggerOn] ?? "2.0.0";
+}
+
 function withCallbackToken(endpointUrl: string, token: string): string {
   const url = new URL(endpointUrl);
   url.searchParams.set("wise_token", token);
@@ -46,7 +54,7 @@ export const wiseEvent: IntegrationDefinition = {
           body: {
             name: "OOMOL Open Flow webhook",
             trigger_on: triggerOn,
-            delivery: { version: "2.0.0", url: webhookUrl },
+            delivery: { version: resolveWiseSchemaVersion(triggerOn), url: webhookUrl },
           },
         });
         if (!isJsonObject(response.data) || typeof response.data.id != "string") {

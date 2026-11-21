@@ -7,6 +7,11 @@ import { reconcileManagedWebhook, webhookRequest } from "../../triggers/managed-
 import { verifyBase64Hmac } from "../../triggers/signature.ts";
 import { snapshot } from "./trigger-on-conversation-event.definition.ts";
 
+// Help Scout enforces a 40-character maximum length for webhook signing secrets.
+function helpScoutSigningSecret(callbackSecret: string): string {
+  return callbackSecret.slice(0, 40);
+}
+
 export const helpscoutConversationEvent: IntegrationDefinition = {
   callback: { headers: ["x-helpscout-event", "x-helpscout-signature"], query: [] },
   snapshot,
@@ -14,26 +19,41 @@ export const helpscoutConversationEvent: IntegrationDefinition = {
   async reconcile(context) {
     const configured = Array.isArray(context.config.events) ? context.config.events.map(String) : [];
     const expected = [...configured].sort();
+    const signingSecret = helpScoutSigningSecret(context.callbackSecret);
     return reconcileManagedWebhook(context, {
       async find() {
-        const response = await webhookRequest(context, { endpoint: "/webhooks", method: "GET" });
-        const embedded =
-          isJsonObject(response.data) && isJsonObject(response.data._embedded) ? response.data._embedded : undefined;
-        if (!embedded || !Array.isArray(embedded.webhooks)) {
-          throw new TransientIntegrationError("Help Scout returned an invalid webhook list.");
+        const webhooks: unknown[] = [];
+        for (let page = 1; page <= 20; page++) {
+          const response = await webhookRequest(context, {
+            endpoint: "/webhooks",
+            method: "GET",
+            query: page > 1 ? { page: String(page) } : undefined,
+          });
+          const embedded =
+            isJsonObject(response.data) && isJsonObject(response.data._embedded) ? response.data._embedded : undefined;
+          if (!embedded || !Array.isArray(embedded.webhooks)) {
+            throw new TransientIntegrationError("Help Scout returned an invalid webhook list.");
+          }
+          webhooks.push(...embedded.webhooks);
+          const pageInfo =
+            isJsonObject(response.data) && isJsonObject(response.data.page) ? response.data.page : undefined;
+          const totalPages = typeof pageInfo?.totalPages == "number" ? pageInfo.totalPages : 1;
+          if (page >= totalPages) break;
         }
         const found: ManagedWebhook[] = [];
-        for (const item of embedded.webhooks) {
+        for (const item of webhooks) {
           if (!isJsonObject(item) || typeof item.url != "string") continue;
           if (item.url != context.endpointUrl) continue;
-          const itemEvents = Array.isArray(item.events) ? item.events.map(String).sort() : [];
-          if (
-            !["number", "string"].includes(typeof item.id) ||
-            JSON.stringify(itemEvents) != JSON.stringify(expected)
-          ) {
-            throw new PermanentIntegrationError("Help Scout webhook settings differ from this subscription.");
+          if (!["number", "string"].includes(typeof item.id)) {
+            throw new PermanentIntegrationError("Help Scout webhook entry is missing an ID.");
           }
-          found.push({ id: String(item.id), secret: context.callbackSecret });
+          if (context.active) {
+            const itemEvents = Array.isArray(item.events) ? item.events.map(String).sort() : [];
+            if (JSON.stringify(itemEvents) != JSON.stringify(expected)) {
+              throw new PermanentIntegrationError("Help Scout webhook settings differ from this subscription.");
+            }
+          }
+          found.push({ id: String(item.id), secret: signingSecret });
         }
         return found;
       },
@@ -44,7 +64,7 @@ export const helpscoutConversationEvent: IntegrationDefinition = {
           body: {
             url: context.endpointUrl,
             events: configured,
-            secret: context.callbackSecret,
+            secret: signingSecret,
             payloadVersion: "V2",
           },
         });
@@ -55,7 +75,7 @@ export const helpscoutConversationEvent: IntegrationDefinition = {
         if (!id) {
           throw new TransientIntegrationError("Help Scout webhook creation returned no identity.");
         }
-        return { id, secret: context.callbackSecret };
+        return { id, secret: signingSecret };
       },
       async remove(id) {
         await webhookRequest(context, { endpoint: `/webhooks/${encodeURIComponent(id)}`, method: "DELETE" });
@@ -64,7 +84,9 @@ export const helpscoutConversationEvent: IntegrationDefinition = {
   },
   async receive(context) {
     const signature = context.header("x-helpscout-signature");
-    if (!(await verifyBase64Hmac(context.callbackSecret, [context.rawBody], signature, "SHA-1"))) {
+    if (
+      !(await verifyBase64Hmac(helpScoutSigningSecret(context.callbackSecret), [context.rawBody], signature, "SHA-1"))
+    ) {
       return { outcome: "respond", status: 401, body: "", contentType: "text/plain" };
     }
     const event = context.header("x-helpscout-event");
@@ -76,7 +98,11 @@ export const helpscoutConversationEvent: IntegrationDefinition = {
     if (!configured.includes(event)) {
       return { outcome: "ignored", reason: "Help Scout event is not subscribed." };
     }
-    const deliveryId = `${event}:${String(body.id ?? "")}:${String(body.userUpdatedAt ?? body.createdAt ?? "")}`;
+    const timestamp =
+      event === "customer.updated"
+        ? (body.updatedAt ?? body.userUpdatedAt ?? body.createdAt ?? "")
+        : (body.userUpdatedAt ?? body.updatedAt ?? body.createdAt ?? "");
+    const deliveryId = `${event}:${String(body.id ?? "")}:${String(timestamp)}`;
     return {
       outcome: "event",
       dedupeKey: deliveryId,

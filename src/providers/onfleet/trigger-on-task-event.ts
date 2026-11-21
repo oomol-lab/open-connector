@@ -31,6 +31,13 @@ function withCallbackToken(endpointUrl: string, token: string): string {
 
 export const onfleetTaskEvent: IntegrationDefinition = {
   callback: { headers: [], query: ["check", "of_token"] },
+  handshake(input) {
+    if (input.method.toUpperCase() !== "GET") return undefined;
+    if (input.callbackSecret && !sameSecret(input.query?.of_token, input.callbackSecret)) {
+      return { outcome: "respond", status: 401, body: "", contentType: "text/plain" };
+    }
+    return { outcome: "respond", status: 200, body: input.query?.check ?? "", contentType: "text/plain" };
+  },
   snapshot,
   initialState: { checkpoint: null, subscription: {} },
   async reconcile(context) {
@@ -49,8 +56,11 @@ export const onfleetTaskEvent: IntegrationDefinition = {
         const found: ManagedWebhook[] = [];
         for (const item of response.data) {
           if (!isJsonObject(item) || typeof item.url != "string") continue;
-          if (!item.url.startsWith(context.endpointUrl)) continue;
-          if (typeof item.id != "string" || item.trigger !== triggerId) {
+          if (item.url !== webhookUrl) continue;
+          if (typeof item.id != "string") {
+            throw new PermanentIntegrationError("Onfleet webhook entry is missing an ID.");
+          }
+          if (context.active && item.trigger !== triggerId) {
             throw new PermanentIntegrationError("Onfleet webhook settings differ from this subscription.");
           }
           found.push({ id: item.id, secret: context.callbackSecret });
@@ -93,7 +103,8 @@ export const onfleetTaskEvent: IntegrationDefinition = {
       return { outcome: "ignored", reason: "Onfleet trigger name does not match." };
     }
     const taskId = typeof body.taskId == "string" ? body.taskId : "";
-    const deliveryId = `${body.triggerName}:${taskId}:${String(body.time ?? "")}`;
+    const entityId = body.triggerName === "workerDuty" ? String(body.workerId ?? "") : taskId;
+    const deliveryId = `${body.triggerName}:${entityId}:${String(body.time ?? "")}`;
     return {
       outcome: "event",
       dedupeKey: deliveryId,

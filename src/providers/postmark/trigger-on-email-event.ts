@@ -86,10 +86,13 @@ export const postmarkEmailEvent: IntegrationDefinition = {
       return { outcome: "ignored", reason: "Postmark event type is not subscribed." };
     }
     const messageId = typeof body.MessageID == "string" ? body.MessageID : "";
-    const deliveryId = String(
-      body.ID ??
-        `${body.RecordType}:${messageId}:${String(body.ReceivedAt ?? body.DeliveredAt ?? body.BouncedAt ?? "")}`,
-    );
+    const deliveryId =
+      body.RecordType === "SubscriptionChange"
+        ? `SubscriptionChange:${String(body.Recipient ?? "")}:${String(body.MessageStream ?? "")}:${String(body.ChangedAt ?? "")}`
+        : String(
+            body.ID ??
+              `${body.RecordType}:${messageId}:${String(body.ReceivedAt ?? body.DeliveredAt ?? body.BouncedAt ?? "")}`,
+          );
     return {
       outcome: "event",
       dedupeKey: deliveryId,

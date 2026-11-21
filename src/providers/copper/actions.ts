@@ -14,6 +14,7 @@ export const copperActions: ActionDefinition[] = [
     inputSchema: s.actionInput(
       {
         name: s.string({ minLength: 1, description: "Optional person name filter." }),
+        pageNumber: s.integer({ minimum: 1, description: "Optional 1-based page number." }),
         pageSize: s.integer({ minimum: 1, maximum: 200, description: "Maximum records per page." }),
       },
       [],
