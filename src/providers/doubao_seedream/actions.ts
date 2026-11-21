@@ -5,9 +5,11 @@ import { s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
 
 const service = "doubao_seedream";
-export const defaultSeedreamModel = "doubao-seedream-5-0-flash-260915";
+export const seedreamFlashModel = "doubao-seedream-5-0-flash-260915";
+export const seedreamProModel = "doubao-seedream-5-0-pro-260628";
 export const seedream55Model = "doubao-seedream-5-5-261028";
-export const seedreamModels: string[] = [defaultSeedreamModel, "doubao-seedream-5-0-pro-260628", seedream55Model];
+export const seedreamModels: readonly string[] = [seedreamFlashModel, seedreamProModel, seedream55Model];
+
 const sizeSchema: JsonSchema = {
   oneOf: [
     s.stringEnum("Output resolution; auto is only available for layer decomposition.", ["1K", "1.5K", "2K", "auto"]),
@@ -33,7 +35,7 @@ export const doubaoSeedreamActions: ProviderActionDefinition[] = [
       {
         model: s.withDefault(
           s.stringEnum("The Seedream model; Flash prioritizes speed, Pro prioritizes quality.", seedreamModels),
-          defaultSeedreamModel,
+          seedreamFlashModel,
         ),
         prompt: s.string(
           "Generation or editing instructions; optional for automatic layer decomposition. Coordinates and marks can identify editing regions.",
