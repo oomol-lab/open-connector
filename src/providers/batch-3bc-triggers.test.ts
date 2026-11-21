@@ -193,31 +193,42 @@ describe("Batch 3B & 3C SaaS triggers", () => {
     expect(res2.checkpoint).toEqual({ updatedAt: 150, seenIds: ["a2", "a3"] });
   });
 
-  it("thehive.on_event paginates when more than 50 records are newer than checkpoint", async () => {
-    const pages: Record<string, unknown[]> = {
-      "0-50": Array.from({ length: 50 }, (_, i) => ({ id: `a${100 - i}`, updatedAt: 200 })),
-      "50-100": [
-        { id: "a50", updatedAt: 180 },
-        { id: "a49", updatedAt: 90 },
-      ],
+  it("thehive.on_event advances ascending cursor when more than 50 records are newer than checkpoint", async () => {
+    const batch1 = Array.from({ length: 50 }, (_, i) => ({ id: `a${i + 1}`, updatedAt: 101 + i }));
+    const batch2 = [
+      { id: "a50", updatedAt: 150 },
+      { id: "a51", updatedAt: 151 },
+    ];
+    let callCount = 0;
+    const seenCursors: number[] = [];
+    const connector = {
+      async execute(req: { body?: { query?: { _gte?: { _value?: number } } } }) {
+        seenCursors.push(req.body?.query?._gte?._value ?? -1);
+        callCount += 1;
+        return { status: 200, data: callCount === 1 ? batch1 : batch2 };
+      },
     };
-    const ranges: string[] = [];
-    const res = await thehiveEvent.poll({
+    const res1 = await thehiveEvent.poll({
       config: { resourceType: "alert" },
       checkpoint: { updatedAt: 100 },
       now: new Date("2026-11-21T00:00:00Z"),
-      connector: {
-        async execute(req: { query?: Record<string, string> }) {
-          const range = req.query?.range ?? "0-50";
-          ranges.push(range);
-          return { status: 200, data: pages[range] ?? [] };
-        },
-      },
+      connector,
     } as never);
-    expect(ranges).toEqual(["0-50", "50-100"]);
-    expect(res.events).toHaveLength(51);
-    expect(res.hasMore).toBe(false);
-    expect(res.checkpoint).toMatchObject({ updatedAt: 200 });
+    expect(res1.events).toHaveLength(50);
+    expect(res1.hasMore).toBe(true);
+    expect(res1.checkpoint).toEqual({ updatedAt: 150, seenIds: ["a50"] });
+
+    const res2 = await thehiveEvent.poll({
+      config: { resourceType: "alert" },
+      checkpoint: res1.checkpoint,
+      now: new Date("2026-11-21T00:00:05Z"),
+      connector,
+    } as never);
+    expect(seenCursors).toEqual([100, 150]);
+    expect(res2.events).toHaveLength(1);
+    expect(res2.events[0]).toMatchObject({ dedupeKey: "alert:a51:151" });
+    expect(res2.hasMore).toBe(false);
+    expect(res2.checkpoint).toEqual({ updatedAt: 151, seenIds: ["a51"] });
   });
 
   it("wufoo.on_form_entry validates HandshakeKey and emits EntryId", async () => {

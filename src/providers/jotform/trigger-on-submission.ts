@@ -73,9 +73,18 @@ export const jotformSubmission: IntegrationDefinition = {
         }
         return { id: match[0], secret: context.callbackSecret };
       },
-      async remove(id) {
+      async remove(_id) {
+        // Jotform webhook IDs are positional indices that can shift when other webhooks are removed.
+        // Re-read the list immediately before DELETE and remove only the entry matching our exact callback URL.
+        const response = await webhookRequest(context, { endpoint: `/form/${formId}/webhooks`, method: "GET" });
+        const entries = isJsonObject(response.data) ? normalizeJotformWebhooks(response.data.content) : null;
+        if (!entries) {
+          throw new TransientIntegrationError("Jotform returned an invalid webhook list before deletion.");
+        }
+        const match = entries.find(([, url]) => url === webhookUrl);
+        if (!match) return;
         await webhookRequest(context, {
-          endpoint: `/form/${formId}/webhooks/${encodeURIComponent(id)}`,
+          endpoint: `/form/${formId}/webhooks/${encodeURIComponent(match[0])}`,
           method: "DELETE",
         });
       },

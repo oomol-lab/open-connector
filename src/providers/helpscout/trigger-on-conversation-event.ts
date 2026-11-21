@@ -23,7 +23,9 @@ export const helpscoutConversationEvent: IntegrationDefinition = {
     return reconcileManagedWebhook(context, {
       async find() {
         const webhooks: unknown[] = [];
-        for (let page = 1; page <= 20; page++) {
+        const maxPages = 20;
+        let totalPages = 1;
+        for (let page = 1; page <= maxPages; page++) {
           const response = await webhookRequest(context, {
             endpoint: "/webhooks",
             method: "GET",
@@ -37,8 +39,11 @@ export const helpscoutConversationEvent: IntegrationDefinition = {
           webhooks.push(...embedded.webhooks);
           const pageInfo =
             isJsonObject(response.data) && isJsonObject(response.data.page) ? response.data.page : undefined;
-          const totalPages = typeof pageInfo?.totalPages == "number" ? pageInfo.totalPages : 1;
+          totalPages = typeof pageInfo?.totalPages == "number" ? pageInfo.totalPages : 1;
           if (page >= totalPages) break;
+        }
+        if (totalPages > maxPages) {
+          throw new TransientIntegrationError("Help Scout webhook list exceeded the maximum supported page count.");
         }
         const found: ManagedWebhook[] = [];
         for (const item of webhooks) {
@@ -48,6 +53,9 @@ export const helpscoutConversationEvent: IntegrationDefinition = {
             throw new PermanentIntegrationError("Help Scout webhook entry is missing an ID.");
           }
           if (context.active) {
+            if (typeof item.state == "string" && item.state.toLowerCase() !== "enabled") {
+              throw new PermanentIntegrationError("Help Scout webhook is disabled.");
+            }
             const itemEvents = Array.isArray(item.events) ? item.events.map(String).sort() : [];
             if (JSON.stringify(itemEvents) != JSON.stringify(expected)) {
               throw new PermanentIntegrationError("Help Scout webhook settings differ from this subscription.");
@@ -98,11 +106,18 @@ export const helpscoutConversationEvent: IntegrationDefinition = {
     if (!configured.includes(event)) {
       return { outcome: "ignored", reason: "Help Scout event is not subscribed." };
     }
+    const embedded = isJsonObject(body._embedded) ? body._embedded : undefined;
+    const threads = Array.isArray(embedded?.threads) ? embedded.threads : undefined;
+    const latestThread = threads && threads.length > 0 && isJsonObject(threads[0]) ? threads[0] : undefined;
+    const threadId =
+      latestThread && ["number", "string"].includes(typeof latestThread.id) ? String(latestThread.id) : undefined;
     const timestamp =
       event === "customer.updated"
         ? (body.updatedAt ?? body.userUpdatedAt ?? body.createdAt ?? "")
         : (body.userUpdatedAt ?? body.updatedAt ?? body.createdAt ?? "");
-    const deliveryId = `${event}:${String(body.id ?? "")}:${String(timestamp)}`;
+    const identity =
+      (event.endsWith(".reply.created") || event.endsWith(".note.created")) && threadId ? threadId : String(timestamp);
+    const deliveryId = `${event}:${String(body.id ?? "")}:${identity}`;
     return {
       outcome: "event",
       dedupeKey: deliveryId,
