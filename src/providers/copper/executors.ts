@@ -100,16 +100,13 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
   service,
   baseUrl,
   skipDnsValidation: true,
+  defaultHeaders: { "x-pw-application": "developer_api" },
   auth: {
-    type: "custom",
-    apply(request, credential) {
-      if (credential.authType !== "custom_credential") {
-        throw new ProviderRequestError(401, "Configure Copper credentials first.");
-      }
-      request.headers.set("x-pw-accesstoken", credential.values.apiKey ?? "");
-      request.headers.set("x-pw-application", "developer_api");
-      request.headers.set("x-pw-useremail", credential.values.userEmail ?? "");
-    },
+    type: "credential_headers",
+    headers: [
+      { name: "x-pw-accesstoken", source: { type: "credential_value", name: "apiKey" } },
+      { name: "x-pw-useremail", source: { type: "credential_value", name: "userEmail" } },
+    ],
   },
 });
 

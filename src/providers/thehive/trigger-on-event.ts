@@ -1,4 +1,4 @@
-import type { PollDefinition } from "../../triggers/common/poll.ts";
+import type { PollDefinition, PollEvent } from "../../triggers/common/poll.ts";
 
 import { isJsonObject } from "../../triggers/common/json.ts";
 import { eventsPollOutputs } from "../../triggers/common/poll.ts";
@@ -21,7 +21,7 @@ export const thehiveEvent: PollDefinition = {
       throw new Error(`TheHive ${resourceType} poll failed with HTTP ${response.status}.`);
     }
     let maxUpdatedAt = since;
-    const events: { dedupeKey: string; payload: Record<string, unknown> }[] = [];
+    const events: PollEvent[] = [];
     for (const item of response.data) {
       if (!isJsonObject(item)) continue;
       const id = String(item.id ?? item._id ?? "");

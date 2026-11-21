@@ -67,7 +67,7 @@ export const executors: ProviderExecutors = defineApiKeyProviderExecutors(
 export const proxy: ProviderProxyExecutor = defineProviderProxy({
   service,
   baseUrl,
-  auth: { type: "api_key_bearer" },
+  auth: { type: "api_key_authorization", prefix: "Bearer " },
   skipDnsValidation: true,
 });
 

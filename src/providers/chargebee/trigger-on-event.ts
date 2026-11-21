@@ -1,4 +1,4 @@
-import type { PollDefinition } from "../../triggers/common/poll.ts";
+import type { PollDefinition, PollEvent } from "../../triggers/common/poll.ts";
 
 import { isJsonObject } from "../../triggers/common/json.ts";
 import { eventsPollOutputs } from "../../triggers/common/poll.ts";
@@ -29,7 +29,7 @@ export const chargebeeEvent: PollDefinition = {
     }
     const filter = Array.isArray(context.config.eventTypes) ? context.config.eventTypes.map(String) : [];
     let maxOccurredAt = since;
-    const events: { dedupeKey: string; payload: Record<string, unknown> }[] = [];
+    const events: PollEvent[] = [];
     for (const entry of response.data.list) {
       if (!isJsonObject(entry) || !isJsonObject(entry.event)) continue;
       const evt = entry.event;

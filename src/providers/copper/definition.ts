@@ -19,7 +19,7 @@ export const provider: ProviderDefinition = {
         {
           key: "userEmail",
           label: "User Email",
-          inputType: "email",
+          inputType: "text",
           required: true,
           secret: false,
           placeholder: "user@example.com",
