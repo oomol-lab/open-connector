@@ -229,11 +229,19 @@ Run OpenConnector from a prebuilt image on GitHub Packages (GHCR): `ghcr.io/oomo
 
 See [docs/docker-ghcr.md](docs/docker-ghcr.md) for tags, pulling, and running.
 
-## A Ready-to-Use AI Bot with Leina
+## Related Projects
 
-If you want an AI bot you can use out of the box, try [Leina](https://leina.ai/). Leina connects to over 1,500 SaaS apps and lets you customize your own AI agent by choosing its app connections, skills, and knowledge base to fit your team’s workflows.
+### <img src="https://openflow.run/favicon.svg" alt="Open Flow" width="18" height="18" /> Open Flow
 
-Use it in Slack, Microsoft Teams, Discord, or Telegram to find information, compile weekly reports, organize customer feedback, and prepare sales follow-ups through the apps you authorize.
+[Open Flow](https://openflow.run) ([GitHub](https://github.com/oomol-lab/open-flow)) adds the workflow orchestration layer on top of OpenConnector. When an agent or application needs multi-step automation—combining code, AI, branching, and human approval—Open Flow handles the workflow execution while delegating app integrations and credentials to OpenConnector.
+
+It is a self-hostable AI workflow automation platform where coding agents like Codex and Claude Code can author flows via CLI or MCP, and teams can inspect inputs, step results, and approvals in a visual Workbench.
+
+### <img src="https://leina.ai/favicon-32.png" alt="Leina" width="18" height="18" /> Leina
+
+[Leina](https://leina.ai/) is a ready-to-use AI assistant built on top of OpenConnector for teams that do not want to build their own agent or chat frontend.
+
+Leina connects to 1,000+ SaaS apps and lets you customize agents with your own app connections, skills, and knowledge bases for information lookup, reporting, and daily operations across Slack, Microsoft Teams, Discord, and Telegram.
 
 ## Documentation
 
