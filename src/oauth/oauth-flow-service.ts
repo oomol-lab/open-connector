@@ -436,14 +436,21 @@ export class OAuthFlowService {
         }
         await this.connections.connectionSaved(appId);
       } else {
-        await this.connections.setOAuthCredential(
-          pending.service,
-          oauthCredential,
-          pending.connectionName,
-          input.signal,
-          pending.retirementGeneration,
-          pending.scope,
-        );
+        try {
+          await this.connections.setOAuthCredential(
+            pending.service,
+            oauthCredential,
+            pending.connectionName,
+            input.signal,
+            pending.retirementGeneration,
+            pending.scope,
+          );
+        } catch (error) {
+          if (error instanceof ConnectionError && error.code === "connection_retired") {
+            await this.connections.revokeUnstoredCredential(pending.service, oauthCredential);
+          }
+          throw error;
+        }
       }
       return {
         service: pending.service,

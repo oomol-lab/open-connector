@@ -99,7 +99,7 @@ describe("scope isolation", () => {
 
   it("rejects an invalid or empty scope and refuses to change the scope of an existing token", async () => {
     runtime = await createConnectorRuntime(await fixture());
-    for (const scope of ["", " ", "has space", "x".repeat(129)]) {
+    for (const scope of ["", " ", "has space", ".", "..", "x".repeat(129)]) {
       const response = await call("/api/runtime-tokens", tokenBody({ scope }), "admin-token");
       expect(response.status).toBe(400);
     }
@@ -290,7 +290,9 @@ describe("scope isolation", () => {
     const kept = await (await call(`/v1/connections/by-id/${a.connectionId}`, undefined, "admin-token")).json();
     expect(kept.data.scope).toBe("tenant-a");
 
-    const removed = await (await call("/api/scopes/tenant-a", undefined, "admin-token", "DELETE")).json();
+    const removedResponse = await call("/api/scopes/tenant-a", undefined, "admin-token", "DELETE");
+    expect(removedResponse.status).toBe(200);
+    const removed = await removedResponse.json();
     expect(removed.deleted.connections).toBe(1);
     const left = (await (await call("/v1/connections", undefined, "admin-token")).json()).data as Array<{
       service: string;

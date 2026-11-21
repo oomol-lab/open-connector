@@ -77,8 +77,12 @@ export function createScopeRoutes(options: ScopeRoutesOptions): Hono {
         for (const subscription of await triggers.list(scope)) {
           if (subscription.status === "deleted" || subscription.status === "abandoned") continue;
           await attempt("trigger_subscriptions", subscription.id, async () => {
-            await triggers.cancel(subscription.id, context.req.raw.signal);
-            deleted.triggerSubscriptions += 1;
+            const status = await triggers.cancel(subscription.id, context.req.raw.signal);
+            if (status === "deleted") {
+              deleted.triggerSubscriptions += 1;
+            } else {
+              throw new Error(`Trigger subscription ${subscription.id} is still ${status}.`);
+            }
           });
         }
       });

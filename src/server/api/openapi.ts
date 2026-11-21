@@ -726,11 +726,25 @@ export function createOpenApiDocument(options: OpenApiDocumentOptions = {}): Ope
         },
       },
     },
-    "/api/trigger-subscriptions": getOperation(
-      "Triggers",
-      "List owned subscriptions and cleanup status without secrets.",
-      { type: "array", items: { type: "object", additionalProperties: true } },
-    ),
+    "/api/trigger-subscriptions": {
+      get: {
+        tags: ["Triggers"],
+        summary: "List owned subscriptions and cleanup status without secrets.",
+        parameters: [
+          {
+            name: "scope",
+            in: "query",
+            required: false,
+            schema: scopeSchema,
+            description: "Only return subscriptions whose connection belongs to this scope.",
+          },
+        ],
+        responses: {
+          200: jsonResponse({ type: "array", items: { type: "object", additionalProperties: true } }),
+          400: jsonResponse(errorResponseSchema),
+        },
+      },
+    },
     "/api/trigger-subscriptions/{id}/cancel": {
       post: {
         tags: ["Triggers"],
@@ -1317,6 +1331,15 @@ function createTransitFilesPath(): Record<string, unknown> {
       tags: ["Files"],
       summary: "Upload one local transit file.",
       description: "Stores one temporary local file and returns a download URL for connector actions.",
+      parameters: [
+        {
+          name: "scope",
+          in: "query",
+          required: false,
+          schema: scopeSchema,
+          description: "Optional isolation scope to bind the uploaded file to.",
+        },
+      ],
       requestBody: {
         required: true,
         content: {

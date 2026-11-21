@@ -152,8 +152,18 @@ export class TransitFileService implements IStagedTransitFileService {
     let deleted = 0;
     let failure: unknown;
     await mkdir(this.rootDir, { recursive: true });
+    const handledSidecars = new Set<string>();
+    const orphanSidecars: string[] = [];
     for await (const entry of await opendir(this.rootDir)) {
-      if (!entry.isFile() || !isSafeFileId(entry.name)) {
+      if (!entry.isFile()) {
+        continue;
+      }
+      if (entry.name.endsWith(".meta.json")) {
+        const fileId = entry.name.slice(0, -".meta.json".length);
+        if (isSafeFileId(fileId)) orphanSidecars.push(fileId);
+        continue;
+      }
+      if (!isSafeFileId(entry.name)) {
         continue;
       }
       const path = join(this.rootDir, entry.name);
@@ -171,9 +181,26 @@ export class TransitFileService implements IStagedTransitFileService {
           },
         );
         if (removed) deleted += 1;
-        await unlink(metadataPath(path)).catch(() => undefined);
+        handledSidecars.add(entry.name);
+        await unlink(metadataPath(path)).catch((error: unknown) => {
+          if (!isMissingFile(error)) throw error;
+        });
       } catch (error) {
         // Finish the other files first; the failure is still reported, so the caller retries.
+        failure ??= error;
+      }
+    }
+    for (const fileId of orphanSidecars) {
+      if (handledSidecars.has(fileId)) continue;
+      const path = join(this.rootDir, fileId);
+      try {
+        const metadata = await this.readMetadata(path, fileId);
+        if (metadata.scope !== scope) continue;
+        if (await stat(path).catch(() => undefined)) continue;
+        await unlink(metadataPath(path)).catch((error: unknown) => {
+          if (!isMissingFile(error)) throw error;
+        });
+      } catch (error) {
         failure ??= error;
       }
     }

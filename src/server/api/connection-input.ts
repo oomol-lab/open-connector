@@ -1,9 +1,9 @@
 import type { OAuthConnectionRequestInput } from "../../oauth/oauth-flow-service.ts";
 
 import { z } from "zod";
-import { scopePattern } from "../../core/scope.ts";
+import { isScope, scopeMessage } from "../../core/scope.ts";
 
-const scopeInput = z.string().regex(scopePattern);
+const scopeInput = z.string().refine(isScope, { message: scopeMessage });
 
 export const oauthConnectionInput: z.ZodType<
   Omit<OAuthConnectionRequestInput, "owner" | "service" | "target" | "signal" | "connectionName">

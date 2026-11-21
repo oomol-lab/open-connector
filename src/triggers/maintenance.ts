@@ -58,15 +58,21 @@ export class TriggerMaintenance {
       }));
   }
 
-  async cancel(id: string, signal: AbortSignal): Promise<void> {
+  async cancel(id: string, signal: AbortSignal): Promise<TriggerSubscription["status"]> {
+    let status: TriggerSubscription["status"] = "deleting";
     await withSubscription(this.options.store, id, signal, async (record, save) => {
       if (record.mode === "resource-set")
         throw new ExecutionError("invalid_input", "Cancel the owning resource subscriptions.");
-      if (record.status === "deleted" || record.status === "abandoned") return;
+      if (record.status === "deleted" || record.status === "abandoned") {
+        status = record.status;
+        return;
+      }
       record.status = "deleting";
       await save();
       await this.options.runner.cleanup(record, save, signal);
+      status = record.status;
     });
+    return status;
   }
 
   async abandon(id: string, signal: AbortSignal): Promise<void> {

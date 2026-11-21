@@ -1,6 +1,6 @@
 # Scopes
 
-A scope is an opaque label (`[A-Za-z0-9._:-]{1,128}`) that separates the connections and run history of different
+A scope is an opaque label (`[A-Za-z0-9._:-]{1,128}`, excluding `.` and `..`) that separates the connections and run history of different
 tenants, workspaces or environments inside one runtime. The runtime never interprets it.
 
 ## Model
@@ -13,7 +13,9 @@ tenants, workspaces or environments inside one runtime. The runtime never interp
 - Every lookup is confined to the caller's scope in the store itself: a scoped token reads only connections of its
   scope, and every request without a scoped token (an unscoped token, the static `runtimeToken`, JWT credentials,
   the administrator on `/v1/actions`) reads only unscoped connections. Existing single-tenant installs, whose
-  connections are all unscoped, behave as before. A caller never sends a scope on `/v1`.
+  connections are all unscoped, behave as before. For runtime lookup and execution, a caller never sends a scope —
+  it always comes from authentication. Only `/v1` connection-start endpoints accept `scope` (from the administrator,
+  or optionally an `allowConnect` token's own scope; any other scope is rejected).
 - Another scope's connection is never read, so it answers exactly like a connection that does not exist, whether it
   is selected by alias or by id, listed, searched or offered as a default.
 - An empty `allowedConnections` list never widens a token beyond its scope.

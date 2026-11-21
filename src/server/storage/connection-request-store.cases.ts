@@ -45,9 +45,10 @@ export function connectionRequestStoreTests(getDatabase: () => RuntimeDatabase):
       const inFlight = pending("scope:tenant-a");
       const other = pending("scope:tenant-b");
       for (const request of [waiting, inFlight, other]) await requests.create(request);
-      await requests.claim(inFlight.state);
+      expect(await requests.claim(inFlight.state)).toEqual(inFlight);
       expect(await requests.cancelPending("scope:tenant-a")).toBe(2);
       expect(await requests.complete(inFlight, credential)).toBeUndefined();
+      expect(await getDatabase().connectionStore.get(inFlight.service, inFlight.connectionName)).toBeUndefined();
       expect(await requests.claim(waiting.state)).toBeUndefined();
       expect(await requests.get(inFlight.connectionRequestId)).toMatchObject({
         status: "failed",
