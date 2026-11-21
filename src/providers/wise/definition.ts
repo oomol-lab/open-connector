@@ -1,11 +1,15 @@
 import type { ProviderDefinition } from "../../core/types.ts";
 
 import { wiseActions } from "./actions.ts";
+import { snapshot } from "./trigger-on-event.definition.ts";
+import { triggerPermissions } from "./trigger-permissions.ts";
 
 const service = "wise";
 
 export const provider: ProviderDefinition = {
   service,
+  triggers: [snapshot],
+  triggerPermissions,
   displayName: "Wise",
   categories: ["Finance", "Data"],
   authTypes: ["api_key"],

@@ -80,6 +80,42 @@ const comment = s.object(
   },
   { additionalProperties: true, description: "Jira comment." },
 );
+const attachment = s.object(
+  {
+    id: s.string({ description: "Jira attachment ID." }),
+    filename: s.string({ description: "Attachment filename." }),
+    mimeType: s.string({ description: "Attachment MIME type." }),
+    size: s.integer({ description: "Attachment size in bytes." }),
+    content: s.string({ description: "Jira attachment content URL." }),
+    created: s.string({ description: "Attachment creation timestamp." }),
+    raw: objectSchema,
+  },
+  { additionalProperties: true, description: "Jira issue attachment." },
+);
+const transitFileOutput = s.object(
+  {
+    fileId: s.string({ description: "Transit file identifier." }),
+    downloadUrl: s.string({ description: "Transit URL for downloading the stored attachment." }),
+    sizeBytes: s.integer({ description: "Downloaded attachment size in bytes." }),
+    name: s.string({ description: "Attachment filename." }),
+    mimeType: s.string({ description: "Attachment MIME type." }),
+  },
+  {
+    required: ["fileId", "downloadUrl", "sizeBytes", "name", "mimeType"],
+    description: "Completed transit file. Download bytes from downloadUrl; normal transit expiry applies.",
+  },
+);
+const transitFileInput = s.object(
+  {
+    fileId: s.string({ minLength: 1, description: "Transit file ID previously uploaded to the connector." }),
+    name: s.string({ minLength: 1, description: "Optional filename override for the uploaded attachment." }),
+    mimeType: s.string({ minLength: 1, description: "Optional MIME type override for the uploaded attachment." }),
+  },
+  {
+    required: ["fileId"],
+    description: "Transit file reference to upload as a Jira issue attachment.",
+  },
+);
 
 const actions: JiraActionSource[] = [
   action(
@@ -205,6 +241,51 @@ const actions: JiraActionSource[] = [
     ),
     object({ comment }),
   ),
+  action(
+    "download_attachment",
+    "read",
+    "Download a Jira attachment into a transit file for downstream processing.",
+    jiraReadScopes,
+    input(
+      {
+        attachmentId: s.string({ minLength: 1, description: "Jira attachment ID." }),
+        fileName: s.string({
+          minLength: 1,
+          description: "Optional filename override; defaults to the Jira attachment metadata filename.",
+        }),
+        mimeType: s.string({
+          minLength: 1,
+          description:
+            "Optional MIME type override; defaults to the Jira attachment metadata or response Content-Type.",
+        }),
+      },
+      ["attachmentId"],
+    ),
+    transitFileOutput,
+  ),
+  action(
+    "upload_attachment",
+    "write",
+    "Upload a file attachment to one Jira issue from a transit file reference or public file URL.",
+    jiraWriteScopes,
+    input(
+      {
+        issueIdOrKey: s.string({ minLength: 1, description: "Jira issue ID or key." }),
+        file: transitFileInput,
+        fileUrl: s.url("Public HTTP(S) URL of the file to download and attach to the Jira issue."),
+        fileName: s.string({
+          minLength: 1,
+          description: "Optional attachment filename override when uploading from file or fileUrl.",
+        }),
+        mimeType: s.string({
+          minLength: 1,
+          description: "Optional MIME type override when uploading from file or fileUrl.",
+        }),
+      },
+      ["issueIdOrKey"],
+    ),
+    object({ attachments: s.array(attachment) }),
+  ),
 ];
 
 export type JiraActionName =
@@ -214,7 +295,9 @@ export type JiraActionName =
   | "get_issue"
   | "create_issue"
   | "list_issue_comments"
-  | "add_comment";
+  | "add_comment"
+  | "download_attachment"
+  | "upload_attachment";
 
 export const jiraActions: ActionDefinition[] = actions.map((source) =>
   defineProviderAction(service, {

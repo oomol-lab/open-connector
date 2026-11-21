@@ -8,6 +8,34 @@ import { sameSecret } from "../../triggers/signature.ts";
 import { basicAuthorizationHeader } from "../provider-runtime.ts";
 import { snapshot } from "./trigger-on-crm-event.definition.ts";
 
+interface PipedriveEventSpec {
+  entity: "deal" | "person" | "organization";
+  action: "create" | "change" | "delete";
+  changedField?: "stage_id" | "status";
+}
+
+const pipedriveEventSpecs: Record<string, PipedriveEventSpec> = {
+  "deal.created": { entity: "deal", action: "create" },
+  "deal.updated": { entity: "deal", action: "change" },
+  "deal.deleted": { entity: "deal", action: "delete" },
+  "deal.stage_changed": { entity: "deal", action: "change", changedField: "stage_id" },
+  "deal.status_changed": { entity: "deal", action: "change", changedField: "status" },
+  "person.created": { entity: "person", action: "create" },
+  "person.updated": { entity: "person", action: "change" },
+  "person.deleted": { entity: "person", action: "delete" },
+  "organization.created": { entity: "organization", action: "create" },
+  "organization.updated": { entity: "organization", action: "change" },
+  "organization.deleted": { entity: "organization", action: "delete" },
+};
+
+function resolvePipedriveEventSpec(event: string): PipedriveEventSpec {
+  const spec = pipedriveEventSpecs[event];
+  if (!spec) {
+    throw new PermanentIntegrationError(`Unsupported Pipedrive CRM event: ${event}`);
+  }
+  return spec;
+}
+
 export const pipedriveCrmEvent: IntegrationDefinition = {
   callback: { headers: ["authorization"], query: [] },
   snapshot,
@@ -22,9 +50,7 @@ export const pipedriveCrmEvent: IntegrationDefinition = {
     )
       throw new TransientIntegrationError("Pipedrive returned no account identity.");
     const companyId = String(current.data.data.company_id);
-    const event = String(context.config.eventType);
-    const entity = event == "person.created" ? "person" : "deal";
-    const action = event.endsWith(".created") ? "create" : "change";
+    const { entity, action } = resolvePipedriveEventSpec(String(context.config.eventType));
     const result = await reconcileManagedWebhook(context, {
       async find() {
         const response = await webhookRequest(context, { endpoint: "/v1/webhooks", method: "GET" });
@@ -86,7 +112,7 @@ export const pipedriveCrmEvent: IntegrationDefinition = {
     const companyId = context.state?.subscription.companyId;
     if (typeof companyId != "string") return { outcome: "respond", status: 503, body: "", contentType: "text/plain" };
     const body = context.payload;
-    if (!isJsonObject(body) || !isJsonObject(body.meta) || !isJsonObject(body.data))
+    if (!isJsonObject(body) || !isJsonObject(body.meta) || (body.data !== null && !isJsonObject(body.data)))
       return { outcome: "respond", status: 400, body: "", contentType: "text/plain" };
     const meta = body.meta;
     if (
@@ -96,14 +122,19 @@ export const pipedriveCrmEvent: IntegrationDefinition = {
     )
       return { outcome: "ignored", reason: "Pipedrive subscription or company does not match." };
     const event = String(context.config.eventType);
-    if (
-      meta.entity != (event == "person.created" ? "person" : "deal") ||
-      meta.action != (event.endsWith(".created") ? "create" : "change")
-    )
+    const spec = pipedriveEventSpecs[event];
+    if (!spec || meta.entity != spec.entity || meta.action != spec.action)
       return { outcome: "ignored", reason: "Pipedrive event does not match." };
-    if (!event.endsWith(".created")) {
-      const field = event == "deal.stage_changed" ? "stage_id" : "status";
-      if (!isJsonObject(body.previous) || !(field in body.previous) || body.previous[field] === body.data[field])
+    if (spec.action !== "delete" && !isJsonObject(body.data))
+      return { outcome: "respond", status: 400, body: "", contentType: "text/plain" };
+    if (spec.changedField) {
+      const field = spec.changedField;
+      if (
+        !isJsonObject(body.previous) ||
+        !isJsonObject(body.data) ||
+        !(field in body.previous) ||
+        body.previous[field] === body.data[field]
+      )
         return { outcome: "ignored", reason: "The selected deal field did not change." };
     }
     if (typeof meta.id != "string" || !meta.id || !["number", "string"].includes(typeof meta.entity_id))

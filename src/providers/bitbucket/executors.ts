@@ -1,8 +1,10 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
+import type { IntegrationDefinition } from "../../triggers/common/integration.ts";
 
 import { defineOAuthProviderExecutors } from "../provider-executors.ts";
 import { defineProviderProxy } from "../provider-proxy.ts";
 import { bitbucketActionHandlers, bitbucketApiBaseUrl } from "./runtime.ts";
+import { bitbucketRepoEvent } from "./trigger-on-repo-event.ts";
 
 export const executors: ProviderExecutors = defineOAuthProviderExecutors("bitbucket", bitbucketActionHandlers, {
   skipDnsValidation: true,
@@ -33,3 +35,5 @@ export const credentialValidators: CredentialValidators = {
     };
   },
 };
+
+export const triggers: readonly IntegrationDefinition[] = [bitbucketRepoEvent];

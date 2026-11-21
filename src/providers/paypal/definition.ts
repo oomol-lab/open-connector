@@ -1,9 +1,13 @@
 import type { ProviderDefinition } from "../../core/types.ts";
 
 import { paypalActions } from "./actions.ts";
+import { snapshot } from "./trigger-on-event.definition.ts";
+import { triggerPermissions } from "./trigger-permissions.ts";
 
 export const provider: ProviderDefinition = {
   service: "paypal",
+  triggers: [snapshot],
+  triggerPermissions,
   displayName: "PayPal",
   categories: ["Finance"],
   authTypes: ["custom_credential"],

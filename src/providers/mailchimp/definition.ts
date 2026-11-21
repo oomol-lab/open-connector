@@ -1,11 +1,15 @@
 import type { ProviderDefinition } from "../../core/types.ts";
 
 import { mailchimpActions } from "./actions.ts";
+import { snapshot } from "./trigger-on-audience-event.definition.ts";
+import { triggerPermissions } from "./trigger-permissions.ts";
 
 const service = "mailchimp";
 
 export const provider: ProviderDefinition = {
   service,
+  triggers: [snapshot],
+  triggerPermissions,
   displayName: "Mailchimp",
   categories: ["Communication", "Marketing"],
   authTypes: ["oauth2", "api_key"],

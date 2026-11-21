@@ -34,3 +34,9 @@ export const credentialValidators: CredentialValidators = {
     };
   },
 };
+
+import type { IntegrationDefinition } from "../../triggers/common/integration.ts";
+
+import { helpscoutConversationEvent } from "./trigger-on-conversation-event.ts";
+
+export const triggers: readonly IntegrationDefinition[] = [helpscoutConversationEvent];

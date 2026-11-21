@@ -2,6 +2,8 @@ import type { ProviderDefinition } from "../../core/types.ts";
 
 import { boxActions } from "./actions.ts";
 import { boxOAuthScopes } from "./scopes.ts";
+import { snapshot } from "./trigger-on-item-event.definition.ts";
+import { triggerPermissions } from "./trigger-permissions.ts";
 
 const service = "box";
 
@@ -10,6 +12,8 @@ const service = "box";
  */
 export const provider: ProviderDefinition = {
   service,
+  triggers: [snapshot],
+  triggerPermissions,
   displayName: "Box",
   description: "Browse and manage files and folders in a Box account.",
   categories: ["Storage", "Productivity"],

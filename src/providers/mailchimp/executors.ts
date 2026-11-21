@@ -563,6 +563,12 @@ function resolveSubscriberHash(input: Record<string, unknown>): string {
   throw new ProviderRequestError(400, "subscriber_hash or email_address is required");
 }
 
+import type { IntegrationDefinition } from "../../triggers/common/integration.ts";
+
+import { mailchimpAudienceEvent } from "./trigger-on-audience-event.ts";
+
 function subscriberHash(emailAddress: string): string {
   return createHash("md5").update(emailAddress.trim().toLowerCase()).digest("hex");
 }
+
+export const triggers: readonly IntegrationDefinition[] = [mailchimpAudienceEvent];

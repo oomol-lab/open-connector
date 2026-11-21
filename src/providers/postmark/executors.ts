@@ -238,3 +238,9 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
   baseUrl: "https://api.postmarkapp.com",
   auth: { type: "api_key_header", name: "x-postmark-server-token" },
 });
+
+import type { IntegrationDefinition } from "../../triggers/common/integration.ts";
+
+import { postmarkEmailEvent } from "./trigger-on-email-event.ts";
+
+export const triggers: readonly IntegrationDefinition[] = [postmarkEmailEvent];

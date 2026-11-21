@@ -50,3 +50,9 @@ export const credentialValidators: CredentialValidators = {
     return validateTheHiveCredential(input.values, input.apiKey, guardedFetcher, runtimeConfig, signal);
   },
 };
+
+import type { PollDefinition } from "../../triggers/common/poll.ts";
+
+import { thehiveEvent } from "./trigger-on-event.ts";
+
+export const triggers: readonly PollDefinition[] = [thehiveEvent];

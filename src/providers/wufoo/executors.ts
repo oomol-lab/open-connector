@@ -41,3 +41,9 @@ export const credentialValidators: CredentialValidators = {
     return validateWufooCredential(input.values, input.apiKey, fetcher, signal);
   },
 };
+
+import type { IntegrationDefinition } from "../../triggers/common/integration.ts";
+
+import { wufooFormEntry } from "./trigger-on-form-entry.ts";
+
+export const triggers: readonly IntegrationDefinition[] = [wufooFormEntry];

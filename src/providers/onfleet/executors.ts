@@ -74,3 +74,9 @@ export const proxy: ProviderProxyExecutor = async (input, context): Promise<Prox
     return toProviderProxyError(error, "Onfleet proxy request failed");
   }
 };
+
+import type { IntegrationDefinition } from "../../triggers/common/integration.ts";
+
+import { onfleetTaskEvent } from "./trigger-on-task-event.ts";
+
+export const triggers: readonly IntegrationDefinition[] = [onfleetTaskEvent];

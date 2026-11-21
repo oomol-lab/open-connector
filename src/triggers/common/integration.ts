@@ -137,6 +137,8 @@ export interface IntegrationDefinition {
   readonly handshake?: (input: {
     readonly method: string;
     readonly headers: Readonly<Record<string, string>>;
+    readonly query?: Readonly<Record<string, string>>;
+    readonly callbackSecret?: string;
   }) => Extract<IntegrationReceiveResult, { outcome: "respond" }> | undefined;
   readonly source?: EventSourceDefinition<CreateEventSource, UpdateEventSource, Partial<EventSource>>;
   readonly sourceReceive?: (

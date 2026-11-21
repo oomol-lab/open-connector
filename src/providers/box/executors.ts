@@ -426,6 +426,12 @@ function commaSeparated(value: unknown): string | undefined {
   return values.length > 0 ? values.join(",") : undefined;
 }
 
+import type { IntegrationDefinition } from "../../triggers/common/integration.ts";
+
+import { boxItemEvent } from "./trigger-on-item-event.ts";
+
 function setQuery(url: URL, name: string, value: string | number | boolean | undefined): void {
   if (value != null) url.searchParams.set(name, String(value));
 }
+
+export const triggers: readonly IntegrationDefinition[] = [boxItemEvent];

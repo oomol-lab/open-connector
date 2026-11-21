@@ -1,9 +1,13 @@
 import type { ProviderDefinition } from "../../core/types.ts";
 
 import { postmarkActions } from "./actions.ts";
+import { snapshot } from "./trigger-on-email-event.definition.ts";
+import { triggerPermissions } from "./trigger-permissions.ts";
 
 export const provider: ProviderDefinition = {
   service: "postmark",
+  triggers: [snapshot],
+  triggerPermissions,
   displayName: "Postmark",
   categories: ["Communication", "Marketing"],
   authTypes: ["api_key"],

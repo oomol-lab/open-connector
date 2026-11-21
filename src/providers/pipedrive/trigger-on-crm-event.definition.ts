@@ -1,14 +1,26 @@
 import type { TriggerKeySnapshot } from "../../triggers/common/types.ts";
 
 import { jsonSchema as s } from "../../core/json-schema.ts";
-const events = ["deal.created", "deal.stage_changed", "deal.status_changed", "person.created"] as const;
+const events = [
+  "deal.created",
+  "deal.updated",
+  "deal.deleted",
+  "deal.stage_changed",
+  "deal.status_changed",
+  "person.created",
+  "person.updated",
+  "person.deleted",
+  "organization.created",
+  "organization.updated",
+  "organization.deleted",
+] as const;
 export const snapshot: TriggerKeySnapshot & { readonly type: "integration" } = {
   key: "pipedrive.on_crm_event",
   provider: "pipedrive",
   name: "on_crm_event",
-  displayName: "Deal or Contact Event",
+  displayName: "CRM Event",
   description:
-    "Receives new deals or contacts, or actual changes to a deal stage or status using Pipedrive Webhooks v2.",
+    "Receives deal, person, or organization create, update, delete, or deal stage/status change events using Pipedrive Webhooks v2.",
   definitionVersion: 2,
   type: "integration",
   endpoint: {

@@ -120,7 +120,7 @@ export async function executeSubscription(
     existing.status === "active" &&
     input.query.connector_subscription === existing.callbackNonce
   ) {
-    const result = definition.handshake?.(input);
+    const result = definition.handshake?.({ ...input, callbackSecret: existing.callbackSecret });
     if (result)
       return { result, checkpoint: existing.checkpoint, subscription: { id }, reconcileAt: existing.reconcileAt };
   }
@@ -244,19 +244,38 @@ export async function executeSubscriptionOperation(
     throw new ExecutionError("invalid_input", "Webhook body is too large", "invalid_input");
   if (!rawBody.byteLength && !definition.snapshot.endpoint.body.allowEmpty)
     throw new ExecutionError("invalid_input", "Webhook body is required.");
-  const type = input.headers["content-type"]?.split(";")[0]?.trim().toLowerCase();
-  if (rawBody.byteLength && type !== "application/json")
-    throw new ExecutionError("invalid_input", "Webhook content type must be application/json.");
+  const rawContentType = input.headers["content-type"];
+  const type = rawContentType?.split(";")[0]?.trim().toLowerCase();
+  const allowedFormats = new Set(definition.snapshot.endpoint.body.formats);
   let payload: unknown = null;
   if (rawBody.byteLength > 0) {
-    const text = new TextDecoder().decode(rawBody);
-    try {
-      payload =
-        type === "application/x-www-form-urlencoded" ? Object.fromEntries(new URLSearchParams(text)) : JSON.parse(text);
-    } catch (error) {
-      if (error instanceof SyntaxError)
-        throw new ExecutionError("invalid_input", "Invalid webhook JSON payload", "invalid_input");
-      throw error;
+    if (type === "application/json" && allowedFormats.has("json")) {
+      const text = new TextDecoder().decode(rawBody);
+      try {
+        payload = JSON.parse(text);
+      } catch (error) {
+        if (error instanceof SyntaxError)
+          throw new ExecutionError("invalid_input", "Invalid webhook JSON payload", "invalid_input");
+        throw error;
+      }
+    } else if (type === "application/x-www-form-urlencoded" && allowedFormats.has("form")) {
+      const text = new TextDecoder().decode(rawBody);
+      payload = Object.fromEntries(new URLSearchParams(text));
+    } else if (type === "multipart/form-data" && allowedFormats.has("multipart") && rawContentType) {
+      try {
+        const form = await new Response(rawBody, { headers: { "content-type": rawContentType } }).formData();
+        const parsed: Record<string, string> = {};
+        for (const [key, value] of form.entries()) {
+          if (typeof value === "string") parsed[key] = value;
+        }
+        payload = parsed;
+      } catch {
+        throw new ExecutionError("invalid_input", "Invalid webhook multipart payload", "invalid_input");
+      }
+    } else if (type?.startsWith("text/") && allowedFormats.has("text")) {
+      payload = new TextDecoder().decode(rawBody);
+    } else {
+      throw new ExecutionError("invalid_input", `Unsupported webhook content type: ${type ?? "missing"}.`);
     }
   }
   if (Array.isArray(payload) && !definition.snapshot.endpoint.body.allowArray)

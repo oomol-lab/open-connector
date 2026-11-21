@@ -1,9 +1,13 @@
 import type { ProviderDefinition } from "../../core/types.ts";
 
 import { helpscoutActions } from "./actions.ts";
+import { snapshot } from "./trigger-on-conversation-event.definition.ts";
+import { triggerPermissions } from "./trigger-permissions.ts";
 
 export const provider: ProviderDefinition = {
   service: "helpscout",
+  triggers: [snapshot],
+  triggerPermissions,
   displayName: "Help Scout",
   categories: ["Communication", "Productivity"],
   authTypes: ["oauth2"],

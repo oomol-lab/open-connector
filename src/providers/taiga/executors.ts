@@ -53,3 +53,9 @@ export const credentialValidators: CredentialValidators = {
     return validateTaigaCredential(input.values, guardedFetcher, signal);
   },
 };
+
+import type { IntegrationDefinition } from "../../triggers/common/integration.ts";
+
+import { taigaProjectEvent } from "./trigger-on-project-event.ts";
+
+export const triggers: readonly IntegrationDefinition[] = [taigaProjectEvent];

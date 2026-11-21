@@ -1,9 +1,13 @@
 import type { ProviderDefinition } from "../../core/types.ts";
 
 import { chargebeeActions } from "./actions.ts";
+import { snapshot } from "./trigger-on-event.definition.ts";
+import { triggerPermissions } from "./trigger-permissions.ts";
 
 export const provider: ProviderDefinition = {
   service: "chargebee",
+  triggers: [snapshot],
+  triggerPermissions,
   displayName: "Chargebee",
   categories: ["Finance"],
   authTypes: ["api_key"],
