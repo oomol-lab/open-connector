@@ -18,7 +18,7 @@ import {
 import { customMcpCreateInput, customMcpUpdateInput, customMcpSyncInput } from "./custom-mcp-input.ts";
 import { policyRequestMaxBytes, policyRuleListMaxItems, policyRuleMaxBytes } from "./policy-input.ts";
 
-const scopeSchema = { type: "string", pattern: scopePattern.source } as const;
+const scopeSchema = { type: "string", pattern: scopePattern.source, not: { enum: [".", ".."] } } as const;
 
 /**
  * Minimal OpenAPI document shape returned by the local runtime.
@@ -1166,11 +1166,11 @@ export function createOpenApiDocument(options: OpenApiDocumentOptions = {}): Ope
             allowedConnections: connectionIdArraySchema(
               "Optional stable connection IDs granted to the new token. Omit or leave empty for unrestricted connection access. A non-empty list matches exact opaque IDs returned by the connection APIs. Virtual no_auth connections do not require grants. Every token is limited to its own scope.",
             ),
-            scope: jsonSchema.string({
+            scope: {
+              ...scopeSchema,
               description:
-                "Optional opaque isolation scope, 1 to 128 characters of letters, digits, '.', '_', ':' and '-'. Fixed for the life of the token.",
-              pattern: scopePattern.source,
-            }),
+                "Optional opaque isolation scope, 1 to 128 characters of letters, digits, '.', '_', ':' and '-' (excluding '.' and '..'). Fixed for the life of the token.",
+            },
             allowConnect: jsonSchema.boolean({
               description:
                 "Let this scoped token start, reconnect and read connections of its own scope through /v1/connections. Requires scope.",
