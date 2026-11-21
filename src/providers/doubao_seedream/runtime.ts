@@ -22,7 +22,7 @@ import {
   requiredResponseRecord,
   runProviderRequest,
 } from "../provider-runtime.ts";
-import { defaultSeedreamModel } from "./actions.ts";
+import { defaultSeedreamModel, seedream55Model, seedreamModels } from "./actions.ts";
 
 export const doubaoSeedreamApiBaseUrl = "https://ark.cn-beijing.volces.com/api/v3";
 const imagesPath = "images/generations";
@@ -46,16 +46,18 @@ function buildSeedreamBody(input: Record<string, unknown>): Record<string, unkno
   const outputFormat = optionalString(input.outputFormat);
   const mode = optionalString(input.optimizePromptMode);
   const size = readSize(input.size, layerDecomposition);
-  if (![defaultSeedreamModel, "doubao-seedream-5-0-pro-260628"].includes(model))
-    throw new ProviderRequestError(400, "Unsupported Seedream model");
+  if (!seedreamModels.includes(model)) throw new ProviderRequestError(400, "Unsupported Seedream model");
   if (!layerDecomposition && !prompt) throw new ProviderRequestError(400, "Image generation requires a prompt");
   if (layerDecomposition && images?.length !== 1)
     throw new ProviderRequestError(400, "Layer decomposition requires exactly one image");
+  const hasLayerOptions = input.maxImages !== undefined || input.textRecognition !== undefined;
+  if (hasLayerOptions && (!layerDecomposition || model !== seedream55Model))
+    throw new ProviderRequestError(400, "Layer options require Seedream 5.5 layer decomposition");
   if (mode === "fast" && model !== "doubao-seedream-5-0-pro-260628")
     throw new ProviderRequestError(400, "Fast mode requires Seedream Pro");
   if (background === "transparent") {
     const hasJPEGReference = images?.some((image) => image.startsWith("data:image/jpeg;"));
-    const invalidReference = images?.length !== 1 || hasJPEGReference;
+    const invalidReference = model !== seedream55Model && (images?.length !== 1 || hasJPEGReference);
     if (invalidReference || outputFormat === "jpeg")
       throw new ProviderRequestError(400, "Transparent output requires one image with an alpha channel and PNG output");
   }
@@ -65,6 +67,9 @@ function buildSeedreamBody(input: Record<string, unknown>): Record<string, unkno
     image: images,
     size,
     layer_decomposition: layerDecomposition,
+    layer_decomposition_options: hasLayerOptions
+      ? compactObject({ max_images: input.maxImages, text_recognition: input.textRecognition })
+      : undefined,
     background,
     output_format: outputFormat,
     optimize_prompt_options: mode === undefined ? undefined : { mode },
@@ -107,6 +112,7 @@ function normalizeSeedreamResponse(payload: Record<string, unknown>): Record<str
       background: image.background,
       zIndex: image.z_index,
       boundingBox: image.bounding_box,
+      textRecognition: image.text_recognition,
       name: image.name,
       description: image.description,
     })),
