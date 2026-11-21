@@ -98,7 +98,9 @@ describe("Jira attachment actions", () => {
       async read() {
         throw new Error("not used");
       },
-      async delete() {},
+      async delete() {
+        return true;
+      },
     };
     const fetcher: typeof fetch = async (input) => {
       const url = String(input);
@@ -158,7 +160,9 @@ describe("Jira attachment actions", () => {
           file: new File(["hello"], "spec.txt", { type: "text/plain" }),
         };
       },
-      async delete() {},
+      async delete() {
+        return true;
+      },
     };
     const fetcher: typeof fetch = async (_input, init) => {
       const headers = new Headers(init?.headers);
