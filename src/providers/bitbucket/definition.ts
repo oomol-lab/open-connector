@@ -31,6 +31,7 @@ export const provider: ProviderDefinition = {
         "pipeline:write",
         "pipeline:variable",
         "runner",
+        "webhook",
       ],
       tokenEndpointAuthMethod: "client_secret_basic",
     },

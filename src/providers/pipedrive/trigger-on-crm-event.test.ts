@@ -105,4 +105,38 @@ describe("Pipedrive CRM v2 trigger", () => {
 
     expect(ignored).toMatchObject({ outcome: "ignored" });
   });
+
+  it("receives organization.deleted v2 events with null data", async () => {
+    const auth = basicAuthorizationHeader("oomol:secret-123");
+    const deleted = await pipedriveCrmEvent.receive({
+      admit: true,
+      callbackSecret: "secret-123",
+      config: { eventType: "organization.deleted" },
+      current: true,
+      method: "POST",
+      rawBody: new Uint8Array(),
+      state: { checkpoint: null, subscription: { companyId: "9876", hookId: "555" } },
+      header: (name: string) => (name.toLowerCase() === "authorization" ? auth : undefined),
+      query: () => undefined,
+      payload: {
+        meta: {
+          version: "2.0",
+          company_id: 9876,
+          webhook_id: 555,
+          entity: "organization",
+          action: "delete",
+          id: "evt-org-del-1",
+          entity_id: 321,
+        },
+        data: null,
+        previous: { id: 321, name: "Acme Corp" },
+      },
+    } as never);
+
+    expect(deleted).toMatchObject({
+      outcome: "event",
+      dedupeKey: "evt-org-del-1",
+      outputs: { event: "organization.deleted", deliveryId: "evt-org-del-1", objectId: "321" },
+    });
+  });
 });

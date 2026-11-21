@@ -58,7 +58,8 @@ export const copperCrmEvent: IntegrationDefinition = {
       return { outcome: "respond", status: 400, body: "", contentType: "text/plain" };
     }
     const secretObj = isJsonObject(body.secret) ? body.secret : undefined;
-    const token = typeof secretObj?.token == "string" ? secretObj.token : undefined;
+    const token =
+      typeof body.token == "string" ? body.token : typeof secretObj?.token == "string" ? secretObj.token : undefined;
     if (!sameSecret(token, context.callbackSecret)) {
       return { outcome: "respond", status: 401, body: "", contentType: "text/plain" };
     }

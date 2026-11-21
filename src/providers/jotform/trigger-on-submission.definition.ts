@@ -12,7 +12,7 @@ export const snapshot: TriggerKeySnapshot & { readonly type: "integration" } = {
   type: "integration",
   endpoint: {
     methods: ["POST"],
-    body: { formats: ["form", "json"], allowArray: false, allowEmpty: false },
+    body: { formats: ["multipart", "form", "json"], allowArray: false, allowEmpty: false },
     successStatus: 200,
   },
   configInputs: [{ handle: "formId", jsonSchema: s.string({ minLength: 1 }), nullable: false }],

@@ -15,7 +15,12 @@ import {
   optionalRecord as asOptionalObject,
   optionalString as asOptionalString,
 } from "../../core/cast.ts";
-import { assertPublicHttpUrl, isPrivateNetworkAccessAllowed, readBoundedResponseBytes } from "../../core/request.ts";
+import {
+  assertPublicHttpUrl,
+  encodePathSegment,
+  isPrivateNetworkAccessAllowed,
+  storeResponseInTransit,
+} from "../../core/request.ts";
 import { defineProviderExecutors } from "../provider-executors.ts";
 import { downloadUploadSource, readTransitFileInput } from "../provider-files.ts";
 import { defineProviderProxy } from "../provider-proxy.ts";
@@ -530,7 +535,7 @@ async function downloadAttachment(input: Record<string, unknown>, context: JiraA
       accessToken: context.accessToken,
       fetcher: context.fetcher,
       providerMetadata: context.providerMetadata,
-      path: `/attachment/${encodeURIComponent(attachmentId)}`,
+      path: `/attachment/${encodePathSegment(attachmentId)}`,
       notFoundAsInvalidInput: true,
       signal: context.signal,
     });
@@ -538,7 +543,7 @@ async function downloadAttachment(input: Record<string, unknown>, context: JiraA
     mimeType = mimeType ?? asOptionalString(metadata.mimeType);
   }
 
-  const url = buildJiraUrl(context.providerMetadata, `/attachment/content/${encodeURIComponent(attachmentId)}`);
+  const url = buildJiraUrl(context.providerMetadata, `/attachment/content/${encodePathSegment(attachmentId)}`);
   return runProviderRequest({ label: "jira attachment", signal: context.signal }, async (signal) => {
     const response = await context.fetcher(url, {
       headers: {
@@ -555,30 +560,13 @@ async function downloadAttachment(input: Record<string, unknown>, context: JiraA
     const resolvedName = fileName ?? `attachment-${attachmentId}`;
     const resolvedMimeType =
       mimeType ?? asOptionalString(response.headers.get("content-type")) ?? "application/octet-stream";
-    if (transitFiles.createFromStream && response.body) {
-      return transitFiles.createFromStream({
-        body: response.body,
-        name: resolvedName,
-        mimeType: resolvedMimeType,
-        signal,
-      });
-    }
-    const bytes = await readBoundedResponseBytes(response, {
-      maxBytes: transitFiles.maxBytes,
+    return storeResponseInTransit(response, transitFiles, {
+      name: resolvedName,
+      mimeType: resolvedMimeType,
       fieldName: resolvedName,
       createError: (message) => new ProviderRequestError(413, message),
       signal,
     });
-    const upload = await transitFiles.create(
-      new File([Uint8Array.from(bytes)], resolvedName, { type: resolvedMimeType }),
-    );
-    return {
-      fileId: upload.fileId,
-      downloadUrl: upload.downloadUrl,
-      sizeBytes: upload.sizeBytes,
-      name: resolvedName,
-      mimeType: resolvedMimeType,
-    };
   });
 }
 

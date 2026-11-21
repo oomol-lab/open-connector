@@ -37,8 +37,15 @@ export const postmarkEmailEvent: IntegrationDefinition = {
         for (const item of response.data.Webhooks) {
           if (!isJsonObject(item) || typeof item.Url != "string") continue;
           if (item.Url != context.endpointUrl) continue;
-          if (!["number", "string"].includes(typeof item.ID)) {
-            throw new PermanentIntegrationError("Postmark webhook entry is missing an ID.");
+          const itemTriggers = isJsonObject(item.Triggers) ? item.Triggers : undefined;
+          const triggersMatch =
+            itemTriggers != null &&
+            Object.entries(triggersPayload).every(([key, value]) => {
+              const remote = isJsonObject(itemTriggers[key]) ? itemTriggers[key] : undefined;
+              return Boolean(remote?.Enabled) === value.Enabled;
+            });
+          if (!["number", "string"].includes(typeof item.ID) || !triggersMatch) {
+            throw new PermanentIntegrationError("Postmark webhook settings differ from this subscription.");
           }
           found.push({ id: String(item.ID), secret: context.callbackSecret });
         }

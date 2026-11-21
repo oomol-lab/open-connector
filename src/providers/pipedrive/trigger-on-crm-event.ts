@@ -112,7 +112,7 @@ export const pipedriveCrmEvent: IntegrationDefinition = {
     const companyId = context.state?.subscription.companyId;
     if (typeof companyId != "string") return { outcome: "respond", status: 503, body: "", contentType: "text/plain" };
     const body = context.payload;
-    if (!isJsonObject(body) || !isJsonObject(body.meta) || !isJsonObject(body.data))
+    if (!isJsonObject(body) || !isJsonObject(body.meta) || (body.data !== null && !isJsonObject(body.data)))
       return { outcome: "respond", status: 400, body: "", contentType: "text/plain" };
     const meta = body.meta;
     if (
@@ -125,9 +125,16 @@ export const pipedriveCrmEvent: IntegrationDefinition = {
     const spec = pipedriveEventSpecs[event];
     if (!spec || meta.entity != spec.entity || meta.action != spec.action)
       return { outcome: "ignored", reason: "Pipedrive event does not match." };
+    if (spec.action !== "delete" && !isJsonObject(body.data))
+      return { outcome: "respond", status: 400, body: "", contentType: "text/plain" };
     if (spec.changedField) {
       const field = spec.changedField;
-      if (!isJsonObject(body.previous) || !(field in body.previous) || body.previous[field] === body.data[field])
+      if (
+        !isJsonObject(body.previous) ||
+        !isJsonObject(body.data) ||
+        !(field in body.previous) ||
+        body.previous[field] === body.data[field]
+      )
         return { outcome: "ignored", reason: "The selected deal field did not change." };
     }
     if (typeof meta.id != "string" || !meta.id || !["number", "string"].includes(typeof meta.entity_id))

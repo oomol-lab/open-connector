@@ -32,7 +32,7 @@ export const wiseEvent: IntegrationDefinition = {
         for (const item of response.data) {
           if (!isJsonObject(item) || !isJsonObject(item.delivery) || typeof item.delivery.url != "string") continue;
           if (!item.delivery.url.startsWith(context.endpointUrl)) continue;
-          if (typeof item.id != "string" || item.trigger_on != triggerOn) {
+          if (typeof item.id != "string" || item.delivery.url !== webhookUrl || item.trigger_on != triggerOn) {
             throw new PermanentIntegrationError("Wise webhook subscription settings differ from this trigger.");
           }
           found.push({ id: item.id, secret: context.callbackSecret });

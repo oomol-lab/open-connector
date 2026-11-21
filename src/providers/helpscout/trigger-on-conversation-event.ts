@@ -64,7 +64,7 @@ export const helpscoutConversationEvent: IntegrationDefinition = {
   },
   async receive(context) {
     const signature = context.header("x-helpscout-signature");
-    if (!(await verifyBase64Hmac(context.callbackSecret, [context.rawBody], signature))) {
+    if (!(await verifyBase64Hmac(context.callbackSecret, [context.rawBody], signature, "SHA-1"))) {
       return { outcome: "respond", status: 401, body: "", contentType: "text/plain" };
     }
     const event = context.header("x-helpscout-event");

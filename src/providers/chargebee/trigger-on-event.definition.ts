@@ -20,6 +20,16 @@ const eventTypes = [
   "payment_refunded",
 ] as const;
 
+const eventSchema = s.object(
+  {
+    eventType: s.string(),
+    eventId: s.string(),
+    occurredAt: s.integer(),
+    body: { type: "object" },
+  },
+  { required: ["eventType", "eventId", "occurredAt", "body"], additionalProperties: false },
+);
+
 export const snapshot: TriggerKeySnapshot & { readonly type: "poll" } = {
   key: "chargebee.on_event",
   provider: "chargebee",
@@ -35,10 +45,5 @@ export const snapshot: TriggerKeySnapshot & { readonly type: "poll" } = {
       nullable: true,
     },
   ],
-  outputs: [
-    { handle: "eventType", jsonSchema: s.string(), nullable: false },
-    { handle: "eventId", jsonSchema: s.string(), nullable: false },
-    { handle: "occurredAt", jsonSchema: s.integer(), nullable: false },
-    { handle: "body", jsonSchema: { type: "object" }, nullable: false },
-  ],
+  outputs: [{ handle: "events", jsonSchema: s.array(eventSchema), nullable: false }],
 };

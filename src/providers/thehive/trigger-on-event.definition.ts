@@ -4,6 +4,15 @@ import { jsonSchema as s } from "../../core/json-schema.ts";
 
 const resourceTypes = ["alert", "case"] as const;
 
+const eventSchema = s.object(
+  {
+    resourceType: s.string(),
+    objectId: s.string(),
+    body: { type: "object" },
+  },
+  { required: ["resourceType", "objectId", "body"], additionalProperties: false },
+);
+
 export const snapshot: TriggerKeySnapshot & { readonly type: "poll" } = {
   key: "thehive.on_event",
   provider: "thehive",
@@ -20,9 +29,5 @@ export const snapshot: TriggerKeySnapshot & { readonly type: "poll" } = {
       value: "alert",
     },
   ],
-  outputs: [
-    { handle: "resourceType", jsonSchema: s.string(), nullable: false },
-    { handle: "objectId", jsonSchema: s.string(), nullable: false },
-    { handle: "body", jsonSchema: { type: "object" }, nullable: false },
-  ],
+  outputs: [{ handle: "events", jsonSchema: s.array(eventSchema), nullable: false }],
 };

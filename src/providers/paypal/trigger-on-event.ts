@@ -37,7 +37,11 @@ export const paypalEvent: IntegrationDefinition = {
                 .filter(Boolean)
                 .sort()
             : [];
-          if (typeof item.id != "string" || JSON.stringify(itemEvents) != JSON.stringify(expected)) {
+          if (
+            typeof item.id != "string" ||
+            item.url !== webhookUrl ||
+            JSON.stringify(itemEvents) != JSON.stringify(expected)
+          ) {
             throw new PermanentIntegrationError("PayPal webhook settings differ from this subscription.");
           }
           found.push({ id: item.id, secret: context.callbackSecret });

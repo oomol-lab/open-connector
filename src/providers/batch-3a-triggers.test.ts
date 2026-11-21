@@ -17,7 +17,7 @@ describe("Batch 3A SaaS webhook triggers", () => {
       rawBody: new Uint8Array(),
       state: { checkpoint: null, subscription: { hookId: "wh-1" } },
       header: () => undefined,
-      query: () => undefined,
+      query: (name: string) => (name === "box_token" ? "sec" : undefined),
     };
     const matched = await boxItemEvent.receive({
       ...base,

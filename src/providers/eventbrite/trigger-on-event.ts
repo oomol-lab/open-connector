@@ -21,6 +21,10 @@ export const eventbriteEvent: IntegrationDefinition = {
     const orgId = encodeURIComponent(String(context.config.organizationId));
     const configured = Array.isArray(context.config.actions) ? context.config.actions.map(String) : [];
     const expected = [...configured].sort();
+    const eventId =
+      typeof context.config.eventId == "string" && context.config.eventId.trim()
+        ? context.config.eventId.trim()
+        : undefined;
     const webhookUrl = withCallbackToken(context.endpointUrl, context.callbackSecret);
     return reconcileManagedWebhook(context, {
       async find() {
@@ -36,7 +40,14 @@ export const eventbriteEvent: IntegrationDefinition = {
           if (!isJsonObject(item) || typeof item.endpoint_url != "string") continue;
           if (!item.endpoint_url.startsWith(context.endpointUrl)) continue;
           const itemActions = Array.isArray(item.actions) ? item.actions.map(String).sort() : [];
-          if (typeof item.id != "string" || JSON.stringify(itemActions) != JSON.stringify(expected)) {
+          const itemEventId =
+            typeof item.event_id == "string" && item.event_id.trim() ? item.event_id.trim() : undefined;
+          if (
+            typeof item.id != "string" ||
+            item.endpoint_url !== webhookUrl ||
+            itemEventId !== eventId ||
+            JSON.stringify(itemActions) != JSON.stringify(expected)
+          ) {
             throw new PermanentIntegrationError("Eventbrite webhook settings differ from this subscription.");
           }
           found.push({ id: item.id, secret: context.callbackSecret });
@@ -44,17 +55,13 @@ export const eventbriteEvent: IntegrationDefinition = {
         return found;
       },
       async create() {
-        const eventId =
-          typeof context.config.eventId == "string" && context.config.eventId.trim()
-            ? context.config.eventId.trim()
-            : undefined;
         const response = await webhookRequest(context, {
           endpoint: `/organizations/${orgId}/webhooks/`,
           method: "POST",
           body: {
             endpoint_url: webhookUrl,
             actions: configured.join(","),
-            ...(eventId ? { event_id: eventId } : {}),
+            event_id: eventId,
           },
         });
         if (!isJsonObject(response.data) || typeof response.data.id != "string") {

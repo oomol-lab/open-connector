@@ -20,7 +20,7 @@ describe("Phase 4 new provider triggers", () => {
     expect(res).toMatchObject({ outcome: "event", outputs: { event: "subscriber.subscriber_activate" } });
   });
 
-  it("copper.on_crm_event verifies body secret and matches resourceType/event", async () => {
+  it("copper.on_crm_event verifies flattened body.token and matches resourceType/event", async () => {
     const res = await copperCrmEvent.receive({
       admit: true,
       callbackSecret: "cp-sec",
@@ -34,7 +34,7 @@ describe("Phase 4 new provider triggers", () => {
         event: "new",
         ids: [42],
         timestamp: 1700000000,
-        secret: { token: "cp-sec" },
+        token: "cp-sec",
       },
       header: () => undefined,
       query: () => undefined,

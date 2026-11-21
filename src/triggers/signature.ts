@@ -12,9 +12,10 @@ export async function verifyBase64Hmac(
   secret: string | Uint8Array,
   parts: readonly Uint8Array[],
   signature: string | undefined,
+  hash = "SHA-256",
 ): Promise<boolean> {
   const candidate = signature == null ? undefined : base64(signature);
-  return candidate != null && sameBytes(candidate, await hmac(secret, parts));
+  return candidate != null && sameBytes(candidate, await hmac(secret, parts, hash));
 }
 
 export async function verifyHexHmac(

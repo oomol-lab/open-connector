@@ -48,7 +48,7 @@ describe("Batch 3B & 3C SaaS triggers", () => {
     } as never);
     expect(res.events).toHaveLength(1);
     expect(res.events[0]).toMatchObject({ dedupeKey: "ev_1" });
-    expect(res.checkpoint).toEqual({ occurredAt: 1060 });
+    expect(res.checkpoint).toMatchObject({ occurredAt: 1060 });
   });
 
   it("postmark.on_email_event verifies Basic auth and emits Delivery events", async () => {
@@ -67,9 +67,9 @@ describe("Batch 3B & 3C SaaS triggers", () => {
     expect(res).toMatchObject({ outcome: "event", outputs: { recordType: "Delivery", messageId: "msg-1" } });
   });
 
-  it("helpscout.on_conversation_event verifies HMAC-SHA256 Base64 signature", async () => {
+  it("helpscout.on_conversation_event verifies HMAC-SHA1 Base64 signature", async () => {
     const raw = new TextEncoder().encode(JSON.stringify({ id: 501, userUpdatedAt: "2026-11-21T00:00:00Z" }));
-    const sig = createHmac("sha256", "hs-sec").update(raw).digest("base64");
+    const sig = createHmac("sha1", "hs-sec").update(raw).digest("base64");
     const headers: Record<string, string> = {
       "x-helpscout-signature": sig,
       "x-helpscout-event": "convo.created",

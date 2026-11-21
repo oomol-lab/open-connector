@@ -14,7 +14,7 @@ export const thehiveEvent: PollDefinition = {
       typeof checkpointObj?.updatedAt == "number" ? checkpointObj.updatedAt : context.now.getTime() - 60_000;
     const endpoint = resourceType === "case" ? "/api/case" : "/api/alert";
     const response = await context.connector.execute(
-      { endpoint, method: "GET", query: { range: "0-50", sort: "+updatedAt" } },
+      { endpoint, method: "GET", query: { range: "0-50", sort: "-updatedAt" } },
       context.signal,
     );
     if (response.status < 200 || response.status >= 300 || !Array.isArray(response.data)) {

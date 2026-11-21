@@ -1,13 +1,21 @@
 import type { IntegrationDefinition } from "../../triggers/common/integration.ts";
 import type { ManagedWebhook } from "../../triggers/managed-webhook.ts";
 
+import { encodePathSegment } from "../../core/request.ts";
 import { PermanentIntegrationError, TransientIntegrationError } from "../../triggers/common/integration.ts";
 import { isJsonObject } from "../../triggers/common/json.ts";
 import { reconcileManagedWebhook, webhookRequest } from "../../triggers/managed-webhook.ts";
+import { sameSecret } from "../../triggers/signature.ts";
 import { snapshot } from "./trigger-on-item-event.definition.ts";
 
+function withCallbackToken(endpointUrl: string, token: string): string {
+  const url = new URL(endpointUrl);
+  url.searchParams.set("box_token", token);
+  return url.toString();
+}
+
 export const boxItemEvent: IntegrationDefinition = {
-  callback: { headers: ["box-delivery-id", "box-delivery-timestamp", "box-signature-primary"], query: [] },
+  callback: { headers: ["box-delivery-id", "box-delivery-timestamp", "box-signature-primary"], query: ["box_token"] },
   snapshot,
   initialState: { checkpoint: null, subscription: {} },
   async reconcile(context) {
@@ -15,6 +23,7 @@ export const boxItemEvent: IntegrationDefinition = {
     const targetId = String(context.config.targetId);
     const configuredTriggers = Array.isArray(context.config.triggers) ? context.config.triggers.map(String) : [];
     const expected = [...configuredTriggers].sort();
+    const webhookUrl = withCallbackToken(context.endpointUrl, context.callbackSecret);
     return reconcileManagedWebhook(context, {
       async find() {
         const response = await webhookRequest(context, { endpoint: "/webhooks", method: "GET" });
@@ -24,11 +33,12 @@ export const boxItemEvent: IntegrationDefinition = {
         const found: ManagedWebhook[] = [];
         for (const item of response.data.entries) {
           if (!isJsonObject(item) || typeof item.address != "string") continue;
-          if (item.address != context.endpointUrl) continue;
+          if (!item.address.startsWith(context.endpointUrl)) continue;
           const target = isJsonObject(item.target) ? item.target : undefined;
           const itemTriggers = Array.isArray(item.triggers) ? item.triggers.map(String).sort() : [];
           if (
             typeof item.id != "string" ||
+            item.address !== webhookUrl ||
             target?.type != targetType ||
             String(target?.id ?? "") != targetId ||
             JSON.stringify(itemTriggers) != JSON.stringify(expected)
@@ -45,7 +55,7 @@ export const boxItemEvent: IntegrationDefinition = {
           method: "POST",
           body: {
             target: { id: targetId, type: targetType },
-            address: context.endpointUrl,
+            address: webhookUrl,
             triggers: configuredTriggers,
           },
         });
@@ -55,11 +65,14 @@ export const boxItemEvent: IntegrationDefinition = {
         return { id: response.data.id, secret: context.callbackSecret };
       },
       async remove(id) {
-        await webhookRequest(context, { endpoint: `/webhooks/${encodeURIComponent(id)}`, method: "DELETE" });
+        await webhookRequest(context, { endpoint: `/webhooks/${encodePathSegment(id)}`, method: "DELETE" });
       },
     });
   },
   receive(context) {
+    if (!sameSecret(context.query("box_token"), context.callbackSecret)) {
+      return { outcome: "respond", status: 401, body: "", contentType: "text/plain" };
+    }
     const hookId = context.state?.subscription.hookId;
     if (typeof hookId != "string") {
       return { outcome: "respond", status: 503, body: "", contentType: "text/plain" };
