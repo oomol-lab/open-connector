@@ -4,7 +4,7 @@ import type { RuntimeExecutionOptions } from "../core/runtime-execution.ts";
 import type { RuntimeLogger } from "../core/types.ts";
 import type { IRuntimePolicyStore } from "../server/storage/runtime-policy-store.ts";
 import type { IRuntimeTokenStore } from "../server/storage/runtime-token-service.ts";
-import type { TriggerStore } from "./store.ts";
+import type { TriggerStore, TriggerSubscription } from "./store.ts";
 import type { TriggerRunner } from "./trigger-runner.ts";
 
 import { ExecutionError } from "../core/execution-error.ts";
