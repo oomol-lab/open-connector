@@ -75,7 +75,9 @@ export const jotformSubmission: IntegrationDefinition = {
       },
       async remove(_id) {
         // Jotform webhook IDs are positional indices that can shift when other webhooks are removed.
-        // Re-read the list immediately before DELETE and remove only the entry matching our exact callback URL.
+        // Re-read the list immediately before DELETE and remove only the entry matching our exact callback URL
+        // (which carries this subscription's unique `jf_token`). Jotform's DELETE only accepts a position, so a
+        // concurrent change to the form's webhook list between this read and the DELETE remains a residual race.
         const response = await webhookRequest(context, { endpoint: `/form/${formId}/webhooks`, method: "GET" });
         const entries = isJsonObject(response.data) ? normalizeJotformWebhooks(response.data.content) : null;
         if (!entries) {

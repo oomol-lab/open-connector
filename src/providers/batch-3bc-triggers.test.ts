@@ -151,13 +151,28 @@ describe("Batch 3B & 3C SaaS triggers", () => {
   });
 
   it("thehive.on_event polls alerts newer than checkpoint", async () => {
+    const allowedFields = new Set(["createdAt", "updatedAt"]);
+    const assertV0Query = (req: {
+      query?: Record<string, string>;
+      body?: { query?: { _gte?: { _field?: string } } };
+    }) => {
+      const sortField = req.query?.sort?.replace(/^[+-]/, "");
+      if (sortField && !allowedFields.has(sortField)) {
+        throw new Error(`Invalid v0 sort field: ${sortField}`);
+      }
+      const filterField = req.body?.query?._gte?._field;
+      if (filterField && !allowedFields.has(filterField)) {
+        throw new Error(`Invalid v0 filter field: ${filterField}`);
+      }
+    };
     const res = await thehiveEvent.poll({
       config: { resourceType: "alert" },
       checkpoint: { updatedAt: 100 },
-      now: new Date("2026-11-21T00:00:00Z"),
+      now: new Date(200),
       connector: {
-        async execute(req: { query?: Record<string, string> }) {
-          if (req.query?.sort?.startsWith("+createdAt")) {
+        async execute(req: { query?: Record<string, string>; body?: { query?: { _gte?: { _field?: string } } } }) {
+          assertV0Query(req);
+          if (req.query?.sort === "+createdAt") {
             return { status: 200, data: [] };
           }
           return {
@@ -174,19 +189,22 @@ describe("Batch 3B & 3C SaaS triggers", () => {
     expect(res.events[0]).toMatchObject({ dedupeKey: "alert:a2:150" });
     expect(res.checkpoint).toEqual({
       createdAt: 100,
-      lastCreatedId: null,
+      createdOffset: 0,
+      createdSeenIds: [],
       updatedAt: 150,
-      lastUpdatedId: "a2",
+      updatedOffset: 0,
+      updatedSeenIds: ["a2"],
     });
 
-    // Boundary timestamp: unseen record a3 (id > a2) at same updatedAt=150 emits while a2 is skipped
+    // Recent boundary timestamp: unseen record a3 at same updatedAt=150 emits while a2 is deduplicated
     const res2 = await thehiveEvent.poll({
       config: { resourceType: "alert" },
       checkpoint: res.checkpoint,
-      now: new Date("2026-11-21T00:01:00Z"),
+      now: new Date(260),
       connector: {
-        async execute(req: { query?: Record<string, string> }) {
-          if (req.query?.sort?.startsWith("+createdAt")) {
+        async execute(req: { query?: Record<string, string>; body?: { query?: { _gte?: { _field?: string } } } }) {
+          assertV0Query(req);
+          if (req.query?.sort === "+createdAt") {
             return { status: 200, data: [] };
           }
           return {
@@ -203,35 +221,67 @@ describe("Batch 3B & 3C SaaS triggers", () => {
     expect(res2.events[0]).toMatchObject({ dedupeKey: "alert:a3:150" });
     expect(res2.checkpoint).toEqual({
       createdAt: 100,
-      lastCreatedId: null,
+      createdOffset: 0,
+      createdSeenIds: [],
       updatedAt: 150,
-      lastUpdatedId: "a3",
+      updatedOffset: 0,
+      updatedSeenIds: ["a2", "a3"],
     });
+
+    // Once the boundary has settled and the page is not full, the cursor steps past it
+    const res3 = await thehiveEvent.poll({
+      config: { resourceType: "alert" },
+      checkpoint: res2.checkpoint,
+      now: new Date(150 + 60_001),
+      connector: {
+        async execute(req: { query?: Record<string, string>; body?: { query?: { _gte?: { _field?: string } } } }) {
+          assertV0Query(req);
+          if (req.query?.sort === "+createdAt") {
+            return { status: 200, data: [] };
+          }
+          return {
+            status: 200,
+            data: [
+              { id: "a2", updatedAt: 150 },
+              { id: "a3", updatedAt: 150 },
+            ],
+          };
+        },
+      },
+    } as never);
+    expect(res3.events).toEqual([]);
+    expect(res3.checkpoint).toMatchObject({ updatedAt: 151, updatedOffset: 0, updatedSeenIds: [] });
   });
 
-  it("thehive.on_event drains 501 tied-timestamp records via composite cursor without re-emitting", async () => {
+  it("thehive.on_event drains 501 tied-timestamp records using only v0 fields without re-emitting", async () => {
     const dataset = Array.from({ length: 501 }, (_, i) => ({
       id: `id-${String(i + 1).padStart(4, "0")}`,
       createdAt: 100,
     }));
     const connector = {
-      async execute(req: { query?: Record<string, string>; body?: { query?: Record<string, unknown> } }) {
-        if (req.query?.sort?.startsWith("+updatedAt")) {
+      async execute(req: {
+        query?: Record<string, string>;
+        body?: { query?: { _gte?: { _field?: string; _value?: number } } };
+      }) {
+        const sort = req.query?.sort;
+        if (sort !== "+createdAt" && sort !== "+updatedAt") {
+          throw new Error(`Unsupported v0 sort: ${String(sort)}`);
+        }
+        const field = req.body?.query?._gte?._field;
+        if (field !== "createdAt" && field !== "updatedAt") {
+          throw new Error(`Unsupported v0 filter field: ${String(field)}`);
+        }
+        if (sort === "+updatedAt") {
           return { status: 200, data: [] };
         }
-        const q = req.body?.query ?? {};
-        let filtered = dataset;
-        if ("_or" in q && Array.isArray(q._or)) {
-          const andClause = (q._or[1] as { _and: Array<Record<string, { _value: unknown }>> })._and;
-          const ts = Number(andClause[0]._eq._value);
-          const lastId = String(andClause[1]._gt._value);
-          filtered = dataset.filter((r) => r.createdAt > ts || (r.createdAt === ts && r.id > lastId));
-        }
-        return { status: 200, data: filtered.slice(0, 25) };
+        const [start, end] = (req.query?.range ?? "0-25").split("-").map(Number);
+        const since = req.body?.query?._gte?._value ?? 0;
+        const filtered = dataset.filter((r) => r.createdAt >= since);
+        return { status: 200, data: filtered.slice(start, end) };
       },
     };
 
-    let checkpoint: unknown = { createdAt: 100, lastCreatedId: null, updatedAt: 100, lastUpdatedId: null };
+    let checkpoint: unknown = { createdAt: 100, updatedAt: 100 };
     const collected: string[] = [];
     for (let step = 0; step < 30; step++) {
       const res = await thehiveEvent.poll({
@@ -255,6 +305,88 @@ describe("Batch 3B & 3C SaaS triggers", () => {
     } as never);
     expect(idle.events).toEqual([]);
     expect(idle.hasMore).toBe(false);
+  });
+
+  it("thehive.on_event advances past a full tied page to a later timestamp with a bounded checkpoint", async () => {
+    const dataset = [
+      ...Array.from({ length: 25 }, (_, i) => ({ id: `t-${String(i).padStart(2, "0")}`, updatedAt: 150 })),
+      { id: "late", updatedAt: 151 },
+    ];
+    const connector = {
+      async execute(req: {
+        query?: Record<string, string>;
+        body?: { query?: { _gte?: { _field?: string; _value?: number } } };
+      }) {
+        if (req.query?.sort === "+createdAt") return { status: 200, data: [] };
+        expect(req.query?.sort).toBe("+updatedAt");
+        expect(req.body?.query?._gte?._field).toBe("updatedAt");
+        const [start, end] = (req.query?.range ?? "0-25").split("-").map(Number);
+        const since = req.body?.query?._gte?._value ?? 0;
+        return { status: 200, data: dataset.filter((r) => r.updatedAt >= since).slice(start, end) };
+      },
+    };
+
+    let checkpoint: unknown = { createdAt: 100, updatedAt: 100 };
+    const collected: string[] = [];
+    for (let step = 0; step < 10; step++) {
+      const res = await thehiveEvent.poll({
+        config: { resourceType: "alert" },
+        checkpoint,
+        now: new Date("2026-11-21T00:00:00Z"),
+        connector,
+      } as never);
+      collected.push(...res.events.map((e) => e.dedupeKey));
+      const cp = res.checkpoint as { updatedSeenIds: string[] };
+      expect(cp.updatedSeenIds.length).toBeLessThanOrEqual(25);
+      checkpoint = res.checkpoint;
+      if (!res.hasMore) break;
+    }
+    expect(collected).toHaveLength(26);
+    expect(collected).toContain("alert:late:151");
+    expect(checkpoint).toMatchObject({ updatedAt: 152, updatedOffset: 0, updatedSeenIds: [] });
+  });
+
+  it("thehive.on_event does not lose events when a drained tied record later leaves the boundary", async () => {
+    const dataset: Array<{ id: string; updatedAt: number }> = Array.from({ length: 25 }, (_, i) => ({
+      id: `t-${String(i).padStart(2, "0")}`,
+      updatedAt: 150,
+    }));
+    const connector = {
+      async execute(req: {
+        query?: Record<string, string>;
+        body?: { query?: { _gte?: { _field?: string; _value?: number } } };
+      }) {
+        if (req.query?.sort === "+createdAt") return { status: 200, data: [] };
+        const [start, end] = (req.query?.range ?? "0-25").split("-").map(Number);
+        const since = req.body?.query?._gte?._value ?? 0;
+        const sorted = dataset.filter((r) => r.updatedAt >= since).sort((a, b) => a.updatedAt - b.updatedAt);
+        return { status: 200, data: sorted.slice(start, end) };
+      },
+    };
+    const pollOnce = (checkpoint: unknown) =>
+      thehiveEvent.poll({
+        config: { resourceType: "alert" },
+        checkpoint,
+        now: new Date("2026-11-21T00:00:00Z"),
+        connector,
+      } as never);
+
+    let checkpoint: unknown = { createdAt: 100, updatedAt: 100 };
+    const collected: string[] = [];
+    for (let step = 0; step < 10; step++) {
+      const res = await pollOnce(checkpoint);
+      collected.push(...res.events.map((e) => e.dedupeKey));
+      checkpoint = res.checkpoint;
+      if (!res.hasMore) break;
+    }
+    expect(collected).toHaveLength(25);
+    expect(checkpoint).toMatchObject({ updatedAt: 151, updatedOffset: 0 });
+
+    // A drained tied record is updated and a newer record arrives; neither may be skipped
+    dataset[0] = { id: "t-00", updatedAt: 200 };
+    dataset.push({ id: "fresh", updatedAt: 210 });
+    const next = await pollOnce(checkpoint);
+    expect(next.events.map((e) => e.dedupeKey)).toEqual(["alert:t-00:200", "alert:fresh:210"]);
   });
 
   it("helpscout.on_conversation_event derives distinct deliveryIds for reply events with or without thread ID", async () => {

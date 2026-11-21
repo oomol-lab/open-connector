@@ -5,30 +5,26 @@ import { eventsPollOutputs } from "../../triggers/common/poll.ts";
 import { snapshot } from "./trigger-on-event.definition.ts";
 
 const thehiveStreamPageSize = 25;
+// Records at a timestamp older than this are assumed fully indexed, so the cursor can step past it.
+const thehiveSettleMs = 60_000;
 
 interface StreamCursor {
   ts: number;
-  lastId: string | null;
+  offset: number;
+  seenIds: string[];
 }
 
-function buildStreamQuery(field: "createdAt" | "updatedAt", cursor: StreamCursor): Record<string, unknown> {
-  if (cursor.lastId === null) {
-    return { _gte: { _field: field, _value: cursor.ts } };
-  }
-  return {
-    _or: [
-      { _gt: { _field: field, _value: cursor.ts } },
-      {
-        _and: [{ _eq: { _field: field, _value: cursor.ts } }, { _gt: { _field: "_id", _value: cursor.lastId } }],
-      },
-    ],
-  };
-}
-
-function isAfterCursor(ts: number, id: string, cursor: StreamCursor): boolean {
-  if (ts > cursor.ts) return true;
-  if (ts < cursor.ts) return false;
-  return cursor.lastId === null || id > cursor.lastId;
+function readStreamCursor(
+  checkpoint: Record<string, unknown> | undefined,
+  tsKey: "createdAt" | "updatedAt",
+  offsetKey: "createdOffset" | "updatedOffset",
+  seenKey: "createdSeenIds" | "updatedSeenIds",
+  fallbackTs: number,
+): StreamCursor {
+  const ts = typeof checkpoint?.[tsKey] == "number" ? checkpoint[tsKey] : fallbackTs;
+  const offset = typeof checkpoint?.[offsetKey] == "number" && checkpoint[offsetKey] > 0 ? checkpoint[offsetKey] : 0;
+  const seenIds = Array.isArray(checkpoint?.[seenKey]) ? checkpoint[seenKey].map(String) : [];
+  return { ts, offset, seenIds };
 }
 
 export const thehiveEvent: PollDefinition = {
@@ -37,15 +33,16 @@ export const thehiveEvent: PollDefinition = {
   async poll(context): Promise<PollResult> {
     const resourceType = String(context.config.resourceType) === "case" ? "case" : "alert";
     const checkpointObj = isJsonObject(context.checkpoint) ? context.checkpoint : undefined;
-    const defaultTs = context.now.getTime() - 60_000;
-    const updatedCursor: StreamCursor = {
-      ts: typeof checkpointObj?.updatedAt == "number" ? checkpointObj.updatedAt : defaultTs,
-      lastId: typeof checkpointObj?.lastUpdatedId == "string" ? checkpointObj.lastUpdatedId : null,
-    };
-    const createdCursor: StreamCursor = {
-      ts: typeof checkpointObj?.createdAt == "number" ? checkpointObj.createdAt : updatedCursor.ts,
-      lastId: typeof checkpointObj?.lastCreatedId == "string" ? checkpointObj.lastCreatedId : null,
-    };
+    const settledBefore = context.now.getTime() - thehiveSettleMs;
+    const defaultTs = settledBefore;
+    const updatedCursor = readStreamCursor(checkpointObj, "updatedAt", "updatedOffset", "updatedSeenIds", defaultTs);
+    const createdCursor = readStreamCursor(
+      checkpointObj,
+      "createdAt",
+      "createdOffset",
+      "createdSeenIds",
+      updatedCursor.ts,
+    );
 
     const endpoint = resourceType === "case" ? "/api/case/_search" : "/api/alert/_search";
     const streams: ReadonlyArray<{ field: "createdAt" | "updatedAt"; cursor: StreamCursor }> = [
@@ -57,21 +54,22 @@ export const thehiveEvent: PollDefinition = {
     const events: PollEvent[] = [];
     let hasMore = false;
     const nextCursors: Record<"createdAt" | "updatedAt", StreamCursor> = {
-      createdAt: { ...createdCursor },
-      updatedAt: { ...updatedCursor },
+      createdAt: { ts: createdCursor.ts, offset: createdCursor.offset, seenIds: [...createdCursor.seenIds] },
+      updatedAt: { ts: updatedCursor.ts, offset: updatedCursor.offset, seenIds: [...updatedCursor.seenIds] },
     };
 
     for (const { field, cursor } of streams) {
+      // Only use v0-registered fields (`createdAt` / `updatedAt`) in filter and sort.
       const response = await context.connector.execute(
         {
           endpoint,
           method: "POST",
           query: {
-            range: `0-${thehiveStreamPageSize}`,
-            sort: `+${field},+_id`,
+            range: `${cursor.offset}-${cursor.offset + thehiveStreamPageSize}`,
+            sort: `+${field}`,
           },
           body: {
-            query: buildStreamQuery(field, cursor),
+            query: { _gte: { _field: field, _value: cursor.ts } },
           },
         },
         context.signal,
@@ -80,16 +78,24 @@ export const thehiveEvent: PollDefinition = {
         throw new Error(`TheHive ${resourceType} poll failed with HTTP ${response.status}.`);
       }
 
-      let advanced = false;
+      const seenSet = new Set(cursor.seenIds);
+      let maxTs = cursor.ts;
+      // IDs observed in this page at the highest timestamp, including already-seen ones.
+      let boundaryIds = new Set<string>();
+
       for (const item of response.data) {
         if (!isJsonObject(item)) continue;
         const id = String(item.id ?? item._id ?? "");
         const rawTs = item[field];
         const ts = typeof rawTs === "number" ? rawTs : Number(rawTs);
-        if (!id || !Number.isFinite(ts) || !isAfterCursor(ts, id, nextCursors[field])) continue;
+        if (!id || !Number.isFinite(ts) || ts < cursor.ts) continue;
 
-        nextCursors[field] = { ts, lastId: id };
-        advanced = true;
+        if (ts > maxTs) {
+          maxTs = ts;
+          boundaryIds = new Set();
+        }
+        if (ts === maxTs) boundaryIds.add(id);
+        if (ts === cursor.ts && seenSet.has(id)) continue;
 
         const effectiveTs = Number(item.updatedAt ?? item.createdAt ?? ts);
         const dedupeKey = `${resourceType}:${id}:${effectiveTs}`;
@@ -102,9 +108,28 @@ export const thehiveEvent: PollDefinition = {
         }
       }
 
-      if (response.data.length >= thehiveStreamPageSize && advanced) {
-        hasMore = true;
+      // The v0 search API cannot sort or filter by `_id`, so records sharing the boundary
+      // timestamp are paged by offset, and the offset only advances past a full page that sits
+      // entirely on the boundary. A persisted offset would drift if a tied record is updated or
+      // deleted, so once a page is not full and the boundary timestamp has settled, the cursor
+      // steps to `ts + 1` and drops the offset and `seenIds`. A non-zero offset therefore only
+      // survives an active `hasMore` drain or a boundary younger than `thehiveSettleMs`, where
+      // `seenIds` (bounded by one page) still catch late arrivals at the same timestamp.
+      const fullPage = response.data.length >= thehiveStreamPageSize;
+      if (!fullPage && maxTs < settledBefore) {
+        nextCursors[field] = { ts: maxTs + 1, offset: 0, seenIds: [] };
+      } else if (maxTs !== cursor.ts) {
+        nextCursors[field] = { ts: maxTs, offset: 0, seenIds: [...boundaryIds] };
+      } else if (fullPage) {
+        nextCursors[field] = { ts: maxTs, offset: cursor.offset + response.data.length, seenIds: [...boundaryIds] };
+      } else {
+        nextCursors[field] = {
+          ts: maxTs,
+          offset: cursor.offset,
+          seenIds: [...new Set([...cursor.seenIds, ...boundaryIds])],
+        };
       }
+      if (fullPage) hasMore = true;
     }
 
     return {
@@ -112,9 +137,11 @@ export const thehiveEvent: PollDefinition = {
       hasMore,
       checkpoint: {
         createdAt: nextCursors.createdAt.ts,
-        lastCreatedId: nextCursors.createdAt.lastId,
+        createdOffset: nextCursors.createdAt.offset,
+        createdSeenIds: nextCursors.createdAt.seenIds,
         updatedAt: nextCursors.updatedAt.ts,
-        lastUpdatedId: nextCursors.updatedAt.lastId,
+        updatedOffset: nextCursors.updatedAt.offset,
+        updatedSeenIds: nextCursors.updatedAt.seenIds,
       },
     };
   },
