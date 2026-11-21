@@ -150,6 +150,12 @@ export const garminConnectActionHandlers: ProviderActionHandlers<"garmin_connect
     // Garmin answers 204 No Content when no night in the range has an HRV reading.
     return { summaries: responseList(response, "HRV summaries", "hrvSummaries") };
   },
+  async get_hrv(input, context) {
+    const date = requiredInputString(input.date, "date");
+    // Garmin answers 204 No Content for a night without HRV data.
+    const hrv = await getGarminConnect(context, { path: `/hrv-service/hrv/${encodePathSegment(date)}` });
+    return { hrv: nullableResponseRecord(hrv, "HRV") };
+  },
   async list_body_battery(input, context) {
     const range = readDateRange(input, garminConnectMaxRangeDays.bodyBattery);
     const response = await getGarminConnect(context, {

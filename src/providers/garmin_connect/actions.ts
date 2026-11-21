@@ -91,6 +91,34 @@ const hrvSummarySchema = s.looseObject("One night of heart rate variability.", {
   status: s.nullableString("The HRV status, such as BALANCED; NONE until Garmin has enough nights to set a baseline."),
 });
 
+const hrvNightSchema = s.looseObject("One night of heart rate variability in detail.", {
+  hrvSummary: hrvSummarySchema,
+  hrvReadings: s.array(
+    "The HRV readings of the night, one every five minutes inside the sleep window, oldest first. Empty when the night has no sleep window.",
+    s.looseObject("One HRV reading.", {
+      hrvValue: s.nullableInteger("The HRV of the five-minute period, in milliseconds."),
+      readingTimeGMT: s.string("The time of the reading in GMT, without an offset, such as 2026-07-01T03:15:00.0."),
+      readingTimeLocal: s.string("The time of the reading on the user's local clock, without an offset."),
+    }),
+  ),
+  startTimestampGMT: s.string("The start of the period the night's HRV covers, in GMT, without an offset."),
+  endTimestampGMT: s.string("The end of the period the night's HRV covers, in GMT, without an offset."),
+  startTimestampLocal: s.string("The start of that period on the user's local clock, without an offset."),
+  endTimestampLocal: s.string("The end of that period on the user's local clock, without an offset."),
+  sleepStartTimestampGMT: s.nullableString(
+    "The start of the sleep window the readings fall in, in GMT, without an offset (not epoch milliseconds as in get_sleep). Null when the night has no sleep window.",
+  ),
+  sleepEndTimestampGMT: s.nullableString(
+    "The end of the sleep window, in GMT, without an offset. Null when the night has no sleep window.",
+  ),
+  sleepStartTimestampLocal: s.nullableString(
+    "The start of the sleep window on the user's local clock. Null when the night has no sleep window.",
+  ),
+  sleepEndTimestampLocal: s.nullableString(
+    "The end of the sleep window on the user's local clock. Null when the night has no sleep window.",
+  ),
+});
+
 const bodyBatteryDaySchema = s.looseObject("One day of Body Battery.", {
   date: s.date("The calendar date of the report."),
   charged: s.nullableInteger("Body Battery charged during the day."),
@@ -350,6 +378,16 @@ export const garminConnectActions: ActionDefinition[] = [
     inputSchema: dateRangeInputSchema(),
     outputSchema: s.object("The HRV summaries returned by Garmin Connect.", {
       summaries: s.array("One summary per night with HRV data.", hrvSummarySchema),
+    }),
+  }),
+  defineProviderAction(service, {
+    name: "get_hrv",
+    operationType: "read",
+    description:
+      "Get one night of heart rate variability in detail: the summary that list_hrv_summaries returns plus the HRV readings taken every five minutes during sleep. The night is the one ending on the date. A night can have a summary but no readings when Garmin recorded no sleep window for it.",
+    inputSchema: calendarDateInputSchema,
+    outputSchema: s.object("The HRV night returned by Garmin Connect.", {
+      hrv: s.nullable(hrvNightSchema),
     }),
   }),
   defineProviderAction(service, {
