@@ -94,6 +94,29 @@ describe("ThreatFox lookup_ioc response validation", () => {
     });
   });
 
+  it("filters out entries missing an ioc when at least one usable entry is present", async () => {
+    const result = await threatfoxActionHandlers.lookup_ioc(
+      { ioc: "44d88612fea8a8f36de82e1278abb02f" },
+      {
+        apiKey: "fixture",
+        fetcher: async () =>
+          Response.json({
+            query_status: "ok",
+            data: [
+              { id: "1", ioc: "" },
+              { id: "2", ioc: "example.test", confidence_level: 80 },
+            ],
+          }),
+      },
+    );
+
+    expect(result).toMatchObject({
+      found: true,
+      query_status: "ok",
+      entries: [{ id: "2", ioc: "example.test", confidence_level: 80 }],
+    });
+  });
+
   it("maps non-object items in data to a 502 provider response error instead of CastError", async () => {
     await expect(
       threatfoxActionHandlers.lookup_ioc(
@@ -106,6 +129,25 @@ describe("ThreatFox lookup_ioc response validation", () => {
     ).rejects.toMatchObject({
       status: 502,
       message: "ThreatFox entry must be an object",
+    });
+  });
+
+  it("maps non-object items in malware_samples to a 502 provider response error instead of CastError", async () => {
+    await expect(
+      threatfoxActionHandlers.lookup_ioc(
+        { ioc: "example.test" },
+        {
+          apiKey: "fixture",
+          fetcher: async () =>
+            Response.json({
+              query_status: "ok",
+              data: [{ id: "1", ioc: "example.test", malware_samples: [1] }],
+            }),
+        },
+      ),
+    ).rejects.toMatchObject({
+      status: 502,
+      message: "ThreatFox malware sample must be an object",
     });
   });
 });
