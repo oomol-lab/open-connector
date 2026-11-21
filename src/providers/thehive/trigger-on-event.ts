@@ -4,7 +4,32 @@ import { isJsonObject } from "../../triggers/common/json.ts";
 import { eventsPollOutputs } from "../../triggers/common/poll.ts";
 import { snapshot } from "./trigger-on-event.definition.ts";
 
-const thehivePageSize = 50;
+const thehiveStreamPageSize = 25;
+
+interface StreamCursor {
+  ts: number;
+  lastId: string | null;
+}
+
+function buildStreamQuery(field: "createdAt" | "updatedAt", cursor: StreamCursor): Record<string, unknown> {
+  if (cursor.lastId === null) {
+    return { _gte: { _field: field, _value: cursor.ts } };
+  }
+  return {
+    _or: [
+      { _gt: { _field: field, _value: cursor.ts } },
+      {
+        _and: [{ _eq: { _field: field, _value: cursor.ts } }, { _gt: { _field: "_id", _value: cursor.lastId } }],
+      },
+    ],
+  };
+}
+
+function isAfterCursor(ts: number, id: string, cursor: StreamCursor): boolean {
+  if (ts > cursor.ts) return true;
+  if (ts < cursor.ts) return false;
+  return cursor.lastId === null || id > cursor.lastId;
+}
 
 export const thehiveEvent: PollDefinition = {
   snapshot,
@@ -12,65 +37,84 @@ export const thehiveEvent: PollDefinition = {
   async poll(context): Promise<PollResult> {
     const resourceType = String(context.config.resourceType) === "case" ? "case" : "alert";
     const checkpointObj = isJsonObject(context.checkpoint) ? context.checkpoint : undefined;
-    const since =
-      typeof checkpointObj?.updatedAt == "number" ? checkpointObj.updatedAt : context.now.getTime() - 60_000;
-    const seenAtSince = new Set(Array.isArray(checkpointObj?.seenIds) ? checkpointObj.seenIds.map(String) : []);
-    const pageOffset =
-      typeof checkpointObj?.pageOffset == "number" && checkpointObj.pageOffset > 0 ? checkpointObj.pageOffset : 0;
+    const defaultTs = context.now.getTime() - 60_000;
+    const updatedCursor: StreamCursor = {
+      ts: typeof checkpointObj?.updatedAt == "number" ? checkpointObj.updatedAt : defaultTs,
+      lastId: typeof checkpointObj?.lastUpdatedId == "string" ? checkpointObj.lastUpdatedId : null,
+    };
+    const createdCursor: StreamCursor = {
+      ts: typeof checkpointObj?.createdAt == "number" ? checkpointObj.createdAt : updatedCursor.ts,
+      lastId: typeof checkpointObj?.lastCreatedId == "string" ? checkpointObj.lastCreatedId : null,
+    };
 
-    // Query both updatedAt and createdAt so newly created alerts/cases without updatedAt are never filtered out.
     const endpoint = resourceType === "case" ? "/api/case/_search" : "/api/alert/_search";
-    const response = await context.connector.execute(
-      {
-        endpoint,
-        method: "POST",
-        query: {
-          range: `${pageOffset}-${pageOffset + thehivePageSize}`,
-          sort: "+updatedAt,+createdAt,+_id",
-        },
-        body: {
+    const streams: ReadonlyArray<{ field: "createdAt" | "updatedAt"; cursor: StreamCursor }> = [
+      { field: "createdAt", cursor: createdCursor },
+      { field: "updatedAt", cursor: updatedCursor },
+    ];
+
+    const emittedKeys = new Set<string>();
+    const events: PollEvent[] = [];
+    let hasMore = false;
+    const nextCursors: Record<"createdAt" | "updatedAt", StreamCursor> = {
+      createdAt: { ...createdCursor },
+      updatedAt: { ...updatedCursor },
+    };
+
+    for (const { field, cursor } of streams) {
+      const response = await context.connector.execute(
+        {
+          endpoint,
+          method: "POST",
           query: {
-            _or: [{ _gte: { _field: "updatedAt", _value: since } }, { _gte: { _field: "createdAt", _value: since } }],
+            range: `0-${thehiveStreamPageSize}`,
+            sort: `+${field},+_id`,
+          },
+          body: {
+            query: buildStreamQuery(field, cursor),
           },
         },
-      },
-      context.signal,
-    );
-    if (response.status < 200 || response.status >= 300 || !Array.isArray(response.data)) {
-      throw new Error(`TheHive ${resourceType} poll failed with HTTP ${response.status}.`);
-    }
-
-    let maxUpdatedAt = since;
-    const nextSeenIds = new Set<string>(seenAtSince);
-    const events: PollEvent[] = [];
-    for (const item of response.data) {
-      if (!isJsonObject(item)) continue;
-      const id = String(item.id ?? item._id ?? "");
-      const updatedAt = Number(item.updatedAt ?? item.createdAt ?? 0);
-      if (!id || !Number.isFinite(updatedAt) || updatedAt < since) continue;
-      if (updatedAt === since && seenAtSince.has(id)) continue;
-      if (updatedAt > maxUpdatedAt) {
-        maxUpdatedAt = updatedAt;
-        nextSeenIds.clear();
+        context.signal,
+      );
+      if (response.status < 200 || response.status >= 300 || !Array.isArray(response.data)) {
+        throw new Error(`TheHive ${resourceType} poll failed with HTTP ${response.status}.`);
       }
-      if (updatedAt === maxUpdatedAt) nextSeenIds.add(id);
-      events.push({
-        dedupeKey: `${resourceType}:${id}:${updatedAt}`,
-        payload: { resourceType, objectId: id, body: item },
-      });
+
+      let advanced = false;
+      for (const item of response.data) {
+        if (!isJsonObject(item)) continue;
+        const id = String(item.id ?? item._id ?? "");
+        const rawTs = item[field];
+        const ts = typeof rawTs === "number" ? rawTs : Number(rawTs);
+        if (!id || !Number.isFinite(ts) || !isAfterCursor(ts, id, nextCursors[field])) continue;
+
+        nextCursors[field] = { ts, lastId: id };
+        advanced = true;
+
+        const effectiveTs = Number(item.updatedAt ?? item.createdAt ?? ts);
+        const dedupeKey = `${resourceType}:${id}:${effectiveTs}`;
+        if (!emittedKeys.has(dedupeKey)) {
+          emittedKeys.add(dedupeKey);
+          events.push({
+            dedupeKey,
+            payload: { resourceType, objectId: id, body: item },
+          });
+        }
+      }
+
+      if (response.data.length >= thehiveStreamPageSize && advanced) {
+        hasMore = true;
+      }
     }
 
-    const fullPage = response.data.length >= thehivePageSize;
-    const sameTimestampFullPage = fullPage && maxUpdatedAt === since;
-    const nextPageOffset = sameTimestampFullPage ? pageOffset + response.data.length : 0;
-    const hasMore = fullPage && (sameTimestampFullPage || events.length > 0);
     return {
       events,
       hasMore,
       checkpoint: {
-        updatedAt: maxUpdatedAt,
-        seenIds: [...nextSeenIds].slice(-500),
-        pageOffset: nextPageOffset,
+        createdAt: nextCursors.createdAt.ts,
+        lastCreatedId: nextCursors.createdAt.lastId,
+        updatedAt: nextCursors.updatedAt.ts,
+        lastUpdatedId: nextCursors.updatedAt.lastId,
       },
     };
   },

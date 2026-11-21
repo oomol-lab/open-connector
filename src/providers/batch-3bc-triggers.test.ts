@@ -156,7 +156,10 @@ describe("Batch 3B & 3C SaaS triggers", () => {
       checkpoint: { updatedAt: 100 },
       now: new Date("2026-11-21T00:00:00Z"),
       connector: {
-        async execute() {
+        async execute(req: { query?: Record<string, string> }) {
+          if (req.query?.sort?.startsWith("+createdAt")) {
+            return { status: 200, data: [] };
+          }
           return {
             status: 200,
             data: [
@@ -169,20 +172,28 @@ describe("Batch 3B & 3C SaaS triggers", () => {
     } as never);
     expect(res.events).toHaveLength(1);
     expect(res.events[0]).toMatchObject({ dedupeKey: "alert:a2:150" });
-    expect(res.checkpoint).toEqual({ updatedAt: 150, seenIds: ["a2"], pageOffset: 0 });
+    expect(res.checkpoint).toEqual({
+      createdAt: 100,
+      lastCreatedId: null,
+      updatedAt: 150,
+      lastUpdatedId: "a2",
+    });
 
-    // Boundary timestamp: unseen record a3 at same updatedAt=150 should emit while a2 is deduplicated
+    // Boundary timestamp: unseen record a3 (id > a2) at same updatedAt=150 emits while a2 is skipped
     const res2 = await thehiveEvent.poll({
       config: { resourceType: "alert" },
       checkpoint: res.checkpoint,
       now: new Date("2026-11-21T00:01:00Z"),
       connector: {
-        async execute() {
+        async execute(req: { query?: Record<string, string> }) {
+          if (req.query?.sort?.startsWith("+createdAt")) {
+            return { status: 200, data: [] };
+          }
           return {
             status: 200,
             data: [
-              { id: "a3", updatedAt: 150 },
               { id: "a2", updatedAt: 150 },
+              { id: "a3", updatedAt: 150 },
             ],
           };
         },
@@ -190,43 +201,60 @@ describe("Batch 3B & 3C SaaS triggers", () => {
     } as never);
     expect(res2.events).toHaveLength(1);
     expect(res2.events[0]).toMatchObject({ dedupeKey: "alert:a3:150" });
-    expect(res2.checkpoint).toEqual({ updatedAt: 150, seenIds: ["a2", "a3"], pageOffset: 0 });
+    expect(res2.checkpoint).toEqual({
+      createdAt: 100,
+      lastCreatedId: null,
+      updatedAt: 150,
+      lastUpdatedId: "a3",
+    });
   });
 
-  it("thehive.on_event advances past tied-timestamp full pages and covers newly created alerts without updatedAt", async () => {
-    const tiedPage1 = Array.from({ length: 50 }, (_, i) => ({ id: `t${i + 1}`, createdAt: 100 }));
-    const tiedPage2 = [
-      { id: "t51", createdAt: 100 },
-      { id: "t52", updatedAt: 150 },
-    ];
-    const ranges: string[] = [];
+  it("thehive.on_event drains 501 tied-timestamp records via composite cursor without re-emitting", async () => {
+    const dataset = Array.from({ length: 501 }, (_, i) => ({
+      id: `id-${String(i + 1).padStart(4, "0")}`,
+      createdAt: 100,
+    }));
     const connector = {
-      async execute(req: { query?: Record<string, string> }) {
-        const range = req.query?.range ?? "0-50";
-        ranges.push(range);
-        return { status: 200, data: range === "0-50" ? tiedPage1 : tiedPage2 };
+      async execute(req: { query?: Record<string, string>; body?: { query?: Record<string, unknown> } }) {
+        if (req.query?.sort?.startsWith("+updatedAt")) {
+          return { status: 200, data: [] };
+        }
+        const q = req.body?.query ?? {};
+        let filtered = dataset;
+        if ("_or" in q && Array.isArray(q._or)) {
+          const andClause = (q._or[1] as { _and: Array<Record<string, { _value: unknown }>> })._and;
+          const ts = Number(andClause[0]._eq._value);
+          const lastId = String(andClause[1]._gt._value);
+          filtered = dataset.filter((r) => r.createdAt > ts || (r.createdAt === ts && r.id > lastId));
+        }
+        return { status: 200, data: filtered.slice(0, 25) };
       },
     };
-    const res1 = await thehiveEvent.poll({
-      config: { resourceType: "alert" },
-      checkpoint: { updatedAt: 100, seenIds: [], pageOffset: 0 },
-      now: new Date("2026-11-21T00:00:00Z"),
-      connector,
-    } as never);
-    expect(res1.events).toHaveLength(50);
-    expect(res1.hasMore).toBe(true);
-    expect(res1.checkpoint).toMatchObject({ updatedAt: 100, pageOffset: 50 });
 
-    const res2 = await thehiveEvent.poll({
+    let checkpoint: unknown = { createdAt: 100, lastCreatedId: null, updatedAt: 100, lastUpdatedId: null };
+    const collected: string[] = [];
+    for (let step = 0; step < 30; step++) {
+      const res = await thehiveEvent.poll({
+        config: { resourceType: "alert" },
+        checkpoint,
+        now: new Date("2026-11-21T00:00:00Z"),
+        connector,
+      } as never);
+      collected.push(...res.events.map((e) => e.dedupeKey));
+      checkpoint = res.checkpoint;
+      if (!res.hasMore) break;
+    }
+    expect(collected).toHaveLength(501);
+
+    // Re-polling the unchanged dataset must emit 0 events
+    const idle = await thehiveEvent.poll({
       config: { resourceType: "alert" },
-      checkpoint: res1.checkpoint,
-      now: new Date("2026-11-21T00:00:05Z"),
+      checkpoint,
+      now: new Date("2026-11-21T00:01:00Z"),
       connector,
     } as never);
-    expect(ranges).toEqual(["0-50", "50-100"]);
-    expect(res2.events.map((e) => e.dedupeKey)).toEqual(["alert:t51:100", "alert:t52:150"]);
-    expect(res2.hasMore).toBe(false);
-    expect(res2.checkpoint).toEqual({ updatedAt: 150, seenIds: ["t52"], pageOffset: 0 });
+    expect(idle.events).toEqual([]);
+    expect(idle.hasMore).toBe(false);
   });
 
   it("helpscout.on_conversation_event derives distinct deliveryIds for reply events with or without thread ID", async () => {
