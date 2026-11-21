@@ -12,6 +12,7 @@ import {
   parseProviderJsonBodyText,
   providerInputError,
   ProviderRequestError,
+  providerResponseError,
   providerUserAgent,
   readProviderErrorTextBody,
   readProviderTextBody,
@@ -56,10 +57,14 @@ export const threatfoxActionHandlers: ProviderActionHandlers<"threatfox", Threat
     if (!Array.isArray(record.data)) {
       throw new ProviderRequestError(502, "ThreatFox returned ok without an entry array");
     }
+    const entries = optionalObjectArray(record.data, "ThreatFox entry", providerResponseError).map(normalizeIocEntry);
+    if (entries.length === 0 || entries.some((entry) => typeof entry.ioc !== "string" || entry.ioc === "")) {
+      throw new ProviderRequestError(502, "ThreatFox returned ok without a usable IOC entry");
+    }
     return {
       found: true,
       query_status: queryStatus,
-      entries: optionalObjectArray(record.data).map(normalizeIocEntry),
+      entries,
     };
   },
 };
