@@ -1,4 +1,5 @@
 import type { IConnectionStore, StoredConnection, StoredLocalConnection } from "../../connection-store.ts";
+import type { ScopeFilter } from "../../core/scope.ts";
 import type { ResolvedCredential } from "../../core/types.ts";
 import type { ISecretCodec } from "../secrets/secret-codec-core.ts";
 import type { RequestTransaction } from "./connection-request-store.ts";
@@ -27,29 +28,36 @@ export class SqlConnectionStore implements IConnectionStore {
       service: row.service as string,
       connectionName: row.connection_name as string,
       credential: JSON.parse(await this.codec.decode(row.value as string)) as ResolvedCredential,
+      ...(typeof row.scope === "string" ? { scope: row.scope } : {}),
     };
   }
 
-  async get(service: string, connectionName: string): Promise<StoredConnection | undefined> {
-    const [[row]] = await this.transaction([
-      {
-        sql: "select * from connections where service = ? and connection_name = ?",
-        values: [service, connectionName],
-      },
-    ]);
-    return row ? this.read(row) : undefined;
+  async get(service: string, connectionName: string, within?: ScopeFilter): Promise<StoredConnection | undefined> {
+    return this.selectOne("service = ? and connection_name = ?", [service, connectionName], within);
   }
 
-  async getById(id: string): Promise<StoredConnection | undefined> {
-    const [[row]] = await this.transaction([{ sql: "select * from connections where id = ?", values: [id] }]);
-    return row ? this.read(row) : undefined;
+  async getById(id: string, within?: ScopeFilter): Promise<StoredConnection | undefined> {
+    return this.selectOne("id = ?", [id], within);
   }
 
-  async list(): Promise<StoredConnection[]> {
+  async list(within?: ScopeFilter): Promise<StoredConnection[]> {
+    const where = scopeWhere("1 = 1", [], within);
     const [rows] = await this.transaction([
-      { sql: "select * from connections order by service, connection_name", values: [] },
+      { sql: `select * from connections where ${where.sql} order by service, connection_name`, values: where.values },
     ]);
     return Promise.all(rows.map((row) => this.read(row)));
+  }
+
+  private async selectOne(
+    sql: string,
+    values: (string | number | null)[],
+    within?: ScopeFilter,
+  ): Promise<StoredConnection | undefined> {
+    const where = scopeWhere(sql, values, within);
+    const [[row]] = await this.transaction([
+      { sql: `select * from connections where ${where.sql}`, values: where.values },
+    ]);
+    return row ? this.read(row) : undefined;
   }
 
   async getRetirementGeneration(service: string, connectionName: string): Promise<string> {
@@ -63,8 +71,13 @@ export class SqlConnectionStore implements IConnectionStore {
     return row.generation as string;
   }
 
-  async set(service: string, connectionName: string, credential: ResolvedCredential): Promise<StoredLocalConnection> {
-    const stored = await this.writeCredential(service, connectionName, credential);
+  async set(
+    service: string,
+    connectionName: string,
+    credential: ResolvedCredential,
+    scope?: string,
+  ): Promise<StoredLocalConnection> {
+    const stored = await this.writeCredential(service, connectionName, credential, undefined, scope);
     if (!stored) throw new Error("Connection upsert did not return the stored row.");
     return stored;
   }
@@ -74,8 +87,9 @@ export class SqlConnectionStore implements IConnectionStore {
     connectionName: string,
     credential: ResolvedCredential,
     retirementGeneration: string,
+    scope?: string,
   ): Promise<StoredLocalConnection | undefined> {
-    return this.writeCredential(service, connectionName, credential, retirementGeneration);
+    return this.writeCredential(service, connectionName, credential, retirementGeneration, scope);
   }
 
   private async writeCredential(
@@ -83,13 +97,14 @@ export class SqlConnectionStore implements IConnectionStore {
     connectionName: string,
     credential: ResolvedCredential,
     retirementGeneration?: string,
+    scope?: string,
   ): Promise<StoredLocalConnection | undefined> {
     const fence =
       retirementGeneration === undefined
         ? { sql: "1 = 1", values: [] }
         : retirementMatches(service, connectionName, retirementGeneration);
     const value = await this.codec.encode(JSON.stringify(credential));
-    const [[accepted], , , [row]] = await this.transaction([
+    const [[accepted], , , [row], [existing]] = await this.transaction([
       retirementGeneration === undefined
         ? { sql: "select 1", values: [] }
         : lockRetirement(service, connectionName, retirementGeneration),
@@ -97,19 +112,22 @@ export class SqlConnectionStore implements IConnectionStore {
         sql: "update connections set revision = revision where service = ? and connection_name = ?",
         values: [service, connectionName],
       },
-      queueSaasConnections(`service = ? and connection_name = ? and ${fence.sql}`, [
+      // A SaaS connection is unscoped, so only an unscoped write may replace it.
+      queueSaasConnections(`service = ? and connection_name = ? and scope is not distinct from ? and ${fence.sql}`, [
         service,
         connectionName,
+        scope ?? null,
         ...fence.values,
       ]),
       {
-        sql: `insert into connections (id, revision, service, connection_name, value, updated_at, provider_account_id)
-          select ?, ?, ?, ?, ?, ?, ? where ${fence.sql} on conflict (service, connection_name) do update set
-          revision = excluded.revision, value = excluded.value, updated_at = excluded.updated_at,
+        sql: `insert into connections (id, revision, service, connection_name, value, updated_at, provider_account_id, scope)
+          select ?, ?, ?, ?, ?, ?, ?, ? where ${fence.sql} on conflict (service, connection_name) do update set
+          revision = excluded.revision, value = excluded.value, updated_at = excluded.updated_at, scope = excluded.scope,
           source = 'local', managed_project_id = null, provider_config_id = null, external_user_id = null,
           remote_account_id = null, local_request_id = null, provider_account_id = excluded.provider_account_id
-          where not exists (select 1 from trigger_subscriptions where connection_id = connections.id and mode <> 'resource-set' and status in ('active', 'deleting'))
-          or (connections.provider_account_id is not null and connections.provider_account_id = excluded.provider_account_id) returning id, revision`,
+          where connections.scope is not distinct from excluded.scope
+          and (not exists (select 1 from trigger_subscriptions where connection_id = connections.id and mode <> 'resource-set' and status in ('active', 'deleting'))
+          or (connections.provider_account_id is not null and connections.provider_account_id = excluded.provider_account_id)) returning id, revision`,
         values: [
           crypto.randomUUID(),
           crypto.randomUUID(),
@@ -120,18 +138,37 @@ export class SqlConnectionStore implements IConnectionStore {
           credential.authType !== "no_auth" && credential.metadata.providerAccountVerified === true
             ? credential.profile.accountId
             : null,
+          scope ?? null,
           ...fence.values,
         ],
       },
+      {
+        sql: "select scope from connections where service = ? and connection_name = ?",
+        values: [service, connectionName],
+      },
     ]);
     if (!accepted) return undefined;
+    // Checked in the same transaction as the write, so two scopes racing for one name cannot take it over.
+    if (!row && (existing?.scope ?? undefined) !== scope)
+      throw new HttpRequestError(
+        "connection_scope_conflict",
+        `${service} connection ${connectionName} already exists in a different scope.`,
+        409,
+      );
     if (!row)
       throw new HttpRequestError(
         "connection_has_subscriptions",
         "Cancel or abandon remote Trigger subscriptions before replacing this connection.",
         409,
       );
-    return { id: row.id as string, revision: row.revision as string, service, connectionName, credential };
+    return {
+      id: row.id as string,
+      revision: row.revision as string,
+      service,
+      connectionName,
+      credential,
+      ...(scope === undefined ? {} : { scope }),
+    };
   }
 
   async updateCredential(input: StoredLocalConnection, refresh = false): Promise<boolean> {
@@ -235,4 +272,15 @@ export class SqlConnectionStore implements IConnectionStore {
         409,
       );
   }
+}
+
+/** Another scope's row is never read, so it is indistinguishable from a missing one. */
+function scopeWhere(
+  sql: string,
+  values: (string | number | null)[],
+  within?: ScopeFilter,
+): { sql: string; values: (string | number | null)[] } {
+  return within
+    ? { sql: `${sql} and scope is not distinct from ?`, values: [...values, within.scope ?? null] }
+    : { sql, values };
 }

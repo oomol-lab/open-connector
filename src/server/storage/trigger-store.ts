@@ -57,8 +57,16 @@ export class SqlTriggerStore implements TriggerStore {
     return JSON.parse(await this.codec.decode(row.value as string)) as TriggerSubscription;
   }
 
-  async list(): Promise<TriggerSubscription[]> {
-    const [rows] = await this.transaction([{ sql: "select value from trigger_subscriptions order by id", values: [] }]);
+  async list(scope?: string): Promise<TriggerSubscription[]> {
+    const [rows] = await this.transaction([
+      scope === undefined
+        ? { sql: "select value from trigger_subscriptions order by id", values: [] }
+        : {
+            sql: `select value from trigger_subscriptions
+              where connection_id in (select id from connections where scope = ?) order by id`,
+            values: [scope],
+          },
+    ]);
     return Promise.all(rows.map((row) => this.read(row)));
   }
 

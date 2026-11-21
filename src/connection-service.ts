@@ -6,7 +6,9 @@ import type {
   StoredSaasConnection,
   SaasConnectionReference,
 } from "./connection-store.ts";
+import type { ConnectionGrantTarget } from "./core/action-policy.ts";
 import type { ProviderHttpDispatchOptions } from "./core/provider-http-dispatch.ts";
+import type { ScopeFilter } from "./core/scope.ts";
 import type {
   ApiKeyAuthDefinition,
   AuthType,
@@ -52,6 +54,8 @@ export interface ConnectionSummary {
   virtual: boolean;
   default: boolean;
   profile: CredentialProfile;
+  /** Opaque isolation scope the connection was stored with; absent for an unscoped connection. */
+  scope?: string;
   /** Completed OAuth consent state; absent for legacy and non-OAuth connections. */
   oauthAuthorizationId?: string;
   notion?: { duplicatedTemplateId: string };
@@ -71,6 +75,8 @@ export interface ConnectWithCredentialInput {
   signal?: AbortSignal;
   expectedConnection?: StoredConnection;
   comment?: string | null;
+  /** Stores the connection in this isolation scope. Reusing a name that belongs to another scope is rejected. */
+  scope?: string;
 }
 
 export interface ConnectWithoutAuthInput {
@@ -98,6 +104,8 @@ export interface DisconnectOptions {
    * grant at the provider, where revoking would end the one that stays.
    */
   revoke?: boolean;
+  /** Only disconnect a connection of this scope: a row of another scope is never read, revoked or deleted. */
+  within?: ScopeFilter;
 }
 
 export interface DisconnectedConnectionSummary {
@@ -178,8 +186,9 @@ export class ConnectionService {
     this.onConnected = input.onConnected;
   }
 
-  async listConnections(services?: ReadonlySet<string>): Promise<ConnectionSummary[]> {
-    const configured = await this.store.list();
+  /** `within` limits every lookup to one scope; omit it only for operator views. */
+  async listConnections(services?: ReadonlySet<string>, within?: ScopeFilter): Promise<ConnectionSummary[]> {
+    const configured = await this.store.list(within);
     const configuredByService = new Map<string, StoredConnection[]>();
     for (const connection of configured) {
       if (services && !services.has(connection.service)) continue;
@@ -188,7 +197,7 @@ export class ConnectionService {
       configuredByService.set(connection.service, serviceConnections);
     }
 
-    const preferences = await this.loadProviderPreferences();
+    const preferences = within?.scope === undefined ? await this.loadProviderPreferences() : new Map<string, boolean>();
     return this.catalog.providers.flatMap((provider) =>
       !services || services.has(provider.service)
         ? this.summarizeProviderConnections(provider, configuredByService.get(provider.service) ?? [], preferences)
@@ -196,10 +205,11 @@ export class ConnectionService {
     );
   }
 
-  async listConnectionsByService(service: string): Promise<ConnectionSummary[]> {
+  async listConnectionsByService(service: string, within?: ScopeFilter): Promise<ConnectionSummary[]> {
     const provider = this.getProvider(service);
-    const connections = (await this.store.list()).filter((connection) => connection.service === service);
-    return this.summarizeProviderConnections(provider, connections, await this.loadProviderPreferences());
+    const connections = (await this.store.list(within)).filter((connection) => connection.service === service);
+    const preferences = within?.scope === undefined ? await this.loadProviderPreferences() : new Map<string, boolean>();
+    return this.summarizeProviderConnections(provider, connections, preferences);
   }
 
   /**
@@ -221,6 +231,7 @@ export class ConnectionService {
               connection.id,
               connection.connectionName,
               connection.credential,
+              connection.scope,
             ),
       );
       const marketplace = this.createMarketplaceConnectionSummary(provider, preferences);
@@ -243,16 +254,18 @@ export class ConnectionService {
     );
   }
 
-  async listAuthenticatedServices(services: string[]): Promise<string[]> {
-    const configured = await this.store.list();
+  async listAuthenticatedServices(services: string[], within?: ScopeFilter): Promise<string[]> {
+    const configured = await this.store.list(within);
     const authenticated = new Set(
       configured
         .filter((connection) => connection.source === "saas" || connection.credential.authType !== "no_auth")
         .map((connection) => connection.service),
     );
-    const preferences = await this.loadProviderPreferences();
-    for (const service of this.marketplace?.getSnapshot()?.actionsByService.keys() ?? []) {
-      if (preferences.get(service) === true) authenticated.add(service);
+    if (within?.scope === undefined) {
+      const preferences = await this.loadProviderPreferences();
+      for (const service of this.marketplace?.getSnapshot()?.actionsByService.keys() ?? []) {
+        if (preferences.get(service) === true) authenticated.add(service);
+      }
     }
     return services.filter((service) => authenticated.has(service));
   }
@@ -261,13 +274,15 @@ export class ConnectionService {
     service: string,
     connectionName?: string,
     connectionId?: string,
+    within?: ScopeFilter,
   ): Promise<ConnectionSummary | undefined> {
     const provider = this.getProvider(service);
-    const stored = await this.selectStoredConnection(service, connectionName, connectionId);
+    const stored = await this.selectStoredConnection(service, connectionName, connectionId, within);
     const name = stored?.connectionName ?? normalizeConnectionName(connectionName);
-    const marketplace = connectionId
-      ? undefined
-      : await this.resolveMarketplaceSummary(provider, connectionName, Boolean(stored));
+    const marketplace =
+      connectionId || within?.scope !== undefined
+        ? undefined
+        : await this.resolveMarketplaceSummary(provider, connectionName, Boolean(stored));
     if (marketplace) return marketplace;
     if (!stored && connectionName && !this.supportsAuth(provider, "no_auth")) {
       throw new ConnectionError("connection_not_found", `${service} connection not found: ${name}.`);
@@ -275,7 +290,7 @@ export class ConnectionService {
 
     if (stored?.source === "saas") return this.createManagedConnectionSummary(stored);
     return stored
-      ? this.createConfiguredConnectionSummary(provider, stored.id, name, stored.credential)
+      ? this.createConfiguredConnectionSummary(provider, stored.id, name, stored.credential, stored.scope)
       : this.supportsAuth(provider, "no_auth")
         ? this.createNoAuthConnectionSummary(provider, name)
         : undefined;
@@ -285,13 +300,15 @@ export class ConnectionService {
     service: string,
     connectionName?: string,
     connectionId?: string,
+    within?: ScopeFilter,
   ): Promise<ResolvedConnection> {
     const provider = this.getProvider(service);
-    const stored = await this.selectStoredConnection(service, connectionName, connectionId);
+    const stored = await this.selectStoredConnection(service, connectionName, connectionId, within);
     const name = stored?.connectionName ?? normalizeConnectionName(connectionName);
-    const marketplace = connectionId
-      ? undefined
-      : await this.resolveMarketplaceSummary(provider, connectionName, Boolean(stored));
+    const marketplace =
+      connectionId || within?.scope !== undefined
+        ? undefined
+        : await this.resolveMarketplaceSummary(provider, connectionName, Boolean(stored));
     if (marketplace) return { source: "marketplace", summary: marketplace };
     if (!stored && connectionName && !this.supportsAuth(provider, "no_auth")) {
       throw new ConnectionError("connection_not_found", `${service} connection not found: ${name}.`);
@@ -302,7 +319,7 @@ export class ConnectionService {
     let credential = stored ? await this.credentials.resolve(stored) : undefined;
     credential ??= this.supportsAuth(provider, "no_auth") ? { authType: "no_auth" } : undefined;
     const summary = stored
-      ? this.createConfiguredConnectionSummary(provider, stored.id, name, credential!)
+      ? this.createConfiguredConnectionSummary(provider, stored.id, name, credential!, stored.scope)
       : credential
         ? this.createNoAuthConnectionSummary(provider, name)
         : undefined;
@@ -425,11 +442,18 @@ export class ConnectionService {
     connectionNameInput?: string,
     signal?: AbortSignal,
     retirementGeneration?: string,
+    scope?: string,
   ): Promise<ConnectionSummary> {
     const connectionName = normalizeConnectionName(connectionNameInput);
     const generation = retirementGeneration ?? (await this.store.getRetirementGeneration(service, connectionName));
     const storedCredential = await this.prepareOAuthCredential(service, credential, signal);
-    const stored = await this.store.setIfCurrentGeneration(service, connectionName, storedCredential, generation);
+    const stored = await this.store.setIfCurrentGeneration(
+      service,
+      connectionName,
+      storedCredential,
+      generation,
+      scope,
+    );
     if (!stored)
       throw new ConnectionError("connection_retired", "The connection was disconnected during authorization.");
     await this.connectionSaved(stored.id);
@@ -438,7 +462,19 @@ export class ConnectionService {
       stored.id,
       connectionName,
       storedCredential,
+      scope,
     );
+  }
+
+  /** The facts a runtime grant is checked against, for callers that only hold a connection id. */
+  async getConnectionGrantTarget(id: string): Promise<ConnectionGrantTarget> {
+    const stored = await this.store.getById(id);
+    return stored && stored.source !== "saas" && stored.scope !== undefined ? { id, scope: stored.scope } : { id };
+  }
+
+  /** The scope a connection was stored with, for operator paths that replace a connection by name. */
+  async getStoredScope(service: string, connectionName?: string): Promise<string | undefined> {
+    return (await this.store.get(service, normalizeConnectionName(connectionName)))?.scope;
   }
 
   /** Capture the durable disconnect fence before sending the user to the provider. */
@@ -468,9 +504,10 @@ export class ConnectionService {
     service: string,
     name: string | undefined,
     id: string | undefined,
+    within: ScopeFilter | undefined,
   ): Promise<StoredConnection | undefined> {
-    if (!id) return this.store.get(service, normalizeConnectionName(name));
-    const connection = await this.getStoredConnection(id);
+    if (!id) return this.store.get(service, normalizeConnectionName(name), within);
+    const connection = await this.getStoredConnection(id, within);
     if (
       connection.service !== service ||
       (name !== undefined && connection.connectionName !== normalizeConnectionName(name))
@@ -482,18 +519,23 @@ export class ConnectionService {
     return connection;
   }
 
-  async getStoredConnection(id: string): Promise<StoredConnection> {
-    const connection = await this.store.getById(id);
+  async getStoredConnection(id: string, within?: ScopeFilter): Promise<StoredConnection> {
+    const connection = await this.store.getById(id, within);
     if (!connection) throw new ConnectionError("connection_not_found", "Connection not found.");
     return connection;
   }
 
-  async listManagedConnections(): Promise<ManagedConnectionSummary[]> {
-    return (await this.store.list()).map((stored) => this.createManagedConnectionSummary(stored));
+  /** The stored connections of a scope, including ones whose provider has left the catalog. */
+  async listStoredConnections(within: ScopeFilter): Promise<StoredConnection[]> {
+    return this.store.list(within);
   }
 
-  async getManagedConnection(id: string): Promise<ManagedConnectionSummary> {
-    return this.createManagedConnectionSummary(await this.getStoredConnection(id));
+  async listManagedConnections(within?: ScopeFilter): Promise<ManagedConnectionSummary[]> {
+    return (await this.store.list(within)).map((stored) => this.createManagedConnectionSummary(stored));
+  }
+
+  async getManagedConnection(id: string, within?: ScopeFilter): Promise<ManagedConnectionSummary> {
+    return this.createManagedConnectionSummary(await this.getStoredConnection(id, within));
   }
 
   private createManagedConnectionSummary(stored: StoredConnection): ManagedConnectionSummary {
@@ -519,6 +561,7 @@ export class ConnectionService {
         stored.id,
         stored.connectionName,
         credential,
+        stored.scope,
       ),
       comment:
         credential.authType !== "no_auth" && typeof credential.metadata.connectionComment === "string"
@@ -544,11 +587,12 @@ export class ConnectionService {
       credential.metadata.connectionComment = input.comment === undefined ? previousComment : input.comment;
     }
     this.assertNotCancelled(input.signal);
+    const connectionName = normalizeConnectionName(input.connectionName);
     const stored = expected
       ? await this.replaceCredential(expected, credential)
-      : await this.store.set(provider.service, normalizeConnectionName(input.connectionName), credential);
+      : await this.store.set(provider.service, connectionName, credential, input.scope);
     await this.connectionSaved(stored.id);
-    return this.createStoredConnectionSummary(provider, stored.id, stored.connectionName, credential);
+    return this.createStoredConnectionSummary(provider, stored.id, stored.connectionName, credential, stored.scope);
   }
 
   /** Notify integrations only after a local connection has been durably saved. */
@@ -561,6 +605,7 @@ export class ConnectionService {
       stored.id,
       stored.connectionName,
       stored.credential,
+      stored.scope,
     );
     await this.onConnected(summary, stored.credential);
   }
@@ -585,13 +630,15 @@ export class ConnectionService {
     // refuses (a row bound to active Trigger subscriptions) then ends nothing at the provider,
     // where revoking first would leave a dead grant behind a row that stays.
     let stored: StoredConnection | undefined;
-    if (options.revoke === true) {
+    if (options.revoke === true || options.within) {
       try {
-        stored = await this.store.get(service, connectionName);
+        stored = await this.store.get(service, connectionName, options.within);
       } catch (error) {
         this.logger?.warn({ service, connectionName, error: describeError(error) }, "oauth token revocation skipped");
         throw error;
       }
+      if (!stored && options.within)
+        throw new ConnectionError("app_not_found", `${service} connection ${connectionName} was not found.`);
     }
     return this.credentials.withDisconnect(stored?.id, async () => {
       if (stored && stored.source !== "saas" && stored.credential.authType === "oauth2") {
@@ -600,7 +647,7 @@ export class ConnectionService {
         if (refresh) {
           // A failed early refresh can leave the original access token usable for revocation.
           const refreshed = await refresh.catch(() => credential);
-          const current = await this.store.get(service, connectionName);
+          const current = await this.store.get(service, connectionName, options.within);
           if (
             current?.source === "saas" ||
             current?.id !== stored.id ||
@@ -624,6 +671,15 @@ export class ConnectionService {
 
       return { service, connectionName, configured: false, revoked };
     });
+  }
+
+  /** End a grant that was issued but never stored, such as one whose scope was deleted during authorization. */
+  async revokeUnstoredCredential(service: string, credential: OAuthCredential): Promise<void> {
+    try {
+      await this.oauthCredentials?.revoke?.(service, credential);
+    } catch (error) {
+      this.logger?.warn({ service, error: describeError(error) }, "oauth token revocation failed");
+    }
   }
 
   /**
@@ -667,16 +723,18 @@ export class ConnectionService {
     id: string,
     connectionName: string,
     credential: ResolvedCredential,
+    scope?: string,
   ): ConnectionSummary {
     if (credential.authType === "no_auth") {
       return {
         ...this.createNoAuthConnectionSummary(provider, connectionName),
         id,
         virtual: false,
+        ...(scope === undefined ? {} : { scope }),
       };
     }
 
-    return this.createStoredConnectionSummary(provider, id, connectionName, credential);
+    return this.createStoredConnectionSummary(provider, id, connectionName, credential, scope);
   }
 
   private createStoredConnectionSummary(
@@ -684,6 +742,7 @@ export class ConnectionService {
     id: string,
     connectionName: string,
     credential: Exclude<ResolvedCredential, { authType: "no_auth" }>,
+    scope?: string,
   ): ConnectionSummary {
     const summary: ConnectionSummary = {
       id,
@@ -700,6 +759,7 @@ export class ConnectionService {
       virtual: false,
       default: connectionName === defaultConnectionName,
       profile: credential.profile,
+      ...(scope === undefined ? {} : { scope }),
     };
     // Credential metadata also contains client secrets. Expose only explicitly allowed fields.
     if (credential.authType === "oauth2" && typeof credential.metadata.oauthAuthorizationId === "string") {

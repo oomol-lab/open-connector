@@ -1,10 +1,14 @@
 import type { OAuthConnectionRequestInput } from "../../oauth/oauth-flow-service.ts";
 
 import { z } from "zod";
+import { isScope, scopeMessage } from "../../core/scope.ts";
+
+const scopeInput = z.string().refine(isScope, { message: scopeMessage });
 
 export const oauthConnectionInput: z.ZodType<
   Omit<OAuthConnectionRequestInput, "owner" | "service" | "target" | "signal" | "connectionName">
 > = z.strictObject({
+  scope: scopeInput.optional(),
   returnUri: z.string().optional(),
   authorizationOptionIds: z.array(z.string()).optional(),
   extra: z.record(z.string(), z.unknown()).optional(),
@@ -29,16 +33,23 @@ export const apiKeyConnectionInput: z.ZodType<{
   apiKey: string;
   extra?: Record<string, string>;
   comment?: string | null;
+  scope?: string;
 }> = z
   .object({
+    scope: scopeInput.optional(),
     apiKey: z.string(),
     extra: z.record(z.string(), z.string()).optional(),
     comment: z.string().nullable().optional(),
   })
   .strict();
 
-export const customConnectionInput: z.ZodType<{ values: Record<string, string>; comment?: string | null }> = z
+export const customConnectionInput: z.ZodType<{
+  values: Record<string, string>;
+  comment?: string | null;
+  scope?: string;
+}> = z
   .object({
+    scope: scopeInput.optional(),
     values: z.record(z.string(), z.string()),
     comment: z.string().nullable().optional(),
   })

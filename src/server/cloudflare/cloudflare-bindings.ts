@@ -18,6 +18,11 @@ export interface R2BucketBinding {
   ): Promise<unknown>;
   get(key: string): Promise<R2ObjectBinding | null>;
   delete(key: string): Promise<void>;
+  list(options?: { prefix?: string; cursor?: string }): Promise<{
+    objects: { key: string }[];
+    truncated: boolean;
+    cursor?: string;
+  }>;
 }
 
 export interface R2ObjectBinding {
@@ -40,4 +45,9 @@ export interface KVNamespaceBinding {
   get(key: string, type: "text"): Promise<string | null>;
   get(key: string, type: "arrayBuffer"): Promise<ArrayBuffer | null>;
   delete(key: string): Promise<void>;
+  list(options?: { prefix?: string; cursor?: string }): Promise<{
+    keys: { name: string }[];
+    list_complete: boolean;
+    cursor?: string;
+  }>;
 }

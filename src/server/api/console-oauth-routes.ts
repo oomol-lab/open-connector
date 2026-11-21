@@ -17,6 +17,7 @@ import {
 } from "../../core/cast.ts";
 import { OAuthClientConfigError } from "../../oauth/oauth-client-config-service.ts";
 import { OAuthCallbackError, OAuthFlowError } from "../../oauth/oauth-flow-service.ts";
+import { scopeOwner } from "../storage/connection-request-store.ts";
 import {
   HttpRequestError,
   jsonError,
@@ -176,6 +177,8 @@ export function createConsoleOAuthRoutes({
       logger?.info(logContext, "connection started");
       return writeConnectionResult(context, connections.connectWithoutAuth(service, { connectionName }), logContext);
     }
+    // The console is the operator view: replacing a connection keeps the scope it was stored with.
+    const scope = await connections.getStoredScope(service, connectionName);
     if (authType === "api_key") {
       logger?.info(logContext, "connection started");
       return writeConnectionResult(
@@ -183,6 +186,7 @@ export function createConsoleOAuthRoutes({
         connections.connectWithApiKey(service, {
           values,
           connectionName,
+          scope,
           signal: context.req.raw.signal,
         }),
         logContext,
@@ -195,6 +199,7 @@ export function createConsoleOAuthRoutes({
         connections.connectWithCustomCredential(service, {
           values,
           connectionName,
+          scope,
           signal: context.req.raw.signal,
         }),
         logContext,
@@ -272,11 +277,19 @@ export function createConsoleOAuthRoutes({
       const target = appId ? await connections.getStoredConnection(appId) : undefined;
       if (target && (target.service !== input.service || target.connectionName !== input.connectionName))
         return jsonError(context, 400, "invalid_input", "The selected connection no longer matches.");
+      // Replacing a connection keeps its scope, and a scoped request is owned by its scope so that deleting the
+      // scope cancels it.
+      const scope = target
+        ? target.source === "saas"
+          ? undefined
+          : target.scope
+        : await connections.getStoredScope(input.service, input.connectionName);
       return context.json(
         await oauthFlow.startConnectionRequest({
           ...input,
           target,
-          owner: "local-admin",
+          scope,
+          owner: scope === undefined ? "local-admin" : scopeOwner(scope),
           signal: context.req.raw.signal,
         }),
       );
@@ -316,6 +329,7 @@ export function createConsoleOAuthRoutes({
       const authorization = await oauthFlow.startAuthorization({
         service,
         connectionName,
+        scope: await connections.getStoredScope(service, connectionName),
         clientConfig: readOAuthClientConfigInput(body),
         authorizationOptionIds: readOptionalStringArray(body, "authorizationOptionIds"),
       });

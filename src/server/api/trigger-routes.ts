@@ -6,8 +6,14 @@ import type { Context } from "hono";
 
 import { Hono } from "hono";
 import { optionalString } from "../../core/cast.ts";
+import { isScope, scopeMessage } from "../../core/scope.ts";
 import { readRuntimeGrant } from "./auth.ts";
-import { HttpRequestError, readConnectionName as defaultReadConnectionName, readJsonBody } from "./http-utils.ts";
+import {
+  HttpRequestError,
+  jsonError,
+  readConnectionName as defaultReadConnectionName,
+  readJsonBody,
+} from "./http-utils.ts";
 import { serializeRuntimeTriggerPermissions, writeRuntimeSuccess } from "./runtime-api.ts";
 
 export interface TriggerRoutesOptions {
@@ -53,7 +59,13 @@ export function createTriggerRoutes({
     return writeRuntimeSuccess(context, result);
   });
 
-  app.get("/api/trigger-subscriptions", async (context) => context.json((await triggerMaintenance?.list()) ?? []));
+  app.get("/api/trigger-subscriptions", async (context) => {
+    const scope = context.req.query("scope");
+    if (scope !== undefined && !isScope(scope)) {
+      return jsonError(context, 400, "invalid_input", scopeMessage);
+    }
+    return context.json((await triggerMaintenance?.list(scope)) ?? []);
+  });
 
   app.post("/api/trigger-subscriptions/:id/cancel", async (context) => {
     if (!triggerMaintenance)

@@ -204,7 +204,7 @@ export class D1RuntimeTokenStore implements IRuntimeTokenStore {
         insert into runtime_tokens (
           ${runtimeTokenColumns}
         )
-        values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `,
       )
       .bind(
@@ -218,6 +218,8 @@ export class D1RuntimeTokenStore implements IRuntimeTokenStore {
         JSON.stringify(record.allowedTriggers ?? []),
         record.createdAt,
         record.lastUsedAt ?? null,
+        record.scope ?? null,
+        record.allowConnect ? 1 : 0,
       )
       .run();
   }
@@ -865,9 +867,10 @@ export class D1RunLogStore implements IRunLogStore {
     await this.database
       .prepare(
         `
-        insert into runs (id, service, action_id, caller, started_at, completed_at, ok, value)
-        values (?, ?, ?, ?, ?, ?, ?, ?)
+        insert into runs (id, service, action_id, caller, started_at, completed_at, ok, value, scope)
+        values (?, ?, ?, ?, ?, ?, ?, ?, ?)
         on conflict(id) do update set
+          scope = excluded.scope,
           service = excluded.service,
           action_id = excluded.action_id,
           caller = excluded.caller,
@@ -886,6 +889,7 @@ export class D1RunLogStore implements IRunLogStore {
         run.completedAt,
         run.ok ? 1 : 0,
         JSON.stringify(run),
+        run.scope ?? null,
       )
       .run();
 
@@ -930,6 +934,11 @@ export class D1RunLogStore implements IRunLogStore {
         return results;
       },
     );
+  }
+
+  async deleteByScope(scope: string): Promise<number> {
+    const result = await this.database.prepare("delete from runs where scope = ?").bind(scope).run();
+    return result.meta.changes ?? 0;
   }
 }
 

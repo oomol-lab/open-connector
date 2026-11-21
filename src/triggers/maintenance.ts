@@ -1,9 +1,10 @@
+import type { ConnectionService } from "../connection-service.ts";
 import type { ActionPolicyService } from "../core/action-policy.ts";
 import type { RuntimeExecutionOptions } from "../core/runtime-execution.ts";
 import type { RuntimeLogger } from "../core/types.ts";
 import type { IRuntimePolicyStore } from "../server/storage/runtime-policy-store.ts";
 import type { IRuntimeTokenStore } from "../server/storage/runtime-token-service.ts";
-import type { TriggerStore } from "./store.ts";
+import type { TriggerStore, TriggerSubscription } from "./store.ts";
 import type { TriggerRunner } from "./trigger-runner.ts";
 
 import { ExecutionError } from "../core/execution-error.ts";
@@ -25,6 +26,7 @@ export interface TriggerSubscriptionSummary {
 interface TriggerMaintenanceOptions extends RuntimeExecutionOptions {
   store: TriggerStore;
   runner: TriggerRunner;
+  connections: Pick<ConnectionService, "getConnectionGrantTarget">;
   tokens: IRuntimeTokenStore;
   runtimePolicy: IRuntimePolicyStore;
   deploymentPolicy: ActionPolicyService;
@@ -40,8 +42,8 @@ export class TriggerMaintenance {
     this.options = options;
   }
 
-  async list(): Promise<TriggerSubscriptionSummary[]> {
-    return (await this.options.store.list())
+  async list(scope?: string): Promise<TriggerSubscriptionSummary[]> {
+    return (await this.options.store.list(scope))
       .filter((record) => record.mode !== "resource-set")
       .map((record) => ({
         id: record.id,
@@ -56,15 +58,21 @@ export class TriggerMaintenance {
       }));
   }
 
-  async cancel(id: string, signal: AbortSignal): Promise<void> {
+  async cancel(id: string, signal: AbortSignal): Promise<TriggerSubscription["status"]> {
+    let status: TriggerSubscription["status"] = "deleting";
     await withSubscription(this.options.store, id, signal, async (record, save) => {
       if (record.mode === "resource-set")
         throw new ExecutionError("invalid_input", "Cancel the owning resource subscriptions.");
-      if (record.status === "deleted" || record.status === "abandoned") return;
+      if (record.status === "deleted" || record.status === "abandoned") {
+        status = record.status;
+        return;
+      }
       record.status = "deleting";
       await save();
       await this.options.runner.cleanup(record, save, signal);
+      status = record.status;
     });
+    return status;
   }
 
   async abandon(id: string, signal: AbortSignal): Promise<void> {
@@ -130,7 +138,8 @@ export class TriggerMaintenance {
             record.status === "active" &&
             token &&
             policy.evaluateTrigger(record.triggerId).allowed &&
-            policy.evaluateConnection(record.connectionId).allowed
+            policy.evaluateConnection(await this.options.connections.getConnectionGrantTarget(record.connectionId))
+              .allowed
           ) {
             await save();
             return;

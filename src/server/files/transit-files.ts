@@ -1,4 +1,4 @@
-import type { TransitFileRead, TransitFileStream, TransitFileUpload } from "../../core/types.ts";
+import type { TransitFileAccess, TransitFileRead, TransitFileStream, TransitFileUpload } from "../../core/types.ts";
 import type { IStagedTransitFileService, StagedTransitFile, TransitFileDescriptor } from "./transit-file-store.ts";
 import type { Stats } from "node:fs";
 import type { ReadableStream as NodeReadableStream } from "node:stream/web";
@@ -9,7 +9,9 @@ import { join } from "node:path";
 import { Readable } from "node:stream";
 import { pipeline } from "node:stream/promises";
 import {
+  assertFileAccess,
   assertFileSize,
+  canAccessFile,
   assertSafeFileId,
   contentTypeFromFileId,
   isSafeFileId,
@@ -21,6 +23,8 @@ import {
   transitFileResponse,
   uploadResult,
 } from "./transit-file-store.ts";
+
+type StoredDescriptor = TransitFileDescriptor & { scope?: string };
 
 export interface TransitFileOptions {
   rootDir: string;
@@ -50,19 +54,27 @@ export class TransitFileService implements IStagedTransitFileService {
     this.maxBytes = options.maxBytes;
   }
 
-  async create(file: File): Promise<TransitFileUpload> {
+  async create(file: File, options?: TransitFileAccess): Promise<TransitFileUpload> {
     assertFileSize(file.size, this.maxBytes);
-    return this.createFromStream({ body: file.stream(), name: file.name, mimeType: file.type });
+    return this.createFromStream({
+      body: file.stream(),
+      name: file.name,
+      mimeType: file.type,
+      ...(options?.scope === undefined ? {} : { scope: options.scope }),
+    });
   }
 
   async createFromStream(file: TransitFileStream): Promise<TransitFileUpload> {
     const fileId = `${randomHex(16)}${safeExtension(file.name)}`;
     const path = join(this.rootDir, fileId);
     const tempPath = `${path}.tmp`;
-    const metadata = normalizeDescriptor({
-      name: file.name || fileId,
-      mimeType: file.mimeType || contentTypeFromFileId(fileId),
-    });
+    const metadata = {
+      ...normalizeDescriptor({
+        name: file.name || fileId,
+        mimeType: file.mimeType || contentTypeFromFileId(fileId),
+      }),
+      ...(file.scope === undefined ? {} : { scope: file.scope }),
+    };
     try {
       file.signal?.throwIfAborted();
       this.sweepIfDue();
@@ -91,32 +103,42 @@ export class TransitFileService implements IStagedTransitFileService {
 
     const fileId = `${randomHex(16)}${safeExtension(file.name)}`;
     const path = join(this.rootDir, fileId);
-    await rename(file.path, path);
-    const metadata = normalizeDescriptor({
-      name: file.name || fileId,
-      mimeType: file.mimeType || contentTypeFromFileId(fileId),
-    });
+    const metadata = {
+      ...normalizeDescriptor({
+        name: file.name || fileId,
+        mimeType: file.mimeType || contentTypeFromFileId(fileId),
+      }),
+      ...(file.scope === undefined ? {} : { scope: file.scope }),
+    };
+    // The side-car goes first, as in createFromStream, so published data never lacks its scope.
     await writeFile(metadataPath(path), JSON.stringify(metadata), { flag: "wx" });
+    try {
+      await rename(file.path, path);
+    } catch (error) {
+      await unlink(metadataPath(path)).catch(() => undefined);
+      throw error;
+    }
 
     return uploadResult(this.publicOrigin, fileId, { ...metadata, sizeBytes: file.sizeBytes });
   }
 
-  async read(fileId: string): Promise<TransitFileRead> {
-    const { path, stats, metadata } = await this.locate(fileId);
+  async read(fileId: string, access?: TransitFileAccess): Promise<TransitFileRead> {
+    const { path, stats, metadata } = await this.locate(fileId, access);
     return transitFileRead(await readFile(path), { ...metadata, sizeBytes: stats.size });
   }
 
-  async response(fileId: string): Promise<Response> {
-    const { path, stats, metadata } = await this.locate(fileId);
+  async response(fileId: string, access?: TransitFileAccess): Promise<Response> {
+    const { path, stats, metadata } = await this.locate(fileId, access);
     return transitFileResponse(Readable.toWeb(createReadStream(path)) as ReadableStream, {
       ...metadata,
       sizeBytes: stats.size,
     });
   }
 
-  async delete(fileId: string): Promise<boolean> {
+  async delete(fileId: string, access?: TransitFileAccess): Promise<boolean> {
     assertSafeFileId(fileId);
     const path = join(this.rootDir, fileId);
+    if (access !== undefined && !canAccessFile((await this.readMetadata(path, fileId)).scope, access)) return false;
     try {
       await unlink(path);
       await unlink(metadataPath(path)).catch(() => undefined);
@@ -124,6 +146,66 @@ export class TransitFileService implements IStagedTransitFileService {
     } catch {
       return false;
     }
+  }
+
+  async deleteByScope(scope: string): Promise<number> {
+    let deleted = 0;
+    let failure: unknown;
+    await mkdir(this.rootDir, { recursive: true });
+    const handledSidecars = new Set<string>();
+    const orphanSidecars: string[] = [];
+    for await (const entry of await opendir(this.rootDir)) {
+      if (!entry.isFile()) {
+        continue;
+      }
+      if (entry.name.endsWith(".meta.json")) {
+        const fileId = entry.name.slice(0, -".meta.json".length);
+        if (isSafeFileId(fileId)) orphanSidecars.push(fileId);
+        continue;
+      }
+      if (!isSafeFileId(entry.name)) {
+        continue;
+      }
+      const path = join(this.rootDir, entry.name);
+      try {
+        const metadata = await this.readMetadata(path, entry.name);
+        if (metadata.scope !== scope) {
+          continue;
+        }
+        // Keep the side-car (the only scope marker) unless the data is gone, so a retry can still find the file.
+        const removed = await unlink(path).then(
+          () => true,
+          (error: unknown) => {
+            if (isMissingFile(error)) return false;
+            throw error;
+          },
+        );
+        if (removed) deleted += 1;
+        handledSidecars.add(entry.name);
+        await unlink(metadataPath(path)).catch((error: unknown) => {
+          if (!isMissingFile(error)) throw error;
+        });
+      } catch (error) {
+        // Finish the other files first; the failure is still reported, so the caller retries.
+        failure ??= error;
+      }
+    }
+    for (const fileId of orphanSidecars) {
+      if (handledSidecars.has(fileId)) continue;
+      const path = join(this.rootDir, fileId);
+      try {
+        const metadata = await this.readMetadata(path, fileId);
+        if (metadata.scope !== scope) continue;
+        if (await stat(path).catch(() => undefined)) continue;
+        await unlink(metadataPath(path)).catch((error: unknown) => {
+          if (!isMissingFile(error)) throw error;
+        });
+      } catch (error) {
+        failure ??= error;
+      }
+    }
+    if (failure !== undefined) throw failure;
+    return deleted;
   }
 
   /**
@@ -202,7 +284,10 @@ export class TransitFileService implements IStagedTransitFileService {
   }
 
   /** Resolve a live, unexpired file on disk together with its side-car metadata, or report it as missing. */
-  private async locate(fileId: string): Promise<{ path: string; stats: Stats; metadata: TransitFileDescriptor }> {
+  private async locate(
+    fileId: string,
+    access?: TransitFileAccess,
+  ): Promise<{ path: string; stats: Stats; metadata: StoredDescriptor }> {
     assertSafeFileId(fileId);
     const path = join(this.rootDir, fileId);
     const stats = await stat(path).catch(() => undefined);
@@ -216,20 +301,32 @@ export class TransitFileService implements IStagedTransitFileService {
     }
 
     const metadata = await this.readMetadata(path, fileId);
+    assertFileAccess(metadata.scope, access);
     return { path, stats, metadata };
   }
 
-  private async readMetadata(path: string, fileId: string): Promise<TransitFileDescriptor> {
+  private async readMetadata(path: string, fileId: string): Promise<StoredDescriptor> {
     const fallback = { name: fileId, mimeType: contentTypeFromFileId(fileId) };
-    const text = await readFile(metadataPath(path), "utf8").catch(() => undefined);
-    if (!text) {
+    // Only a missing side-car means a legacy unscoped file; an unreadable one must not grant unscoped access.
+    const text = await readFile(metadataPath(path), "utf8").catch((error: unknown) => {
+      if (isMissingFile(error)) return undefined;
+      throw error;
+    });
+    // An empty side-car is not a missing one: it falls through to the parse failure below.
+    if (text === undefined) {
       return fallback;
     }
+    let parsed: Partial<StoredDescriptor>;
     try {
-      return normalizeDescriptor(JSON.parse(text) as Partial<TransitFileDescriptor>, fallback);
+      parsed = JSON.parse(text) as Partial<StoredDescriptor>;
     } catch {
-      return fallback;
+      // Its scope is unknown, so only the operator may see it: no caller's scope matches this marker.
+      return { ...fallback, scope: unreadableScope };
     }
+    return {
+      ...normalizeDescriptor(parsed, fallback),
+      ...(typeof parsed.scope === "string" && parsed.scope ? { scope: parsed.scope } : {}),
+    };
   }
 
   private async writeStream(file: TransitFileStream, tempPath: string): Promise<number> {
@@ -265,4 +362,11 @@ function isManagedFileName(fileName: string): boolean {
 
 function metadataPath(path: string): string {
   return `${path}.meta.json`;
+}
+
+/** Not a valid scope (it contains a space), so it never equals the scope of a caller. */
+const unreadableScope = " unreadable";
+
+function isMissingFile(error: unknown): boolean {
+  return (error as NodeJS.ErrnoException | undefined)?.code === "ENOENT";
 }

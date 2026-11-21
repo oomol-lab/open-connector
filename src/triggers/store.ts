@@ -21,7 +21,8 @@ export interface TriggerSubscription {
   status: "active" | "deleting" | "deleted" | "abandoned";
 }
 export interface TriggerStore extends SourceApplicationStore {
-  list(): Promise<TriggerSubscription[]>;
+  /** `scope` keeps only subscriptions whose connection carries it; omit it for every subscription (operator view). */
+  list(scope?: string): Promise<TriggerSubscription[]>;
   listFlowTriggersForMaintenance(now: number, limit: number): Promise<TriggerSubscription[]>;
   insertFlowTrigger(record: TriggerSubscription): Promise<TriggerSubscription>;
   getFlowTrigger(id: string): Promise<TriggerSubscription | null>;

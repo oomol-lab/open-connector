@@ -13,7 +13,7 @@ import {
 
 function filterAllowedConnections(policy: ActionPolicySnapshot, connections: ConnectionSummary[]): ConnectionSummary[] {
   return connections.filter(
-    (connection) => connection.authType === "no_auth" || policy.evaluateConnection(connection.id).allowed,
+    (connection) => connection.authType === "no_auth" || policy.evaluateConnection(connection).allowed,
   );
 }
 
@@ -39,7 +39,9 @@ export function createRuntimeAppRoutes({ connections, getPolicySnapshot }: Runti
     }
     return writeRuntimeSuccess(
       context,
-      filterAllowedConnections(policy, await connections.listConnections()).map(serializeRuntimeConnectedApp),
+      filterAllowedConnections(policy, await connections.listConnections(undefined, policy.within)).map(
+        serializeRuntimeConnectedApp,
+      ),
     );
   });
 
@@ -56,7 +58,7 @@ export function createRuntimeAppRoutes({ connections, getPolicySnapshot }: Runti
       });
     }
     const authenticated = new Set(
-      filterAllowedConnections(policy, await connections.listConnections())
+      filterAllowedConnections(policy, await connections.listConnections(undefined, policy.within))
         .filter((connection) => connection.configured && connection.authType !== "no_auth")
         .map((connection) => connection.service),
     );
@@ -82,7 +84,7 @@ export function createRuntimeAppRoutes({ connections, getPolicySnapshot }: Runti
     try {
       return writeRuntimeSuccess(
         context,
-        filterAllowedConnections(policy, await connections.listConnectionsByService(service)).map(
+        filterAllowedConnections(policy, await connections.listConnectionsByService(service, policy.within)).map(
           serializeRuntimeConnectedApp,
         ),
       );

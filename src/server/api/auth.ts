@@ -48,9 +48,14 @@ export interface LocalAuthSession {
 type AuthScope = "admin" | "runtime" | "oauth";
 
 const adminBearerRequests = new WeakSet<Request>();
+const adminAuthRequests = new WeakSet<Request>();
 
 export function hasAdminBearer(context: Context): boolean {
   return adminBearerRequests.has(context.req.raw);
+}
+
+export function hasAdminAuth(context: Context): boolean {
+  return adminBearerRequests.has(context.req.raw) || adminAuthRequests.has(context.req.raw);
 }
 
 const runtimeGrants = new WeakMap<Request, RuntimeGrant>();
@@ -81,16 +86,30 @@ export function createLocalAuthMiddleware(options: LocalAuthOptions): Middleware
 
   const authenticate = async (context: Context): Promise<Response | undefined> => {
     const scope = readAuthScope(context.req.path, context.req.method);
+    if (adminToken && matchesConfiguredToken(context, adminToken)) adminBearerRequests.add(context.req.raw);
     if (isPublicPath(context.req.path, context.req.method)) {
+      // A download stays open for unscoped files, but a bearer or admin session identifies the caller so scoped files can be served.
+      if (isTransitFileDownload(context.req.path, context.req.method) && !hasAdminBearer(context)) {
+        if (readBearerToken(context)) {
+          await hasValidRuntimeToken(context, options);
+        } else if (adminToken && (await hasValidAuthCookie(context, adminToken))) {
+          adminAuthRequests.add(context.req.raw);
+        }
+      }
       return;
     }
-
-    if (adminToken && matchesConfiguredToken(context, adminToken)) adminBearerRequests.add(context.req.raw);
     if (await hasValidToken(context, options, scope)) {
       if (scope === "admin") {
+        adminAuthRequests.add(context.req.raw);
         await installAdminCookieForBearer(context, options);
       }
       return;
+    }
+
+    // A scoped runtime token created with `allowConnect` manages the connections of its own scope. The routes
+    // read the grant and confine every read and write to that scope.
+    if (scope === "admin" && isTenantConnectPath(context.req.path, context.req.method)) {
+      if ((await hasValidRuntimeToken(context, options)) && runtimeGrants.get(context.req.raw)?.allowConnect) return;
     }
 
     if (scope === "admin" && !adminToken) {
@@ -108,6 +127,7 @@ export function createLocalAuthMiddleware(options: LocalAuthOptions): Middleware
       normalizeToken(options.adminToken) &&
       (await hasValidToken(context, options, "admin"))
     ) {
+      adminAuthRequests.add(context.req.raw);
       await installAdminCookieForBearer(context, options);
       return;
     }
@@ -311,6 +331,10 @@ function normalizeToken(token: string | undefined): string | undefined {
   return value ? value : undefined;
 }
 
+function isTransitFileDownload(path: string, method: string): boolean {
+  return method === "GET" && path.startsWith("/api/files/");
+}
+
 function isTransitFileDelete(path: string, method: string): boolean {
   return method === "DELETE" && /^\/api\/files\/[^/]+$/.test(path);
 }
@@ -392,6 +416,22 @@ function readBearerCredential(context: Context): string {
   }
 
   return authorization.slice(separator + 1);
+}
+
+/** The subset of connection management a tenant token may use: start, reconnect, read and poll its own connections. */
+function isTenantConnectPath(path: string, method: string): boolean {
+  if (method === "GET") {
+    return (
+      path === "/v1/connections" ||
+      /^\/v1\/connections\/by-id\/[^/]+$/.test(path) ||
+      /^\/v1\/connection-requests\/[^/]+$/.test(path) ||
+      /^\/v1\/providers\/[^/]+\/setup$/.test(path)
+    );
+  }
+  return (
+    method === "POST" &&
+    /^\/v1\/connections\/(?:by-id\/[^/]+|[^/]+)\/connect(?:\/(?:api-key|custom-credential))?$/.test(path)
+  );
 }
 
 function isConnectionManagementPath(path: string): boolean {

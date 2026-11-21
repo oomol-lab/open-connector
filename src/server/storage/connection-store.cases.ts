@@ -61,4 +61,60 @@ export function connectionStoreTests(getDatabase: () => RuntimeDatabase): void {
     expect(await store.getRetirementGeneration("example", "work")).not.toBe(generation);
     await expect(database.oauthStateStore.take("pending-authorization")).resolves.toBeUndefined();
   });
+
+  it("stores a scope with a connection and confines lookups to it", async () => {
+    const store = getDatabase().connectionStore;
+    const a = await store.set("example", "tenant-a-app", credential, "tenant-a");
+    const b = await store.set("example", "tenant-b-app", credential, "tenant-b");
+    const unscoped = await store.set("example", "plain", credential);
+
+    expect(a.scope).toBe("tenant-a");
+    expect(unscoped.scope).toBeUndefined();
+    await expect(store.getById(b.id)).resolves.toMatchObject({ scope: "tenant-b" });
+    expect((await store.list({ scope: "tenant-a" })).map((connection) => connection.id)).toEqual([a.id]);
+    expect((await store.list()).map((connection) => connection.id).sort()).toEqual([a.id, b.id, unscoped.id].sort());
+    expect((await store.list({ scope: undefined })).map((connection) => connection.id)).toEqual([unscoped.id]);
+    // A lookup confined to a scope never reads another scope's row.
+    await expect(store.getById(b.id, { scope: "tenant-a" })).resolves.toBeUndefined();
+    await expect(store.get("example", "tenant-b-app", { scope: "tenant-a" })).resolves.toBeUndefined();
+    await expect(store.get("example", "tenant-a-app", { scope: undefined })).resolves.toBeUndefined();
+    await expect(store.getById(unscoped.id, { scope: undefined })).resolves.toMatchObject({ id: unscoped.id });
+    // The scope is checked inside the write, so no other scope (or an unscoped write) can take the name over.
+    await expect(store.set("example", "tenant-a-app", credential, "tenant-b")).rejects.toMatchObject({
+      code: "connection_scope_conflict",
+    });
+    await expect(store.set("example", "tenant-a-app", credential)).rejects.toMatchObject({
+      code: "connection_scope_conflict",
+    });
+    await expect(store.set("example", "plain", credential, "tenant-a")).rejects.toMatchObject({
+      code: "connection_scope_conflict",
+    });
+    // Updating the credential keeps the scope.
+    const replaced = await store.set("example", "tenant-a-app", { ...credential, apiKey: "rotated" }, "tenant-a");
+    expect(replaced.scope).toBe("tenant-a");
+  });
+
+  it("persists a runtime token's scope and allowConnect flag", async () => {
+    const store = getDatabase().runtimeTokenStore;
+    const base = {
+      name: "tenant",
+      allowedActions: [],
+      blockedActions: [],
+      allowedProxies: [],
+      allowedConnections: [],
+      allowedTriggers: [],
+      createdAt: new Date().toISOString(),
+    };
+    await store.add({ ...base, id: "token-connect", tokenHash: "hash-connect", scope: "tenant-a", allowConnect: true });
+    await store.add({ ...base, id: "token-plain", tokenHash: "hash-plain", scope: "tenant-a" });
+    await store.add({ ...base, id: "token-open", tokenHash: "hash-open" });
+
+    await expect(store.findByHash("hash-connect")).resolves.toMatchObject({ scope: "tenant-a", allowConnect: true });
+    const plain = await store.findById("token-plain");
+    expect(plain?.scope).toBe("tenant-a");
+    expect(plain?.allowConnect).toBeUndefined();
+    const open = await store.findById("token-open");
+    expect(open?.scope).toBeUndefined();
+    expect(open?.allowConnect).toBeUndefined();
+  });
 }

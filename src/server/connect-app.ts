@@ -192,6 +192,7 @@ export async function createConnectApp(options: ConnectAppOptions): Promise<Conn
     providerHttpDispatch: options.providerHttpDispatch,
     store: options.runtimeDatabase.triggerStore,
     runner: triggers,
+    connections,
     tokens: options.runtimeDatabase.runtimeTokenStore,
     runtimePolicy: options.runtimeDatabase.runtimePolicyStore,
     deploymentPolicy: options.actionPolicy ?? new ExecutionPolicyService(),

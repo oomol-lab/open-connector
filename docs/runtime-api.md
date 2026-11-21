@@ -27,14 +27,15 @@ connection grants. Their `allowedProxies` list is empty by default, so a persist
 `/v1/proxy/:service` until a provider service or `*` is explicitly granted.
 
 `allowedConnections` belongs only to stored tokens, not to deployment or Runtime policy. Omit the
-field on create, or send `[]`, for unrestricted connection access. Updates must send the field so a
+field on create, or send `[]`, for unrestricted connection access within the token's scope (an empty
+list never crosses scope boundaries). Updates must send the field so a
 PUT cannot drop an existing restriction. A non-empty list grants exact stable, opaque IDs returned
 by the connection APIs. Omitting `connectionName` on HTTP, MCP, or proxy requests selects the
 target provider's default connection, whose ID must be granted. Denied requests fail before
 credential lookup with HTTP `403` / MCP `connection_not_allowed`. Runtime discovery is filtered to
 granted credential connections; virtual `no_auth` connections do not require grants. Admin `GET /api/connections` and
 `GET /api/actions/:actionId/agent.md` stay unfiltered. Bootstrap runtime tokens and JWTs have no
-stored connection grant, so they remain unrestricted.
+stored connection grant, so they remain unrestricted within the default (unscoped) scope.
 
 Example: two GitHub connections (`default` and `work`) and two tokens:
 
@@ -59,6 +60,8 @@ curl -s -X POST http://localhost:3000/api/runtime-tokens \
 The unrestricted token can omit a connection name or send `work`. The work-only token succeeds only
 with `x-oo-connector-alias: work`, MCP `connectionName: "work"`, or the equivalent proxy alias; an
 omitted name or `default` returns `connection_not_allowed`.
+
+To serve several tenants from one runtime, see [Scopes](scopes.md).
 
 The Node server accepts JWT access tokens when `OOMOL_CONNECT_JWKS_URI`,
 `OOMOL_CONNECT_JWT_ISSUER`, and `OOMOL_CONNECT_JWT_AUDIENCE` are configured together. JWT

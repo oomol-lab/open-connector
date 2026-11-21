@@ -439,5 +439,6 @@ export async function resolveOAuthAccessToken(
     allowedProxies: backing.allowedProxies,
     allowedConnections: backing.allowedConnections ?? [],
     allowedTriggers: backing.allowedTriggers ?? [],
+    scope: backing.scope,
   };
 }

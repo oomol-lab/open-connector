@@ -171,6 +171,8 @@ describe("PostgreSQL migrations with PGlite", () => {
           { name: "0020_oauth_tables.sql" },
           { name: "0021_oauth_refresh_replay.sql" },
           { name: "0022_custom_mcp.sql" },
+          { name: "0023_scope.sql" },
+          { name: "0024_tenant_connect.sql" },
         ],
       });
 
@@ -238,6 +240,8 @@ describe("PostgreSQL migrations with a custom migration source", () => {
           { name: "0020_oauth_tables.sql" },
           { name: "0021_oauth_refresh_replay.sql" },
           { name: "0022_custom_mcp.sql" },
+          { name: "0023_scope.sql" },
+          { name: "0024_tenant_connect.sql" },
           { name: "9998_custom.sql" },
         ],
       });

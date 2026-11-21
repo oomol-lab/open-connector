@@ -388,6 +388,10 @@ class UnusedR2Bucket implements R2BucketBinding {
   async delete(): Promise<void> {
     throw new Error("Unexpected R2 delete");
   }
+
+  async list(): Promise<{ objects: { key: string }[]; truncated: boolean }> {
+    throw new Error("Unexpected R2 list");
+  }
 }
 
 class MemoryKVNamespace implements KVNamespaceBinding {
@@ -415,6 +419,14 @@ class MemoryKVNamespace implements KVNamespaceBinding {
     this.store.delete(key);
   }
 
+  async list(options?: { prefix?: string }) {
+    const prefix = options?.prefix ?? "";
+    return {
+      keys: [...this.store.keys()].filter((name) => name.startsWith(prefix)).map((name) => ({ name })),
+      list_complete: true,
+    };
+  }
+
   entry(key: string): { bytes: ArrayBuffer; expirationTtl?: number } | undefined {
     return this.store.get(key);
   }
@@ -438,6 +450,14 @@ class MemoryR2Bucket implements R2BucketBinding {
 
   async delete(key: string): Promise<void> {
     this.objects.delete(key);
+  }
+
+  async list(options?: { prefix?: string }) {
+    const prefix = options?.prefix ?? "";
+    return {
+      objects: [...this.objects.keys()].filter((key) => key.startsWith(prefix)).map((key) => ({ key })),
+      truncated: false,
+    };
   }
 
   stored(key: string): MemoryR2Object | undefined {

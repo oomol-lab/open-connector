@@ -38,6 +38,8 @@ export type OAuthAuthorizationStart = {
 export interface OAuthAuthorizationStartInput {
   service: string;
   connectionName?: string;
+  /** Stored with the pending state, so the callback can never choose or change the scope of the connection. */
+  scope?: string;
   clientConfig?: OAuthClientConfigInput;
   authorizationOptionIds?: string[];
 }
@@ -56,6 +58,8 @@ export interface OAuthAuthorizationCompleteInput {
 export interface OAuthAuthorizationState {
   service: string;
   connectionName?: string;
+  /** Isolation scope the saved connection will carry; fixed when authorization starts. */
+  scope?: string;
   retirementGeneration: string;
   state: string;
   createdAt: string;
@@ -131,6 +135,8 @@ export class OAuthFlowService {
 
   async startConnectionRequest(input: OAuthConnectionRequestInput): Promise<OAuthConnectionRequestStart> {
     validateReturnUri(input.returnUri);
+    // A SaaS-hosted authorization cannot carry a scope, so a scoped request must stay local instead of silently losing it.
+    if (input.scope !== undefined) await this.saasOAuth?.assertLocalAuthorization(input.service);
     const remote = await this.saasOAuth?.start(input);
     if (remote) return remote;
     const requestedScopes = input.authorizationOptionIds;
@@ -151,6 +157,7 @@ export class OAuthFlowService {
       {
         service: input.service,
         connectionName,
+        scope: input.scope,
       },
       config,
     );
@@ -174,8 +181,14 @@ export class OAuthFlowService {
     };
   }
 
-  async getConnectionRequest(id: string, owner: string): Promise<ConnectionRequest | undefined> {
+  /** Omit `owner` for the operator view of every request. */
+  async getConnectionRequest(id: string, owner?: string): Promise<ConnectionRequest | undefined> {
     return this.requests.get(id, owner);
+  }
+
+  /** Fail every open request of one owner, including a callback already in flight, so it cannot store its connection. */
+  async cancelPendingRequests(owner: string): Promise<number> {
+    return this.requests.cancelPending(owner);
   }
 
   async rejectAuthorization(state: string, denied: boolean, issuer?: string): Promise<string | undefined> {
@@ -244,6 +257,7 @@ export class OAuthFlowService {
     const pending: OAuthAuthorizationState = {
       service,
       connectionName,
+      ...(input.scope === undefined ? {} : { scope: input.scope }),
       retirementGeneration,
       state,
       createdAt: now.toISOString(),
@@ -404,6 +418,11 @@ export class OAuthFlowService {
         input.signal?.throwIfAborted();
         const appId = await this.requests.complete(request, credential, input.signal);
         if (!appId) {
+          // The scope was deleted while the provider issued this grant: end the grant instead of leaving it live.
+          if ((await this.requests.get(request.connectionRequestId))?.errorCode === "scope_deleted") {
+            await this.connections.revokeUnstoredCredential(pending.service, credential);
+            throw new OAuthFlowError("scope_deleted", "The scope was deleted during authorization.");
+          }
           if (request.target) {
             try {
               await this.connections.getStoredConnection(request.target.id);
@@ -417,13 +436,21 @@ export class OAuthFlowService {
         }
         await this.connections.connectionSaved(appId);
       } else {
-        await this.connections.setOAuthCredential(
-          pending.service,
-          oauthCredential,
-          pending.connectionName,
-          input.signal,
-          pending.retirementGeneration,
-        );
+        try {
+          await this.connections.setOAuthCredential(
+            pending.service,
+            oauthCredential,
+            pending.connectionName,
+            input.signal,
+            pending.retirementGeneration,
+            pending.scope,
+          );
+        } catch (error) {
+          if (error instanceof ConnectionError && error.code === "connection_retired") {
+            await this.connections.revokeUnstoredCredential(pending.service, oauthCredential);
+          }
+          throw error;
+        }
       }
       return {
         service: pending.service,
@@ -443,7 +470,8 @@ export class OAuthFlowService {
       }
       if (request) {
         const code =
-          error instanceof OAuthFlowError && ["app_not_found", "request_key_conflict"].includes(error.code)
+          error instanceof OAuthFlowError &&
+          ["app_not_found", "request_key_conflict", "scope_deleted"].includes(error.code)
             ? error.code
             : "provider_error";
         const message = "OAuth connection failed.";
@@ -548,6 +576,8 @@ export interface OAuthConnectionRequestInput {
   connectionName?: string;
   service: string;
   owner: string;
+  /** Isolation scope for the new connection. A reconnect keeps the scope of its target. */
+  scope?: string;
   signal?: AbortSignal;
   target?: StoredConnection;
   returnUri?: string;

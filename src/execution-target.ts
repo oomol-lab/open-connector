@@ -38,20 +38,22 @@ export async function resolveExecutionTarget(input: ResolveExecutionTargetInput)
   return measureExecutionPhase("credentialMs", async () => {
     const authorize = (summary: ConnectionSummary | undefined): void => {
       if (input.operation !== "trigger" && summary?.authType === "no_auth") return;
-      const decision = input.policy?.evaluateConnection(summary?.id);
+      const decision = input.policy?.evaluateConnection(summary);
       if (decision && !decision.allowed) throw new ExecutionPolicyError(decision);
     };
     try {
       input.signal?.throwIfAborted();
+      const within = input.policy?.within;
       const summary = await input.connections.getConnectionSummary(
         input.service,
         input.connectionName,
         input.connectionId,
+        within,
       );
       input.signal?.throwIfAborted();
       authorize(summary);
       const connection = await waitForSignal(
-        input.connections.resolveConnection(input.service, input.connectionName, input.connectionId),
+        input.connections.resolveConnection(input.service, input.connectionName, input.connectionId, within),
         input.signal,
       );
       input.signal?.throwIfAborted();

@@ -227,9 +227,9 @@ async function listConnections(options: IMcpServerOptions, input: McpConnections
     return errorPayload("internal_error", "Runtime policy is unavailable.");
   }
   try {
-    const connections = await options.connections.listConnectionsByService(input.service);
+    const connections = await options.connections.listConnectionsByService(input.service, policy.within);
     const visible = connections.filter(
-      (connection) => connection.authType !== "no_auth" && policy.evaluateConnection(connection.id).allowed,
+      (connection) => connection.authType !== "no_auth" && policy.evaluateConnection(connection).allowed,
     );
     const offset = Number(input.cursor ?? 0);
     return {
@@ -300,7 +300,7 @@ async function searchActions(options: IMcpServerOptions, input: McpSearchInput):
     );
     const availableServices = new Set<string>();
     if (services.size > 0) {
-      const connections = await options.connections.listConnections(services);
+      const connections = await options.connections.listConnections(services, policy.within);
       for (const connection of connections) {
         if (connection.status !== "reauth_required" && evaluateConnectionGrant(policy, connection).allowed) {
           availableServices.add(connection.service);
@@ -344,7 +344,7 @@ async function getActionGuide(
     return errorPayload("internal_error", "Runtime policy is unavailable.");
   }
   try {
-    const connection = await getSelectedConnectionSummary(options, action.service, connectionName);
+    const connection = await getSelectedConnectionSummary(options, action.service, connectionName, policy);
     const connectionDecision = evaluateConnectionGrant(policy, connection);
     if (!connectionDecision.allowed) {
       return errorPayload(connectionDecision.code, connectionDecision.message);
@@ -382,7 +382,7 @@ async function executeAction(
   }
   if (connectionName && policy.evaluate(action).allowed) {
     try {
-      const connection = await getSelectedConnectionSummary(options, action.service, connectionName);
+      const connection = await getSelectedConnectionSummary(options, action.service, connectionName, policy);
       const connectionDecision = evaluateConnectionGrant(policy, connection);
       if (!connectionDecision.allowed) {
         return errorPayload(connectionDecision.code, connectionDecision.message);
@@ -398,6 +398,7 @@ async function executeAction(
     connectionName,
     policy,
     runtimeTokenId: options.runtimeGrant?.tokenId,
+    scope: options.runtimeGrant?.scope,
     signal: options.signal,
   });
   if (!run) {
@@ -451,8 +452,9 @@ async function getSelectedConnectionSummary(
   options: IMcpServerOptions,
   service: string,
   connectionName: string | undefined,
+  policy: ActionPolicySnapshot,
 ): Promise<ConnectionSummary | undefined> {
-  const connection = await options.connections.getConnectionSummary(service, connectionName);
+  const connection = await options.connections.getConnectionSummary(service, connectionName, undefined, policy.within);
   if (connectionName && connection?.virtual && !connection.default) {
     throw new ConnectionError("connection_not_found", `${service} connection not found: ${connection.connectionName}.`);
   }
@@ -463,7 +465,7 @@ function evaluateConnectionGrant(
   policy: ActionPolicySnapshot,
   connection: ConnectionSummary | undefined,
 ): ActionPolicyDecision {
-  return connection?.authType === "no_auth" ? { allowed: true, checks: [] } : policy.evaluateConnection(connection?.id);
+  return connection?.authType === "no_auth" ? { allowed: true, checks: [] } : policy.evaluateConnection(connection);
 }
 
 interface ToolExecutionMeta {

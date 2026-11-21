@@ -14,6 +14,10 @@ export interface RuntimeTokenRecord {
   allowedTriggers?: string[];
   createdAt: string;
   lastUsedAt?: string;
+  /** Immutable isolation scope. A token without one only sees unscoped connections, or nothing when scopes are required. */
+  scope?: string;
+  /** The token may start and read connections in its own scope through `/v1/connections`. Requires a scope. */
+  allowConnect?: boolean;
 }
 
 export interface RuntimeTokenSummary {
@@ -26,6 +30,8 @@ export interface RuntimeTokenSummary {
   allowedTriggers?: string[];
   createdAt: string;
   lastUsedAt?: string;
+  scope?: string;
+  allowConnect?: boolean;
 }
 
 export interface RuntimeTokenCreation {
@@ -48,6 +54,15 @@ const tokenPrefix = "oct_";
 
 export interface RuntimeGrant extends TokenPolicy {
   tokenId: string;
+  /** Set for a scoped token created with `allowConnect`; see `CreateTokenOptions`. */
+  allowConnect?: boolean;
+}
+
+export interface CreateTokenOptions {
+  /** Fixed for the life of the token; rotate the token to change it. */
+  scope?: string;
+  /** Lets the token start connections and read them in its own scope without the administrator token. */
+  allowConnect?: boolean;
 }
 
 export class RuntimeTokenService {
@@ -67,6 +82,7 @@ export class RuntimeTokenService {
       allowedProxies: [],
       allowedConnections: [],
     },
+    options: CreateTokenOptions = {},
   ): Promise<RuntimeTokenCreation> {
     const token = `${tokenPrefix}${randomBytes(32).toString("base64url")}`;
     const now = new Date().toISOString();
@@ -80,6 +96,8 @@ export class RuntimeTokenService {
       allowedConnections: policy.allowedConnections ?? [],
       allowedTriggers: policy.allowedTriggers ?? [],
       createdAt: now,
+      scope: options.scope,
+      allowConnect: options.allowConnect ? true : undefined,
     };
     await this.store.add(record);
     return { token, record };
@@ -116,6 +134,8 @@ export class RuntimeTokenService {
       allowedProxies: matched.allowedProxies,
       allowedConnections: matched.allowedConnections ?? [],
       allowedTriggers: matched.allowedTriggers ?? [],
+      scope: matched.scope,
+      allowConnect: matched.allowConnect,
     };
   }
 
@@ -151,6 +171,8 @@ export function summarizeRuntimeToken(record: RuntimeTokenRecord): RuntimeTokenS
     allowedTriggers: record.allowedTriggers ?? [],
     createdAt: record.createdAt,
     lastUsedAt: record.lastUsedAt,
+    scope: record.scope,
+    allowConnect: record.allowConnect,
   };
 }
 

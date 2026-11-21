@@ -2,9 +2,27 @@ import type { R2BucketBinding, R2ObjectBinding } from "../cloudflare/cloudflare-
 
 import { describe, expect, it } from "vitest";
 import { R2TransitFileService } from "./r2-transit-files.ts";
+import { expectScopeIsolation } from "./transit-file-scope.cases.ts";
 import { TransitFileError } from "./transit-file-store.ts";
 
 describe("R2TransitFileService", () => {
+  it("binds files to a scope", async () => {
+    await expectScopeIsolation(createService(new MemoryR2Bucket()));
+  });
+
+  it("removes the payload when its scope marker cannot be written", async () => {
+    const bucket = new MemoryR2Bucket();
+    const put = bucket.put.bind(bucket);
+    bucket.put = async (key, value, options) => {
+      if (key.endsWith(".meta.json")) throw new Error("metadata write failed");
+      return put(key, value, options);
+    };
+    await expect(createService(bucket).create(new File(["secret"], "s.txt"), { scope: "tenant-a" })).rejects.toThrow(
+      "metadata write failed",
+    );
+    await expect(bucket.list({ prefix: "" })).resolves.toMatchObject({ objects: [] });
+  });
+
   it("uploads, reads, and deletes transit files", async () => {
     const bucket = new MemoryR2Bucket();
     const service = createService(bucket);
@@ -95,6 +113,13 @@ class MemoryR2Bucket implements R2BucketBinding {
 
   async delete(key: string): Promise<void> {
     this.objects.delete(key);
+  }
+
+  async list(options?: { prefix?: string; cursor?: string }) {
+    return {
+      objects: [...this.objects.keys()].filter((key) => key.startsWith(options?.prefix ?? "")).map((key) => ({ key })),
+      truncated: false,
+    };
   }
 }
 

@@ -22,6 +22,7 @@ import {
   withProviderHttpDispatchResult,
 } from "../../providers/provider-runtime.ts";
 import { SaasError, saasExecutionFailureKind } from "../../saas/saas-client.ts";
+import { bindTransitFilesToScope } from "../files/transit-file-store.ts";
 import { safeRunLogError, summarizeForRunLog } from "./run-log-summary.ts";
 
 export interface ActionRunnerOptions extends RuntimeExecutionOptions {
@@ -43,6 +44,8 @@ export interface RunActionInput {
   connectionId?: string;
   policy: ActionPolicySnapshot;
   runtimeTokenId?: string;
+  /** Scope of the calling runtime token; stored with the run so it can be listed and purged per scope. */
+  scope?: string;
   signal?: AbortSignal;
 }
 
@@ -179,6 +182,7 @@ export class ActionRunner {
           this.createExecutionContext(
             async (service) => (connection?.kind === "local" ? connection.getCredential(service) : undefined),
             input.signal,
+            input.scope,
           ),
         );
         if (input.signal?.aborted) {
@@ -225,6 +229,7 @@ export class ActionRunner {
       connectionId: connection?.summary?.id,
       connectionProfile: connection?.summary?.profile,
       runtimeTokenId: input.runtimeTokenId,
+      ...(input.scope === undefined ? {} : { scope: input.scope }),
       policy,
       inputSummary: summarizeForRunLog(input.input),
       outputSummary: result.ok ? summarizeForRunLog(result.output) : undefined,
@@ -279,9 +284,14 @@ export class ActionRunner {
     return this.options.runs.get(id);
   }
 
+  deleteRunsByScope(scope: string): Promise<number> {
+    return this.options.runs.deleteByScope(scope);
+  }
+
   private createExecutionContext(
     getCredential: ExecutionContext["getCredential"],
     signal: AbortSignal | undefined,
+    scope: string | undefined,
   ): ExecutionContext {
     const context: ExecutionContext = {
       getCredential,
@@ -289,7 +299,8 @@ export class ActionRunner {
       logger: this.options.logger,
     };
     if (this.options.transitFiles) {
-      context.transitFiles = this.options.transitFiles;
+      // Files an executor creates carry the caller's scope, and it can read back only files of that scope.
+      context.transitFiles = bindTransitFilesToScope(this.options.transitFiles, scope);
     }
     return context;
   }

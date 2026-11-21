@@ -2,9 +2,27 @@ import type { KVNamespaceBinding } from "../cloudflare/cloudflare-bindings.ts";
 
 import { describe, expect, it } from "vitest";
 import { KVTransitFileService } from "./kv-transit-files.ts";
+import { expectScopeIsolation } from "./transit-file-scope.cases.ts";
 import { TransitFileError } from "./transit-file-store.ts";
 
 describe("KVTransitFileService", () => {
+  it("binds files to a scope", async () => {
+    await expectScopeIsolation(createService(new MemoryKVNamespace()));
+  });
+
+  it("removes the payload when its scope marker cannot be written", async () => {
+    const namespace = new MemoryKVNamespace();
+    const put = namespace.put.bind(namespace);
+    namespace.put = async (key, value, options) => {
+      if (key.endsWith(".meta.json")) throw new Error("metadata write failed");
+      return put(key, value, options);
+    };
+    await expect(createService(namespace).create(new File(["secret"], "s.txt"), { scope: "tenant-a" })).rejects.toThrow(
+      "metadata write failed",
+    );
+    await expect(namespace.list({ prefix: "" })).resolves.toMatchObject({ keys: [] });
+  });
+
   it("uploads, reads, and deletes transit files", async () => {
     const namespace = new MemoryKVNamespace();
     const service = createService(namespace);
@@ -202,6 +220,13 @@ class MemoryKVNamespace implements KVNamespaceBinding {
 
   async delete(key: string): Promise<void> {
     this.store.delete(key);
+  }
+
+  async list(options?: { prefix?: string; cursor?: string }) {
+    return {
+      keys: [...this.store.keys()].filter((name) => name.startsWith(options?.prefix ?? "")).map((name) => ({ name })),
+      list_complete: true,
+    };
   }
 
   has(key: string): boolean {

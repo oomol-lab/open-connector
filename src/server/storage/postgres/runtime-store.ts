@@ -399,7 +399,7 @@ class PostgresRuntimeTokenStore implements IRuntimeTokenStore {
         insert into runtime_tokens (
           ${runtimeTokenColumns}
         )
-        values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+        values ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
       `,
       [
         record.id,
@@ -412,6 +412,8 @@ class PostgresRuntimeTokenStore implements IRuntimeTokenStore {
         JSON.stringify(record.allowedTriggers ?? []),
         record.createdAt,
         record.lastUsedAt ?? null,
+        record.scope ?? null,
+        record.allowConnect ? 1 : 0,
       ],
     );
   }
@@ -1016,9 +1018,10 @@ class PostgresRunLogStore implements IRunLogStore {
   async add(run: RunLog): Promise<RunLogWriteResult> {
     await this.pool.query(
       `
-        insert into runs (id, service, action_id, caller, started_at, completed_at, ok, value)
-        values ($1, $2, $3, $4, $5, $6, $7, $8)
+        insert into runs (id, service, action_id, caller, started_at, completed_at, ok, value, scope)
+        values ($1, $2, $3, $4, $5, $6, $7, $8, $9)
         on conflict(id) do update set
+          scope = excluded.scope,
           service = excluded.service,
           action_id = excluded.action_id,
           caller = excluded.caller,
@@ -1036,6 +1039,7 @@ class PostgresRunLogStore implements IRunLogStore {
         run.completedAt,
         run.ok ? 1 : 0,
         JSON.stringify(run),
+        run.scope ?? null,
       ],
     );
 
@@ -1070,6 +1074,10 @@ class PostgresRunLogStore implements IRunLogStore {
       (position) => `$${position}`,
       async (sql, values) => (await this.pool.query<RuntimeRow>(sql, values)).rows,
     );
+  }
+
+  async deleteByScope(scope: string): Promise<number> {
+    return (await this.pool.query("delete from runs where scope = $1", [scope])).rowCount ?? 0;
   }
 }
 

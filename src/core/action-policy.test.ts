@@ -327,7 +327,7 @@ describe("ActionPolicyService", () => {
 
     for (const snapshot of unrestricted) {
       expect(snapshot.evaluateConnection()).toEqual({ allowed: true, checks: [] });
-      expect(snapshot.evaluateConnection(workConnectionId)).toEqual({ allowed: true, checks: [] });
+      expect(snapshot.evaluateConnection({ id: workConnectionId })).toEqual({ allowed: true, checks: [] });
       expect(snapshot.evaluate(action)).toEqual({ allowed: true, checks: [] });
     }
   });
@@ -340,15 +340,15 @@ describe("ActionPolicyService", () => {
       allowedConnections: [workConnectionId, defaultConnectionId],
     });
 
-    expect(snapshot.evaluateConnection(workConnectionId)).toEqual({
+    expect(snapshot.evaluateConnection({ id: workConnectionId })).toEqual({
       allowed: true,
       checks: [{ source: "token", outcome: "allow_match", rule: workConnectionId }],
     });
-    expect(snapshot.evaluateConnection(defaultConnectionId)).toEqual({
+    expect(snapshot.evaluateConnection({ id: defaultConnectionId })).toEqual({
       allowed: true,
       checks: [{ source: "token", outcome: "allow_match", rule: defaultConnectionId }],
     });
-    expect(snapshot.evaluateConnection(otherConnectionId)).toMatchObject({
+    expect(snapshot.evaluateConnection({ id: otherConnectionId })).toMatchObject({
       allowed: false,
       code: "connection_not_allowed",
       checks: [{ source: "token", outcome: "allow_miss" }],
@@ -373,11 +373,11 @@ describe("ActionPolicyService", () => {
       allowed: false,
       code: "connection_not_allowed",
     });
-    expect(snapshot.evaluateConnection(defaultConnectionId)).toMatchObject({
+    expect(snapshot.evaluateConnection({ id: defaultConnectionId })).toMatchObject({
       allowed: false,
       code: "connection_not_allowed",
     });
-    expect(snapshot.evaluateConnection(workConnectionId)).toMatchObject({ allowed: true });
+    expect(snapshot.evaluateConnection({ id: workConnectionId })).toMatchObject({ allowed: true });
   });
 });
 
@@ -408,5 +408,36 @@ describe("Trigger policy", () => {
         .evaluateTrigger("gmail.on_message_received"),
     ).toMatchObject({ allowed: false, code: "trigger_not_allowed" });
     expect(service.createSnapshot(rules, token).evaluateTrigger("gmail.on_message_received").allowed).toBe(true);
+  });
+
+  describe("connection scope", () => {
+    const base = { allowedActions: [], blockedActions: [], allowedProxies: [], allowedConnections: [] };
+    const mine = { id: workConnectionId, scope: "tenant-a" };
+    const theirs = { id: otherConnectionId, scope: "tenant-b" };
+    const unscoped = { id: defaultConnectionId };
+
+    it("lets a scoped token use only connections of its own scope, whatever the allowlist says", () => {
+      const snapshot = new ActionPolicyService().createSnapshot(undefined, { ...base, scope: "tenant-a" });
+      expect(snapshot.evaluateConnection(mine).allowed).toBe(true);
+      expect(snapshot.evaluateConnection(theirs)).toMatchObject({ allowed: false, code: "connection_not_allowed" });
+      expect(snapshot.evaluateConnection(unscoped).allowed).toBe(false);
+      const listed = new ActionPolicyService().createSnapshot(undefined, {
+        ...base,
+        scope: "tenant-a",
+        allowedConnections: [theirs.id],
+      });
+      expect(listed.evaluateConnection(theirs).allowed).toBe(false);
+    });
+
+    it("confines an unscoped token, and a request without any token record, to unscoped connections", () => {
+      for (const snapshot of [
+        new ActionPolicyService().createSnapshot(undefined, base),
+        new ActionPolicyService().createSnapshot(),
+      ]) {
+        expect(snapshot.within).toEqual({ scope: undefined });
+        expect(snapshot.evaluateConnection(unscoped).allowed).toBe(true);
+        expect(snapshot.evaluateConnection(mine).allowed).toBe(false);
+      }
+    });
   });
 });

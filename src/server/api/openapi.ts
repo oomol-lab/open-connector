@@ -2,6 +2,7 @@ import type { ActionDefinition, JsonSchema } from "../../core/types.ts";
 
 import { z } from "zod";
 import { jsonSchema } from "../../core/json-schema.ts";
+import { scopePattern } from "../../core/scope.ts";
 import { triggerOperationSchema } from "../../triggers/request.ts";
 import {
   actionInputMaxDepth,
@@ -16,6 +17,8 @@ import {
 } from "./connection-input.ts";
 import { customMcpCreateInput, customMcpUpdateInput, customMcpSyncInput } from "./custom-mcp-input.ts";
 import { policyRequestMaxBytes, policyRuleListMaxItems, policyRuleMaxBytes } from "./policy-input.ts";
+
+const scopeSchema = { type: "string", pattern: scopePattern.source, not: { enum: [".", ".."] } } as const;
 
 /**
  * Minimal OpenAPI document shape returned by the local runtime.
@@ -233,6 +236,11 @@ const runtimeConnectionProperties: Record<string, JsonSchema> = {
     description: "Provider account identity from the stored credential profile.",
   }),
   service: jsonSchema.string({ description: "Provider service identifier." }),
+  scope: jsonSchema.optional(
+    jsonSchema.string({
+      description: "Opaque isolation scope the connection was stored with. Absent for an unscoped connection.",
+    }),
+  ),
   status: { type: "string", enum: ["active", "disconnected"] },
   alias: jsonSchema.string({ description: namedConnectionDescription }),
   authType: jsonSchema.string({ description: "Connection authentication type." }),
@@ -718,11 +726,25 @@ export function createOpenApiDocument(options: OpenApiDocumentOptions = {}): Ope
         },
       },
     },
-    "/api/trigger-subscriptions": getOperation(
-      "Triggers",
-      "List owned subscriptions and cleanup status without secrets.",
-      { type: "array", items: { type: "object", additionalProperties: true } },
-    ),
+    "/api/trigger-subscriptions": {
+      get: {
+        tags: ["Triggers"],
+        summary: "List owned subscriptions and cleanup status without secrets.",
+        parameters: [
+          {
+            name: "scope",
+            in: "query",
+            required: false,
+            schema: scopeSchema,
+            description: "Only return subscriptions whose connection belongs to this scope.",
+          },
+        ],
+        responses: {
+          200: jsonResponse({ type: "array", items: { type: "object", additionalProperties: true } }),
+          400: jsonResponse(errorResponseSchema),
+        },
+      },
+    },
     "/api/trigger-subscriptions/{id}/cancel": {
       post: {
         tags: ["Triggers"],
@@ -745,6 +767,36 @@ export function createOpenApiDocument(options: OpenApiDocumentOptions = {}): Ope
           200: jsonResponse(jsonSchema.object({ ok: jsonSchema.boolean() })),
           404: jsonResponse(errorResponseSchema),
           409: jsonResponse(errorResponseSchema),
+        },
+      },
+    },
+    "/api/scopes/{scope}": {
+      delete: {
+        tags: ["Access"],
+        summary:
+          "Delete a scope: revoke its tokens, cancel its authorizations and triggers, remove its connections, runs and files.",
+        parameters: [
+          {
+            name: "scope",
+            in: "path",
+            required: true,
+            schema: scopeSchema,
+            description: "The scope to offboard. Other scopes are not touched.",
+          },
+        ],
+        responses: {
+          200: jsonResponse({
+            type: "object",
+            properties: {
+              scope: { type: "string" },
+              complete: { type: "boolean" },
+              deleted: { type: "object", additionalProperties: { type: "integer" } },
+              failures: { type: "array", items: { type: "object", additionalProperties: true } },
+            },
+            required: ["scope", "complete", "deleted", "failures"],
+          }),
+          207: jsonResponse({ type: "object", additionalProperties: true }),
+          400: jsonResponse({ $ref: "#/components/schemas/ErrorResponse" }),
         },
       },
     },
@@ -978,6 +1030,7 @@ export function createOpenApiDocument(options: OpenApiDocumentOptions = {}): Ope
               description: "Provider account identity from the stored credential profile.",
             }),
             service: jsonSchema.string({ description: "Provider service identifier." }),
+            scope: jsonSchema.string({ description: "Isolation scope of a stored connection. Absent when unscoped." }),
             authType: jsonSchema.string({ description: "Connection authentication type." }),
             configured: jsonSchema.boolean({ description: "Whether the provider is connected." }),
             notion: notionConnectionSchema,
@@ -1075,6 +1128,13 @@ export function createOpenApiDocument(options: OpenApiDocumentOptions = {}): Ope
             allowedConnections: connectionIdArraySchema(
               "Stable connection IDs granted to this stored runtime token. An empty list is unrestricted connection access. IDs are opaque values returned by the connection APIs. Virtual no_auth connections do not require grants.",
             ),
+            scope: jsonSchema.string({
+              description: "Immutable isolation scope; see docs/scopes.md.",
+            }),
+            allowConnect: jsonSchema.boolean({
+              description:
+                "A scoped token with this flag can also start, reconnect and read connections of its own scope through /v1/connections without the administrator token.",
+            }),
             createdAt: jsonSchema.string({ description: "Creation timestamp." }),
             lastUsedAt: jsonSchema.string({ description: "Last successful use timestamp." }),
           },
@@ -1104,8 +1164,17 @@ export function createOpenApiDocument(options: OpenApiDocumentOptions = {}): Ope
               "Trigger IDs explicitly granted to this token. Omit or leave empty to deny all Trigger operations.",
             ),
             allowedConnections: connectionIdArraySchema(
-              "Optional stable connection IDs granted to the new token. Omit or leave empty for unrestricted connection access. A non-empty list matches exact opaque IDs returned by the connection APIs. Virtual no_auth connections do not require grants.",
+              "Optional stable connection IDs granted to the new token. Omit or leave empty for unrestricted connection access. A non-empty list matches exact opaque IDs returned by the connection APIs. Virtual no_auth connections do not require grants. Every token is limited to its own scope.",
             ),
+            scope: {
+              ...scopeSchema,
+              description:
+                "Optional opaque isolation scope, 1 to 128 characters of letters, digits, '.', '_', ':' and '-' (excluding '.' and '..'). Fixed for the life of the token.",
+            },
+            allowConnect: jsonSchema.boolean({
+              description:
+                "Let this scoped token start, reconnect and read connections of its own scope through /v1/connections. Requires scope.",
+            }),
           },
           {
             required: ["name"],
@@ -1219,6 +1288,9 @@ export function createOpenApiDocument(options: OpenApiDocumentOptions = {}): Ope
             ),
             connectionId: jsonSchema.string({ description: "Stable connection identifier used by the run." }),
             runtimeTokenId: jsonSchema.string({ description: "Stored runtime token identifier used by the run." }),
+            scope: jsonSchema.string({
+              description: "Isolation scope of the token that made the run. Absent when unscoped.",
+            }),
             policy: { $ref: "#/components/schemas/PolicyDecision" },
             inputSummary: {
               description: "Redacted action input summary.",
@@ -1259,6 +1331,15 @@ function createTransitFilesPath(): Record<string, unknown> {
       tags: ["Files"],
       summary: "Upload one local transit file.",
       description: "Stores one temporary local file and returns a download URL for connector actions.",
+      parameters: [
+        {
+          name: "scope",
+          in: "query",
+          required: false,
+          schema: scopeSchema,
+          description: "Optional isolation scope to bind the uploaded file to.",
+        },
+      ],
       requestBody: {
         required: true,
         content: {
@@ -1717,9 +1798,33 @@ function createRunsPath(): Record<string, unknown> {
           schema: { type: "boolean" },
           description: "Only return successful or failed runs.",
         },
+        {
+          name: "scope",
+          in: "query",
+          required: false,
+          schema: scopeSchema,
+          description: "Only return runs made with a runtime token of this scope.",
+        },
       ],
       responses: {
         200: jsonResponse({ $ref: "#/components/schemas/RunLogPage" }),
+      },
+    },
+    delete: {
+      tags: ["Runs"],
+      summary: "Delete every run recorded for one scope.",
+      parameters: [
+        {
+          name: "scope",
+          in: "query",
+          required: true,
+          schema: scopeSchema,
+          description: "The scope whose run history is removed, for example when a tenant is offboarded.",
+        },
+      ],
+      responses: {
+        200: jsonResponse(jsonSchema.object({ scope: jsonSchema.string(), deleted: jsonSchema.integer() })),
+        400: jsonResponse({ $ref: "#/components/schemas/ErrorResponse" }),
       },
     },
   };
@@ -2373,7 +2478,7 @@ function connectionManagementPaths(): Record<string, unknown> {
           tags: ["Connections"],
           summary: `${reconnect ? "Reconnect" : "Create"} ${suffix || "OAuth"} connection.`,
           description:
-            "Requires administrator credentials. OAuth returns an authorization request; API key and custom credentials return the saved connection synchronously.",
+            "Requires administrator credentials, or a scoped runtime token created with allowConnect, which is confined to its own scope (it cannot name another scope). OAuth returns an authorization request; API key and custom credentials return the saved connection synchronously.",
           parameters: [parameter(reconnect ? "appId" : "service")],
           requestBody: {
             required: Boolean(suffix),

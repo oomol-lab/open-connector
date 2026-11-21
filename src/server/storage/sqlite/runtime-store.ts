@@ -393,7 +393,7 @@ export class SqliteRuntimeTokenStore implements IRuntimeTokenStore {
         insert into runtime_tokens (
           ${runtimeTokenColumns}
         )
-        values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `,
       )
       .run(
@@ -407,6 +407,8 @@ export class SqliteRuntimeTokenStore implements IRuntimeTokenStore {
         JSON.stringify(record.allowedTriggers ?? []),
         record.createdAt,
         record.lastUsedAt ?? null,
+        record.scope ?? null,
+        record.allowConnect ? 1 : 0,
       );
   }
 
@@ -1029,15 +1031,20 @@ export class SqliteRunLogStore implements IRunLogStore {
       (sql, values) => this.database.prepare(sql).all(...values),
     );
   }
+
+  async deleteByScope(scope: string): Promise<number> {
+    return Number(this.database.prepare("delete from runs where scope = ?").run(scope).changes);
+  }
 }
 
 function insertRun(database: DatabaseSync, run: RunLog): void {
   database
     .prepare(
       `
-      insert into runs (id, service, action_id, caller, started_at, completed_at, ok, value)
-      values (?, ?, ?, ?, ?, ?, ?, ?)
+      insert into runs (id, service, action_id, caller, started_at, completed_at, ok, value, scope)
+      values (?, ?, ?, ?, ?, ?, ?, ?, ?)
       on conflict(id) do update set
+        scope = excluded.scope,
         service = excluded.service,
         action_id = excluded.action_id,
         caller = excluded.caller,
@@ -1056,6 +1063,7 @@ function insertRun(database: DatabaseSync, run: RunLog): void {
       run.completedAt,
       run.ok ? 1 : 0,
       JSON.stringify(run),
+      run.scope ?? null,
     );
 }
 

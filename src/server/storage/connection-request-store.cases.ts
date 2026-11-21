@@ -38,6 +38,25 @@ export function connectionRequestStoreTests(getDatabase: () => RuntimeDatabase):
       expect(claims.find(Boolean)).toEqual(request);
     });
 
+    it("cancels an owner's pending and in-flight requests so neither can store a connection", async () => {
+      const { connectionRequestStore: requests } = getDatabase();
+      // Different services, so the second request does not supersede the first.
+      const waiting = { ...pending("scope:tenant-a"), service: "other" };
+      const inFlight = pending("scope:tenant-a");
+      const other = pending("scope:tenant-b");
+      for (const request of [waiting, inFlight, other]) await requests.create(request);
+      expect(await requests.claim(inFlight.state)).toEqual(inFlight);
+      expect(await requests.cancelPending("scope:tenant-a")).toBe(2);
+      expect(await requests.complete(inFlight, credential)).toBeUndefined();
+      expect(await getDatabase().connectionStore.get(inFlight.service, inFlight.connectionName)).toBeUndefined();
+      expect(await requests.claim(waiting.state)).toBeUndefined();
+      expect(await requests.get(inFlight.connectionRequestId)).toMatchObject({
+        status: "failed",
+        errorCode: "scope_deleted",
+      });
+      expect(await requests.get(other.connectionRequestId)).toMatchObject({ status: "initiated" });
+    });
+
     it("rolls back supersession when the new request cannot be saved", async () => {
       const { connectionRequestStore: requests } = getDatabase();
       const request = pending();

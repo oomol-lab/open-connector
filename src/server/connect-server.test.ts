@@ -5355,6 +5355,10 @@ class MemoryRunLogStore implements IRunLogStore {
       nextCursor: runs.length > limit && items.length > 0 ? encodeRunLogCursor(items[items.length - 1]) : undefined,
     };
   }
+
+  async deleteByScope(): Promise<number> {
+    return 0;
+  }
 }
 
 function createRunLog(id: string, startedAt: string): RunLog {

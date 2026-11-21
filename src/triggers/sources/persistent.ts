@@ -429,7 +429,7 @@ export async function deleteSourceReference(
   owner: string,
   connectionId: string | undefined,
   request: Extract<PersistentSourceRequest, { action: "delete" }>,
-  authorize: (connectionId: string) => void,
+  authorize: (connectionId: string) => void | Promise<void>,
   signal: AbortSignal,
 ): Promise<{ deleted: true }> {
   if (definition.source == null)
@@ -458,7 +458,7 @@ export async function deleteSourceReference(
     const source = application.sources[sourceId];
     if (!source && !("requestKey" in request.reference))
       throw new ExecutionError("trigger_not_found", "Source not found.", "not_found");
-    authorize(source?.connectionId ?? connectionId);
+    await authorize(source?.connectionId ?? connectionId);
     if (source?.deleted) return { deleted: true };
     if (source && Object.values(source.resources ?? {}).some((item) => item.active))
       throw new ExecutionError("invalid_input", "Release Source resources before deletion.", "conflict");
@@ -479,7 +479,7 @@ export async function routeSourceApplication(
   definition: IntegrationDefinition,
   owner: string,
   request: Extract<PersistentSourceRequest, { action: "route" }>,
-  authorize: (connectionId: string) => void,
+  authorize: (connectionId: string) => void | Promise<void>,
   signal: AbortSignal,
 ): Promise<{
   references: SourceReference[];
@@ -514,7 +514,7 @@ export async function routeSourceApplication(
         return { references: [], response: { status: 401, body: "", headers: {} } };
       }
       if ("event" in result) {
-        authorize(current.connectionId);
+        await authorize(current.connectionId);
         references.push({ applicationId: request.applicationId, sourceId });
       } else {
         if (!result.response.ok)

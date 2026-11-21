@@ -8,6 +8,7 @@ import type { Context } from "hono";
 import { Hono } from "hono";
 import { DEFAULT_ACTION_SEARCH_LIMIT, searchActions } from "../../core/action-search.ts";
 import { optionalString } from "../../core/cast.ts";
+import { readRuntimeGrant } from "./auth.ts";
 import { catalogLocale } from "./catalog-locale.ts";
 import {
   serializeRuntimeAction,
@@ -107,9 +108,14 @@ export function createRuntimeCatalogRoutes({
 }: RuntimeCatalogRoutesOptions): Hono {
   const app = new Hono();
 
-  const serializeSearchResults = async (results: ActionSearchDocument[]): Promise<RuntimeActionSearchResult[]> => {
+  const serializeSearchResults = async (
+    context: Context,
+    results: ActionSearchDocument[],
+  ): Promise<RuntimeActionSearchResult[]> => {
     const authenticated = new Set(
-      await connections.listAuthenticatedServices([...new Set(results.map((result) => result.service))]),
+      await connections.listAuthenticatedServices([...new Set(results.map((result) => result.service))], {
+        scope: readRuntimeGrant(context)?.scope,
+      }),
     );
     const items: RuntimeActionSearchResult[] = [];
     for (const result of results) {
@@ -129,19 +135,28 @@ export function createRuntimeCatalogRoutes({
       : undefined;
     const source = oauth ? await saasProject?.getSource(service) : undefined;
     if (oauth && source?.mode === "saas") {
-      const { config } = await saasProject!.resolveConfig(
-        service,
-        source.providerConfigId,
-        source.managedProjectId,
-        context.req.raw.signal,
-      );
-      oauth = {
-        ...oauth,
-        configured: true,
-        customClientAvailable: false,
-        expectedRedirectUri: config.callbackUrl,
-        missingFields: [],
-      };
+      if (readRuntimeGrant(context)?.scope !== undefined) {
+        // SaaS-hosted OAuth cannot carry a scope, so a scoped tenant token cannot start it.
+        oauth = {
+          ...oauth,
+          configured: false,
+          customClientAvailable: false,
+        };
+      } else {
+        const { config } = await saasProject!.resolveConfig(
+          service,
+          source.providerConfigId,
+          source.managedProjectId,
+          context.req.raw.signal,
+        );
+        oauth = {
+          ...oauth,
+          configured: true,
+          customClientAvailable: false,
+          expectedRedirectUri: config.callbackUrl,
+          missingFields: [],
+        };
+      }
     }
     return writeRuntimeSuccess(context, serializeRuntimeProviderSetup(provider, oauth, locale));
   });
@@ -205,7 +220,7 @@ export function createRuntimeCatalogRoutes({
       service: query.service,
       limit: query.limit,
     });
-    return writeRuntimeSuccess(context, await serializeSearchResults(results));
+    return writeRuntimeSuccess(context, await serializeSearchResults(context, results));
   });
 
   app.get("/actions/:actionId", async (context) => {

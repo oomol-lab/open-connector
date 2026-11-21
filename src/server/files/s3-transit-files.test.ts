@@ -2,6 +2,7 @@ import {
   DeleteObjectCommand,
   GetObjectCommand,
   HeadObjectCommand,
+  ListObjectsV2Command,
   PutObjectCommand,
   S3Client,
   S3ServiceException,
@@ -12,8 +13,13 @@ import { join } from "node:path";
 import { Readable } from "node:stream";
 import { describe, expect, it, vi } from "vitest";
 import { createS3TransitClient, S3TransitFileService } from "./s3-transit-files.ts";
+import { expectScopeIsolation } from "./transit-file-scope.cases.ts";
 
 describe("S3TransitFileService", () => {
+  it("binds files to a scope", async () => {
+    await expectScopeIsolation(createService(new MemoryS3().client));
+  });
+
   it("shares transit files across service instances", async () => {
     const storage = new MemoryS3();
     const first = createService(storage.client);
@@ -196,10 +202,19 @@ class MemoryS3 {
       };
     }
     if (command instanceof HeadObjectCommand) {
-      if (!this.objects.has(command.input.Key!)) {
+      const value = this.objects.get(command.input.Key!);
+      if (!value) {
         throw notFound();
       }
-      return {};
+      return { Metadata: value.metadata };
+    }
+    if (command instanceof ListObjectsV2Command) {
+      return {
+        Contents: [...this.objects.keys()]
+          .filter((key) => key.startsWith(command.input.Prefix ?? ""))
+          .map((key) => ({ Key: key })),
+        IsTruncated: false,
+      };
     }
     if (command instanceof DeleteObjectCommand) {
       this.objects.delete(command.input.Key!);

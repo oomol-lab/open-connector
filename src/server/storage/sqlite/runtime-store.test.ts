@@ -92,6 +92,8 @@ describe("SqliteRuntimeDatabase", () => {
       "0020_oauth_tables.sql",
       "0021_oauth_refresh_replay.sql",
       "0022_custom_mcp.sql",
+      "0023_scope.sql",
+      "0024_tenant_connect.sql",
     ];
     expect(entries.filter((entry) => entry.message === "sqlite migration started")).toEqual(
       migrations.map((migration) => ({ fields: { migration }, message: "sqlite migration started" })),
@@ -558,6 +560,19 @@ describe("SqliteRuntimeDatabase", () => {
     inspected.close();
   });
 
+  it("purges run logs by scope and filters listings by scope", async () => {
+    const database = new SqliteRuntimeDatabase(await createDatabasePath());
+    await database.runLogStore.add({ ...createRun("run-a", "2026-06-30T00:00:00.000Z"), scope: "tenant-a" });
+    await database.runLogStore.add({ ...createRun("run-b", "2026-06-30T00:00:01.000Z"), scope: "tenant-b" });
+    await database.runLogStore.add(createRun("run-none", "2026-06-30T00:00:02.000Z"));
+
+    expect((await database.runLogStore.list({ scope: "tenant-a" })).items.map((run) => run.id)).toEqual(["run-a"]);
+    await expect(database.runLogStore.deleteByScope("tenant-a")).resolves.toBe(1);
+    expect((await database.runLogStore.list()).items.map((run) => run.id)).toEqual(["run-none", "run-b"]);
+    await expect(database.runLogStore.deleteByScope("tenant-a")).resolves.toBe(0);
+    database.close();
+  });
+
   it("keeps an inserted run when retention cleanup fails", async () => {
     const raw = new DatabaseSync(":memory:");
     for (const migration of [
@@ -572,6 +587,8 @@ describe("SqliteRuntimeDatabase", () => {
       "0009_runtime_token_proxy.sql",
       "0010_connection_revision.sql",
       "0011_runtime_token_connection_scope.sql",
+      "0023_scope.sql",
+      "0024_tenant_connect.sql",
     ]) {
       raw.exec(readFileSync(new URL(`../../../../migrations/${migration}`, import.meta.url), "utf8"));
     }

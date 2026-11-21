@@ -1,3 +1,4 @@
+import type { ScopeFilter } from "./scope.ts";
 import type { ActionDefinition } from "./types.ts";
 
 export type PolicySource = "deployment" | "runtime" | "token";
@@ -35,12 +36,21 @@ export interface PolicyRules {
   blockedTriggers?: string[];
 }
 
+/** The connection facts a grant is checked against. */
+export interface ConnectionGrantTarget {
+  id?: string;
+  /** Isolation scope stored with the connection; absent for an unscoped connection. */
+  scope?: string;
+}
+
 export interface TokenPolicy {
   allowedActions: string[];
   blockedActions: string[];
   allowedProxies: string[];
   allowedConnections?: string[];
   allowedTriggers?: string[];
+  /** Set from the stored runtime token, never from a request. Ignored when a token policy is updated. */
+  scope?: string;
 }
 
 export interface RuntimePolicyState {
@@ -83,8 +93,11 @@ export class ActionPolicySnapshot {
   private readonly tokenProxyRules?: CompiledRule[];
   private readonly tokenTriggerRules?: CompiledRule[];
   private readonly allowedConnections: readonly string[];
+  /** The only scope this request may read; every request without a scoped token sees only unscoped connections. */
+  readonly within: ScopeFilter;
 
   constructor(deployment: PolicyRules, runtime: PolicyRules, token?: TokenPolicy, updatedAt?: string) {
+    this.within = { scope: token?.scope };
     const deploymentRules = immutablePolicyRules(deployment);
     const runtimeRules = immutablePolicyRules(runtime);
     this.state = Object.freeze({ deployment: deploymentRules, runtime: runtimeRules, updatedAt });
@@ -223,7 +236,16 @@ export class ActionPolicySnapshot {
     return { allowed: true, checks };
   }
 
-  evaluateConnection(connectionId?: string): ActionPolicyDecision {
+  /** Scope isolation sits before the allowlist and cannot be widened by it. */
+  evaluateConnection(connection?: ConnectionGrantTarget): ActionPolicyDecision {
+    const connectionId = connection?.id;
+    if (connection && connection.scope !== this.within.scope)
+      return {
+        allowed: false,
+        code: "connection_not_allowed",
+        message: "The selected connection is not granted to this runtime token.",
+        checks: [{ source: "token", outcome: "allow_miss" }],
+      };
     if (this.allowedConnections.length === 0) {
       return { allowed: true, checks: [] };
     }
