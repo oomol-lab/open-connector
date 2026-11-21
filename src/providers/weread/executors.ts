@@ -69,17 +69,8 @@ async function request({ apiName, fields, apiKey, fetcher, parentSignal }: Werea
         response.status === 429 ? "rate_limited" : "provider_error",
       );
     }
-    const result = requiredResponseRecord(payload, "WeRead response");
-    if (result.upgrade_info != null) {
-      const message = optionalRawString(optionalRecord(result.upgrade_info)?.message);
-      throw new ProviderRequestError(
-        502,
-        `WeRead integration version ${skillVersion} requires an update${message ? `: ${message.split(apiKey).join("[REDACTED]")}` : ""}`,
-        undefined,
-        "provider_error",
-      );
-    }
-    return result;
+    // upgrade_info is a non-blocking notice: the request was processed, so return its data.
+    return requiredResponseRecord(payload, "WeRead response");
   });
 }
 const handlers = mapProviderActionHandlers(
