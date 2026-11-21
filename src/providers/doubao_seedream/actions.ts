@@ -5,7 +5,11 @@ import { s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
 
 const service = "doubao_seedream";
-export const defaultSeedreamModel = "doubao-seedream-5-0-flash-260915";
+export const seedreamFlashModel = "doubao-seedream-5-0-flash-260915";
+export const seedreamProModel = "doubao-seedream-5-0-pro-260628";
+export const seedream55Model = "doubao-seedream-5-5-261028";
+export const seedreamModels: readonly string[] = [seedreamFlashModel, seedreamProModel, seedream55Model];
+
 const sizeSchema: JsonSchema = {
   oneOf: [
     s.stringEnum("Output resolution; auto is only available for layer decomposition.", ["1K", "1.5K", "2K", "auto"]),
@@ -26,33 +30,38 @@ export const doubaoSeedreamActions: ProviderActionDefinition[] = [
     name: "generate_image",
     operationType: "write",
     description:
-      "Generate or edit one image, or split one image into a background and up to 16 transparent layers with Seedream Pro or Flash.",
+      "Generate or edit one image, or split one image into a background and up to 99 transparent layers with Seedream 5.5 (16 with Pro or Flash).",
     inputSchema: s.actionInput(
       {
         model: s.withDefault(
-          s.stringEnum("The Seedream model; Flash prioritizes speed, Pro prioritizes quality.", [
-            defaultSeedreamModel,
-            "doubao-seedream-5-0-pro-260628",
-          ]),
-          defaultSeedreamModel,
+          s.stringEnum(
+            "Flash prioritizes speed, Pro prioritizes quality, and 5.5 supports transparent generation and layer OCR.",
+            seedreamModels,
+          ),
+          seedreamFlashModel,
         ),
         prompt: s.string(
           "Generation or editing instructions; optional for automatic layer decomposition. Coordinates and marks can identify editing regions.",
           { minLength: 1, maxLength: 1000 },
         ),
         images: s.array(
-          "Public URLs or data URLs for up to ten references; layer decomposition and transparent editing require exactly one image.",
+          "Public URLs or data URLs for up to ten references; layer decomposition requires exactly one image.",
           s.nonEmptyString("A public image URL or data URL."),
           { minItems: 1, maxItems: 10 },
         ),
         size: sizeSchema,
         layerDecomposition: s.boolean(
-          "Split one input image into a background and up to 16 layers. The prompt is optional.",
+          "Split one input image into a background and up to 99 layers with 5.5 or 16 with Pro or Flash. The prompt is optional.",
         ),
-        background: s.stringEnum("Transparent output requires one reference with an alpha channel and PNG output.", [
-          "opaque",
-          "transparent",
-        ]),
+        maxImages: s.integer(
+          "Maximum total outputs for 5.5 layer decomposition, including the background (default 30).",
+          { minimum: 2, maximum: 100 },
+        ),
+        textRecognition: s.boolean("Return rich-text OCR for recognized text layers in 5.5 layer decomposition."),
+        background: s.stringEnum(
+          "Omit for layer decomposition. Transparent PNG generation accepts zero to ten references with 5.5. Pro and Flash require one reference with an alpha channel.",
+          ["opaque", "transparent"],
+        ),
         outputFormat: s.stringEnum(
           "Output format; in layer decomposition this controls the background only, foreground layers are always PNG.",
           ["png", "jpeg"],
@@ -79,7 +88,7 @@ export const doubaoSeedreamActions: ProviderActionDefinition[] = [
               size: s.nonEmptyString("The generated image dimensions as WIDTHxHEIGHT."),
               outputFormat: s.stringEnum("The returned image format.", ["png", "jpeg"]),
               background: s.stringEnum("Whether the image background is transparent.", ["opaque", "transparent"]),
-              zIndex: s.integer("Layer stacking order; zero identifies the background.", { minimum: 0, maximum: 16 }),
+              zIndex: s.integer("Layer stacking order; zero identifies the background.", { minimum: 0, maximum: 99 }),
               boundingBox: s.object(
                 "Layer placement on the background canvas.",
                 {
@@ -96,6 +105,7 @@ export const doubaoSeedreamActions: ProviderActionDefinition[] = [
                 },
                 { required: ["absolute", "normalized"] },
               ),
+              textRecognition: s.record("Rich-text OCR with line positions and styled text runs from Ark.", true),
               name: s.string("The layer name."),
               description: s.string("The layer content description."),
             },

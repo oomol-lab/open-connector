@@ -15,6 +15,7 @@ import {
 import {
   ProviderRequestError,
   withRetryAfterSeconds,
+  providerInputError,
   providerResponseError,
   providerUserAgent,
   readProviderJsonBody,
@@ -22,7 +23,7 @@ import {
   requiredResponseRecord,
   runProviderRequest,
 } from "../provider-runtime.ts";
-import { defaultSeedreamModel } from "./actions.ts";
+import { seedream55Model, seedreamFlashModel, seedreamModels, seedreamProModel } from "./actions.ts";
 
 export const doubaoSeedreamApiBaseUrl = "https://ark.cn-beijing.volces.com/api/v3";
 const imagesPath = "images/generations";
@@ -39,25 +40,30 @@ export const doubaoSeedreamActionHandlers: ProviderActionHandlers<
 
 function buildSeedreamBody(input: Record<string, unknown>): Record<string, unknown> {
   const images = optionalStringArray(input.images);
-  const model = optionalString(input.model) ?? defaultSeedreamModel;
+  const model = optionalString(input.model) ?? seedreamFlashModel;
   const layerDecomposition = optionalBoolean(input.layerDecomposition) ?? false;
   const prompt = optionalString(input.prompt);
   const background = optionalString(input.background);
   const outputFormat = optionalString(input.outputFormat);
   const mode = optionalString(input.optimizePromptMode);
   const size = readSize(input.size, layerDecomposition);
-  if (![defaultSeedreamModel, "doubao-seedream-5-0-pro-260628"].includes(model))
-    throw new ProviderRequestError(400, "Unsupported Seedream model");
+  if (!seedreamModels.includes(model)) throw new ProviderRequestError(400, "Unsupported Seedream model");
   if (!layerDecomposition && !prompt) throw new ProviderRequestError(400, "Image generation requires a prompt");
   if (layerDecomposition && images?.length !== 1)
     throw new ProviderRequestError(400, "Layer decomposition requires exactly one image");
-  if (mode === "fast" && model !== "doubao-seedream-5-0-pro-260628")
+  if (layerDecomposition && background !== undefined)
+    throw providerInputError("Layer decomposition does not accept background");
+  const hasLayerOptions = input.maxImages !== undefined || input.textRecognition !== undefined;
+  if (hasLayerOptions && (!layerDecomposition || model !== seedream55Model))
+    throw new ProviderRequestError(400, "Layer options require Seedream 5.5 layer decomposition");
+  if (mode === "fast" && model !== seedreamProModel)
     throw new ProviderRequestError(400, "Fast mode requires Seedream Pro");
-  if (background === "transparent") {
+  if (background === "transparent" && outputFormat === "jpeg")
+    throw providerInputError("Transparent output requires PNG output");
+  if (background === "transparent" && model !== seedream55Model) {
     const hasJPEGReference = images?.some((image) => image.startsWith("data:image/jpeg;"));
-    const invalidReference = images?.length !== 1 || hasJPEGReference;
-    if (invalidReference || outputFormat === "jpeg")
-      throw new ProviderRequestError(400, "Transparent output requires one image with an alpha channel and PNG output");
+    if (images?.length !== 1 || hasJPEGReference)
+      throw providerInputError("Transparent editing requires one reference with an alpha channel");
   }
   return compactObject({
     model,
@@ -65,6 +71,9 @@ function buildSeedreamBody(input: Record<string, unknown>): Record<string, unkno
     image: images,
     size,
     layer_decomposition: layerDecomposition,
+    layer_decomposition_options: hasLayerOptions
+      ? compactObject({ max_images: input.maxImages, text_recognition: input.textRecognition })
+      : undefined,
     background,
     output_format: outputFormat,
     optimize_prompt_options: mode === undefined ? undefined : { mode },
@@ -107,6 +116,7 @@ function normalizeSeedreamResponse(payload: Record<string, unknown>): Record<str
       background: image.background,
       zIndex: image.z_index,
       boundingBox: image.bounding_box,
+      textRecognition: image.text_recognition,
       name: image.name,
       description: image.description,
     })),

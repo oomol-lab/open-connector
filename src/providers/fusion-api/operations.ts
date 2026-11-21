@@ -360,7 +360,7 @@ export const fusionApiOperations: FusionApiOperation[] = [
     method: "POST",
     path: "/v1/doubao-text-to-image-seedream/action/generate",
     tag: "doubao-text-to-image-seedream",
-    description: "Generate, edit or decompose images with Seedream Pro or Flash",
+    description: "Generate, edit or decompose images with Seedream 5.5, Pro or Flash",
     successStatuses: [200],
     pathParams: [],
     inputFields: [
@@ -368,8 +368,12 @@ export const fusionApiOperations: FusionApiOperation[] = [
         name: "model",
         kind: "string",
         required: false,
-        description: "Seedream Pro or Flash model ID.",
-        enumValues: ["doubao-seedream-5-0-flash-260915", "doubao-seedream-5-0-pro-260628"],
+        description: "Seedream 5.5, Pro or Flash model ID.",
+        enumValues: [
+          "doubao-seedream-5-0-flash-260915",
+          "doubao-seedream-5-0-pro-260628",
+          "doubao-seedream-5-5-261028",
+        ],
         defaultValue: "doubao-seedream-5-0-flash-260915",
       },
       {
@@ -396,7 +400,7 @@ export const fusionApiOperations: FusionApiOperation[] = [
         name: "response_format",
         kind: "string",
         required: false,
-        description: "Return image URLs or Base64 data.",
+        description: "Return image URLs or Base64 data. Seedream 5.5 layer decomposition requires URLs.",
         enumValues: ["url", "b64_json"],
       },
       {
@@ -413,16 +417,23 @@ export const fusionApiOperations: FusionApiOperation[] = [
         description: "Prompt optimization options: mode is standard or fast (Pro only).",
       },
       {
+        name: "layer_decomposition_options",
+        kind: "object",
+        required: false,
+        description: "5.5 layer options: max_images (2 to 100) and text_recognition.",
+      },
+      {
         name: "layer_decomposition",
         kind: "boolean",
         required: false,
-        description: "Split one input image into a background and up to sixteen layers.",
+        description: "Split one input image into a background and up to 99 layers with 5.5 (16 with Pro or Flash).",
       },
       {
         name: "background",
         kind: "string",
         required: false,
-        description: "Transparent output requires one reference with an alpha channel and PNG output.",
+        description:
+          "Omit for layer decomposition. Transparent output requires PNG. Pro and Flash require one reference with an alpha channel.",
         enumValues: ["opaque", "transparent"],
       },
       {
