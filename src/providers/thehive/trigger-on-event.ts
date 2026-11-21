@@ -15,17 +15,22 @@ export const thehiveEvent: PollDefinition = {
     const since =
       typeof checkpointObj?.updatedAt == "number" ? checkpointObj.updatedAt : context.now.getTime() - 60_000;
     const seenAtSince = new Set(Array.isArray(checkpointObj?.seenIds) ? checkpointObj.seenIds.map(String) : []);
+    const pageOffset =
+      typeof checkpointObj?.pageOffset == "number" && checkpointObj.pageOffset > 0 ? checkpointObj.pageOffset : 0;
 
-    // Use ascending updatedAt cursor search so deletions never shift offsets and skip unread records.
+    // Query both updatedAt and createdAt so newly created alerts/cases without updatedAt are never filtered out.
     const endpoint = resourceType === "case" ? "/api/case/_search" : "/api/alert/_search";
     const response = await context.connector.execute(
       {
         endpoint,
         method: "POST",
-        query: { range: `0-${thehivePageSize}`, sort: "+updatedAt" },
+        query: {
+          range: `${pageOffset}-${pageOffset + thehivePageSize}`,
+          sort: "+updatedAt,+createdAt,+_id",
+        },
         body: {
           query: {
-            _gte: { _field: "updatedAt", _value: since },
+            _or: [{ _gte: { _field: "updatedAt", _value: since } }, { _gte: { _field: "createdAt", _value: since } }],
           },
         },
       },
@@ -55,13 +60,17 @@ export const thehiveEvent: PollDefinition = {
       });
     }
 
-    const hasMore = response.data.length >= thehivePageSize && events.length > 0;
+    const fullPage = response.data.length >= thehivePageSize;
+    const sameTimestampFullPage = fullPage && maxUpdatedAt === since;
+    const nextPageOffset = sameTimestampFullPage ? pageOffset + response.data.length : 0;
+    const hasMore = fullPage && (sameTimestampFullPage || events.length > 0);
     return {
       events,
       hasMore,
       checkpoint: {
         updatedAt: maxUpdatedAt,
-        seenIds: [...nextSeenIds].slice(-200),
+        seenIds: [...nextSeenIds].slice(-500),
+        pageOffset: nextPageOffset,
       },
     };
   },

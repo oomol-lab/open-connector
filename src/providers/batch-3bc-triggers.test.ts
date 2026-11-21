@@ -169,7 +169,7 @@ describe("Batch 3B & 3C SaaS triggers", () => {
     } as never);
     expect(res.events).toHaveLength(1);
     expect(res.events[0]).toMatchObject({ dedupeKey: "alert:a2:150" });
-    expect(res.checkpoint).toEqual({ updatedAt: 150, seenIds: ["a2"] });
+    expect(res.checkpoint).toEqual({ updatedAt: 150, seenIds: ["a2"], pageOffset: 0 });
 
     // Boundary timestamp: unseen record a3 at same updatedAt=150 should emit while a2 is deduplicated
     const res2 = await thehiveEvent.poll({
@@ -190,33 +190,32 @@ describe("Batch 3B & 3C SaaS triggers", () => {
     } as never);
     expect(res2.events).toHaveLength(1);
     expect(res2.events[0]).toMatchObject({ dedupeKey: "alert:a3:150" });
-    expect(res2.checkpoint).toEqual({ updatedAt: 150, seenIds: ["a2", "a3"] });
+    expect(res2.checkpoint).toEqual({ updatedAt: 150, seenIds: ["a2", "a3"], pageOffset: 0 });
   });
 
-  it("thehive.on_event advances ascending cursor when more than 50 records are newer than checkpoint", async () => {
-    const batch1 = Array.from({ length: 50 }, (_, i) => ({ id: `a${i + 1}`, updatedAt: 101 + i }));
-    const batch2 = [
-      { id: "a50", updatedAt: 150 },
-      { id: "a51", updatedAt: 151 },
+  it("thehive.on_event advances past tied-timestamp full pages and covers newly created alerts without updatedAt", async () => {
+    const tiedPage1 = Array.from({ length: 50 }, (_, i) => ({ id: `t${i + 1}`, createdAt: 100 }));
+    const tiedPage2 = [
+      { id: "t51", createdAt: 100 },
+      { id: "t52", updatedAt: 150 },
     ];
-    let callCount = 0;
-    const seenCursors: number[] = [];
+    const ranges: string[] = [];
     const connector = {
-      async execute(req: { body?: { query?: { _gte?: { _value?: number } } } }) {
-        seenCursors.push(req.body?.query?._gte?._value ?? -1);
-        callCount += 1;
-        return { status: 200, data: callCount === 1 ? batch1 : batch2 };
+      async execute(req: { query?: Record<string, string> }) {
+        const range = req.query?.range ?? "0-50";
+        ranges.push(range);
+        return { status: 200, data: range === "0-50" ? tiedPage1 : tiedPage2 };
       },
     };
     const res1 = await thehiveEvent.poll({
       config: { resourceType: "alert" },
-      checkpoint: { updatedAt: 100 },
+      checkpoint: { updatedAt: 100, seenIds: [], pageOffset: 0 },
       now: new Date("2026-11-21T00:00:00Z"),
       connector,
     } as never);
     expect(res1.events).toHaveLength(50);
     expect(res1.hasMore).toBe(true);
-    expect(res1.checkpoint).toEqual({ updatedAt: 150, seenIds: ["a50"] });
+    expect(res1.checkpoint).toMatchObject({ updatedAt: 100, pageOffset: 50 });
 
     const res2 = await thehiveEvent.poll({
       config: { resourceType: "alert" },
@@ -224,11 +223,74 @@ describe("Batch 3B & 3C SaaS triggers", () => {
       now: new Date("2026-11-21T00:00:05Z"),
       connector,
     } as never);
-    expect(seenCursors).toEqual([100, 150]);
-    expect(res2.events).toHaveLength(1);
-    expect(res2.events[0]).toMatchObject({ dedupeKey: "alert:a51:151" });
+    expect(ranges).toEqual(["0-50", "50-100"]);
+    expect(res2.events.map((e) => e.dedupeKey)).toEqual(["alert:t51:100", "alert:t52:150"]);
     expect(res2.hasMore).toBe(false);
-    expect(res2.checkpoint).toEqual({ updatedAt: 151, seenIds: ["a51"] });
+    expect(res2.checkpoint).toEqual({ updatedAt: 150, seenIds: ["t52"], pageOffset: 0 });
+  });
+
+  it("helpscout.on_conversation_event derives distinct deliveryIds for reply events with or without thread ID", async () => {
+    const withThreadPayload = {
+      id: 42,
+      userUpdatedAt: "2026-11-21T00:00:00Z",
+      _embedded: { threads: [{ id: 9001 }] },
+    };
+    const rawWithThread = Buffer.from(JSON.stringify(withThreadPayload));
+    const sig1 = createHmac("sha1", "hs-sec").update(rawWithThread).digest("base64");
+    const r1 = await helpscoutConversationEvent.receive({
+      admit: true,
+      callbackSecret: "hs-sec",
+      config: { events: ["convo.customer.reply.created"] },
+      current: true,
+      method: "POST",
+      rawBody: new Uint8Array(rawWithThread),
+      payload: withThreadPayload,
+      header: (k: string) =>
+        ({ "x-helpscout-signature": sig1, "x-helpscout-event": "convo.customer.reply.created" })[k],
+      query: () => undefined,
+    } as never);
+    expect(r1).toMatchObject({ outcome: "event", dedupeKey: "convo.customer.reply.created:42:9001" });
+
+    // Without _embedded.threads, two distinct replies sharing userUpdatedAt produce distinct deliveryIds
+    const pA = { id: 42, userUpdatedAt: "2026-11-21T00:00:00Z", preview: "first reply" };
+    const pB = { id: 42, userUpdatedAt: "2026-11-21T00:00:00Z", preview: "second reply" };
+    const rawA = Buffer.from(JSON.stringify(pA));
+    const rawB = Buffer.from(JSON.stringify(pB));
+    const rA = await helpscoutConversationEvent.receive({
+      admit: true,
+      callbackSecret: "hs-sec",
+      config: { events: ["convo.customer.reply.created"] },
+      current: true,
+      method: "POST",
+      rawBody: new Uint8Array(rawA),
+      payload: pA,
+      header: (k: string) =>
+        ({
+          "x-helpscout-signature": createHmac("sha1", "hs-sec").update(rawA).digest("base64"),
+          "x-helpscout-event": "convo.customer.reply.created",
+        })[k],
+      query: () => undefined,
+    } as never);
+    const rB = await helpscoutConversationEvent.receive({
+      admit: true,
+      callbackSecret: "hs-sec",
+      config: { events: ["convo.customer.reply.created"] },
+      current: true,
+      method: "POST",
+      rawBody: new Uint8Array(rawB),
+      payload: pB,
+      header: (k: string) =>
+        ({
+          "x-helpscout-signature": createHmac("sha1", "hs-sec").update(rawB).digest("base64"),
+          "x-helpscout-event": "convo.customer.reply.created",
+        })[k],
+      query: () => undefined,
+    } as never);
+    expect(rA.outcome).toBe("event");
+    expect(rB.outcome).toBe("event");
+    if (rA.outcome === "event" && rB.outcome === "event") {
+      expect(rA.dedupeKey).not.toBe(rB.dedupeKey);
+    }
   });
 
   it("wufoo.on_form_entry validates HandshakeKey and emits EntryId", async () => {

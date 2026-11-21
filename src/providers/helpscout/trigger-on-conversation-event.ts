@@ -1,6 +1,7 @@
 import type { IntegrationDefinition } from "../../triggers/common/integration.ts";
 import type { ManagedWebhook } from "../../triggers/managed-webhook.ts";
 
+import { createHash } from "node:crypto";
 import { PermanentIntegrationError, TransientIntegrationError } from "../../triggers/common/integration.ts";
 import { isJsonObject } from "../../triggers/common/json.ts";
 import { reconcileManagedWebhook, webhookRequest } from "../../triggers/managed-webhook.ts";
@@ -107,16 +108,22 @@ export const helpscoutConversationEvent: IntegrationDefinition = {
       return { outcome: "ignored", reason: "Help Scout event is not subscribed." };
     }
     const embedded = isJsonObject(body._embedded) ? body._embedded : undefined;
-    const threads = Array.isArray(embedded?.threads) ? embedded.threads : undefined;
+    const threads = Array.isArray(embedded?.threads)
+      ? embedded.threads
+      : Array.isArray(body.threads)
+        ? body.threads
+        : undefined;
     const latestThread = threads && threads.length > 0 && isJsonObject(threads[0]) ? threads[0] : undefined;
     const threadId =
       latestThread && ["number", "string"].includes(typeof latestThread.id) ? String(latestThread.id) : undefined;
     const timestamp =
       event === "customer.updated"
-        ? (body.updatedAt ?? body.userUpdatedAt ?? body.createdAt ?? "")
-        : (body.userUpdatedAt ?? body.updatedAt ?? body.createdAt ?? "");
-    const identity =
-      (event.endsWith(".reply.created") || event.endsWith(".note.created")) && threadId ? threadId : String(timestamp);
+        ? (body.updatedAt ?? body.userModifiedAt ?? body.modifiedAt ?? body.userUpdatedAt ?? body.createdAt ?? "")
+        : (body.userModifiedAt ?? body.modifiedAt ?? body.userUpdatedAt ?? body.updatedAt ?? body.createdAt ?? "");
+    const isReplyOrNote = event.endsWith(".reply.created") || event.endsWith(".note.created");
+    const identity = isReplyOrNote
+      ? (threadId ?? createHash("sha256").update(context.rawBody).digest("hex").slice(0, 16))
+      : String(timestamp);
     const deliveryId = `${event}:${String(body.id ?? "")}:${identity}`;
     return {
       outcome: "event",
