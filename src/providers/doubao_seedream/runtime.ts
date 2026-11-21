@@ -51,6 +51,8 @@ function buildSeedreamBody(input: Record<string, unknown>): Record<string, unkno
   if (!layerDecomposition && !prompt) throw new ProviderRequestError(400, "Image generation requires a prompt");
   if (layerDecomposition && images?.length !== 1)
     throw new ProviderRequestError(400, "Layer decomposition requires exactly one image");
+  if (layerDecomposition && background !== undefined)
+    throw providerInputError("Layer decomposition does not accept background");
   const hasLayerOptions = input.maxImages !== undefined || input.textRecognition !== undefined;
   if (hasLayerOptions && (!layerDecomposition || model !== seedream55Model))
     throw new ProviderRequestError(400, "Layer options require Seedream 5.5 layer decomposition");

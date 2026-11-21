@@ -400,7 +400,7 @@ export const fusionApiOperations: FusionApiOperation[] = [
         name: "response_format",
         kind: "string",
         required: false,
-        description: "Return image URLs or Base64 data.",
+        description: "Return image URLs or Base64 data. Seedream 5.5 layer decomposition requires URLs.",
         enumValues: ["url", "b64_json"],
       },
       {
@@ -432,7 +432,8 @@ export const fusionApiOperations: FusionApiOperation[] = [
         name: "background",
         kind: "string",
         required: false,
-        description: "Transparent output requires PNG. Pro and Flash require one reference with an alpha channel.",
+        description:
+          "Omit for layer decomposition. Transparent output requires PNG. Pro and Flash require one reference with an alpha channel.",
         enumValues: ["opaque", "transparent"],
       },
       {

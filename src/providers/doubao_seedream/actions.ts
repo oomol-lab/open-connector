@@ -34,7 +34,10 @@ export const doubaoSeedreamActions: ProviderActionDefinition[] = [
     inputSchema: s.actionInput(
       {
         model: s.withDefault(
-          s.stringEnum("The Seedream model; Flash prioritizes speed, Pro prioritizes quality.", seedreamModels),
+          s.stringEnum(
+            "Flash prioritizes speed, Pro prioritizes quality, and 5.5 supports transparent generation and layer OCR.",
+            seedreamModels,
+          ),
           seedreamFlashModel,
         ),
         prompt: s.string(
@@ -56,7 +59,7 @@ export const doubaoSeedreamActions: ProviderActionDefinition[] = [
         ),
         textRecognition: s.boolean("Return rich-text OCR for recognized text layers in 5.5 layer decomposition."),
         background: s.stringEnum(
-          "Transparent PNG generation accepts zero to ten references with 5.5. Pro and Flash require one reference with an alpha channel.",
+          "Omit for layer decomposition. Transparent PNG generation accepts zero to ten references with 5.5. Pro and Flash require one reference with an alpha channel.",
           ["opaque", "transparent"],
         ),
         outputFormat: s.stringEnum(
