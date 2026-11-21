@@ -1,6 +1,8 @@
 import type { ProviderDefinition } from "../../core/types.ts";
 
 import { jotformActions } from "./actions.ts";
+import { snapshot } from "./trigger-on-submission.definition.ts";
+import { triggerPermissions } from "./trigger-permissions.ts";
 
 const service = "jotform";
 
@@ -9,6 +11,8 @@ const service = "jotform";
  */
 export const provider: ProviderDefinition = {
   service,
+  triggers: [snapshot],
+  triggerPermissions,
   displayName: "Jotform",
   categories: ["Productivity", "Data"],
   authTypes: ["api_key"],

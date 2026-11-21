@@ -21,3 +21,9 @@ export const credentialValidators: CredentialValidators = {
     return validateWiseCredential(input.apiKey, fetcher, signal);
   },
 };
+
+import type { IntegrationDefinition } from "../../triggers/common/integration.ts";
+
+import { wiseEvent } from "./trigger-on-event.ts";
+
+export const triggers: readonly IntegrationDefinition[] = [wiseEvent];

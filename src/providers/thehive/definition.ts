@@ -1,9 +1,13 @@
 import type { ProviderDefinition } from "../../core/types.ts";
 
 import { theHiveActions } from "./actions.ts";
+import { snapshot } from "./trigger-on-event.definition.ts";
+import { triggerPermissions } from "./trigger-permissions.ts";
 
 export const provider: ProviderDefinition = {
   service: "thehive",
+  triggers: [snapshot],
+  triggerPermissions,
   displayName: "TheHive",
   description: "Create and inspect alerts and cases in a TheHive 4 instance.",
   categories: ["Security"],

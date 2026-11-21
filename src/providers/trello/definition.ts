@@ -1,11 +1,15 @@
 import type { ProviderDefinition } from "../../core/types.ts";
 
 import { trelloActions } from "./actions.ts";
+import { snapshot } from "./trigger-on-model-event.definition.ts";
+import { triggerPermissions } from "./trigger-permissions.ts";
 
 const service = "trello";
 
 export const provider: ProviderDefinition = {
   service,
+  triggers: [snapshot],
+  triggerPermissions,
   displayName: "Trello",
   categories: ["Productivity"],
   authTypes: ["oauth2", "custom_credential"],

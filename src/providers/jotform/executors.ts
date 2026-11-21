@@ -663,6 +663,10 @@ function isScalarSubmissionValue(value: unknown): value is string | number | boo
   return typeof value === "string" || typeof value === "number" || typeof value === "boolean";
 }
 
+import type { IntegrationDefinition } from "../../triggers/common/integration.ts";
+
+import { jotformSubmission } from "./trigger-on-submission.ts";
+
 function requireProviderRecord(value: unknown, label: string): Record<string, unknown> {
   const record = optionalRecord(value);
   if (!record) {
@@ -670,3 +674,5 @@ function requireProviderRecord(value: unknown, label: string): Record<string, un
   }
   return record;
 }
+
+export const triggers: readonly IntegrationDefinition[] = [jotformSubmission];

@@ -1,9 +1,13 @@
 import type { ProviderDefinition } from "../../core/types.ts";
 
 import { wufooActions } from "./actions.ts";
+import { snapshot } from "./trigger-on-form-entry.definition.ts";
+import { triggerPermissions } from "./trigger-permissions.ts";
 
 export const provider: ProviderDefinition = {
   service: "wufoo",
+  triggers: [snapshot],
+  triggerPermissions,
   displayName: "Wufoo",
   description: "Read forms and entries or submit entries to Wufoo.",
   categories: ["Data", "Productivity"],

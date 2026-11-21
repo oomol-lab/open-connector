@@ -271,3 +271,9 @@ function createChargebeeError(response: Response, payload: unknown): ProviderReq
     `Chargebee request failed with HTTP ${response.status}`;
   return new ProviderRequestError(response.status >= 500 ? 502 : response.status, message, payload);
 }
+
+import type { PollDefinition } from "../../triggers/common/poll.ts";
+
+import { chargebeeEvent } from "./trigger-on-event.ts";
+
+export const triggers: readonly PollDefinition[] = [chargebeeEvent];

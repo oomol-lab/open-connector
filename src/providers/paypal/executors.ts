@@ -47,3 +47,9 @@ export const credentialValidators: CredentialValidators = {
     return validatePayPalCredential(input.values, fetcher);
   },
 };
+
+import type { IntegrationDefinition } from "../../triggers/common/integration.ts";
+
+import { paypalEvent } from "./trigger-on-event.ts";
+
+export const triggers: readonly IntegrationDefinition[] = [paypalEvent];

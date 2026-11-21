@@ -1,9 +1,13 @@
 import type { ProviderDefinition } from "../../core/types.ts";
 
 import { taigaActions } from "./actions.ts";
+import { snapshot } from "./trigger-on-project-event.definition.ts";
+import { triggerPermissions } from "./trigger-permissions.ts";
 
 export const provider: ProviderDefinition = {
   service: "taiga",
+  triggers: [snapshot],
+  triggerPermissions,
   displayName: "Taiga",
   description: "Manage projects, user stories, tasks, and issues on a Taiga instance.",
   categories: ["Productivity"],

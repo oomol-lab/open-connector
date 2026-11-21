@@ -1,9 +1,13 @@
 import type { ProviderDefinition } from "../../core/types.ts";
 
 import { bitbucketActions } from "./actions.ts";
+import { snapshot } from "./trigger-on-repo-event.definition.ts";
+import { triggerPermissions } from "./trigger-permissions.ts";
 
 export const provider: ProviderDefinition = {
   service: "bitbucket",
+  triggers: [snapshot],
+  triggerPermissions,
   displayName: "Bitbucket",
   categories: ["Developer Tools"],
   authTypes: ["oauth2"],

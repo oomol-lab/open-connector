@@ -93,7 +93,13 @@ export const proxy: ProviderProxyExecutor = async (input, context) => {
   }
 };
 
+import type { IntegrationDefinition } from "../../triggers/common/integration.ts";
+
+import { trelloModelEvent } from "./trigger-on-model-event.ts";
+
 export const credentialValidators: CredentialValidators = {
   customCredential: validateTrelloCredential,
   oauth2: validateTrelloOAuthCredential,
 };
+
+export const triggers: readonly IntegrationDefinition[] = [trelloModelEvent];

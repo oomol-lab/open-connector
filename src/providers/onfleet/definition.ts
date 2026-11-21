@@ -1,9 +1,13 @@
 import type { ProviderDefinition } from "../../core/types.ts";
 
 import { onfleetActions } from "./actions.ts";
+import { snapshot } from "./trigger-on-task-event.definition.ts";
+import { triggerPermissions } from "./trigger-permissions.ts";
 
 export const provider: ProviderDefinition = {
   service: "onfleet",
+  triggers: [snapshot],
+  triggerPermissions,
   displayName: "Onfleet",
   categories: ["Productivity", "Location"],
   authTypes: ["api_key"],
