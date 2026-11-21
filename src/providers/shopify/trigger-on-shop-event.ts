@@ -19,6 +19,7 @@ export const shopifyShopEvent: IntegrationDefinition = {
     headers: [
       "x-shopify-api-version",
       "x-shopify-event-id",
+      "x-shopify-hmac-sha256",
       "x-shopify-shop-domain",
       "x-shopify-topic",
       "x-shopify-triggered-at",
