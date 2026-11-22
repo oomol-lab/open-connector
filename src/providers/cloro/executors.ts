@@ -19,11 +19,22 @@ const baseUrl = "https://api.cloro.dev";
 // Bing reads the Bing AI Mode prompt and the Bing Search query from a query string, and
 // Cloro rejects them past 3,500 characters once URL-encoded. The schema maxLength counts
 // raw characters, so a non-Latin text can pass it and still fail upstream. This count
-// matches the one Cloro uses.
+// matches the one Cloro uses: Cloro trims the text first, then counts the encoded length.
 const bingPromptLimit = 3500;
 function bingPromptTooLong(prompt: unknown): boolean {
   const text = optionalRawString(prompt);
-  return text !== undefined && encodeURIComponent(text.trim()).replaceAll("%20", "+").length > bingPromptLimit;
+  if (text === undefined) return false;
+  let encoded: string;
+  try {
+    encoded = encodeURIComponent(text.trim());
+  } catch (error) {
+    // encodeURIComponent throws a URIError on an unpaired UTF-16 surrogate.
+    if (error instanceof URIError) {
+      throw providerInputError("Bing AI Mode prompt or Bing Search query is not valid Unicode text.");
+    }
+    throw error;
+  }
+  return encoded.replaceAll("%20", "+").length > bingPromptLimit;
 }
 function bingPrompts(actionName: string, values: Record<string, unknown>): unknown[] {
   if (actionName === "monitor_bing_aimode") return [values.prompt];
