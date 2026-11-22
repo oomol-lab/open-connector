@@ -1,7 +1,14 @@
 import type { CredentialValidationResult, ResolvedCredential } from "../../core/types.ts";
 import type { ProviderActionHandlers } from "../provider-executors.ts";
 
-import { compactObject, objectArray, optionalBoolean, optionalRecord, optionalString } from "../../core/cast.ts";
+import {
+  compactObject,
+  objectArray,
+  optionalBoolean,
+  optionalRecord,
+  optionalString,
+  optionalStringArray,
+} from "../../core/cast.ts";
 import {
   ProviderRequestError,
   providerResponseError,
@@ -36,7 +43,18 @@ type TrelloRequestInput = {
 
 const defaultMemberFields = ["id", "username", "fullName"];
 const defaultBoardFields = ["name", "desc", "url", "shortUrl", "closed"];
-const defaultCardFields = ["name", "desc", "url", "shortUrl", "closed", "due", "dueComplete", "idBoard", "idList"];
+const defaultCardFields = [
+  "name",
+  "desc",
+  "url",
+  "shortUrl",
+  "closed",
+  "due",
+  "dueComplete",
+  "idBoard",
+  "idList",
+  "idMembers",
+];
 
 export const trelloActionHandlers: ProviderActionHandlers<"trello", TrelloActionHandler> = {
   async get_member(input, context) {
@@ -721,6 +739,7 @@ function normalizeCard(payload: Record<string, unknown>) {
     id: readOptionalString(payload.id),
     boardId: readOptionalString(payload.idBoard),
     listId: readOptionalString(payload.idList),
+    memberIds: optionalStringArray(payload.idMembers),
     name: readOptionalString(payload.name),
     description: readOptionalString(payload.desc),
     url: readOptionalString(payload.url),

@@ -1,7 +1,7 @@
 import type { ExecutionContext, ResolvedCredential } from "../../core/types.ts";
 
 import { afterEach, describe, expect, it, vi } from "vitest";
-import { proxy } from "./executors.ts";
+import { executors, proxy } from "./executors.ts";
 
 const credential: ResolvedCredential = {
   authType: "custom_credential",
@@ -15,6 +15,35 @@ const originalEndpoint = "/cards/card-1/attachments/attachment-1/download/image.
 const imageBytes = new Uint8Array([0x89, 0x50, 0x4e, 0x47, 0x00, 0xff, 0x80, 0xc3, 0x28]);
 
 afterEach(() => vi.unstubAllGlobals());
+
+describe("Trello card members", () => {
+  it("requests and returns the assigned member IDs when reading a card", async () => {
+    const fetcher = vi.fn<typeof fetch>(async () => Response.json({ idMembers: ["member-1", "member-2"] }));
+    vi.stubGlobal("fetch", fetcher);
+
+    const result = await executors["trello.get_card"]!({ cardId: "card-1" }, context);
+    expect(new URL(String(fetcher.mock.calls[0]![0])).searchParams.get("fields")?.split(",")).toContain("idMembers");
+    expect(result).toEqual({ ok: true, output: { card: { memberIds: ["member-1", "member-2"] } } });
+  });
+
+  it("returns the assigned member IDs for each card on a board, including empty lists", async () => {
+    const fetcher = vi.fn<typeof fetch>(async () => Response.json([{ idMembers: ["member-1"] }, { idMembers: [] }]));
+    vi.stubGlobal("fetch", fetcher);
+
+    const result = await executors["trello.list_board_cards"]!({ boardId: "board-1" }, context);
+    expect(new URL(String(fetcher.mock.calls[0]![0])).searchParams.get("fields")?.split(",")).toContain("idMembers");
+    expect(result).toEqual({ ok: true, output: { cards: [{ memberIds: ["member-1"] }, { memberIds: [] }] } });
+  });
+
+  it("omits member IDs when the caller requests only the card name", async () => {
+    const fetcher = vi.fn<typeof fetch>(async () => Response.json({ name: "Buy supplies" }));
+    vi.stubGlobal("fetch", fetcher);
+
+    const result = await executors["trello.get_card"]!({ cardId: "card-1", fields: ["name"] }, context);
+    expect(new URL(String(fetcher.mock.calls[0]![0])).searchParams.get("fields")).toBe("name");
+    expect(result).toEqual({ ok: true, output: { card: { name: "Buy supplies" } } });
+  });
+});
 
 describe("Trello proxy authentication", () => {
   it.each([
