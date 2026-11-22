@@ -82,6 +82,23 @@ describe("SaasClient", () => {
     await expect(client.getRequest(project, "request")).rejects.toMatchObject({ code: "oauth_source_protocol_error" });
   });
 
+  it("accepts the webhookId that current SaaS connection requests include", async () => {
+    const withWebhook = { ...request, webhookId: null };
+    const fetcher = vi
+      .fn<typeof fetch>()
+      .mockResolvedValueOnce(envelope(withWebhook))
+      .mockResolvedValueOnce(envelope({ ...withWebhook, webhookId: "webhook" }));
+    const client = new SaasClient(fetcher);
+    const input = {
+      providerConfigId: "config",
+      externalUserId: "user",
+      alias: "alias",
+      returnUri: "https://connect.example/done",
+    };
+    expect(await client.createLink(project, input)).toEqual(withWebhook);
+    expect(await client.getRequest(project, "request")).toEqual({ ...withWebhook, webhookId: "webhook" });
+  });
+
   it("creates an ordinary link with explicit selectors and checks its browser URL", async () => {
     const fetcher = vi
       .fn<typeof fetch>()

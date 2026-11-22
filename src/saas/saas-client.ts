@@ -46,6 +46,8 @@ export interface SaasConnectionRequest {
   alias: string | null;
   authorizationUrl: string;
   connectedAccountId: string | null;
+  /** Set by current SaaS deployments; older ones omit it. Connect does not read it. */
+  webhookId?: string | null;
   errorCode: string | null;
   errorMessage: string | null;
   expiresAt: string;
@@ -515,6 +517,7 @@ async function createSchemas() {
       alias: z.string().nullable(),
       authorizationUrl: z.url({ protocol: /^https$/ }),
       connectedAccountId: identifier.nullable(),
+      webhookId: identifier.nullable().optional(),
       errorCode: z.string().nullable(),
       errorMessage: z.string().nullable(),
       expiresAt: z.iso.datetime(),
