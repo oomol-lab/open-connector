@@ -643,6 +643,43 @@ export const bingAiModeMonitorRequest: JsonSchema = {
   description: "Bing AI Mode monitoring parameters.",
   allOf: [{ if: { required: ["state"] }, then: { properties: { country: { const: "US" } } } }],
 };
+export const bingMonitorRequest: JsonSchema = {
+  required: ["query", "country"],
+  type: "object",
+  properties: {
+    query: {
+      description:
+        "The search query to execute on Bing. Bing limits the URL-encoded query to 3,500 characters, so non-Latin scripts allow fewer characters.",
+      type: "string",
+      minLength: 1,
+      maxLength: 3500,
+    },
+    country: {
+      ...countryCodeSchema,
+      description:
+        "ISO 3166-1 alpha-2 country code for localized search results. The country selects the Bing market. See [List of countries](/api-reference/endpoint/countries) for the codes each provider supports.",
+    },
+    include: {
+      description: "Optional flags for including additional response data",
+      type: "object",
+      properties: {
+        html: { description: "Include raw HTML response from Bing search", type: "boolean" },
+        aioverview: {
+          description:
+            "Include the Bing AI summary at the top of the results page, returned as `aioverview`. Paid add-on: +2 credits.",
+          type: "object",
+          properties: {
+            markdown: { description: "Include AI Overview formatted as markdown", type: "boolean" },
+          },
+          additionalProperties: false,
+        },
+      },
+      additionalProperties: false,
+    },
+  },
+  additionalProperties: false,
+  description: "Bing monitoring parameters.",
+};
 export const googleProductRequest: JsonSchema = {
   required: ["productResultToken"],
   type: "object",
