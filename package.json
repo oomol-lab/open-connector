@@ -10,25 +10,26 @@
   "scripts": {
     "postinstall": "node scripts/ensure-generated.ts",
     "dev": "node scripts/dev-local.ts",
+    "dev:cloudflare": "npm run generate:catalog && npm run build:web && node scripts/copy-catalog-assets.ts && wrangler dev --config wrangler.local.jsonc",
+    "start": "node scripts/ensure-generated.ts && node src/server/index.ts",
     "build": "npm run typecheck",
     "build:web": "npm run build --workspace web",
     "build:binary": "npm run generate:catalog && npm run build:web && bun scripts/build-binary.ts",
-    "dev:cloudflare": "npm run generate:catalog && npm run build:web && node scripts/copy-catalog-assets.ts && wrangler dev --config wrangler.local.jsonc",
+    "build:runtime": "npm run generate:catalog && node scripts/build-runtime-package.ts",
     "deploy:cloudflare": "npm run generate:catalog && npm run build:web && node scripts/copy-catalog-assets.ts && wrangler deploy --config wrangler.local.jsonc --minify",
-    "start": "node scripts/ensure-generated.ts && node src/server/index.ts",
     "test": "vitest run",
+    "test:probe": "vitest run --config vitest.probe.config.ts",
     "typecheck": "npm run generate:registry && node scripts/typecheck.ts",
-    "generate:registry": "node scripts/generate-provider-registry.ts",
-    "generate:catalog": "node scripts/generate-catalog.ts",
-    "runtime:migrate": "node scripts/runtime-data.ts migrate",
-    "runtime:data": "node scripts/runtime-data.ts",
     "lint": "oxlint .",
     "lint:fix": "oxlint . --fix",
     "format": "oxfmt --check .",
     "format:fix": "oxfmt .",
     "fix": "npm run lint:fix && npm run format:fix",
     "fix-check": "npm run fix && npm run typecheck",
-    "build:runtime": "npm run generate:catalog && node scripts/build-runtime-package.ts"
+    "generate:registry": "node scripts/generate-provider-registry.ts",
+    "generate:catalog": "node scripts/generate-catalog.ts",
+    "runtime:data": "node scripts/runtime-data.ts",
+    "runtime:migrate": "node scripts/runtime-data.ts migrate"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.1151.0",
@@ -90,8 +91,8 @@
     "node": "^22.23.4 || ^24.22.1 || >=26.12.1"
   },
   "allowScripts": {
-    "fsevents@2.3.3": true,
     "esbuild@0.28.2": true,
+    "fsevents@2.3.3": true,
     "workerd@1.20261006.1": true
   }
 }

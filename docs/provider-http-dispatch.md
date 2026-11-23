@@ -73,9 +73,7 @@ connection identity. The request's outer fallback scope has operation `runtime`.
 A host requiring stricter identity must deny unknown contexts.
 
 These IDs identify the resolved connection; they do not attest a credential
-revision or fence authorization changes. Existing credential mutability, OAuth
-refresh/single-flight, connection-store APIs and Trigger ownership behavior are
-preserved when admission is enabled.
+revision or fence authorization changes.
 
 ## Result feedback
 
@@ -112,8 +110,7 @@ Coverage is HTTP passing through the shared guarded provider fetch: provider
 requests, content downloads, credential validation, OAuth requests and Trigger
 proxies. SDK transports that bypass shared fetch, including Alibaba OSS SDK
 actions, are outside this hook. Home Assistant WebSockets, MQTT over WebSockets,
-and IMAP/SMTP TCP/TLS also remain outside it. Existing transport guards are
-unchanged. Platform transit storage, remote SaaS/Marketplace execution and host
+and IMAP/SMTP TCP/TLS also remain outside it. Platform transit storage, remote SaaS/Marketplace execution and host
 control-plane traffic do not acquire local-provider HTTP permits.
 
 Library callers can use `withProviderHttpDispatch(context, run, options)` from
