@@ -1,11 +1,10 @@
 import type { IntegrationDefinition } from "../../triggers/common/integration.ts";
 import type { ManagedWebhook } from "../../triggers/managed-webhook.ts";
 
-import { createHmac } from "node:crypto";
 import { PermanentIntegrationError, TransientIntegrationError } from "../../triggers/common/integration.ts";
 import { isJsonObject } from "../../triggers/common/json.ts";
 import { reconcileManagedWebhook, webhookRequest } from "../../triggers/managed-webhook.ts";
-import { sameSecret } from "../../triggers/signature.ts";
+import { sameSecret, verifyHexHmac } from "../../triggers/signature.ts";
 import { snapshot } from "./trigger-on-task-event.definition.ts";
 
 const triggerNameToId: Record<string, number> = {
@@ -30,12 +29,15 @@ function withCallbackToken(endpointUrl: string, token: string): string {
   return url.toString();
 }
 
-function verifyOnfleetSignature(secret: string, rawBody: Uint8Array, signature: string | undefined): boolean {
+async function verifyOnfleetSignature(
+  secret: string,
+  rawBody: Uint8Array,
+  signature: string | undefined,
+): Promise<boolean> {
   if (!signature) return false;
   const key = Buffer.from(secret, "hex");
   if (key.length === 0) return false;
-  const expected = createHmac("sha512", key).update(rawBody).digest("hex");
-  return sameSecret(signature.toLowerCase(), expected);
+  return verifyHexHmac(key, [rawBody], signature, "SHA-512");
 }
 
 export const onfleetTaskEvent: IntegrationDefinition = {
@@ -106,7 +108,7 @@ export const onfleetTaskEvent: IntegrationDefinition = {
       },
     });
   },
-  receive(context) {
+  async receive(context) {
     if (!sameSecret(context.query("of_token"), context.callbackSecret)) {
       return { outcome: "respond", status: 401, body: "", contentType: "text/plain" };
     }
@@ -117,7 +119,7 @@ export const onfleetTaskEvent: IntegrationDefinition = {
     const webhookSecret = context.connector.credentialValues?.webhookSecret;
     if (
       webhookSecret &&
-      !verifyOnfleetSignature(webhookSecret, context.rawBody, context.header("x-onfleet-signature"))
+      !(await verifyOnfleetSignature(webhookSecret, context.rawBody, context.header("x-onfleet-signature")))
     ) {
       return { outcome: "respond", status: 401, body: "", contentType: "text/plain" };
     }
