@@ -84,7 +84,7 @@ export const boxItemEvent: IntegrationDefinition = {
     return reconcileManagedWebhook(context, {
       async find() {
         const savedHookId = context.state?.subscription.hookId;
-        if (typeof savedHookId == "string" && savedHookId.length > 0) {
+        if (context.active && typeof savedHookId == "string" && savedHookId.length > 0) {
           const detail = await context.connector.execute(
             { endpoint: `/webhooks/${encodeURIComponent(savedHookId)}`, method: "GET" },
             context.signal,

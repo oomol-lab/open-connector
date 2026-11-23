@@ -113,7 +113,9 @@ export const trelloModelEvent: IntegrationDefinition = {
       return { outcome: "respond", status: 503, body: "", contentType: "text/plain" };
     }
     if (applicationSecret) {
-      const callbackURL = context.state?.subscription.callbackURL;
+      const callbackURL =
+        context.state?.subscription.callbackURL ??
+        (context.endpointUrl ? withCallbackToken(context.endpointUrl, context.callbackSecret) : undefined);
       if (typeof callbackURL != "string" || callbackURL.length === 0) {
         return { outcome: "respond", status: 503, body: "", contentType: "text/plain" };
       }

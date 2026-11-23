@@ -204,13 +204,13 @@ export const chargebeeEvent: PollDefinition = {
     const events: PollEvent[] = [];
     for (const entry of result.entries) {
       if (entry.occurredAt < scan.lowerBound) continue;
+      if (filter.length > 0 && !filter.includes(entry.eventType)) continue;
       const digest = eventDigest(entry.id);
       if (entry.occurredAt === checkpoint.baseline && checkpoint.baselineIds.has(digest)) continue;
       let second = seen.get(entry.occurredAt);
       if (second?.has(digest)) continue;
       if (!second) seen.set(entry.occurredAt, (second = new Set()));
       second.add(digest);
-      if (filter.length > 0 && !filter.includes(entry.eventType)) continue;
       events.push({
         dedupeKey: entry.id,
         payload: {

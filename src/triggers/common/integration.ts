@@ -85,6 +85,7 @@ export interface IntegrationStateContext {
 }
 
 export interface IntegrationReceiveContext {
+  readonly endpointUrl?: string;
   readonly eventSourceId?: string;
   readonly signal?: AbortSignal;
   readonly admit: boolean;
@@ -133,6 +134,7 @@ export type ResourceDefinition =
   | { readonly reconcile: (context: IntegrationReconcileContext) => Promise<IntegrationReconcileResult> };
 
 export interface IntegrationDefinition {
+  readonly maximumBodyBytes?: number;
   readonly callback?: { readonly headers: readonly string[]; readonly query: readonly string[] };
   readonly handshake?: (input: {
     /** Base64-encoded wire body from the Trigger receive request. */

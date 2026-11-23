@@ -50,13 +50,15 @@ export const paypalEvent: IntegrationDefinition = {
         const found: ManagedWebhook[] = [];
         for (const item of response.data.webhooks) {
           if (!isJsonObject(item) || typeof item.url != "string") continue;
-          if (!item.url.startsWith(context.endpointUrl)) continue;
+          const ownsStoredHook = typeof item.id === "string" && item.id === context.state?.subscription.hookId;
+          if (!item.url.startsWith(context.endpointUrl) && (context.active || !ownsStoredHook)) continue;
           if (typeof item.id != "string") {
             throw new PermanentIntegrationError("PayPal webhook entry is missing an ID.");
           }
           if (item.url !== webhookUrl) {
-            if (!context.active) continue;
-            throw new PermanentIntegrationError("PayPal webhook callback URL differs from this subscription.");
+            if (!context.active && !ownsStoredHook) continue;
+            if (context.active)
+              throw new PermanentIntegrationError("PayPal webhook callback URL differs from this subscription.");
           }
           if (context.active) {
             const itemEvents = Array.isArray(item.event_types)

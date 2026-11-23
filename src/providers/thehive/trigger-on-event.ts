@@ -5,8 +5,6 @@ import { isJsonObject } from "../../triggers/common/json.ts";
 import { eventsPollOutputs, PermanentPollError } from "../../triggers/common/poll.ts";
 import { snapshot } from "./trigger-on-event.definition.ts";
 
-// Independent creation/update cursors avoid skipping records without updatedAt.
-// Re-read boundary IDs instead of persisting offsets that drift as records change.
 const thehivePageSize = 50;
 const thehiveSeenIdLimit = 500;
 
@@ -15,12 +13,14 @@ type StreamField = "createdAt" | "updatedAt";
 interface StreamCursor {
   readonly since: number;
   readonly seenIds: readonly string[];
+  readonly offset?: number;
 }
 
 function readCursor(value: JsonValue | undefined): StreamCursor | undefined {
   if (!isJsonObject(value) || typeof value.since != "number") return undefined;
   return {
     since: value.since,
+    offset: typeof value.offset === "number" ? value.offset : 0,
     seenIds: Array.isArray(value.seenIds) ? value.seenIds.map(String) : [],
   };
 }
@@ -36,12 +36,13 @@ async function pollStream(
 ): Promise<{ events: PollEvent[]; cursor: StreamCursor; hasMore: boolean }> {
   const { field, cursor, resourceType } = input;
   const seenAtSince = new Set(cursor.seenIds);
+  const offset = cursor.offset ?? 0;
   const rangeSize = seenAtSince.size + thehivePageSize;
   const response = await context.connector.execute(
     {
       endpoint: input.endpoint,
       method: "POST",
-      query: { range: `0-${rangeSize}`, sort: `+${field}` },
+      query: { range: `${offset}-${offset + rangeSize}`, sort: `+${field}` },
       body: { query: { _gte: { _field: field, _value: cursor.since } } },
     },
     context.signal,
@@ -50,9 +51,9 @@ async function pollStream(
     throw new Error(`TheHive ${resourceType} poll failed with HTTP ${response.status}.`);
   }
   let since = cursor.since;
+  let nextOffset = offset;
   let seenIds = new Set(seenAtSince);
   const events: PollEvent[] = [];
-
   let budgetReached = false;
   for (const item of response.data) {
     if (events.length >= thehivePageSize) {
@@ -66,6 +67,7 @@ async function pollStream(
     if (at === cursor.since && seenAtSince.has(id)) continue;
     if (at > since) {
       since = at;
+      nextOffset = 0;
       seenIds = new Set();
     }
     seenIds.add(id);
@@ -75,14 +77,13 @@ async function pollStream(
       payload: { resourceType, change, objectId: id, body: item },
     });
   }
-  if (seenIds.size > thehiveSeenIdLimit) {
-    throw new PermanentPollError(
-      `TheHive returned more than ${thehiveSeenIdLimit} ${resourceType} records with the same ${field}; recreate the subscription to rebuild the baseline.`,
-    );
+  if (nextOffset > 0 || seenIds.size > thehiveSeenIdLimit) {
+    nextOffset += seenIds.size;
+    seenIds = new Set();
   }
   return {
     events,
-    cursor: { since, seenIds: [...seenIds] },
+    cursor: { since, seenIds: [...seenIds], offset: nextOffset },
     hasMore: budgetReached || response.data.length >= rangeSize,
   };
 }
@@ -95,9 +96,8 @@ export const thehiveEvent: PollDefinition = {
     const checkpointObj = isJsonObject(context.checkpoint) ? context.checkpoint : undefined;
     const created = readCursor(checkpointObj?.created);
     const updated = readCursor(checkpointObj?.updated);
-
     if (context.checkpoint === null) {
-      const baseline: StreamCursor = { since: context.now.getTime(), seenIds: [] };
+      const baseline: StreamCursor = { since: context.now.getTime(), seenIds: [], offset: 0 };
       return {
         events: [],
         hasMore: false,
@@ -126,8 +126,8 @@ export const thehiveEvent: PollDefinition = {
       events: [...createdPage.events, ...updatedPage.events],
       hasMore: createdPage.hasMore || updatedPage.hasMore,
       checkpoint: {
-        created: { since: createdPage.cursor.since, seenIds: [...createdPage.cursor.seenIds] },
-        updated: { since: updatedPage.cursor.since, seenIds: [...updatedPage.cursor.seenIds] },
+        created: { ...createdPage.cursor },
+        updated: { ...updatedPage.cursor },
       },
     };
   },

@@ -29,9 +29,11 @@ export const keapEvent: IntegrationDefinition = {
       headers: { "x-hook-secret": hookSecret },
     };
   },
+  maximumBodyBytes: 1024 * 1024,
   snapshot,
   initialState: { checkpoint: null, subscription: {} },
   async reconcile(context) {
+    let hookStatus: unknown;
     const eventKey = String(context.config.eventKey);
     const hookUrl = withCallbackToken(context.endpointUrl, context.callbackSecret);
     return reconcileManagedWebhook(context, {
@@ -55,12 +57,7 @@ export const keapEvent: IntegrationDefinition = {
             if (item.eventKey != eventKey) {
               throw new PermanentIntegrationError("Keap hook settings differ from this subscription.");
             }
-            if (typeof item.status == "string" && item.status.toLowerCase() !== "verified") {
-              await webhookRequest(context, {
-                endpoint: `/hooks/${encodeURIComponent(item.key)}/verify`,
-                method: "POST",
-              });
-            }
+            hookStatus = item.status;
           }
           found.push({ id: item.key, secret: context.callbackSecret });
         }
@@ -75,7 +72,16 @@ export const keapEvent: IntegrationDefinition = {
         if (!isJsonObject(response.data) || typeof response.data.key != "string") {
           throw new TransientIntegrationError("Keap hook creation returned no key.");
         }
+        hookStatus = response.data.status;
         return { id: response.data.key, secret: context.callbackSecret };
+      },
+      async align(id) {
+        if (typeof hookStatus === "string" && hookStatus.toLowerCase() === "verified") return;
+        await webhookRequest(context, { endpoint: `/hooks/${encodeURIComponent(id)}/verify`, method: "POST" });
+        const response = await webhookRequest(context, { endpoint: `/hooks/${encodeURIComponent(id)}`, method: "GET" });
+        if (!isJsonObject(response.data) || response.data.status !== "Verified") {
+          throw new TransientIntegrationError("Keap webhook verification is pending.");
+        }
       },
       async remove(id) {
         await webhookRequest(context, { endpoint: `/hooks/${encodeURIComponent(id)}`, method: "DELETE" });

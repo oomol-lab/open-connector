@@ -31,7 +31,7 @@ const requestSchema = z.discriminatedUnion("operation", [
     query: z.record(z.string(), z.string().max(8192)),
     rawBody: z
       .string()
-      .max(90000)
+      .max(1_398_104)
       .regex(/^(?:[A-Za-z0-9+/]{4})*(?:[A-Za-z0-9+/]{2}==|[A-Za-z0-9+/]{3}=)?$/),
     admit: z.boolean(),
     current: z.boolean(),

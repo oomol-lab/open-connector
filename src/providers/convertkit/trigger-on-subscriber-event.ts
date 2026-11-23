@@ -1,6 +1,7 @@
 import type { IntegrationDefinition } from "../../triggers/common/integration.ts";
 import type { ManagedWebhook } from "../../triggers/managed-webhook.ts";
 
+import { randomUUIDv7 } from "../../core/uuid-v7.ts";
 import { PermanentIntegrationError, TransientIntegrationError } from "../../triggers/common/integration.ts";
 import { isJsonObject } from "../../triggers/common/json.ts";
 import { reconcileManagedWebhook, webhookRequest } from "../../triggers/managed-webhook.ts";
@@ -129,8 +130,7 @@ export const convertkitSubscriberEvent: IntegrationDefinition = {
       return { outcome: "respond", status: 400, body: "", contentType: "text/plain" };
     }
     const event = String(context.config.eventName);
-    const subscriber = isJsonObject(body.subscriber) ? body.subscriber : undefined;
-    const deliveryId = `${event}:${String(subscriber?.id ?? body.id ?? "")}:${String(subscriber?.created_at ?? body.created_at ?? "")}`;
+    const deliveryId = randomUUIDv7();
     return {
       outcome: "event",
       dedupeKey: deliveryId,

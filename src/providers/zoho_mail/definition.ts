@@ -34,7 +34,7 @@ export const provider: ProviderDefinition = {
           secret: false,
           defaultValue: "zoho.com",
           description:
-            "Zoho account domain: zoho.com, zoho.eu, zoho.in, zoho.com.au, zoho.jp, zohocloud.ca, zoho.com.cn, zoho.ae, or zoho.sa.",
+            "Zoho account domain: zoho.com, zoho.eu, zoho.in, zoho.com.au, zoho.jp, zohocloud.ca, zoho.com.cn, zoho.ae, zoho.sa, zoho.uk, or zoho.sg.",
         },
       ],
       clientSetup: {

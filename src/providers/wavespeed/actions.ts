@@ -15,8 +15,11 @@ const modelSummarySchema = s.looseRequiredObject("A WaveSpeedAI model.", {
 });
 const predictionSchema = s.looseRequiredObject("A WaveSpeedAI prediction.", {
   id: s.nonEmptyString("The prediction id used to fetch the result."),
-  status: s.string("The prediction status: created, processing, completed or failed."),
-  outputs: s.stringArray("URLs of the generated files. Empty until the prediction is completed."),
+  status: s.string("The prediction status: created, processing, completed, failed, cancelled, timeout or deleted."),
+  outputs: s.array(
+    "Generated file URLs or structured results. Empty until the prediction is completed.",
+    s.unknown("A model output value."),
+  ),
   error: s.nullableString("The failure reason when the prediction failed."),
 });
 

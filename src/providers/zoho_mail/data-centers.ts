@@ -11,6 +11,8 @@ const dataCenters = new Map<string, string>([
   ["zoho.com.cn", "https://mail.zoho.com.cn"],
   ["zoho.ae", "https://mail.zoho.ae"],
   ["zoho.sa", "https://mail.zoho.sa"],
+  ["zoho.uk", "https://mail.zoho.uk"],
+  ["zoho.sg", "https://mail.zoho.sg"],
 ]);
 
 export function resolveZohoDataCenter(value: unknown): string {
@@ -41,6 +43,8 @@ export function resolveZohoCallbackDataCenter(callbackQuery: string | undefined,
     ["cn", "zoho.com.cn"],
     ["ae", "zoho.ae"],
     ["sa", "zoho.sa"],
+    ["uk", "zoho.uk"],
+    ["sg", "zoho.sg"],
   ]);
   const domain = domains.get(location);
   if (!domain) throw providerInputError("Unsupported Zoho callback location");
