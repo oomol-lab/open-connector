@@ -1,6 +1,7 @@
 import type { IntegrationDefinition } from "../../triggers/common/integration.ts";
 import type { ManagedWebhook } from "../../triggers/managed-webhook.ts";
 
+import { sha256Hex } from "../../core/aws-sigv4.ts";
 import { PermanentIntegrationError, TransientIntegrationError } from "../../triggers/common/integration.ts";
 import { isJsonObject } from "../../triggers/common/json.ts";
 import { reconcileManagedWebhook, webhookRequest } from "../../triggers/managed-webhook.ts";
@@ -116,7 +117,7 @@ export const keapEvent: IntegrationDefinition = {
           )
           .join(",")
       : "";
-    const deliveryId = `${body.event_key}:${keys}`;
+    const deliveryId = sha256Hex(`${body.event_key}:${keys}`);
     return {
       outcome: "event",
       dedupeKey: deliveryId,

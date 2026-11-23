@@ -81,10 +81,16 @@ async function pollStream(
     nextOffset += seenIds.size;
     seenIds = new Set();
   }
+  const hasMore = budgetReached || response.data.length >= rangeSize;
+  if (nextOffset > 0 && !hasMore) {
+    since += 1;
+    nextOffset = 0;
+    seenIds = new Set();
+  }
   return {
     events,
     cursor: { since, seenIds: [...seenIds], offset: nextOffset },
-    hasMore: budgetReached || response.data.length >= rangeSize,
+    hasMore,
   };
 }
 
