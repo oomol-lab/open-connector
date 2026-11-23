@@ -14,7 +14,7 @@ import {
 import { wereadActions } from "./actions.ts";
 
 const baseUrl = "https://i.weread.qq.com";
-const skillVersion = "1.0.5";
+const skillVersion = "1.0.6";
 const defaultHeaders = { "accept": "application/json", "content-type": "application/json" };
 const routes: Record<string, string> = {
   search: "/store/search",
@@ -73,25 +73,24 @@ async function request({ apiName, fields, apiKey, fetcher, parentSignal }: Werea
     return requiredResponseRecord(payload, "WeRead response");
   });
 }
+const requestDefaults: Record<string, Record<string, unknown>> = {
+  list_similar_books: { count: 12, maxIdx: 0 },
+  get_reading_stats: { mode: "monthly", baseTime: 0 },
+};
+
 const handlers = mapProviderActionHandlers(
   "weread",
   wereadActions,
-  (action) => async (dataInput: Record<string, unknown>, context: ApiKeyProviderContext) => {
-    const route = routes[action.name];
-    const fields = dataInput;
-    const body =
-      action.name === "list_similar_books"
-        ? { ...fields, count: fields.count ?? 12, maxIdx: fields.maxIdx ?? 0 }
-        : fields;
-    return request({
-      apiName: route,
-      fields: body,
+  (action) => (input: Record<string, unknown>, context: ApiKeyProviderContext) =>
+    request({
+      apiName: routes[action.name],
+      fields: { ...requestDefaults[action.name], ...input },
       apiKey: context.apiKey,
       fetcher: context.fetcher,
       parentSignal: context.signal,
-    });
-  },
+    }),
 );
+
 export const executors: ProviderExecutors = defineApiKeyProviderExecutors("weread", handlers, {
   skipDnsValidation: true,
 });
@@ -101,7 +100,7 @@ export const credentialValidators: CredentialValidators = {
       apiName: "/_list",
       fields: {},
       apiKey: requiredInputString(input.apiKey, "API Key"),
-      fetcher: fetcher,
+      fetcher,
       parentSignal: signal,
     });
     return { profile: { displayName: "WeRead API Key" }, metadata: { apiBaseUrl: baseUrl } };
@@ -112,7 +111,7 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
   baseUrl,
   auth: { type: "api_key_authorization", prefix: "Bearer " },
   skipDnsValidation: true,
-  defaultHeaders: { "accept": "application/json", "content-type": "application/json" },
+  defaultHeaders,
   async readError(response) {
     return new ProviderRequestError(
       response.status,

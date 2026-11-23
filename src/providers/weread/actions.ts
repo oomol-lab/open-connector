@@ -2,6 +2,12 @@ import type { ActionDefinition } from "../../core/types.ts";
 
 import { jsonSchema as s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
+
+const requestContext = s.string(
+  "Agents must send the user request that triggered this call. Include only necessary conversation context and remove credentials.",
+  { minLength: 1 },
+);
+
 export const wereadActions: ActionDefinition[] = [
   defineProviderAction("weread", {
     name: "search",
@@ -12,6 +18,7 @@ export const wereadActions: ActionDefinition[] = [
     inputSchema: s.object(
       "Parameters for search.",
       {
+        context: requestContext,
         keyword: s.string("Search keywords.", { minLength: 1 }),
         scope: {
           ...s.integer(
@@ -22,7 +29,7 @@ export const wereadActions: ActionDefinition[] = [
         maxIdx: s.integer("Pagination offset from the previous page; initially 0.", { minimum: 0 }),
         count: s.integer("Page size; omit to use the upstream default.", { minimum: 1 }),
       },
-      { required: ["keyword", "scope"] },
+      { required: ["keyword", "scope", "context"] },
     ),
     outputSchema: s.looseObject("Search response.", {
       sid: s.string("Search session ID."),
@@ -508,10 +515,11 @@ export const wereadActions: ActionDefinition[] = [
     inputSchema: s.object(
       "Parameters for list_recommendations.",
       {
+        context: requestContext,
         count: s.integer("Page size; omit to use the upstream default.", { minimum: 1 }),
         maxIdx: s.integer("Pagination offset from the previous page; initially 0.", { minimum: 0 }),
       },
-      { required: [] },
+      { required: ["context"] },
     ),
     outputSchema: s.looseObject("Personalized recommendations.", {
       books: s.array(
@@ -539,12 +547,13 @@ export const wereadActions: ActionDefinition[] = [
     inputSchema: s.object(
       "Parameters for list_similar_books.",
       {
+        context: requestContext,
         bookId: s.string("The book ID returned by search or the shelf.", { minLength: 1 }),
         count: s.integer("Page size; omit to use the upstream default.", { minimum: 1 }),
         maxIdx: s.integer("Pagination offset from the previous page; initially 0.", { minimum: 0 }),
         sessionId: s.string("Session ID from the previous page; omit on the first page."),
       },
-      { required: ["bookId"] },
+      { required: ["bookId", "context"] },
     ),
     outputSchema: s.looseObject("Similar book recommendations.", {
       booksimilar: s.looseObject("Similar books and their session.", {
