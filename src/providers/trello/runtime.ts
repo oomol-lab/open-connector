@@ -11,7 +11,7 @@ import {
   optionalString,
   optionalStringArray,
 } from "../../core/cast.ts";
-import { encodePathSegment, storeResponseInTransit } from '../../core/request.ts';
+import { encodePathSegment, storeResponseInTransit } from "../../core/request.ts";
 import {
   ProviderRequestError,
   providerInputError,
