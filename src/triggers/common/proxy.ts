@@ -13,7 +13,12 @@ export interface ConnectorProxyResult {
 }
 
 export interface ConnectorProxy {
-  readonly oauthClientConfig?: { readonly clientId: string; readonly clientSecret?: string };
+  readonly oauthClientConfig?: {
+    readonly clientId: string;
+    readonly clientSecret?: string;
+    readonly secretExtra?: Readonly<Record<string, string>>;
+  };
+  readonly credentialValues?: Readonly<Record<string, string>>;
   readonly providerAccountId?: string;
   readonly authType?: string;
   execute(request: ConnectorProxyRequest, signal?: AbortSignal): Promise<ConnectorProxyResult>;

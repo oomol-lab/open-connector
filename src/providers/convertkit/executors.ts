@@ -38,6 +38,7 @@ async function kitRequest(
         response.status >= 500 ? 502 : response.status,
         `Kit request failed (${response.status})`,
         errorPayload,
+        response.status === 401 || response.status === 403 ? "provider_error" : undefined,
       );
     }
     const payload = (await response.json()) as unknown;

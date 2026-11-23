@@ -68,6 +68,7 @@ export const wavespeedActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "run_model",
+    asyncLifecycle: { startActionId: "wavespeed.run_model", statusActionId: "wavespeed.get_prediction" },
     operationType: "write",
     description:
       "Start a WaveSpeedAI prediction for a model with a JSON input and return its id. The run is billed; poll get_prediction with the id for the outputs.",
@@ -79,6 +80,7 @@ export const wavespeedActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_prediction",
+    asyncLifecycle: { startActionId: "wavespeed.run_model", statusActionId: "wavespeed.get_prediction" },
     operationType: "read",
     description:
       "Retrieve the status of a WaveSpeedAI prediction and, once it is completed, the URLs of the generated files.",

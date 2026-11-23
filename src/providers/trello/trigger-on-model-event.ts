@@ -4,13 +4,22 @@ import type { ManagedWebhook } from "../../triggers/managed-webhook.ts";
 import { PermanentIntegrationError, TransientIntegrationError } from "../../triggers/common/integration.ts";
 import { isJsonObject } from "../../triggers/common/json.ts";
 import { reconcileManagedWebhook, webhookRequest } from "../../triggers/managed-webhook.ts";
-import { sameSecret } from "../../triggers/signature.ts";
+import { bytes, sameSecret, verifyBase64Hmac } from "../../triggers/signature.ts";
 import { snapshot } from "./trigger-on-model-event.definition.ts";
 
 function withCallbackToken(endpointUrl: string, token: string): string {
   const url = new URL(endpointUrl);
   url.searchParams.set("trello_token", token);
   return url.toString();
+}
+
+async function verifyTrelloSignature(
+  secret: string,
+  rawBody: Uint8Array,
+  callbackURL: string,
+  signature: string | undefined,
+): Promise<boolean> {
+  return verifyBase64Hmac(secret, [rawBody, bytes(callbackURL)], signature, "SHA-1");
 }
 
 export const trelloModelEvent: IntegrationDefinition = {
@@ -53,7 +62,11 @@ export const trelloModelEvent: IntegrationDefinition = {
             } else if (item.callbackURL !== callbackURL) {
               continue;
             }
-            found.push({ id: item.id, secret: context.callbackSecret });
+            found.push({
+              id: item.id,
+              secret: context.callbackSecret,
+              state: { callbackURL: item.callbackURL },
+            });
           }
         }
         return found;
@@ -71,19 +84,49 @@ export const trelloModelEvent: IntegrationDefinition = {
         if (!isJsonObject(response.data) || typeof response.data.id != "string") {
           throw new TransientIntegrationError("Trello webhook creation returned no identity.");
         }
-        return { id: response.data.id, secret: context.callbackSecret };
+        return {
+          id: response.data.id,
+          secret: context.callbackSecret,
+          state: { callbackURL },
+        };
       },
       async remove(id) {
-        await webhookRequest(context, { endpoint: `/webhooks/${encodeURIComponent(id)}`, method: "DELETE" });
+        await webhookRequest(context, {
+          endpoint: `/webhooks/${encodeURIComponent(id)}`,
+          method: "DELETE",
+        });
       },
     });
   },
-  receive(context) {
+  async receive(context) {
     if (!sameSecret(context.query("trello_token"), context.callbackSecret)) {
       return { outcome: "respond", status: 401, body: "", contentType: "text/plain" };
     }
     if (context.method.toUpperCase() === "HEAD") {
       return { outcome: "respond", status: 200, body: "", contentType: "text/plain" };
+    }
+    const applicationSecret =
+      context.connector.authType === "oauth2"
+        ? context.connector.oauthClientConfig?.clientSecret
+        : context.connector.credentialValues?.apiSecret;
+    if (!applicationSecret && context.connector.authType === "oauth2") {
+      return { outcome: "respond", status: 503, body: "", contentType: "text/plain" };
+    }
+    if (applicationSecret) {
+      const callbackURL = context.state?.subscription.callbackURL;
+      if (typeof callbackURL != "string" || callbackURL.length === 0) {
+        return { outcome: "respond", status: 503, body: "", contentType: "text/plain" };
+      }
+      if (
+        !(await verifyTrelloSignature(
+          applicationSecret,
+          context.rawBody,
+          callbackURL,
+          context.header("x-trello-webhook"),
+        ))
+      ) {
+        return { outcome: "respond", status: 401, body: "", contentType: "text/plain" };
+      }
     }
     const body = context.payload;
     if (
@@ -99,6 +142,12 @@ export const trelloModelEvent: IntegrationDefinition = {
       return { outcome: "ignored", reason: "Trello action type is not subscribed." };
     }
     const model = isJsonObject(body.model) ? body.model : undefined;
+    const sanitizedBody = isJsonObject(body.webhook)
+      ? {
+          ...body,
+          webhook: Object.fromEntries(Object.entries(body.webhook).filter(([key]) => key !== "callbackURL")),
+        }
+      : body;
     return {
       outcome: "event",
       dedupeKey: body.action.id,
@@ -106,7 +155,7 @@ export const trelloModelEvent: IntegrationDefinition = {
         actionType: body.action.type,
         deliveryId: body.action.id,
         modelId: String(model?.id ?? context.config.modelId ?? ""),
-        body,
+        body: sanitizedBody,
       },
     };
   },

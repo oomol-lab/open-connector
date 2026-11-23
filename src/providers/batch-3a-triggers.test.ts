@@ -9,6 +9,7 @@ import { trelloModelEvent } from "./trello/trigger-on-model-event.ts";
 describe("Batch 3A SaaS webhook triggers", () => {
   it("box.on_item_event receives matching webhook events and ignores mismatched webhook IDs", async () => {
     const base = {
+      connector: {},
       admit: true,
       callbackSecret: "sec",
       config: { targetType: "folder", targetId: "100", triggers: ["FILE.UPLOADED"] },
@@ -46,6 +47,7 @@ describe("Batch 3A SaaS webhook triggers", () => {
       "x-hook-uuid": "{hook-1}",
     };
     const res = await bitbucketRepoEvent.receive({
+      connector: {},
       admit: true,
       callbackSecret: "bb-secret",
       config: { workspace: "acme", repoSlug: "web", events: ["repo:push"] },
@@ -63,6 +65,7 @@ describe("Batch 3A SaaS webhook triggers", () => {
     });
 
     const badSig = await bitbucketRepoEvent.receive({
+      connector: {},
       admit: true,
       callbackSecret: "bb-secret",
       config: { workspace: "acme", repoSlug: "web", events: ["repo:push"] },
@@ -78,6 +81,7 @@ describe("Batch 3A SaaS webhook triggers", () => {
 
   it("trello.on_model_event handles HEAD verification and POST card events", async () => {
     const headRes = await trelloModelEvent.receive({
+      connector: {},
       admit: true,
       callbackSecret: "tr-sec",
       config: { modelId: "board-1" },
@@ -91,6 +95,7 @@ describe("Batch 3A SaaS webhook triggers", () => {
     expect(headRes).toMatchObject({ outcome: "respond", status: 200 });
 
     const postRes = await trelloModelEvent.receive({
+      connector: {},
       admit: true,
       callbackSecret: "tr-sec",
       config: { modelId: "board-1", actionTypes: ["createCard"] },
@@ -106,6 +111,7 @@ describe("Batch 3A SaaS webhook triggers", () => {
 
   it("mailchimp.on_audience_event handles GET probe and POST subscribe events", async () => {
     const getRes = await mailchimpAudienceEvent.receive({
+      connector: {},
       admit: true,
       callbackSecret: "mc-sec",
       config: { listId: "list-1", events: ["subscribe"] },
@@ -119,6 +125,7 @@ describe("Batch 3A SaaS webhook triggers", () => {
     expect(getRes).toMatchObject({ outcome: "respond", status: 200 });
 
     const postRes = await mailchimpAudienceEvent.receive({
+      connector: {},
       admit: true,
       callbackSecret: "mc-sec",
       config: { listId: "list-1", events: ["subscribe"] },
@@ -134,6 +141,7 @@ describe("Batch 3A SaaS webhook triggers", () => {
 
   it("jotform.on_submission verifies callback token and emits submissionId", async () => {
     const res = await jotformSubmission.receive({
+      connector: {},
       admit: true,
       callbackSecret: "jf-sec",
       config: { formId: "form-9" },

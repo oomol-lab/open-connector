@@ -84,7 +84,12 @@ export const copperCrmEvent: IntegrationDefinition = {
     return {
       outcome: "event",
       dedupeKey: deliveryId,
-      outputs: { resourceType, event, deliveryId, body },
+      outputs: {
+        resourceType,
+        event,
+        deliveryId,
+        body: Object.fromEntries(Object.entries(body).filter(([key]) => key !== "token" && key !== "secret")),
+      },
     };
   },
 };

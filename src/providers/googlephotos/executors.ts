@@ -17,7 +17,7 @@ import {
   recordOrEmpty,
   stringArray,
 } from "../../core/cast.ts";
-import { storeResponseInTransit } from "../../core/request.ts";
+import { readBoundedResponseBytes, storeResponseInTransit } from "../../core/request.ts";
 import { requireOAuthCredential } from "../provider-credentials.ts";
 import { defineProviderExecutors } from "../provider-executors.ts";
 import { defineProviderProxy } from "../provider-proxy.ts";
@@ -834,7 +834,12 @@ async function resolveSingleUploadSource(
       throw new ProviderRequestError(remoteResponse.status, `failed to fetch upload source: ${remoteResponse.status}`);
     }
 
-    const bytes = new Uint8Array(await remoteResponse.arrayBuffer());
+    const bytes = await readBoundedResponseBytes(remoteResponse, {
+      maxBytes: 50 * 1024 * 1024,
+      fieldName: "Google Photos upload source",
+      createError: providerInputError,
+      signal,
+    });
 
     return {
       bytes,
@@ -860,7 +865,6 @@ async function uploadSourceToGooglePhotos(
 ): Promise<string> {
   const session = await startResumableUploadSession(
     {
-      fileName: input.fileName,
       mimeType: input.mimeType,
       sizeBytes: input.sizeBytes,
     },
@@ -871,7 +875,7 @@ async function uploadSourceToGooglePhotos(
 }
 
 async function startResumableUploadSession(
-  input: { fileName: string; mimeType: string; sizeBytes: number },
+  input: { mimeType: string; sizeBytes: number },
   context: GooglePhotosRuntimeContext,
 ): Promise<{ uploadUrl: string; chunkGranularity: number }> {
   const response = await requestGooglePhotosRaw(`${googlePhotosApiBaseUrl}/uploads`, {
@@ -880,7 +884,6 @@ async function startResumableUploadSession(
     headers: {
       "content-length": "0",
       "x-goog-upload-command": "start",
-      "x-goog-upload-file-name": input.fileName,
       "x-goog-upload-protocol": "resumable",
       "x-goog-upload-content-type": input.mimeType,
       "x-goog-upload-raw-size": String(input.sizeBytes),
@@ -1059,7 +1062,12 @@ function inferFileNameFromUrl(url: string): string {
   try {
     const pathname = new URL(url).pathname;
     const fileName = pathname.split("/").filter(Boolean).at(-1);
-    return fileName && fileName.length > 0 ? fileName : "upload";
+    if (!fileName) return "upload";
+    try {
+      return decodeURIComponent(fileName);
+    } catch {
+      return fileName;
+    }
   } catch {
     return "upload";
   }
@@ -1070,6 +1078,7 @@ function inferMimeType(contentType: string | null): string {
 }
 
 function parseContentLength(contentLength: string | null): number | null {
+  if (contentLength == null || contentLength.trim() === "") return null;
   const parsed = Number(contentLength);
   return Number.isInteger(parsed) && parsed >= 0 ? parsed : null;
 }

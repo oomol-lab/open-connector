@@ -135,6 +135,8 @@ export type ResourceDefinition =
 export interface IntegrationDefinition {
   readonly callback?: { readonly headers: readonly string[]; readonly query: readonly string[] };
   readonly handshake?: (input: {
+    /** Base64-encoded wire body from the Trigger receive request. */
+    readonly rawBody?: string;
     readonly method: string;
     readonly headers: Readonly<Record<string, string>>;
     readonly query?: Readonly<Record<string, string>>;

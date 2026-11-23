@@ -31,6 +31,7 @@ async function keapRequest(
         response.status >= 500 ? 502 : response.status,
         `Keap request failed (${response.status})`,
         payload,
+        response.status === 401 || response.status === 403 ? "provider_error" : undefined,
       );
     }
     return optionalRecord(payload) ?? {};

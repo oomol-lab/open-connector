@@ -40,6 +40,15 @@ export const provider: ProviderDefinition = {
       type: "custom_credential",
       fields: [
         {
+          key: "apiSecret",
+          label: "API Secret",
+          inputType: "password",
+          secret: true,
+          required: false,
+          description:
+            "Optional API Secret from https://trello.com/apps/admin for verifying native webhook signatures.",
+        },
+        {
           key: "apiKey",
           label: "API Key",
           inputType: "password",

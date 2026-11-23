@@ -1,6 +1,7 @@
 import type { IntegrationDefinition } from "../../triggers/common/integration.ts";
 import type { ManagedWebhook } from "../../triggers/managed-webhook.ts";
 
+import { createHmac } from "node:crypto";
 import { PermanentIntegrationError, TransientIntegrationError } from "../../triggers/common/integration.ts";
 import { isJsonObject } from "../../triggers/common/json.ts";
 import { reconcileManagedWebhook, webhookRequest } from "../../triggers/managed-webhook.ts";
@@ -29,14 +30,27 @@ function withCallbackToken(endpointUrl: string, token: string): string {
   return url.toString();
 }
 
+function verifyOnfleetSignature(secret: string, rawBody: Uint8Array, signature: string | undefined): boolean {
+  if (!signature) return false;
+  const key = Buffer.from(secret, "hex");
+  if (key.length === 0) return false;
+  const expected = createHmac("sha512", key).update(rawBody).digest("hex");
+  return sameSecret(signature.toLowerCase(), expected);
+}
+
 export const onfleetTaskEvent: IntegrationDefinition = {
-  callback: { headers: [], query: ["check", "of_token"] },
+  callback: { headers: ["x-onfleet-signature"], query: ["check", "of_token"] },
   handshake(input) {
     if (input.method.toUpperCase() !== "GET") return undefined;
     if (input.callbackSecret && !sameSecret(input.query?.of_token, input.callbackSecret)) {
       return { outcome: "respond", status: 401, body: "", contentType: "text/plain" };
     }
-    return { outcome: "respond", status: 200, body: input.query?.check ?? "", contentType: "text/plain" };
+    return {
+      outcome: "respond",
+      status: 200,
+      body: input.query?.check ?? "",
+      contentType: "text/plain",
+    };
   },
   snapshot,
   initialState: { checkpoint: null, subscription: {} },
@@ -60,8 +74,10 @@ export const onfleetTaskEvent: IntegrationDefinition = {
           if (typeof item.id != "string") {
             throw new PermanentIntegrationError("Onfleet webhook entry is missing an ID.");
           }
-          if (context.active && item.trigger !== triggerId) {
-            throw new PermanentIntegrationError("Onfleet webhook settings differ from this subscription.");
+          if (context.active && (item.trigger !== triggerId || item.isEnabled === false)) {
+            throw new PermanentIntegrationError(
+              "Onfleet webhook settings differ from this subscription or the webhook is disabled.",
+            );
           }
           found.push({ id: item.id, secret: context.callbackSecret });
         }
@@ -83,7 +99,10 @@ export const onfleetTaskEvent: IntegrationDefinition = {
         return { id: response.data.id, secret: context.callbackSecret };
       },
       async remove(id) {
-        await webhookRequest(context, { endpoint: `/webhooks/${encodeURIComponent(id)}`, method: "DELETE" });
+        await webhookRequest(context, {
+          endpoint: `/webhooks/${encodeURIComponent(id)}`,
+          method: "DELETE",
+        });
       },
     });
   },
@@ -94,6 +113,13 @@ export const onfleetTaskEvent: IntegrationDefinition = {
     if (context.method.toUpperCase() === "GET") {
       const check = context.query("check") ?? "";
       return { outcome: "respond", status: 200, body: check, contentType: "text/plain" };
+    }
+    const webhookSecret = context.connector.credentialValues?.webhookSecret;
+    if (
+      webhookSecret &&
+      !verifyOnfleetSignature(webhookSecret, context.rawBody, context.header("x-onfleet-signature"))
+    ) {
+      return { outcome: "respond", status: 401, body: "", contentType: "text/plain" };
     }
     const body = context.payload;
     if (!isJsonObject(body) || typeof body.triggerName != "string") {

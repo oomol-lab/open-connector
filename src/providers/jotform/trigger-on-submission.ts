@@ -41,7 +41,10 @@ export const jotformSubmission: IntegrationDefinition = {
     const webhookUrl = withCallbackToken(context.endpointUrl, context.callbackSecret);
     return reconcileManagedWebhook(context, {
       async find() {
-        const response = await webhookRequest(context, { endpoint: `/form/${formId}/webhooks`, method: "GET" });
+        const response = await webhookRequest(context, {
+          endpoint: `/form/${formId}/webhooks`,
+          method: "GET",
+        });
         const entries = isJsonObject(response.data) ? normalizeJotformWebhooks(response.data.content) : null;
         if (!entries) {
           throw new TransientIntegrationError("Jotform returned an invalid webhook list.");
@@ -61,7 +64,8 @@ export const jotformSubmission: IntegrationDefinition = {
         const response = await webhookRequest(context, {
           endpoint: `/form/${formId}/webhooks`,
           method: "POST",
-          body: { webhookURL: webhookUrl },
+          headers: { "content-type": "application/x-www-form-urlencoded" },
+          body: new URLSearchParams({ webhookURL: webhookUrl }).toString(),
         });
         const entries = isJsonObject(response.data) ? normalizeJotformWebhooks(response.data.content) : null;
         if (!entries) {
@@ -74,11 +78,10 @@ export const jotformSubmission: IntegrationDefinition = {
         return { id: match[0], secret: context.callbackSecret };
       },
       async remove(_id) {
-        // Jotform webhook IDs are positional indices that can shift when other webhooks are removed.
-        // Re-read the list immediately before DELETE and remove only the entry matching our exact callback URL
-        // (which carries this subscription's unique `jf_token`). Jotform's DELETE only accepts a position, so a
-        // concurrent change to the form's webhook list between this read and the DELETE remains a residual race.
-        const response = await webhookRequest(context, { endpoint: `/form/${formId}/webhooks`, method: "GET" });
+        const response = await webhookRequest(context, {
+          endpoint: `/form/${formId}/webhooks`,
+          method: "GET",
+        });
         const entries = isJsonObject(response.data) ? normalizeJotformWebhooks(response.data.content) : null;
         if (!entries) {
           throw new TransientIntegrationError("Jotform returned an invalid webhook list before deletion.");

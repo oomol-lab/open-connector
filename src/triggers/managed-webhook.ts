@@ -7,6 +7,7 @@ import { PermanentIntegrationError, TransientIntegrationError } from "./common/i
 export interface ManagedWebhook {
   readonly id: string;
   readonly secret: string;
+  readonly state?: Readonly<Record<string, JsonValue>>;
 }
 
 export async function webhookRequest(
@@ -63,7 +64,7 @@ export async function reconcileManagedWebhook(
       throw error;
     }
   }
-  const subscription: Record<string, JsonValue> = { hookId: hook.id, secret: hook.secret };
+  const subscription: Record<string, JsonValue> = { ...hook.state, hookId: hook.id, secret: hook.secret };
   await state.saveSubscription(subscription, context.now);
   await operations.align?.(hook.id);
   await state.saveSubscription(subscription, new Date(context.now.getTime() + 86_400_000));

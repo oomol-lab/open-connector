@@ -25,6 +25,26 @@ export const provider: ProviderDefinition = {
       tokenUrl: "https://api.box.com/oauth2/token",
       scopes: boxOAuthScopes,
       tokenEndpointAuthMethod: "client_secret_post",
+      clientConfigFields: [
+        {
+          key: "primarySignatureKey",
+          label: "Primary webhook signing key",
+          location: "secretExtra",
+          inputType: "password",
+          secret: true,
+          required: false,
+          description: "Primary webhook signing key from your Box app configuration.",
+        },
+        {
+          key: "secondarySignatureKey",
+          label: "Secondary webhook signing key",
+          location: "secretExtra",
+          inputType: "password",
+          secret: true,
+          required: false,
+          description: "Optional secondary key for webhook signing key rotation.",
+        },
+      ],
       clientSetup: {
         docsUrl: "https://developer.box.com/guides/authentication/oauth2/oauth2-setup/",
         steps: [
