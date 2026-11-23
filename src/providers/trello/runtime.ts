@@ -315,6 +315,21 @@ export const trelloActionHandlers: ProviderActionHandlers<"trello", TrelloAction
       action: normalizeAction(action),
     };
   },
+  async list_card_activity(input, context) {
+    const cardId = readRequiredString(input.cardId, "cardId");
+    const payload = await trelloRequest<unknown>({
+      credential: context,
+      fetcher: context.fetcher,
+      path: `/cards/${encodeURIComponent(cardId)}/actions`,
+      query: [
+        ["filter", "all"],
+        ["limit", readOptionalInteger(input.limit, "limit") ?? 50],
+        ["before", readOptionalString(input.before)],
+      ],
+      phase: "execute",
+    });
+    return { actions: objectArray(payload, "Trello card activity", providerResponseError) };
+  },
   async list_card_comments(input, context) {
     const cardId = readRequiredString(input.cardId, "cardId");
     const comments = await trelloRequest<unknown[]>({

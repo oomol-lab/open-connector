@@ -501,6 +501,25 @@ export const trelloActions: ActionDefinition[] = [
     }),
   }),
   defineProviderAction(service, {
+    name: "list_card_activity",
+    operationType: "read",
+    description:
+      "List activity on a Trello card, newest first. Pass the last action ID as before to read the next page.",
+    requiredScopes: ["read:board:trello"],
+    inputSchema: s.object(
+      "Card activity to read.",
+      {
+        cardId: trelloId("Trello card ID or short link."),
+        limit: s.integer("Maximum number of actions per page. Defaults to 50.", { minimum: 1, maximum: 1000 }),
+        before: trelloId("Return actions older than this action ID."),
+      },
+      { optional: ["limit", "before"] },
+    ),
+    outputSchema: s.object("Activity returned by Trello.", {
+      actions: s.array("Card actions, newest first.", trelloActionSchema),
+    }),
+  }),
+  defineProviderAction(service, {
     name: "list_card_comments",
     operationType: "read",
     description: "List comment actions on a Trello card.",
