@@ -7,15 +7,12 @@ import { PermanentIntegrationError, TransientIntegrationError } from "../../trig
 import { isJsonObject } from "../../triggers/common/json.ts";
 import { reconcileManagedWebhook, webhookRequest } from "../../triggers/managed-webhook.ts";
 import { sameSecret } from "../../triggers/signature.ts";
+import { basicAuthorizationHeader } from "../provider-runtime.ts";
 import { snapshot } from "./trigger-on-email-event.definition.ts";
 
 const postmarkVerificationFailedErrorCode = 1364;
 const postmarkTestMessageIds = new Set(["883953f4-6105-42a2-a16a-77a8eac79483"]);
 const postmarkTestDetails = new Set(["Test delivery webhook details", "Test bounce details"]);
-
-function expectedBasicAuth(callbackSecret: string): string {
-  return `Basic ${Buffer.from(`oomol:${callbackSecret}`).toString("base64")}`;
-}
 
 function readHeaderCaseInsensitive(headers: Readonly<Record<string, string>>, target: string): string | undefined {
   const lower = target.toLowerCase();
@@ -80,7 +77,10 @@ export const postmarkEmailEvent: IntegrationDefinition = {
       return undefined;
     if (
       !input.callbackSecret ||
-      !sameSecret(readHeaderCaseInsensitive(input.headers, "authorization"), expectedBasicAuth(input.callbackSecret))
+      !sameSecret(
+        readHeaderCaseInsensitive(input.headers, "authorization"),
+        basicAuthorizationHeader(`oomol:${input.callbackSecret}`),
+      )
     ) {
       return { outcome: "respond", status: 401, body: "", contentType: "text/plain" };
     }
@@ -246,7 +246,7 @@ export const postmarkEmailEvent: IntegrationDefinition = {
     });
   },
   receive(context) {
-    if (!sameSecret(context.header("authorization"), expectedBasicAuth(context.callbackSecret))) {
+    if (!sameSecret(context.header("authorization"), basicAuthorizationHeader(`oomol:${context.callbackSecret}`))) {
       return { outcome: "respond", status: 401, body: "", contentType: "text/plain" };
     }
     const body = context.payload;

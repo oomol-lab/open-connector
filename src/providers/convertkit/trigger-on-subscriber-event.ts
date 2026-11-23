@@ -51,35 +51,54 @@ export const convertkitSubscriberEvent: IntegrationDefinition = {
     const targetUrl = withCallbackToken(context.endpointUrl, context.callbackSecret);
     return reconcileManagedWebhook(context, {
       async find() {
-        const response = await webhookRequest(context, { endpoint: "/webhooks", method: "GET" });
-        if (!isJsonObject(response.data) || !Array.isArray(response.data.webhooks)) {
-          throw new TransientIntegrationError("ConvertKit returned an invalid webhook list.");
-        }
         const found: ManagedWebhook[] = [];
-        for (const item of response.data.webhooks) {
-          if (!isJsonObject(item) || typeof item.target_url != "string") continue;
-          if (!item.target_url.startsWith(context.endpointUrl)) continue;
-          if (item.target_url !== targetUrl) {
-            if (!context.active) continue;
-            throw new PermanentIntegrationError("ConvertKit webhook callback URL differs from this subscription.");
+        const cursors = new Set<string>();
+        let after: string | undefined;
+        while (true) {
+          const response = await webhookRequest(context, {
+            endpoint: after === undefined ? "/webhooks" : `/webhooks?after=${encodeURIComponent(after)}`,
+            method: "GET",
+          });
+          if (!isJsonObject(response.data) || !Array.isArray(response.data.webhooks)) {
+            throw new TransientIntegrationError("ConvertKit returned an invalid webhook list.");
           }
-          if (!["number", "string"].includes(typeof item.id)) {
-            throw new PermanentIntegrationError("ConvertKit webhook entry is missing an ID.");
-          }
-          if (context.active) {
-            const evt = isJsonObject(item.event) ? item.event : undefined;
-            const remoteName = typeof evt?.name == "string" ? normalizeKitEventName(evt.name) : "";
-            const remoteTagId = parseOptionalNumericId(evt?.tag_id);
-            const remoteFormId = parseOptionalNumericId(evt?.form_id);
-            if (
-              remoteName !== normalizedEventName ||
-              (needsTagId && remoteTagId !== tagId) ||
-              (needsFormId && remoteFormId !== formId)
-            ) {
-              throw new PermanentIntegrationError("ConvertKit webhook settings differ from this subscription.");
+          for (const item of response.data.webhooks) {
+            if (!isJsonObject(item) || typeof item.target_url != "string") continue;
+            if (!item.target_url.startsWith(context.endpointUrl)) continue;
+            if (item.target_url !== targetUrl) {
+              if (!context.active) continue;
+              throw new PermanentIntegrationError("ConvertKit webhook callback URL differs from this subscription.");
             }
+            if (!["number", "string"].includes(typeof item.id)) {
+              throw new PermanentIntegrationError("ConvertKit webhook entry is missing an ID.");
+            }
+            if (context.active) {
+              const evt = isJsonObject(item.event) ? item.event : undefined;
+              const remoteName = typeof evt?.name == "string" ? normalizeKitEventName(evt.name) : "";
+              const remoteTagId = parseOptionalNumericId(evt?.tag_id);
+              const remoteFormId = parseOptionalNumericId(evt?.form_id);
+              if (
+                remoteName !== normalizedEventName ||
+                (needsTagId && remoteTagId !== tagId) ||
+                (needsFormId && remoteFormId !== formId)
+              ) {
+                throw new PermanentIntegrationError("ConvertKit webhook settings differ from this subscription.");
+              }
+            }
+            found.push({ id: String(item.id), secret: context.callbackSecret });
           }
-          found.push({ id: String(item.id), secret: context.callbackSecret });
+
+          const pagination = response.data.pagination;
+          if (!isJsonObject(pagination) || typeof pagination.has_next_page !== "boolean") {
+            throw new TransientIntegrationError("ConvertKit returned invalid webhook pagination.");
+          }
+          if (!pagination.has_next_page) break;
+          const next = pagination.end_cursor;
+          if (typeof next !== "string" || !next || cursors.has(next)) {
+            throw new TransientIntegrationError("ConvertKit returned an invalid webhook cursor.");
+          }
+          cursors.add(next);
+          after = next;
         }
         return found;
       },

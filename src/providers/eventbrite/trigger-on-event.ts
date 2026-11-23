@@ -45,8 +45,7 @@ export const eventbriteEvent: IntegrationDefinition = {
           if (
             typeof item.id != "string" ||
             item.endpoint_url !== webhookUrl ||
-            itemEventId !== eventId ||
-            JSON.stringify(itemActions) != JSON.stringify(expected)
+            (context.active && (itemEventId !== eventId || JSON.stringify(itemActions) != JSON.stringify(expected)))
           ) {
             throw new PermanentIntegrationError("Eventbrite webhook settings differ from this subscription.");
           }
@@ -90,10 +89,11 @@ export const eventbriteEvent: IntegrationDefinition = {
     const apiUrl = typeof body.api_url == "string" ? body.api_url : "";
     const deliveryId =
       context.header("x-eventbrite-delivery") ?? `${action}:${apiUrl}:${String(body.config.webhook_id ?? "")}`;
+    const { endpoint_url: _endpointUrl, ...publicConfig } = body.config;
     return {
       outcome: "event",
       dedupeKey: deliveryId,
-      outputs: { action, deliveryId, apiUrl, body },
+      outputs: { action, deliveryId, apiUrl, body: { ...body, config: publicConfig } },
     };
   },
 };
