@@ -1,6 +1,7 @@
 import type { IntegrationDefinition } from "../../triggers/common/integration.ts";
 import type { ManagedWebhook } from "../../triggers/managed-webhook.ts";
 
+import { randomUUIDv7 } from "../../core/uuid-v7.ts";
 import { PermanentIntegrationError, TransientIntegrationError } from "../../triggers/common/integration.ts";
 import { isJsonObject } from "../../triggers/common/json.ts";
 import { reconcileManagedWebhook, webhookRequest } from "../../triggers/managed-webhook.ts";
@@ -45,8 +46,7 @@ export const eventbriteEvent: IntegrationDefinition = {
           if (
             typeof item.id != "string" ||
             item.endpoint_url !== webhookUrl ||
-            itemEventId !== eventId ||
-            JSON.stringify(itemActions) != JSON.stringify(expected)
+            (context.active && (itemEventId !== eventId || JSON.stringify(itemActions) != JSON.stringify(expected)))
           ) {
             throw new PermanentIntegrationError("Eventbrite webhook settings differ from this subscription.");
           }
@@ -79,21 +79,22 @@ export const eventbriteEvent: IntegrationDefinition = {
       return { outcome: "respond", status: 401, body: "", contentType: "text/plain" };
     }
     const body = context.payload;
-    if (!isJsonObject(body) || !isJsonObject(body.config) || typeof body.config.action != "string") {
+    if (!isJsonObject(body) || !isJsonObject(body.config)) {
       return { outcome: "respond", status: 400, body: "", contentType: "text/plain" };
     }
-    const action = body.config.action;
     const configured = Array.isArray(context.config.actions) ? context.config.actions.map(String) : [];
-    if (!configured.includes(action)) {
+    const action =
+      typeof body.config.action === "string" ? body.config.action : configured.length === 1 ? configured[0]! : null;
+    if (action !== null && !configured.includes(action)) {
       return { outcome: "ignored", reason: "Eventbrite action is not subscribed." };
     }
     const apiUrl = typeof body.api_url == "string" ? body.api_url : "";
-    const deliveryId =
-      context.header("x-eventbrite-delivery") ?? `${action}:${apiUrl}:${String(body.config.webhook_id ?? "")}`;
+    const deliveryId = context.header("x-eventbrite-delivery") || randomUUIDv7();
+    const { endpoint_url: _endpointUrl, ...publicConfig } = body.config;
     return {
       outcome: "event",
       dedupeKey: deliveryId,
-      outputs: { action, deliveryId, apiUrl, body },
+      outputs: { action, deliveryId, apiUrl, body: { ...body, config: publicConfig } },
     };
   },
 };

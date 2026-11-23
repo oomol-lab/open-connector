@@ -18,7 +18,16 @@ export const provider: ProviderDefinition = {
       placeholder: "ONFLEET_API_KEY",
       description:
         "Onfleet API key used as the Basic Auth username. Create or manage it in Configuration > API & Webhook: https://docs.onfleet.com/reference/scope-api-key.",
-      extraFields: [],
+      extraFields: [
+        {
+          key: "webhookSecret",
+          label: "Webhook Secret",
+          inputType: "password",
+          secret: true,
+          required: false,
+          description: "Optional hexadecimal webhook signing secret from Onfleet Configuration > API & Webhook.",
+        },
+      ],
     },
   ],
   homepageUrl: "https://onfleet.com/",

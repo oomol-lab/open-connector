@@ -38,7 +38,7 @@ export const snapshot: TriggerKeySnapshot & { readonly type: "integration" } = {
     },
   ],
   outputs: [
-    { handle: "action", jsonSchema: s.string(), nullable: false },
+    { handle: "action", jsonSchema: s.string(), nullable: true },
     { handle: "deliveryId", jsonSchema: s.string(), nullable: false },
     { handle: "apiUrl", jsonSchema: s.string(), nullable: false },
     { handle: "body", jsonSchema: { type: "object" }, nullable: false },

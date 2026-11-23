@@ -6,11 +6,12 @@ const resourceTypes = ["alert", "case"] as const;
 
 const eventSchema = s.object(
   {
+    change: s.stringEnum(["created", "updated"], { description: "Whether the resource was created or updated." }),
     resourceType: s.string(),
     objectId: s.string(),
     body: { type: "object" },
   },
-  { required: ["resourceType", "objectId", "body"], additionalProperties: false },
+  { required: ["resourceType", "change", "objectId", "body"], additionalProperties: false },
 );
 
 export const snapshot: TriggerKeySnapshot & { readonly type: "poll" } = {

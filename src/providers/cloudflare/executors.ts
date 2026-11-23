@@ -8,6 +8,7 @@ import { defineProviderProxy } from "../provider-proxy.ts";
 import { ProviderRequestError, runProviderRequest } from "../provider-runtime.ts";
 import { handlers as browserRenderingHandlers } from "./browser-rendering/runtime.ts";
 import { credentialHeaders, validateApiKey, validateCustomCredential } from "./credentials.ts";
+import { handlers as d1Handlers } from "./d1/runtime.ts";
 import { handlers as dnsHandlers } from "./dns/runtime.ts";
 import { handlers as emailRoutingHandlers } from "./email-routing/runtime.ts";
 import { handlers as kvHandlers } from "./kv/runtime.ts";
@@ -20,6 +21,7 @@ import { handlers as workersHandlers } from "./workers/runtime.ts";
 
 const handlers: Record<string, ProviderRuntimeHandler<CloudflareContext>> = {
   ...dnsHandlers,
+  ...d1Handlers,
   ...workersHandlers,
   ...r2Handlers,
   ...emailRoutingHandlers,

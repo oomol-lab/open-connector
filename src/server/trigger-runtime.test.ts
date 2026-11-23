@@ -927,3 +927,104 @@ it.each([true, false])("resolves Source resources regardless of missing scope sn
   expect(response.status, await response.clone().text()).toBe(404);
   expect(calls).toHaveLength(0);
 });
+
+it.each(["app", "different-app"])(
+  "resolves later Box signing keys only from the same OAuth client: %s",
+  async (configuredId) => {
+    const { provider } = await import("../providers/box/definition.ts");
+    const native = await import("../providers/box/executors.ts");
+    const { boxItemEvent } = await import("../providers/box/trigger-on-item-event.ts");
+    let keys: unknown;
+    const loader = new ProviderLoader({
+      box: async () => ({
+        ...native,
+        triggers: [
+          {
+            ...boxItemEvent,
+            configOptions: async (context) => {
+              keys = context.connector.oauthClientConfig?.secretExtra;
+              return [];
+            },
+          },
+        ],
+      }),
+    });
+    const connection = await database.connectionStore.set("box", "work", {
+      authType: "oauth2",
+      accessToken: "token",
+      tokenType: "Bearer",
+      profile: { accountId: "account", displayName: "Box", grantedScopes: [] },
+      metadata: {
+        providerAccountVerified: true,
+        oauthClientConfig: { clientId: "app", clientSecret: "saved", secretExtra: {} },
+      },
+    });
+    const catalog = createCatalogStore([provider]);
+    const runner = new TriggerRunner({
+      catalog,
+      providerLoader: loader,
+      store: database.triggerStore,
+      connections: new ConnectionService({ catalog, providerLoader: loader, store: database.connectionStore }),
+      oauthClientConfigs: {
+        getConfig: async () => ({
+          service: "box",
+          clientId: configuredId,
+          clientSecret: "configured",
+          extra: {},
+          secretExtra: { primarySignatureKey: "key" },
+        }),
+      },
+    });
+    await runner.run({
+      service: "box",
+      triggerId: "box.on_item_event",
+      connectionId: connection.id,
+      policy: new ActionPolicyService().createSnapshot(),
+      signal: new AbortController().signal,
+      request: { operation: "options", field: "targetType", config: {} },
+    });
+    expect(keys).toEqual(configuredId === "app" ? { primarySignatureKey: "key" } : {});
+  },
+);
+
+it("forwards structured upstream errors from the proxy to trigger reconciliation", async () => {
+  const definitions = await fixtureProviderLoader.loadTriggerDefinitions("github");
+  const definition = definitions!.find((item) => item.snapshot.key === "github.on_repo_event")!;
+  vi.spyOn(fixtureProviderLoader, "loadProxyExecutor").mockResolvedValue(async () => ({
+    ok: false,
+    error: {
+      code: "invalid_input",
+      message: "verification failed",
+      details: { status: 422, details: { ErrorCode: 1364, Message: "verification failed" } },
+    },
+  }));
+  vi.spyOn(fixtureProviderLoader, "loadTriggerDefinitions").mockResolvedValue([
+    {
+      ...definition,
+      configOptions: async (context) => {
+        const result = await context.connector.execute({ method: "POST", endpoint: "/webhooks" });
+        expect(result).toEqual({ status: 422, data: { ErrorCode: 1364, Message: "verification failed" } });
+        return [];
+      },
+    },
+  ]);
+  const catalog = createCatalogStore([github]);
+  const runner = new TriggerRunner({
+    catalog,
+    providerLoader: fixtureProviderLoader,
+    store: database.triggerStore,
+    connections: new ConnectionService({
+      catalog,
+      providerLoader: fixtureProviderLoader,
+      store: database.connectionStore,
+    }),
+  });
+  await runner.run({
+    service: "github",
+    triggerId: "github.on_repo_event",
+    connectionId,
+    policy: new ActionPolicyService().createSnapshot(),
+    signal: new AbortController().signal,
+    request: { operation: "options", field: "events", config: {} },
+  });
+});

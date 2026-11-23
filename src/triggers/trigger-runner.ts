@@ -332,18 +332,28 @@ export class TriggerRunner {
       if (!executor)
         throw new ExecutionError("trigger_not_supported", "The provider has no Trigger transport.", "unsupported");
       let oauthClientConfig: ConnectorProxy["oauthClientConfig"];
-      if (service === "jira" && credential.authType === "oauth2") {
+      if (["jira", "box", "trello"].includes(service) && credential.authType === "oauth2") {
         oauthClientConfig = readOAuthClientConfigMetadata(service, credential.metadata);
-        if (!oauthClientConfig?.clientSecret) {
+        if (service === "box" || !oauthClientConfig?.clientSecret || !oauthClientConfig.secretExtra) {
           const configured = await this.options.oauthClientConfigs?.getConfig(service);
           if (oauthClientConfig == null) oauthClientConfig = configured;
           else if (configured?.clientId === oauthClientConfig.clientId)
-            oauthClientConfig = { ...oauthClientConfig, clientSecret: configured.clientSecret };
+            oauthClientConfig = {
+              ...oauthClientConfig,
+              clientSecret: oauthClientConfig.clientSecret || configured.clientSecret,
+              secretExtra: {
+                ...configured.secretExtra,
+                ...Object.fromEntries(
+                  Object.entries(oauthClientConfig.secretExtra ?? {}).filter(([, value]) => value.length > 0),
+                ),
+              },
+            };
         }
       }
       const proxy: ConnectorProxy = {
         authType: credential.authType,
         oauthClientConfig,
+        credentialValues: credential.authType === "oauth2" ? undefined : credential.values,
         providerAccountId: credential.profile.accountId,
         execute: async (request, requestSignal) => {
           signal.throwIfAborted();
@@ -363,7 +373,7 @@ export class TriggerRunner {
           );
           if (result.ok) return result.response;
           const status = optionalInteger(optionalRecord(result.error.details)?.status) ?? 502;
-          return { status, data: { error: result.error.message } };
+          return { status, data: optionalRecord(result.error.details)?.details ?? { error: result.error.message } };
         },
       };
       return {

@@ -14,6 +14,7 @@ import { isDeepStrictEqual } from "node:util";
 import { ExecutionError } from "../core/execution-error.ts";
 import { randomUUIDv7 } from "../core/uuid-v7.ts";
 import { canonicalJsonBytes, digestBytes } from "./common/encoding.ts";
+import { maximumIntegrationBodyBytes } from "./common/integration.ts";
 export type SubscriptionOwner = Pick<
   TriggerSubscription,
   "tokenId" | "service" | "connectionId" | "triggerId" | "connectionRevision" | "providerAccountId"
@@ -120,6 +121,8 @@ export async function executeSubscription(
     existing.status === "active" &&
     input.query.connector_subscription === existing.callbackNonce
   ) {
+    if (Buffer.byteLength(input.rawBody, "base64") > (definition.maximumBodyBytes ?? maximumIntegrationBodyBytes))
+      throw new ExecutionError("invalid_input", "Webhook body is too large", "invalid_input");
     const result = definition.handshake?.({ ...input, callbackSecret: existing.callbackSecret });
     if (result)
       return { result, checkpoint: existing.checkpoint, subscription: { id }, reconcileAt: existing.reconcileAt };
@@ -197,14 +200,10 @@ export async function executeSubscriptionOperation(
     }
     if (input.active && record.status !== "active")
       throw new ExecutionError("invalid_input", "Subscription is being deleted", "conflict");
-    const callback = new URL(record.endpointUrl);
-    callback.searchParams.set("connector_subscription", record.callbackNonce);
-    // Existing registrations retain their original URL for lookup and cleanup.
-    if (record.callbackReference) callback.searchParams.set("connector_reference", record.callbackReference);
     const result = await definition.reconcile({
       active: input.active,
       config: record.config,
-      endpointUrl: callback.href,
+      endpointUrl: subscriptionCallbackUrl(record),
       callbackSecret: record.callbackSecret,
       idempotencyKey: record.callbackNonce,
       connector: proxy,
@@ -240,7 +239,7 @@ export async function executeSubscriptionOperation(
   if (!definition.snapshot.endpoint.methods.includes(input.method))
     throw new ExecutionError("invalid_input", "Unsupported webhook method.");
   const rawBody = Uint8Array.from(Buffer.from(input.rawBody, "base64"));
-  if (rawBody.byteLength > 64 * 1024)
+  if (rawBody.byteLength > (definition.maximumBodyBytes ?? maximumIntegrationBodyBytes))
     throw new ExecutionError("invalid_input", "Webhook body is too large", "invalid_input");
   if (!rawBody.byteLength && !definition.snapshot.endpoint.body.allowEmpty)
     throw new ExecutionError("invalid_input", "Webhook body is required.");
@@ -281,6 +280,7 @@ export async function executeSubscriptionOperation(
   if (Array.isArray(payload) && !definition.snapshot.endpoint.body.allowArray)
     throw new ExecutionError("invalid_input", "Webhook body must not be an array.");
   const result = await definition.receive({
+    endpointUrl: subscriptionCallbackUrl(record),
     bindingId: id,
     callbackSecret: record.callbackSecret,
     config: record.config,
@@ -306,4 +306,12 @@ export async function executeSubscriptionOperation(
     subscription: { id },
     reconcileAt: record.reconcileAt,
   };
+}
+
+function subscriptionCallbackUrl(record: TriggerSubscription): string {
+  const callback = new URL(record.endpointUrl);
+  callback.searchParams.set("connector_subscription", record.callbackNonce);
+  // Existing registrations retain their original URL for lookup and cleanup.
+  if (record.callbackReference) callback.searchParams.set("connector_reference", record.callbackReference);
+  return callback.href;
 }

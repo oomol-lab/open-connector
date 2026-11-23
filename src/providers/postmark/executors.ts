@@ -4,7 +4,12 @@ import type { ProviderActionHandlers, ApiKeyProviderContext } from "../provider-
 import { compactObject, optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
 import { defineApiKeyProviderExecutors } from "../provider-executors.ts";
 import { defineProviderProxy } from "../provider-proxy.ts";
-import { ProviderRequestError, providerUserAgent, requiredInputString } from "../provider-runtime.ts";
+import {
+  ProviderRequestError,
+  providerUserAgent,
+  requiredInputString,
+  readProviderErrorBody,
+} from "../provider-runtime.ts";
 
 const service = "postmark";
 const postmarkApiBaseUrl = "https://api.postmarkapp.com";
@@ -237,6 +242,14 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
   service,
   baseUrl: "https://api.postmarkapp.com",
   auth: { type: "api_key_header", name: "x-postmark-server-token" },
+  async readError(response) {
+    const payload = await readProviderErrorBody(response, "Postmark");
+    return new ProviderRequestError(
+      response.status,
+      optionalString(optionalRecord(payload)?.Message) ?? `Postmark request failed (${response.status})`,
+      payload,
+    );
+  },
 });
 
 import type { IntegrationDefinition } from "../../triggers/common/integration.ts";

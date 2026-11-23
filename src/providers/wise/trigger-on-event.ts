@@ -1,6 +1,7 @@
 import type { IntegrationDefinition } from "../../triggers/common/integration.ts";
 import type { ManagedWebhook } from "../../triggers/managed-webhook.ts";
 
+import { verify } from "node:crypto";
 import { PermanentIntegrationError, TransientIntegrationError } from "../../triggers/common/integration.ts";
 import { isJsonObject } from "../../triggers/common/json.ts";
 import { reconcileManagedWebhook, webhookRequest } from "../../triggers/managed-webhook.ts";
@@ -15,6 +16,25 @@ function resolveWiseSchemaVersion(triggerOn: string): string {
   return wiseSchemaVersionByEvent[triggerOn] ?? "2.0.0";
 }
 
+const wiseProductionPublicKey = `-----BEGIN PUBLIC KEY-----
+MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKCAQEAvO8vXV+JksBzZAY6GhSO
+XdoTCfhXaaiZ+qAbtaDBiu2AGkGVpmEygFmWP4Li9m5+Ni85BhVvZOodM9epgW3F
+bA5Q1SexvAF1PPjX4JpMstak/QhAgl1qMSqEevL8cmUeTgcMuVWCJmlge9h7B1CS
+D4rtlimGZozG39rUBDg6Qt2K+P4wBfLblL0k4C4YUdLnpGYEDIth+i8XsRpFlogx
+CAFyH9+knYsDbR43UJ9shtc42Ybd40Afihj8KnYKXzchyQ42aC8aZ/h5hyZ28yVy
+Oj3Vos0VdBIs/gAyJ/4yyQFCXYte64I7ssrlbGRaco4nKF3HmaNhxwyKyJafz19e
+HwIDAQAB
+-----END PUBLIC KEY-----`;
+
+function verifyWiseSignature(rawBody: Uint8Array, signature: string | undefined, publicKey: string): boolean {
+  if (!signature) return false;
+  try {
+    return verify("RSA-SHA256", rawBody, publicKey, Buffer.from(signature, "base64"));
+  } catch {
+    return false;
+  }
+}
+
 function withCallbackToken(endpointUrl: string, token: string): string {
   const url = new URL(endpointUrl);
   url.searchParams.set("wise_token", token);
@@ -22,7 +42,10 @@ function withCallbackToken(endpointUrl: string, token: string): string {
 }
 
 export const wiseEvent: IntegrationDefinition = {
-  callback: { headers: ["x-delivery-id", "x-signature-sha256"], query: ["wise_token"] },
+  callback: {
+    headers: ["x-delivery-id", "x-signature-sha256", "x-test-notification"],
+    query: ["wise_token"],
+  },
   snapshot,
   initialState: { checkpoint: null, subscription: {} },
   async reconcile(context) {
@@ -63,7 +86,10 @@ export const wiseEvent: IntegrationDefinition = {
         return { id: response.data.id, secret: context.callbackSecret };
       },
       async remove(id) {
-        await webhookRequest(context, { endpoint: `${subsPath}/${encodeURIComponent(id)}`, method: "DELETE" });
+        await webhookRequest(context, {
+          endpoint: `${subsPath}/${encodeURIComponent(id)}`,
+          method: "DELETE",
+        });
       },
     });
   },
@@ -71,9 +97,25 @@ export const wiseEvent: IntegrationDefinition = {
     if (!sameSecret(context.query("wise_token"), context.callbackSecret)) {
       return { outcome: "respond", status: 401, body: "", contentType: "text/plain" };
     }
+    if (!verifyWiseSignature(context.rawBody, context.header("x-signature-sha256"), wiseProductionPublicKey)) {
+      return { outcome: "respond", status: 401, body: "", contentType: "text/plain" };
+    }
+    if (context.header("x-test-notification")?.toLowerCase() === "true") {
+      return { outcome: "ignored", reason: "Wise test webhook notification." };
+    }
     const body = context.payload;
     if (!isJsonObject(body) || typeof body.event_type != "string") {
       return { outcome: "respond", status: 400, body: "", contentType: "text/plain" };
+    }
+    const hookId = context.state?.subscription.hookId;
+    if (typeof hookId != "string" || hookId.length === 0) {
+      return { outcome: "respond", status: 503, body: "", contentType: "text/plain" };
+    }
+    if (body.subscription_id !== hookId) {
+      return {
+        outcome: "ignored",
+        reason: "Wise subscription ID does not match this subscription.",
+      };
     }
     if (body.event_type != String(context.config.triggerOn)) {
       return { outcome: "ignored", reason: "Wise event type does not match." };

@@ -647,6 +647,13 @@ export const bingMonitorRequest: JsonSchema = {
   required: ["query", "country"],
   type: "object",
   properties: {
+    pages: {
+      type: "integer",
+      minimum: 1,
+      maximum: 10,
+      description: "Number of search result pages to retrieve (1-10).",
+    },
+    first: { type: "integer", minimum: 1, description: "One-based index of the first search result." },
     query: {
       description:
         "The search query to execute on Bing. Bing limits the URL-encoded query to 3,500 characters, so non-Latin scripts allow fewer characters.",

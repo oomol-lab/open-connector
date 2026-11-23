@@ -3,6 +3,14 @@ import type { OAuthAuthorizationOption } from "../../core/types.ts";
 const permissions: Array<readonly [string, string, string]> = [
   ["account-settings.read", "Read accounts", "List accounts and read account settings."],
   ["memberships.read", "Read memberships", "List accounts you belong to."],
+  ["d1.read", "Read D1", "List databases and inspect database settings."],
+  ["d1.write", "Manage D1", "Manage databases and execute SQL statements."],
+  ["workers-r2-bucket-item.read", "Read R2 objects", "Read objects in authorized R2 buckets."],
+  [
+    "workers-r2-bucket-item.write",
+    "Manage R2 objects",
+    "Request object-level write access. For REST deletion, select workers-r2.write.",
+  ],
   ["dns.read", "Read DNS", "Read DNS records."],
   ["dns.write", "Manage DNS", "Create, update, and delete DNS records."],
   ["zone.read", "Read zones", "Read domains and their nameservers."],

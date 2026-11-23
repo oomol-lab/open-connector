@@ -165,14 +165,21 @@ function lurkapiRequestError(
     );
   }
   if (status === 401 || status === 403) {
-    const refusedKey = code === undefined || credentialErrorCodes.has(code);
+    const refusedKey = code !== undefined && credentialErrorCodes.has(code);
     if (phase === "validate" && refusedKey) {
       return new ProviderRequestError(400, message, details);
     }
     // LurkAPI also answers 403 `not_public` for content only logged-in visitors see; a new key cannot fix that.
-    if (!refusedKey) {
+    if (code === "not_public") {
       return new ProviderRequestError(status, message, details, "invalid_input");
     }
   }
-  return new ProviderRequestError(status >= 500 ? 502 : status, message, details);
+  return new ProviderRequestError(
+    status >= 500 ? 502 : status,
+    message,
+    details,
+    (status === 401 || status === 403) && (code === undefined || !credentialErrorCodes.has(code))
+      ? "provider_error"
+      : undefined,
+  );
 }

@@ -4,7 +4,7 @@ import type { ManagedWebhook } from "../../triggers/managed-webhook.ts";
 import { PermanentIntegrationError, TransientIntegrationError } from "../../triggers/common/integration.ts";
 import { isJsonObject } from "../../triggers/common/json.ts";
 import { reconcileManagedWebhook, webhookRequest } from "../../triggers/managed-webhook.ts";
-import { verifyHexHmac } from "../../triggers/signature.ts";
+import { sameSecret, verifyHexHmac } from "../../triggers/signature.ts";
 import { snapshot } from "./trigger-on-project-event.definition.ts";
 
 export const taigaProjectEvent: IntegrationDefinition = {
@@ -27,8 +27,14 @@ export const taigaProjectEvent: IntegrationDefinition = {
         for (const item of response.data) {
           if (!isJsonObject(item) || typeof item.url != "string") continue;
           if (item.url != context.endpointUrl) continue;
-          if (!["number", "string"].includes(typeof item.id) || Number(item.project) !== projectId) {
-            throw new PermanentIntegrationError("Taiga webhook settings differ from this subscription.");
+          if (!["number", "string"].includes(typeof item.id)) {
+            throw new PermanentIntegrationError("Taiga webhook entry is missing an ID.");
+          }
+          if (context.active) {
+            const keyMatch = typeof item.key !== "string" || sameSecret(item.key, context.callbackSecret);
+            if (Number(item.project) !== projectId || !keyMatch) {
+              throw new PermanentIntegrationError("Taiga webhook settings differ from this subscription.");
+            }
           }
           found.push({ id: String(item.id), secret: context.callbackSecret });
         }
@@ -51,7 +57,10 @@ export const taigaProjectEvent: IntegrationDefinition = {
         return { id: String(response.data.id), secret: context.callbackSecret };
       },
       async remove(id) {
-        await webhookRequest(context, { endpoint: `/webhooks/${encodeURIComponent(id)}`, method: "DELETE" });
+        await webhookRequest(context, {
+          endpoint: `/webhooks/${encodeURIComponent(id)}`,
+          method: "DELETE",
+        });
       },
     });
   },
@@ -63,6 +72,9 @@ export const taigaProjectEvent: IntegrationDefinition = {
     const body = context.payload;
     if (!isJsonObject(body) || typeof body.type != "string" || typeof body.action != "string") {
       return { outcome: "respond", status: 400, body: "", contentType: "text/plain" };
+    }
+    if (body.type === "test" && body.action === "test") {
+      return { outcome: "ignored", reason: "Taiga test webhook notification." };
     }
     const allowedTypes = Array.isArray(context.config.types) ? context.config.types.map(String) : [];
     const allowedActions = Array.isArray(context.config.actions) ? context.config.actions.map(String) : [];

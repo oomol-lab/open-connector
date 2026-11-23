@@ -3,6 +3,7 @@ import type { ActionDefinition } from "../../core/types.ts";
 import { s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
 import { actions as browserRenderingActions } from "./browser-rendering/actions.ts";
+import { actions as d1Actions } from "./d1/actions.ts";
 import { actions as dnsActions } from "./dns/actions.ts";
 import { actions as emailRoutingActions } from "./email-routing/actions.ts";
 import { actions as kvActions } from "./kv/actions.ts";
@@ -39,6 +40,7 @@ export const actions: ActionDefinition[] = [
     ),
   }),
   ...dnsActions,
+  ...d1Actions,
   ...workersActions,
   ...r2Actions,
   ...emailRoutingActions,

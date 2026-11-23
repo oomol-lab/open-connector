@@ -15,8 +15,11 @@ const modelSummarySchema = s.looseRequiredObject("A WaveSpeedAI model.", {
 });
 const predictionSchema = s.looseRequiredObject("A WaveSpeedAI prediction.", {
   id: s.nonEmptyString("The prediction id used to fetch the result."),
-  status: s.string("The prediction status: created, processing, completed or failed."),
-  outputs: s.stringArray("URLs of the generated files. Empty until the prediction is completed."),
+  status: s.string("The prediction status: created, processing, completed, failed, cancelled, timeout or deleted."),
+  outputs: s.array(
+    "Generated file URLs or structured results. Empty until the prediction is completed.",
+    s.unknown("A model output value."),
+  ),
   error: s.nullableString("The failure reason when the prediction failed."),
 });
 
@@ -68,6 +71,7 @@ export const wavespeedActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "run_model",
+    asyncLifecycle: { startActionId: "wavespeed.run_model", statusActionId: "wavespeed.get_prediction" },
     operationType: "write",
     description:
       "Start a WaveSpeedAI prediction for a model with a JSON input and return its id. The run is billed; poll get_prediction with the id for the outputs.",
@@ -79,6 +83,7 @@ export const wavespeedActions: ActionDefinition[] = [
   }),
   defineProviderAction(service, {
     name: "get_prediction",
+    asyncLifecycle: { startActionId: "wavespeed.run_model", statusActionId: "wavespeed.get_prediction" },
     operationType: "read",
     description:
       "Retrieve the status of a WaveSpeedAI prediction and, once it is completed, the URLs of the generated files.",

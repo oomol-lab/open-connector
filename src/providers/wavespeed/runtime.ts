@@ -13,6 +13,7 @@ import { defineApiKeyProviderExecutors } from "../provider-executors.ts";
 import {
   providerInputError,
   ProviderRequestError,
+  runProviderRequest,
   providerResponseError,
   providerUserAgent,
 } from "../provider-runtime.ts";
@@ -29,9 +30,9 @@ type WavespeedActionHandler = (input: Record<string, unknown>, context: ApiKeyPr
 
 interface WavespeedRequestOptions {
   method?: "GET" | "POST";
+  timeoutMs?: number;
   path: string;
   body?: Record<string, unknown>;
-  mode?: "validate" | "execute";
   context: ApiKeyProviderContext;
 }
 
@@ -60,7 +61,7 @@ export async function validateWavespeedCredential(
   fetcher: typeof fetch,
   signal?: AbortSignal,
 ): Promise<CredentialValidationResult> {
-  await wavespeedRequest({ path: balancePath, mode: "validate", context: { apiKey, fetcher, signal } });
+  await wavespeedRequest({ path: balancePath, context: { apiKey, fetcher, signal } });
 
   return {
     profile: { accountId: "wavespeed-api-key", displayName: "WaveSpeedAI API Key" },
@@ -107,7 +108,13 @@ async function runModel(input: Record<string, unknown>, context: ApiKeyProviderC
   const modelId = readModelId(input.modelId);
   const body = requiredRecord(input.input, "input", providerInputError);
   const data = readDataObject(
-    await wavespeedRequest({ method: "POST", path: `/api/v3/${modelId}`, body, context }),
+    await wavespeedRequest({
+      method: "POST",
+      path: `/api/v3/${modelId}`,
+      body,
+      context,
+      timeoutMs: body.enable_sync_mode === true ? 120_000 : undefined,
+    }),
     "prediction",
   );
   return { prediction: normalizePrediction(data) };
@@ -166,7 +173,7 @@ function normalizePrediction(data: Record<string, unknown>): Record<string, unkn
     ...data,
     id,
     status: optionalString(data.status) ?? "",
-    outputs: Array.isArray(data.outputs) ? data.outputs.filter((output) => typeof output === "string") : [],
+    outputs: Array.isArray(data.outputs) ? data.outputs : [],
     error: optionalString(data.error) ?? null,
   };
 }
@@ -182,39 +189,36 @@ function readModelId(value: unknown): string {
 }
 
 async function wavespeedRequest(options: WavespeedRequestOptions): Promise<unknown> {
-  const headers = new Headers({
-    "accept": "application/json",
-    "authorization": `Bearer ${options.context.apiKey}`,
-    "user-agent": providerUserAgent,
-  });
-  const init: RequestInit = {
-    method: options.method ?? "GET",
-    headers,
-    signal: options.context.signal,
-  };
-  if (options.body) {
-    headers.set("content-type", "application/json");
-    init.body = JSON.stringify(options.body);
-  }
+  return runProviderRequest(
+    { label: "WaveSpeedAI", signal: options.context.signal, timeoutMs: options.timeoutMs },
+    async (signal) => {
+      const headers = new Headers({
+        "accept": "application/json",
+        "authorization": `Bearer ${options.context.apiKey}`,
+        "user-agent": providerUserAgent,
+      });
+      const init: RequestInit = {
+        method: options.method ?? "GET",
+        headers,
+        signal,
+      };
+      if (options.body) {
+        headers.set("content-type", "application/json");
+        init.body = JSON.stringify(options.body);
+      }
 
-  let response: Response;
-  try {
-    response = await options.context.fetcher(new URL(options.path, wavespeedApiBaseUrl), init);
-  } catch (error) {
-    throw new ProviderRequestError(
-      502,
-      error instanceof Error ? `WaveSpeedAI request failed: ${error.message}` : "WaveSpeedAI request failed",
-    );
-  }
+      const response = await options.context.fetcher(new URL(options.path, wavespeedApiBaseUrl), init);
 
-  const payload = await readWavespeedResponse(response);
-  // The API reports some failures as HTTP 200 with a non-200 code in the JSON envelope.
-  const envelopeCode = optionalInteger(optionalRecord(payload)?.code);
-  const status = response.ok && envelopeCode !== undefined && envelopeCode !== 200 ? envelopeCode : response.status;
-  if (status < 200 || status >= 300) {
-    throw mapWavespeedError(status, payload, options.mode ?? "execute");
-  }
-  return payload;
+      const payload = await readWavespeedResponse(response);
+      // The API reports some failures as HTTP 200 with a non-200 code in the JSON envelope.
+      const envelopeCode = optionalInteger(optionalRecord(payload)?.code);
+      const status = response.ok && envelopeCode !== undefined && envelopeCode !== 200 ? envelopeCode : response.status;
+      if (status < 200 || status >= 300) {
+        throw mapWavespeedError(status, payload);
+      }
+      return payload;
+    },
+  );
 }
 
 async function readWavespeedResponse(response: Response): Promise<unknown> {
@@ -229,20 +233,15 @@ async function readWavespeedResponse(response: Response): Promise<unknown> {
   }
 }
 
-function mapWavespeedError(status: number, payload: unknown, mode: "validate" | "execute"): ProviderRequestError {
+function mapWavespeedError(status: number, payload: unknown): ProviderRequestError {
   const message =
     optionalString(optionalRecord(payload)?.message) ?? `WaveSpeedAI request failed with status ${status}`;
-
-  if (status === 401 || status === 403) {
-    return new ProviderRequestError(401, message, payload);
-  }
-  if (status === 404 || status === 429) {
-    return new ProviderRequestError(status, message, payload);
-  }
-  if (status >= 400 && status < 500) {
-    return new ProviderRequestError(mode === "validate" ? 401 : 400, message, payload);
-  }
-  return new ProviderRequestError(502, message, payload);
+  return new ProviderRequestError(
+    status >= 400 && status <= 599 ? status : 502,
+    message,
+    payload,
+    status === 401 || status === 403 ? "provider_error" : undefined,
+  );
 }
 
 function readDataObject(value: unknown, label: string): Record<string, unknown> {

@@ -4,7 +4,12 @@ import type { IntegrationDefinition } from "../../triggers/common/integration.ts
 import { optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
 import { defineApiKeyProviderExecutors } from "../provider-executors.ts";
 import { defineProviderProxy } from "../provider-proxy.ts";
-import { ProviderRequestError, requiredInputString, runProviderRequest } from "../provider-runtime.ts";
+import {
+  ProviderRequestError,
+  requiredInputString,
+  requiredResponseRecord,
+  runProviderRequest,
+} from "../provider-runtime.ts";
 import { convertkitSubscriberEvent } from "./trigger-on-subscriber-event.ts";
 
 const service = "convertkit";
@@ -38,10 +43,11 @@ async function kitRequest(
         response.status >= 500 ? 502 : response.status,
         `Kit request failed (${response.status})`,
         errorPayload,
+        response.status === 401 || response.status === 403 ? "provider_error" : undefined,
       );
     }
     const payload = (await response.json()) as unknown;
-    return optionalRecord(payload) ?? {};
+    return requiredResponseRecord(payload, "convertkit response");
   });
 }
 

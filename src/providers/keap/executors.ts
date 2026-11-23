@@ -1,10 +1,15 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
 import type { IntegrationDefinition } from "../../triggers/common/integration.ts";
 
-import { optionalInteger, optionalRecord, optionalString } from "../../core/cast.ts";
+import { optionalInteger, optionalString } from "../../core/cast.ts";
 import { defineApiKeyProviderExecutors } from "../provider-executors.ts";
 import { defineProviderProxy } from "../provider-proxy.ts";
-import { ProviderRequestError, providerInputError, runProviderRequest } from "../provider-runtime.ts";
+import {
+  ProviderRequestError,
+  providerInputError,
+  requiredResponseRecord,
+  runProviderRequest,
+} from "../provider-runtime.ts";
 import { keapEvent } from "./trigger-on-event.ts";
 
 const service = "keap";
@@ -25,15 +30,17 @@ async function keapRequest(
       },
       signal: reqSignal,
     });
-    const payload = (await response.json().catch(() => ({}))) as unknown;
     if (!response.ok) {
+      const payload = await response.json().catch(() => undefined);
       throw new ProviderRequestError(
         response.status >= 500 ? 502 : response.status,
         `Keap request failed (${response.status})`,
         payload,
+        response.status === 401 || response.status === 403 ? "provider_error" : undefined,
       );
     }
-    return optionalRecord(payload) ?? {};
+    const payload = (await response.json()) as unknown;
+    return requiredResponseRecord(payload, "keap response");
   });
 }
 
