@@ -245,8 +245,17 @@ export async function createConnectorRuntime(options: ConnectorRuntimeOptions): 
     });
     saasCleanup.start();
     triggerMaintenance.start();
-    const shutdown = new AbortController();
+    // Each request gets its own controller that follows the caller's signal; close() aborts every request that has not
+    // been released yet. Do not derive the request signal with AbortSignal.any([request.signal, <runtime-lifetime
+    // signal>]): a dependent signal that has "abort" listeners stays reachable from its still-live source, so a
+    // listener that is never removed (the MCP SDK leaves one per /mcp call) would pin that request's objects until the
+    // runtime closes. A request is released (dropped from `active`, follower removed from the caller's signal) as soon
+    // as its Response is produced, or when the controller aborts, so a signal that outlives the request (a shared
+    // AbortController, a client transport's signal) does not accumulate one listener per request. The exception is a
+    // text/event-stream response: /mcp streams it to 2025-protocol clients and runs the tool after the Response has been
+    // returned, so that request stays registered until the body ends, errors or is cancelled.
     const pending = new Set<Promise<Response>>();
+    const active = new Map<AbortController, () => void>();
     let closing: Promise<void> | undefined;
     return {
       runtimeAuthConfigured,
@@ -256,22 +265,51 @@ export async function createConnectorRuntime(options: ConnectorRuntimeOptions): 
         if (mountPath && url.pathname !== mountPath && !url.pathname.startsWith(`${mountPath}/`))
           return Promise.resolve(new Response("Not found", { status: 404 }));
         url.pathname = url.pathname.slice(mountPath.length) || "/";
-        const forwarded = new Request(
-          url,
-          new Request(request, { signal: AbortSignal.any([request.signal, shutdown.signal]) }),
-        );
-        const response = Promise.resolve().then(() => app.fetch(forwarded));
+        const controller = new AbortController();
+        const caller = request.signal;
+        let released = false;
+        const release = () => {
+          if (released) return;
+          released = true;
+          active.delete(controller);
+          caller.removeEventListener("abort", follow);
+        };
+        const follow = () => {
+          controller.abort(caller.reason);
+          release();
+        };
+        active.set(controller, release);
+        if (caller.aborted) follow();
+        else caller.addEventListener("abort", follow, { once: true });
+        const forwarded = new Request(url, new Request(request, { signal: controller.signal }));
+        const response = Promise.resolve()
+          .then(() => app.fetch(forwarded))
+          .then(
+            (produced) => {
+              if (released || !isEventStream(produced)) {
+                release();
+                return produced;
+              }
+              return releaseWhenBodyEnds(produced, release, controller);
+            },
+            (error) => {
+              release();
+              throw error;
+            },
+          );
         pending.add(response);
-        void response.then(
-          () => pending.delete(response),
-          () => pending.delete(response),
-        );
+        const settle = () => pending.delete(response);
+        void response.then(settle, settle);
         return response;
       },
       close() {
         if (!closing) {
           closing = Promise.resolve().then(async () => {
-            shutdown.abort(new Error("Open Connector runtime is closing."));
+            const reason = new Error("Open Connector runtime is closing.");
+            for (const [controller, release] of active) {
+              controller.abort(reason);
+              release();
+            }
             await Promise.allSettled([...pending, saasCleanup.close(), triggerMaintenance.close()]);
             try {
               await database.close();
@@ -291,6 +329,35 @@ export async function createConnectorRuntime(options: ConnectorRuntimeOptions): 
     }
     throw error;
   }
+}
+
+/** True when the handler keeps working after the Response is returned, as the MCP transport does for SSE. */
+function isEventStream(response: Response): boolean {
+  return response.body !== null && /^text\/event-stream\b/i.test(response.headers.get("content-type") ?? "");
+}
+
+function releaseWhenBodyEnds(response: Response, done: () => void, controller: AbortController): Response {
+  const reader = response.body!.getReader();
+  const body = new ReadableStream<Uint8Array>({
+    async pull(stream) {
+      try {
+        const chunk = await reader.read();
+        if (chunk.done) {
+          done();
+          stream.close();
+        } else stream.enqueue(chunk.value);
+      } catch (error) {
+        done();
+        stream.error(error);
+      }
+    },
+    cancel(reason) {
+      controller.abort(reason);
+      done();
+      return reader.cancel(reason).catch(() => {});
+    },
+  });
+  return new Response(body, { status: response.status, statusText: response.statusText, headers: response.headers });
 }
 
 export type { RuntimeProviderSetup } from "./api/runtime-api.ts";

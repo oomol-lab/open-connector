@@ -2,10 +2,13 @@ import type { ProviderHttpAttempt } from "../core/provider-http-dispatch.ts";
 import type { ConnectorRuntime, ConnectorRuntimeOptions } from "./connector-runtime.ts";
 import type { McpOutputMode } from "./mcp-settings.ts";
 
+import { serve } from "@hono/node-server";
 import { Client, StreamableHTTPClientTransport } from "@modelcontextprotocol/client";
+import { getEventListeners, once } from "node:events";
 import { cp, mkdtemp, mkdir, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
+import { queryObjects } from "node:v8";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { getProviderNetworkPolicy } from "../core/provider-network-policy.ts";
 import { createConnectorRuntime } from "./connector-runtime.ts";
@@ -499,6 +502,298 @@ describe("headless runtime", () => {
     expect(aborted).toBe(true);
     expect((await running).ok).toBe(false);
     expect((await request("/v1/health", undefined, "runtime-token")).status).toBe(503);
+  });
+
+  it("does not derive request signals from a signal that lives as long as the runtime", async () => {
+    // A dependent signal (AbortSignal.any) with an abort listener stays reachable from its live sources, so deriving
+    // request signals from one runtime-lifetime source pins every request that leaves a listener behind.
+    runtime = await createConnectorRuntime(await fixture());
+    const any = vi.spyOn(AbortSignal, "any");
+    try {
+      expect((await request("/v1/health", undefined, "runtime-token")).status).toBe(200);
+      expect(any).not.toHaveBeenCalled();
+    } finally {
+      any.mockRestore();
+    }
+  });
+
+  it("leaves no abort listener behind on the caller's signal once the response is produced", async () => {
+    // A signal that outlives the request (a shared AbortController, a client transport's signal) must not collect one
+    // listener per request, and the host must not have to read the body to make that so.
+    runtime = await createConnectorRuntime(await fixture());
+    const shared = new AbortController();
+    for (let i = 0; i < 3; i++) {
+      const incoming = new Request(`${publicOrigin}/v1/health`, {
+        headers: { authorization: "Bearer runtime-token" },
+        signal: shared.signal,
+      });
+      // Count on the signal the runtime actually sees: Bun reuses init.signal, Node gives each Request its own follower.
+      const before = getEventListeners(incoming.signal, "abort").length;
+      const response = await runtime.fetch(incoming);
+      expect(response.status).toBe(200);
+      expect(getEventListeners(incoming.signal, "abort").length).toBe(before);
+    }
+  });
+
+  it("returns non-streaming responses as the handler produced them", async () => {
+    // The standalone host sets Content-Length only for a response it can read without a stream; wrapping every
+    // response in a new stream would turn JSON replies into chunked ones.
+    runtime = await createConnectorRuntime(await fixture());
+    const server = serve({ fetch: (incoming) => runtime!.fetch(incoming), hostname: "127.0.0.1", port: 0 });
+    try {
+      await once(server, "listening");
+      const address = server.address();
+      if (typeof address !== "object" || address === null) throw new Error("Expected a TCP address.");
+      const response = await fetch(`http://127.0.0.1:${address.port}/connector/v1/health`, {
+        headers: { authorization: "Bearer runtime-token" },
+      });
+      expect(response.status).toBe(200);
+      expect(response.headers.get("content-length")).toMatch(/^\d+$/);
+      expect(response.headers.get("transfer-encoding")).toBeNull();
+      await response.text();
+    } finally {
+      server.close();
+    }
+  });
+
+  it("stops following a caller's signal as soon as it aborts, without the host reading the response", async () => {
+    runtime = await createConnectorRuntime(await fixture());
+    vi.stubGlobal("fetch", async () => Response.json({ id: 1, login: "fixture-account" }));
+    expect((await request("/v1/connections/github/connect/api-key", { apiKey: "fixture-secret" })).status).toBe(200);
+    const accounts = (await (await request("/v1/apps", undefined, "runtime-token")).json()).data;
+    let started!: () => void;
+    const ready = new Promise<void>((done) => {
+      started = done;
+    });
+    vi.stubGlobal("fetch", (input: RequestInfo | URL, init?: RequestInit) => {
+      started();
+      return new Promise((_done, fail) =>
+        new Request(input, init).signal.addEventListener("abort", () => fail(new DOMException("x", "AbortError")), {
+          once: true,
+        }),
+      );
+    });
+    const caller = new AbortController();
+    const incoming = new Request(`${publicOrigin}/v1/proxy/github`, {
+      method: "POST",
+      headers: {
+        "authorization": "Bearer runtime-token",
+        "content-type": "application/json",
+        "x-oo-connector-alias": accounts[0].alias,
+      },
+      body: JSON.stringify({ method: "GET", endpoint: "/user" }),
+      signal: caller.signal,
+    });
+    const before = getEventListeners(incoming.signal, "abort").length;
+    const running = runtime.fetch(incoming);
+    await ready;
+    expect(getEventListeners(incoming.signal, "abort").length).toBe(before + 1);
+    caller.abort();
+    expect(getEventListeners(incoming.signal, "abort").length).toBe(before);
+    // The host never reads the response, as a server does for a connection that is already gone.
+    await running.catch(() => undefined);
+    expect(getEventListeners(incoming.signal, "abort").length).toBe(before);
+    await runtime.close();
+  });
+
+  it("keeps no per-request objects alive after responses are produced", async () => {
+    // Counts live AbortControllers (each request owns one) after many calls, so it fails if anything keeps a finished
+    // request registered until close(): a request left in the runtime's active set, a never-removed follower on a
+    // longer-lived signal, or a missing release when a caller aborts. It cannot observe Bun's retention of derived
+    // signals; the AbortSignal.any test above is the structural guard for that.
+    const connector = await createConnectorRuntime(await fixture());
+    runtime = connector;
+    const liveControllers = () => queryObjects(AbortController, { format: "count" }) as number;
+    const mcp = (signal?: AbortSignal) =>
+      new Request(`${publicOrigin}/mcp`, {
+        method: "POST",
+        headers: {
+          "authorization": "Bearer runtime-token",
+          "content-type": "application/json",
+          "accept": "application/json, text/event-stream",
+        },
+        body: JSON.stringify({
+          jsonrpc: "2.0",
+          id: 1,
+          method: "tools/call",
+          params: { name: "list_apps", arguments: {} },
+        }),
+        signal,
+      });
+    await (await connector.fetch(mcp())).text();
+    const before = liveControllers();
+    const calls = 100;
+    // /mcp streamed to completion, /v1 whose body is never read, and /mcp for a caller that is already gone.
+    for (let i = 0; i < calls; i++) await (await connector.fetch(mcp())).text();
+    for (let i = 0; i < calls; i++)
+      await connector.fetch(
+        new Request(`${publicOrigin}/v1/health`, { headers: { authorization: "Bearer runtime-token" } }),
+      );
+    for (let i = 0; i < calls; i++) {
+      const caller = new AbortController();
+      caller.abort();
+      await connector.fetch(mcp(caller.signal)).catch(() => undefined);
+    }
+    await new Promise((done) => setTimeout(done, 50));
+    // 3 * calls requests were made; a leak keeps about one controller each.
+    expect(liveControllers() - before).toBeLessThan(calls / 3);
+  });
+
+  describe("MCP tool calls whose response is already streaming", () => {
+    // A client on a 2025 protocol version gets text/event-stream: the Response resolves before the tool runs, so the
+    // request has to stay tied to the caller's signal and to close() until its body ends.
+    async function startHangingToolCall(caller?: AbortSignal) {
+      const connector = await createConnectorRuntime(await fixture());
+      runtime = connector;
+      vi.stubGlobal("fetch", async () => Response.json({ id: 1, login: "fixture-account" }));
+      expect((await request("/v1/connections/github/connect/api-key", { apiKey: "fixture-secret" })).status).toBe(200);
+      const accounts = (await (await request("/v1/apps", undefined, "runtime-token")).json()).data;
+      const upstream = { requests: 0, aborted: false };
+      vi.stubGlobal(
+        "fetch",
+        (input: RequestInfo | URL, init?: RequestInit) =>
+          new Promise((_done, fail) => {
+            upstream.requests++;
+            new Request(input, init).signal.addEventListener(
+              "abort",
+              () => {
+                upstream.aborted = true;
+                fail(new DOMException("Cancelled", "AbortError"));
+              },
+              { once: true },
+            );
+          }),
+      );
+      const incoming = new Request(`${publicOrigin}/mcp`, {
+        method: "POST",
+        headers: {
+          "authorization": "Bearer runtime-token",
+          "content-type": "application/json",
+          "accept": "application/json, text/event-stream",
+        },
+        body: JSON.stringify({
+          jsonrpc: "2.0",
+          id: 1,
+          method: "tools/call",
+          params: {
+            name: "execute_action",
+            arguments: {
+              actionId: "github.get_workflow_job_logs",
+              connectionName: accounts[0].alias,
+              input: { owner: "o", repo: "r", jobId: 1 },
+            },
+          },
+        }),
+        signal: caller,
+      });
+      const response = await connector.fetch(incoming);
+      expect(response.headers.get("content-type")).toContain("text/event-stream");
+      await vi.waitFor(() => expect(upstream.requests).toBe(1));
+      return { response, upstream, incoming };
+    }
+
+    it("aborts the provider call when the caller aborts", async () => {
+      const caller = new AbortController();
+      const { response, upstream } = await startHangingToolCall(caller.signal);
+      expect(upstream.aborted).toBe(false);
+      caller.abort();
+      await vi.waitFor(() => expect(upstream.aborted).toBe(true));
+      await response.body?.cancel().catch(() => undefined);
+    });
+
+    it("aborts the provider call when the response body is cancelled", async () => {
+      const { response, upstream } = await startHangingToolCall();
+      expect(upstream.aborted).toBe(false);
+      await response.body!.cancel();
+      await vi.waitFor(() => expect(upstream.aborted).toBe(true));
+    });
+
+    it("follows the caller's signal only while the body is open", async () => {
+      const caller = new AbortController();
+      const { response, incoming } = await startHangingToolCall(caller.signal);
+      expect(getEventListeners(incoming.signal, "abort").length).toBe(1);
+      await response.body!.cancel();
+      expect(getEventListeners(incoming.signal, "abort").length).toBe(0);
+    });
+
+    it("leaves no listener on the signal of a caller that is already aborted", async () => {
+      const caller = new AbortController();
+      caller.abort();
+      const connector = await createConnectorRuntime(await fixture());
+      runtime = connector;
+      const incoming = new Request(`${publicOrigin}/mcp`, {
+        method: "POST",
+        headers: {
+          "authorization": "Bearer runtime-token",
+          "content-type": "application/json",
+          "accept": "application/json, text/event-stream",
+        },
+        body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "tools/list" }),
+        signal: caller.signal,
+      });
+      // The host never reads or cancels the body; nothing may stay registered with the runtime or the signal.
+      await connector.fetch(incoming).catch(() => undefined);
+      expect(getEventListeners(incoming.signal, "abort").length).toBe(0);
+      await connector.close();
+    });
+
+    it("aborts the provider call when close() is called", async () => {
+      const { response, upstream } = await startHangingToolCall();
+      expect(upstream.aborted).toBe(false);
+      await runtime!.close();
+      await vi.waitFor(() => expect(upstream.aborted).toBe(true));
+      await response.body?.cancel().catch(() => undefined);
+    });
+  });
+
+  it("propagates a caller's abort to the work behind the request", async () => {
+    runtime = await createConnectorRuntime(await fixture());
+    vi.stubGlobal("fetch", async () => Response.json({ id: 1, login: "fixture-account" }));
+    expect((await request("/v1/connections/github/connect/api-key", { apiKey: "fixture-secret" })).status).toBe(200);
+    let started!: () => void;
+    const ready = new Promise<void>((done) => {
+      started = done;
+    });
+    let aborted = false;
+    vi.stubGlobal(
+      "fetch",
+      (input: RequestInfo | URL, init?: RequestInit) =>
+        new Promise((_done, fail) => {
+          new Request(input, init).signal.addEventListener(
+            "abort",
+            () => {
+              aborted = true;
+              fail(new DOMException("Cancelled", "AbortError"));
+            },
+            { once: true },
+          );
+          started();
+        }),
+    );
+    const accounts = (await (await request("/v1/apps", undefined, "runtime-token")).json()).data;
+    const caller = new AbortController();
+    const running = runtime.fetch(
+      new Request(`${publicOrigin}/v1/proxy/github`, {
+        method: "POST",
+        headers: {
+          "authorization": "Bearer runtime-token",
+          "content-type": "application/json",
+          "x-oo-connector-alias": accounts[0].alias,
+        },
+        body: JSON.stringify({ method: "GET", endpoint: "/user" }),
+        signal: caller.signal,
+      }),
+    );
+    await Promise.race([
+      ready,
+      running.then(async (response) => {
+        throw new Error(await response.text());
+      }),
+    ]);
+    expect(aborted).toBe(false);
+    caller.abort();
+    await running.catch(() => undefined);
+    expect(aborted).toBe(true);
   });
 
   it("keeps concurrent runtimes' network policies independent after peer shutdown", async () => {
