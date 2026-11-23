@@ -6,7 +6,6 @@ import type {
 } from "../../core/types.ts";
 import type { TrelloActionContext, TrelloAuth } from "./runtime.ts";
 
-import { encodeRfc3986 } from "../../core/aws-sigv4.ts";
 import { defineProviderExecutors } from "../provider-executors.ts";
 import {
   createProviderProxyUrl,
@@ -18,6 +17,7 @@ import {
 import { createProviderFetch, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
 import {
   trelloActionHandlers,
+  trelloAuthorization,
   trelloBaseUrl,
   trelloResponseErrorCode,
   trelloBearerAuth,
@@ -34,7 +34,12 @@ export const executors: ProviderExecutors = defineProviderExecutors<TrelloAction
   handlers: trelloActionHandlers,
   skipDnsValidation: true,
   async createContext(context: ExecutionContext, fetcher: typeof fetch): Promise<TrelloActionContext> {
-    return { auth: await requireTrelloAuth(context), fetcher, signal: context.signal };
+    return {
+      auth: await requireTrelloAuth(context),
+      fetcher,
+      signal: context.signal,
+      transitFiles: context.transitFiles,
+    };
   },
 });
 
@@ -57,12 +62,7 @@ export const proxy: ProviderProxyExecutor = async (input, context) => {
     url.searchParams.delete("token");
     const headers = normalizeProviderProxyHeaders(input.headers);
     // Trello attachment downloads require header authentication, unlike metadata reads.
-    headers.set(
-      "authorization",
-      auth.type === "bearer"
-        ? `${auth.tokenType} ${auth.accessToken}`
-        : `OAuth oauth_consumer_key="${encodeRfc3986(auth.apiKey)}", oauth_token="${encodeRfc3986(auth.apiToken)}"`,
-    );
+    headers.set("authorization", trelloAuthorization(auth));
     headers.set("user-agent", providerUserAgent);
 
     const init: RequestInit = {

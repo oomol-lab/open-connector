@@ -141,15 +141,23 @@ const trelloAttachmentSchema = s.object(
   {
     id: s.string("Trello attachment ID."),
     name: s.string("Attachment name."),
+    fileName: s.string("Original filename of an uploaded attachment."),
+    mimeType: s.string("MIME type of an uploaded attachment."),
+    isUpload: s.boolean("Whether the attachment is an uploaded file."),
     url: s.url("Attachment URL."),
     bytes: s.nullable(s.integer("Attachment size in bytes.")),
     date: s.dateTime("Attachment creation timestamp in ISO 8601 format."),
   },
   {
-    optional: ["id", "name", "url", "bytes", "date"],
+    optional: ["id", "name", "fileName", "mimeType", "isUpload", "url", "bytes", "date"],
     additionalProperties: true,
   },
 );
+
+const cardAttachmentInput = s.object("Attachment to read.", {
+  cardId: trelloId("Trello card ID or short link."),
+  attachmentId: trelloId("Trello attachment ID."),
+});
 
 const optionalMemberIdInput = {
   memberId: trelloId("Trello member ID or the me shortcut. Defaults to me."),
@@ -643,6 +651,39 @@ export const trelloActions: ActionDefinition[] = [
     }),
     outputSchema: s.object("The Trello card returned after updating the check item.", {
       card: trelloCardSchema,
+    }),
+  }),
+  defineProviderAction(service, {
+    name: "list_card_attachments",
+    operationType: "read",
+    description: "List uploaded files and external links attached to a Trello card.",
+    requiredScopes: ["read:board:trello"],
+    inputSchema: s.object("Card to read.", { cardId: trelloId("Trello card ID or short link.") }),
+    outputSchema: s.object("Attachments on the card.", {
+      attachments: s.array("Card attachments.", trelloAttachmentSchema),
+    }),
+  }),
+  defineProviderAction(service, {
+    name: "get_card_attachment",
+    operationType: "read",
+    description: "Get metadata for one attachment on a Trello card.",
+    requiredScopes: ["read:board:trello"],
+    inputSchema: cardAttachmentInput,
+    outputSchema: s.object("The requested attachment.", { attachment: trelloAttachmentSchema }),
+  }),
+  defineProviderAction(service, {
+    name: "download_card_attachment",
+    operationType: "read",
+    description:
+      "Download a file uploaded to a Trello card into temporary file storage. For external links, use get_card_attachment.",
+    requiredScopes: ["read:board:trello"],
+    inputSchema: cardAttachmentInput,
+    outputSchema: s.object("The downloaded file in temporary storage.", {
+      fileId: s.string("Transit file ID."),
+      downloadUrl: s.string("URL to retrieve the stored file."),
+      name: s.string("Attachment filename."),
+      mimeType: s.string("Attachment MIME type."),
+      sizeBytes: s.nonNegativeInteger("File size in bytes."),
     }),
   }),
   defineProviderAction(service, {

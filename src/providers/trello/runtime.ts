@@ -1,19 +1,25 @@
-import type { CredentialValidationResult, ResolvedCredential } from "../../core/types.ts";
+import type { CredentialValidationResult, ResolvedCredential, TransitFileWriter } from "../../core/types.ts";
 import type { ProviderActionHandlers } from "../provider-executors.ts";
 
+import { encodeRfc3986 } from "../../core/aws-sigv4.ts";
 import {
   compactObject,
   objectArray,
   optionalBoolean,
+  optionalRawString,
   optionalRecord,
   optionalString,
   optionalStringArray,
 } from "../../core/cast.ts";
+import { encodePathSegment, storeResponseInTransit } from "../../core/request.ts";
 import {
   ProviderRequestError,
+  providerInputError,
   providerResponseError,
   providerUserAgent,
+  readProviderErrorTextBody,
   requiredResponseRecord,
+  runProviderRequest,
 } from "../provider-runtime.ts";
 
 const trelloApiBaseUrl = "https://api.trello.com/1";
@@ -24,6 +30,7 @@ export type TrelloAuth =
   | { type: "bearer"; accessToken: string; tokenType: string };
 
 export interface TrelloActionContext {
+  transitFiles?: TransitFileWriter;
   auth: TrelloAuth;
   fetcher: typeof fetch;
   signal?: AbortSignal;
@@ -32,6 +39,7 @@ export interface TrelloActionContext {
 type TrelloActionHandler = (input: Record<string, unknown>, context: TrelloActionContext) => Promise<unknown>;
 
 type TrelloRequestInput = {
+  signal?: AbortSignal;
   credential: Pick<TrelloActionContext, "auth">;
   fetcher: typeof fetch;
   method?: "DELETE" | "GET" | "POST" | "PUT";
@@ -465,6 +473,55 @@ export const trelloActionHandlers: ProviderActionHandlers<"trello", TrelloAction
       card: normalizeCard(card),
     };
   },
+  async list_card_attachments(input, context) {
+    const cardId = readRequiredString(input.cardId, "cardId");
+    const payload = await trelloRequest<unknown>({
+      credential: context,
+      fetcher: context.fetcher,
+      signal: context.signal,
+      path: `/cards/${encodePathSegment(cardId)}/attachments`,
+      phase: "execute",
+    });
+    return { attachments: objectArray(payload, "Trello attachments", providerResponseError).map(normalizeAttachment) };
+  },
+  async get_card_attachment(input, context) {
+    return { attachment: await getCardAttachment(cardAttachmentPath(input), context) };
+  },
+  async download_card_attachment(input, context) {
+    const { transitFiles } = context;
+    if (!transitFiles) throw providerInputError("Trello attachment downloads require transit file storage.");
+    const path = cardAttachmentPath(input);
+    return runProviderRequest({ label: "Trello attachment download", signal: context.signal }, async (signal) => {
+      const attachment = await getCardAttachment(path, context, signal);
+      if (attachment.isUpload === false)
+        throw providerInputError("This attachment is an external link. Read its URL with get_card_attachment.");
+      const name = attachment.fileName;
+      if (attachment.isUpload !== true || !name || name === "." || name === ".." || /[/\\]/u.test(name)) {
+        throw providerResponseError("Trello did not return a valid uploaded filename.");
+      }
+      const url = `${trelloBaseUrl(context.auth)}${path}/download/${encodePathSegment(name)}`;
+      const response = await context.fetcher(url, {
+        headers: { "authorization": trelloAuthorization(context.auth), "user-agent": providerUserAgent },
+        signal,
+      });
+      if (!response.ok) {
+        const message = await readProviderErrorTextBody(response, "Trello attachment download", signal);
+        throw new ProviderRequestError(
+          response.status,
+          message || `Trello attachment download failed with HTTP ${response.status}`,
+          undefined,
+          trelloResponseErrorCode(context.auth, response.status, message),
+        );
+      }
+      return storeResponseInTransit(response, transitFiles, {
+        name,
+        mimeType: attachment.mimeType ?? response.headers.get("content-type") ?? "application/octet-stream",
+        fieldName: name,
+        createError: (message) => new ProviderRequestError(413, message),
+        signal,
+      });
+    });
+  },
   async add_card_attachment_url(input, context) {
     const cardId = readRequiredString(input.cardId, "cardId");
     const attachment = await trelloRequest<Record<string, unknown>>({
@@ -583,6 +640,7 @@ async function trelloRequest<T>(input: TrelloRequestInput): Promise<T> {
   }
 
   const response = await input.fetcher(url.toString(), {
+    signal: input.signal,
     method: input.method ?? "GET",
     headers: {
       "accept": "application/json",
@@ -792,8 +850,33 @@ function normalizeCheckItem(payload: Record<string, unknown>) {
   });
 }
 
+function cardAttachmentPath(input: Record<string, unknown>): string {
+  const cardId = readRequiredString(input.cardId, "cardId");
+  const attachmentId = readRequiredString(input.attachmentId, "attachmentId");
+  return `/cards/${encodePathSegment(cardId)}/attachments/${encodePathSegment(attachmentId)}`;
+}
+
+async function getCardAttachment(path: string, context: TrelloActionContext, signal = context.signal) {
+  const payload = await trelloRequest<unknown>({
+    credential: context,
+    fetcher: context.fetcher,
+    path,
+    phase: "execute",
+    signal,
+  });
+  return normalizeAttachment(requiredResponseRecord(payload, "Trello attachment"));
+}
+
+export function trelloAuthorization(auth: TrelloAuth): string {
+  if (auth.type === "bearer") return `${auth.tokenType} ${auth.accessToken}`;
+  return `OAuth oauth_consumer_key="${encodeRfc3986(auth.apiKey)}", oauth_token="${encodeRfc3986(auth.apiToken)}"`;
+}
+
 function normalizeAttachment(payload: Record<string, unknown>) {
   return compactObject({
+    fileName: optionalRawString(payload.fileName),
+    mimeType: readOptionalString(payload.mimeType),
+    isUpload: optionalBoolean(payload.isUpload),
     id: readOptionalString(payload.id),
     name: readOptionalString(payload.name),
     url: readOptionalString(payload.url),
