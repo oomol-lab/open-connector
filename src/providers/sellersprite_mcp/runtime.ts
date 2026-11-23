@@ -17,7 +17,7 @@ function mcpOptions(context: ApiKeyProviderContext, validating = false): McpTool
     service: "SellerSprite",
     headers: { "secret-key": context.apiKey },
     signal: context.signal,
-    redirect: "error",
+    redirect: "manual",
     requestTimeoutMs,
     maxResponseBytes,
     fetcher: async (url, init) => {
