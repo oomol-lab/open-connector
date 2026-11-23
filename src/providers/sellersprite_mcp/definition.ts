@@ -11,7 +11,8 @@ export const provider: ProviderDefinition = {
       type: "api_key",
       label: "MCP Secret Key",
       placeholder: "Paste your SellerSprite MCP secret key",
-      description: "SellerSprite MCP secret key from https://open.sellersprite.com/mcp.",
+      description:
+        "Activate your MCP service and copy its Secret Key at https://open.sellersprite.com/app/list, then paste it here.",
     },
   ],
   homepageUrl: "https://open.sellersprite.com/mcp",

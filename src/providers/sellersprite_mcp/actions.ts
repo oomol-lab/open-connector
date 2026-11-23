@@ -2,7 +2,9 @@ import type { ActionDefinition } from "../../core/types.ts";
 
 import { s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
-import { sellerSpriteMcpOfficialActions } from "./official-actions.ts";
+import { categoriesActions } from "./categories-actions.ts";
+import { keywordsActions } from "./keywords-actions.ts";
+import { productsActions } from "./products-actions.ts";
 
 const service = "sellersprite_mcp";
 
@@ -28,7 +30,9 @@ const mcpToolSummarySchema = s.object(
 );
 
 export const sellerspriteMcpActions: readonly ActionDefinition[] = [
-  ...sellerSpriteMcpOfficialActions,
+  ...productsActions,
+  ...categoriesActions,
+  ...keywordsActions,
   defineProviderAction(service, {
     name: "list_tools",
     operationType: "read",
@@ -37,7 +41,7 @@ export const sellerspriteMcpActions: readonly ActionDefinition[] = [
     requiredScopes: [],
     followUpActions: ["sellersprite_mcp.call_tool"],
     inputSchema: s.object("No input is required.", {}),
-    outputSchema: s.object("The current SellerSprite MCP tool catalog.", {
+    outputSchema: s.requiredObject("The current SellerSprite MCP tool catalog.", {
       tools: s.array("Tools currently exposed to the connected SellerSprite MCP account.", mcpToolSummarySchema),
     }),
   }),
@@ -56,7 +60,7 @@ export const sellerspriteMcpActions: readonly ActionDefinition[] = [
       },
       { optional: ["arguments"] },
     ),
-    outputSchema: s.object("The normalized result returned by the SellerSprite MCP tool.", {
+    outputSchema: s.requiredObject("The normalized result returned by the SellerSprite MCP tool.", {
       result: s.unknown(
         "The tool result. Structured MCP content is returned directly; otherwise the MCP content envelope is preserved.",
       ),
