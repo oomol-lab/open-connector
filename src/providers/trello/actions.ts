@@ -67,6 +67,7 @@ const trelloCardSchema = s.object(
     id: s.string("Trello card ID."),
     boardId: s.string("Trello board ID that owns the card."),
     listId: s.string("Trello list ID that contains the card."),
+    memberIds: s.array("IDs of the members assigned to the card.", trelloId("Trello member ID.")),
     name: s.string("Card name."),
     description: s.string("Card description."),
     url: s.url("Public Trello card URL."),
@@ -76,7 +77,19 @@ const trelloCardSchema = s.object(
     dueComplete: s.boolean("Whether the card due date is marked complete."),
   },
   {
-    optional: ["id", "boardId", "listId", "name", "description", "url", "shortUrl", "closed", "due", "dueComplete"],
+    optional: [
+      "id",
+      "boardId",
+      "listId",
+      "memberIds",
+      "name",
+      "description",
+      "url",
+      "shortUrl",
+      "closed",
+      "due",
+      "dueComplete",
+    ],
     additionalProperties: true,
   },
 );
