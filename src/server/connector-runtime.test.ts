@@ -649,12 +649,16 @@ describe("headless runtime", () => {
       expect((await request("/v1/connections/github/connect/api-key", { apiKey: "fixture-secret" })).status).toBe(200);
       const accounts = (await (await request("/v1/apps", undefined, "runtime-token")).json()).data;
       const upstream = { requests: 0, aborted: false };
+      // A Request only follows its init signal while it is reachable, so keep the ones the provider call builds.
+      const upstreamRequests: Request[] = [];
       vi.stubGlobal(
         "fetch",
         (input: RequestInfo | URL, init?: RequestInit) =>
           new Promise((_done, fail) => {
             upstream.requests++;
-            new Request(input, init).signal.addEventListener(
+            const upstreamRequest = new Request(input, init);
+            upstreamRequests.push(upstreamRequest);
+            upstreamRequest.signal.addEventListener(
               "abort",
               () => {
                 upstream.aborted = true;
@@ -737,6 +741,32 @@ describe("headless runtime", () => {
       await connector.close();
     });
 
+    it("aborts the provider call when reading the response body fails", async () => {
+      const failRead = Promise.withResolvers<void>();
+      const getReader = ReadableStream.prototype.getReader;
+      const spy = vi.spyOn(ReadableStream.prototype, "getReader").mockImplementation(function (this: ReadableStream) {
+        const reader = (getReader as (this: ReadableStream) => ReadableStreamDefaultReader).call(this);
+        // Only the reader the runtime takes on the SSE body is replaced; the MCP transport and the SDK read other streams.
+        if (!new Error().stack?.includes("releaseWhenBodyEnds")) return reader;
+        return Object.assign(Object.create(reader), {
+          read: async () => {
+            await failRead.promise;
+            throw new Error("stream broke");
+          },
+        });
+      } as never);
+      let started;
+      try {
+        started = await startHangingToolCall();
+      } finally {
+        spy.mockRestore();
+      }
+      expect(started.upstream.aborted).toBe(false);
+      failRead.resolve();
+      await vi.waitFor(() => expect(started.upstream.aborted).toBe(true));
+      await started.response.body?.cancel().catch(() => undefined);
+    });
+
     it("aborts the provider call when close() is called", async () => {
       const { response, upstream } = await startHangingToolCall();
       expect(upstream.aborted).toBe(false);
@@ -744,6 +774,76 @@ describe("headless runtime", () => {
       await vi.waitFor(() => expect(upstream.aborted).toBe(true));
       await response.body?.cancel().catch(() => undefined);
     });
+
+    describe("after a full GC", () => {
+      const fullGc = async () => {
+        const { setFlagsFromString } = await import("node:v8");
+        const { runInNewContext } = await import("node:vm");
+        setFlagsFromString("--expose_gc");
+        const gc = runInNewContext("gc") as () => void;
+        await new Promise((done) => setTimeout(done, 20));
+        gc();
+        await new Promise((done) => setTimeout(done, 20));
+        gc();
+        await new Promise((done) => setTimeout(done, 20));
+      };
+
+      it("GC: aborts the provider call when the response body is cancelled", async () => {
+        const { response, upstream } = await startHangingToolCall();
+        await fullGc();
+        await response.body!.cancel();
+        await vi.waitFor(() => expect(upstream.aborted).toBe(true));
+      });
+
+      it("GC: aborts the provider call when close() is called", async () => {
+        const { response, upstream } = await startHangingToolCall();
+        await fullGc();
+        await runtime!.close();
+        await vi.waitFor(() => expect(upstream.aborted).toBe(true));
+        await response.body?.cancel().catch(() => undefined);
+      });
+
+      it("GC: aborts the provider call when reading the response body fails", async () => {
+        const failRead = Promise.withResolvers<void>();
+        const getReader = ReadableStream.prototype.getReader;
+        const spy = vi.spyOn(ReadableStream.prototype, "getReader").mockImplementation(function (this: ReadableStream) {
+          const reader = (getReader as (this: ReadableStream) => ReadableStreamDefaultReader).call(this);
+          if (!new Error().stack?.includes("releaseWhenBodyEnds")) return reader;
+          return Object.assign(Object.create(reader), {
+            read: async () => {
+              await failRead.promise;
+              throw new Error("stream broke");
+            },
+          });
+        } as never);
+        let started;
+        try {
+          started = await startHangingToolCall();
+        } finally {
+          spy.mockRestore();
+        }
+        await fullGc();
+        failRead.resolve();
+        await vi.waitFor(() => expect(started.upstream.aborted).toBe(true));
+        await started.response.body?.cancel().catch(() => undefined);
+      });
+    });
+  });
+
+  it("leaves nothing registered when the request cannot be forwarded", async () => {
+    const connector = await createConnectorRuntime(await fixture());
+    runtime = connector;
+    const caller = new AbortController();
+    const incoming = new Request(`${publicOrigin}/mcp`, {
+      method: "POST",
+      headers: { "authorization": "Bearer runtime-token", "content-type": "application/json" },
+      body: JSON.stringify({ jsonrpc: "2.0", id: 1, method: "tools/list" }),
+      signal: caller.signal,
+    });
+    await incoming.text();
+    const before = getEventListeners(incoming.signal, "abort").length;
+    await expect(Promise.resolve().then(() => connector.fetch(incoming))).rejects.toThrow();
+    expect(getEventListeners(incoming.signal, "abort").length).toBe(before);
   });
 
   it("propagates a caller's abort to the work behind the request", async () => {

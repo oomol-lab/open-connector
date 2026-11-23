@@ -255,7 +255,7 @@ export async function createConnectorRuntime(options: ConnectorRuntimeOptions): 
     // text/event-stream response: /mcp streams it to 2025-protocol clients and runs the tool after the Response has been
     // returned, so that request stays registered until the body ends, errors or is cancelled.
     const pending = new Set<Promise<Response>>();
-    const active = new Map<AbortController, () => void>();
+    const active = new Map<AbortController, { release: () => void; derived: Request }>();
     let closing: Promise<void> | undefined;
     return {
       runtimeAuthConfigured,
@@ -278,10 +278,15 @@ export async function createConnectorRuntime(options: ConnectorRuntimeOptions): 
           controller.abort(caller.reason);
           release();
         };
-        active.set(controller, release);
+        // Build the forwarded request first: the constructor throws synchronously for a request whose body was already
+        // consumed, and nothing is registered yet that would need cleaning up.
+        // Node forwards an abort through an intermediate Request only while that Request is reachable, so the
+        // registration holds it until the request is released.
+        const derived = new Request(request, { signal: controller.signal });
+        const forwarded = new Request(url, derived);
+        active.set(controller, { release, derived });
         if (caller.aborted) follow();
         else caller.addEventListener("abort", follow, { once: true });
-        const forwarded = new Request(url, new Request(request, { signal: controller.signal }));
         const response = Promise.resolve()
           .then(() => app.fetch(forwarded))
           .then(
@@ -306,7 +311,7 @@ export async function createConnectorRuntime(options: ConnectorRuntimeOptions): 
         if (!closing) {
           closing = Promise.resolve().then(async () => {
             const reason = new Error("Open Connector runtime is closing.");
-            for (const [controller, release] of active) {
+            for (const [controller, { release }] of active) {
               controller.abort(reason);
               release();
             }
@@ -331,7 +336,11 @@ export async function createConnectorRuntime(options: ConnectorRuntimeOptions): 
   }
 }
 
-/** True when the handler keeps working after the Response is returned, as the MCP transport does for SSE. */
+/**
+ * True for a text/event-stream response, the shape /mcp returns before it writes the tool result to the body. Every
+ * other response is treated as finished when it is produced, so a handler that streams a non-SSE body past its return
+ * must not read the request signal after that point.
+ */
 function isEventStream(response: Response): boolean {
   return response.body !== null && /^text\/event-stream\b/i.test(response.headers.get("content-type") ?? "");
 }
@@ -347,6 +356,8 @@ function releaseWhenBodyEnds(response: Response, done: () => void, controller: A
           stream.close();
         } else stream.enqueue(chunk.value);
       } catch (error) {
+        // A body that errors mid-stream leaves the handler's work unobserved; abort it like a cancel does.
+        controller.abort(error);
         done();
         stream.error(error);
       }
