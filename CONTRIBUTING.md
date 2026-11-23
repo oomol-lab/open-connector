@@ -15,8 +15,25 @@ Run:
 
 ```bash
 npm run fix-check
-npm test
+npm test -- <affected-file-or-directory>
 ```
+
+Run relevant probes when changing database, native transport or subprocess
+behavior. Adding a provider does not require running probes unless it changes
+those shared paths. CI runs the full test suites.
+
+## Test suites
+
+Use `npm test -- <path>` to run the tests for a file or directory. Without a path,
+`npm test` runs all `*.test.ts` files, including provider tests.
+
+Use `npm run test:probe -- <path>` for `*.probe.ts` tests that need database
+servers, native connections or child processes. Omit the path to run all probes.
+Install OpenSSL before running TLS probes. Set `TEST_POSTGRES_URL` to include
+PostgreSQL integration tests; PGlite tests start their own database.
+
+Keep mocked behavior in ordinary tests and environment-dependent checks in probes.
+CI runs both suites.
 
 ## Adding Providers
 
@@ -26,18 +43,16 @@ Start a public JSON GET provider with the minimal scaffold:
 node scripts/create-provider.ts example "Example" https://api.example.com/data
 ```
 
-The command creates `definition.ts`, `actions.ts`, and `executors.ts` and refuses to
-replace an existing provider. It uses shared request/timeout/error helpers and
-keeps execution lazy. Supply a real public endpoint, then replace `get_data` and
-its generic output with the provider's documented action and schema. Add the
-provider's authentication and credential validation when required. The scaffold
-is a starting point; review it before publishing the provider.
+The command creates a provider under `src/providers/<service>/` without replacing
+existing files. Supply a real public endpoint, replace `get_data` and its output
+with the provider's action and schema, and add authentication when required.
 
 Provider definitions should be source-of-truth files under `src/providers/<service>/definition.ts`.
 Generated files are updated through:
 
 ```bash
 npm run generate:catalog
+node scripts/check-action-examples.ts
 ```
 
 Generated `src/providers/registry*.generated.ts`, `src/providers/action-contracts.generated.ts`, and

@@ -1,7 +1,5 @@
 import type { ProviderHttpAttempt, ProviderHttpPermit } from "./provider-http-dispatch.ts";
 
-import { once } from "node:events";
-import { createServer } from "node:http";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { lacunaActionHandlers, skipRetryDelay } from "../providers/lacuna/runtime.ts";
 import {
@@ -45,45 +43,6 @@ describe("provider HTTP dispatch", () => {
     expect(response.bodyUsed).toBe(false);
     expect(onResult).toHaveBeenCalledExactlyOnceWith({ kind: "response", status: 200, retryAfter: undefined });
     expect(await response.json()).toEqual({ fixture: true });
-  });
-
-  it("delivers a native response body before pending feedback can consume its deadline", async () => {
-    const server = createServer((_request, response) => response.end("completed provider result"));
-    server.listen(0, "127.0.0.1");
-    await once(server, "listening");
-    const controller = new AbortController();
-    const feedback = deferred<void>();
-    let deadline: ReturnType<typeof setTimeout> | undefined;
-    let completeFeedback: ReturnType<typeof setTimeout> | undefined;
-    try {
-      const address = server.address();
-      if (!address || typeof address === "string") throw new Error("Missing test listener");
-      const fetcher = createProviderFetch({
-        fetch: async (_url, init) => fetch(`http://127.0.0.1:${address.port}`, init),
-      });
-      const response = await withProviderHttpDispatch(
-        context,
-        () => fetcher("https://example.com", { method: "POST", signal: controller.signal }),
-        {
-          beforeAttempt: () => ({
-            allow: true,
-            onResult: () => {
-              deadline = setTimeout(() => controller.abort(), 500);
-              completeFeedback = setTimeout(() => feedback.resolve(), 600);
-              return feedback.promise;
-            },
-          }),
-        },
-      );
-      expect(await response.text()).toBe("completed provider result");
-    } finally {
-      clearTimeout(deadline);
-      clearTimeout(completeFeedback);
-      feedback.resolve();
-      controller.abort();
-      server.close();
-      server.closeAllConnections();
-    }
   });
 
   it("accounts for a permit when admission resolution and cancellation share a microtask turn", async () => {

@@ -54,21 +54,13 @@ Run a fixed workload without external accounts or upstream network access:
 node scripts/benchmark-runtime-execution.ts
 ```
 
-The script creates a fresh temporary SQLite database for each scenario, stores 1,000 encrypted
-connections, selects one by ID and uses a persistent runtime token with authentication required.
-It warms up with 20 requests, then measures 200 requests at concurrency 1 and 10. Scenarios cover
-success, upstream failure, invalid input, cancellation before execution and invalid authentication.
-The simulated upstream has a fixed 2 ms timer delay; actual elapsed time includes scheduler delays.
-Temporary databases are removed when the script finishes.
+The benchmark measures authenticated requests against a temporary SQLite database,
+covering successful calls, upstream failures, invalid input and cancellation.
+It uses a simulated provider and removes its temporary databases when finished.
 
-Each JSON output line reports P50/P95 latency through consuming the response body, mean handler
-time, mean phase times and operation counts. Counts distinguish token lookup, last-use writes,
-connection reads and decoding, policy reads, audit additions, executor loading and upstream calls;
-these are service/store operations, not raw SQL statement counts. The script asserts that explicit
-authentication performs no token-existence queries, that each executing request decodes only its
-two selected-connection reads, and that rejected or cancelled requests never reach the upstream.
+The output reports P50/P95 response latency, handler and phase timings, and
+service/store operation counts. These counts are not SQL query counts.
 
-The fixture catalog and executor are already loaded, and structured logs are captured in memory.
-Results exclude real DNS, TLS, provider latency and logging-sink I/O, and do not represent cold
-startup or a full audit-history dataset. Compare runs on the same machine and runtime version;
-latency values are diagnostic measurements rather than CI pass/fail thresholds.
+Compare runs on the same machine and runtime version. Results measure a warmed-up
+local runtime; they exclude real provider latency, network setup and logging I/O.
+Use them to investigate performance, not as CI pass/fail thresholds.

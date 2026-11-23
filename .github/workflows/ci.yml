@@ -68,6 +68,21 @@ jobs:
       fail-fast: false
       matrix:
         shard: [1, 2, 3, 4]
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@v7
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+      - run: npm ci
+      - name: Run tests
+        run: npm test -- --shard=${{ matrix.shard }}/4
+
+  probe:
+    name: Environment probes
+    runs-on: ubuntu-latest
     services:
       postgres:
         image: postgres:15-alpine
@@ -93,5 +108,5 @@ jobs:
           node-version: ${{ env.NODE_VERSION }}
           cache: npm
       - run: npm ci
-      - name: Run tests
-        run: npm test -- --shard=${{ matrix.shard }}/4
+      - name: Run probes
+        run: npm run test:probe
