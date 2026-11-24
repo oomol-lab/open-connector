@@ -5,6 +5,8 @@ import { tiktokBusinessActions } from "./actions.ts";
 export const provider: ProviderDefinition = {
   service: "tiktok_business",
   displayName: "TikTok Business",
+  description:
+    "TikTok Business through its API: typed operations for GMV Max campaigns, videos and reports. For TikTok's own advertising tools, use TikTok for Business MCP.",
   categories: ["Marketing", "Data"],
   authTypes: ["oauth2", "api_key"],
   auth: [

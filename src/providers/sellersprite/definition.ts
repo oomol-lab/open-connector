@@ -10,6 +10,8 @@ const service = "sellersprite";
 export const provider: ProviderDefinition = {
   service,
   displayName: "SellerSprite",
+  description:
+    "SellerSprite through its Open API: ASIN details, competitors, product research and reverse ASIN keywords. For the larger research toolset, use SellerSprite MCP.",
   categories: ["Data", "Marketing"],
   authTypes: ["api_key"],
   auth: [

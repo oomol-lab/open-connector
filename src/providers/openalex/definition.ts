@@ -7,6 +7,8 @@ const service = "openalex";
 export const provider: ProviderDefinition = {
   service,
   displayName: "OpenAlex",
+  description:
+    "OpenAlex through its public API: search, get and autocomplete works and other entities with an API key. OpenAlex MCP adds analysis, alerts and your own account.",
   categories: ["Data"],
   authTypes: ["api_key"],
   auth: [

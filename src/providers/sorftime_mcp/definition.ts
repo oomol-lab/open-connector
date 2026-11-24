@@ -5,6 +5,8 @@ import { sorftimeMcpActions } from "./actions.ts";
 export const provider: ProviderDefinition = {
   service: "sorftime_mcp",
   displayName: "Sorftime MCP",
+  description:
+    "Discover and call Sorftime's own tools through its official MCP service. For fixed, typed operations, use Sorftime.",
   categories: ["Data", "Marketing", "Cross Border E-commerce"],
   authTypes: ["api_key"],
   auth: [

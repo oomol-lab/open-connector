@@ -14,6 +14,8 @@ export const provider: ProviderDefinition = {
   triggers: [snapshot],
   triggerPermissions,
   displayName: "Microsoft Teams Bot",
+  description:
+    "Microsoft Teams as your own Azure bot: sends, replies to and updates messages where the bot is installed, and receives messages and mentions sent to it.",
   categories: ["Communication"],
   authTypes: ["custom_credential"],
   auth: [

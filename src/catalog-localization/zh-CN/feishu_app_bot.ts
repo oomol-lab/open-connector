@@ -2,6 +2,8 @@ import type { ProviderTranslation } from "../types.ts";
 
 export const translation: ProviderTranslation = {
   displayName: "飞书应用机器人",
+  description:
+    "以你自己应用的机器人身份使用飞书：发送、编辑、撤回和置顶聊天消息，处理文件和表情回复，并接收应用事件。如需访问用户数据，请使用飞书。",
   auth: {
     custom_credential: {
       fields: {

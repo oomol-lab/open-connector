@@ -14,6 +14,8 @@ const feishuOAuthScopes = feishuOAuthScopesFor(feishuActions);
 export const provider: ProviderDefinition = {
   service,
   displayName: "Feishu",
+  description:
+    "Feishu as the authorizing user: works with that person's messages, docs, bases, tasks, wiki and approvals. For a bot in chats, use Feishu App Bot.",
   categories: ["Communication", "Productivity", "Storage"],
   authTypes: ["oauth2"],
   auth: [

@@ -12,6 +12,8 @@ const service = "feishu_app_bot";
 export const provider: ProviderDefinition = {
   service,
   displayName: "Feishu App Bot",
+  description:
+    "Feishu as your own app's bot: sends, edits, recalls and pins chat messages, handles files and reactions, and receives app events. For user data, use Feishu.",
   categories: ["Communication", "Productivity", "Storage"],
   authTypes: ["custom_credential"],
   auth: [
