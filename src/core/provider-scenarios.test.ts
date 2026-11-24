@@ -47,7 +47,7 @@ describe("resolveProviderScenario", () => {
     );
   });
 
-  it.each(["hithink_finance", "financial_modeling_prep", "coinbase", "investoday_mcp", "alpaca"])(
+  it.each(["hithink_finance", "financial_modeling_prep", "coinbase", "investoday_mcp", "alpaca", "trading_212"])(
     "classifies %s as investment before broad Finance or Data categories",
     (service) => {
       expect(resolveProviderScenario(provider({ service, categories: ["Finance", "Data"] }))).toBe("investment");

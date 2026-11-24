@@ -1,5 +1,10 @@
 import { describe, expect, it } from "vitest";
-import { readProviderErrorBody, readRetryAfterSeconds, withRetryAfterSeconds } from "./provider-runtime.ts";
+import {
+  createProviderRetryDetails,
+  readProviderErrorBody,
+  readRetryAfterSeconds,
+  withRetryAfterSeconds,
+} from "./provider-runtime.ts";
 
 const now = Date.parse("2026-09-26T10:00:00Z");
 
@@ -37,6 +42,26 @@ describe("readRetryAfterSeconds", () => {
 
   it("ignores a missing header", () => {
     expect(readRetryAfterSeconds(new Headers(), now)).toBeUndefined();
+  });
+});
+
+describe("createProviderRetryDetails", () => {
+  it("merges a resolved delay without mutating the original details", () => {
+    const details = { message: "Limited", retryAfterSeconds: 10 };
+    expect(createProviderRetryDetails(details, 0)).toEqual({ message: "Limited", retryAfterSeconds: 0 });
+    expect(details).toEqual({ message: "Limited", retryAfterSeconds: 10 });
+  });
+
+  it("preserves non-record bodies and creates details for an absent body", () => {
+    expect(createProviderRetryDetails("Limited", 50)).toEqual({ body: "Limited", retryAfterSeconds: 50 });
+    expect(createProviderRetryDetails(undefined, 50)).toEqual({ retryAfterSeconds: 50 });
+  });
+
+  it("preserves the original details when no delay is available", () => {
+    const details = { message: "Limited" };
+    expect(createProviderRetryDetails(details, undefined)).toBe(details);
+    expect(createProviderRetryDetails("Limited", undefined)).toBe("Limited");
+    expect(createProviderRetryDetails(undefined, undefined)).toBeUndefined();
   });
 });
 
