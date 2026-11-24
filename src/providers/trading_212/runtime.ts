@@ -351,8 +351,8 @@ async function getTrading212(context: Trading212Context, url: URL): Promise<unkn
   return runProviderRequest({ label: "Trading 212", signal: context.signal }, async (signal) => {
     const response = await context.fetcher(url, {
       headers: {
-        accept: "application/json",
-        authorization: trading212Authorization(context.credential),
+        "accept": "application/json",
+        "authorization": trading212Authorization(context.credential),
         "user-agent": providerUserAgent,
       },
       signal,
