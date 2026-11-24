@@ -22,6 +22,7 @@ import { getConnectorAssetDirectory } from "./connector-assets.ts";
 import { cleanupStagedTransitFiles, createNodeTransitFileUpload } from "./files/node-transit-file-upload.ts";
 import { TransitFileService } from "./files/transit-files.ts";
 import { parseMcpOutputMode } from "./mcp-settings.ts";
+import { releaseAfterResponse } from "./response-lifecycle.ts";
 import { createSecretCodec } from "./secrets/secret-codec.ts";
 import { createDirectoryMigrationSource } from "./storage/migration-source.ts";
 import { createNodeRuntimeDatabase } from "./storage/node-runtime-database.ts";
@@ -121,6 +122,7 @@ export interface ConnectorRuntimeOptions {
 /** Standard web requests are the host boundary; credentials, databases and framework objects stay private. */
 export interface ConnectorRuntime {
   readonly runtimeAuthConfigured: boolean;
+  /** Cancellation follows SSE bodies until they end. */
   fetch(request: Request): Promise<Response>;
   /** Abort active requests, wait for their handlers, and close owned resources. Safe to call repeatedly. */
   close(): Promise<void>;
@@ -245,8 +247,14 @@ export async function createConnectorRuntime(options: ConnectorRuntimeOptions): 
     });
     saasCleanup.start();
     triggerMaintenance.start();
-    const shutdown = new AbortController();
+    // Independent controllers prevent SDK abort listeners from pinning completed requests to a runtime-wide signal.
     const pending = new Set<Promise<Response>>();
+    interface ActiveRequest {
+      release: () => void;
+      /** Keep the intermediate Request reachable so Node continues forwarding aborts. */
+      derived: Request;
+    }
+    const active = new Map<AbortController, ActiveRequest>();
     let closing: Promise<void> | undefined;
     return {
       runtimeAuthConfigured,
@@ -256,22 +264,53 @@ export async function createConnectorRuntime(options: ConnectorRuntimeOptions): 
         if (mountPath && url.pathname !== mountPath && !url.pathname.startsWith(`${mountPath}/`))
           return Promise.resolve(new Response("Not found", { status: 404 }));
         url.pathname = url.pathname.slice(mountPath.length) || "/";
-        const forwarded = new Request(
-          url,
-          new Request(request, { signal: AbortSignal.any([request.signal, shutdown.signal]) }),
-        );
-        const response = Promise.resolve().then(() => app.fetch(forwarded));
+        const controller = new AbortController();
+        const caller = request.signal;
+        let released = false;
+        const release = () => {
+          if (released) return;
+          released = true;
+          active.delete(controller);
+          caller.removeEventListener("abort", follow);
+        };
+        const follow = () => {
+          controller.abort(caller.reason);
+          release();
+        };
+        // Build the forwarded request first: the constructor throws synchronously for a request whose body was already
+        // consumed, and nothing is registered yet that would need cleaning up.
+        // Node forwards an abort through an intermediate Request only while that Request is reachable, so the
+        // registration holds it until the request is released.
+        const derived = new Request(request, { signal: controller.signal });
+        const forwarded = new Request(url, derived);
+        active.set(controller, { release, derived });
+        if (caller.aborted) follow();
+        else caller.addEventListener("abort", follow, { once: true });
+        const response = Promise.resolve()
+          .then(() => app.fetch(forwarded))
+          .then(
+            (produced) => {
+              if (released) return produced;
+              return releaseAfterResponse(produced, controller, release);
+            },
+            (error) => {
+              release();
+              throw error;
+            },
+          );
         pending.add(response);
-        void response.then(
-          () => pending.delete(response),
-          () => pending.delete(response),
-        );
+        const settle = () => pending.delete(response);
+        void response.then(settle, settle);
         return response;
       },
       close() {
         if (!closing) {
           closing = Promise.resolve().then(async () => {
-            shutdown.abort(new Error("Open Connector runtime is closing."));
+            const reason = new Error("Open Connector runtime is closing.");
+            for (const [controller, { release }] of active) {
+              controller.abort(reason);
+              release();
+            }
             await Promise.allSettled([...pending, saasCleanup.close(), triggerMaintenance.close()]);
             try {
               await database.close();
