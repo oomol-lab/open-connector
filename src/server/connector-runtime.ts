@@ -22,6 +22,7 @@ import { getConnectorAssetDirectory } from "./connector-assets.ts";
 import { cleanupStagedTransitFiles, createNodeTransitFileUpload } from "./files/node-transit-file-upload.ts";
 import { TransitFileService } from "./files/transit-files.ts";
 import { parseMcpOutputMode } from "./mcp-settings.ts";
+import { releaseAfterResponse } from "./response-lifecycle.ts";
 import { createSecretCodec } from "./secrets/secret-codec.ts";
 import { createDirectoryMigrationSource } from "./storage/migration-source.ts";
 import { createNodeRuntimeDatabase } from "./storage/node-runtime-database.ts";
@@ -121,6 +122,7 @@ export interface ConnectorRuntimeOptions {
 /** Standard web requests are the host boundary; credentials, databases and framework objects stay private. */
 export interface ConnectorRuntime {
   readonly runtimeAuthConfigured: boolean;
+  /** Cancellation follows SSE bodies until they end. */
   fetch(request: Request): Promise<Response>;
   /** Abort active requests, wait for their handlers, and close owned resources. Safe to call repeatedly. */
   close(): Promise<void>;
@@ -245,17 +247,14 @@ export async function createConnectorRuntime(options: ConnectorRuntimeOptions): 
     });
     saasCleanup.start();
     triggerMaintenance.start();
-    // Each request gets its own controller that follows the caller's signal; close() aborts every request that has not
-    // been released yet. Do not derive the request signal with AbortSignal.any([request.signal, <runtime-lifetime
-    // signal>]): a dependent signal that has "abort" listeners stays reachable from its still-live source, so a
-    // listener that is never removed (the MCP SDK leaves one per /mcp call) would pin that request's objects until the
-    // runtime closes. A request is released (dropped from `active`, follower removed from the caller's signal) as soon
-    // as its Response is produced, or when the controller aborts, so a signal that outlives the request (a shared
-    // AbortController, a client transport's signal) does not accumulate one listener per request. The exception is a
-    // text/event-stream response: /mcp streams it to 2025-protocol clients and runs the tool after the Response has been
-    // returned, so that request stays registered until the body ends, errors or is cancelled.
+    // Independent controllers prevent SDK abort listeners from pinning completed requests to a runtime-wide signal.
     const pending = new Set<Promise<Response>>();
-    const active = new Map<AbortController, { release: () => void; derived: Request }>();
+    interface ActiveRequest {
+      release: () => void;
+      /** Keep the intermediate Request reachable so Node continues forwarding aborts. */
+      derived: Request;
+    }
+    const active = new Map<AbortController, ActiveRequest>();
     let closing: Promise<void> | undefined;
     return {
       runtimeAuthConfigured,
@@ -291,11 +290,8 @@ export async function createConnectorRuntime(options: ConnectorRuntimeOptions): 
           .then(() => app.fetch(forwarded))
           .then(
             (produced) => {
-              if (released || !isEventStream(produced)) {
-                release();
-                return produced;
-              }
-              return releaseWhenBodyEnds(produced, release, controller);
+              if (released) return produced;
+              return releaseAfterResponse(produced, controller, release);
             },
             (error) => {
               release();
@@ -334,41 +330,6 @@ export async function createConnectorRuntime(options: ConnectorRuntimeOptions): 
     }
     throw error;
   }
-}
-
-/**
- * True for a text/event-stream response, the shape /mcp returns before it writes the tool result to the body. Every
- * other response is treated as finished when it is produced, so a handler that streams a non-SSE body past its return
- * must not read the request signal after that point.
- */
-function isEventStream(response: Response): boolean {
-  return response.body !== null && /^text\/event-stream\b/i.test(response.headers.get("content-type") ?? "");
-}
-
-function releaseWhenBodyEnds(response: Response, done: () => void, controller: AbortController): Response {
-  const reader = response.body!.getReader();
-  const body = new ReadableStream<Uint8Array>({
-    async pull(stream) {
-      try {
-        const chunk = await reader.read();
-        if (chunk.done) {
-          done();
-          stream.close();
-        } else stream.enqueue(chunk.value);
-      } catch (error) {
-        // A body that errors mid-stream leaves the handler's work unobserved; abort it like a cancel does.
-        controller.abort(error);
-        done();
-        stream.error(error);
-      }
-    },
-    cancel(reason) {
-      controller.abort(reason);
-      done();
-      return reader.cancel(reason).catch(() => {});
-    },
-  });
-  return new Response(body, { status: response.status, statusText: response.statusText, headers: response.headers });
 }
 
 export type { RuntimeProviderSetup } from "./api/runtime-api.ts";

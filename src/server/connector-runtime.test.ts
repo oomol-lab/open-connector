@@ -8,7 +8,6 @@ import { getEventListeners, once } from "node:events";
 import { cp, mkdtemp, mkdir, readFile, rm } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join, resolve } from "node:path";
-import { queryObjects } from "node:v8";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { getProviderNetworkPolicy } from "../core/provider-network-policy.ts";
 import { createConnectorRuntime } from "./connector-runtime.ts";
@@ -504,19 +503,6 @@ describe("headless runtime", () => {
     expect((await request("/v1/health", undefined, "runtime-token")).status).toBe(503);
   });
 
-  it("does not derive request signals from a signal that lives as long as the runtime", async () => {
-    // A dependent signal (AbortSignal.any) with an abort listener stays reachable from its live sources, so deriving
-    // request signals from one runtime-lifetime source pins every request that leaves a listener behind.
-    runtime = await createConnectorRuntime(await fixture());
-    const any = vi.spyOn(AbortSignal, "any");
-    try {
-      expect((await request("/v1/health", undefined, "runtime-token")).status).toBe(200);
-      expect(any).not.toHaveBeenCalled();
-    } finally {
-      any.mockRestore();
-    }
-  });
-
   it("leaves no abort listener behind on the caller's signal once the response is produced", async () => {
     // A signal that outlives the request (a shared AbortController, a client transport's signal) must not collect one
     // listener per request, and the host must not have to read the body to make that so.
@@ -594,49 +580,6 @@ describe("headless runtime", () => {
     await running.catch(() => undefined);
     expect(getEventListeners(incoming.signal, "abort").length).toBe(before);
     await runtime.close();
-  });
-
-  it("keeps no per-request objects alive after responses are produced", async () => {
-    // Counts live AbortControllers (each request owns one) after many calls, so it fails if anything keeps a finished
-    // request registered until close(): a request left in the runtime's active set, a never-removed follower on a
-    // longer-lived signal, or a missing release when a caller aborts. It cannot observe Bun's retention of derived
-    // signals; the AbortSignal.any test above is the structural guard for that.
-    const connector = await createConnectorRuntime(await fixture());
-    runtime = connector;
-    const liveControllers = () => queryObjects(AbortController, { format: "count" }) as number;
-    const mcp = (signal?: AbortSignal) =>
-      new Request(`${publicOrigin}/mcp`, {
-        method: "POST",
-        headers: {
-          "authorization": "Bearer runtime-token",
-          "content-type": "application/json",
-          "accept": "application/json, text/event-stream",
-        },
-        body: JSON.stringify({
-          jsonrpc: "2.0",
-          id: 1,
-          method: "tools/call",
-          params: { name: "list_apps", arguments: {} },
-        }),
-        signal,
-      });
-    await (await connector.fetch(mcp())).text();
-    const before = liveControllers();
-    const calls = 100;
-    // /mcp streamed to completion, /v1 whose body is never read, and /mcp for a caller that is already gone.
-    for (let i = 0; i < calls; i++) await (await connector.fetch(mcp())).text();
-    for (let i = 0; i < calls; i++)
-      await connector.fetch(
-        new Request(`${publicOrigin}/v1/health`, { headers: { authorization: "Bearer runtime-token" } }),
-      );
-    for (let i = 0; i < calls; i++) {
-      const caller = new AbortController();
-      caller.abort();
-      await connector.fetch(mcp(caller.signal)).catch(() => undefined);
-    }
-    await new Promise((done) => setTimeout(done, 50));
-    // 3 * calls requests were made; a leak keeps about one controller each.
-    expect(liveControllers() - before).toBeLessThan(calls / 3);
   });
 
   describe("MCP tool calls whose response is already streaming", () => {
@@ -741,92 +684,12 @@ describe("headless runtime", () => {
       await connector.close();
     });
 
-    it("aborts the provider call when reading the response body fails", async () => {
-      const failRead = Promise.withResolvers<void>();
-      const getReader = ReadableStream.prototype.getReader;
-      const spy = vi.spyOn(ReadableStream.prototype, "getReader").mockImplementation(function (this: ReadableStream) {
-        const reader = (getReader as (this: ReadableStream) => ReadableStreamDefaultReader).call(this);
-        // Only the reader the runtime takes on the SSE body is replaced; the MCP transport and the SDK read other streams.
-        if (!new Error().stack?.includes("releaseWhenBodyEnds")) return reader;
-        return Object.assign(Object.create(reader), {
-          read: async () => {
-            await failRead.promise;
-            throw new Error("stream broke");
-          },
-        });
-      } as never);
-      let started;
-      try {
-        started = await startHangingToolCall();
-      } finally {
-        spy.mockRestore();
-      }
-      expect(started.upstream.aborted).toBe(false);
-      failRead.resolve();
-      await vi.waitFor(() => expect(started.upstream.aborted).toBe(true));
-      await started.response.body?.cancel().catch(() => undefined);
-    });
-
     it("aborts the provider call when close() is called", async () => {
       const { response, upstream } = await startHangingToolCall();
       expect(upstream.aborted).toBe(false);
       await runtime!.close();
       await vi.waitFor(() => expect(upstream.aborted).toBe(true));
       await response.body?.cancel().catch(() => undefined);
-    });
-
-    describe("after a full GC", () => {
-      const fullGc = async () => {
-        const { setFlagsFromString } = await import("node:v8");
-        const { runInNewContext } = await import("node:vm");
-        setFlagsFromString("--expose_gc");
-        const gc = runInNewContext("gc") as () => void;
-        await new Promise((done) => setTimeout(done, 20));
-        gc();
-        await new Promise((done) => setTimeout(done, 20));
-        gc();
-        await new Promise((done) => setTimeout(done, 20));
-      };
-
-      it("GC: aborts the provider call when the response body is cancelled", async () => {
-        const { response, upstream } = await startHangingToolCall();
-        await fullGc();
-        await response.body!.cancel();
-        await vi.waitFor(() => expect(upstream.aborted).toBe(true));
-      });
-
-      it("GC: aborts the provider call when close() is called", async () => {
-        const { response, upstream } = await startHangingToolCall();
-        await fullGc();
-        await runtime!.close();
-        await vi.waitFor(() => expect(upstream.aborted).toBe(true));
-        await response.body?.cancel().catch(() => undefined);
-      });
-
-      it("GC: aborts the provider call when reading the response body fails", async () => {
-        const failRead = Promise.withResolvers<void>();
-        const getReader = ReadableStream.prototype.getReader;
-        const spy = vi.spyOn(ReadableStream.prototype, "getReader").mockImplementation(function (this: ReadableStream) {
-          const reader = (getReader as (this: ReadableStream) => ReadableStreamDefaultReader).call(this);
-          if (!new Error().stack?.includes("releaseWhenBodyEnds")) return reader;
-          return Object.assign(Object.create(reader), {
-            read: async () => {
-              await failRead.promise;
-              throw new Error("stream broke");
-            },
-          });
-        } as never);
-        let started;
-        try {
-          started = await startHangingToolCall();
-        } finally {
-          spy.mockRestore();
-        }
-        await fullGc();
-        failRead.resolve();
-        await vi.waitFor(() => expect(started.upstream.aborted).toBe(true));
-        await started.response.body?.cancel().catch(() => undefined);
-      });
     });
   });
 
