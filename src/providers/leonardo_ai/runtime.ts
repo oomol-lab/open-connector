@@ -5,6 +5,7 @@ import {
   compactObject,
   objectArray,
   optionalRecord,
+  optionalNumber,
   optionalString,
   requiredRecord,
   requiredString,
@@ -25,7 +26,6 @@ interface LeonardoAiRequestOptions {
   baseUrl?: string;
   path: string;
   body?: Record<string, unknown>;
-  mode?: "validate" | "execute";
 }
 
 type LeonardoAiActionHandler = (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>;
@@ -58,7 +58,6 @@ export async function validateLeonardoAiCredential(
   await leonardoAiRequest(
     {
       path: leonardoAiValidationPath,
-      mode: "validate",
     },
     { apiKey, fetcher, signal },
   );
@@ -82,7 +81,9 @@ async function removeBackground(input: Record<string, unknown>, context: ApiKeyP
     for (const reference of references) {
       const image = requiredRecord(reference.image, "image", providerInputError);
       if (image.type === "URL") {
-        const url = assertPublicHttpUrl(requiredString(image.url, "image.url", providerInputError), {
+        const value = requiredString(image.url, "image.url", providerInputError);
+        if (value.startsWith("data:image/") && value.includes(";base64,")) continue;
+        const url = assertPublicHttpUrl(value, {
           fieldName: "image.url",
           createError: providerInputError,
         });
@@ -204,8 +205,21 @@ async function leonardoAiRequest(options: LeonardoAiRequestOptions, context: Api
   try {
     const response = await context.fetcher(url, { ...init, signal: timeout.signal });
     const payload = await readLeonardoAiResponse(response);
+    const errors = optionalRecord(payload)?.errors;
+    if (Array.isArray(errors) && errors.length > 0) {
+      const error = optionalRecord(errors[0]);
+      const upstreamStatus = optionalNumber(optionalRecord(error?.extensions)?.statusCode);
+      throw mapLeonardoAiError(
+        upstreamStatus != null && upstreamStatus >= 400 && upstreamStatus <= 599
+          ? upstreamStatus
+          : response.ok
+            ? 502
+            : response.status,
+        error,
+      );
+    }
     if (!response.ok) {
-      throw mapLeonardoAiError(response.status, payload, options.mode ?? "execute");
+      throw mapLeonardoAiError(response.status, payload);
     }
     return payload;
   } catch (error) {
@@ -232,7 +246,7 @@ async function readLeonardoAiResponse(response: Response): Promise<unknown> {
   });
 }
 
-function mapLeonardoAiError(status: number, payload: unknown, mode: "validate" | "execute"): ProviderRequestError {
+function mapLeonardoAiError(status: number, payload: unknown): ProviderRequestError {
   const payloadRecord = optionalRecord(payload);
   const message =
     optionalString(payloadRecord?.error) ??
@@ -240,16 +254,12 @@ function mapLeonardoAiError(status: number, payload: unknown, mode: "validate" |
     optionalString(payloadRecord?.detail) ??
     `Leonardo.Ai request failed with status ${status}.`;
 
-  if (status === 401 || status === 403) {
-    return new ProviderRequestError(mode === "validate" ? 400 : 401, message, payload);
-  }
-  if (status === 429) {
-    return new ProviderRequestError(429, message, payload);
-  }
-  if (status >= 400 && status < 500) {
-    return new ProviderRequestError(status, message, payload);
-  }
-  return new ProviderRequestError(status >= 500 ? status : 502, message, payload);
+  return new ProviderRequestError(
+    status >= 400 ? status : 502,
+    message,
+    payload,
+    status === 401 || status === 403 ? "provider_error" : undefined,
+  );
 }
 
 function readObjectPayload(value: unknown, label: string): Record<string, unknown> {
