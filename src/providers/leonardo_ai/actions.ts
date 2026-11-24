@@ -37,9 +37,9 @@ const imageSchema = s.object(
 );
 
 const removalImageSchema = s.oneOf([
-  s.requiredObject("An image at a public HTTPS URL.", {
+  s.requiredObject("An image at an HTTPS URL or Base64 data URL.", {
     type: s.literal("URL"),
-    url: s.url("Public HTTPS image URL."),
+    url: s.url("HTTPS image URL or Base64 image data URL."),
   }),
   s.requiredObject("Inline image bytes.", {
     type: s.literal("BASE64"),
@@ -50,10 +50,13 @@ const removalImageSchema = s.oneOf([
     id: s.nonEmptyString("Leonardo image identifier."),
   }),
 ]);
-const removalReferenceSchema = s.array(s.requiredObject("Image reference.", { image: removalImageSchema }), {
-  minItems: 1,
-  maxItems: 1,
-});
+const removalReferenceSchema = s.array(
+  s.object({ image: removalImageSchema, order: s.integer("Guidance order.") }, { required: ["image"] }),
+  {
+    minItems: 1,
+    maxItems: 1,
+  },
+);
 const removalParametersSchema = s.object(
   {
     guidances: s.object(
@@ -63,6 +66,7 @@ const removalParametersSchema = s.object(
       },
       { required: ["image_reference"] },
     ),
+    quantity: s.literal(1, { description: "Number of outputs; must be 1." }),
     size: s.stringEnum(["auto", "preview", "full", "50MP"], {
       description: "Output resolution tier. PNG is limited to 10 megapixels.",
     }),

@@ -195,7 +195,7 @@ async function validateMixpanelCredential(
   const projectId = normalizeRequiredId(values.projectId, "Project ID");
   const baseUrl = normalizeMixpanelBaseUrl(values.baseUrl, mixpanelDefaultBaseUrl, "Base URL");
   const exportBaseUrl = normalizeMixpanelBaseUrl(values.exportBaseUrl, mixpanelDefaultExportBaseUrl, "Export Base URL");
-  const validationPath = `/api/app/projects/${encodeURIComponent(projectId)}/service-accounts`;
+  const validationPath = "/api/app/me";
   const payload = await requestMixpanelJson({
     baseUrl,
     apiKey,
@@ -205,32 +205,24 @@ async function validateMixpanelCredential(
     signal,
     phase: "validate",
   });
-  const serviceAccounts = extractObjectArray(payload, "mixpanel service account list response");
-  const matchedServiceAccount = serviceAccounts.find(
-    (serviceAccount) => optionalString(serviceAccount.username) === serviceAccountUsername,
-  );
-  if (!matchedServiceAccount) {
-    throw new ProviderRequestError(400, "Service account username does not belong to the selected Mixpanel project");
+  const response = requireObjectPayload(payload, "mixpanel current account response");
+  const profile = requireObjectPayload(response.results, "mixpanel current account profile");
+  const projects = requireObjectPayload(profile.projects, "mixpanel current account projects");
+  if (!optionalRecord(projects[projectId])) {
+    throw new ProviderRequestError(400, "Service account does not have access to the selected Mixpanel project");
   }
-
-  const serviceAccountId = normalizeRequiredProviderAccountId(matchedServiceAccount.id, serviceAccountUsername);
   return {
     profile: {
-      accountId: serviceAccountId,
-      displayName:
-        optionalString(matchedServiceAccount.name) ??
-        optionalString(matchedServiceAccount.username) ??
-        serviceAccountUsername,
+      accountId: serviceAccountUsername,
+      displayName: optionalString(profile.user_name) ?? serviceAccountUsername,
     },
-    metadata: compactObject({
+    metadata: {
       baseUrl,
       exportBaseUrl,
       projectId,
       serviceAccountUsername,
-      serviceAccountId,
-      serviceAccountCount: serviceAccounts.length,
       validationEndpoint: validationPath,
-    }),
+    },
   };
 }
 
@@ -638,7 +630,7 @@ function createMixpanelError(
     return new ProviderRequestError(429, message);
   }
   if (response.status === 401 || response.status === 403) {
-    return new ProviderRequestError(phase === "validate" ? 400 : response.status, message);
+    return new ProviderRequestError(response.status, message, undefined, "provider_error");
   }
   if (response.status === 404 && (phase === "validate" || notFoundAsInvalidInput)) {
     return providerInputError(message);
@@ -720,11 +712,6 @@ function extractObjectArray(value: unknown, label: string): Array<Record<string,
   if (Array.isArray(record?.results)) {
     return record.results.map((item, index) => requireObjectPayload(item, `${label}.results[${index}]`));
   }
-  if (Array.isArray(record?.service_accounts)) {
-    return record.service_accounts.map((item, index) =>
-      requireObjectPayload(item, `${label}.service_accounts[${index}]`),
-    );
-  }
   if (Array.isArray(record?.data)) {
     return record.data.map((item, index) => requireObjectPayload(item, `${label}.data[${index}]`));
   }
@@ -757,12 +744,4 @@ function normalizeTopEventsType(value: unknown): "general" | "unique" | "average
     return normalized;
   }
   throw new ProviderRequestError(502, "mixpanel top events response is missing a valid type");
-}
-
-function normalizeRequiredProviderAccountId(value: unknown, serviceAccountUsername: string): string {
-  const normalized = normalizeOptionalId(value);
-  if (!normalized) {
-    throw new ProviderRequestError(502, `mixpanel service account ${serviceAccountUsername} is missing an id`);
-  }
-  return normalized;
 }
