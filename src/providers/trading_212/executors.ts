@@ -58,6 +58,7 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
     return trading212Origin(await resolveTrading212Credential(context));
   },
   auth: { type: "none" },
+  redirect: "manual",
   skipDnsValidation: true,
   async customizeRequest({ context, method, url, headers }) {
     if (method.toUpperCase() !== "GET") {

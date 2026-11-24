@@ -5,6 +5,7 @@ import type { ProviderFetch } from "../provider-runtime.ts";
 
 import {
   optionalInteger,
+  optionalNumberLike,
   optionalRecord,
   optionalScalarString,
   optionalString,
@@ -14,6 +15,7 @@ import {
 import { encodePathSegment, queryParams } from "../../core/request.ts";
 import {
   basicAuthorizationHeader,
+  createProviderRetryDetails,
   parseProviderJsonBodyText,
   providerInputError,
   ProviderRequestError,
@@ -21,11 +23,11 @@ import {
   providerUserAgent,
   readProviderErrorBody,
   readProviderTextBody,
+  readRetryAfterSeconds,
   requiredInputString,
   requiredResponseRecord,
   runProviderRequest,
   setSearchParams,
-  withRetryAfterSeconds,
 } from "../provider-runtime.ts";
 import { trading212DefaultInstrumentLimit } from "./limits.ts";
 
@@ -235,7 +237,10 @@ export async function readTrading212Error(response: Response, signal?: AbortSign
       return new ProviderRequestError(
         429,
         "Trading 212 rate limit reached for this endpoint. Limits apply per account, so wait before sending more requests.",
-        withRetryAfterSeconds(response, body),
+        createProviderRetryDetails(
+          body,
+          readRetryAfterSeconds(response.headers) ?? readTrading212ResetDelay(response.headers),
+        ),
       );
     default:
       return new ProviderRequestError(
@@ -244,6 +249,15 @@ export async function readTrading212Error(response: Response, signal?: AbortSign
         body,
       );
   }
+}
+
+/** Trading 212 reports the quota reset as Unix seconds rather than a retry delay. */
+function readTrading212ResetDelay(headers: Headers): number | undefined {
+  const reset = optionalNumberLike(headers.get("x-ratelimit-reset"));
+  if (reset === undefined || !Number.isSafeInteger(reset) || reset < 0) {
+    return undefined;
+  }
+  return Math.max(0, reset - Math.floor(Date.now() / 1000));
 }
 
 function readTrading212Environment(value: unknown): Trading212Environment {

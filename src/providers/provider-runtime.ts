@@ -374,7 +374,11 @@ export function withRetryAfterSeconds(response: Response, details?: unknown): un
   if (response.status !== 429 && response.status !== 503) {
     return details;
   }
-  const retryAfterSeconds = readRetryAfterSeconds(response.headers);
+  return createProviderRetryDetails(details, readRetryAfterSeconds(response.headers));
+}
+
+/** Attach a resolved retry delay in seconds, preserving the provider's error details. */
+export function createProviderRetryDetails(details: unknown, retryAfterSeconds: number | undefined): unknown {
   if (retryAfterSeconds === undefined) {
     return details;
   }

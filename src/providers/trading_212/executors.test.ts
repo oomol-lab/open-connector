@@ -15,6 +15,7 @@ interface CapturedRequest {
 
 afterEach(() => {
   vi.unstubAllGlobals();
+  vi.restoreAllMocks();
 });
 
 describe("Trading 212 actions", () => {
@@ -130,6 +131,40 @@ describe("Trading 212 actions", () => {
     });
   });
 
+  it.each([
+    ["1760000050", undefined, 50],
+    ["1759999999", undefined, 0],
+    ["1760000050", "5", 5],
+    ["1760000050", "invalid", 50],
+    ["invalid", undefined, undefined],
+    ["", undefined, undefined],
+    ["1760000050.5", undefined, undefined],
+    ["-1", undefined, undefined],
+    ["9007199254740992", undefined, undefined],
+  ])("reads quota reset %s with retry header %s", async (reset, retryAfter, expected) => {
+    vi.spyOn(Date, "now").mockReturnValue(1760000000250);
+    const headers = new Headers({ "x-ratelimit-reset": reset });
+    if (retryAfter !== undefined) {
+      headers.set("Retry-After", retryAfter);
+    }
+    stubResponses([Response.json({ message: "Limited" }, { status: 429, headers })]);
+    const result = await executors["trading_212.get_account_summary"]!({}, contextWithKey("live"));
+    expect(result).toMatchObject({
+      ok: false,
+      error: {
+        code: "rate_limited",
+        details: {
+          status: 429,
+          details: { message: "Limited" },
+        },
+      },
+    });
+    expect(result.error?.details).toEqual({
+      status: 429,
+      details: { message: "Limited", retryAfterSeconds: expected },
+    });
+  });
+
   it("reports an empty or non-list body as a provider error instead of an empty account", async () => {
     stubResponses([
       new Response("", { status: 200 }),
@@ -152,6 +187,26 @@ describe("Trading 212 actions", () => {
 });
 
 describe("Trading 212 proxy", () => {
+  it.each([301, 302, 303, 307, 308])("does not follow HTTP %i to an unchecked path", async (status) => {
+    const requests = stubResponses([
+      new Response("redirect body must not be exposed", {
+        status,
+        headers: { location: `${liveApiUrl}/equity/history/exports` },
+      }),
+      Response.json([]),
+    ]);
+
+    const result = await proxy({ method: "GET", endpoint: "/api/v0/equity/account/summary" }, contextWithKey("live"));
+
+    expect(result).toMatchObject({
+      ok: false,
+      error: { code: "provider_error", message: `provider request failed with HTTP ${status}` },
+    });
+    expect(requests).toEqual([
+      { method: "GET", url: `${liveApiUrl}/equity/account/summary`, authorization: basicKeyPair },
+    ]);
+  });
+
   it("sends only GET requests for the read paths of the chosen environment", async () => {
     const requests = stubResponses([Response.json([]), Response.json({ items: [], nextPagePath: null })]);
 

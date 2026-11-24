@@ -114,6 +114,7 @@ const scenarioByService = new Map<string, ProviderScenario>([
   ["telegram", "communication"],
   ["tokenmetrics", "investment"],
   ["tongdaxin", "investment"],
+  ["trading212", "investment"],
   ["trello", "productivity"],
   ["tushare", "investment"],
   ["twelvedata", "investment"],
