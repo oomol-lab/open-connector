@@ -27,6 +27,8 @@ const slackAuthorizationOptions: OAuthAuthorizationOption[] = [
 export const provider: ProviderDefinition = {
   service,
   displayName: "Slack",
+  description:
+    "Slack as the person who connects it: reads and searches what they can see and posts in their name. For messages sent by an app or bot, use Slack Bot.",
   categories: ["Communication", "Productivity"],
   authTypes: ["oauth2", "api_key"],
   auth: [

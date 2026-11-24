@@ -14,6 +14,8 @@ const service = "linear";
 export const provider: ProviderDefinition = {
   service,
   displayName: "Linear",
+  description:
+    "Linear through its API: typed operations and triggers on issue events, with OAuth or an API key. Linear MCP offers Linear's own, smaller tool set instead.",
   categories: ["Productivity", "Developer Tools"],
   authTypes: ["oauth2", "api_key"],
   auth: [

@@ -16,6 +16,8 @@ const service = "notion";
 export const provider: ProviderDefinition = {
   service,
   displayName: "Notion",
+  description:
+    "Notion through its API: typed operations for pages, blocks, databases and users, plus a database page event trigger. For Notion's own tools, use Notion MCP.",
   categories: ["Productivity"],
   authTypes: ["oauth2", "api_key"],
   auth: [

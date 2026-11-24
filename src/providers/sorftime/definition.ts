@@ -5,6 +5,8 @@ import { sorftimeActions } from "./actions.ts";
 export const provider: ProviderDefinition = {
   service: "sorftime",
   displayName: "Sorftime",
+  description:
+    "Sorftime through its API: typed operations for Amazon and Walmart keywords, rankings, sales history and categories.",
   categories: ["Data", "Marketing"],
   authTypes: ["api_key"],
   auth: [

@@ -10,6 +10,8 @@ const service = "mcdonalds_cn";
 export const provider: ProviderDefinition = {
   service,
   displayName: "McDonald's China",
+  description:
+    "McDonald's China through its API: read cities, stores, menus and products. For ordering, coupons and points, use McDonald's China MCP.",
   categories: ["Location", "Data"],
   authTypes: ["custom_credential"],
   auth: [

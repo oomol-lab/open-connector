@@ -14,6 +14,8 @@ export const provider: ProviderDefinition = {
   triggers: [snapshot],
   triggerPermissions,
   displayName: "ClickUp",
+  description:
+    "ClickUp through its API: typed operations for tasks, lists, folders, spaces and comments, plus a task event trigger. For ClickUp's own tools, use ClickUp MCP.",
   categories: ["Productivity"],
   authTypes: ["oauth2", "api_key"],
   auth: [

@@ -10,6 +10,8 @@ const service = "feishu_custom_bot";
 export const provider: ProviderDefinition = {
   service,
   displayName: "Feishu Custom Bot",
+  description:
+    "Feishu group webhook bot: only sends text, rich text, image, card and group-share messages to its webhook's group. It cannot read or receive anything.",
   categories: ["Communication"],
   authTypes: ["api_key"],
   auth: [

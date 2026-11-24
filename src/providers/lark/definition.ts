@@ -17,6 +17,8 @@ const service = "lark";
 export const provider: ProviderDefinition = {
   service,
   displayName: "Lark",
+  description:
+    "Lark, the international edition of Feishu, as the authorizing user: the same operations as Feishu, for accounts on larksuite.com.",
   categories: ["Communication", "Productivity", "Storage"],
   authTypes: ["oauth2"],
   auth: [

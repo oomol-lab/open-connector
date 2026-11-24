@@ -16,6 +16,8 @@ const discordScopes = [
 export const provider: ProviderDefinition = {
   service: "discord",
   displayName: "Discord",
+  description:
+    "Discord as the signed-in user: reads their profile, servers and linked accounts. It cannot send messages; to post in or manage a server, use Discord Bot.",
   categories: ["Communication", "Social"],
   authTypes: ["oauth2"],
   auth: [

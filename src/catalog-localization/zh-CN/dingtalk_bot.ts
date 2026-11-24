@@ -2,6 +2,8 @@ import type { ProviderTranslation } from "../types.ts";
 
 export const translation: ProviderTranslation = {
   displayName: "钉钉机器人",
+  description:
+    "钉钉群机器人 webhook：只能向其 webhook 所属的群发送文本、Markdown、链接和卡片消息。如需使用文档、日历或通讯录，请使用钉钉 MCP。",
   auth: {
     api_key: {
       label: "Webhook 访问令牌",

@@ -8,6 +8,8 @@ const service = "discordbot";
 export const provider: ProviderDefinition = {
   service,
   displayName: "Discord Bot",
+  description:
+    "Discord as a bot in your server: sends and deletes messages and manages channels, members, roles and bans with the bot's own permissions.",
   categories: ["Communication", "Developer Tools"],
   authTypes: ["api_key"],
   auth: [

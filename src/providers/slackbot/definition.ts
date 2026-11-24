@@ -15,6 +15,8 @@ export const provider: ProviderDefinition = {
   triggers: [snapshot],
   triggerPermissions,
   displayName: "Slack Bot",
+  description:
+    "Slack as your workspace's app bot: posts, replies and sends DMs as the bot, and receives mentions and events. It cannot search messages; use Slack for that.",
   categories: ["Communication", "Productivity"],
   authTypes: ["oauth2"],
   auth: [

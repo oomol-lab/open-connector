@@ -1,6 +1,8 @@
 import type { ProviderTranslation } from "../types.ts";
 
 export const translation: ProviderTranslation = {
+  description:
+    "以连接者本人的身份使用 Slack：读取和搜索其可见的内容，并以其名义发送消息。如需以应用或机器人身份发送消息，请使用 Slack Bot。",
   auth: {
     api_key: {
       label: "访问令牌",

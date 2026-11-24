@@ -5,6 +5,8 @@ import { wecomMcpActions } from "./actions.ts";
 export const provider: ProviderDefinition = {
   service: "wecom_mcp",
   displayName: "WeCom MCP",
+  description:
+    "Discover and call live WeCom tools through the MCP URL of a WeCom API-mode bot. For group webhook messages or typed smart bot operations, use WeCom Bot.",
   categories: ["Communication", "Productivity", "Developer Tools"],
   authTypes: ["custom_credential"],
   auth: [

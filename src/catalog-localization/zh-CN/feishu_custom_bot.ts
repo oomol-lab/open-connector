@@ -2,6 +2,8 @@ import type { ProviderTranslation } from "../types.ts";
 
 export const translation: ProviderTranslation = {
   displayName: "飞书自定义机器人",
+  description:
+    "飞书群 webhook 机器人：只能向其 webhook 所属的群发送文本、富文本、图片、卡片和群名片消息，无法读取或接收任何内容。",
   auth: {
     api_key: {
       label: "Webhook 令牌",

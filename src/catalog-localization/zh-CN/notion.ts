@@ -1,6 +1,8 @@
 import type { ProviderTranslation } from "../types.ts";
 
 export const translation: ProviderTranslation = {
+  description:
+    "通过 Notion API 使用 Notion：提供页面、块、数据库和用户的类型化操作，以及数据库页面事件触发器。如需使用 Notion 官方工具，请使用 Notion MCP。",
   auth: {
     api_key: {
       label: "内部集成密钥",

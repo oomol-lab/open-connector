@@ -7,6 +7,8 @@ const service = "dingtalk_bot";
 export const provider: ProviderDefinition = {
   service,
   displayName: "DingTalk Bot",
+  description:
+    "DingTalk group robot webhook: only sends text, markdown, link and card messages into its webhook's group. For docs, calendar or contacts, use DingTalk MCP.",
   categories: ["Communication"],
   authTypes: ["api_key"],
   auth: [
