@@ -9,7 +9,7 @@ import {
   requiredRecord,
   requiredString,
 } from "../../core/cast.ts";
-import { encodePathSegment } from "../../core/request.ts";
+import { assertPublicHttpUrl, encodePathSegment } from "../../core/request.ts";
 import {
   createProviderTimeout,
   providerInputError,
@@ -17,6 +17,7 @@ import {
   providerUserAgent,
   ProviderRequestError,
   readProviderJsonBody,
+  requiredResponseRecord,
 } from "../provider-runtime.ts";
 
 interface LeonardoAiRequestOptions {
@@ -37,6 +38,7 @@ const leonardoAiV1ApiBaseUrl = `${leonardoAiApiRootUrl}/v1`;
 const leonardoAiRequestTimeoutMs = 60_000;
 
 export const leonardoAiActionHandlers: ProviderActionHandlers<"leonardo_ai", LeonardoAiActionHandler> = {
+  remove_background: removeBackground,
   list_models(_input, context) {
     return listModels(context);
   },
@@ -69,6 +71,45 @@ export async function validateLeonardoAiCredential(
       validationEndpoint: `${leonardoAiV2ApiBaseUrl}${leonardoAiValidationPath}`,
     },
   };
+}
+
+async function removeBackground(input: Record<string, unknown>, context: ApiKeyProviderContext): Promise<unknown> {
+  const parameters = requiredRecord(input.parameters, "parameters", providerInputError);
+  const guidances = requiredRecord(parameters.guidances, "parameters.guidances", providerInputError);
+  for (const field of ["image_reference", "background_image_reference"]) {
+    if (guidances[field] === undefined && field === "background_image_reference") continue;
+    const references = objectArray(guidances[field], field, providerInputError);
+    for (const reference of references) {
+      const image = requiredRecord(reference.image, "image", providerInputError);
+      if (image.type === "URL") {
+        const url = assertPublicHttpUrl(requiredString(image.url, "image.url", providerInputError), {
+          fieldName: "image.url",
+          createError: providerInputError,
+        });
+        if (url.protocol !== "https:") throw providerInputError("image.url must use HTTPS.");
+      }
+    }
+  }
+  const payload = requiredResponseRecord(
+    await leonardoAiRequest(
+      {
+        method: "POST",
+        path: "/generationssync",
+        body: {
+          model: "remove-bg",
+          parameters,
+          ephemeral: input.ephemeral ?? true,
+          public: input.public ?? false,
+          base64: input.base64,
+        },
+      },
+      context,
+    ),
+    "Leonardo.Ai background removal response",
+  );
+  requiredString(payload.id, "Leonardo.Ai generation id", providerResponseError);
+  objectArray(payload.results, "Leonardo.Ai results", providerResponseError);
+  return payload;
 }
 
 async function listModels(context: ApiKeyProviderContext): Promise<unknown> {
