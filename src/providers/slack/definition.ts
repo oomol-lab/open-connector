@@ -28,7 +28,7 @@ export const provider: ProviderDefinition = {
   service,
   displayName: "Slack",
   description:
-    "Slack as the person who connects it: reads and searches what they can see and posts in their name. For messages sent by an app or bot, use Slack Bot.",
+    "Slack as the signed-in person: reads and searches what they see and posts as them. A pasted bot token acts as that bot. For bot events, use Slack Bot.",
   categories: ["Communication", "Productivity"],
   authTypes: ["oauth2", "api_key"],
   auth: [
