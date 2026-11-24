@@ -7,7 +7,8 @@ const service = "leonardo_ai";
 export const provider: ProviderDefinition = {
   service,
   displayName: "Leonardo.Ai",
-  description: "Create and inspect image, video, audio, and 3D generation jobs with Leonardo.Ai.",
+  description:
+    "Remove image backgrounds and create or inspect image, video, audio, and 3D generation jobs with Leonardo.Ai.",
   categories: ["AI", "Design & Media"],
   authTypes: ["api_key"],
   auth: [
