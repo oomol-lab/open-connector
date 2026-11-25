@@ -62,7 +62,10 @@ export const credentialValidators: CredentialValidators = {
   },
 };
 
-function requestTeamorouter(input: TeamorouterRequest, context: ApiKeyProviderContext): Promise<Record<string, unknown>> {
+function requestTeamorouter(
+  input: TeamorouterRequest,
+  context: ApiKeyProviderContext,
+): Promise<Record<string, unknown>> {
   return runProviderRequest(
     {
       signal: context.signal,

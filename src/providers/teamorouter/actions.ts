@@ -7,7 +7,9 @@ const service = "teamorouter";
 const messageSchema = s.looseObject(
   "An OpenAI-format message with a role and content, or tool call fields. Image content requires a vision-capable model.",
 );
-const modelIdSchema = s.nonEmptyString("A model ID returned by list_models, such as `deepseek-v4-flash` or `claude-sonnet-5-5`.");
+const modelIdSchema = s.nonEmptyString(
+  "A model ID returned by list_models, such as `deepseek-v4-flash` or `claude-sonnet-5-5`.",
+);
 const modelSchema = s.object(
   "A model served by TeamoRouter, with metadata such as its owner, context length and pricing.",
   { id: s.nonEmptyString("The model ID to pass unchanged in inference requests.") },
