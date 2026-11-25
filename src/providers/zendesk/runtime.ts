@@ -585,7 +585,7 @@ function normalizeZendeskOrganization(value: unknown, fieldName = "organization"
   };
 }
 
-function normalizeZendeskSubdomain(raw: string): string {
+export function normalizeZendeskSubdomain(raw: string): string {
   let candidate = raw.trim();
   if (candidate.startsWith("http://") || candidate.startsWith("https://")) {
     const url = new URL(candidate);

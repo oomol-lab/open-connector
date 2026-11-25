@@ -160,6 +160,8 @@ export class OAuthCredentialRefreshService implements IOAuthCredentialRefresher 
           : credential;
       await providerOAuth.revokeAccessToken({
         accessToken: current.accessToken,
+        refreshToken: current.refreshToken,
+        providerMetadata: current.metadata,
         clientConfig: config,
         fetcher: providerFetch,
         createError,

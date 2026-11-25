@@ -1,4 +1,5 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
+import type { ProviderOAuthRuntime } from "../../oauth/oauth-token.ts";
 import type { ProviderActionHandlers } from "../provider-executors.ts";
 
 import { Buffer } from "node:buffer";
@@ -12,9 +13,15 @@ import {
   requiredString,
 } from "../../core/cast.ts";
 import { encodePathSegment, jsonObject } from "../../core/request.ts";
+import { requestTokenRevocation, selectOAuthRevocationToken } from "../../oauth/oauth-token.ts";
 import { defineOAuthProviderExecutors } from "../provider-executors.ts";
 import { defineProviderProxy } from "../provider-proxy.ts";
-import { providerInputError, ProviderRequestError, providerResponseError } from "../provider-runtime.ts";
+import {
+  providerInputError,
+  ProviderRequestError,
+  providerResponseError,
+  basicAuthorizationHeader,
+} from "../provider-runtime.ts";
 
 const service = "discord";
 // Pin regular REST calls to v10; use the unversioned OAuth/OIDC URLs from official discovery.
@@ -358,3 +365,25 @@ function normalizeInviteCode(value: string): string {
 function readGrantedScopes(scope: unknown): string[] {
   return optionalString(scope)?.split(/\s+/u).filter(Boolean) ?? [];
 }
+
+export const oauth: ProviderOAuthRuntime = {
+  async revokeAccessToken(input): Promise<void> {
+    const { accessToken, refreshToken, clientConfig } = input;
+
+    const token = selectOAuthRevocationToken({ accessToken, refreshToken });
+    if (!token) return;
+
+    await requestTokenRevocation({
+      revocationUrl: "https://discord.com/api/v10/oauth2/token/revoke",
+      request: {
+        body: new URLSearchParams(token),
+        headers: {
+          "content-type": "application/x-www-form-urlencoded",
+          "authorization": basicAuthorizationHeader(`${clientConfig.clientId}:${clientConfig.clientSecret}`),
+        },
+      },
+      fetcher: input.fetcher,
+      createError: input.createError,
+    });
+  },
+};

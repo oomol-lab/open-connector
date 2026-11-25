@@ -1,6 +1,11 @@
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { providerUserAgent } from "../providers/provider-runtime.ts";
-import { requestAuthorizationCodeToken, requestRefreshToken, requestTokenRevocation } from "./oauth-token.ts";
+import {
+  requestAuthorizationCodeToken,
+  requestRefreshToken,
+  requestTokenRevocation,
+  readOAuthRevocationPayload,
+} from "./oauth-token.ts";
 
 const authorizationCodeRequest = {
   clientId: "client-id",
@@ -494,8 +499,8 @@ describe("OAuth token revocation", () => {
     );
   });
 
-  it("names the platform cause when the transport returns no HTTP response", async () => {
-    const refused = new TypeError("fetch failed");
+  it("does not expose credentials from transport failures", async () => {
+    const refused = new TypeError("fetch failed: secret-access secret-refresh secret-client");
     (refused as { cause?: unknown }).cause = { code: "ECONNREFUSED" };
     vi.stubGlobal(
       "fetch",
@@ -503,7 +508,7 @@ describe("OAuth token revocation", () => {
     );
 
     await expect(requestTokenRevocation({ ...revocationRequest })).rejects.toThrow(
-      "OAuth token revocation failed without an HTTP response: provider network request failed (ECONNREFUSED)",
+      "OAuth token revocation request failed",
     );
   });
 
@@ -530,5 +535,60 @@ describe("OAuth token revocation", () => {
     } finally {
       vi.useRealTimers();
     }
+  });
+});
+
+describe("provider-specific token revocation", () => {
+  it("rejects redirects before interpreting a provider response and releases the body", async () => {
+    const response = new Response("sensitive redirect body", {
+      status: 307,
+      headers: { location: "https://other.example/revoke" },
+    });
+    const isRevoked = vi.fn(() => true);
+    await expect(
+      requestTokenRevocation({
+        revocationUrl: "https://provider.example.com/revoke",
+        request: { method: "DELETE" },
+        fetcher: vi.fn<typeof fetch>().mockResolvedValue(response),
+        createError: (message) => new Error(message),
+        isRevoked,
+      }),
+    ).rejects.toThrow("HTTP 307");
+    expect(isRevoked).not.toHaveBeenCalled();
+    expect(response.bodyUsed).toBe(true);
+  });
+  it("bounds provider response parsing and releases oversized bodies", async () => {
+    const cancel = vi.fn();
+    const response = new Response(
+      new ReadableStream({
+        start(controller) {
+          controller.enqueue(new Uint8Array(1024 * 1024 + 1));
+        },
+        cancel,
+      }),
+    );
+    await expect(
+      requestTokenRevocation({
+        revocationUrl: "https://provider.example.com/revoke",
+        request: { body: new URLSearchParams({ token: "secret" }) },
+        fetcher: vi.fn<typeof fetch>().mockResolvedValue(response),
+        createError: (message) => new Error(message),
+        async isRevoked(result) {
+          return (await readOAuthRevocationPayload(result))?.ok === true;
+        },
+      }),
+    ).rejects.toThrow("OAuth token revocation response could not be read.");
+    expect(cancel).toHaveBeenCalledOnce();
+  });
+  it("releases successful custom responses even when the predicate does not read them", async () => {
+    const response = new Response("unused");
+    await requestTokenRevocation({
+      revocationUrl: "https://provider.example.com/revoke",
+      request: { method: "DELETE" },
+      fetcher: vi.fn<typeof fetch>().mockResolvedValue(response),
+      createError: (message) => new Error(message),
+      isRevoked: () => true,
+    });
+    expect(response.bodyUsed).toBe(true);
   });
 });

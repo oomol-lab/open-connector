@@ -5,6 +5,7 @@ import type {
   ProviderProxyExecutor,
   TransitFileWriter,
 } from "../../core/types.ts";
+import type { ProviderOAuthRuntime } from "../../oauth/oauth-token.ts";
 import type { ProviderActionHandlers } from "../provider-executors.ts";
 import type { ProviderFetch } from "../provider-runtime.ts";
 
@@ -18,6 +19,7 @@ import {
   stringArray,
 } from "../../core/cast.ts";
 import { readBoundedResponseBytes, storeResponseInTransit } from "../../core/request.ts";
+import { revokeAccessToken } from "../gmail/shared/revocation.ts";
 import { requireOAuthCredential } from "../provider-credentials.ts";
 import { defineProviderExecutors } from "../provider-executors.ts";
 import { defineProviderProxy } from "../provider-proxy.ts";
@@ -1124,3 +1126,5 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
   baseUrl: "https://photoslibrary.googleapis.com/v1",
   auth: { type: "oauth_bearer" },
 });
+
+export const oauth: ProviderOAuthRuntime = { revokeAccessToken };

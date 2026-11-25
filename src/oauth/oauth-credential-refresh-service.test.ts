@@ -4,6 +4,8 @@ import type { OAuthClientConfigService } from "./oauth-client-config-service.ts"
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { githubOAuthRuntime } from "../providers/github/oauth.ts";
 import { githubUserAgent } from "../providers/github/runtime-shared.ts";
+import { provider as jiraProvider } from "../providers/jira/definition.ts";
+import { provider as linearMcpProvider } from "../providers/linear_mcp/definition.ts";
 import { ProviderLoader } from "../providers/provider-loader.ts";
 import { OAuthCredentialRefreshService } from "./oauth-credential-refresh-service.ts";
 
@@ -627,4 +629,39 @@ describe("Notion template metadata during refresh", () => {
     );
     expect(refreshed.metadata.duplicated_template_id).toBe("new-value");
   });
+});
+
+describe("standard provider revocation endpoints", () => {
+  afterEach(() => vi.unstubAllGlobals());
+
+  it.each([
+    { provider: jiraProvider, endpoint: "https://auth.atlassian.com/oauth/revoke", clientSecret: "client-secret" },
+    { provider: linearMcpProvider, endpoint: "https://mcp.linear.app/token", clientSecret: undefined },
+  ])(
+    "revokes an expired $provider.service credential directly through its standard endpoint",
+    async ({ provider, endpoint, clientSecret }) => {
+      const auth = provider.auth.find((auth) => auth.type === "oauth2");
+      if (!auth) throw new Error("Expected an OAuth provider");
+      const configs = { ...clientConfigs, getOAuthDefinition: () => auth } as unknown as OAuthClientConfigService;
+      const loader = new ProviderLoader({
+        jira: () => import("../providers/jira/executors.ts"),
+        linear_mcp: () => import("../providers/linear_mcp/executors.ts"),
+      });
+      const fetcher = vi.fn<typeof fetch>().mockResolvedValue(new Response());
+      vi.stubGlobal("fetch", fetcher);
+      await expect(
+        new OAuthCredentialRefreshService(configs, loader).revoke(provider.service, expiredCredential({})),
+      ).resolves.toBe("done");
+      expect(fetcher).toHaveBeenCalledOnce();
+      const [url, init] = fetcher.mock.calls[0]!;
+      expect(String(url)).toBe(endpoint);
+      expect(init?.method).toBe("POST");
+      const body = new URLSearchParams(String(init?.body));
+      expect(body.get("token")).toBe("refresh-token");
+      expect(body.get("token_type_hint")).toBe("refresh_token");
+      expect(body.get("client_id")).toBe("client-id");
+      expect(body.get("client_secret")).toBe(clientSecret ?? null);
+      expect(new Headers(init?.headers).has("authorization")).toBe(false);
+    },
+  );
 });

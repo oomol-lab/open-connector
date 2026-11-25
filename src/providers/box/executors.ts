@@ -1,4 +1,5 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
+import type { ProviderOAuthRuntime } from "../../oauth/oauth-token.ts";
 import type { ProviderActionHandlers, OAuthProviderContext } from "../provider-executors.ts";
 
 import {
@@ -20,6 +21,7 @@ import {
   readProviderJsonBody,
   requiredInputString,
 } from "../provider-runtime.ts";
+import { revokeAccessToken } from "./revocation.ts";
 
 const service = "box";
 const boxApiBaseUrl = "https://api.box.com/2.0";
@@ -435,3 +437,5 @@ function setQuery(url: URL, name: string, value: string | number | boolean | und
 }
 
 export const triggers: readonly IntegrationDefinition[] = [boxItemEvent];
+
+export const oauth: ProviderOAuthRuntime = { revokeAccessToken };

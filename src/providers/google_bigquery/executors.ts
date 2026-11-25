@@ -1,4 +1,5 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
+import type { ProviderOAuthRuntime } from "../../oauth/oauth-token.ts";
 import type { ProviderActionHandlers } from "../provider-executors.ts";
 import type { OAuthProviderContext } from "../provider-executors.ts";
 
@@ -9,6 +10,7 @@ import {
   optionalInteger as asOptionalInteger,
   requiredRecord,
 } from "../../core/cast.ts";
+import { revokeAccessToken } from "../gmail/shared/revocation.ts";
 import {
   defineGoogleProviderExecutors,
   googleBearerProxyAuth,
@@ -1219,3 +1221,5 @@ function optionalUppercaseStringArray(value: unknown) {
 function asObject(value: unknown): Record<string, unknown> {
   return requiredRecord(value, "object input", (message) => new ProviderRequestError(400, message));
 }
+
+export const oauth: ProviderOAuthRuntime = { revokeAccessToken };

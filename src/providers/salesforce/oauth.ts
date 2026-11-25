@@ -2,12 +2,14 @@ import type { OAuthClientConfig } from "../../oauth/oauth-client-config-service.
 import type { OAuthTokenErrorFactory, OAuthTokenResult, ProviderOAuthRuntime } from "../../oauth/oauth-token.ts";
 
 import { optionalNumber, optionalRecord, optionalString, optionalRawString, requiredString } from "../../core/cast.ts";
+import {
+  requestTokenRevocation,
+  selectOAuthRevocationToken,
+  readOAuthRevocationPayload,
+} from "../../oauth/oauth-token.ts";
 import { ProviderRequestError, providerResponseError, requiredResponseRecord } from "../provider-runtime.ts";
 import { salesforceOrigin, salesforceRequest } from "./transport.ts";
 
-function loginOrigin(config: OAuthClientConfig): string {
-  return salesforceOrigin(optionalString(config.extra.loginUrl) ?? "https://login.salesforce.com", "loginUrl");
-}
 interface TokenRequest {
   config: OAuthClientConfig;
   parameters: Record<string, string>;
@@ -81,6 +83,28 @@ async function requestToken(input: TokenRequest): Promise<OAuthTokenResult> {
 }
 
 export const oauth: ProviderOAuthRuntime = {
+  async revokeAccessToken(input): Promise<void> {
+    const { accessToken, refreshToken, clientConfig } = input;
+
+    const revocation = selectOAuthRevocationToken({ accessToken, refreshToken });
+    if (!revocation) return;
+
+    await requestTokenRevocation({
+      revocationUrl: new URL("/services/oauth2/revoke", loginOrigin(clientConfig)),
+      request: {
+        body: new URLSearchParams({ token: revocation.token }),
+        headers: { "content-type": "application/x-www-form-urlencoded" },
+      },
+      fetcher: input.fetcher,
+      createError: input.createError,
+      async isRevoked(response) {
+        return (
+          response.ok ||
+          (response.status === 400 && (await readOAuthRevocationPayload(response))?.error === "invalid_token")
+        );
+      },
+    });
+  },
   buildAuthorizationUrl({ authorizationUrl, clientConfig }) {
     const url = new URL("/services/oauth2/authorize", loginOrigin(clientConfig));
     url.search = authorizationUrl.search;
@@ -110,3 +134,7 @@ export const oauth: ProviderOAuthRuntime = {
     });
   },
 };
+
+function loginOrigin(config: OAuthClientConfig): string {
+  return salesforceOrigin(optionalString(config.extra.loginUrl) ?? "https://login.salesforce.com", "loginUrl");
+}

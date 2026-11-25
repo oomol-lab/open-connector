@@ -6,6 +6,7 @@ import type {
   ProviderProxyExecutor,
   ResolvedCredential,
 } from "../../core/types.ts";
+import type { ProviderOAuthRuntime } from "../../oauth/oauth-token.ts";
 import type { TwitterActionContext } from "./runtime.ts";
 
 import { optionalRecord, optionalString } from "../../core/cast.ts";
@@ -18,6 +19,7 @@ import {
   toProviderProxyError,
 } from "../provider-proxy.ts";
 import { createProviderFetch, ProviderRequestError, providerUserAgent } from "../provider-runtime.ts";
+import { revokeAccessToken } from "./revocation.ts";
 import { fetchTwitterCurrentAccount, twitterActionHandlers, twitterApiBaseUrl } from "./runtime.ts";
 
 const service = "twitter";
@@ -134,3 +136,5 @@ function readTwitterProxyToken(credential: ResolvedCredential | undefined): stri
 function readOAuthAppBearerToken(credential: Extract<ResolvedCredential, { authType: "oauth2" }>): string | undefined {
   return optionalString(optionalRecord(credential.metadata.oauthClientSecretExtra)?.appBearerToken);
 }
+
+export const oauth: ProviderOAuthRuntime = { revokeAccessToken };

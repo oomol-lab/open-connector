@@ -1,4 +1,5 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
+import type { ProviderOAuthRuntime } from "../../oauth/oauth-token.ts";
 import type { ProviderActionHandlers } from "../provider-executors.ts";
 import type { OAuthProviderContext } from "../provider-executors.ts";
 
@@ -10,6 +11,7 @@ import {
   pickOptionalInteger,
   pickOptionalString as pickNonEmptyString,
 } from "../../core/cast.ts";
+import { revokeAccessToken } from "../gmail/shared/revocation.ts";
 import {
   defineGoogleProviderExecutors,
   googleBearerProxyAuth,
@@ -414,3 +416,5 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
   baseUrl: "https://www.googleapis.com/webmasters/v3",
   auth: googleBearerProxyAuth(googleSearchConsoleOAuthScopes),
 });
+
+export const oauth: ProviderOAuthRuntime = { revokeAccessToken };
