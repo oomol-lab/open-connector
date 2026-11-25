@@ -4,12 +4,14 @@ import type {
   ProviderExecutors,
   ProviderProxyExecutor,
 } from "../../core/types.ts";
+import type { ProviderOAuthRuntime } from "../../oauth/oauth-token.ts";
 import type { IntegrationDefinition } from "../../triggers/common/integration.ts";
 import type { IntercomActionContext } from "./runtime.ts";
 
 import { requireOAuthCredential } from "../provider-credentials.ts";
 import { defineProviderExecutors } from "../provider-executors.ts";
 import { defineProviderProxy } from "../provider-proxy.ts";
+import { revokeAccessToken } from "./revocation.ts";
 import {
   intercomActionHandlers,
   intercomAllowedApiBaseUrls,
@@ -56,3 +58,5 @@ export const credentialValidators: CredentialValidators = {
 };
 
 export const triggers: readonly IntegrationDefinition[] = [intercomConversationEvents];
+
+export const oauth: ProviderOAuthRuntime = { revokeAccessToken };

@@ -4,6 +4,7 @@ import type {
   ProviderExecutors,
   ProviderProxyExecutor,
 } from "../../core/types.ts";
+import type { ProviderOAuthRuntime } from "../../oauth/oauth-token.ts";
 import type { IntegrationDefinition } from "../../triggers/common/integration.ts";
 import type { PollDefinition } from "../../triggers/common/poll.ts";
 import type { ProviderActionHandlers } from "../provider-executors.ts";
@@ -23,6 +24,7 @@ import {
   providerUserAgent,
   withRetryAfterSeconds,
 } from "../provider-runtime.ts";
+import { revokeAccessToken } from "./revocation.ts";
 import { linearIssueChanged } from "./trigger-on-issue-changed.ts";
 import { linearIssueEvent } from "./trigger-on-issue-event.ts";
 
@@ -2493,3 +2495,5 @@ function asOptionalObject(value: unknown) {
 }
 
 export const triggers: readonly (IntegrationDefinition | PollDefinition)[] = [linearIssueChanged, linearIssueEvent];
+
+export const oauth: ProviderOAuthRuntime = { revokeAccessToken };

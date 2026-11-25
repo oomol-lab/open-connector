@@ -1,4 +1,5 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
+import type { ProviderOAuthRuntime } from "../../oauth/oauth-token.ts";
 import type { ProviderActionHandlers, OAuthProviderContext } from "../provider-executors.ts";
 
 import {
@@ -9,6 +10,7 @@ import {
   optionalRecord,
   optionalString,
 } from "../../core/cast.ts";
+import { revokeAccessToken } from "../gmail/shared/revocation.ts";
 import {
   defineGoogleProviderExecutors,
   googleBearerProxyAuth,
@@ -533,3 +535,5 @@ function requirePayloadString(value: unknown, message: string): string {
 
   return resolved;
 }
+
+export const oauth: ProviderOAuthRuntime = { revokeAccessToken };

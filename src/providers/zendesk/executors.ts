@@ -4,9 +4,12 @@ import type {
   ProviderExecutors,
   ProviderProxyExecutor,
 } from "../../core/types.ts";
+import type { ProviderOAuthRuntime } from "../../oauth/oauth-token.ts";
 import type { IntegrationDefinition } from "../../triggers/common/integration.ts";
 import type { PollDefinition } from "../../triggers/common/poll.ts";
 
+import { optionalRecord } from "../../core/cast.ts";
+import { requestTokenRevocation } from "../../oauth/oauth-token.ts";
 import { requireApiKeyCredential, requireOAuthCredential } from "../provider-credentials.ts";
 import { defineProviderExecutors } from "../provider-executors.ts";
 import {
@@ -21,8 +24,9 @@ import {
   providerFetch,
   ProviderRequestError,
   providerUserAgent,
+  requiredInputString,
 } from "../provider-runtime.ts";
-import { validateZendeskCredential, zendeskActionHandlers } from "./runtime.ts";
+import { validateZendeskCredential, zendeskActionHandlers, normalizeZendeskSubdomain } from "./runtime.ts";
 import { zendeskEvent } from "./trigger-on-event.ts";
 
 const service = "zendesk";
@@ -153,22 +157,27 @@ function requireValue(value: string | undefined, message: string): string {
   throw new ProviderRequestError(400, message);
 }
 
-function normalizeZendeskSubdomain(raw: string): string {
-  let candidate = raw.trim();
-  if (candidate.startsWith("http://") || candidate.startsWith("https://")) {
-    const url = new URL(candidate);
-    candidate = url.hostname;
-  }
-  const lower = candidate.toLowerCase();
-  const subdomain = lower.endsWith(".zendesk.com") ? lower.slice(0, -".zendesk.com".length) : lower;
-  if (!subdomain || subdomain.includes(".") || subdomain.startsWith("-") || subdomain.endsWith("-")) {
-    throw new ProviderRequestError(400, "Zendesk subdomain is invalid");
-  }
-  for (const character of subdomain) {
-    const ok = (character >= "a" && character <= "z") || (character >= "0" && character <= "9") || character === "-";
-    if (!ok) throw new ProviderRequestError(400, "Zendesk subdomain is invalid");
-  }
-  return subdomain;
-}
-
 export const triggers: readonly (IntegrationDefinition | PollDefinition)[] = [zendeskEvent];
+
+export const oauth: ProviderOAuthRuntime = {
+  async revokeAccessToken(input): Promise<void> {
+    const { accessToken, clientConfig, providerMetadata } = input;
+
+    if (!accessToken.trim()) return;
+    // Revoke only at the tenant that issued the stored credential.
+    const subdomain = providerMetadata
+      ? normalizeZendeskSubdomain(
+          requiredInputString(
+            providerMetadata.subdomain ?? optionalRecord(providerMetadata.oauthClientExtra)?.subdomain,
+            "subdomain",
+          ),
+        )
+      : normalizeZendeskSubdomain(requiredInputString(clientConfig.extra.subdomain, "subdomain"));
+    await requestTokenRevocation({
+      revocationUrl: `https://${subdomain}.zendesk.com/api/v2/oauth/tokens/current`,
+      request: { method: "DELETE", headers: { authorization: `Bearer ${accessToken}` } },
+      fetcher: input.fetcher,
+      createError: input.createError,
+    });
+  },
+};

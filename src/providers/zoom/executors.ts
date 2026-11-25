@@ -1,8 +1,10 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
+import type { ProviderOAuthRuntime } from "../../oauth/oauth-token.ts";
 import type { IntegrationDefinition } from "../../triggers/common/integration.ts";
 
 import { defineOAuthProviderExecutors } from "../provider-executors.ts";
 import { defineProviderProxy } from "../provider-proxy.ts";
+import { revokeAccessToken } from "./revocation.ts";
 import { fetchZoomCurrentAccount, zoomActionHandlers, zoomApiBaseUrl } from "./runtime.ts";
 import { zoomRecordingReady } from "./trigger-on-recording-ready.ts";
 
@@ -23,3 +25,5 @@ export const credentialValidators: CredentialValidators = {
 };
 
 export const triggers: readonly IntegrationDefinition[] = [zoomRecordingReady];
+
+export const oauth: ProviderOAuthRuntime = { revokeAccessToken };

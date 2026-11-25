@@ -1,4 +1,5 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
+import type { ProviderOAuthRuntime } from "../../oauth/oauth-token.ts";
 import type { ProviderActionHandlers } from "../provider-executors.ts";
 import type { OAuthProviderContext } from "../provider-executors.ts";
 
@@ -10,6 +11,7 @@ import {
   pickOptionalInteger,
   pickOptionalString,
 } from "../../core/cast.ts";
+import { revokeAccessToken } from "../gmail/shared/revocation.ts";
 import {
   defineGoogleProviderExecutors,
   googleBearerProxyAuth,
@@ -693,3 +695,5 @@ function stringifyBoolean(value: boolean | undefined): string | undefined {
 function stringifyInteger(value: number | undefined): string | undefined {
   return value === undefined ? undefined : String(value);
 }
+
+export const oauth: ProviderOAuthRuntime = { revokeAccessToken };

@@ -90,7 +90,12 @@ function requestOnomeo(input: OnomeoRequest, context: ApiKeyProviderContext): Pr
           optionalString(error?.error) ??
           optionalString(error?.message) ??
           `onomeo request failed with HTTP ${response.status}`;
-        throw new ProviderRequestError(response.status, message, withRetryAfterSeconds(response, payload));
+        throw new ProviderRequestError(
+          response.status,
+          message,
+          withRetryAfterSeconds(response, payload),
+          response.status === 401 || response.status === 403 ? "provider_error" : undefined,
+        );
       }
       const result = requiredResponseRecord(payload, "onomeo response");
       if (input.path === "/models" && !Array.isArray(result.data)) {

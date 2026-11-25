@@ -5,6 +5,7 @@ import type {
   ProviderExecutors,
   ProviderProxyExecutor,
 } from "../../core/types.ts";
+import type { ProviderOAuthRuntime } from "../../oauth/oauth-token.ts";
 import type { IntegrationDefinition } from "../../triggers/common/integration.ts";
 import type { PollDefinition } from "../../triggers/common/poll.ts";
 import type { ProviderActionHandlers } from "../provider-executors.ts";
@@ -55,6 +56,7 @@ import {
 import { readGmailAttachments } from "./mime-attachments.ts";
 import { decodeMimeSubject, encodeMimeMessage, readMimeReplyHeaders, updateMimeMessage } from "./mime.ts";
 import { gmailOAuthScopes } from "./scopes.ts";
+import { revokeAccessToken } from "./shared/revocation.ts";
 import { gmailMessageReceived } from "./trigger-on-message-received.ts";
 
 const service = "gmail";
@@ -1439,3 +1441,5 @@ async function readGmailError(response: Response): Promise<ProviderRequestError>
 }
 
 export const triggers: readonly (IntegrationDefinition | PollDefinition)[] = [gmailMessageReceived];
+
+export const oauth: ProviderOAuthRuntime = { revokeAccessToken };

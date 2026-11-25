@@ -1,10 +1,17 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
+import type { ProviderOAuthRuntime } from "../../oauth/oauth-token.ts";
 import type { OAuthProviderContext, ProviderActionHandlers } from "../provider-executors.ts";
 
 import { compactObject, optionalNumber, optionalRecord, optionalString, requiredRecord } from "../../core/cast.ts";
+import { requestTokenRevocation, selectOAuthRevocationToken } from "../../oauth/oauth-token.ts";
 import { defineOAuthProviderExecutors } from "../provider-executors.ts";
 import { defineProviderProxy } from "../provider-proxy.ts";
-import { providerInputError, ProviderRequestError, requiredInputString } from "../provider-runtime.ts";
+import {
+  providerInputError,
+  ProviderRequestError,
+  requiredInputString,
+  basicAuthorizationHeader,
+} from "../provider-runtime.ts";
 
 const service = "canva";
 const canvaApiBaseUrl = "https://api.canva.com/rest";
@@ -544,3 +551,25 @@ function readStringArray(value: unknown) {
 function unixSecondsToIso(value: unknown) {
   return typeof value === "number" && Number.isFinite(value) ? new Date(value * 1000).toISOString() : null;
 }
+
+export const oauth: ProviderOAuthRuntime = {
+  async revokeAccessToken(input): Promise<void> {
+    const token = selectOAuthRevocationToken(input);
+    if (!token) return;
+
+    await requestTokenRevocation({
+      revocationUrl: "https://api.canva.com/rest/v1/oauth/revoke",
+      request: {
+        body: new URLSearchParams({ token: token.token }),
+        headers: {
+          "content-type": "application/x-www-form-urlencoded",
+          "authorization": basicAuthorizationHeader(
+            `${input.clientConfig.clientId}:${input.clientConfig.clientSecret}`,
+          ),
+        },
+      },
+      fetcher: input.fetcher,
+      createError: input.createError,
+    });
+  },
+};

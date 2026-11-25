@@ -1,4 +1,5 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
+import type { ProviderOAuthRuntime } from "../../oauth/oauth-token.ts";
 import type { OAuthProviderContext, ProviderActionHandlers } from "../provider-executors.ts";
 
 import {
@@ -11,6 +12,7 @@ import {
   requiredRawString,
   requiredString,
 } from "../../core/cast.ts";
+import { revokeAccessToken } from "../gmail/shared/revocation.ts";
 import {
   defineGoogleProviderExecutors,
   googleBearerProxyAuth,
@@ -540,3 +542,5 @@ function integerQuery(value: unknown): string | undefined {
   const integer = optionalInteger(value);
   return integer !== undefined ? String(integer) : undefined;
 }
+
+export const oauth: ProviderOAuthRuntime = { revokeAccessToken };

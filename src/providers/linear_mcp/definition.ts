@@ -25,6 +25,7 @@ export const provider: ProviderDefinition = {
       type: "oauth2",
       authorizationUrl: `${linearMcpIssuer}/authorize`,
       tokenUrl: `${linearMcpIssuer}/token`,
+      revocationUrl: `${linearMcpIssuer}/token`,
       scopes: ["read", "write"],
       requiredScopes: ["read"],
       tokenEndpointAuthMethod: "none",

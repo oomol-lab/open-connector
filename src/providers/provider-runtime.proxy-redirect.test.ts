@@ -6,6 +6,7 @@ import { proxy as arcgisOnlineProxy } from "./arcgis_online/executors.ts";
 import { proxy as ilovepdfProxy } from "./ilovepdf/executors.ts";
 import { providerFetch } from "./provider-runtime.ts";
 import { proxy as scopusProxy } from "./scopus/executors.ts";
+import { proxy as showdocProxy } from "./showdoc/executors.ts";
 
 interface RecordedHop {
   url: string;
@@ -33,6 +34,29 @@ afterEach(() => {
 });
 
 describe("provider egress on cross-origin redirects", () => {
+  it("does not replay ShowDoc body credentials after a redirect", async () => {
+    const fetcher = vi.fn(
+      async () =>
+        new Response(null, {
+          status: 307,
+          headers: { location: "https://attacker.example.net/collect" },
+        }),
+    );
+    vi.stubGlobal("fetch", fetcher);
+    const result = await showdocProxy(
+      { method: "POST", endpoint: "/getPage", body: { page_id: 1 } },
+      contextFor({ ...arcgisCredential, apiKey: "key", values: { apiToken: "token" } }),
+    );
+    expect(result).toMatchObject({ ok: false, error: { code: "provider_error" } });
+    expect(fetcher).toHaveBeenCalledTimes(1);
+    expect(fetcher).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({
+        body: JSON.stringify({ page_id: 1, api_key: "key", api_token: "token" }),
+        redirect: "manual",
+      }),
+    );
+  });
   it.each([307, 308])("does not replay iLovePDF task secrets after HTTP %i", async (status) => {
     const fetcher = vi.fn(
       async () =>

@@ -1,4 +1,5 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
+import type { ProviderOAuthRuntime } from "../../oauth/oauth-token.ts";
 import type { IntegrationDefinition } from "../../triggers/common/integration.ts";
 import type { PollDefinition } from "../../triggers/common/poll.ts";
 import type { ProviderActionHandlers } from "../provider-executors.ts";
@@ -7,6 +8,7 @@ import type { OAuthProviderContext } from "../provider-executors.ts";
 import { randomUUID } from "node:crypto";
 import { requiredRawString, requiredString } from "../../core/cast.ts";
 import { storeResponseInTransit } from "../../core/request.ts";
+import { revokeAccessToken } from "../gmail/shared/revocation.ts";
 import { defineProviderProxy, providerProxyEndpointPrefixes } from "../provider-proxy.ts";
 import { ProviderRequestError, providerResponseError } from "../provider-runtime.ts";
 import { defineGoogleProviderExecutors, googleBearerProxyAuth, googleServiceAccountValidator } from "./runtime-auth.ts";
@@ -1073,3 +1075,5 @@ export const triggers: readonly (IntegrationDefinition | PollDefinition)[] = [
   googleDriveChangeListener,
   googleDriveFileChange,
 ];
+
+export const oauth: ProviderOAuthRuntime = { revokeAccessToken };

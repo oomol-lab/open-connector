@@ -1,4 +1,5 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
+import type { ProviderOAuthRuntime } from "../../oauth/oauth-token.ts";
 import type { IntegrationDefinition } from "../../triggers/common/integration.ts";
 import type { PollDefinition } from "../../triggers/common/poll.ts";
 import type { ProviderActionHandlers } from "../provider-executors.ts";
@@ -12,6 +13,7 @@ import {
   pickOptionalString,
   requiredRecord,
 } from "../../core/cast.ts";
+import { revokeAccessToken } from "../gmail/shared/revocation.ts";
 import {
   defineGoogleProviderExecutors,
   googleBearerProxyAuth,
@@ -742,3 +744,5 @@ function asRecord<T>(value: unknown) {
 }
 
 export const triggers: readonly (IntegrationDefinition | PollDefinition)[] = [googleCalendarEventChanged];
+
+export const oauth: ProviderOAuthRuntime = { revokeAccessToken };

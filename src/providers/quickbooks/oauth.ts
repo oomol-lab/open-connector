@@ -7,7 +7,7 @@ import type {
 
 import { optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import { readBoundedResponseBytes } from "../../core/request.ts";
-import { expiresAtFromLifetime } from "../../oauth/oauth-token.ts";
+import { expiresAtFromLifetime, requestTokenRevocation, selectOAuthRevocationToken } from "../../oauth/oauth-token.ts";
 import {
   basicAuthorizationHeader,
   createProviderTimeout,
@@ -39,6 +39,26 @@ interface QuickbooksTokenRequest {
  * form body.
  */
 export const oauth: ProviderOAuthRuntime = {
+  async revokeAccessToken(input): Promise<void> {
+    const token = selectOAuthRevocationToken(input);
+    if (!token) return;
+
+    await requestTokenRevocation({
+      revocationUrl: "https://developer.api.intuit.com/v2/oauth2/tokens/revoke",
+      request: {
+        body: JSON.stringify({ token: token.token }),
+        headers: {
+          "content-type": "application/json",
+          "accept": "application/json",
+          "authorization": basicAuthorizationHeader(
+            `${input.clientConfig.clientId}:${input.clientConfig.clientSecret}`,
+          ),
+        },
+      },
+      fetcher: input.fetcher,
+      createError: input.createError,
+    });
+  },
   async exchangeCode(input: OAuthCodeExchangeInput): Promise<OAuthTokenResult> {
     const realmId = optionalString(input.callbackParameters?.realmId);
     if (!realmId) {

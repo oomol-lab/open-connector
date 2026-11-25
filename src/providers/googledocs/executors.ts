@@ -4,10 +4,12 @@ import type {
   ProviderExecutors,
   ProviderProxyExecutor,
 } from "../../core/types.ts";
+import type { ProviderOAuthRuntime } from "../../oauth/oauth-token.ts";
 import type { ProviderActionHandlers } from "../provider-executors.ts";
 
 import { Buffer } from "node:buffer";
 import { integer, objectArray } from "../../core/cast.ts";
+import { revokeAccessToken } from "../gmail/shared/revocation.ts";
 import {
   googleJsonRequest as googleJsonRequestShared,
   googleRequest as googleRequestShared,
@@ -1120,3 +1122,5 @@ const driveFileFields = [
   "starred",
   "trashed",
 ].join(",");
+
+export const oauth: ProviderOAuthRuntime = { revokeAccessToken };

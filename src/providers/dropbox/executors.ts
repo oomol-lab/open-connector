@@ -4,6 +4,7 @@ import type {
   ProviderProxyExecutor,
   TransitFileWriter,
 } from "../../core/types.ts";
+import type { ProviderOAuthRuntime } from "../../oauth/oauth-token.ts";
 import type { ProviderActionHandlers } from "../provider-executors.ts";
 import type { OAuthProviderContext } from "../provider-executors.ts";
 
@@ -33,6 +34,7 @@ import {
   providerResponseError,
   providerUserAgent,
 } from "../provider-runtime.ts";
+import { revokeAccessToken } from "./revocation.ts";
 
 const dropboxApiBaseUrl = "https://api.dropboxapi.com/2";
 const dropboxContentBaseUrl = "https://content.dropboxapi.com/2";
@@ -1037,3 +1039,5 @@ function decodeBase64Content(value: string) {
     throw new ProviderRequestError(400, "contentBase64 must be valid base64");
   }
 }
+
+export const oauth: ProviderOAuthRuntime = { revokeAccessToken };

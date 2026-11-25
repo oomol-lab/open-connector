@@ -1,4 +1,5 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
+import type { ProviderOAuthRuntime } from "../../oauth/oauth-token.ts";
 import type { ProviderActionHandlers } from "../provider-executors.ts";
 import type { ProviderFetch } from "../provider-runtime.ts";
 
@@ -11,6 +12,7 @@ import {
   optionalScalarString,
   optionalString,
 } from "../../core/cast.ts";
+import { revokeAccessToken } from "../gmail/shared/revocation.ts";
 import { googleJsonRequest, googleRequest } from "../googledrive/runtime-request.ts";
 import { requireOAuthCredential } from "../provider-credentials.ts";
 import { defineProviderExecutors } from "../provider-executors.ts";
@@ -879,3 +881,5 @@ function parseScopeString(value: unknown): string[] {
   const scope = optionalString(value);
   return scope ? scope.split(/\s+/).filter((item) => item === googleAdsScope) : [];
 }
+
+export const oauth: ProviderOAuthRuntime = { revokeAccessToken };

@@ -1,5 +1,7 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
+import type { ProviderOAuthRuntime } from "../../oauth/oauth-token.ts";
 
+import { revokeAccessToken } from "../gmail/shared/revocation.ts";
 import { googleJsonRequest } from "../googledrive/runtime-request.ts";
 import { defineOAuthProviderExecutors } from "../provider-executors.ts";
 import { defineProviderProxy, providerProxyEndpointPrefixes } from "../provider-proxy.ts";
@@ -35,3 +37,5 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
   auth: { type: "oauth_bearer" },
   allowedEndpoint: providerProxyEndpointPrefixes("/youtube/v3", "/upload/youtube/v3"),
 });
+
+export const oauth: ProviderOAuthRuntime = { revokeAccessToken };

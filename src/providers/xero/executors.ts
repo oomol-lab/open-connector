@@ -1,12 +1,14 @@
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
+import type { ProviderOAuthRuntime } from "../../oauth/oauth-token.ts";
 import type { ProviderActionHandlers } from "../provider-executors.ts";
 import type { OAuthProviderContext, ProviderRuntimeHandler } from "../provider-executors.ts";
 
 import { optionalInteger, optionalNumber, optionalString, requiredString } from "../../core/cast.ts";
+import { requestTokenRevocation } from "../../oauth/oauth-token.ts";
 import { arrayPayload, definedBody, firstString, objectPayload, requestJson } from "../http-json-runtime.ts";
 import { defineOAuthProviderExecutors } from "../provider-executors.ts";
 import { defineProviderProxy } from "../provider-proxy.ts";
-import { ProviderRequestError } from "../provider-runtime.ts";
+import { ProviderRequestError, basicAuthorizationHeader } from "../provider-runtime.ts";
 
 const service = "xero";
 const apiBaseUrl = "https://api.xero.com/api.xro/2.0";
@@ -570,3 +572,26 @@ function xeroDate(value: unknown): string | null {
   }
   return /^\d{4}-\d{2}-\d{2}/.test(value) ? value.slice(0, 10) : null;
 }
+
+export const oauth: ProviderOAuthRuntime = {
+  async revokeAccessToken(input): Promise<void> {
+    const { accessToken, refreshToken, clientConfig } = input;
+
+    if (!refreshToken?.trim()) {
+      if (accessToken?.trim()) throw input.createError("Xero revocation requires a refresh token");
+      return;
+    }
+    await requestTokenRevocation({
+      revocationUrl: "https://identity.xero.com/connect/revocation",
+      request: {
+        body: new URLSearchParams({ token: refreshToken }),
+        headers: {
+          "content-type": "application/x-www-form-urlencoded",
+          "authorization": basicAuthorizationHeader(`${clientConfig.clientId}:${clientConfig.clientSecret}`),
+        },
+      },
+      fetcher: input.fetcher,
+      createError: input.createError,
+    });
+  },
+};
