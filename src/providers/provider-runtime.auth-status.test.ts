@@ -18,6 +18,7 @@ import { credentialValidators as dovetailValidators } from "./dovetail/executors
 import { executors as figmaExecutors } from "./figma/executors.ts";
 import { executors as helpdeskExecutors } from "./helpdesk/executors.ts";
 import { executors as mondayExecutors } from "./monday/executors.ts";
+import { executors as onomeoExecutors } from "./onomeo/executors.ts";
 import { ProviderRequestError, toProviderExecutionError } from "./provider-runtime.ts";
 import { proxy as rendiProxy } from "./rendi/executors.ts";
 import {
@@ -402,4 +403,15 @@ it.each([
     ok: false,
     error: { code },
   });
+});
+
+it.each([
+  [400, "invalid_input"],
+  [403, "provider_error"],
+])("onomeo distinguishes invalid input from ambiguous authorization failures (HTTP %i)", async (status, code) => {
+  const result = await runExpiredCredential(
+    { service: "onomeo", executors: onomeoExecutors, actionId: "onomeo.list_models", credential: apiKeyCredential },
+    Number(status),
+  );
+  expect(result).toMatchObject({ ok: false, error: { code } });
 });
