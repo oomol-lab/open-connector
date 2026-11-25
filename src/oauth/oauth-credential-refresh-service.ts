@@ -154,9 +154,10 @@ export class OAuthCredentialRefreshService implements IOAuthCredentialRefresher 
       readOAuthClientConfigMetadata(service, credential.metadata) ?? (await this.clientConfigs.getConfig(service));
     if (providerOAuth?.revokeAccessToken) {
       if (!config) throw createError(`Configure an OAuth client for ${service} before revoking its token.`);
+      // A failed renewal must not prevent revocation of the tokens we already hold.
       const current =
         credential.refreshToken && isOAuthCredentialExpired(credential, 0)
-          ? await this.refresh(service, credential)
+          ? await this.refresh(service, credential).catch(() => credential)
           : credential;
       await providerOAuth.revokeAccessToken({
         accessToken: current.accessToken,

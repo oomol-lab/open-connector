@@ -229,6 +229,20 @@ for (const item of cases) {
       if (item.json) expect(JSON.parse(String(init?.body))).toEqual(item.json);
       if (response.body) expect(response.bodyUsed).toBe(true);
     });
+    if (item.fallbackForm || item.fallbackJson)
+      it("revokes the access token when no refresh token was issued", async () => {
+        const fetcher = vi.fn<typeof fetch>().mockResolvedValue(item.success());
+        await item.revoke({
+          ...credential,
+          refreshToken: undefined,
+          fetcher,
+          createError: (message) => new Error(message),
+        });
+        expect(fetcher).toHaveBeenCalledTimes(1);
+        const body = fetcher.mock.calls[0]?.[1]?.body;
+        if (item.fallbackForm) expect(Object.fromEntries(new URLSearchParams(String(body)))).toEqual(item.fallbackForm);
+        if (item.fallbackJson) expect(JSON.parse(String(body))).toEqual(item.fallbackJson);
+      });
     if (item.expired)
       it("accepts documented already-revoked responses", async () => {
         await expect(
@@ -265,7 +279,9 @@ it("revokes Google refresh tokens without client authentication and accepts inva
   for (const status of [200, 400]) {
     const fetcher = vi
       .fn<typeof fetch>()
-      .mockResolvedValue(status === 200 ? new Response() : Response.json({ error: "invalid_token" }, { status }));
+      .mockImplementation(async () =>
+        status === 200 ? new Response() : Response.json({ error: "invalid_token" }, { status }),
+      );
     await googleRevoke({
       accessToken,
       refreshToken,
@@ -315,3 +331,15 @@ function requireRevoke(runtime: ProviderOAuthRuntime): (input: OAuthTokenRevokeI
   if (!revoke) throw new Error("Expected a provider-specific revocation protocol");
   return (input) => revoke.call(runtime, input);
 }
+
+it.each([200, 400, 503])("tries the Google access token after an invalid refresh token (HTTP %i)", async (status) => {
+  const fetcher = vi
+    .fn<typeof fetch>()
+    .mockResolvedValueOnce(Response.json({ error: "invalid_token" }, { status: 400 }))
+    .mockResolvedValueOnce(status === 200 ? new Response() : Response.json({ error: "invalid_token" }, { status }));
+  const result = googleRevoke({ ...credential, fetcher, createError: (message) => new Error(message) });
+  if (status === 503) await expect(result).rejects.toThrow(/failed/);
+  else await expect(result).resolves.toBeUndefined();
+  expect(fetcher).toHaveBeenCalledTimes(2);
+  expect(new URLSearchParams(String(fetcher.mock.calls[1]?.[1]?.body)).get("token")).toBe(accessToken);
+});

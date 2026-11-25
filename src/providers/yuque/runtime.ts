@@ -75,7 +75,7 @@ export async function requestYuque(
         response.status,
         `Yuque request failed (HTTP ${response.status})${details ? `: ${details}` : ""}`,
         undefined,
-        "provider_error",
+        response.status === 401 || response.status === 403 ? "provider_error" : undefined,
       );
     }
     return requiredResponseRecord(parsed, "Yuque response");

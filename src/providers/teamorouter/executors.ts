@@ -99,7 +99,7 @@ function requestTeamorouter(
           response.status,
           message,
           withRetryAfterSeconds(response, payload),
-          "provider_error",
+          response.status === 401 || response.status === 403 ? "provider_error" : undefined,
         );
       }
       const result = requiredResponseRecord(payload, "TeamoRouter response");

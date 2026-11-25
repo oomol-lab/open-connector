@@ -67,7 +67,7 @@ export async function requestJinshuju(
         response.status,
         description ?? `Jinshuju request failed (HTTP ${response.status})`,
         payload,
-        "provider_error",
+        response.status === 401 || response.status === 403 ? "provider_error" : undefined,
       );
     }
     return requiredResponseRecord(payload, "Jinshuju response");

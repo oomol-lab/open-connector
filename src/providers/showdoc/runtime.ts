@@ -1,6 +1,6 @@
 import type { ApiKeyProviderContext } from "../provider-executors.ts";
 
-import { optionalRecord, optionalString } from "../../core/cast.ts";
+import { optionalRawString, optionalRecord, optionalString } from "../../core/cast.ts";
 import { storeResponseInTransit } from "../../core/request.ts";
 import {
   providerFetch,
@@ -59,7 +59,7 @@ export async function pageRequest(
   context: ShowdocContext,
 ): Promise<Record<string, unknown>> {
   const result = await requestShowdoc(endpoint, input, context);
-  const content = optionalString(result.page_content);
+  const content = optionalRawString(result.page_content);
   // Decode one layer of PHP htmlspecialchars without interpreting original HTML.
   if (content !== undefined)
     return {

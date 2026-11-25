@@ -10,6 +10,7 @@ export async function revokeAccessToken(input: OAuthTokenRevokeInput): Promise<v
   const token = selectOAuthRevocationToken(input);
   if (!token) return;
 
+  let alreadyInvalid = false;
   await requestTokenRevocation({
     revocationUrl: "https://oauth2.googleapis.com/revoke",
     request: {
@@ -19,10 +20,12 @@ export async function revokeAccessToken(input: OAuthTokenRevokeInput): Promise<v
     fetcher: input.fetcher,
     createError: input.createError,
     async isRevoked(response) {
-      return (
-        response.ok ||
-        (response.status === 400 && (await readOAuthRevocationPayload(response))?.error === "invalid_token")
-      );
+      alreadyInvalid =
+        response.status === 400 && (await readOAuthRevocationPayload(response))?.error === "invalid_token";
+      return response.ok || alreadyInvalid;
     },
   });
+  if (alreadyInvalid && token.token_type_hint === "refresh_token" && input.accessToken.trim()) {
+    await revokeAccessToken({ ...input, refreshToken: undefined });
+  }
 }

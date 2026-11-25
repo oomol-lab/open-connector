@@ -2,7 +2,7 @@ import type { TransitFileWriter } from "../../core/types.ts";
 
 import { afterEach, expect, it, vi } from "vitest";
 import { providerFetch } from "../provider-runtime.ts";
-import { requestShowdoc, uploadAttachment } from "./runtime.ts";
+import { pageRequest, requestShowdoc, uploadAttachment } from "./runtime.ts";
 
 vi.mock("node:dns/promises", () => ({ lookup: vi.fn(async () => [{ address: "93.184.216.34", family: 4 }]) }));
 afterEach(() => vi.unstubAllGlobals());
@@ -81,4 +81,16 @@ it.each([200, 307])("uploads through a buffered transit backend and cleans up af
   expect(fetcher.mock.calls[1]?.[1]?.redirect).toBe("manual");
   expect(store.delete).toHaveBeenCalledWith("staged.txt");
   expect(stored).toBeUndefined();
+});
+
+it("preserves Markdown whitespace when decoding one layer of HTML entities", async () => {
+  const fetcher = vi.fn<typeof fetch>().mockResolvedValue(
+    Response.json({
+      error_code: 0,
+      data: { page_content: "    &lt;code&gt; &amp;lt;\n\n" },
+    }),
+  );
+  await expect(pageRequest("getPage", {}, { apiKey: "key", apiToken: "token", fetcher })).resolves.toEqual({
+    page_content: "    <code> &lt;\n\n",
+  });
 });

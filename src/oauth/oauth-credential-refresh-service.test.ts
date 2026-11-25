@@ -7,6 +7,7 @@ import { githubUserAgent } from "../providers/github/runtime-shared.ts";
 import { provider as jiraProvider } from "../providers/jira/definition.ts";
 import { provider as linearMcpProvider } from "../providers/linear_mcp/definition.ts";
 import { ProviderLoader } from "../providers/provider-loader.ts";
+import { oauth as quickbooksOAuth } from "../providers/quickbooks/oauth.ts";
 import { OAuthCredentialRefreshService } from "./oauth-credential-refresh-service.ts";
 
 type OAuthCredential = Extract<ResolvedCredential, { authType: "oauth2" }>;
@@ -452,14 +453,14 @@ describe("OAuthCredentialRefreshService revoke", () => {
     expect(JSON.parse(String(fetcher.mock.calls[0]?.[1]?.body))).toEqual({ access_token: "old-access-token" });
   });
 
-  it("does not report successful revocation when the required refresh fails", async () => {
+  it("does not report successful revocation when renewal and revocation both fail", async () => {
     const fetcher = vi.fn(async () => Response.json({ error: "temporarily_unavailable" }, { status: 429 }));
     vi.stubGlobal("fetch", fetcher);
     const loader = new ProviderLoader({ github: async () => ({ executors: {}, oauth: githubOAuthRuntime }) });
     await expect(
       new OAuthCredentialRefreshService(clientConfigs, loader).revoke("github", expiredCredential({})),
-    ).rejects.toMatchObject({ code: "oauth_token_refresh_failed" });
-    expect(fetcher).toHaveBeenCalledTimes(1);
+    ).rejects.toMatchObject({ code: "oauth_token_revocation_failed" });
+    expect(fetcher).toHaveBeenCalledTimes(2);
   });
 
   it("does not expose GitHub revocation response or transport credential data", async () => {
@@ -664,4 +665,19 @@ describe("standard provider revocation endpoints", () => {
       expect(new Headers(init?.headers).has("authorization")).toBe(false);
     },
   );
+});
+
+it("still revokes a QuickBooks refresh token when renewal is unavailable", async () => {
+  const fetcher = vi
+    .fn<typeof fetch>()
+    .mockResolvedValueOnce(Response.json({ error: "temporarily_unavailable" }, { status: 503 }))
+    .mockResolvedValueOnce(new Response());
+  vi.stubGlobal("fetch", fetcher);
+  const loader = new ProviderLoader({ quickbooks: async () => ({ executors: {}, oauth: quickbooksOAuth }) });
+  await expect(
+    new OAuthCredentialRefreshService(clientConfigs, loader).revoke("quickbooks", expiredCredential({})),
+  ).resolves.toBe("done");
+  expect(fetcher).toHaveBeenCalledTimes(2);
+  expect(String(fetcher.mock.calls[1]?.[0])).toBe("https://developer.api.intuit.com/v2/oauth2/tokens/revoke");
+  expect(JSON.parse(String(fetcher.mock.calls[1]?.[1]?.body))).toEqual({ token: "refresh-token" });
 });
