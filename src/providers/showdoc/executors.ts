@@ -52,7 +52,7 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
   service: "showdoc",
   baseUrl: showdocApiBaseUrl,
   // Credentials in the body cannot be forwarded to a redirect destination.
-  redirect: "error",
+  redirect: "manual",
   auth: { type: "none" },
   skipDnsValidation: true,
   defaultHeaders: { "accept": "application/json", "content-type": "application/json" },

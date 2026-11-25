@@ -15,6 +15,7 @@ export const headers = {
   "Jinshuju-Version": "2026-11-12",
 };
 
+// Reject path traversal before encoding: encodeURIComponent leaves dot segments unchanged.
 function encodeToken(token: string) {
   if (token === "." || token === "..") throw providerInputError("Invalid form token");
   return encodeURIComponent(token);

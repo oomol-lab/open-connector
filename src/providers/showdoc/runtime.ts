@@ -26,7 +26,7 @@ export async function requestShowdoc(
   return runProviderRequest({ label: "ShowDoc", signal: context.signal }, async (signal) => {
     const response = await context.fetcher(`${showdocApiBaseUrl}/${endpoint}`, {
       method: "POST",
-      redirect: "error",
+      redirect: "manual",
       headers: { "content-type": "application/json", "accept": "application/json", "user-agent": providerUserAgent },
       body: JSON.stringify({ ...body, api_key: context.apiKey, api_token: context.apiToken }),
       signal,
@@ -80,8 +80,7 @@ export async function uploadAttachment(
   context: ShowdocContext,
 ): Promise<Record<string, unknown>> {
   const store = context.transitFiles;
-  if (!store?.createFromStream || !store.response)
-    throw providerInputError("ShowDoc uploads require a transit backend with streaming writes and reads.");
+  if (!store?.response) throw providerInputError("ShowDoc uploads require a transit backend with reads.");
   const readTransitFile = store.response.bind(store);
   const fileUrl = String(input.fileUrl);
   const name = optionalString(input.fileName) || new URL(fileUrl).pathname.split("/").pop() || "attachment.bin";
@@ -140,7 +139,7 @@ export async function uploadAttachment(
         });
         const uploadRequest: RequestInit & { duplex: "half" } = {
           method: "POST",
-          redirect: "error",
+          redirect: "manual",
           headers: {
             "content-type": `multipart/form-data; boundary=${boundary}`,
             "content-length": String(prefix.byteLength + file.sizeBytes + suffix.byteLength),

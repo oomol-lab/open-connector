@@ -13,6 +13,7 @@ import {
 export const yuqueBaseUrl = "https://www.yuque.com/api/v2";
 export const yuqueHeaders: Record<string, string> = { "accept": "application/json", "user-agent": providerUserAgent };
 
+// Reject path traversal before encoding: encodeURIComponent leaves dot segments unchanged.
 function segment(value: unknown): string {
   const text = String(value);
   if (!text || text === "." || text === ".." || text.includes("/") || text.includes("\\") || text.includes("%")) {
