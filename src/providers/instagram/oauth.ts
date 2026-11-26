@@ -7,7 +7,14 @@ import type {
 
 import { optionalRecord, optionalString, requiredString } from "../../core/cast.ts";
 import { readBoundedResponseBytes } from "../../core/request.ts";
-import { createProviderTimeout, providerUserAgent } from "../provider-runtime.ts";
+import { exchangeMetaCode } from "../meta/oauth.ts";
+import { metaRequest } from "../meta/request.ts";
+import {
+  createProviderTimeout,
+  providerInputError,
+  providerUserAgent,
+  requiredInputString,
+} from "../provider-runtime.ts";
 
 const instagramLongLivedTokenUrl = "https://graph.instagram.com/access_token";
 const instagramRefreshTokenUrl = "https://graph.instagram.com/refresh_access_token";
@@ -37,9 +44,46 @@ interface InstagramTokenRequest {
   createError(message: string): Error;
 }
 
-/** Instagram Login token protocol, kept provider-local because it is not standard OAuth refresh-token behavior. */
+/** Missing mode identifies existing Instagram Login app configurations and credentials. */
+export function instagramLoginMode(extra: Record<string, unknown> | undefined): "instagram" | "unified" {
+  const mode = optionalString(extra?.loginMode) ?? "instagram";
+  if (mode === "instagram" || mode === "unified") return mode;
+  throw providerInputError("loginMode must be instagram or unified.");
+}
+
 export const oauth: ProviderOAuthRuntime = {
+  buildAuthorizationUrl({ authorizationUrl, clientConfig }): string {
+    if (instagramLoginMode(clientConfig.extra) === "instagram") return authorizationUrl.toString();
+    const url = new URL("https://www.facebook.com/dialog/oauth");
+    for (const key of ["client_id", "redirect_uri", "response_type", "state"]) {
+      const value = authorizationUrl.searchParams.get(key);
+      if (value != null) url.searchParams.set(key, value);
+    }
+    url.searchParams.set("config_id", requiredInputString(clientConfig.extra.configId, "configId"));
+    url.searchParams.set("override_default_response_type", "true");
+    url.searchParams.set("prompt", "login");
+    return url.toString();
+  },
   async exchangeCode(input: OAuthCodeExchangeInput): Promise<OAuthTokenResult> {
+    if (instagramLoginMode(input.clientConfig.extra) === "unified") {
+      const token = await exchangeMetaCode(input);
+      const business = await metaRequest(
+        "me",
+        {
+          accessToken: token.accessToken,
+          appSecret: input.clientConfig.clientSecret,
+          fetcher: input.fetcher,
+          signal: input.signal,
+        },
+        { query: { fields: "client_business_id" }, phase: "validate" },
+      );
+      token.metadata.clientBusinessId = requiredString(
+        business.client_business_id,
+        "Meta client business ID",
+        input.createError,
+      );
+      return token;
+    }
     const body = new FormData();
     body.set("client_id", input.clientConfig.clientId);
     body.set("client_secret", input.clientConfig.clientSecret);

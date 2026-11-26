@@ -2,6 +2,7 @@ import type { CredentialValidationResult, ResolvedCredential } from "../../core/
 import type { OAuthProviderContext, ProviderActionHandlers } from "../provider-executors.ts";
 import type { ProviderFetch } from "../provider-runtime.ts";
 
+import { hmacHex } from "../../core/aws-sigv4.ts";
 import {
   compactObject,
   objectArray,
@@ -17,6 +18,8 @@ import {
   requiredStringArray,
 } from "../../core/cast.ts";
 import { assertPublicHttpUrl, encodePathSegment } from "../../core/request.ts";
+import { readOAuthScopes } from "../../oauth/oauth-scopes.ts";
+import { metaGraphApiVersion } from "../meta/request.ts";
 import {
   createProviderTimeout,
   isAbortSignalError,
@@ -27,6 +30,7 @@ import {
   readProviderJsonBody,
   setSearchParams,
 } from "../provider-runtime.ts";
+import { instagramLoginMode } from "./oauth.ts";
 
 const instagramApiBaseUrl = "https://graph.instagram.com";
 const facebookGraphBaseUrl = "https://graph.facebook.com";
@@ -48,8 +52,7 @@ const professionalAccountRequiredMessage = "Instagram connections require a Busi
 type OAuthCredential = Extract<ResolvedCredential, { authType: "oauth2" }>;
 
 /**
- * Which Meta Graph host a credential talks to. OAuth connections use Instagram Login on
- * `graph.instagram.com`; pasted access tokens use Instagram API with Facebook Login on `graph.facebook.com`.
+ * Instagram Login uses `graph.instagram.com`; Unified Login and pasted tokens use `graph.facebook.com`.
  */
 type InstagramApiHost = "instagram" | "facebook";
 
@@ -132,6 +135,25 @@ export async function validateInstagramCredential(
   fetcher: ProviderFetch,
   signal?: AbortSignal,
 ): Promise<CredentialValidationResult> {
+  const extra = optionalRecord(credential.metadata.oauthClientExtra);
+  if (instagramLoginMode(extra) === "unified") {
+    const context: InstagramContext = {
+      accessToken: credential.accessToken,
+      apiHost: "facebook",
+      providerSecret: credential.providerSecret,
+      fetcher,
+      signal,
+    };
+    const account = selectInstagramAccount(
+      await listAssignedInstagramAccounts(context),
+      optionalString(extra?.instagramAccountId),
+    );
+    const grantedScopes = readOAuthScopes(credential.metadata.scope) ?? [];
+    return {
+      profile: { accountId: account.id, displayName: account.username ?? account.name ?? account.id, grantedScopes },
+      grantedScopes,
+    };
+  }
   const context: InstagramContext = {
     accessToken: credential.accessToken,
     tokenType: credential.tokenType,
@@ -166,13 +188,37 @@ export async function validateInstagramFacebookLoginCredential(
   signal?: AbortSignal,
 ): Promise<CredentialValidationResult> {
   const context: InstagramContext = { accessToken: input.apiKey, apiHost: "facebook", fetcher, signal };
-  const accounts = await listLinkedInstagramAccounts(context);
+  let accounts: LinkedInstagramAccount[] = [];
+  try {
+    accounts = await listLinkedInstagramAccounts(context);
+  } catch (error) {
+    // Unified Login does not require Page permissions or a linked Page.
+    const code =
+      error instanceof ProviderRequestError ? optionalInteger(optionalRecord(error.details)?.code) : undefined;
+    if (code !== 100 && code !== 10 && !(code != null && 200 <= code && code <= 299)) throw error;
+  }
+  if (accounts.length === 0) {
+    try {
+      accounts = await listAssignedInstagramAccounts(context);
+    } catch (error) {
+      // Page and ordinary user tokens may not support the assigned-account edge.
+      if (!(error instanceof ProviderRequestError) || optionalInteger(optionalRecord(error.details)?.code) !== 100)
+        throw error;
+    }
+  }
+  const account = selectInstagramAccount(accounts, optionalString(input.values.instagramAccountId));
+  return { profile: { accountId: account.id, displayName: account.username ?? account.name ?? account.id } };
+}
+
+function selectInstagramAccount(
+  accounts: LinkedInstagramAccount[],
+  requestedId: string | undefined,
+): LinkedInstagramAccount {
   if (accounts.length === 0) {
     throw providerInputError(
-      "No Instagram Business or Creator account is linked to a Facebook Page this token can access.",
+      "No Instagram Business or Creator account is shared with or linked to a Facebook Page this token can access.",
     );
   }
-  const requestedId = optionalString(input.values.instagramAccountId);
   const account = requestedId ? accounts.find((candidate) => candidate.id === requestedId) : accounts[0];
   if (!account || (!requestedId && accounts.length > 1)) {
     const choices = accounts.map((candidate) => `${candidate.username ?? candidate.id} (${candidate.id})`).join(", ");
@@ -182,7 +228,12 @@ export async function validateInstagramFacebookLoginCredential(
         : `This token reaches several Instagram accounts; set instagramAccountId to one of: ${choices}.`,
     );
   }
-  return { profile: { accountId: account.id, displayName: account.username ?? account.name ?? account.id } };
+  return account;
+}
+
+async function listAssignedInstagramAccounts(context: InstagramContext): Promise<LinkedInstagramAccount[]> {
+  const accounts = await listAccountDiscoveryPages(context, "/me/assigned_instagram_accounts", "id,username");
+  return accounts.map(normalizeLinkedAccount);
 }
 
 /** Resolve linked accounts from a Page token (`/me`) first, then from a user token (`/me/accounts`). */
@@ -202,31 +253,36 @@ async function listLinkedInstagramAccounts(context: InstagramContext): Promise<L
       throw error;
     }
   }
-  const accounts: LinkedInstagramAccount[] = [];
+  const pages = await listAccountDiscoveryPages(context, "/me/accounts", `id,name,${linkedField}`);
+  return pages.flatMap((page) => {
+    const linked = optionalRecord(page.instagram_business_account);
+    return linked ? [normalizeLinkedAccount(linked)] : [];
+  });
+}
+
+async function listAccountDiscoveryPages(
+  context: InstagramContext,
+  path: string,
+  fields: string,
+): Promise<Record<string, unknown>[]> {
+  const accounts: Record<string, unknown>[] = [];
+  const cursors = new Set<string>();
   let after: string | undefined;
   do {
-    const pages = requiredRecord(
-      await instagramRequestJson(
-        { path: "/me/accounts", query: { fields: `id,name,${linkedField}`, limit: "100", after } },
-        context,
-      ),
-      "Facebook Pages response",
+    const page = requiredRecord(
+      await instagramRequestJson({ path, query: { fields, limit: "100", after } }, context),
+      "Instagram account discovery response",
       providerResponseError,
     );
-    accounts.push(
-      ...objectArray(pages.data, "Facebook Pages", providerResponseError).flatMap((page) => {
-        const linked = optionalRecord(page.instagram_business_account);
-        return linked ? [normalizeLinkedAccount(linked)] : [];
-      }),
-    );
-    const paging = optionalRecord(pages.paging);
-    const nextAfter = optionalString(paging?.next)
-      ? requiredString(optionalRecord(paging?.cursors)?.after, "Facebook Pages next cursor", providerResponseError)
+    accounts.push(...objectArray(page.data, "Instagram accounts", providerResponseError));
+    const paging = optionalRecord(page.paging);
+    after = optionalString(paging?.next)
+      ? requiredString(optionalRecord(paging?.cursors)?.after, "Instagram accounts next cursor", providerResponseError)
       : undefined;
-    if (nextAfter !== undefined && nextAfter === after) {
-      throw providerResponseError("Facebook Pages next cursor did not advance.");
+    if (after != null) {
+      if (cursors.has(after)) throw providerResponseError("Instagram accounts next cursor did not advance.");
+      cursors.add(after);
     }
-    after = nextAfter;
   } while (after);
   return accounts;
 }
@@ -605,7 +661,7 @@ async function sendMessage(
 ): Promise<Record<string, unknown>> {
   if (context.apiHost === "facebook") {
     throw providerInputError(
-      "send_message requires an Instagram Login (OAuth) connection; Facebook Login sends messages through the Page.",
+      "send_message requires an Instagram Login OAuth connection; Unified Login and pasted tokens are not supported for this action.",
     );
   }
   const recipientId = requiredString(input.recipientId, "recipientId", providerInputError);
@@ -634,8 +690,13 @@ async function sendMessage(
 
 async function instagramRequestJson(request: InstagramRequest, context: InstagramContext): Promise<unknown> {
   const baseUrl = context.apiHost === "facebook" ? facebookGraphBaseUrl : instagramApiBaseUrl;
-  const url = new URL(`/${instagramApiVersion}${request.path}`, baseUrl);
+  const version = context.apiHost === "facebook" ? metaGraphApiVersion : instagramApiVersion;
+  const url = new URL(`/${version}${request.path}`, baseUrl);
   setSearchParams(url, request.query ?? {});
+  const appSecret = optionalString(context.providerSecret?.appSecret);
+  if (context.apiHost === "facebook" && appSecret) {
+    url.searchParams.set("appsecret_proof", hmacHex(appSecret, context.accessToken));
+  }
   const headers: Record<string, string> = {
     "accept": "application/json",
     "authorization": `Bearer ${context.accessToken}`,

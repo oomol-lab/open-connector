@@ -1412,6 +1412,45 @@ describe("OAuthFlowService", () => {
     },
   );
 
+  it("binds default-app consent and its credential to the configuration present at authorization start", async () => {
+    let exchangedConfig: OAuthClientConfig | undefined;
+    const services = createServices([oauthProvider], {
+      oauthRuntime: {
+        async exchangeCode({ clientConfig }) {
+          exchangedConfig = clientConfig;
+          return { accessToken: "token", tokenType: "Bearer", metadata: {} };
+        },
+      },
+    });
+    await services.clientConfigs.upsertConfig({
+      service: "example",
+      clientId: "original-app",
+      clientSecret: "original-secret",
+      extra: { tenant: "original" },
+    });
+    const started = await services.flow.startAuthorization({ service: "example" });
+    await services.clientConfigs.upsertConfig({
+      service: "example",
+      clientId: "replacement-app",
+      clientSecret: "replacement-secret",
+      extra: { tenant: "replacement" },
+    });
+    await services.flow.completeAuthorization({ state: started.state, code: "code" });
+    expect(exchangedConfig).toMatchObject({
+      clientId: "original-app",
+      clientSecret: "original-secret",
+      extra: { tenant: "original" },
+    });
+    const credential = await services.connections.getCredential("example");
+    expect(credential).toMatchObject({
+      metadata: {
+        oauthClientId: "original-app",
+        oauthClientExtra: { tenant: "original" },
+        oauthClientConfig: exchangedConfig,
+      },
+    });
+  });
+
   it("stores the token returned by a provider OAuth runtime", async () => {
     const expiresAt = new Date(Date.now() + 60 * 60 * 1000).toISOString();
     let callbackParameters: Record<string, string> | undefined;

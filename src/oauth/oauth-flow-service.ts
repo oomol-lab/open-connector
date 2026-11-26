@@ -265,7 +265,7 @@ export class OAuthFlowService {
       issuer: auth.issuer,
       requireIssuer: auth.requireIssuer,
       redirectUri,
-      clientConfig: input.clientConfig || auth.issuer ? config : undefined,
+      clientConfig: config,
     };
 
     const authorizationUrl = new URL(this.clientConfigs.resolveEndpointUrl(service, auth.authorizationUrl, config));

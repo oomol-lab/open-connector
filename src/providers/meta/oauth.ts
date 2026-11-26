@@ -1,5 +1,5 @@
 import type { OAuthClientConfig } from "../../oauth/oauth-client-config-service.ts";
-import type { ProviderOAuthRuntime } from "../../oauth/oauth-token.ts";
+import type { OAuthCodeExchangeInput, OAuthTokenResult, ProviderOAuthRuntime } from "../../oauth/oauth-token.ts";
 
 import { optionalNumber, optionalRawString, requiredString } from "../../core/cast.ts";
 import {
@@ -15,54 +15,7 @@ export const oauth: ProviderOAuthRuntime = {
     authorizationUrl.searchParams.set("config_id", requiredInputString(clientConfig.extra.configId, "configId"));
     return authorizationUrl.toString();
   },
-  async exchangeCode({ code, clientConfig, fetcher, redirectUri }) {
-    const context = { accessToken: "", fetcher };
-    let token = await metaRequest("oauth/access_token", context, {
-      query: {
-        client_id: clientConfig.clientId,
-        client_secret: clientConfig.clientSecret,
-        redirect_uri: redirectUri,
-        code,
-      },
-      phase: "validate",
-    });
-
-    let accessToken = requiredString(token.access_token, "Meta access token", providerResponseError);
-    let debug = await inspectToken(accessToken, clientConfig, fetcher);
-    if (debug.type === "USER") {
-      token = await metaRequest("oauth/access_token", context, {
-        query: {
-          grant_type: "fb_exchange_token",
-          client_id: clientConfig.clientId,
-          client_secret: clientConfig.clientSecret,
-          fb_exchange_token: accessToken,
-        },
-        phase: "validate",
-      });
-      accessToken = requiredString(token.access_token, "Meta long-lived access token", providerResponseError);
-      debug = await inspectToken(accessToken, clientConfig, fetcher);
-    }
-
-    const dataAccessExpiresAt = optionalNumber(debug.data_access_expires_at);
-    const expiresAt = resolveTokenExpiration(token, debug, dataAccessExpiresAt);
-    const scopes = Array.isArray(debug.scopes)
-      ? debug.scopes.filter((scope): scope is string => typeof scope === "string")
-      : undefined;
-
-    return {
-      accessToken,
-      refreshToken: "",
-      tokenType: optionalRawString(token.token_type) ?? "Bearer",
-      expiresAt,
-      providerSecret: { appSecret: clientConfig.clientSecret },
-      metadata: {
-        scope: scopes?.join(" "),
-        graphApiVersion: metaGraphApiVersion,
-        tokenType: debug.type,
-        dataAccessExpiresAt,
-      },
-    };
-  },
+  exchangeCode: exchangeMetaCode,
   async refreshAccessToken() {
     throw new ProviderRequestError(
       401,
@@ -73,12 +26,74 @@ export const oauth: ProviderOAuthRuntime = {
   },
 };
 
-async function inspectToken(accessToken: string, clientConfig: OAuthClientConfig, fetcher: typeof fetch) {
+/** Exchange a Facebook Login for Business code and retain the provider-reported token lifetime and grants. */
+export async function exchangeMetaCode({
+  code,
+  clientConfig,
+  fetcher,
+  redirectUri,
+  signal,
+}: OAuthCodeExchangeInput): Promise<OAuthTokenResult> {
+  const context = { accessToken: "", fetcher, signal };
+  let token = await metaRequest("oauth/access_token", context, {
+    query: {
+      client_id: clientConfig.clientId,
+      client_secret: clientConfig.clientSecret,
+      redirect_uri: redirectUri,
+      code,
+    },
+    phase: "validate",
+  });
+
+  let accessToken = requiredString(token.access_token, "Meta access token", providerResponseError);
+  let debug = await inspectToken(accessToken, clientConfig, fetcher, signal);
+  if (debug.type === "USER") {
+    token = await metaRequest("oauth/access_token", context, {
+      query: {
+        grant_type: "fb_exchange_token",
+        client_id: clientConfig.clientId,
+        client_secret: clientConfig.clientSecret,
+        fb_exchange_token: accessToken,
+      },
+      phase: "validate",
+    });
+    accessToken = requiredString(token.access_token, "Meta long-lived access token", providerResponseError);
+    debug = await inspectToken(accessToken, clientConfig, fetcher, signal);
+  }
+
+  const dataAccessExpiresAt = optionalNumber(debug.data_access_expires_at);
+  const expiresAt = resolveTokenExpiration(token, debug, dataAccessExpiresAt);
+  const scopes = Array.isArray(debug.scopes)
+    ? debug.scopes.filter((scope): scope is string => typeof scope === "string")
+    : undefined;
+
+  return {
+    accessToken,
+    refreshToken: "",
+    tokenType: optionalRawString(token.token_type) ?? "Bearer",
+    expiresAt,
+    providerSecret: { appSecret: clientConfig.clientSecret },
+    metadata: {
+      scope: scopes?.join(" "),
+      graphApiVersion: metaGraphApiVersion,
+      tokenType: debug.type,
+      dataAccessExpiresAt,
+    },
+  };
+}
+
+async function inspectToken(
+  accessToken: string,
+  clientConfig: OAuthClientConfig,
+  fetcher: typeof fetch,
+  signal?: AbortSignal,
+): Promise<Record<string, unknown>> {
   const result = await metaRequest(
     "debug_token",
     {
       accessToken: `${clientConfig.clientId}|${clientConfig.clientSecret}`,
       fetcher,
+      signal,
     },
     { query: { input_token: accessToken }, phase: "validate" },
   );
@@ -100,7 +115,7 @@ function resolveTokenExpiration(
   token: Record<string, unknown>,
   debug: Record<string, unknown>,
   dataAccessExpiresAt: number | undefined,
-) {
+): string {
   const expiresAt = optionalNumber(debug.expires_at);
   const expiresIn = optionalNumber(token.expires_in);
   let expiration: number;

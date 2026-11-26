@@ -4,31 +4,28 @@ This guide connects OpenConnector directly to Meta's official Instagram API with
 application that you own. OpenConnector does not provide a shared Meta app for this flow. The
 provider supports Instagram Business and Creator accounts only.
 
-## Prerequisites And Meta Access
+## Choose a login setup
 
-You need:
+Use **Unified Login** for a Meta app configured with the **Manage messaging & content on Instagram**
+use case. The app must belong to a business portfolio and use Facebook Login for Business. Create
+or select a configuration marked **Instagram Login Compatible**, then copy its `config_id`.
+Use the **Meta App ID and App Secret**, rather than the Instagram app credentials. An Instagram
+professional account does not need a linked Facebook Page for this flow.
 
-- a Meta Business app with the Instagram product added;
-- Business Login for Instagram enabled on that app;
-- an Instagram Business or Creator account;
-- an Instagram App ID and App Secret; and
-- a public HTTPS OpenConnector origin that Meta can redirect to.
+Existing **Instagram Login** apps remain supported with their Instagram App ID and App Secret.
+Omitting `loginMode` keeps this original flow. Both OAuth setups need a public HTTPS callback.
 
-Standard Access is sufficient when the professional account is owned or managed by the app
-operator and has been added in the Meta App Dashboard. Serving professional accounts you do not
-own or manage requires Advanced Access and the applicable Meta App Review approval. Availability
-of an Action also depends on the permissions approved for the app and granted by the connected
-account.
+Standard Access supports testing with accounts that hold the required app roles. Serving other
+clients requires Live mode and Advanced Access to the applicable permissions through App Review.
+Meta decides whether each API request is allowed; the runtime displays the actual reported grants
+and does not reject reduced or unfamiliar scope lists locally.
 
-The provider requests these native Instagram permissions by default:
+Official setup and protocol references:
 
-- `instagram_business_basic`
-- `instagram_business_manage_comments`
-- `instagram_business_manage_insights`
-- `instagram_business_content_publish`
-- `instagram_business_manage_messages`
-
-Meta setup starts in the official [Business Login for Instagram documentation](https://developers.facebook.com/documentation/instagram-platform/instagram-api-with-instagram-login/business-login).
+- [Unified Login setup](https://developers.facebook.com/documentation/instagram-platform/instagram-api-with-unified-login/get-started)
+- [Unified Login authentication and token lifecycle](https://developers.facebook.com/documentation/instagram-platform/instagram-api-with-unified-login/authentication)
+- [Unified Login permissions](https://developers.facebook.com/documentation/instagram-platform/instagram-api-with-unified-login/permissions)
+- [Business Login for Instagram](https://developers.facebook.com/documentation/instagram-platform/instagram-api-with-instagram-login/business-login)
 
 ## 1. Configure A Public Callback
 
@@ -55,27 +52,37 @@ Run `GET /api/oauth/configs` again after changing the origin and register the ne
 encrypts stored OAuth app configuration, credentials, OAuth state, and other sensitive runtime
 records.
 
-## 2. Save The Instagram OAuth App
+## 2. Save the OAuth app
 
-Save the Instagram App ID as `clientId` and App Secret as `clientSecret`:
-
-```bash
-curl -s -X PUT http://localhost:3000/api/oauth/configs/instagram \
-  -H 'content-type: application/json' \
-  -d '{"clientId":"<INSTAGRAM_APP_ID>","clientSecret":"<INSTAGRAM_APP_SECRET>"}'
-```
-
-To request a non-empty subset of the declared permissions, add `requestedScopes`. For example, a
-read-only profile and media connection can request only the basic permission:
+For Unified Login, save the Meta app credentials and configuration ID:
 
 ```bash
 curl -s -X PUT http://localhost:3000/api/oauth/configs/instagram \
   -H 'content-type: application/json' \
-  -d '{"clientId":"<INSTAGRAM_APP_ID>","clientSecret":"<INSTAGRAM_APP_SECRET>","requestedScopes":["instagram_business_basic"]}'
+  -d '{"clientId":"<META_APP_ID>","clientSecret":"<META_APP_SECRET>","extra":{"loginMode":"unified","configId":"<CONFIG_ID>"}}'
 ```
 
-The runtime rejects unknown permissions. A connection can execute only Actions whose required
-permissions were granted.
+Choose permissions in the Meta configuration, including `instagram_basic` for profile and media
+reads and `instagram_manage_insights` for media insights. Unified Login uses `config_id` instead of
+a URL `scope` parameter; `requestedScopes` does not override that configuration.
+
+For an existing Instagram Login app, save its Instagram credentials:
+
+```bash
+curl -s -X PUT http://localhost:3000/api/oauth/configs/instagram \
+  -H 'content-type: application/json' \
+  -d '{"clientId":"<INSTAGRAM_APP_ID>","clientSecret":"<INSTAGRAM_APP_SECRET>","extra":{"loginMode":"instagram"}}'
+```
+
+Instagram Login requests `instagram_business_basic`, `instagram_business_manage_comments`,
+`instagram_business_manage_insights`, `instagram_business_content_publish`, and
+`instagram_business_manage_messages` by default. Supply `requestedScopes` to choose the permissions
+sent to Instagram, for example `["instagram_business_basic"]` for profile and media reads.
+
+Changing the default app affects new authorizations. Authorizations started after this update
+retain the app configuration used at consent time for their callback and subsequent renewal.
+Existing Instagram Login connections continue to use Instagram's token refresh protocol after
+the default app switches to Unified Login; they are not converted to Unified Login connections.
 
 ## 3. Authorize A Professional Account
 
@@ -87,7 +94,7 @@ curl -s -X POST http://localhost:3000/api/oauth/authorizations \
   -d '{"service":"instagram"}'
 ```
 
-Open the returned `authorizationUrl`, complete Business Login, and let Meta redirect to the
+Open the returned `authorizationUrl`, complete the selected login flow, and let Meta redirect to the
 registered callback. Confirm that the stored connection identifies the Instagram account by its
 username and professional-account ID:
 
@@ -95,13 +102,34 @@ username and professional-account ID:
 curl -s http://localhost:3000/api/connections
 ```
 
-Meta first returns a short-lived token, normally valid for about one hour. OpenConnector exchanges
-it server-side for a long-lived token before storing the connection. The long-lived token is
-normally valid for about 60 days. When an Action resolves a token near or after its stored expiry,
-OpenConnector refreshes it through Meta's access-token refresh flow; Instagram does not issue a
-standard OAuth `refresh_token` for this flow. A connection that remains unused beyond Meta's actual
-token lifetime may require reauthorization, and an expired token that cannot be refreshed requires
-reconnecting the account.
+### Unified Login account selection and lifetime
+
+OpenConnector discovers shared Instagram accounts using `/me/assigned_instagram_accounts` and
+selects the only account automatically. If several accounts are shared, the error lists their
+IDs. Add `instagramAccountId` to the OAuth app's `extra` fields alongside `loginMode` and `configId`,
+then start a new authorization. The chosen ID must belong to the accounts returned by Meta.
+There is no post-consent account picker.
+
+For separate named connections, the authorization endpoint also accepts a `clientConfig` scoped
+to that authorization when custom OAuth clients are enabled. Put the app credentials and
+`extra.instagramAccountId` there to select an account without changing the default configuration.
+Otherwise, set the default account selection before starting each named connection. A completed
+connection retains its own selection.
+
+Unified Login returns a Business Integration System User access token. OpenConnector checks that
+it belongs to your Meta app and stores its business ID, selected account and provider-reported
+expiration. The expiration depends on the Meta configuration; a non-expiring token can still be
+revoked. This integration does not automatically renew Unified Login tokens through Meta's
+Business Integration System User Access Token Management API. Reauthorize when the token expires
+or the authorization is removed. No Instagram refresh request is sent for these connections.
+
+### Existing Instagram Login lifetime
+
+Instagram Login first returns a short-lived token, normally valid for about one hour.
+OpenConnector exchanges it for a long-lived token before storing the connection. The long-lived
+token is normally valid for about 60 days. When an Action resolves a token near or after its
+stored expiry, OpenConnector uses Instagram's access-token refresh flow. A connection that remains
+unused beyond Meta's actual token lifetime may require reauthorization.
 
 ## 4. Call The Nine Instagram Actions
 
@@ -219,20 +247,18 @@ curl -s -X POST http://localhost:3000/v1/actions/instagram.send_message \
 The same Action IDs and generated schemas are exposed through the Connector SDK, `oo` CLI, MCP,
 and `/openapi.json`; see [Runtime API and MCP](runtime-api.md) and [Developer tools](sdk-cli.md).
 
-## Alternative: Facebook Login Access Token
+## Alternative: pasted access token
 
-Newer Meta apps are created with Unified login and no longer offer Business Login for Instagram, so
-the OAuth flow above is unavailable for them. The `instagram` provider also accepts an access
-token from Instagram API with Facebook Login. This connection reads and writes through
-`graph.facebook.com` and needs no OAuth callback, so it works on a local HTTP origin.
+The provider also accepts pasted Unified Login or Facebook Login access tokens. These connections
+use `graph.facebook.com` and need no OAuth callback, so they work on a local HTTP origin.
 
-You need an Instagram Business or Creator account linked to a Facebook Page, and a token that can
-reach that Page:
-
-- a Page access token, or a user or system-user access token that can list the Page;
-- `instagram_basic`, `pages_show_list` and `pages_read_engagement`, plus `instagram_manage_comments`,
-  `instagram_manage_insights` or `instagram_content_publish` for the matching Actions; and
-- for an app in Development mode, the token owner holds a role on the app.
+- A Unified Login token discovers the shared professional accounts through
+  `/me/assigned_instagram_accounts`; no Facebook Page is required.
+- A Facebook Login Page token, or a user/system-user token that can list Pages, resolves
+  `instagram_business_account` from its accessible Pages. Page discovery needs the applicable
+  `pages_show_list` and `pages_read_engagement` permissions.
+- Both use `instagram_basic`, plus `instagram_manage_comments`, `instagram_manage_insights` or
+  `instagram_content_publish` for the matching Actions.
 
 Prefer a long-lived or system-user token. OpenConnector does not refresh a pasted token, and a
 short-lived user token stops working after about an hour.
@@ -243,16 +269,29 @@ curl -s -X PUT http://localhost:3000/api/connections/instagram \
   -d '{"authType":"api_key","values":{"apiKey":"<FACEBOOK_LOGIN_ACCESS_TOKEN>"}}'
 ```
 
-OpenConnector resolves the linked Instagram account from the token. When the token reaches several
-Pages that each link an Instagram account, add `"instagramAccountId":"<INSTAGRAM_ACCOUNT_ID>"` to
-`values`; the error message lists the candidates. The same Action IDs work for both connection
-types, with these differences for a pasted token:
+When the token reaches several Instagram accounts, add
+`"instagramAccountId":"<INSTAGRAM_ACCOUNT_ID>"` to `values`; the error message lists the candidates.
+An ID cannot bypass account discovery or grant access to an unshared account.
 
-- `send_message` is not available; messaging through Facebook Login goes through the Page, so use
-  an OAuth connection for it.
-- `get_current_user` omits `accountType` because Facebook Login does not return it.
-- Permissions are the Facebook Login names (`instagram_basic`, ...), not the `instagram_business_*`
-  names listed in each Action's `requiredScopes`.
+## Action support by login setup
+
+All existing Action IDs and input/output schemas remain the same.
+
+| Actions                                                     | Instagram Login permissions                     | Unified Login / pasted-token permissions |
+| ----------------------------------------------------------- | ----------------------------------------------- | ---------------------------------------- |
+| `get_current_user`, `list_media`, `get_media`               | `instagram_business_basic`                      | `instagram_basic`                        |
+| `list_media_comments`, `create_comment`, `reply_to_comment` | Basic plus `instagram_business_manage_comments` | Basic plus `instagram_manage_comments`   |
+| `get_media_insights`                                        | Basic plus `instagram_business_manage_insights` | Basic plus `instagram_manage_insights`   |
+| `publish_media`                                             | Basic plus `instagram_business_content_publish` | Basic plus `instagram_content_publish`   |
+| `send_message`                                              | Basic plus `instagram_business_manage_messages` | Not supported by this integration        |
+
+The catalog's `requiredScopes` describes Instagram Login. For Unified Login and pasted tokens,
+use the corresponding permissions above; the two families are alternatives, not a combined list
+of required grants. Granted permissions are displayed as reported by Meta.
+
+Unified Login and pasted-token `get_current_user` address the selected Instagram account by ID and
+omit `accountType` when Meta does not return it. Unified Login supports messaging at the platform
+level, but this provider's `send_message` currently requires Instagram Login OAuth.
 
 ## Publishing Boundaries
 
@@ -296,7 +335,7 @@ because Meta may already have delivered it.
 
 ## Platform, Privacy, And Data Handling
 
-This provider uses the official Instagram API with Instagram Login and `graph.instagram.com`. It
+This provider uses Meta's official Instagram APIs on `graph.instagram.com` and `graph.facebook.com`. It
 does not support Instagram Basic Display, personal accounts, scraping, public-account harvesting,
 hashtag or Explore browsing, arbitrary-user lookup, follower/following enumeration, ads, commerce,
 stories, cold outreach, bulk messaging, or inbound webhooks.
