@@ -5,7 +5,6 @@ import type { ApiKeyProviderContext, ProviderActionHandlers } from "../provider-
 import { arrayPayload, objectPayload, requestJson } from "../http-json-runtime.ts";
 import { defineApiKeyProviderExecutors } from "../provider-executors.ts";
 import { providerInputError, runProviderRequest } from "../provider-runtime.ts";
-import { defaultModel } from "./actions.ts";
 
 const service = "worldrouter";
 const apiBaseUrl = "https://inference-api.worldrouter.ai/v1";
@@ -25,7 +24,9 @@ async function listModels(
   context: ApiKeyProviderContext,
   phase: "validate" | "execute",
 ): Promise<Record<string, unknown>> {
-  const payload = await requestJson({ ...requestOptions(context), path: "/models", phase });
+  const payload = await runProviderRequest({ label: requestLabel, signal: context.signal }, (signal) =>
+    requestJson({ ...requestOptions(context), signal, path: "/models", phase }),
+  );
   const result = objectPayload(payload, "WorldRouter model list");
   arrayPayload(result.data, "WorldRouter model list data");
   return result;
@@ -49,7 +50,7 @@ const handlers: ProviderActionHandlers<
           ...requestOptions(context),
           signal,
           path: "/chat/completions",
-          body: { ...input, model: input.model ?? defaultModel, stream: false },
+          body: { ...input, stream: false },
         }),
     );
     return objectPayload(payload, "WorldRouter chat completion");

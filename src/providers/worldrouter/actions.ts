@@ -3,7 +3,6 @@ import type { ActionDefinition } from "../../core/types.ts";
 import { s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
 
-export const defaultModel = "gpt-6.2-astra";
 const service = "worldrouter";
 
 export const worldrouterActions: ActionDefinition[] = [
@@ -37,13 +36,27 @@ export const worldrouterActions: ActionDefinition[] = [
     inputSchema: s.object(
       "OpenAI-compatible chat completion parameters. Supported options depend on the model.",
       {
-        model: s.withDefault(s.nonEmptyString("Model ID from the model list."), defaultModel),
+        model: s.nonEmptyString("Model ID from the model list."),
         messages: s.array("Conversation messages in order.", s.looseObject("An OpenAI-format chat message."), {
           minItems: 1,
         }),
+        temperature: s.number("Sampling temperature, when supported by the model.", { minimum: 0, maximum: 2 }),
+        max_tokens: s.positiveInteger("Maximum output token count, when supported by the model."),
+        top_p: s.number("Nucleus sampling probability, when supported by the model.", { minimum: 0, maximum: 1 }),
+        tools: s.array("OpenAI-format tool definitions.", s.looseObject("A tool definition.")),
+        tool_choice: s.anyOf("Tool selection policy.", [
+          s.string("Tool selection mode."),
+          s.looseObject("A named tool selection."),
+        ]),
+        response_format: s.looseObject("Model-supported response format configuration."),
+        stop: s.anyOf("Sequences that stop generation.", [
+          s.string("A stop sequence."),
+          s.array("Stop sequences.", s.string("A stop sequence.")),
+        ]),
+        seed: s.integer("Sampling seed, when supported by the model."),
         stream: s.literal(false, { description: "Only false or omitted is supported." }),
       },
-      { required: ["messages"], additionalProperties: true },
+      { required: ["model", "messages"], additionalProperties: true },
     ),
     outputSchema: s.object(
       "An OpenAI-compatible chat completion.",

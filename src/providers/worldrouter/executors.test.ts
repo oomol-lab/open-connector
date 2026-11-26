@@ -14,6 +14,7 @@ const credential: Extract<ResolvedCredential, { authType: "api_key" }> = {
 const context: ExecutionContext = { getCredential: async () => credential };
 
 afterEach(() => {
+  vi.useRealTimers();
   vi.unstubAllGlobals();
   setDefaultGuardedFetchDnsLookup(null);
 });
@@ -32,6 +33,25 @@ describe("WorldRouter", () => {
     expect(fetcher).toHaveBeenCalledOnce();
   });
 
+  it("times out a stalled model-list request during credential validation", async () => {
+    vi.useFakeTimers();
+    const fetcher = vi.fn(
+      (_url: RequestInfo | URL, init?: RequestInit) =>
+        new Promise<Response>((_resolve, reject) => {
+          init!.signal!.addEventListener("abort", () => reject(init!.signal!.reason), { once: true });
+        }),
+    );
+    const result = credentialValidators.apiKey!({ apiKey: "test-key", values: {} }, { fetcher });
+    const assertion = expect(result).rejects.toMatchObject({
+      status: 504,
+      message: "WorldRouter API request timed out",
+    });
+    await vi.advanceTimersByTimeAsync(30_000);
+    await assertion;
+    expect(fetcher).toHaveBeenCalledOnce();
+    expect(vi.getTimerCount()).toBe(0);
+  });
+
   it("reports a rejected API key as a connection field error", async () => {
     await expect(
       credentialValidators.apiKey!(
@@ -41,10 +61,18 @@ describe("WorldRouter", () => {
     ).rejects.toMatchObject({ status: 400 });
   });
 
-  it.each([
-    [undefined, "gpt-6.2-astra"],
-    ["another-model", "another-model"],
-  ])("uses the expected model with a caller selection of %s", async (model, expectedModel) => {
+  it("passes the selected model and optional parameters to chat completions", async () => {
+    const model = "another-model";
+    const options = {
+      temperature: 0.5,
+      max_tokens: 100,
+      top_p: 0.9,
+      stop: ["END"],
+      seed: 42,
+      tools: [{ type: "function", function: { name: "lookup" } }],
+      tool_choice: "auto",
+      response_format: { type: "json_object" },
+    };
     setDefaultGuardedFetchDnsLookup(async () => [{ address: "93.184.216.34", family: 4 }]);
     const messages = [{ role: "user", content: "Hello" }];
     const output = { id: "reply", choices: [{ message: { role: "assistant", content: "Hello" } }] };
@@ -52,11 +80,11 @@ describe("WorldRouter", () => {
       expect(url.toString()).toBe("https://inference-api.worldrouter.ai/v1/chat/completions");
       expect(init?.method).toBe("POST");
       expect(new Headers(init?.headers).get("authorization")).toBe("Bearer test-key");
-      expect(JSON.parse(String(init?.body))).toEqual({ messages, model: expectedModel, stream: false });
+      expect(JSON.parse(String(init?.body))).toEqual({ messages, model, ...options, stream: false });
       return Response.json(output);
     });
     vi.stubGlobal("fetch", fetcher);
-    const input = model === undefined ? { messages } : { messages, model };
+    const input = { messages, model, ...options };
 
     await expect(executors["worldrouter.create_chat_completion"]!(input, context)).resolves.toEqual({
       ok: true,
