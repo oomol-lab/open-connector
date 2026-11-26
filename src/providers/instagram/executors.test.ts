@@ -103,23 +103,54 @@ describe("Instagram Unified Login credentials", () => {
     expect(fetcher).toHaveBeenCalledTimes(1);
   });
 
-  it.each(["empty", "unsupported", "denied"])(
-    "discovers pasted Unified Login tokens when Page discovery is %s",
-    async (pages) => {
-      const result = await credentialValidators.apiKey!(
-        { apiKey: "system-token", values: {} },
+  it("prefers assigned accounts when a pasted token can also reach Pages", async () => {
+    const fetcher = vi.fn<typeof fetch>(async (value) => {
+      const url = new URL(String(value));
+      if (url.pathname.endsWith("/assigned_instagram_accounts"))
+        return Response.json({ data: [{ id: "other" }, linkedAccount] });
+      return Response.json({ id: "page", instagram_business_account: { id: "page-linked-account" } });
+    });
+    const result = await credentialValidators.apiKey!(
+      { apiKey: "system-token", values: { instagramAccountId: linkedAccount.id } },
+      { fetcher },
+    );
+    expect(result?.profile?.accountId).toBe(linkedAccount.id);
+    expect(fetcher).toHaveBeenCalledTimes(1);
+    expect(pathOf(fetcher.mock.calls[0]![0])).toBe("/v27.0/me/assigned_instagram_accounts");
+  });
+
+  it("preserves Page permission errors when neither discovery path works", async () => {
+    await expect(
+      credentialValidators.apiKey!(
+        { apiKey: "token", values: {} },
         {
           fetcher: async (value) => {
             const url = new URL(String(value));
-            if (url.pathname.endsWith("/assigned_instagram_accounts")) return Response.json({ data: [linkedAccount] });
-            if (url.pathname.endsWith("/me") || pages === "unsupported")
-              return graphError(100, "Unsupported field or edge");
-            if (pages === "denied") return graphError(200, "Page permission required");
-            return Response.json({ data: [] });
+            return url.pathname.endsWith("/accounts")
+              ? graphError(200, "pages_show_list is required")
+              : graphError(100, "Unsupported field or edge");
           },
         },
-      );
-      expect(result?.profile?.accountId).toBe(linkedAccount.id);
+      ),
+    ).rejects.toThrow("pages_show_list is required");
+  });
+
+  it.each(["empty", "unsupported"])(
+    "preserves assigned-account permission errors when Page discovery is %s",
+    async (pages) => {
+      await expect(
+        credentialValidators.apiKey!(
+          { apiKey: "token", values: {} },
+          {
+            fetcher: async (value) =>
+              pathOf(value).endsWith("/assigned_instagram_accounts")
+                ? graphError(200, "instagram_basic is required")
+                : pages === "unsupported"
+                  ? graphError(100, "Unsupported Page edge")
+                  : Response.json({ id: "page" }),
+          },
+        ),
+      ).rejects.toThrow("instagram_basic is required");
     },
   );
 
@@ -173,6 +204,7 @@ describe("Instagram Facebook Login credentials", () => {
         fetcher: async (url, init) => {
           const target = new URL(url.toString());
           requested.push(`${target.host}${target.pathname}`);
+          if (target.pathname.endsWith("/assigned_instagram_accounts")) return graphError(100, "Unsupported edge");
           expect(new Headers(init?.headers).get("authorization")).toBe("Bearer page-token");
           expect(target.searchParams.get("fields")).toContain("instagram_business_account{");
           return Response.json({ id: "page-1", name: "Page", instagram_business_account: linkedAccount });
@@ -180,7 +212,10 @@ describe("Instagram Facebook Login credentials", () => {
       },
     );
 
-    expect(requested).toEqual(["graph.facebook.com/v27.0/me"]);
+    expect(requested).toEqual([
+      "graph.facebook.com/v27.0/me/assigned_instagram_accounts",
+      "graph.facebook.com/v27.0/me",
+    ]);
     expect(result).toEqual({ profile: { accountId: linkedAccount.id, displayName: "creator_one" } });
   });
 
@@ -191,6 +226,7 @@ describe("Instagram Facebook Login credentials", () => {
       {
         fetcher: async (url) => {
           requested.push(pathOf(url));
+          if (pathOf(url).endsWith("/assigned_instagram_accounts")) return graphError(100, "Unsupported edge");
           if (pathOf(url) === "/v27.0/me") {
             return graphError(
               100,
@@ -207,7 +243,7 @@ describe("Instagram Facebook Login credentials", () => {
       },
     );
 
-    expect(requested).toEqual(["/v27.0/me", "/v27.0/me/accounts"]);
+    expect(requested).toEqual(["/v27.0/me/assigned_instagram_accounts", "/v27.0/me", "/v27.0/me/accounts"]);
     expect(result?.profile?.accountId).toBe(linkedAccount.id);
   });
 
@@ -223,7 +259,7 @@ describe("Instagram Facebook Login credentials", () => {
   it("requires instagramAccountId when several Pages link an account", async () => {
     const second = { id: "17841400000000002", username: "creator_two" };
     const fetcher = async (url: URL | RequestInfo): Promise<Response> =>
-      pathOf(url) === "/v27.0/me"
+      pathOf(url) !== "/v27.0/me/accounts"
         ? graphError(100, "nonexisting field")
         : Response.json({
             data: [
@@ -254,7 +290,8 @@ describe("Instagram Facebook Login credentials", () => {
           fetcher: async (value) => {
             const url = new URL(value.toString());
             seen.push(url);
-            if (url.pathname === "/v27.0/me") return graphError(100, "nonexisting field");
+            if (url.pathname === "/v27.0/me" || url.pathname.endsWith("/assigned_instagram_accounts"))
+              return graphError(100, "nonexisting field");
             if (!url.searchParams.has("after")) {
               return Response.json({
                 data: [{ id: "page-0", instagram_business_account: hasLinkedAccount ? { id: "other" } : undefined }],
@@ -272,11 +309,11 @@ describe("Instagram Facebook Login credentials", () => {
         },
       );
       expect(result?.profile?.accountId).toBe(linkedAccount.id);
-      expect(seen).toHaveLength(3);
-      expect(seen[2]!.origin).toBe("https://graph.facebook.com");
-      expect(seen[2]!.pathname).toBe("/v27.0/me/accounts");
-      expect(seen[2]!.searchParams.get("after")).toBe("page-two");
-      expect(seen[2]!.searchParams.get("fields")).toContain("instagram_business_account{");
+      expect(seen).toHaveLength(4);
+      expect(seen[3]!.origin).toBe("https://graph.facebook.com");
+      expect(seen[3]!.pathname).toBe("/v27.0/me/accounts");
+      expect(seen[3]!.searchParams.get("after")).toBe("page-two");
+      expect(seen[3]!.searchParams.get("fields")).toContain("instagram_business_account{");
     },
   );
 
@@ -289,8 +326,9 @@ describe("Instagram Facebook Login credentials", () => {
           fetcher: async (value) => {
             const url = new URL(value.toString());
             seen.push(url);
-            if (seen.length > 3) throw new Error("Unexpected repeated page request");
-            if (url.pathname === "/v27.0/me") return graphError(100, "nonexisting field");
+            if (seen.length > 4) throw new Error("Unexpected repeated page request");
+            if (url.pathname === "/v27.0/me" || url.pathname.endsWith("/assigned_instagram_accounts"))
+              return graphError(100, "nonexisting field");
             return Response.json({
               data: [],
               paging: {
@@ -302,8 +340,8 @@ describe("Instagram Facebook Login credentials", () => {
         },
       ),
     ).rejects.toMatchObject({ message: "Instagram accounts next cursor did not advance.", status: 502 });
-    expect(seen).toHaveLength(3);
-    expect(seen[2]!.searchParams.get("after")).toBe("page-two");
+    expect(seen).toHaveLength(4);
+    expect(seen[3]!.searchParams.get("after")).toBe("page-two");
   });
 
   it("requires account selection when linked accounts span several pages", async () => {
@@ -313,7 +351,8 @@ describe("Instagram Facebook Login credentials", () => {
         {
           fetcher: async (value) => {
             const url = new URL(value.toString());
-            if (url.pathname === "/v27.0/me") return graphError(100, "nonexisting field");
+            if (url.pathname === "/v27.0/me" || url.pathname.endsWith("/assigned_instagram_accounts"))
+              return graphError(100, "nonexisting field");
             if (url.searchParams.has("after")) {
               return Response.json({
                 data: [{ instagram_business_account: { id: "second", username: "creator_two" } }],

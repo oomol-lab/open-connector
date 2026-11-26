@@ -18,6 +18,9 @@ import { createCatalogStore } from "../catalog-store.ts";
 import { ConnectionService } from "../connection-service.ts";
 import { provider as githubProvider } from "../providers/github/definition.ts";
 import { provider as googleDriveProvider } from "../providers/googledrive/definition.ts";
+import { provider as instagramProvider } from "../providers/instagram/definition.ts";
+import { credentialValidators as instagramValidators } from "../providers/instagram/executors.ts";
+import { oauth as instagramOAuth } from "../providers/instagram/oauth.ts";
 import { provider as posthogProvider } from "../providers/posthog/definition.ts";
 import { provider as slackProvider } from "../providers/slack/definition.ts";
 import { provider as slackbotProvider } from "../providers/slackbot/definition.ts";
@@ -27,6 +30,7 @@ import { provider as zoomProvider } from "../providers/zoom/definition.ts";
 import { AesGcmSecretCodec } from "../server/secrets/secret-codec.ts";
 import { SqliteRuntimeDatabase } from "../server/storage/sqlite/runtime-store.ts";
 import { OAuthClientConfigService } from "./oauth-client-config-service.ts";
+import { OAuthCredentialRefreshService } from "./oauth-credential-refresh-service.ts";
 import { OAuthFlowService } from "./oauth-flow-service.ts";
 
 const requestDatabases: SqliteRuntimeDatabase[] = [];
@@ -1412,13 +1416,13 @@ describe("OAuthFlowService", () => {
     },
   );
 
-  it("binds default-app consent and its credential to the configuration present at authorization start", async () => {
+  it("uses the authorization-time default app for exchange without freezing its secret for renewal", async () => {
     let exchangedConfig: OAuthClientConfig | undefined;
     const services = createServices([oauthProvider], {
       oauthRuntime: {
         async exchangeCode({ clientConfig }) {
           exchangedConfig = clientConfig;
-          return { accessToken: "token", tokenType: "Bearer", metadata: {} };
+          return { accessToken: "token", refreshToken: "refresh", tokenType: "Bearer", metadata: {} };
         },
       },
     });
@@ -1446,8 +1450,70 @@ describe("OAuthFlowService", () => {
       metadata: {
         oauthClientId: "original-app",
         oauthClientExtra: { tenant: "original" },
-        oauthClientConfig: exchangedConfig,
+        oauthClientConfig: undefined,
       },
+    });
+    await services.clientConfigs.upsertConfig({
+      service: "example",
+      clientId: "original-app",
+      clientSecret: "rotated-secret",
+      extra: { tenant: "original" },
+    });
+    if (credential?.authType !== "oauth2") throw new Error("Expected OAuth credential");
+    const fetcher = vi.fn<typeof fetch>(async () => Response.json({ access_token: "renewed-token" }));
+    vi.stubGlobal("fetch", fetcher);
+    await new OAuthCredentialRefreshService(services.clientConfigs).refresh("example", credential);
+    const fields = new URLSearchParams(String(fetcher.mock.calls[0]?.[1]?.body));
+    expect(fields.get("client_id")).toBe("original-app");
+    expect(fields.get("client_secret")).toBe("rotated-secret");
+  });
+
+  it("completes Unified Login with the original configuration after the default login mode changes", async () => {
+    const services = createServices([{ ...instagramProvider, actions: [] }], {
+      oauthRuntime: instagramOAuth,
+      validators: instagramValidators,
+    });
+    const extra = { loginMode: "unified", configId: "config", instagramAccountId: "selected" };
+    await services.clientConfigs.upsertConfig({
+      service: "instagram",
+      clientId: "meta-app",
+      clientSecret: "meta-secret",
+      extra,
+    });
+    const started = await services.flow.startAuthorization({ service: "instagram" });
+    expect(new URL(started.authorizationUrl).searchParams.get("config_id")).toBe("config");
+    await services.clientConfigs.upsertConfig({
+      service: "instagram",
+      clientId: "instagram-app",
+      clientSecret: "instagram-secret",
+      extra: { loginMode: "instagram" },
+    });
+    vi.stubGlobal("fetch", async (value: URL | RequestInfo) => {
+      const url = new URL(String(value));
+      expect(url.hostname).toBe("graph.facebook.com");
+      if (url.pathname.endsWith("/oauth/access_token")) {
+        expect(url.searchParams.get("client_id")).toBe("meta-app");
+        expect(url.searchParams.get("client_secret")).toBe("meta-secret");
+        return Response.json({ access_token: "system-token" });
+      }
+      if (url.pathname.endsWith("/debug_token"))
+        return Response.json({
+          data: { is_valid: true, app_id: "meta-app", type: "SYSTEM_USER", expires_at: 0, scopes: ["instagram_basic"] },
+        });
+      if (url.pathname.endsWith("/assigned_instagram_accounts"))
+        return Response.json({
+          data: [
+            { id: "other", username: "other" },
+            { id: "selected", username: "creator" },
+          ],
+        });
+      return Response.json({ client_business_id: "business" });
+    });
+    await services.flow.completeAuthorization({ state: started.state, code: "code" });
+    expect(await services.connections.getCredential("instagram")).toMatchObject({
+      accessToken: "system-token",
+      profile: { accountId: "selected", displayName: "creator", grantedScopes: ["instagram_basic"] },
+      metadata: { oauthClientId: "meta-app", oauthClientExtra: extra, oauthClientConfig: undefined },
     });
   });
 

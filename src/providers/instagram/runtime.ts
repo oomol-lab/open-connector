@@ -189,22 +189,28 @@ export async function validateInstagramFacebookLoginCredential(
 ): Promise<CredentialValidationResult> {
   const context: InstagramContext = { accessToken: input.apiKey, apiHost: "facebook", fetcher, signal };
   let accounts: LinkedInstagramAccount[] = [];
+  let discoveryError: ProviderRequestError | undefined;
   try {
-    accounts = await listLinkedInstagramAccounts(context);
+    accounts = await listAssignedInstagramAccounts(context);
   } catch (error) {
-    // Unified Login does not require Page permissions or a linked Page.
     const code =
       error instanceof ProviderRequestError ? optionalInteger(optionalRecord(error.details)?.code) : undefined;
     if (code !== 100 && code !== 10 && !(code != null && 200 <= code && code <= 299)) throw error;
+    if (error instanceof ProviderRequestError && code !== 100) discoveryError = error;
   }
   if (accounts.length === 0) {
     try {
-      accounts = await listAssignedInstagramAccounts(context);
+      accounts = await listLinkedInstagramAccounts(context);
     } catch (error) {
-      // Page and ordinary user tokens may not support the assigned-account edge.
-      if (!(error instanceof ProviderRequestError) || optionalInteger(optionalRecord(error.details)?.code) !== 100)
-        throw error;
+      if (
+        discoveryError &&
+        error instanceof ProviderRequestError &&
+        optionalInteger(optionalRecord(error.details)?.code) === 100
+      )
+        throw discoveryError;
+      throw error;
     }
+    if (accounts.length === 0 && discoveryError) throw discoveryError;
   }
   const account = selectInstagramAccount(accounts, optionalString(input.values.instagramAccountId));
   return { profile: { accountId: account.id, displayName: account.username ?? account.name ?? account.id } };
