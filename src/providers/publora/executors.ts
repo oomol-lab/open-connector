@@ -1,6 +1,6 @@
 import type { QueryValue } from "../../core/request.ts";
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
-import type { ApiKeyProviderContext, ProviderActionHandlers, ProviderRuntimeHandler } from "../provider-executors.ts";
+import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-executors.ts";
 
 import {
   compactObject,
@@ -28,7 +28,6 @@ import {
 const service = "publora";
 const apiBaseUrl = "https://api.publora.com/api/v1";
 
-type Handler = ProviderRuntimeHandler<ApiKeyProviderContext>;
 type PubloraRequestPhase = "validate" | "execute";
 
 interface PubloraRequest {
@@ -40,7 +39,7 @@ interface PubloraRequest {
   phase?: PubloraRequestPhase;
 }
 
-const publoraActionHandlers: ProviderActionHandlers<"publora", Handler> = {
+const publoraActionHandlers: Record<string, ProviderRuntimeHandler<ApiKeyProviderContext>> = {
   async list_connections(_input, context) {
     const payload = await publoraRequest({ path: "/platform-connections" }, context);
     return { connections: requiredArray(payload.connections, "Publora connections", providerResponseError) };
@@ -96,9 +95,6 @@ const publoraActionHandlers: ProviderActionHandlers<"publora", Handler> = {
   },
   async update_post(input, context) {
     const body = compactObject({ ...postBody(input), status: input.status });
-    if (Object.keys(body).length === 0) {
-      throw new ProviderRequestError(400, "update_post requires at least one field to update");
-    }
     const payload = await publoraRequest(
       {
         method: "PUT",
@@ -219,25 +215,24 @@ async function readPubloraResponseError(
   return publoraRequestError(response.status, payload, phase);
 }
 
-/**
- * Turn a Publora error answer, `{ error, code }`, into the execution error the runtime can express.
- *
- * A 401 is a rejected key. A 403 is a plan limit or a feature the plan lacks (for example
- * POST_LIMIT_REACHED), which reconnecting would not fix, so it is reported as invalid input.
- */
+/** Only the documented invalid-key error identifies a credential that needs replacement. */
 function publoraRequestError(status: number, payload: unknown, phase: PubloraRequestPhase): ProviderRequestError {
   const body = optionalRecord(payload);
   const code = optionalString(body?.code);
   const error = optionalString(body?.error) ?? `Publora request failed with HTTP ${status}`;
   const message = code ? `${error} (${code})` : error;
-  if (status >= 500) {
-    return new ProviderRequestError(502, message, payload);
+  if (status === 401 && error === "Invalid API key") {
+    return new ProviderRequestError(
+      phase === "validate" ? 400 : 401,
+      message,
+      payload,
+      phase === "validate" ? "invalid_input" : "authorization_failed",
+    );
   }
-  if (phase === "validate" && (status === 401 || status === 403)) {
-    return new ProviderRequestError(400, message, payload);
-  }
-  if (status === 403) {
-    return new ProviderRequestError(403, message, payload, "invalid_input");
-  }
-  return new ProviderRequestError(status, message, payload);
+  return new ProviderRequestError(
+    status >= 500 ? 502 : status,
+    message,
+    payload,
+    status === 401 || status === 403 ? "provider_error" : undefined,
+  );
 }

@@ -20,12 +20,18 @@ import { executors as helpdeskExecutors } from "./helpdesk/executors.ts";
 import { executors as mondayExecutors } from "./monday/executors.ts";
 import { executors as onomeoExecutors } from "./onomeo/executors.ts";
 import { ProviderRequestError, toProviderExecutionError } from "./provider-runtime.ts";
+import { executors as publoraExecutors, proxy as publoraProxy } from "./publora/executors.ts";
 import { proxy as rendiProxy } from "./rendi/executors.ts";
 import {
   credentialValidators as roxyapiValidators,
   executors as roxyapiExecutors,
   proxy as roxyapiProxy,
 } from "./roxyapi/executors.ts";
+import {
+  proxy as salesforgeProxy,
+  executors as salesforgeExecutors,
+  credentialValidators as salesforgeValidators,
+} from "./salesforge/executors.ts";
 import { executors as sellerspriteExecutors } from "./sellersprite/executors.ts";
 import { executors as teableExecutors } from "./teable/executors.ts";
 import { assertTikHubEndpointEligible } from "./tikhub/endpoint-policy.ts";
@@ -414,4 +420,53 @@ it.each([
     Number(status),
   );
   expect(result).toMatchObject({ ok: false, error: { code } });
+});
+
+it.each([
+  [401, "Invalid API key", "authorization_failed"],
+  [401, "Invalid API key owner", "provider_error"],
+  [401, "Unclassified failure", "provider_error"],
+  [403, "Monthly post limit reached", "provider_error"],
+  [429, "Too many requests", "rate_limited"],
+  [404, "Post group not found", "invalid_input"],
+  [409, "Conflict", "invalid_input"],
+  [422, "Invalid request", "invalid_input"],
+])("Publora action and proxy preserve the credential-recovery boundary for HTTP %i %s", async (status, error, code) => {
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(async () => Response.json({ error }, { status: Number(status) })),
+  );
+  const context: ExecutionContext = { getCredential: async () => apiKeyCredential };
+  await expect(publoraExecutors["publora.list_connections"]!({}, context)).resolves.toMatchObject({
+    ok: false,
+    error: { code },
+  });
+  await expect(publoraProxy({ method: "GET", endpoint: "/platform-connections" }, context)).resolves.toMatchObject({
+    ok: false,
+    error: { code },
+  });
+});
+
+it.each([401, 403])("Salesforge proxy keeps ambiguous HTTP %i failures out of credential recovery", async (status) => {
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(async () => Response.json({ message: "Access denied" }, { status })),
+  );
+  await expect(
+    salesforgeProxy({ method: "GET", endpoint: "/me" }, { getCredential: async () => apiKeyCredential }),
+  ).resolves.toMatchObject({ ok: false, error: { code: "provider_error", message: "Access denied" } });
+});
+
+it("Salesforge actions, validation and proxy retain upstream text errors", async () => {
+  const fetcher = vi.fn(async () => new Response("Workspace access suspended", { status: 403 }));
+  vi.stubGlobal("fetch", fetcher);
+  const context: ExecutionContext = { getCredential: async () => apiKeyCredential };
+  const failure = { ok: false, error: { code: "provider_error", message: "Workspace access suspended" } };
+  await expect(salesforgeExecutors["salesforge.get_current_user"]!({}, context)).resolves.toMatchObject(failure);
+  await expect(salesforgeProxy({ method: "GET", endpoint: "/me" }, context)).resolves.toMatchObject(failure);
+  await expect(salesforgeValidators.apiKey!({ apiKey: "key", values: {} }, { fetcher })).rejects.toMatchObject({
+    status: 403,
+    message: "Workspace access suspended",
+    code: "provider_error",
+  });
 });
