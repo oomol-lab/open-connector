@@ -124,8 +124,8 @@ export const publoraActions: ActionDefinition[] = [
     operationType: "read",
     description:
       "List the social accounts connected to Publora, with each connection ID and whether its token still works. Use the IDs as create_post platforms.",
-    inputSchema: s.object("No input is needed to list connections.", {}),
-    outputSchema: s.object("The connected accounts.", {
+    inputSchema: s.requiredObject("No input is needed to list connections.", {}),
+    outputSchema: s.requiredObject("The connected accounts.", {
       connections: s.array("Every connected account, including ones that need reconnecting.", connectionSchema),
     }),
   }),
@@ -141,7 +141,7 @@ export const publoraActions: ActionDefinition[] = [
       },
       { optional: ["scheduledTime"] },
     ),
-    outputSchema: s.object("The account context.", {
+    outputSchema: s.requiredObject("The account context.", {
       context: s.looseObject(
         "Plan, features and quotas.",
         {
@@ -184,7 +184,7 @@ export const publoraActions: ActionDefinition[] = [
       "The created post group.",
       {
         postGroupId: s.string("The ID to read, update or delete the post with."),
-        scheduledTime: s.nullableString("The publish time Publora stored; absent for a draft."),
+        scheduledTime: s.nullableString("The publish time Publora stored; null for a draft."),
         warnings: warningsSchema,
       },
       { optional: ["scheduledTime", "warnings"] },
@@ -195,8 +195,8 @@ export const publoraActions: ActionDefinition[] = [
     operationType: "read",
     description:
       "Get one Publora post with its overall status and, for each account, its text, status, published ID and address.",
-    inputSchema: s.object("The post to read.", { postGroupId: postGroupIdSchema }),
-    outputSchema: s.object("The post.", {
+    inputSchema: s.requiredObject("The post to read.", { postGroupId: postGroupIdSchema }),
+    outputSchema: s.requiredObject("The post.", {
       post: s.looseObject(
         "A Publora post group.",
         {
@@ -230,7 +230,7 @@ export const publoraActions: ActionDefinition[] = [
       },
       { optional: ["page", "limit", "status", "platform", "sortBy", "sortOrder", "fromDate", "toDate"] },
     ),
-    outputSchema: s.object("A page of posts.", {
+    outputSchema: s.requiredObject("A page of posts.", {
       posts: s.array(
         "The posts on this page.",
         s.looseObject(
@@ -315,8 +315,8 @@ export const publoraActions: ActionDefinition[] = [
     operationType: "destructive",
     description:
       "Delete a Publora post group with its per-account posts and uploaded media, for example to cancel a scheduled post.",
-    inputSchema: s.object("The post to delete.", { postGroupId: postGroupIdSchema }),
-    outputSchema: s.object("The deleted post group.", {
+    inputSchema: s.requiredObject("The post to delete.", { postGroupId: postGroupIdSchema }),
+    outputSchema: s.requiredObject("The deleted post group.", {
       postGroupId: s.string("The ID of the deleted post group."),
       deleted: s.boolean("True once Publora has deleted it."),
     }),
@@ -326,8 +326,8 @@ export const publoraActions: ActionDefinition[] = [
     operationType: "read",
     description:
       "Get the publishing events of a Publora post from the last 90 days, oldest first: scheduling, each attempt, retries, successes and failures with their HTTP status and error.",
-    inputSchema: s.object("The post to read logs for.", { postGroupId: postGroupIdSchema }),
-    outputSchema: s.object("The post's publishing events.", {
+    inputSchema: s.requiredObject("The post to read logs for.", { postGroupId: postGroupIdSchema }),
+    outputSchema: s.requiredObject("The post's publishing events.", {
       logs: s.array(
         "Up to 100 events.",
         s.looseObject(

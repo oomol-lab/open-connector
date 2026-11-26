@@ -20,12 +20,14 @@ import { executors as helpdeskExecutors } from "./helpdesk/executors.ts";
 import { executors as mondayExecutors } from "./monday/executors.ts";
 import { executors as onomeoExecutors } from "./onomeo/executors.ts";
 import { ProviderRequestError, toProviderExecutionError } from "./provider-runtime.ts";
+import { executors as publoraExecutors, proxy as publoraProxy } from "./publora/executors.ts";
 import { proxy as rendiProxy } from "./rendi/executors.ts";
 import {
   credentialValidators as roxyapiValidators,
   executors as roxyapiExecutors,
   proxy as roxyapiProxy,
 } from "./roxyapi/executors.ts";
+import { proxy as salesforgeProxy } from "./salesforge/executors.ts";
 import { executors as sellerspriteExecutors } from "./sellersprite/executors.ts";
 import { executors as teableExecutors } from "./teable/executors.ts";
 import { assertTikHubEndpointEligible } from "./tikhub/endpoint-policy.ts";
@@ -414,4 +416,36 @@ it.each([
     Number(status),
   );
   expect(result).toMatchObject({ ok: false, error: { code } });
+});
+
+it.each([
+  [401, "Invalid API key", "authorization_failed"],
+  [401, "Invalid API key owner", "provider_error"],
+  [401, "Unclassified failure", "provider_error"],
+  [403, "Monthly post limit reached", "provider_error"],
+  [429, "Too many requests", "rate_limited"],
+])("Publora action and proxy preserve the credential-recovery boundary for HTTP %i %s", async (status, error, code) => {
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(async () => Response.json({ error }, { status: Number(status) })),
+  );
+  const context: ExecutionContext = { getCredential: async () => apiKeyCredential };
+  await expect(publoraExecutors["publora.list_connections"]!({}, context)).resolves.toMatchObject({
+    ok: false,
+    error: { code },
+  });
+  await expect(publoraProxy({ method: "GET", endpoint: "/platform-connections" }, context)).resolves.toMatchObject({
+    ok: false,
+    error: { code },
+  });
+});
+
+it.each([401, 403])("Salesforge proxy keeps ambiguous HTTP %i failures out of credential recovery", async (status) => {
+  vi.stubGlobal(
+    "fetch",
+    vi.fn(async () => Response.json({ message: "Access denied" }, { status })),
+  );
+  await expect(
+    salesforgeProxy({ method: "GET", endpoint: "/me" }, { getCredential: async () => apiKeyCredential }),
+  ).resolves.toMatchObject({ ok: false, error: { code: "provider_error", message: "Access denied" } });
 });
