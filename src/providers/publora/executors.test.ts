@@ -161,6 +161,12 @@ describe("Publora actions", () => {
     expect(result).toMatchObject({ ok: true, output: { postGroupId, deleted: true } });
   });
 
+  it("rejects a blank idempotency key instead of sending the post without one", () => {
+    expect(
+      validateActionInput(action("create_post"), { platforms: ["linkedin-ABC123"], idempotencyKey: "  " }).valid,
+    ).toBe(false);
+  });
+
   it("only accepts a 24-character post group ID", () => {
     expect(validateActionInput(action("get_post"), { postGroupId }).valid).toBe(true);
     for (const value of ["..", "../webhooks", `${postGroupId}/x`]) {

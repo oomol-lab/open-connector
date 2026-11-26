@@ -71,9 +71,8 @@ const warningsSchema = s.array(
   }),
 );
 
-const idempotencyKeySchema = s.string(
+const idempotencyKeySchema = s.nonWhitespaceString(
   "A unique key, such as a UUID, sent as Idempotency-Key. Repeating it with the same body within 24 hours returns the first result instead of acting twice.",
-  { minLength: 1 },
 );
 
 const connectionSchema = s.looseObject(
