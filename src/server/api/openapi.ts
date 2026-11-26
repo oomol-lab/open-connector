@@ -1886,7 +1886,7 @@ function createProxyPath(): Record<string, unknown> {
       tags: ["Proxy"],
       summary: "Proxy one provider API request.",
       description:
-        "Executes through the selected connection. Local connections use the local provider proxy; SaaS connections use the project proxy without loading local credentials. SaaS accepts GET/POST/PUT/PATCH/DELETE, primitive query values, string non-authentication headers and JSON/text bodies only; accessGrant and unknown fields are rejected. SaaS execution has a 300-second POST budget and a 64 MiB decoded JSON envelope limit, preserves the upstream status inside data.status, and supplies distinct local executionId and remoteExecutionId in meta. Failed or cancelled calls are never automatically replayed; remote side effects may have completed.",
+        "Executes through the selected connection. When a local provider answers with an error status, the failure envelope carries data.status and the provider response headers in data.headers, in the same shape as a success. Local connections use the local provider proxy; SaaS connections use the project proxy without loading local credentials. SaaS accepts GET/POST/PUT/PATCH/DELETE, primitive query values, string non-authentication headers and JSON/text bodies only; accessGrant and unknown fields are rejected. SaaS execution has a 300-second POST budget and a 64 MiB decoded JSON envelope limit, preserves the upstream status inside data.status, and supplies distinct local executionId and remoteExecutionId in meta. Failed or cancelled calls are never automatically replayed; remote side effects may have completed.",
       parameters: [
         {
           name: "service",

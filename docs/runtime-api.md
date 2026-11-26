@@ -585,7 +585,10 @@ Request body:
 `endpoint` must be a relative path beginning with `/`; absolute URLs are rejected. The runtime keeps
 stored credentials local and lets the provider proxy executor apply provider-specific authentication.
 Successful responses use the standard `/v1` success envelope with `data.status`, `data.headers`, and
-`data.data`.
+`data.data`. On a local-provider connection, an error status returns the provider's `data.status` and
+its response headers in `data.headers`, the same shape a success uses, with the parsed error in
+`data.details`; an unfollowed redirect returns neither its body nor its headers. SaaS errors carry only
+`data.details.retryAfter`, and providers with a hand-written proxy executor don't return error headers yet.
 
 Caller cancellation returns HTTP 400 with `errorCode: "execution_cancelled"`. An already cancelled
 request stops before credential resolution; cancellation after dispatch does not undo provider
