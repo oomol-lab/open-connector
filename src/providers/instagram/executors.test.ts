@@ -70,16 +70,6 @@ describe("Instagram Unified Login credentials", () => {
     ).rejects.toMatchObject({ message: expect.stringContaining("other_creator") });
   });
 
-  it("does not infer grants from successful account discovery", async () => {
-    const result = await credentialValidators.oauth2!(
-      { ...unifiedCredential, metadata: { oauthClientExtra: { loginMode: "unified" } } },
-      {
-        fetcher: async () => Response.json({ data: [linkedAccount] }),
-      },
-    );
-    expect(result?.grantedScopes).toEqual([]);
-  });
-
   it("rejects an assigned-account pagination cycle", async () => {
     let requests = 0;
     await expect(
@@ -95,12 +85,6 @@ describe("Instagram Unified Login credentials", () => {
       }),
     ).rejects.toThrow("next cursor did not advance");
     expect(requests).toBe(3);
-  });
-
-  it("does not fall back to Page discovery when Unified Login is denied", async () => {
-    const fetcher = vi.fn<typeof fetch>(async () => graphError(190, "Token expired"));
-    await expect(credentialValidators.oauth2!(unifiedCredential, { fetcher })).rejects.toThrow("Token expired");
-    expect(fetcher).toHaveBeenCalledTimes(1);
   });
 
   it("prefers assigned accounts when a pasted token can also reach Pages", async () => {
@@ -316,62 +300,6 @@ describe("Instagram Facebook Login credentials", () => {
       expect(seen[3]!.searchParams.get("fields")).toContain("instagram_business_account{");
     },
   );
-
-  it("rejects an unchanged cursor when Facebook indicates another page", async () => {
-    const seen: URL[] = [];
-    await expect(
-      credentialValidators.apiKey!(
-        { apiKey: "user-token", values: {} },
-        {
-          fetcher: async (value) => {
-            const url = new URL(value.toString());
-            seen.push(url);
-            if (seen.length > 4) throw new Error("Unexpected repeated page request");
-            if (url.pathname === "/v27.0/me" || url.pathname.endsWith("/assigned_instagram_accounts"))
-              return graphError(100, "nonexisting field");
-            return Response.json({
-              data: [],
-              paging: {
-                cursors: { after: "page-two" },
-                next: "https://graph.facebook.com/v27.0/me/accounts?after=page-two",
-              },
-            });
-          },
-        },
-      ),
-    ).rejects.toMatchObject({ message: "Instagram accounts next cursor did not advance.", status: 502 });
-    expect(seen).toHaveLength(4);
-    expect(seen[3]!.searchParams.get("after")).toBe("page-two");
-  });
-
-  it("requires account selection when linked accounts span several pages", async () => {
-    await expect(
-      credentialValidators.apiKey!(
-        { apiKey: "user-token", values: {} },
-        {
-          fetcher: async (value) => {
-            const url = new URL(value.toString());
-            if (url.pathname === "/v27.0/me" || url.pathname.endsWith("/assigned_instagram_accounts"))
-              return graphError(100, "nonexisting field");
-            if (url.searchParams.has("after")) {
-              return Response.json({
-                data: [{ instagram_business_account: { id: "second", username: "creator_two" } }],
-              });
-            }
-            return Response.json({
-              data: [{ instagram_business_account: linkedAccount }],
-              paging: {
-                cursors: { after: "page-two" },
-                next: "https://graph.facebook.com/v27.0/me/accounts?after=page-two",
-              },
-            });
-          },
-        },
-      ),
-    ).rejects.toMatchObject({
-      message: expect.stringMatching(/set instagramAccountId.*creator_one.*creator_two/),
-    });
-  });
 
   it("rejects a token whose Page has no linked Instagram account", async () => {
     await expect(

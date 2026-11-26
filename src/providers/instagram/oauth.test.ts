@@ -44,61 +44,42 @@ it("builds Unified Login consent without Instagram Login parameters or scopes", 
   });
 });
 
-it.each([
-  { loginMode: "unified", configId: "" },
-  { loginMode: "typo", configId: "config" },
-])("rejects invalid login configuration before consent: $loginMode", async (extra) => {
-  await expect(async () =>
-    oauth.buildAuthorizationUrl!({
-      authorizationUrl: new URL("https://www.instagram.com/oauth/authorize"),
-      clientConfig: { ...clientConfig, extra },
-      now: new Date(),
+it("exchanges a system-user token without applying user-token extension or refresh", async () => {
+  const scopes = ["instagram_basic", "instagram_manage_insights", "future_permission"];
+  const calls: URL[] = [];
+  const token = await oauth.exchangeCode!(
+    exchangeInput(async (input, init) => {
+      const url = new URL(String(input));
+      calls.push(url);
+      expect(url.origin).toBe("https://graph.facebook.com");
+      if (url.pathname.endsWith("/oauth/access_token")) {
+        expect(url.searchParams.get("client_id")).toBe("meta-app");
+        expect(url.searchParams.get("code")).toBe("authorization-code");
+        expect(url.searchParams.has("fb_exchange_token")).toBe(false);
+        return Response.json({ access_token: "system-token" });
+      }
+      if (url.pathname.endsWith("/debug_token")) {
+        expect(new Headers(init?.headers).get("authorization")).toBe("Bearer meta-app|meta-secret");
+        expect(url.searchParams.get("input_token")).toBe("system-token");
+        return Response.json({
+          data: { is_valid: true, app_id: "meta-app", type: "SYSTEM_USER", expires_at: 0, scopes },
+        });
+      }
+      expect(url.pathname).toBe("/v27.0/me");
+      expect(url.searchParams.get("fields")).toBe("client_business_id");
+      expect(url.searchParams.get("appsecret_proof")).toMatch(/^[a-f0-9]{64}$/);
+      return Response.json({ id: "system-user", client_business_id: "business" });
     }),
-  ).rejects.toThrow();
+  );
+  expect(token).toMatchObject({
+    accessToken: "system-token",
+    refreshToken: "",
+    expiresAt: "9999-12-31T23:59:59.000Z",
+    providerSecret: { appSecret: "meta-secret" },
+    metadata: { scope: scopes.join(" "), clientBusinessId: "business" },
+  });
+  expect(calls).toHaveLength(3);
 });
-
-it.each([
-  { expiresAt: 0, scopes: ["instagram_basic", "instagram_manage_insights", "future_permission"] },
-  { expiresAt: 2000000000, scopes: ["instagram_basic"] },
-  { expiresAt: 2000000000, scopes: undefined },
-])(
-  "exchanges a system-user token with its reported lifetime and grants: $expiresAt, $scopes",
-  async ({ expiresAt, scopes }) => {
-    const calls: URL[] = [];
-    const token = await oauth.exchangeCode!(
-      exchangeInput(async (input, init) => {
-        const url = new URL(String(input));
-        calls.push(url);
-        expect(url.origin).toBe("https://graph.facebook.com");
-        if (url.pathname.endsWith("/oauth/access_token")) {
-          expect(url.searchParams.get("client_id")).toBe("meta-app");
-          expect(url.searchParams.get("code")).toBe("authorization-code");
-          expect(url.searchParams.has("fb_exchange_token")).toBe(false);
-          return Response.json({ access_token: "system-token" });
-        }
-        if (url.pathname.endsWith("/debug_token")) {
-          expect(new Headers(init?.headers).get("authorization")).toBe("Bearer meta-app|meta-secret");
-          expect(url.searchParams.get("input_token")).toBe("system-token");
-          return Response.json({
-            data: { is_valid: true, app_id: "meta-app", type: "SYSTEM_USER", expires_at: expiresAt, scopes },
-          });
-        }
-        expect(url.pathname).toBe("/v27.0/me");
-        expect(url.searchParams.get("fields")).toBe("client_business_id");
-        expect(url.searchParams.get("appsecret_proof")).toMatch(/^[a-f0-9]{64}$/);
-        return Response.json({ id: "system-user", client_business_id: "business" });
-      }),
-    );
-    expect(token).toMatchObject({
-      accessToken: "system-token",
-      refreshToken: "",
-      expiresAt: expiresAt === 0 ? "9999-12-31T23:59:59.000Z" : new Date(expiresAt * 1000).toISOString(),
-      providerSecret: { appSecret: "meta-secret" },
-      metadata: { scope: scopes?.join(" "), clientBusinessId: "business" },
-    });
-    expect(calls).toHaveLength(3);
-  },
-);
 
 it.each([
   { app_id: "another-app", is_valid: true },

@@ -75,7 +75,6 @@ export interface OAuthAuthorizationState {
    */
   redirectUri?: string;
   clientConfig?: OAuthClientConfig;
-  exchangeClientConfig?: OAuthClientConfig;
 }
 
 export interface OAuthFlowServiceOptions {
@@ -255,7 +254,6 @@ export class OAuthFlowService {
       input.authorizationOptionIds ?? this.clientConfigs.getEffectiveScopes(service, config),
     );
     const redirectUri = this.clientConfigs.expectedRedirectUri(service, config);
-    const retainClientConfig = Boolean(input.clientConfig || auth.issuer || requestConfig);
     const pending: OAuthAuthorizationState = {
       service,
       connectionName,
@@ -267,8 +265,7 @@ export class OAuthFlowService {
       issuer: auth.issuer,
       requireIssuer: auth.requireIssuer,
       redirectUri,
-      clientConfig: retainClientConfig ? config : undefined,
-      exchangeClientConfig: retainClientConfig ? undefined : config,
+      clientConfig: input.clientConfig || auth.issuer ? config : undefined,
     };
 
     const authorizationUrl = new URL(this.clientConfigs.resolveEndpointUrl(service, auth.authorizationUrl, config));
@@ -330,8 +327,7 @@ export class OAuthFlowService {
     try {
       assertOAuthIssuer(pending, input.callbackParameters?.iss);
       const auth = this.clientConfigs.getOAuthDefinition(pending.service);
-      const savedConfig =
-        pending.clientConfig ?? pending.exchangeClientConfig ?? (await this.clientConfigs.getConfig(pending.service));
+      const savedConfig = pending.clientConfig ?? (await this.clientConfigs.getConfig(pending.service));
       if (!savedConfig) {
         throw new OAuthFlowError(
           "oauth_client_config_required",
