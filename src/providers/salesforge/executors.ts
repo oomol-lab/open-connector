@@ -73,21 +73,7 @@ export const credentialValidators: CredentialValidators = {
 export const proxy: ProviderProxyExecutor = defineProviderProxy({
   service: "salesforge",
   baseUrl,
-  async readError(response) {
-    const payload = parseProviderJsonBodyText(await readProviderErrorTextBody(response, "Salesforge error response"), {
-      emptyBody: null,
-      invalidJsonMessage: "Salesforge returned invalid JSON",
-      invalidJsonFallback: (text) => text.slice(0, 500),
-    });
-    return new ProviderRequestError(
-      response.status,
-      optionalString(optionalRecord(payload)?.message) ??
-        optionalString(payload) ??
-        `Salesforge request failed (HTTP ${response.status})`,
-      undefined,
-      response.status === 429 ? "rate_limited" : "provider_error",
-    );
-  },
+  readError: readSalesforgeError,
   auth: { type: "api_key_header", name: "Authorization" },
   defaultHeaders: { "accept": "application/json", "content-type": "application/json" },
   skipDnsValidation: true,
@@ -118,6 +104,7 @@ async function request(
       headers: { "Authorization": context.apiKey, "accept": "application/json", "content-type": "application/json" },
       body: method === "POST" ? JSON.stringify(parameters) : undefined,
     });
+    if (!response.ok) throw await readSalesforgeError(response);
     if (response.status === 204) return { success: true };
     let payload: unknown;
     try {
@@ -125,19 +112,28 @@ async function request(
     } catch (error) {
       if (isAbortLikeError(error)) throw error;
       throw new ProviderRequestError(
-        response.ok ? 502 : response.status,
+        502,
         `Salesforge returned a non-JSON response (HTTP ${response.status})`,
         undefined,
-        response.status === 429 ? "rate_limited" : "provider_error",
+        "provider_error",
       );
     }
-    if (!response.ok)
-      throw new ProviderRequestError(
-        response.status,
-        optionalString(optionalRecord(payload)?.message) ?? `Salesforge request failed (HTTP ${response.status})`,
-        undefined,
-        response.status === 429 ? "rate_limited" : "provider_error",
-      );
     return requiredResponseRecord(payload, "Salesforge response");
   });
+}
+
+async function readSalesforgeError(response: Response): Promise<ProviderRequestError> {
+  const payload = parseProviderJsonBodyText(await readProviderErrorTextBody(response, "Salesforge error response"), {
+    emptyBody: null,
+    invalidJsonMessage: "Salesforge returned invalid JSON",
+    invalidJsonFallback: (text) => text.slice(0, 500),
+  });
+  return new ProviderRequestError(
+    response.status,
+    optionalString(optionalRecord(payload)?.message) ??
+      optionalString(payload) ??
+      `Salesforge request failed (HTTP ${response.status})`,
+    undefined,
+    response.status === 429 ? "rate_limited" : "provider_error",
+  );
 }

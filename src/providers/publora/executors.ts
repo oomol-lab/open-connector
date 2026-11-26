@@ -1,6 +1,6 @@
 import type { QueryValue } from "../../core/request.ts";
 import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } from "../../core/types.ts";
-import type { ApiKeyProviderContext, ProviderActionHandlers, ProviderRuntimeHandler } from "../provider-executors.ts";
+import type { ApiKeyProviderContext, ProviderRuntimeHandler } from "../provider-executors.ts";
 
 import {
   compactObject,
@@ -28,7 +28,6 @@ import {
 const service = "publora";
 const apiBaseUrl = "https://api.publora.com/api/v1";
 
-type Handler = ProviderRuntimeHandler<ApiKeyProviderContext>;
 type PubloraRequestPhase = "validate" | "execute";
 
 interface PubloraRequest {
@@ -40,7 +39,7 @@ interface PubloraRequest {
   phase?: PubloraRequestPhase;
 }
 
-const publoraActionHandlers: ProviderActionHandlers<"publora", Handler> = {
+const publoraActionHandlers: Record<string, ProviderRuntimeHandler<ApiKeyProviderContext>> = {
   async list_connections(_input, context) {
     const payload = await publoraRequest({ path: "/platform-connections" }, context);
     return { connections: requiredArray(payload.connections, "Publora connections", providerResponseError) };
@@ -96,9 +95,6 @@ const publoraActionHandlers: ProviderActionHandlers<"publora", Handler> = {
   },
   async update_post(input, context) {
     const body = compactObject({ ...postBody(input), status: input.status });
-    if (Object.keys(body).length === 0) {
-      throw new ProviderRequestError(400, "update_post requires at least one field to update");
-    }
     const payload = await publoraRequest(
       {
         method: "PUT",
@@ -237,6 +233,6 @@ function publoraRequestError(status: number, payload: unknown, phase: PubloraReq
     status >= 500 ? 502 : status,
     message,
     payload,
-    status === 429 ? "rate_limited" : status === 400 ? "invalid_input" : "provider_error",
+    status === 401 || status === 403 ? "provider_error" : undefined,
   );
 }
