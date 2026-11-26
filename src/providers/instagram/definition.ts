@@ -4,7 +4,7 @@ import { instagramActions, instagramOAuthScopes } from "./actions.ts";
 
 const service = "instagram";
 
-/** Instagram API provider: OAuth through an operator-owned Meta app, or a pasted Facebook Login access token. */
+/** Instagram API through an operator-owned app or a pasted access token. */
 export const provider: ProviderDefinition = {
   service,
   displayName: "Instagram",
@@ -22,22 +22,54 @@ export const provider: ProviderDefinition = {
         enable_fb_login: "0",
         force_authentication: "1",
       },
+      clientConfigFields: [
+        {
+          key: "loginMode",
+          label: "Login mode",
+          description:
+            "Use unified for Meta Unified Login, or instagram for existing Instagram Login apps. Defaults to instagram.",
+          inputType: "text",
+          required: false,
+          secret: false,
+          location: "extra",
+        },
+        {
+          key: "configId",
+          label: "Facebook Login for Business Configuration ID",
+          description:
+            "Required for unified mode. Choose a configuration marked Instagram Login Compatible in your Meta app.",
+          inputType: "text",
+          required: false,
+          secret: false,
+          location: "extra",
+        },
+        {
+          key: "instagramAccountId",
+          label: "Instagram account ID",
+          description:
+            "For Unified Login, select an authorized Instagram account when the token reaches several accounts. Omit to use the only account.",
+          inputType: "text",
+          required: false,
+          secret: false,
+          location: "extra",
+        },
+      ],
       clientSetup: {
         docsUrl:
-          "https://developers.facebook.com/documentation/instagram-platform/instagram-api-with-instagram-login/business-login",
+          "https://developers.facebook.com/documentation/instagram-platform/instagram-api-with-unified-login/get-started",
         steps: [
-          "Create a Meta Business app, add the Instagram product, and configure Business Login for Instagram.",
+          "For Unified Login, create a Meta app with the Manage messaging & content on Instagram use case and an Instagram Login Compatible configuration. Set loginMode to unified and enter configId.",
           "Register this runtime's exact /oauth/callback URL as a valid OAuth redirect URI.",
-          "Copy the Instagram App ID and App Secret into the local OAuth client configuration.",
+          "Use the Meta App ID and App Secret for Unified Login. Existing Instagram Login apps use their Instagram App ID and App Secret with loginMode set to instagram.",
         ],
       },
     },
     {
       type: "api_key",
-      label: "Facebook Login access token",
+      label: "Facebook or Unified Login access token",
       placeholder: "EAAG...",
       description:
-        "Instagram API with Facebook Login: a Page access token, or a user or system-user token that can list Pages, for a Facebook Page linked to an Instagram Business or Creator account. Grant instagram_basic, pages_show_list and pages_read_engagement, plus instagram_manage_comments, instagram_manage_insights or instagram_content_publish for the matching actions. Prefer a long-lived or system-user token; OpenConnector does not refresh it. Messaging (send_message) requires OAuth.",
+        "Use a Unified Login system-user token for shared Instagram accounts, or a Facebook Login token for a Page linked to an Instagram professional account. Grant instagram_basic plus instagram_manage_comments, instagram_manage_insights or instagram_content_publish for the matching actions. Page discovery also needs the applicable Page permissions. OpenConnector does not refresh pasted tokens. send_message requires Instagram Login OAuth.",
       extraFields: [
         {
           key: "instagramAccountId",
@@ -47,7 +79,7 @@ export const provider: ProviderDefinition = {
           secret: false,
           placeholder: "17841400000000000",
           description:
-            "Only needed when the token reaches several Pages that each link an Instagram account. Leave empty to use the only linked account.",
+            "Only needed when the token reaches several Instagram accounts. Leave empty to use the only account.",
         },
       ],
     },

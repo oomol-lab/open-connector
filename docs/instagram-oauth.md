@@ -1,48 +1,32 @@
-# Instagram OAuth And Actions
+# Instagram OAuth and Actions
 
-This guide connects OpenConnector directly to Meta's official Instagram API with an OAuth
-application that you own. OpenConnector does not provide a shared Meta app for this flow. The
-provider supports Instagram Business and Creator accounts only.
+Connect OpenConnector to Meta's official Instagram API using an OAuth app you own. This provider supports Instagram Business and Creator accounts.
 
-## Prerequisites And Meta Access
+## Choose a login setup
 
-You need:
+- **Unified Login**: Use for a Meta app configured with the **Manage messaging & content on Instagram** use case (belonging to a business portfolio and using Facebook Login for Business). Create or select a configuration marked **Instagram Login Compatible**, copy its `config_id`, and use your **Meta App ID and App Secret**. No linked Facebook Page is required.
+- **Instagram Login**: Use for existing Business Login for Instagram apps with their **Instagram App ID and App Secret**. Omitting `loginMode` keeps this flow.
 
-- a Meta Business app with the Instagram product added;
-- Business Login for Instagram enabled on that app;
-- an Instagram Business or Creator account;
-- an Instagram App ID and App Secret; and
-- a public HTTPS OpenConnector origin that Meta can redirect to.
+Both OAuth setups require a public HTTPS callback. Standard Access works for accounts that hold roles on your Meta app; serving external accounts requires Live mode, Meta App Review, and Business Verification.
 
-Standard Access is sufficient when the professional account is owned or managed by the app
-operator and has been added in the Meta App Dashboard. Serving professional accounts you do not
-own or manage requires Advanced Access and the applicable Meta App Review approval. Availability
-of an Action also depends on the permissions approved for the app and granted by the connected
-account.
+Official references:
 
-The provider requests these native Instagram permissions by default:
+- [Unified Login setup](https://developers.facebook.com/documentation/instagram-platform/instagram-api-with-unified-login/get-started)
+- [Unified Login authentication and token lifecycle](https://developers.facebook.com/documentation/instagram-platform/instagram-api-with-unified-login/authentication)
+- [Unified Login permissions](https://developers.facebook.com/documentation/instagram-platform/instagram-api-with-unified-login/permissions)
+- [Business Login for Instagram](https://developers.facebook.com/documentation/instagram-platform/instagram-api-with-instagram-login/business-login)
 
-- `instagram_business_basic`
-- `instagram_business_manage_comments`
-- `instagram_business_manage_insights`
-- `instagram_business_content_publish`
-- `instagram_business_manage_messages`
+## 1. Configure a public callback
 
-Meta setup starts in the official [Business Login for Instagram documentation](https://developers.facebook.com/documentation/instagram-platform/instagram-api-with-instagram-login/business-login).
-
-## 1. Configure A Public Callback
-
-Read the runtime's exact callback URI instead of constructing it by hand:
+Read the exact callback URI from your runtime:
 
 ```bash
 curl -s http://localhost:3000/api/oauth/configs
 ```
 
-Find the `instagram` entry and copy its `expectedRedirectUri`. Register that exact URI in the
-Business Login settings for your Meta app. It ends in `/oauth/callback`.
+Find the `instagram` entry, copy its `expectedRedirectUri` (ending in `/oauth/callback`), and register it in your Meta app's Business Login settings.
 
-Meta must be able to reach the callback over public HTTPS. For local development, use an
-operator-managed HTTPS tunnel and start OpenConnector with its public origin:
+Meta requires a public HTTPS callback. For local development, expose OpenConnector through an HTTPS tunnel and start it with the public origin:
 
 ```bash
 OOMOL_CONNECT_ORIGIN="https://connect.example.com" \
@@ -50,34 +34,33 @@ OOMOL_CONNECT_ENCRYPTION_KEY="replace-with-a-long-random-secret" \
 npm run dev
 ```
 
-Run `GET /api/oauth/configs` again after changing the origin and register the newly reported URI.
-`OOMOL_CONNECT_ENCRYPTION_KEY` is strongly recommended outside disposable local development; it
-encrypts stored OAuth app configuration, credentials, OAuth state, and other sensitive runtime
-records.
+Run `GET /api/oauth/configs` again after changing the origin and register the updated URI. Set `OOMOL_CONNECT_ENCRYPTION_KEY` outside disposable local setups to encrypt stored credentials and OAuth configuration.
 
-## 2. Save The Instagram OAuth App
+## 2. Save the OAuth app
 
-Save the Instagram App ID as `clientId` and App Secret as `clientSecret`:
+For **Unified Login**, save your Meta app credentials and configuration ID:
 
 ```bash
 curl -s -X PUT http://localhost:3000/api/oauth/configs/instagram \
   -H 'content-type: application/json' \
-  -d '{"clientId":"<INSTAGRAM_APP_ID>","clientSecret":"<INSTAGRAM_APP_SECRET>"}'
+  -d '{"clientId":"<META_APP_ID>","clientSecret":"<META_APP_SECRET>","extra":{"loginMode":"unified","configId":"<CONFIG_ID>"}}'
 ```
 
-To request a non-empty subset of the declared permissions, add `requestedScopes`. For example, a
-read-only profile and media connection can request only the basic permission:
+Unified Login permissions are controlled by `configId` in Meta (include `instagram_basic` for profile and media reads, plus any management permissions you need). `requestedScopes` does not override the Meta configuration.
+
+For **Instagram Login**, save your Instagram app credentials:
 
 ```bash
 curl -s -X PUT http://localhost:3000/api/oauth/configs/instagram \
   -H 'content-type: application/json' \
-  -d '{"clientId":"<INSTAGRAM_APP_ID>","clientSecret":"<INSTAGRAM_APP_SECRET>","requestedScopes":["instagram_business_basic"]}'
+  -d '{"clientId":"<INSTAGRAM_APP_ID>","clientSecret":"<INSTAGRAM_APP_SECRET>","extra":{"loginMode":"instagram"}}'
 ```
 
-The runtime rejects unknown permissions. A connection can execute only Actions whose required
-permissions were granted.
+Instagram Login requests `instagram_business_basic`, `instagram_business_manage_comments`, `instagram_business_manage_insights`, `instagram_business_content_publish`, and `instagram_business_manage_messages` by default. Pass `requestedScopes` (for example `["instagram_business_basic"]`) to request a smaller set.
 
-## 3. Authorize A Professional Account
+Updating the default app only affects new authorizations; existing connections keep their original login mode and token refresh behavior.
+
+## 3. Authorize a professional account
 
 Start authorization:
 
@@ -87,27 +70,26 @@ curl -s -X POST http://localhost:3000/api/oauth/authorizations \
   -d '{"service":"instagram"}'
 ```
 
-Open the returned `authorizationUrl`, complete Business Login, and let Meta redirect to the
-registered callback. Confirm that the stored connection identifies the Instagram account by its
-username and professional-account ID:
+Open the returned `authorizationUrl`, complete the login flow, and verify the saved connection:
 
 ```bash
 curl -s http://localhost:3000/api/connections
 ```
 
-Meta first returns a short-lived token, normally valid for about one hour. OpenConnector exchanges
-it server-side for a long-lived token before storing the connection. The long-lived token is
-normally valid for about 60 days. When an Action resolves a token near or after its stored expiry,
-OpenConnector refreshes it through Meta's access-token refresh flow; Instagram does not issue a
-standard OAuth `refresh_token` for this flow. A connection that remains unused beyond Meta's actual
-token lifetime may require reauthorization, and an expired token that cannot be refreshed requires
-reconnecting the account.
+### Account selection (Unified Login)
 
-## 4. Call The Nine Instagram Actions
+If only one Instagram account is shared with the app, OpenConnector selects it automatically. If multiple accounts are shared, the error lists their IDs — add `instagramAccountId` to `extra` alongside `loginMode` and `configId`, then start a new authorization.
 
-The examples use the default connection. If runtime authentication is enabled, add
-`-H "authorization: Bearer $OOMOL_CONNECT_RUNTIME_TOKEN"`. A named connection can be selected with
-`-H 'x-oo-connector-alias: work'`.
+To authorize multiple accounts as separate named connections without modifying the default app config, pass a per-request `clientConfig` with `extra.instagramAccountId` when custom OAuth clients are enabled.
+
+### Token lifetime
+
+- **Unified Login**: Returns a Business Integration System User token whose expiration depends on your Meta configuration. OpenConnector does not auto-renew Unified Login tokens; reauthorize if the token expires or is revoked.
+- **Instagram Login**: Exchanges the initial short-lived token (~1 hour) for a long-lived token (~60 days) and refreshes it automatically on use when it nears expiry. Reauthorize if a connection goes unused past expiry.
+
+## 4. Call Instagram actions
+
+The examples below use the default connection. If runtime authentication is enabled, add `-H "authorization: Bearer $OOMOL_CONNECT_RUNTIME_TOKEN"`. To target a named connection, add `-H 'x-oo-connector-alias: work'`.
 
 Get the connected professional account:
 
@@ -117,7 +99,7 @@ curl -s -X POST http://localhost:3000/v1/actions/instagram.get_current_user \
   -d '{"input":{}}'
 ```
 
-List owned media, then continue with the returned cursor rather than a Meta paging URL:
+List owned media (pass the returned cursor to `after` for pagination):
 
 ```bash
 curl -s -X POST http://localhost:3000/v1/actions/instagram.list_media \
@@ -133,7 +115,7 @@ curl -s -X POST http://localhost:3000/v1/actions/instagram.get_media \
   -d '{"input":{"mediaId":"<INSTAGRAM_MEDIA_ID>"}}'
 ```
 
-List top-level comments. This does not promise a complete reply tree:
+List top-level comments on a media item:
 
 ```bash
 curl -s -X POST http://localhost:3000/v1/actions/instagram.list_media_comments \
@@ -141,8 +123,7 @@ curl -s -X POST http://localhost:3000/v1/actions/instagram.list_media_comments \
   -d '{"input":{"mediaId":"<INSTAGRAM_MEDIA_ID>","limit":25}}'
 ```
 
-Get media insights. Meta validates which metric, period, and breakdown combinations apply to the
-selected media type:
+Get media insights (supported metrics depend on the media type):
 
 ```bash
 curl -s -X POST http://localhost:3000/v1/actions/instagram.get_media_insights \
@@ -182,9 +163,7 @@ curl -s -X POST http://localhost:3000/v1/actions/instagram.publish_media \
   -d '{"input":{"kind":"carousel","caption":"Two items","children":[{"kind":"image","imageUrl":"https://cdn.example.com/one.jpg","altText":"First item"},{"kind":"video","videoUrl":"https://cdn.example.com/two.mp4"}]}}'
 ```
 
-Resume a container only when a previous safe error detail includes `resumable: true`. Carousel
-child errors include `resumable: false`; those child containers cannot be passed to this variant.
-Resuming a publishable container avoids creating a new container and a possible duplicate post:
+Resume publishing an existing container (when a previous publish error returns a container ID with `resumable: true`):
 
 ```bash
 curl -s -X POST http://localhost:3000/v1/actions/instagram.publish_media \
@@ -208,7 +187,7 @@ curl -s -X POST http://localhost:3000/v1/actions/instagram.reply_to_comment \
   -d '{"input":{"commentId":"<PARENT_COMMENT_ID>","message":"Thanks for your comment"}}'
 ```
 
-Send a policy-constrained message reply:
+Send a direct message reply (Instagram Login only):
 
 ```bash
 curl -s -X POST http://localhost:3000/v1/actions/instagram.send_message \
@@ -216,91 +195,44 @@ curl -s -X POST http://localhost:3000/v1/actions/instagram.send_message \
   -d '{"input":{"recipientId":"<INSTAGRAM_SCOPED_RECIPIENT_ID>","text":"Thanks for contacting us"}}'
 ```
 
-The same Action IDs and generated schemas are exposed through the Connector SDK, `oo` CLI, MCP,
-and `/openapi.json`; see [Runtime API and MCP](runtime-api.md) and [Developer tools](sdk-cli.md).
+The same Action IDs and schemas are available through the Connector SDK, `oo` CLI, MCP, and `/openapi.json`; see [Runtime API and MCP](runtime-api.md) and [Developer tools](sdk-cli.md).
 
-## Alternative: Facebook Login Access Token
+## Alternative: pasted access token
 
-Newer Meta apps are created with Unified login and no longer offer Business Login for Instagram, so
-the OAuth flow above is unavailable for them. The `instagram` provider also accepts an access
-token from Instagram API with Facebook Login. This connection reads and writes through
-`graph.facebook.com` and needs no OAuth callback, so it works on a local HTTP origin.
+You can also connect with a pasted Unified Login or Facebook Login access token. Because no OAuth callback is needed, this works on a local HTTP origin.
 
-You need an Instagram Business or Creator account linked to a Facebook Page, and a token that can
-reach that Page:
+- **Unified Login token**: Discovers shared professional accounts directly without a Facebook Page.
+- **Facebook Login token** (Page, user, or system-user): Resolves the Instagram account linked to an accessible Page (requires `pages_show_list` and `pages_read_engagement`).
 
-- a Page access token, or a user or system-user access token that can list the Page;
-- `instagram_basic`, `pages_show_list` and `pages_read_engagement`, plus `instagram_manage_comments`,
-  `instagram_manage_insights` or `instagram_content_publish` for the matching Actions; and
-- for an app in Development mode, the token owner holds a role on the app.
-
-Prefer a long-lived or system-user token. OpenConnector does not refresh a pasted token, and a
-short-lived user token stops working after about an hour.
+Prefer a long-lived or system-user token; OpenConnector does not refresh pasted tokens.
 
 ```bash
 curl -s -X PUT http://localhost:3000/api/connections/instagram \
   -H 'content-type: application/json' \
-  -d '{"authType":"api_key","values":{"apiKey":"<FACEBOOK_LOGIN_ACCESS_TOKEN>"}}'
+  -d '{"authType":"api_key","values":{"apiKey":"<ACCESS_TOKEN>"}}'
 ```
 
-OpenConnector resolves the linked Instagram account from the token. When the token reaches several
-Pages that each link an Instagram account, add `"instagramAccountId":"<INSTAGRAM_ACCOUNT_ID>"` to
-`values`; the error message lists the candidates. The same Action IDs work for both connection
-types, with these differences for a pasted token:
+If the token can access multiple Instagram accounts, add `"instagramAccountId":"<INSTAGRAM_ACCOUNT_ID>"` to `values` (the error lists available IDs).
 
-- `send_message` is not available; messaging through Facebook Login goes through the Page, so use
-  an OAuth connection for it.
-- `get_current_user` omits `accountType` because Facebook Login does not return it.
-- Permissions are the Facebook Login names (`instagram_basic`, ...), not the `instagram_business_*`
-  names listed in each Action's `requiredScopes`.
+## Action support and permissions
 
-## Publishing Boundaries
+All Action IDs and input/output schemas are identical across login modes.
 
-Instagram fetches publishing media from the supplied URL. Image, video, Reel, carousel child, and
-cover URLs must therefore be publicly reachable HTTP or HTTPS URLs. OpenConnector rejects
-loopback, private, link-local, reserved, and cloud-metadata targets before sending the URL to Meta.
-Do not place credentials or sensitive signed data in example URLs or logs.
+| Actions                                                     | Instagram Login permissions                     | Unified Login / pasted-token permissions |
+| ----------------------------------------------------------- | ----------------------------------------------- | ---------------------------------------- |
+| `get_current_user`, `list_media`, `get_media`               | `instagram_business_basic`                      | `instagram_basic`                        |
+| `list_media_comments`, `create_comment`, `reply_to_comment` | Basic plus `instagram_business_manage_comments` | Basic plus `instagram_manage_comments`   |
+| `get_media_insights`                                        | Basic plus `instagram_business_manage_insights` | Basic plus `instagram_manage_insights`   |
+| `publish_media`                                             | Basic plus `instagram_business_content_publish` | Basic plus `instagram_content_publish`   |
+| `send_message`                                              | Basic plus `instagram_business_manage_messages` | Not supported                            |
 
-The provider supports images, feed videos, Reels, and carousels containing 2 through 10 images or
-videos. Stories are not supported. Video and carousel publishing creates Meta media containers and
-polls their processing status at most once per minute for at most five minutes. A timeout or
-terminal processing error includes the safe container ID when available.
+- The catalog's `requiredScopes` lists Instagram Login permissions; use the corresponding Unified Login / pasted-token permissions above for those flows.
+- For pasted Facebook Login tokens where the user holds the Page role through Business Manager, `get_media_insights` also requires `ads_management` and `ads_read` (not required for Unified Login).
+- With Unified Login or pasted tokens, `get_current_user` omits `accountType` when Meta does not return it, and `send_message` is not currently supported (use Instagram Login OAuth for messaging).
 
-Container creation and `media_publish` are external mutations. OpenConnector does not
-automatically retry them after an ambiguous transport failure because Meta may have accepted the
-request. Inspect the error and account state first; resume with `kind: "container"` only when the
-error marks that container `resumable: true`. A successful publish is not rolled back if the optional follow-up
-metadata read fails.
+## Operational notes
 
-## Comment And Messaging Boundaries
-
-`create_comment` creates a top-level comment on owned media. Instagram live-video comments are not
-supported; Meta's error is returned as a provider failure. `reply_to_comment` replies to an explicit
-comment ID. Neither mutation is automatically retried after an ambiguous transport failure.
-
-`send_message` is a reply Action, not an inbox or cold-outreach tool:
-
-- the recipient must have initiated the conversation with the connected professional account;
-- a normal automated reply must be sent inside Meta's current messaging window, generally 24
-  hours after the user's message;
-- `recipientId` is an Instagram-scoped ID, not a username;
-- callers normally obtain that ID through their own Meta webhook integration;
-- text is limited to 1,000 UTF-8 bytes;
-- group messaging, unsolicited messages, bulk outreach, inbox synchronization, recipient
-  discovery, and inbound webhook handling are not supported; and
-- required automated-experience disclosure and all applicable legal obligations remain the
-  operator's responsibility.
-
-OpenConnector does not automatically retry a message send after an ambiguous transport failure
-because Meta may already have delivered it.
-
-## Platform, Privacy, And Data Handling
-
-This provider uses the official Instagram API with Instagram Login and `graph.instagram.com`. It
-does not support Instagram Basic Display, personal accounts, scraping, public-account harvesting,
-hashtag or Explore browsing, arbitrary-user lookup, follower/following enumeration, ads, commerce,
-stories, cold outreach, bulk messaging, or inbound webhooks.
-
-Meta rate limits and permission checks still apply. Request only the permissions you need, protect
-the runtime database and encryption key, avoid retaining Instagram data longer than necessary, and
-follow the Meta Platform Terms, privacy requirements, and any laws that apply to your use case.
+- **Media URLs**: Image, video, Reel, carousel item, and cover URLs must be publicly reachable HTTP(S) URLs so Meta can fetch them.
+- **Publishing formats and polling**: Supports images, feed videos, Reels, and carousels (2–10 items); Stories are not supported. Video and carousel publishing polls Meta for up to 5 minutes.
+- **Retries and resumable publishing**: Publish, comment, and message actions are not automatically retried after ambiguous network errors to avoid duplicate posts or messages. If a publish fails with a container ID marked `resumable: true`, resume with `kind: "container"`.
+- **Messaging (`send_message`)**: Replies to users who initiated a conversation within Meta's messaging window (generally 24 hours). `recipientId` is an Instagram-scoped ID (typically obtained from your Meta webhook), and text is limited to 1,000 UTF-8 bytes.

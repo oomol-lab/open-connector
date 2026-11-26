@@ -300,7 +300,7 @@ export const instagramActions: ActionDefinition[] = [
     name: "get_media_insights",
     operationType: "read",
     description:
-      "Get structured insights for owned Instagram media. Meta validates metric, period, breakdown, and media-type compatibility.",
+      "Get structured insights for owned Instagram media. Meta validates metric, period, breakdown, and media-type compatibility. Unified Login and pasted tokens need instagram_basic and instagram_manage_insights.",
     requiredScopes: insightScopes,
     inputSchema: s.object(
       {
@@ -410,7 +410,7 @@ export const instagramActions: ActionDefinition[] = [
     name: "send_message",
     operationType: "write",
     description:
-      "Reply with text to an Instagram-scoped recipient who already initiated a conversation, normally within Meta's 24-hour messaging window. This does not support cold outreach, recipient discovery, bulk messaging, webhooks, or inbox sync.",
+      "Reply with text to an Instagram-scoped recipient who already initiated a conversation, normally within Meta's 24-hour messaging window. Requires Instagram Login OAuth; Unified Login and pasted tokens are not supported. This does not support cold outreach, recipient discovery, bulk messaging, webhooks, or inbox sync.",
     requiredScopes: messagingScopes,
     inputSchema: s.object(
       {

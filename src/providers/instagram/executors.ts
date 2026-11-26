@@ -1,8 +1,10 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
 import type { InstagramContext } from "./runtime.ts";
 
+import { optionalRecord } from "../../core/cast.ts";
 import { defineProviderExecutors } from "../provider-executors.ts";
 import { ProviderRequestError } from "../provider-runtime.ts";
+import { instagramLoginMode } from "./oauth.ts";
 import {
   instagramActionHandlers,
   validateInstagramCredential,
@@ -13,7 +15,6 @@ export { oauth } from "./oauth.ts";
 
 const service = "instagram";
 
-/** OAuth connections use Instagram Login; pasted tokens use Instagram API with Facebook Login. */
 export const executors: ProviderExecutors = defineProviderExecutors<InstagramContext>({
   service,
   handlers: instagramActionHandlers,
@@ -26,7 +27,10 @@ export const executors: ProviderExecutors = defineProviderExecutors<InstagramCon
         tokenType: credential.tokenType,
         accountId: credential.profile.accountId,
         providerSecret: credential.providerSecret,
-        apiHost: "instagram",
+        apiHost:
+          instagramLoginMode(optionalRecord(credential.metadata.oauthClientExtra)) === "unified"
+            ? "facebook"
+            : "instagram",
         fetcher,
         transitFiles: context.transitFiles,
         signal: context.signal,
