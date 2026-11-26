@@ -60,7 +60,7 @@ const mediaUrlsSchema = s.array(
 );
 
 const platformSettingsSchema = s.unknownObject(
-  "Per-platform options keyed by platform type, such as instagram.videoType, youtube.title and privacy, tiktok.privacyLevel or linkedin.repostParentUrn. Publora rejects unknown keys with PLATFORM_SETTING_UNKNOWN.",
+  "Per-platform options keyed by platform type: instagram, tiktok, youtube, threads, twitter, telegram or linkedin, such as instagram.videoType, youtube.title and privacy, tiktok.viewerSetting or linkedin.repostParentUrn. Publora rejects any other key with PLATFORM_SETTING_UNKNOWN.",
 );
 
 const warningsSchema = s.array(
@@ -96,7 +96,9 @@ const platformPostSchema = s.looseObject(
   "The post on one connected account.",
   {
     platform: s.string("The social network."),
-    platformId: s.string("The connection ID."),
+    platformId: s.nullableString(
+      "The account's own ID on the social network, without the platform prefix, so not a connection ID for create_post or update_post.",
+    ),
     content: s.string("The text published to this account."),
     status: s.string("draft, scheduled, pending, processing, published or failed."),
     postedId: s.nullableString("The post ID on the social network once published."),
@@ -104,7 +106,7 @@ const platformPostSchema = s.looseObject(
     publishedAt: s.nullableString("When the post was published to this account."),
     error: s.unknown("Why publishing failed on this account, when it did."),
   },
-  { required: ["platform", "platformId", "status"] },
+  { required: ["platform", "status"] },
 );
 
 const postEditFields = {
@@ -254,13 +256,18 @@ export const publoraActions: ActionDefinition[] = [
     name: "update_post",
     operationType: "write",
     description:
-      "Change a Publora draft or scheduled post: its text, accounts, media, settings, comments or time, move it between draft and scheduled, or publish it now. A platforms list replaces the stored one.",
+      "Change a Publora draft or scheduled post: its text, accounts, media, settings, comments or time, move it between draft and scheduled, or publish it now. A platforms list replaces the stored one; mediaUrls are added to the media already attached.",
     inputSchema: s.requireAnyProperty(
       s.object(
         "The post to change and at least one field to update.",
         {
           postGroupId: postGroupIdSchema,
           ...postEditFields,
+          mediaUrls: s.array(
+            "Public HTTPS addresses of images or videos to add to the media already attached; this provider has no action that removes media. Send idempotencyKey with them, or a retried update attaches the files twice.",
+            s.url("One image or video address."),
+            { minItems: 1, maxItems: 10 },
+          ),
           platforms: s.array(
             "The complete new list of connection IDs. Accounts left out lose their copy of the post.",
             s.nonEmptyString("One connection ID."),

@@ -102,7 +102,7 @@ describe("Publora actions", () => {
         success: true,
         postGroupId,
         status: "published",
-        posts: [{ platform: "mastodon", platformId: "mastodon-1", status: "published", postedId: "115" }],
+        posts: [{ platform: "mastodon", platformId: "109876543210", status: "published", postedId: "115" }],
       });
     });
 
