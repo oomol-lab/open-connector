@@ -140,11 +140,16 @@ describe("custom-registered providers", () => {
   });
 
   it("rejects a custom provider that shadows a bundled service or duplicates another custom provider", async () => {
-    const shadow: CustomProvider = { ...customGreet, definition: { ...customGreet.definition, service: "github" } };
-    await expect(createConnectorRuntime({ ...(await fixture()), customProviders: [shadow] })).rejects.toThrow("github");
+    const shadow: CustomProvider = {
+      ...customGreet,
+      definition: { ...customGreet.definition, service: "github", actions: [] },
+    };
+    await expect(createConnectorRuntime({ ...(await fixture()), customProviders: [shadow] })).rejects.toThrow(
+      "Provider service already registered: github",
+    );
     await expect(
       createConnectorRuntime({ ...(await fixture()), customProviders: [customGreet, customGreet] }),
-    ).rejects.toThrow("customgreet");
+    ).rejects.toThrow("Provider service already registered: customgreet");
   });
 
   it("rejects an action that does not belong to its provider", async () => {
@@ -215,7 +220,7 @@ const customPoll: CustomProvider = {
 };
 
 describe("custom provider poll triggers", () => {
-  it("lists a host poll trigger and polls it end to end through the connection proxy, with dispatch and policy applied", async () => {
+  it("lists a host poll trigger and polls it end to end through the connection proxy, with dispatch applied", async () => {
     // The custom provider's API: items 1..3 exist.
     vi.stubGlobal(
       "fetch",
@@ -274,6 +279,36 @@ describe("custom provider poll triggers", () => {
     expect(
       attempts.filter((attempt) => attempt.service === "custompoll" && attempt.operation === "trigger"),
     ).toHaveLength(2);
+  });
+});
+
+describe("custom provider trigger policy", () => {
+  it("blocks a host poll trigger by policy before it reaches the provider", async () => {
+    const fetcher = vi.fn<typeof fetch>(async () => Response.json([]));
+    vi.stubGlobal("fetch", fetcher);
+    runtime = await createConnectorRuntime({
+      ...(await fixture()),
+      customProviders: [customPoll],
+      actionPolicy: { blockedTriggers: ["custompoll.on_new_item"] },
+    });
+    expect((await call("/v1/connections/custompoll/connect/api-key", { apiKey: "key" })).status).toBe(200);
+    const alias = (
+      (await (await call("/v1/apps", undefined, "runtime-token")).json()).data as { service: string; alias: string }[]
+    ).find((app) => app.service === "custompoll")!.alias;
+    const response = await runtime.fetch(
+      new Request(`${publicOrigin}/v1/providers/custompoll/triggers/custompoll.on_new_item/execute`, {
+        method: "POST",
+        headers: {
+          "authorization": "Bearer runtime-token",
+          "content-type": "application/json",
+          "x-oo-connector-alias": alias,
+        },
+        body: JSON.stringify({ operation: "read", config: {}, checkpoint: null }),
+      }),
+    );
+    expect(response.status).toBe(403);
+    expect((await response.json()).errorCode).toBe("trigger_blocked");
+    expect(fetcher).not.toHaveBeenCalled();
   });
 });
 
@@ -396,15 +431,27 @@ describe("custom provider registration checks", () => {
 
   it("loads a custom provider module once on first use and retries after a failed load", async () => {
     const module = await customGreet.load();
-    const load = vi.fn(async () => module);
+    let release!: () => void;
+    const pending = new Promise<void>((resolve) => (release = resolve));
+    const load = vi.fn(async () => {
+      await pending;
+      return module;
+    });
     runtime = await createConnectorRuntime({ ...(await fixture()), customProviders: [{ ...customGreet, load }] });
     await call("/v1/providers", undefined, "runtime-token");
     await call("/v1/actions?service=customgreet", undefined, "runtime-token");
     await call("/v1/actions/customgreet.greet", undefined, "runtime-token");
     expect(load).not.toHaveBeenCalled();
     const execute = () => call("/v1/actions/customgreet.greet", { input: { name: "Ada" } }, "runtime-token");
+    // Both first uses start while the load is still pending and share it.
+    const first = execute();
+    await vi.waitFor(() => expect(load).toHaveBeenCalledTimes(1));
+    const second = execute();
+    await new Promise((resolve) => setTimeout(resolve, 50));
+    expect(load).toHaveBeenCalledTimes(1);
+    release();
+    expect((await Promise.all([first, second])).map((response) => response.status)).toEqual([200, 200]);
     expect((await execute()).status).toBe(200);
-    expect((await Promise.all([execute(), execute()])).map((response) => response.status)).toEqual([200, 200]);
     expect(load).toHaveBeenCalledTimes(1);
     await runtime.close();
 

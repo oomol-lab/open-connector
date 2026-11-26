@@ -398,14 +398,26 @@ describe("cloudflare worker custom providers", () => {
   });
 
   it("rejects a custom provider that shadows a bundled service or repeats another", () => {
-    const shadow: CustomProvider = { ...customGreet, definition: { ...customGreet.definition, service: "github" } };
-    expect(() => createCloudflareWorker({ customProviders: [shadow] })).toThrow("github");
-    expect(() => createCloudflareWorker({ customProviders: [customGreet, customGreet] })).toThrow("customgreet");
+    const shadow: CustomProvider = {
+      ...customGreet,
+      definition: { ...customGreet.definition, service: "github", actions: [] },
+    };
+    expect(() => createCloudflareWorker({ customProviders: [shadow] })).toThrow(
+      "Provider service already registered: github",
+    );
+    expect(() => createCloudflareWorker({ customProviders: [customGreet, customGreet] })).toThrow(
+      "Provider service already registered: customgreet",
+    );
   });
 
   it("rejects a Node-only bundled service id when the worker is created", () => {
-    const shadow: CustomProvider = { ...customGreet, definition: { ...customGreet.definition, service: "sftp" } };
-    expect(() => createCloudflareWorker({ customProviders: [shadow] })).toThrow("sftp");
+    const shadow: CustomProvider = {
+      ...customGreet,
+      definition: { ...customGreet.definition, service: "sftp", actions: [] },
+    };
+    expect(() => createCloudflareWorker({ customProviders: [shadow] })).toThrow(
+      "Provider service already registered: sftp",
+    );
   });
 
   it("rejects an invalid service id or a stray action when the worker is created", () => {
@@ -420,7 +432,12 @@ describe("cloudflare worker custom providers", () => {
 
   it("loads a custom provider module once across executions", async () => {
     vi.spyOn(console, "info").mockImplementation(() => {});
-    const load = vi.fn(customGreet.load);
+    let release!: () => void;
+    const pending = new Promise<void>((resolve) => (release = resolve));
+    const load = vi.fn(async () => {
+      await pending;
+      return customGreet.load();
+    });
     const binding = new SqliteD1Database();
     const hosted = createCloudflareWorker({ customProviders: [{ ...customGreet, load }] });
     const env = { ...createEnv(), DB: binding, OOMOL_CONNECT_RUNTIME_TOKEN: "host-token" };
@@ -435,9 +452,15 @@ describe("cloudflare worker custom providers", () => {
         createExecutionContext(),
       );
     try {
+      // Both first uses start while the load is still pending and share it.
+      const first = execute();
+      await vi.waitFor(() => expect(load).toHaveBeenCalledTimes(1));
+      const second = execute();
+      await new Promise((resolve) => setTimeout(resolve, 50));
+      expect(load).toHaveBeenCalledTimes(1);
+      release();
+      expect((await Promise.all([first, second])).map((response) => response.status)).toEqual([200, 200]);
       expect((await execute()).status).toBe(200);
-      const concurrent = await Promise.all([execute(), execute()]);
-      expect(concurrent.map((response) => response.status)).toEqual([200, 200]);
       expect(load).toHaveBeenCalledTimes(1);
     } finally {
       binding.close();
