@@ -167,7 +167,8 @@ export async function createConnectorRuntime(options: ConnectorRuntimeOptions): 
     catalogIndexFile: join(assetDirectory, "catalog/apps-index.json"),
     migrationDirectory: join(assetDirectory, "migrations"),
   };
-  const customProviders = options.customProviders ?? [];
+  // Copy the list so a later change to the host's array cannot split the registry from the catalog.
+  const customProviders = [...(options.customProviders ?? [])];
   const modules = registerCustomProviders({
     bundledModules: executorModules,
     bundledServices: Object.keys(executorModules),

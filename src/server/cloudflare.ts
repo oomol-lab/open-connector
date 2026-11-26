@@ -53,7 +53,8 @@ export interface CloudflareWorker {
 }
 
 export function createCloudflareWorker(options: CloudflareWorkerOptions = {}): CloudflareWorker {
-  const customProviders = options.customProviders ?? [];
+  // Copy the list so a later change to the host's array cannot split the registry from the catalog.
+  const customProviders = [...(options.customProviders ?? [])];
   // Node-only providers are not in the Workers registry, but their ids are still bundled and reserved.
   const modules = registerCustomProviders({
     bundledModules: executorModules,

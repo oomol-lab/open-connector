@@ -370,6 +370,33 @@ describe("cloudflare worker custom providers", () => {
     }
   });
 
+  it("keeps the provider list passed at creation when the host changes its array later", async () => {
+    vi.spyOn(console, "info").mockImplementation(() => {});
+    const binding = new SqliteD1Database();
+    const providers = [customGreet];
+    const hosted = createCloudflareWorker({ customProviders: providers });
+    providers.length = 0;
+    const env = { ...createEnv(), DB: binding, OOMOL_CONNECT_RUNTIME_TOKEN: "host-token" };
+    const request = (path: string, body?: unknown) =>
+      hosted.fetch(
+        new Request(`https://host-snapshot.example.com${path}`, {
+          method: body ? "POST" : "GET",
+          headers: { "authorization": "Bearer host-token", "content-type": "application/json" },
+          body: body === undefined ? undefined : JSON.stringify(body),
+        }),
+        env,
+        createExecutionContext(),
+      );
+    try {
+      expect(JSON.stringify(await (await request("/v1/actions?service=customgreet")).json())).toContain(
+        "customgreet.greet",
+      );
+      expect((await request("/v1/actions/customgreet.greet", { input: { name: "Ada" } })).status).toBe(200);
+    } finally {
+      binding.close();
+    }
+  });
+
   it("rejects a custom provider that shadows a bundled service or repeats another", () => {
     const shadow: CustomProvider = { ...customGreet, definition: { ...customGreet.definition, service: "github" } };
     expect(() => createCloudflareWorker({ customProviders: [shadow] })).toThrow("github");

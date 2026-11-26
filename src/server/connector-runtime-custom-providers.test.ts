@@ -284,6 +284,16 @@ describe("custom provider registration checks", () => {
     expect((await call("/v1/actions/customgreet.greet", { input: { name: "Ada" } }, "runtime-token")).status).toBe(200);
   });
 
+  it("keeps the provider list passed at creation when the host changes its array later", async () => {
+    const providers = [customGreet];
+    const created = createConnectorRuntime({ ...(await fixture()), customProviders: providers });
+    providers.length = 0;
+    runtime = await created;
+    const listed = (await (await call("/v1/actions?service=customgreet", undefined, "runtime-token")).json()).data;
+    expect(JSON.stringify(listed)).toContain("customgreet.greet");
+    expect((await call("/v1/actions/customgreet.greet", { input: { name: "Ada" } }, "runtime-token")).status).toBe(200);
+  });
+
   it("lists and executes a custom provider with eager schemas", async () => {
     runtime = await createConnectorRuntime({
       ...(await fixture()),
