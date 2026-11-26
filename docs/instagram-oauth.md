@@ -7,7 +7,7 @@ Connect OpenConnector to Meta's official Instagram API using an OAuth app you ow
 - **Unified Login**: Use for a Meta app configured with the **Manage messaging & content on Instagram** use case (belonging to a business portfolio and using Facebook Login for Business). Create or select a configuration marked **Instagram Login Compatible**, copy its `config_id`, and use your **Meta App ID and App Secret**. No linked Facebook Page is required.
 - **Instagram Login**: Use for existing Business Login for Instagram apps with their **Instagram App ID and App Secret**. Omitting `loginMode` keeps this flow.
 
-Both OAuth setups require a public HTTPS callback. Standard Access works for accounts that hold roles on your Meta app; serving external accounts requires Live mode and Meta App Review.
+Both OAuth setups require a public HTTPS callback. Standard Access works for accounts that hold roles on your Meta app; serving external accounts requires Live mode, Meta App Review, and Business Verification.
 
 Official references:
 
@@ -227,6 +227,7 @@ All Action IDs and input/output schemas are identical across login modes.
 | `send_message`                                              | Basic plus `instagram_business_manage_messages` | Not supported                            |
 
 - The catalog's `requiredScopes` lists Instagram Login permissions; use the corresponding Unified Login / pasted-token permissions above for those flows.
+- For pasted Facebook Login tokens where the user holds the Page role through Business Manager, `get_media_insights` also requires `ads_management` and `ads_read` (not required for Unified Login).
 - With Unified Login or pasted tokens, `get_current_user` omits `accountType` when Meta does not return it, and `send_message` is not currently supported (use Instagram Login OAuth for messaging).
 
 ## Operational notes
