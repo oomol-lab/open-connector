@@ -1,3 +1,4 @@
+import type { ProviderDefinition } from "../src/core/types.ts";
 import type { AssetsBinding } from "../src/server/cloudflare/cloudflare-bindings.ts";
 
 import { mkdir, mkdtemp, readFile, readdir, rm, writeFile } from "node:fs/promises";
@@ -110,6 +111,59 @@ describe("copyCatalogAssets", () => {
 
     expect(index.chunks.length).toBeGreaterThan(1);
     expect(catalog.providers.map((entry) => entry.service)).toEqual(["alpha", "zulu"]);
+  });
+});
+
+describe("copyCatalogAssets with a provider allowlist", () => {
+  it("copies only the allowlisted providers and counts them in the index", async () => {
+    const { sourceDir, targetDir } = await fixture();
+    for (const service of ["alpha", "bravo", "charlie"]) {
+      await writeFile(join(sourceDir, `${service}.json`), JSON.stringify(providerDefinition(service)));
+    }
+
+    const index = await copyCatalogAssets({ sourceDir, targetDir, providers: ["alpha", "charlie"] });
+
+    expect(index).toEqual({ version: 1, providerCount: 2, chunks: ["apps-0000.json"] });
+    const catalog = await loadCatalogFromAssets(directoryAssets(targetDir), {
+      executableServices: ["alpha", "charlie"],
+    });
+    expect(catalog.providers.map((entry) => entry.service)).toEqual(["alpha", "charlie"]);
+  });
+
+  it("copies every provider when no allowlist is given", async () => {
+    const { sourceDir, targetDir } = await fixture();
+    for (const service of ["alpha", "bravo"]) {
+      await writeFile(join(sourceDir, `${service}.json`), JSON.stringify(providerDefinition(service)));
+    }
+
+    const index = await copyCatalogAssets({ sourceDir, targetDir, providers: undefined });
+
+    expect(index.providerCount).toBe(2);
+  });
+
+  // Custom providers never come from the catalog files, so a filtered catalog must still merge them in.
+  it("still serves custom providers next to a filtered catalog", async () => {
+    const { sourceDir, targetDir } = await fixture();
+    for (const service of ["alpha", "bravo"]) {
+      await writeFile(join(sourceDir, `${service}.json`), JSON.stringify(providerDefinition(service)));
+    }
+
+    await copyCatalogAssets({ sourceDir, targetDir, providers: ["alpha"] });
+    const catalog = await loadCatalogFromAssets(directoryAssets(targetDir), {
+      executableServices: ["alpha", "custom"],
+      customProviders: [providerDefinition("custom") as unknown as ProviderDefinition],
+    });
+
+    expect(catalog.providers.map((entry) => entry.service).sort()).toEqual(["alpha", "custom"]);
+  });
+
+  it("refuses an allowlist naming a provider that has no catalog file", async () => {
+    const { sourceDir, targetDir } = await fixture();
+    await writeFile(join(sourceDir, "alpha.json"), JSON.stringify(providerDefinition("alpha")));
+
+    await expect(copyCatalogAssets({ sourceDir, targetDir, providers: ["alpha", "alhpa", "zzz"] })).rejects.toThrow(
+      "OPENCONNECTOR_PROVIDERS lists unknown providers: alhpa (did you mean alpha?), zzz",
+    );
   });
 });
 
