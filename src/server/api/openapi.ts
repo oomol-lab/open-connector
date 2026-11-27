@@ -1095,6 +1095,12 @@ export function createOpenApiDocument(options: OpenApiDocumentOptions = {}): Ope
             effectiveScopes: jsonSchema.array(jsonSchema.string(), {
               description: "Scopes the runtime will include in new authorization requests.",
             }),
+            configSource: jsonSchema.nullable(
+              jsonSchema.stringEnum(
+                "Where the effective client comes from: OAUTH_<SERVICE>_* deployment variables, or the config stored through this API; null when none is configured.",
+                ["environment", "stored"],
+              ),
+            ),
           },
           {
             required: [
@@ -1107,6 +1113,7 @@ export function createOpenApiDocument(options: OpenApiDocumentOptions = {}): Ope
               "auth",
               "requestedScopes",
               "effectiveScopes",
+              "configSource",
             ],
             description: "OAuth client config summary safe for the local console.",
           },
@@ -2125,6 +2132,7 @@ function createOAuthConfigPath(): Record<string, unknown> {
         200: jsonResponse({ $ref: "#/components/schemas/OAuthClientConfigSummary" }),
         400: jsonResponse({ $ref: "#/components/schemas/ErrorResponse" }),
         404: jsonResponse({ $ref: "#/components/schemas/ErrorResponse" }),
+        409: jsonResponse({ $ref: "#/components/schemas/ErrorResponse" }),
       },
     },
     delete: {
@@ -2144,6 +2152,7 @@ function createOAuthConfigPath(): Record<string, unknown> {
           ),
         ),
         404: jsonResponse({ $ref: "#/components/schemas/ErrorResponse" }),
+        409: jsonResponse({ $ref: "#/components/schemas/ErrorResponse" }),
       },
     },
   };

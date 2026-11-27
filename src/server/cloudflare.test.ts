@@ -306,6 +306,121 @@ describe("cloudflare worker", () => {
   });
 });
 
+describe("cloudflare worker OAuth clients from the environment", () => {
+  const oauthApp = {
+    service: "envapp",
+    displayName: "Env App",
+    categories: ["Developer Tools"],
+    authTypes: ["oauth2"],
+    auth: [
+      {
+        type: "oauth2",
+        authorizationUrl: "https://envapp.example.com/oauth/authorize",
+        tokenUrl: "https://envapp.example.com/oauth/token",
+        scopes: ["read"],
+        tokenEndpointAuthMethod: "client_secret_post",
+      },
+    ],
+    actions: [],
+  };
+  // The default worker has already cached a catalog without this provider, so these tests use their own.
+  const oauthWorker = createCloudflareWorker();
+  const databases: SqliteD1Database[] = [];
+  afterEach(() => {
+    for (const database of databases.splice(0)) database.close();
+  });
+
+  function createOAuthEnv(variables: Record<string, string>): CloudflareEnv {
+    const database = new SqliteD1Database();
+    databases.push(database);
+    return {
+      ...createEnv(),
+      DB: database,
+      ASSETS: memoryAssets({
+        "/catalog/index.json": { version: 1, providerCount: 2, chunks: ["apps-0000.json"] },
+        "/catalog/apps-0000.json": [provider, oauthApp],
+      }),
+      ...variables,
+    };
+  }
+
+  function send(env: CloudflareEnv, origin: string, path: string, init?: RequestInit): Promise<Response> {
+    return oauthWorker.fetch(new Request(`${origin}${path}`, init), env, createExecutionContext());
+  }
+
+  it("authorizes with the environment client, lists it without its secret, and refuses admin writes", async () => {
+    const origin = "https://oauth-env.example.com";
+    const env = createOAuthEnv({
+      OAUTH_ENVAPP_CLIENT_ID: "env-client-id",
+      OAUTH_ENVAPP_CLIENT_SECRET: "env-client-secret",
+    });
+
+    const list = await send(env, origin, "/api/oauth/configs");
+    expect(list.status).toBe(200);
+    const body = await list.text();
+    expect(JSON.parse(body)).toMatchObject([
+      { service: "envapp", configured: true, clientId: "env-client-id", configSource: "environment" },
+    ]);
+    expect(body).not.toContain("env-client-secret");
+
+    const started = await send(env, origin, "/api/oauth/connection-requests", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ service: "envapp", connectionName: "work" }),
+    });
+    expect(started.status).toBe(200);
+    const { authorizationUrl } = (await started.json()) as { authorizationUrl: string };
+    expect(new URL(authorizationUrl).searchParams.get("client_id")).toBe("env-client-id");
+
+    for (const init of [
+      {
+        method: "PUT",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ clientId: "stored-client-id", clientSecret: "stored-client-secret" }),
+      },
+      { method: "DELETE" },
+    ]) {
+      const response = await send(env, origin, "/api/oauth/configs/envapp", init);
+      expect(response.status).toBe(409);
+      expect(await response.json()).toMatchObject({ error: { code: "oauth_client_config_from_environment" } });
+    }
+  });
+
+  it("keeps the admin API path when no environment client is set", async () => {
+    const origin = "https://oauth-env-unset.example.com";
+    const env = createOAuthEnv({});
+
+    const saved = await send(env, origin, "/api/oauth/configs/envapp", {
+      method: "PUT",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ clientId: "stored-client-id", clientSecret: "stored-client-secret" }),
+    });
+    expect(saved.status).toBe(200);
+    expect(await saved.json()).toMatchObject({ configured: true, configSource: "stored" });
+    const list = await send(env, origin, "/api/oauth/configs");
+    const body = await list.text();
+    expect(JSON.parse(body)).toMatchObject([{ service: "envapp", clientId: "stored-client-id" }]);
+    expect(body).not.toContain("stored-client-secret");
+  });
+
+  it("fails startup for a half pair, naming the missing variable", async () => {
+    const env = createOAuthEnv({ OAUTH_ENVAPP_CLIENT_ID: "env-client-id" });
+    await expect(send(env, "https://oauth-env-half.example.com", "/health")).rejects.toThrow(
+      "OAUTH_ENVAPP_CLIENT_SECRET is required when OAUTH_ENVAPP_CLIENT_ID is set.",
+    );
+  });
+
+  it("fails startup for a variable that names a non-OAuth or unknown service", async () => {
+    for (const [name, message] of [
+      ["OAUTH_EXAMPLE", "example does not support oauth2"],
+      ["OAUTH_NOPE", "OAUTH_NOPE_CLIENT_ID"],
+    ]) {
+      const env = createOAuthEnv({ [`${name}_CLIENT_ID`]: "id", [`${name}_CLIENT_SECRET`]: "secret" });
+      await expect(send(env, "https://oauth-env-unknown.example.com", "/health")).rejects.toThrow(message);
+    }
+  });
+});
+
 describe("cloudflare worker custom providers", () => {
   const greet = defineProviderAction("customgreet", {
     name: "greet",

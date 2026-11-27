@@ -11,6 +11,7 @@ import { ActionPolicyService, parseActionPolicyList } from "../core/action-polic
 import { PromiseCache } from "../core/promise-cache.ts";
 import { parseEgressTrustedHosts, parsePrivateNetworkAccessFlag } from "../core/request.ts";
 import { readMcpOAuthClientMetadata } from "../custom-mcp/definition.ts";
+import { listOAuthClientEnvironmentVariables } from "../oauth/oauth-client-config-environment.ts";
 import { ProviderLoader } from "../providers/provider-loader.ts";
 import { excludedServices, executorModules } from "../providers/registry.cloudflare.generated.ts";
 import { SaasCleanupService } from "../saas/saas-cleanup-service.ts";
@@ -131,6 +132,7 @@ export function createCloudflareWorker(options: CloudflareWorkerOptions = {}): C
         blockedTriggers: parseActionPolicyList(env.OOMOL_CONNECT_BLOCKED_TRIGGERS),
       }),
       allowedCustomOAuth: parseActionPolicyList(env.OOMOL_CONNECT_ALLOWED_CUSTOM_OAUTH),
+      oauthClientEnvironment: env,
       oauthResultOrigins: parseOAuthResultOrigins(env.OOMOL_CONNECT_OAUTH_RESULT_ORIGINS),
       customMcpOAuthClient: readMcpOAuthClientMetadata({
         clientName: env.OOMOL_CONNECT_CUSTOM_MCP_CLIENT_NAME,
@@ -254,6 +256,7 @@ function createCacheKey(env: CloudflareEnv, publicOrigin: string): string {
     blockedTriggers: env.OOMOL_CONNECT_BLOCKED_TRIGGERS ?? "",
     blockedProxies: env.OOMOL_CONNECT_BLOCKED_PROXIES ?? "",
     allowedCustomOAuth: env.OOMOL_CONNECT_ALLOWED_CUSTOM_OAUTH ?? "",
+    oauthClients: listOAuthClientEnvironmentVariables(env),
     oauthResultOrigins: env.OOMOL_CONNECT_OAUTH_RESULT_ORIGINS ?? "",
     customMcpClientName: env.OOMOL_CONNECT_CUSTOM_MCP_CLIENT_NAME ?? "",
     customMcpClientLogoUri: env.OOMOL_CONNECT_CUSTOM_MCP_CLIENT_LOGO_URI ?? "",

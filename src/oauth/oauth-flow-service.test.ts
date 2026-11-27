@@ -26,6 +26,7 @@ import { provider as tencentDocsProvider } from "../providers/tencent_docs/defin
 import { provider as zoomProvider } from "../providers/zoom/definition.ts";
 import { AesGcmSecretCodec } from "../server/secrets/secret-codec.ts";
 import { SqliteRuntimeDatabase } from "../server/storage/sqlite/runtime-store.ts";
+import { readOAuthClientEnvironment } from "./oauth-client-config-environment.ts";
 import { OAuthClientConfigService } from "./oauth-client-config-service.ts";
 import { OAuthFlowService } from "./oauth-flow-service.ts";
 
@@ -459,6 +460,75 @@ describe("OAuthFlowService", () => {
 
     const tokenBody = fetcher.mock.calls.at(-1)?.[1]?.body as URLSearchParams;
     expect(tokenBody.get("redirect_uri")).toBe("app://oauth/callback");
+  });
+
+  it("authorizes and exchanges the code with an OAuth client from the environment", async () => {
+    const provider: ProviderDefinition = {
+      ...oauthProvider,
+      auth: [
+        {
+          type: "oauth2",
+          authorizationUrl: "https://example.com/oauth/authorize",
+          tokenUrl: "https://example.com/oauth/token",
+          scopes: ["read"],
+          tokenEndpointAuthMethod: "client_secret_post",
+        },
+      ],
+    };
+    const services = createServices([provider], {
+      oauthClientEnvironment: {
+        OAUTH_EXAMPLE_CLIENT_ID: "env-client-id",
+        OAUTH_EXAMPLE_CLIENT_SECRET: "env-client-secret",
+      },
+    });
+    const fetcher = vi.fn(async (_url: string | URL | Request, _init?: RequestInit) =>
+      Response.json({ access_token: "access-token", token_type: "Bearer" }),
+    );
+    vi.stubGlobal("fetch", fetcher);
+
+    const started = await services.flow.startAuthorization({ service: "example", connectionName: "work" });
+    expect(new URL(started.authorizationUrl).searchParams.get("client_id")).toBe("env-client-id");
+    await services.flow.completeAuthorization({ state: started.state, code: "code" });
+
+    const tokenBody = fetcher.mock.calls.at(-1)?.[1]?.body as URLSearchParams;
+    expect(tokenBody.get("client_id")).toBe("env-client-id");
+    expect(tokenBody.get("client_secret")).toBe("env-client-secret");
+    await expect(services.connections.getCredential("example", "work")).resolves.toMatchObject({
+      accessToken: "access-token",
+    });
+  });
+
+  it("sends the scope subset and redirect URI override of an environment client", async () => {
+    const environment = {
+      OAUTH_EXAMPLE_CLIENT_ID: "env-client-id",
+      OAUTH_EXAMPLE_CLIENT_SECRET: "env-client-secret",
+      OAUTH_EXAMPLE_TENANT: "acme",
+    };
+    const services = createServices([oauthProvider], {
+      oauthClientEnvironment: {
+        ...environment,
+        OAUTH_EXAMPLE_SCOPES: " read,read ",
+        OAUTH_EXAMPLE_REDIRECT_URI: "https://proxy.example.com/connect/oauth/callback",
+      },
+    });
+    const fetcher = vi.fn(async (_url: string | URL | Request, _init?: RequestInit) =>
+      Response.json({ access_token: "access-token", token_type: "Bearer" }),
+    );
+    vi.stubGlobal("fetch", fetcher);
+
+    const started = await services.flow.startAuthorization({ service: "example", connectionName: "work" });
+    const authorizationUrl = new URL(started.authorizationUrl);
+    expect(authorizationUrl.searchParams.get("scope")).toBe("read");
+    expect(authorizationUrl.searchParams.get("redirect_uri")).toBe("https://proxy.example.com/connect/oauth/callback");
+    await services.flow.completeAuthorization({ state: started.state, code: "code" });
+    const tokenBody = fetcher.mock.calls.at(-1)?.[1]?.body as URLSearchParams;
+    expect(tokenBody.get("redirect_uri")).toBe("https://proxy.example.com/connect/oauth/callback");
+
+    const spaced = createServices([oauthProvider], {
+      oauthClientEnvironment: { ...environment, OAUTH_EXAMPLE_SCOPES: "write  read" },
+    });
+    const spacedStart = await spaced.flow.startAuthorization({ service: "example", connectionName: "work" });
+    expect(new URL(spacedStart.authorizationUrl).searchParams.get("scope")).toBe("write read");
   });
 
   it("uses the requested scope subset from the OAuth client config", async () => {
@@ -1490,6 +1560,7 @@ interface CreateServicesOptions {
   allowedCustomOAuth?: string[];
   secretCodec?: ISecretCodec;
   oauthRuntime?: ProviderOAuthRuntime;
+  oauthClientEnvironment?: Record<string, string>;
 }
 
 function createServices(
@@ -1514,6 +1585,7 @@ function createServices(
     catalog,
     origin: "http://localhost:3000",
     store: new MemoryOAuthClientConfigStore(),
+    environmentClients: readOAuthClientEnvironment(options.oauthClientEnvironment ?? {}, catalog.providers),
   });
 
   const states = new MemoryOAuthStateStore();

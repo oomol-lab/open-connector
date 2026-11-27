@@ -160,6 +160,62 @@ curl https://open-connector.example.workers.dev/health
 The health endpoint should return `{"ok":true}`. Replace the example URL with the deployed Worker
 URL or your custom domain.
 
+## OAuth apps from the environment
+
+A Worker can read the OAuth app of a provider from Wrangler secrets or variables instead of the
+admin API, so a deployment does not have to send its OAuth apps again after each cold start. Set
+the client id and secret for each provider, and any other value its app needs:
+
+```bash
+npx wrangler secret put OAUTH_GOOGLECALENDAR_CLIENT_ID --config wrangler.local.jsonc
+npx wrangler secret put OAUTH_GOOGLECALENDAR_CLIENT_SECRET --config wrangler.local.jsonc
+```
+
+- Every name starts with `OAUTH_<SERVICE>_`, where `<SERVICE>` is the provider's service id in
+  upper case with `-` written as `_`: `googlecalendar` becomes `OAUTH_GOOGLECALENDAR_*` and
+  `microsoft_teams` becomes `OAUTH_MICROSOFT_TEAMS_*`. Only providers with OAuth2 auth qualify.
+- `OAUTH_<SERVICE>_CLIENT_ID` and `OAUTH_<SERVICE>_CLIENT_SECRET` set the client. A public client
+  (`tokenEndpointAuthMethod: "none"`) may set the client id alone.
+- `OAUTH_<SERVICE>_<FIELD>` sets each client config field the provider declares
+  (`auth[].clientConfigFields` in its catalog entry), `<FIELD>` being the field key in upper
+  snake case: Box reads `OAUTH_BOX_PRIMARY_SIGNATURE_KEY` and `OAUTH_BOX_SECONDARY_SIGNATURE_KEY`,
+  slackbot reads `OAUTH_SLACKBOT_APP_ID` and `OAUTH_SLACKBOT_SIGNING_SECRET`, and Microsoft
+  providers read `OAUTH_<SERVICE>_TENANT`. A field left unset takes its catalog default, if any.
+  Store secret fields with `wrangler secret put`; they are never listed.
+- `OAUTH_<SERVICE>_SCOPES` requests a scope subset, comma- or space-separated (for example
+  `read,write`); unset, the app requests the provider's default scopes.
+- `OAUTH_<SERVICE>_REDIRECT_URI` overrides the redirect URI, which must match the one registered on
+  the OAuth app; unset, the app uses the runtime callback `<OOMOL_CONNECT_ORIGIN>/oauth/callback`.
+  It is validated as the admin API validates `redirectUri`.
+- A blank value counts as unset. Other `OAUTH_` names, such as the `OAUTH_KV` binding, are ignored,
+  except those ending in `_CLIENT_ID`, `_CLIENT_SECRET`, `_SCOPES` or `_REDIRECT_URI` (including
+  `OAUTH_CLIENT_ID`, `OAUTH_CLIENT_SECRET`, `OAUTH_SCOPES` and `OAUTH_REDIRECT_URI`, which lack a
+  service name) and those under the prefix of a service the environment configures.
+- The Worker fails at startup, so every request fails and the Worker log names the variable, when a
+  variable is set without the client id or the client id without the secret (for example
+  `OAUTH_GOOGLECALENDAR_CLIENT_SECRET is required when OAUTH_GOOGLECALENDAR_CLIENT_ID is set.`),
+  when a required field has no default and no value, when a value fails validation, when a name
+  lacks the service name, when a name under a configured service's prefix is not read for the
+  service whose prefix it carries (the longest matching prefix of any OAuth2 service names it, so
+  `OAUTH_OUTLOOK_CALENDAR_TENNANT` is blamed on `outlook_calendar`, even if only `outlook` is
+  configured), or when a name maps to no OAuth2 provider or could be read two ways. A name that
+  maps to no provider stays fatal after an upgrade too, so remove the variables of a provider
+  before deploying a catalog that renames or drops it.
+
+The environment is the whole source of truth for a service set this way: a config stored earlier
+through the admin API is not merged, so set every field the app needs, such as the Box signature
+keys that turn on Box webhook signature verification. `GET /api/oauth/configs` lists the app as
+configured with `configSource: "environment"`, its client id and its non-secret fields, never a
+secret, and `PUT` and `DELETE /api/oauth/configs/<service>` answer
+`409 oauth_client_config_from_environment`. The console still offers Edit and Delete for such an
+app, and both fail with that 409; change the variables instead. The stored config stays in D1
+unused, and is used again once the variables are removed. Services without these variables
+behave as before: their app is managed through the admin API, a stored config is listed with
+`configSource: "stored"` and a service with no config with `configSource: null`. A connection
+request can still supply provider fields for its own connection. Connection-scoped OAuth apps
+(`OOMOL_CONNECT_ALLOWED_CUSTOM_OAUTH`) still take precedence over the deployment app for their own
+connections. The Node runtime does not read these variables.
+
 ## ChatGPT-compatible MCP OAuth
 
 To enable OAuth for clients that cannot supply an Authorization header, create a dedicated Workers KV namespace and bind it as `OAUTH_KV`:

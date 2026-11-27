@@ -136,7 +136,9 @@ export function createConsoleOAuthRoutes({
       return context.json(await operation);
     } catch (error) {
       if (error instanceof OAuthClientConfigError || error instanceof OAuthFlowError) {
-        return jsonError(context, error.code === "unknown_service" ? 404 : 400, error.code, error.message);
+        const status =
+          error.code === "unknown_service" ? 404 : error.code === "oauth_client_config_from_environment" ? 409 : 400;
+        return jsonError(context, status, error.code, error.message);
       }
       if (error instanceof HttpRequestError) {
         return jsonError(context, 400, error.code, error.message);
