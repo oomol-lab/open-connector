@@ -192,6 +192,18 @@ function collectMultimodalIssues(input: KlingSubmitInput, limits: KlingMultimoda
   const elements = input.elements ?? [];
   const voices = input.voices ?? [];
   if (
+    input.media.length > 0 &&
+    !input.media.some((item) => ["reference_image", "reference_video", "source_video"].includes(item.role)) &&
+    elements.length === 0 &&
+    voices.length === 0 &&
+    input.aspectRatio !== "adaptive"
+  )
+    add(
+      "aspectRatio",
+      "Kling 4 frame-only generation inherits the image aspect ratio; omit aspectRatio or use adaptive",
+    );
+
+  if (
     images.length > 10 ||
     videos.length > 5 ||
     elements.length > 7 ||

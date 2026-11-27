@@ -487,6 +487,12 @@ it.each([401, 403])("WorldRouter keeps ambiguous HTTP %i failures out of credent
 });
 
 it.each([
+  [400, { msg: "Invalid request" }, "invalid_input"],
+  [404, {}, "invalid_input"],
+  [409, {}, "invalid_input"],
+  [422, {}, "invalid_input"],
+  [500, {}, "provider_error"],
+  [200, { code: 99999 }, "provider_error"],
   [401, {}, "provider_error"],
   [403, { msgKey: "PLAN_LIMIT" }, "provider_error"],
   [200, { code: 30009, msgKey: "ERR_AUTHENTICATION_FAIL" }, "authorization_failed"],

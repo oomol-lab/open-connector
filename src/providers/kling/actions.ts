@@ -34,10 +34,12 @@ const mediaSchema = s.object(
       pattern: "^[hH][tT][tT][pP][sS]?:\\/\\/",
       maxLength: 8192,
     }),
-    referenceId: s.string("A request-unique identifier that can be referenced as @referenceId in prompts.", {
-      minLength: 1,
-      maxLength: 256,
-    }),
+    referenceId: s.nonWhitespaceString(
+      "A request-unique identifier that can be referenced as @referenceId in prompts.",
+      {
+        maxLength: 256,
+      },
+    ),
   },
   { optional: ["referenceId"] },
 );
@@ -331,9 +333,7 @@ const klingSubmitInputSchema: JsonSchema = s.object(
       "Kling 4 subject references. At most 3 video subjects; video subjects plus videos must not exceed 5.",
       s.requiredObject("A subject reference.", {
         elementId: s.string("The official or owned subject ID.", { minLength: 1 }),
-        referenceId: s.string("A unique reference ID used as @referenceId in the prompt.", {
-          minLength: 1,
-        }),
+        referenceId: s.nonWhitespaceString("A unique reference ID used as @referenceId in the prompt."),
       }),
       { maxItems: 7 },
     ),
@@ -341,9 +341,7 @@ const klingSubmitInputSchema: JsonSchema = s.object(
       "Kling 4.0 voice references, unavailable with original audio or Flash.",
       s.requiredObject("A voice reference.", {
         voiceId: s.string("The official or owned voice ID.", { minLength: 1 }),
-        referenceId: s.string("A unique reference ID used as @referenceId in the prompt.", {
-          minLength: 1,
-        }),
+        referenceId: s.nonWhitespaceString("A unique reference ID used as @referenceId in the prompt."),
       }),
       { maxItems: 3 },
     ),

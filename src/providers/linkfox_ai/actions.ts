@@ -5,7 +5,7 @@ import { s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
 
 const service = "linkfox_ai";
-const taskId = s.nonWhitespaceString("Task ID as an exact decimal string.");
+const taskId = s.string("Task ID as an exact decimal string.", { pattern: "^[0-9]+$" });
 const traceId = s.string("LinkFox AI request trace ID.");
 const model = s.nonWhitespaceString("Public model code returned by list_video_models.");
 const prompt = s.nonWhitespaceString("Instructions for generating or editing the video.");
@@ -172,7 +172,9 @@ export const linkfoxAiActions: ActionDefinition[] = [
         sourceVideoUrl: s.nonWhitespaceString("Public URL of the video to edit."),
         model,
         prompt,
-        duration: s.integer("Output duration in seconds, or -1 to follow the source duration on supported models."),
+        duration: s.integer("Output duration in seconds, or -1 to follow the source duration on supported models.", {
+          minimum: -1,
+        }),
         referenceImageUrls,
         useAssetWhitelist,
       },

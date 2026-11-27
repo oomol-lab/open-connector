@@ -58,7 +58,12 @@ function responseError(response: Response, payload: Record<string, unknown> | un
       validating ? "invalid_input" : "authorization_failed",
     );
   if (msgKey && inputErrorKeys.has(msgKey)) return new ProviderRequestError(400, message, details, "invalid_input");
-  return new ProviderRequestError(response.ok ? 502 : response.status, message, details, "provider_error");
+  return new ProviderRequestError(
+    response.ok ? 502 : response.status,
+    message,
+    details,
+    response.ok || response.status === 401 || response.status === 403 ? "provider_error" : undefined,
+  );
 }
 
 // Validate header characters before fetch so invalid input does not become a transport failure.
