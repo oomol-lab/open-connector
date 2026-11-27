@@ -187,6 +187,42 @@ cleaned up automatically. Workers KV applies the configured TTL when each file i
 deletes it automatically. KV clamps `OOMOL_CONNECT_TRANSIT_FILE_TTL_SECONDS` to a minimum of 60
 seconds and `OOMOL_CONNECT_TRANSIT_FILE_MAX_BYTES` to a maximum of 25 MiB.
 
+## Selecting providers
+
+By default the Worker bundles every Workers-capable provider. esbuild bundles each provider the registry can import,
+so a deployment that needs only a few providers still ships all of them: a larger script, a source map that can exceed
+Cloudflare's upload limit, and slower cold starts. Set `OPENCONNECTOR_PROVIDERS` to a comma-separated list of provider
+ids to build only those:
+
+```bash
+OPENCONNECTOR_PROVIDERS=googlecalendar,hubspot,salesforce npm run deploy:cloudflare
+```
+
+It is a build-time variable, read by `scripts/generate-provider-registry.ts` and `scripts/copy-catalog-assets.ts`, so
+set it in the environment of `npm run deploy:cloudflare` or `npm run dev:cloudflare`, not as a Worker variable in
+`wrangler.local.jsonc`. The Workers provider registry and the catalog assets then hold only the listed providers.
+Entries are trimmed, and empty or repeated entries are ignored. Leaving the variable unset, empty or whitespace-only
+builds every provider, as before. The Node registry and `catalog/apps` always keep every provider, but an invalid
+value in the shell also stops Node-side commands that regenerate (`npm install`, `npm start`, `npm test`), so set it only
+for the Workers build.
+
+The other bundled provider ids stay reserved, so a custom provider still cannot use one. Changing the variable
+regenerates the registry the next time `scripts/ensure-generated.ts` runs (on `npm install`, `npm start` and
+`npm test`) and in `npm run deploy:cloudflare` and `npm run dev:cloudflare`, so those never reuse a registry built for
+another selection. A bare `wrangler deploy` uses whatever was generated last, so deploy through the npm scripts.
+
+An id that is not a bundled provider fails the build, naming each unknown id and suggesting close matches:
+
+```text
+Error: OPENCONNECTOR_PROVIDERS lists unknown providers: hubsopt (did you mean hubspot?)
+```
+
+A Node-only provider, which cannot run on Workers, fails the build the same way:
+
+```text
+Error: OPENCONNECTOR_PROVIDERS lists Node-only providers that cannot run on Cloudflare Workers: sftp
+```
+
 ## Custom providers
 
 The Worker can register the same `customProviders` entries as the

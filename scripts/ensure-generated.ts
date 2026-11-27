@@ -1,12 +1,14 @@
 import { spawnSync } from "node:child_process";
-import { readdir, stat } from "node:fs/promises";
+import { readFile, readdir, stat } from "node:fs/promises";
 import { join } from "node:path";
 import { catalogIndexFileName } from "../src/catalog-index.ts";
+import { readProviderAllowlist, readProviderAllowlistMarker } from "./provider-allowlist.ts";
 
 const rootDir = process.cwd();
+const cloudflareRegistryPath = join(process.cwd(), "src/providers/registry.cloudflare.generated.ts");
 const generatedPaths = [
   join(process.cwd(), "src/providers/registry.generated.ts"),
-  join(process.cwd(), "src/providers/registry.cloudflare.generated.ts"),
+  cloudflareRegistryPath,
   join(process.cwd(), "src/providers/action-contracts.generated.ts"),
 ];
 const catalogDir = join(process.cwd(), "catalog/apps");
@@ -16,21 +18,48 @@ const sourcePaths = [
   join(rootDir, "src/providers"),
   join(rootDir, "scripts/generate-catalog.ts"),
   join(rootDir, "scripts/generate-provider-registry.ts"),
+  join(rootDir, "scripts/provider-allowlist.ts"),
   join(rootDir, "scripts/provider-source.ts"),
 ];
 const generatedPathSet = new Set(generatedPaths);
 
-const sourceMtimeMs = await newestMtimeMs(sourcePaths);
+if (import.meta.main) {
+  const sourceMtimeMs = await newestMtimeMs(sourcePaths);
 
-const [generatedFilesPresent, catalogFresh] = await Promise.all([
-  Promise.all(generatedPaths.map((path) => isFile(path))),
-  isFreshCatalog(sourceMtimeMs),
-]);
-// A fresh catalog proves all generated provider files were produced from the same source set.
-if (!catalogFresh) {
-  runNodeScript("scripts/generate-catalog.ts");
-} else if (generatedFilesPresent.some((present) => !present)) {
-  runNodeScript("scripts/generate-provider-registry.ts");
+  const [generatedFilesPresent, catalogFresh, cloudflareRegistryCurrent] = await Promise.all([
+    Promise.all(generatedPaths.map((path) => isFile(path))),
+    isFreshCatalog(sourceMtimeMs),
+    isCloudflareRegistryCurrent(cloudflareRegistryPath, readProviderAllowlist()),
+  ]);
+  // A fresh catalog proves all generated provider files were produced from the same source set. It says nothing about
+  // OPENCONNECTOR_PROVIDERS, which only the Workers registry depends on, so that is checked on its own.
+  if (!catalogFresh) {
+    runNodeScript("scripts/generate-catalog.ts");
+  } else if (generatedFilesPresent.some((present) => !present) || !cloudflareRegistryCurrent) {
+    runNodeScript("scripts/generate-provider-registry.ts");
+  }
+}
+
+/**
+ * Whether the Workers registry was built with the current `OPENCONNECTOR_PROVIDERS` value. Its mtime cannot tell, so
+ * the registry records the allowlist it was built with and a change of the variable, either way, makes it stale.
+ */
+export async function isCloudflareRegistryCurrent(
+  path: string,
+  allowlist: readonly string[] | undefined,
+): Promise<boolean> {
+  let content: string;
+  try {
+    content = await readFile(path, "utf8");
+  } catch (error) {
+    if (isNotFoundError(error)) {
+      return false;
+    }
+
+    throw error;
+  }
+
+  return (readProviderAllowlistMarker(content) ?? []).join(",") === (allowlist ?? []).join(",");
 }
 
 function runNodeScript(script: string): void {
