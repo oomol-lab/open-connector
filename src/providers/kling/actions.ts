@@ -1,29 +1,29 @@
-import type { ProviderActionDefinition } from "../../core/provider-definition.ts";
+import type { ActionDefinition } from "../../core/types.ts";
 import type { JsonSchema } from "../../core/types.ts";
 
 import { s } from "../../core/json-schema.ts";
 import { defineProviderAction } from "../../core/provider-definition.ts";
+import { defaultKlingModel, klingModelDefinitions, klingModels } from "./models.ts";
 
 const service = "kling";
 
-export const defaultKlingModel = "kling-3.0";
-export const klingModels = ["kling-3.0-turbo", "kling-3.0", "kling-3.0-omni"] as const;
-export const klingPromptMaxLength = 2500;
-
-const taskIdSchema = s.nonWhitespaceString("The opaque Kling AI task handle returned by the selected connection.", {
+const taskIdSchema = s.string("The opaque Kling AI task handle returned by the selected connection.", {
+  minLength: 1,
   maxLength: 512,
 });
-const modelSchema = s.withDefault(s.stringEnum("The Kling AI V3 video model.", klingModels), defaultKlingModel);
-const resolutionSchema = s.withDefault(
-  s.stringEnum("The generated video resolution.", ["720p", "1080p", "4k"]),
+const modelSchema = s.withDefault(s.stringEnum("The Kling AI video model.", klingModels), defaultKlingModel);
+const resolutionSchema = s.stringEnum("Output resolution. Defaults to 1080p for Kling 4.0, otherwise 720p.", [
   "720p",
-);
+  "1080p",
+  "4k",
+]);
 const audioModeSchema = s.stringEnum("How the generated video uses audio.", ["off", "native", "original"]);
 const mediaSchema = s.object(
   "A URL-based image or video input for Kling AI.",
   {
     role: s.stringEnum("How Kling AI uses this media input.", [
       "first_frame",
+      "middle_frame",
       "last_frame",
       "reference_image",
       "reference_video",
@@ -34,28 +34,30 @@ const mediaSchema = s.object(
       pattern: "^[hH][tT][tT][pP][sS]?:\\/\\/",
       maxLength: 8192,
     }),
-    referenceId: s.nonWhitespaceString(
-      "A request-unique identifier that can be referenced as @referenceId in prompts.",
-      { maxLength: 256 },
-    ),
+    referenceId: s.string("A request-unique identifier that can be referenced as @referenceId in prompts.", {
+      minLength: 1,
+      maxLength: 256,
+    }),
   },
-  { required: ["role", "url"], optional: ["referenceId"] },
+  { optional: ["referenceId"] },
 );
-const shotSchema = s.object(
-  "One custom multi-shot segment.",
-  {
-    prompt: s.nonWhitespaceString("The prompt for this shot.", { maxLength: 512 }),
-    duration: s.integer("The shot duration in seconds.", { minimum: 1, maximum: 15 }),
-  },
-  { required: ["prompt", "duration"] },
-);
+const shotSchema = s.requiredObject("One custom multi-shot segment.", {
+  prompt: s.string("The prompt for this shot.", {
+    minLength: 1,
+    maxLength: 512,
+  }),
+  duration: s.integer("The shot duration in seconds.", { minimum: 1, maximum: 15 }),
+});
 const multiShotSchema = s.object(
-  "A Kling AI multi-shot generation mode.",
+  "Kling 3 multi-shot settings. For Kling 4, describe shots directly in the prompt.",
   {
     mode: s.stringEnum("Whether Kling AI plans shots or uses the supplied custom shots.", ["intelligent", "custom"]),
-    shots: s.array("The ordered shots used by custom mode.", shotSchema, { minItems: 1, maxItems: 6 }),
+    shots: s.array("The ordered shots used by custom mode.", shotSchema, {
+      minItems: 1,
+      maxItems: 6,
+    }),
   },
-  { required: ["mode"], optional: ["shots"] },
+  { optional: ["shots"] },
 );
 const errorSchema = s.object(
   "The terminal error reported for a Kling AI task.",
@@ -76,7 +78,7 @@ const processingTaskSchema = s.object(
     ...commonTaskProperties,
     state: s.literal("processing", { description: "The task is submitted or processing." }),
   },
-  { required: ["taskId", "state"], optional: ["createdAt", "updatedAt"] },
+  { optional: ["createdAt", "updatedAt"] },
 );
 const succeededTaskSchema = s.object(
   "A succeeded Kling AI video generation task.",
@@ -91,7 +93,6 @@ const succeededTaskSchema = s.object(
     audioMode: audioModeSchema,
   },
   {
-    required: ["taskId", "state", "videoUrl"],
     optional: ["watermarkVideoUrl", "duration", "resolution", "framesPerSecond", "audioMode", "createdAt", "updatedAt"],
   },
 );
@@ -104,22 +105,81 @@ function terminalTaskSchema(state: "failed" | "cancelled" | "expired"): JsonSche
       state: s.literal(state, { description: `The task is ${state}.` }),
       error: errorSchema,
     },
-    { required: ["taskId", "state"], optional: ["error", "createdAt", "updatedAt"] },
+    { optional: ["error", "createdAt", "updatedAt"] },
   );
 }
 
-const klingTaskSchema: JsonSchema = s.oneOf(
-  [
+const klingTaskSchema: JsonSchema = {
+  oneOf: [
     processingTaskSchema,
     succeededTaskSchema,
     terminalTaskSchema("failed"),
     terminalTaskSchema("cancelled"),
     terminalTaskSchema("expired"),
   ],
-  { description: "The normalized Kling AI task state." },
-);
+  description: "The normalized Kling AI task state.",
+};
+
+const multimodalModels = klingModels.filter((model) => klingModelDefinitions[model].multimodal);
+const hdrModels = klingModels.filter((model) => klingModelDefinitions[model].multimodal?.dynamicRange);
 
 const submitCrossFieldConstraints: JsonSchema[] = [
+  {
+    if: { properties: { model: { enum: multimodalModels } }, required: ["model"] },
+    then: {
+      required: ["prompt"],
+      not: { required: ["multiShot"] },
+      properties: { audioMode: { enum: ["native", "original"] } },
+    },
+    else: {
+      properties: {
+        duration: { maximum: 15 },
+        prompt: { maxLength: 2500 },
+        media: { maxItems: 9 },
+        aspectRatio: { enum: ["16:9", "9:16", "1:1"] },
+      },
+      not: {
+        anyOf: [{ required: ["dynamicRange"] }, { required: ["elements"] }, { required: ["voices"] }],
+      },
+    },
+  },
+  ...multimodalModels.map((model): JsonSchema => {
+    const limits = klingModelDefinitions[model].multimodal!;
+    return {
+      if: { properties: { model: { const: model } }, required: ["model"] },
+      then: {
+        properties: {
+          resolution: { enum: limits.resolutions },
+          duration: { maximum: limits.maxDuration },
+          dynamicRange: limits.dynamicRange ? { enum: ["sdr", "hdr"] } : false,
+          voices: limits.maxVoices ? { maxItems: limits.maxVoices } : false,
+          media: {
+            items: {
+              properties: {
+                role: {
+                  enum: limits.frameSequence
+                    ? [
+                        "first_frame",
+                        "middle_frame",
+                        "last_frame",
+                        "reference_image",
+                        "reference_video",
+                        "source_video",
+                      ]
+                    : ["first_frame", "reference_image", "reference_video", "source_video"],
+                },
+              },
+            },
+          },
+        },
+      },
+    };
+  }),
+  {
+    if: { properties: { dynamicRange: { const: "hdr" } }, required: ["dynamicRange"] },
+    then: { properties: { model: { enum: hdrModels }, resolution: { enum: ["1080p", "4k"] } } },
+  },
+
   {
     if: { properties: { model: { const: "kling-3.0-turbo" } }, required: ["model"] },
     then: {
@@ -194,7 +254,7 @@ const submitCrossFieldConstraints: JsonSchema[] = [
     then: {
       required: ["model", "media"],
       properties: {
-        model: { const: "kling-3.0-omni" },
+        model: { enum: ["kling-3.0-omni", ...multimodalModels] },
         media: {
           type: "array",
           contains: {
@@ -208,6 +268,10 @@ const submitCrossFieldConstraints: JsonSchema[] = [
   },
   {
     if: {
+      not: {
+        properties: { model: { enum: multimodalModels } },
+        required: ["model"],
+      },
       required: ["media"],
       properties: {
         media: {
@@ -235,57 +299,85 @@ const submitCrossFieldConstraints: JsonSchema[] = [
   },
 ];
 
-const klingSubmitInputSchema: JsonSchema = {
-  ...s.requireAnyProperty(
-    s.actionInput(
+const klingSubmitInputSchema: JsonSchema = s.object(
+  {
+    model: modelSchema,
+    prompt: s.string(
+      "The video prompt with @referenceId references. Kling 3: up to 2500 characters. Kling 4: 26000 English or 11000 non-English characters; mixed-language limits apply.",
       {
-        model: modelSchema,
-        prompt: s.nonWhitespaceString("The video prompt, including any @referenceId media references.", {
-          maxLength: klingPromptMaxLength,
-        }),
-        media: s.array("URL-based media inputs for Kling AI.", mediaSchema, { maxItems: 9 }),
-        resolution: resolutionSchema,
-        aspectRatio: s.withDefault(
-          s.stringEnum("The generated aspect ratio when it is not inherited from input media.", [
-            "16:9",
-            "9:16",
-            "1:1",
-          ]),
-          "16:9",
-        ),
-        duration: s.withDefault(s.integer("The requested video duration in seconds.", { minimum: 3, maximum: 15 }), 5),
-        audioMode: audioModeSchema,
-        multiShot: multiShotSchema,
-        watermark: s.withDefault(s.boolean("Whether Kling AI should also generate a watermarked video."), false),
+        minLength: 1,
+        maxLength: 26000,
       },
-      [],
-      "A unified Kling AI V3 video generation request.",
     ),
-    ["prompt", "multiShot"],
-  ),
-  allOf: submitCrossFieldConstraints,
-};
+    media: s.array("URL-based media inputs for Kling AI.", mediaSchema, { maxItems: 15 }),
+    resolution: resolutionSchema,
+    aspectRatio: s.stringEnum("Output aspect ratio. Defaults to adaptive for Kling 4, otherwise 16:9.", [
+      "16:9",
+      "9:16",
+      "1:1",
+      "21:9",
+      "4:3",
+      "3:4",
+      "adaptive",
+    ]),
+    duration: s.integer(
+      "Requested seconds: Kling 3 defaults to 5; Kling 4 may infer duration from the prompt or base video, otherwise 10.",
+      { minimum: 3, maximum: 30 },
+    ),
+    audioMode: audioModeSchema,
+    multiShot: multiShotSchema,
+    dynamicRange: s.stringEnum("Kling 4.0 output dynamic range. HDR requires 1080p or 4k.", ["sdr", "hdr"]),
+    elements: s.array(
+      "Kling 4 subject references. At most 3 video subjects; video subjects plus videos must not exceed 5.",
+      s.requiredObject("A subject reference.", {
+        elementId: s.string("The official or owned subject ID.", { minLength: 1 }),
+        referenceId: s.string("A unique reference ID used as @referenceId in the prompt.", {
+          minLength: 1,
+        }),
+      }),
+      { maxItems: 7 },
+    ),
+    voices: s.array(
+      "Kling 4.0 voice references, unavailable with original audio or Flash.",
+      s.requiredObject("A voice reference.", {
+        voiceId: s.string("The official or owned voice ID.", { minLength: 1 }),
+        referenceId: s.string("A unique reference ID used as @referenceId in the prompt.", {
+          minLength: 1,
+        }),
+      }),
+      { maxItems: 3 },
+    ),
+    watermark: s.withDefault(s.boolean("Whether Kling AI should also generate a watermarked video."), false),
+  },
+  {
+    required: [],
+    description: "A unified Kling AI video generation request.",
+    ...{
+      anyOf: [{ required: ["prompt"] }, { required: ["multiShot"] }],
+      allOf: submitCrossFieldConstraints,
+    },
+  },
+);
 
-const lifecycle = {
-  startActionId: "kling.submit_video_generation",
-  statusActionId: "kling.get_video_generation",
-};
+const resultActionId = "kling.get_video_generation";
 
-export const klingActions: ProviderActionDefinition[] = [
+export const klingActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "submit_video_generation",
     operationType: "write",
-    description: "Submit an asynchronous Kling AI V3 video generation task.",
-    followUpActions: [lifecycle.statusActionId],
-    asyncLifecycle: lifecycle,
+    requiredScopes: [],
+    description: "Submit an asynchronous Kling AI video generation task.",
+    followUpActions: [resultActionId],
+    asyncLifecycle: { startActionId: "kling.submit_video_generation", statusActionId: "kling.get_video_generation" },
     inputSchema: klingSubmitInputSchema,
     outputSchema: s.actionOutput({ taskId: taskIdSchema }, "The submitted Kling AI task handle."),
   }),
   defineProviderAction(service, {
     name: "get_video_generation",
     operationType: "read",
+    requiredScopes: [],
     description: "Retrieve a Kling AI task state and its generated video when available.",
-    asyncLifecycle: lifecycle,
+    asyncLifecycle: { startActionId: "kling.submit_video_generation", statusActionId: "kling.get_video_generation" },
     inputSchema: s.actionInput({ taskId: taskIdSchema }, ["taskId"], "A Kling AI task lookup."),
     outputSchema: klingTaskSchema,
   }),
