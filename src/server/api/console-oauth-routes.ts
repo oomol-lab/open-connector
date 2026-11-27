@@ -15,6 +15,7 @@ import {
   requiredString,
   requiredStringArray,
 } from "../../core/cast.ts";
+import { isScope, scopeMessage } from "../../core/scope.ts";
 import { OAuthClientConfigError } from "../../oauth/oauth-client-config-service.ts";
 import { OAuthCallbackError, OAuthFlowError } from "../../oauth/oauth-flow-service.ts";
 import { scopeOwner } from "../storage/connection-request-store.ts";
@@ -177,8 +178,13 @@ export function createConsoleOAuthRoutes({
       logger?.info(logContext, "connection started");
       return writeConnectionResult(context, connections.connectWithoutAuth(service, { connectionName }), logContext);
     }
-    // The console is the operator view: replacing a connection keeps the scope it was stored with.
-    const scope = await connections.getStoredScope(service, connectionName);
+    // The console is the only place the administrator chooses a connection name, so it also chooses the scope of a new
+    // connection. Replacing an existing one keeps the scope it was stored with, and naming another scope is refused by
+    // the store (`connection_scope_conflict`) rather than moving the connection.
+    const requestedScope = body.values === undefined ? undefined : body.scope;
+    if (requestedScope !== undefined && !isScope(requestedScope))
+      return jsonError(context, 400, "invalid_input", scopeMessage);
+    const scope = requestedScope ?? (await connections.getStoredScope(service, connectionName));
     if (authType === "api_key") {
       logger?.info(logContext, "connection started");
       return writeConnectionResult(
@@ -273,7 +279,7 @@ export function createConsoleOAuthRoutes({
       const { consoleOAuthConnectionInput } = await import("./connection-input.ts");
       const parsed = consoleOAuthConnectionInput.safeParse(await readJsonBody(context));
       if (!parsed.success) return jsonError(context, 400, "invalid_input", "Invalid OAuth connection request.");
-      const { appId, ...input } = parsed.data;
+      const { appId, scope: requestedScope, ...input } = parsed.data;
       const target = appId ? await connections.getStoredConnection(appId) : undefined;
       if (target && (target.service !== input.service || target.connectionName !== input.connectionName))
         return jsonError(context, 400, "invalid_input", "The selected connection no longer matches.");
@@ -283,7 +289,7 @@ export function createConsoleOAuthRoutes({
         ? target.source === "saas"
           ? undefined
           : target.scope
-        : await connections.getStoredScope(input.service, input.connectionName);
+        : (requestedScope ?? (await connections.getStoredScope(input.service, input.connectionName)));
       return context.json(
         await oauthFlow.startConnectionRequest({
           ...input,

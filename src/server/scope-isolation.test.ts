@@ -261,6 +261,53 @@ describe("scope isolation", () => {
     expect((await execute(b.token, b.alias)).status).toBe(200);
     expect(await (await fetchFile(fileB)).text()).toBe("beta");
   });
+  it("lets the administrator create a named connection inside a scope from the console, so the owning tenant can use it", async () => {
+    const fetcher = stubProvider();
+    runtime = await createConnectorRuntime(await fixture());
+    const tokenA = await createToken({ scope: "tenant-a" });
+    const tokenB = await createToken({ scope: "tenant-b" });
+
+    // The console is the only place the administrator chooses a connection name; it must also be able to choose a scope.
+    const created = await call(
+      "/api/connections/ninjapear",
+      { authType: "api_key", values: { apiKey: "key-a" }, connectionName: "tenant-a-ninjapear", scope: "tenant-a" },
+      "admin-token",
+      "PUT",
+    );
+    expect(created.status).toBe(200);
+    const stored = await (await call("/v1/connections", undefined, "admin-token")).json();
+    expect(stored.data.find((connection: { alias: string }) => connection.alias === "tenant-a-ninjapear").scope).toBe(
+      "tenant-a",
+    );
+    fetcher.mockClear();
+
+    const own = await execute(tokenA, "tenant-a-ninjapear");
+    expect(own.status).toBe(200);
+    expect(fetcher.mock.calls[0]![1]?.headers).toMatchObject({ authorization: "Bearer key-a" });
+    fetcher.mockClear();
+    // Another tenant, and an unscoped caller, still cannot reach it.
+    expect((await execute(tokenB, "tenant-a-ninjapear")).status).toBe(404);
+    expect((await execute(await createToken(), "tenant-a-ninjapear")).status).toBe(404);
+    expect(fetcher).not.toHaveBeenCalled();
+
+    // A name that already belongs to another scope cannot be taken over, and a scope cannot be changed by replacing.
+    const takeover = await call(
+      "/api/connections/ninjapear",
+      { authType: "api_key", values: { apiKey: "key-b" }, connectionName: "tenant-a-ninjapear", scope: "tenant-b" },
+      "admin-token",
+      "PUT",
+    );
+    expect(takeover.status).toBeGreaterThanOrEqual(400);
+    // An invalid scope is rejected before anything is stored.
+    const invalid = await call(
+      "/api/connections/ninjapear",
+      { authType: "api_key", values: { apiKey: "key-x" }, connectionName: "other", scope: "not a scope!" },
+      "admin-token",
+      "PUT",
+    );
+    expect(invalid.status).toBe(400);
+  });
+
   it("deletes only the scope's stored connections, never a shared default, and the console keeps a scope", async () => {
     vi.stubGlobal(
       "fetch",

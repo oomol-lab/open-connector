@@ -18,12 +18,14 @@ export const oauthConnectionInput: z.ZodType<
 export const consoleOAuthConnectionInput: z.ZodType<{
   service: string;
   connectionName: string;
+  scope?: string;
   appId?: string;
   authorizationOptionIds?: string[];
   returnUri?: string;
 }> = z.strictObject({
   service: z.string().trim().min(1),
   connectionName: z.string().regex(/^[a-zA-Z0-9][a-zA-Z0-9_-]{0,63}$/),
+  scope: scopeInput.optional(),
   appId: z.string().min(1).optional(),
   authorizationOptionIds: z.array(z.string()).optional(),
   returnUri: z.string().optional(),
