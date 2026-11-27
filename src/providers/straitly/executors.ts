@@ -2,6 +2,7 @@ import type { CredentialValidators, ProviderExecutors, ProviderProxyExecutor } f
 import type { ProviderRequestPhase } from "../http-json-runtime.ts";
 import type { ApiKeyProviderContext } from "../provider-executors.ts";
 
+import { optionalRecord, optionalString } from "../../core/cast.ts";
 import { arrayPayload, objectPayload, requestJson } from "../http-json-runtime.ts";
 import { defineApiKeyProviderExecutors } from "../provider-executors.ts";
 import { defineProviderProxy } from "../provider-proxy.ts";
@@ -11,6 +12,12 @@ const service = "straitly";
 const apiBaseUrl = "https://api.straitly.ai/v1";
 const requestLabel = "Straitly API";
 const inferenceTimeoutMs = 300_000;
+
+function nestedErrorMessage(details: unknown): string | undefined {
+  const record = optionalRecord(details);
+  const nested = optionalRecord(record?.error);
+  return optionalString(nested?.message);
+}
 
 function requestStraitly(
   context: ApiKeyProviderContext,
@@ -33,12 +40,11 @@ function requestStraitly(
           phase,
         });
       } catch (error) {
-        if (
-          phase === "execute" &&
-          error instanceof ProviderRequestError &&
-          (error.status === 401 || error.status === 403)
-        ) {
-          throw new ProviderRequestError(error.status, error.message, error.details, "provider_error");
+        if (error instanceof ProviderRequestError) {
+          const nestedMessage = nestedErrorMessage(error.details);
+          if (nestedMessage && nestedMessage !== error.message) {
+            throw new ProviderRequestError(error.status, nestedMessage, error.details, error.code);
+          }
         }
         throw error;
       }
@@ -75,7 +81,9 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
 });
 
 export const credentialValidators: CredentialValidators = {
-  // /v1/models is public on Straitly, so validate keys against /v1/key (401 on bad key, no inference).
+  // /v1/models is public on Straitly, so validate keys against Straitly's /v1/key metadata endpoint
+  // (returns 200 with key metadata for a valid key and 401 for an invalid key without running inference;
+  // not yet listed on the public /docs/endpoints page).
   async apiKey(input, { fetcher, signal }) {
     objectPayload(
       await requestStraitly({ apiKey: input.apiKey, fetcher, signal }, "/key", { phase: "validate" }),

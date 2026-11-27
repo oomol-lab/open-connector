@@ -53,13 +53,13 @@ describe("Straitly", () => {
     expect(vi.getTimerCount()).toBe(0);
   });
 
-  it("reports a rejected API key as a connection field error", async () => {
+  it("reports a rejected API key with the upstream nested error message", async () => {
     await expect(
       credentialValidators.apiKey!(
         { apiKey: "invalid-key", values: {} },
         { fetcher: async () => Response.json({ error: { message: "Invalid API key." } }, { status: 401 }) },
       ),
-    ).rejects.toMatchObject({ status: 400 });
+    ).rejects.toMatchObject({ status: 400, message: "Invalid API key." });
   });
 
   it("lists models via GET /v1/models", async () => {
@@ -128,7 +128,7 @@ describe("Straitly", () => {
     });
   });
 
-  it("preserves HTTP 401 on chat execution as provider_error", async () => {
+  it("keeps HTTP 401 on chat execution as authorization_failed with upstream message", async () => {
     setDefaultGuardedFetchDnsLookup(async () => [{ address: "93.184.216.34", family: 4 }]);
     vi.stubGlobal("fetch", async () => Response.json({ error: { message: "Unauthorized" } }, { status: 401 }));
     await expect(
@@ -139,8 +139,8 @@ describe("Straitly", () => {
     ).resolves.toEqual({
       ok: false,
       error: {
-        code: "provider_error",
-        message: "Straitly API request failed with HTTP 401",
+        code: "authorization_failed",
+        message: "Unauthorized",
         details: { status: 401, details: { error: { message: "Unauthorized" } } },
       },
     });
