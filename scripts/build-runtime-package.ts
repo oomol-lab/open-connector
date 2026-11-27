@@ -38,6 +38,7 @@ await writeFile(
       exports: {
         ".": { types: "./src/server/connector-runtime.d.ts", import: "./src/server/connector-runtime.js" },
         "./build": { types: "./src/server/connector-build.d.ts", import: "./src/server/connector-build.js" },
+        "./provider": { types: "./src/provider.d.ts", import: "./src/provider.js" },
       },
       dependencies: source.dependencies,
       engines: source.engines,

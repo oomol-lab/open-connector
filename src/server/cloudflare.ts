@@ -1,4 +1,5 @@
 import type { CatalogStore } from "../catalog-store.ts";
+import type { CustomProvider } from "../provider.ts";
 import type { AssetsBinding, KVNamespaceBinding, R2BucketBinding } from "./cloudflare/cloudflare-bindings.ts";
 import type { CloudflareEnv } from "./cloudflare/cloudflare-env.ts";
 import type { McpOAuthHandler } from "./cloudflare/mcp-oauth.ts";
@@ -11,7 +12,7 @@ import { PromiseCache } from "../core/promise-cache.ts";
 import { parseEgressTrustedHosts, parsePrivateNetworkAccessFlag } from "../core/request.ts";
 import { readMcpOAuthClientMetadata } from "../custom-mcp/definition.ts";
 import { ProviderLoader } from "../providers/provider-loader.ts";
-import { executorModules } from "../providers/registry.cloudflare.generated.ts";
+import { excludedServices, executorModules } from "../providers/registry.cloudflare.generated.ts";
 import { SaasCleanupService } from "../saas/saas-cleanup-service.ts";
 import { isConsoleShellPath } from "./api/console-paths.ts";
 import { DEFAULT_OAUTH_CLOSE_DELAY_SECONDS, parseOAuthResultOrigins } from "./api/oauth-completion-page.ts";
@@ -19,6 +20,7 @@ import { loadCatalogFromAssets } from "./cloudflare/catalog-assets.ts";
 import { readNonNegativeInteger, readPositiveInteger, resolvePublicOrigin } from "./cloudflare/cloudflare-env.ts";
 import { createConnectApp } from "./connect-app.ts";
 import { preloadOptionalServerModules } from "./connect-server.ts";
+import { registerCustomProviders } from "./custom-providers.ts";
 import { KVTransitFileService } from "./files/kv-transit-files.ts";
 import { R2TransitFileService } from "./files/r2-transit-files.ts";
 import { parseMcpOutputMode } from "./mcp-settings.ts";
@@ -26,149 +28,189 @@ import { createWorkerSecretCodec } from "./secrets/worker-secret-codec.ts";
 import { D1RuntimeDatabase } from "./storage/d1/runtime-store.ts";
 import { DEFAULT_RUN_LIMIT } from "./storage/runtime-store.ts";
 
-interface CloudflareExecutionContext {
+export interface CloudflareExecutionContext {
   waitUntil(promise: Promise<unknown>): void;
   passThroughOnException(): void;
 }
 
-const catalogCache = new PromiseCache<CatalogStore>();
 const secretCodecCache = new PromiseCache<ISecretCodec>();
-const appCache = new PromiseCache<ConnectApp>();
-const mcpOAuthCache = new PromiseCache<McpOAuthHandler>();
 
-export default {
-  async scheduled(_event: unknown, env: CloudflareEnv, ctx: CloudflareExecutionContext): Promise<void> {
-    const database = new D1RuntimeDatabase(env.DB, {
-      secretCodec: await createSecretCodec(env.OOMOL_CONNECT_ENCRYPTION_KEY),
-    });
-    const cleanup = new SaasCleanupService({
+export interface CloudflareWorkerOptions {
+  /**
+   * Providers registered next to the bundled ones, as with `createConnectorRuntime({ customProviders })`. A bundled or
+   * duplicate service id throws when the worker is created.
+   */
+  customProviders?: readonly CustomProvider[];
+}
+
+/**
+ * Build the Worker handlers. The default export is `createCloudflareWorker()`. A host that registers its own
+ * providers exports `createCloudflareWorker({ customProviders })` from its own entry file instead.
+ */
+export interface CloudflareWorker {
+  fetch(request: Request, env: CloudflareEnv, ctx: CloudflareExecutionContext): Promise<Response>;
+  scheduled(event: unknown, env: CloudflareEnv, ctx: CloudflareExecutionContext): Promise<void>;
+}
+
+export function createCloudflareWorker(options: CloudflareWorkerOptions = {}): CloudflareWorker {
+  // Copy the list so a later change to the host's array cannot split the registry from the catalog.
+  const customProviders = [...(options.customProviders ?? [])];
+  // Node-only providers are not in the Workers registry, but their ids are still bundled and reserved.
+  const modules = registerCustomProviders({
+    bundledModules: executorModules,
+    bundledServices: [...Object.keys(executorModules), ...excludedServices],
+    customProviders,
+  });
+  const catalogCache = new PromiseCache<CatalogStore>();
+  const appCache = new PromiseCache<ConnectApp>();
+  const mcpOAuthCache = new PromiseCache<McpOAuthHandler>();
+
+  async function fetchRuntime(request: Request, env: CloudflareEnv): Promise<Response> {
+    const publicOrigin = resolvePublicOrigin(request, env);
+    const { app } = await appCache.get(createCacheKey(env, publicOrigin), () => createCloudflareApp(env, publicOrigin));
+    const response = await app.fetch(request, env);
+    if (response.status === 404 && env.ASSETS && shouldServeAsset(request)) {
+      return env.ASSETS.fetch(request);
+    }
+
+    return response;
+  }
+
+  async function createCloudflareApp(env: CloudflareEnv, publicOrigin: string): Promise<ConnectApp> {
+    const assets = env.ASSETS;
+    if (!assets) {
+      throw new Error("Cloudflare ASSETS binding is required to load the catalog");
+    }
+    // The Node server defers the MCP and docs modules to their first request so its startup graph stays small.
+    // Workers keep paying their evaluation here, at app creation, so the first /mcp or /docs request of an isolate
+    // is served the same way as every later one.
+    await preloadOptionalServerModules();
+    const secretCodec = await createSecretCodec(env.OOMOL_CONNECT_ENCRYPTION_KEY);
+    return await createConnectApp({
+      customProviderServices: customProviders.map((provider) => provider.definition.service),
       network: {
         allowPrivateNetwork: parsePrivateNetworkAccessFlag(env.OOMOL_CONNECT_ALLOW_PRIVATE_NETWORK),
         trustedHosts: parseEgressTrustedHosts(env.OOMOL_CONNECT_EGRESS_TRUSTED_HOSTS),
       },
-      store: database.saasProjectStore,
-      requests: database.connectionRequestStore,
-      logger: workerLogger,
-    });
-    const triggerCleanup = async () => {
-      if (!(await database.triggerStore.listFlowTriggersForMaintenance(Date.now(), 1)).length) return;
-      const origin = env.OOMOL_CONNECT_ORIGIN ?? "https://connector.invalid";
-      const { triggerMaintenance } = await appCache.get(createCacheKey(env, origin), () =>
-        createCloudflareApp(env, origin),
-      );
-      await triggerMaintenance.run();
-    };
-    ctx.waitUntil(Promise.all([cleanup.run(), triggerCleanup()]).then(() => undefined));
-  },
-  async fetch(request: Request, env: CloudflareEnv, ctx: CloudflareExecutionContext): Promise<Response> {
-    if (env.OAUTH_KV) {
-      if (
-        !env.OOMOL_CONNECT_ORIGIN?.trim() ||
-        !env.OOMOL_CONNECT_ADMIN_TOKEN?.trim() ||
-        !env.OOMOL_CONNECT_ENCRYPTION_KEY?.trim()
-      ) {
-        return new Response("MCP OAuth requires a configured origin, administrator token, and encryption key.", {
-          status: 503,
-        });
-      }
-      const origin = env.OOMOL_CONNECT_ORIGIN.trim().replace(/\/+$/, "");
-      const oauth = await mcpOAuthCache.get(origin, async () => {
-        const { createMcpOAuthHandler } = await import("./cloudflare/mcp-oauth.ts");
-        return createMcpOAuthHandler(origin, fetchRuntime);
-      });
-      return oauth.fetch(request, env, ctx);
-    }
-    return fetchRuntime(request, env);
-  },
-};
-
-async function fetchRuntime(request: Request, env: CloudflareEnv): Promise<Response> {
-  const publicOrigin = resolvePublicOrigin(request, env);
-  const { app } = await appCache.get(createCacheKey(env, publicOrigin), () => createCloudflareApp(env, publicOrigin));
-  const response = await app.fetch(request, env);
-  if (response.status === 404 && env.ASSETS && shouldServeAsset(request)) {
-    return env.ASSETS.fetch(request);
-  }
-
-  return response;
-}
-
-async function createCloudflareApp(env: CloudflareEnv, publicOrigin: string): Promise<ConnectApp> {
-  const assets = env.ASSETS;
-  if (!assets) {
-    throw new Error("Cloudflare ASSETS binding is required to load the catalog");
-  }
-  // The Node server defers the MCP and docs modules to their first request so its startup graph stays small.
-  // Workers keep paying their evaluation here, at app creation, so the first /mcp or /docs request of an isolate
-  // is served the same way as every later one.
-  await preloadOptionalServerModules();
-  const secretCodec = await createSecretCodec(env.OOMOL_CONNECT_ENCRYPTION_KEY);
-  return await createConnectApp({
-    network: {
-      allowPrivateNetwork: parsePrivateNetworkAccessFlag(env.OOMOL_CONNECT_ALLOW_PRIVATE_NETWORK),
-      trustedHosts: parseEgressTrustedHosts(env.OOMOL_CONNECT_EGRESS_TRUSTED_HOSTS),
-    },
-    catalog: await loadCatalogOnce(assets),
-    providerLoader: new ProviderLoader(executorModules),
-    runtimeDatabase: new D1RuntimeDatabase(env.DB, {
+      catalog: await loadCatalogOnce(assets),
+      providerLoader: new ProviderLoader(modules),
+      runtimeDatabase: new D1RuntimeDatabase(env.DB, {
+        secretCodec,
+        runLimit: readPositiveInteger(env.OOMOL_CONNECT_RUN_LIMIT, DEFAULT_RUN_LIMIT),
+      }),
+      transitFiles: (() => {
+        const transitFileOptions = {
+          publicOrigin,
+          ttlSeconds: readPositiveInteger(env.OOMOL_CONNECT_TRANSIT_FILE_TTL_SECONDS, 86_400),
+          maxBytes: readPositiveInteger(env.OOMOL_CONNECT_TRANSIT_FILE_MAX_BYTES, 100 * 1024 * 1024),
+        };
+        return env.TRANSIT_FILES_BACKEND === "kv"
+          ? new KVTransitFileService({
+              namespace: env.TRANSIT_FILES as KVNamespaceBinding,
+              ...transitFileOptions,
+            })
+          : new R2TransitFileService({
+              bucket: env.TRANSIT_FILES as R2BucketBinding,
+              ...transitFileOptions,
+            });
+      })(),
+      publicOrigin,
+      configuredOrigin: env.OOMOL_CONNECT_ORIGIN,
       secretCodec,
-      runLimit: readPositiveInteger(env.OOMOL_CONNECT_RUN_LIMIT, DEFAULT_RUN_LIMIT),
-    }),
-    transitFiles: (() => {
-      const transitFileOptions = {
-        publicOrigin,
-        ttlSeconds: readPositiveInteger(env.OOMOL_CONNECT_TRANSIT_FILE_TTL_SECONDS, 86_400),
-        maxBytes: readPositiveInteger(env.OOMOL_CONNECT_TRANSIT_FILE_MAX_BYTES, 100 * 1024 * 1024),
+      adminToken: env.OOMOL_CONNECT_ADMIN_TOKEN,
+      runtimeToken: env.OOMOL_CONNECT_RUNTIME_TOKEN,
+      eventVerifyToken: env.OOMOL_CONNECT_EVENT_VERIFY_TOKEN,
+      mcpOutputMode: parseMcpOutputMode(env.OOMOL_CONNECT_MCP_OUTPUT_MODE),
+      requireRuntimeAuth: Boolean(env.OAUTH_KV),
+      actionPolicy: new ActionPolicyService({
+        allowedActions: parseActionPolicyList(env.OOMOL_CONNECT_ALLOWED_ACTIONS),
+        blockedActions: parseActionPolicyList(env.OOMOL_CONNECT_BLOCKED_ACTIONS),
+        allowedProxies: parseActionPolicyList(env.OOMOL_CONNECT_ALLOWED_PROXIES),
+        blockedProxies: parseActionPolicyList(env.OOMOL_CONNECT_BLOCKED_PROXIES),
+        allowedTriggers: parseActionPolicyList(env.OOMOL_CONNECT_ALLOWED_TRIGGERS),
+        blockedTriggers: parseActionPolicyList(env.OOMOL_CONNECT_BLOCKED_TRIGGERS),
+      }),
+      allowedCustomOAuth: parseActionPolicyList(env.OOMOL_CONNECT_ALLOWED_CUSTOM_OAUTH),
+      oauthResultOrigins: parseOAuthResultOrigins(env.OOMOL_CONNECT_OAUTH_RESULT_ORIGINS),
+      customMcpOAuthClient: readMcpOAuthClientMetadata({
+        clientName: env.OOMOL_CONNECT_CUSTOM_MCP_CLIENT_NAME,
+        logoUri: env.OOMOL_CONNECT_CUSTOM_MCP_CLIENT_LOGO_URI,
+        clientUri: env.OOMOL_CONNECT_CUSTOM_MCP_CLIENT_URI,
+      }),
+      logger: workerLogger,
+      computeRuntimeAuthConfigured: false,
+      // Cloudflare compresses on egress itself: Response defaults to
+      // `encodeBody: "automatic"`, so the runtime re-encodes a body that Hono's
+      // compress() already gzipped. Depending on what the client negotiates, the
+      // wire then carries gzip-in-gzip or gzip bytes with no Content-Encoding at
+      // all, and dashboard JSON stops parsing either way. Hono's middleware
+      // rebuilds the Response from the previous one and cannot pass
+      // `encodeBody: "manual"`, so application-level compression stays off here.
+      // https://developers.cloudflare.com/workers/runtime-apis/response/
+      compressApiResponses: false,
+      oauthCloseDelaySeconds: readNonNegativeInteger(
+        env.OOMOL_CONNECT_OAUTH_CLOSE_DELAY_SECONDS,
+        DEFAULT_OAUTH_CLOSE_DELAY_SECONDS,
+      ),
+    });
+  }
+
+  function loadCatalogOnce(assets: AssetsBinding): Promise<CatalogStore> {
+    // The catalog depends only on the assets binding, which is fixed for the isolate, so one slot
+    // under a constant key covers every request.
+    return catalogCache.get("", () =>
+      loadCatalogFromAssets(assets, {
+        executableServices: Object.keys(modules),
+        customProviders: customProviders.map((provider) => provider.definition),
+      }),
+    );
+  }
+
+  return {
+    async scheduled(_event: unknown, env: CloudflareEnv, ctx: CloudflareExecutionContext): Promise<void> {
+      const database = new D1RuntimeDatabase(env.DB, {
+        secretCodec: await createSecretCodec(env.OOMOL_CONNECT_ENCRYPTION_KEY),
+      });
+      const cleanup = new SaasCleanupService({
+        network: {
+          allowPrivateNetwork: parsePrivateNetworkAccessFlag(env.OOMOL_CONNECT_ALLOW_PRIVATE_NETWORK),
+          trustedHosts: parseEgressTrustedHosts(env.OOMOL_CONNECT_EGRESS_TRUSTED_HOSTS),
+        },
+        store: database.saasProjectStore,
+        requests: database.connectionRequestStore,
+        logger: workerLogger,
+      });
+      const triggerCleanup = async () => {
+        if (!(await database.triggerStore.listFlowTriggersForMaintenance(Date.now(), 1)).length) return;
+        const origin = env.OOMOL_CONNECT_ORIGIN ?? "https://connector.invalid";
+        const { triggerMaintenance } = await appCache.get(createCacheKey(env, origin), () =>
+          createCloudflareApp(env, origin),
+        );
+        await triggerMaintenance.run();
       };
-      return env.TRANSIT_FILES_BACKEND === "kv"
-        ? new KVTransitFileService({
-            namespace: env.TRANSIT_FILES as KVNamespaceBinding,
-            ...transitFileOptions,
-          })
-        : new R2TransitFileService({
-            bucket: env.TRANSIT_FILES as R2BucketBinding,
-            ...transitFileOptions,
+      ctx.waitUntil(Promise.all([cleanup.run(), triggerCleanup()]).then(() => undefined));
+    },
+    async fetch(request: Request, env: CloudflareEnv, ctx: CloudflareExecutionContext): Promise<Response> {
+      if (env.OAUTH_KV) {
+        if (
+          !env.OOMOL_CONNECT_ORIGIN?.trim() ||
+          !env.OOMOL_CONNECT_ADMIN_TOKEN?.trim() ||
+          !env.OOMOL_CONNECT_ENCRYPTION_KEY?.trim()
+        ) {
+          return new Response("MCP OAuth requires a configured origin, administrator token, and encryption key.", {
+            status: 503,
           });
-    })(),
-    publicOrigin,
-    configuredOrigin: env.OOMOL_CONNECT_ORIGIN,
-    secretCodec,
-    adminToken: env.OOMOL_CONNECT_ADMIN_TOKEN,
-    runtimeToken: env.OOMOL_CONNECT_RUNTIME_TOKEN,
-    eventVerifyToken: env.OOMOL_CONNECT_EVENT_VERIFY_TOKEN,
-    mcpOutputMode: parseMcpOutputMode(env.OOMOL_CONNECT_MCP_OUTPUT_MODE),
-    requireRuntimeAuth: Boolean(env.OAUTH_KV),
-    actionPolicy: new ActionPolicyService({
-      allowedActions: parseActionPolicyList(env.OOMOL_CONNECT_ALLOWED_ACTIONS),
-      blockedActions: parseActionPolicyList(env.OOMOL_CONNECT_BLOCKED_ACTIONS),
-      allowedProxies: parseActionPolicyList(env.OOMOL_CONNECT_ALLOWED_PROXIES),
-      blockedProxies: parseActionPolicyList(env.OOMOL_CONNECT_BLOCKED_PROXIES),
-      allowedTriggers: parseActionPolicyList(env.OOMOL_CONNECT_ALLOWED_TRIGGERS),
-      blockedTriggers: parseActionPolicyList(env.OOMOL_CONNECT_BLOCKED_TRIGGERS),
-    }),
-    allowedCustomOAuth: parseActionPolicyList(env.OOMOL_CONNECT_ALLOWED_CUSTOM_OAUTH),
-    oauthResultOrigins: parseOAuthResultOrigins(env.OOMOL_CONNECT_OAUTH_RESULT_ORIGINS),
-    customMcpOAuthClient: readMcpOAuthClientMetadata({
-      clientName: env.OOMOL_CONNECT_CUSTOM_MCP_CLIENT_NAME,
-      logoUri: env.OOMOL_CONNECT_CUSTOM_MCP_CLIENT_LOGO_URI,
-      clientUri: env.OOMOL_CONNECT_CUSTOM_MCP_CLIENT_URI,
-    }),
-    logger: workerLogger,
-    computeRuntimeAuthConfigured: false,
-    // Cloudflare compresses on egress itself: Response defaults to
-    // `encodeBody: "automatic"`, so the runtime re-encodes a body that Hono's
-    // compress() already gzipped. Depending on what the client negotiates, the
-    // wire then carries gzip-in-gzip or gzip bytes with no Content-Encoding at
-    // all, and dashboard JSON stops parsing either way. Hono's middleware
-    // rebuilds the Response from the previous one and cannot pass
-    // `encodeBody: "manual"`, so application-level compression stays off here.
-    // https://developers.cloudflare.com/workers/runtime-apis/response/
-    compressApiResponses: false,
-    oauthCloseDelaySeconds: readNonNegativeInteger(
-      env.OOMOL_CONNECT_OAUTH_CLOSE_DELAY_SECONDS,
-      DEFAULT_OAUTH_CLOSE_DELAY_SECONDS,
-    ),
-  });
+        }
+        const origin = env.OOMOL_CONNECT_ORIGIN.trim().replace(/\/+$/, "");
+        const oauth = await mcpOAuthCache.get(origin, async () => {
+          const { createMcpOAuthHandler } = await import("./cloudflare/mcp-oauth.ts");
+          return createMcpOAuthHandler(origin, fetchRuntime);
+        });
+        return oauth.fetch(request, env, ctx);
+      }
+      return fetchRuntime(request, env);
+    },
+  };
 }
 
 const workerLogger = {
@@ -187,16 +229,6 @@ function writeWorkerLog(level: "error" | "info" | "warn"): (fields: unknown, mes
 
     write(fields);
   };
-}
-
-function loadCatalogOnce(assets: AssetsBinding): Promise<CatalogStore> {
-  // The catalog depends only on the assets binding, which is fixed for the isolate, so one slot
-  // under a constant key covers every request.
-  return catalogCache.get("", () =>
-    loadCatalogFromAssets(assets, {
-      executableServices: Object.keys(executorModules),
-    }),
-  );
 }
 
 function createSecretCodec(encryptionKey: string | undefined): Promise<ISecretCodec> {
@@ -237,3 +269,6 @@ function shouldServeAsset(request: Request): boolean {
   const { pathname } = new URL(request.url);
   return !pathname.startsWith("/catalog") && isConsoleShellPath(pathname);
 }
+
+const worker: CloudflareWorker = createCloudflareWorker();
+export default worker;

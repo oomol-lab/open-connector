@@ -16,6 +16,7 @@ export async function generateProviderRegistries(providerSources: ProviderSource
     writeRegistry(
       "registry.cloudflare.generated.ts",
       providerSources.filter((source) => !source.nodeOnly),
+      providerSources.filter((source) => source.nodeOnly),
     ),
     writeActionContracts(providerSources),
   ]);
@@ -29,7 +30,11 @@ function propertyName(service: string): string {
   return /^[A-Za-z_$][\w$]*$/.test(service) ? service : JSON.stringify(service);
 }
 
-async function writeRegistry(filename: string, sources: ProviderSource[]): Promise<void> {
+/**
+ * Write one executor registry. `excluded` lists bundled providers this registry cannot run, such as the Node-only
+ * ones on Workers, so the entry point still knows every bundled service id.
+ */
+async function writeRegistry(filename: string, sources: ProviderSource[], excluded?: ProviderSource[]): Promise<void> {
   const services = sources.map((source) => source.service);
   const lines = [
     'import type { ExecutorModule } from "./provider-loader.ts";',
@@ -41,6 +46,15 @@ async function writeRegistry(filename: string, sources: ProviderSource[]): Promi
     ),
     "};",
   ];
+  if (excluded) {
+    lines.push(
+      "",
+      "/** Bundled providers that are left out of this registry. Do not hand-edit. */",
+      "export const excludedServices: readonly string[] = [",
+      ...excluded.map((source) => `  ${JSON.stringify(source.service)},`),
+      "];",
+    );
+  }
 
   const path = join(providersDir, filename);
   const content = `${lines.join("\n")}\n`;

@@ -151,7 +151,22 @@ export class CustomMcpStore {
       );
   }
 
-  async delete(service: string, revision: string): Promise<void> {
+  /**
+   * Delete a record unless the service still has connections. `keepConnections` deletes it anyway, for a record whose
+   * service id now belongs to a catalog provider that owns those connections.
+   */
+  async delete(service: string, revision: string, options: { keepConnections?: boolean } = {}): Promise<void> {
+    if (options.keepConnections) {
+      const [[deleted]] = await this.transaction([
+        {
+          sql: "delete from custom_mcp where service = ? and revision = ? returning service",
+          values: [service, revision],
+        },
+      ]);
+      if (!deleted)
+        throw new HttpRequestError("custom_mcp_conflict", "The MCP service changed. Reload and try again.", 409);
+      return;
+    }
     const [[deleted]] = await this.transaction([
       {
         sql: "delete from custom_mcp where service = ? and revision = ? and not exists (select 1 from connections where service = ?) returning service",

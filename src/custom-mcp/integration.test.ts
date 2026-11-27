@@ -551,3 +551,65 @@ it("keeps a saved connection successful when publishing its first tools fails", 
   const sync = await request(app, `/api/custom-mcp/${record.service}/sync`, "POST", { connectionId: connection.id });
   expect((await sync.json()).actions).toHaveLength(1);
 });
+
+it("never merges a stored record whose service the base catalog already has", async () => {
+  await database.customMcpStore.create({
+    service: "builtin",
+    displayName: "Stored MCP",
+    endpoint: "https://mcp.example.com/mcp",
+    transport: "streamable_http",
+    auth: { type: "none" },
+    enabled: true,
+    revision: "stored",
+  });
+  const app = await createApp("Built In");
+  const providers = (await (await request(app, "/api/providers")).json()) as { service: string; displayName: string }[];
+  expect(providers.map((provider) => [provider.service, provider.displayName])).toEqual([["builtin", "Built In"]]);
+  expect(await (await request(app, "/api/custom-mcp")).json()).toEqual([]);
+});
+
+it("deletes a stored record hidden by a base provider and leaves that provider's connections", async () => {
+  await database.customMcpStore.create({
+    service: "builtin",
+    displayName: "Stored MCP",
+    endpoint: "https://mcp.example.com/mcp",
+    transport: "streamable_http",
+    auth: { type: "none" },
+    enabled: true,
+    revision: "stored",
+  });
+  await database.connectionStore.set("builtin", "work", { authType: "no_auth" });
+  const app = await createApp("Built In");
+  expect((await request(app, "/api/custom-mcp/builtin", "DELETE")).status).toBe(200);
+  expect(await database.customMcpStore.list()).toEqual([]);
+  expect(await database.connectionStore.get("builtin", "work")).toBeDefined();
+  expect((await request(app, "/api/custom-mcp/builtin", "DELETE")).status).toBe(404);
+  expect((await request(app, "/api/custom-mcp/unknown", "DELETE")).status).toBe(404);
+});
+
+it("keeps a record created after the request's catalog snapshot when deleting it", async () => {
+  const app = await createApp();
+  expect(await (await request(app, "/api/custom-mcp")).json()).toEqual([]);
+  const store = database.customMcpStore;
+  const version = store.version.bind(store);
+  vi.spyOn(store, "version").mockImplementationOnce(async () => {
+    const snapshotVersion = await version();
+    // Another runtime registers the service after this request read its catalog version.
+    await store.create({
+      service: "late",
+      displayName: "Late MCP",
+      endpoint: "https://mcp.example.com/mcp",
+      transport: "streamable_http",
+      auth: { type: "none" },
+      enabled: true,
+      revision: "late",
+    });
+    await database.connectionStore.set("late", "work", { authType: "no_auth" });
+    return snapshotVersion;
+  });
+  const response = await request(app, "/api/custom-mcp/late", "DELETE");
+  expect(response.status).toBe(404);
+  await expect(response.json()).resolves.toMatchObject({ error: { code: "unknown_service" } });
+  expect((await store.list()).map((record) => record.service)).toEqual(["late"]);
+  expect(await database.connectionStore.get("late", "work")).toBeDefined();
+});

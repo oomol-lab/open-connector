@@ -1,3 +1,4 @@
+import type { CustomProvider } from "../provider.ts";
 import type {
   AssetsBinding,
   D1DatabaseBinding,
@@ -10,9 +11,11 @@ import type { CloudflareEnv } from "./cloudflare/cloudflare-env.ts";
 
 import { Client, StreamableHTTPClientTransport } from "@modelcontextprotocol/client";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { s as schema } from "../core/json-schema.ts";
+import { defineProviderAction } from "../core/provider-definition.ts";
 import { getProviderNetworkPolicy } from "../core/provider-network-policy.ts";
 import { MarketplaceService } from "../marketplace/marketplace-service.ts";
-import worker from "./cloudflare.ts";
+import worker, { createCloudflareWorker } from "./cloudflare.ts";
 import { createWorkerSecretCodec } from "./secrets/worker-secret-codec.ts";
 import { D1RuntimeDatabase } from "./storage/d1/runtime-store.ts";
 import { SqliteD1Database } from "./storage/d1/test-database.ts";
@@ -300,6 +303,168 @@ describe("cloudflare worker", () => {
     );
     expect(getResponse.status).toBe(200);
     await expect(getResponse.text()).resolves.toBe("r2-payload");
+  });
+});
+
+describe("cloudflare worker custom providers", () => {
+  const greet = defineProviderAction("customgreet", {
+    name: "greet",
+    description: "Greet someone.",
+    operationType: "read",
+    inputSchema: schema.requiredObject("Greeting input.", { name: schema.nonEmptyString("Who to greet.") }),
+    outputSchema: schema.object("Greeting output.", { greeting: schema.string("The greeting.") }),
+  });
+  const customGreet: CustomProvider = {
+    definition: {
+      service: "customgreet",
+      displayName: "Custom Greeter",
+      categories: ["Productivity"],
+      authTypes: ["no_auth"],
+      auth: [{ type: "no_auth" }],
+      actions: [greet],
+    },
+    load: async () => ({
+      executors: {
+        "customgreet.greet": async (input) => ({
+          ok: true,
+          output: { greeting: `Hello, ${(input as { name: string }).name}!` },
+        }),
+      },
+    }),
+  };
+
+  it("lists and executes a custom provider next to the bundled ones", async () => {
+    vi.spyOn(console, "info").mockImplementation(() => {});
+    const binding = new SqliteD1Database();
+    const hosted = createCloudflareWorker({ customProviders: [customGreet] });
+    const env = { ...createEnv(), DB: binding, OOMOL_CONNECT_RUNTIME_TOKEN: "host-token" };
+    const request = (path: string, body?: unknown) =>
+      hosted.fetch(
+        new Request(`https://host-providers.example.com${path}`, {
+          method: body ? "POST" : "GET",
+          headers: { "authorization": "Bearer host-token", "content-type": "application/json" },
+          body: body === undefined ? undefined : JSON.stringify(body),
+        }),
+        env,
+        createExecutionContext(),
+      );
+    try {
+      const listed = await (await request("/v1/actions?service=customgreet")).json();
+      expect(JSON.stringify(listed)).toContain("customgreet.greet");
+      const response = await request("/v1/actions/customgreet.greet", { input: { name: "Ada" } });
+      expect(response.status).toBe(200);
+      expect((await response.json()).data).toEqual({ greeting: "Hello, Ada!" });
+      // The plain worker knows nothing of the custom provider.
+      const plain = await worker.fetch(
+        new Request("https://host-providers.example.com/v1/actions/customgreet.greet", {
+          method: "POST",
+          headers: { "authorization": "Bearer host-token", "content-type": "application/json" },
+          body: JSON.stringify({ input: { name: "x" } }),
+        }),
+        env,
+        createExecutionContext(),
+      );
+      expect(plain.status).toBeGreaterThanOrEqual(400);
+    } finally {
+      binding.close();
+    }
+  });
+
+  it("keeps the provider list passed at creation when the host changes its array later", async () => {
+    vi.spyOn(console, "info").mockImplementation(() => {});
+    const binding = new SqliteD1Database();
+    const providers = [customGreet];
+    const hosted = createCloudflareWorker({ customProviders: providers });
+    providers.length = 0;
+    const env = { ...createEnv(), DB: binding, OOMOL_CONNECT_RUNTIME_TOKEN: "host-token" };
+    const request = (path: string, body?: unknown) =>
+      hosted.fetch(
+        new Request(`https://host-snapshot.example.com${path}`, {
+          method: body ? "POST" : "GET",
+          headers: { "authorization": "Bearer host-token", "content-type": "application/json" },
+          body: body === undefined ? undefined : JSON.stringify(body),
+        }),
+        env,
+        createExecutionContext(),
+      );
+    try {
+      expect(JSON.stringify(await (await request("/v1/actions?service=customgreet")).json())).toContain(
+        "customgreet.greet",
+      );
+      expect((await request("/v1/actions/customgreet.greet", { input: { name: "Ada" } })).status).toBe(200);
+    } finally {
+      binding.close();
+    }
+  });
+
+  it("rejects a custom provider that shadows a bundled service or repeats another", () => {
+    const shadow: CustomProvider = {
+      ...customGreet,
+      definition: { ...customGreet.definition, service: "github", actions: [] },
+    };
+    expect(() => createCloudflareWorker({ customProviders: [shadow] })).toThrow(
+      "Provider service already registered: github",
+    );
+    expect(() => createCloudflareWorker({ customProviders: [customGreet, customGreet] })).toThrow(
+      "Provider service already registered: customgreet",
+    );
+  });
+
+  it("rejects a Node-only bundled service id when the worker is created", () => {
+    const shadow: CustomProvider = {
+      ...customGreet,
+      definition: { ...customGreet.definition, service: "sftp", actions: [] },
+    };
+    expect(() => createCloudflareWorker({ customProviders: [shadow] })).toThrow(
+      "Provider service already registered: sftp",
+    );
+  });
+
+  it("rejects an invalid service id or a stray action when the worker is created", () => {
+    const invalid: CustomProvider = { ...customGreet, definition: { ...customGreet.definition, service: "Not Valid" } };
+    expect(() => createCloudflareWorker({ customProviders: [invalid] })).toThrow("Not Valid");
+    const stray: CustomProvider = {
+      ...customGreet,
+      definition: { ...customGreet.definition, actions: [{ ...greet, id: "other.greet", service: "other" }] },
+    };
+    expect(() => createCloudflareWorker({ customProviders: [stray] })).toThrow("other.greet");
+  });
+
+  it("loads a custom provider module once across executions", async () => {
+    vi.spyOn(console, "info").mockImplementation(() => {});
+    let release!: () => void;
+    const pending = new Promise<void>((resolve) => (release = resolve));
+    const load = vi.fn(async () => {
+      await pending;
+      return customGreet.load();
+    });
+    const binding = new SqliteD1Database();
+    const hosted = createCloudflareWorker({ customProviders: [{ ...customGreet, load }] });
+    const env = { ...createEnv(), DB: binding, OOMOL_CONNECT_RUNTIME_TOKEN: "host-token" };
+    const execute = () =>
+      hosted.fetch(
+        new Request("https://host-providers.example.com/v1/actions/customgreet.greet", {
+          method: "POST",
+          headers: { "authorization": "Bearer host-token", "content-type": "application/json" },
+          body: JSON.stringify({ input: { name: "Ada" } }),
+        }),
+        env,
+        createExecutionContext(),
+      );
+    try {
+      // Both first uses start while the load is still pending and share it.
+      const first = execute();
+      await vi.waitFor(() => expect(load).toHaveBeenCalledTimes(1));
+      const second = execute();
+      await new Promise((resolve) => setTimeout(resolve, 50));
+      expect(load).toHaveBeenCalledTimes(1);
+      release();
+      expect((await Promise.all([first, second])).map((response) => response.status)).toEqual([200, 200]);
+      expect((await execute()).status).toBe(200);
+      expect(load).toHaveBeenCalledTimes(1);
+    } finally {
+      binding.close();
+    }
   });
 });
 

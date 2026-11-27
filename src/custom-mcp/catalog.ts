@@ -79,7 +79,10 @@ export class CustomMcpCatalog implements CatalogStore {
   async refresh(): Promise<CatalogSnapshot> {
     const version = await this.store.version();
     if (version === this.snapshot.version) return this.snapshot;
-    const records = await this.store.list();
+    const stored = await this.store.list();
+    // A stored record never shadows a provider of the base catalog, which may have gained that service id later.
+    const baseServices = new Set(this.base.providers.map((provider) => provider.service));
+    const records = stored.filter((record) => !baseServices.has(record.service));
     const definitions = records.map(customMcpProvider);
     const actions = new Map(definitions.flatMap((provider) => provider.actions.map((action) => [action.id, action])));
     let catalog = this.base;
@@ -95,7 +98,7 @@ export class CustomMcpCatalog implements CatalogStore {
       );
     }
     this.snapshot = {
-      version: JSON.stringify(records.map((record) => [record.service, record.revision])),
+      version: JSON.stringify(stored.map((record) => [record.service, record.revision])),
       records: new Map(records.map((record) => [record.service, record])),
       catalog,
       search: createActionSearchIndexProvider(catalog.actions),

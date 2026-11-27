@@ -105,9 +105,24 @@ export class CustomMcpService {
   }
 
   async delete(service: string): Promise<void> {
+    if (!this.catalog.getRecord(service)) return this.deleteHidden(service);
     const record = this.get(service);
     await this.store.delete(service, record.revision);
     if (record.auth.type === "oauth2") await this.oauthClientConfigs.deleteConfig(service);
+    await this.catalog.refresh();
+  }
+
+  /**
+   * Remove a stored record that a provider of the base catalog hides because it uses the same service id. That
+   * provider now owns the service's connections and OAuth client, so only the record is removed. A record missing from
+   * the request's snapshot for any other reason, such as one created after it, is unknown to this request.
+   */
+  private async deleteHidden(service: string): Promise<void> {
+    if (!this.catalog.providers.some((provider) => provider.service === service))
+      throw new HttpRequestError("unknown_service", "Unknown custom MCP service.", 404);
+    const record = (await this.store.list()).find((stored) => stored.service === service);
+    if (!record) throw new HttpRequestError("unknown_service", "Unknown custom MCP service.", 404);
+    await this.store.delete(service, record.revision, { keepConnections: true });
     await this.catalog.refresh();
   }
 
