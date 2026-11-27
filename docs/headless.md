@@ -119,12 +119,13 @@ provider:
 
 ```ts
 // providers/custom-crm.ts
-import type { CustomProvider } from "@oomol-lab/open-connector";
-
-import { s } from "@oomol-lab/open-connector/json-schema";
-import { defineProviderAction } from "@oomol-lab/open-connector/provider-definition";
-import { defineApiKeyProviderExecutors } from "@oomol-lab/open-connector/provider-executors";
-import { ProviderRequestError } from "@oomol-lab/open-connector/provider-runtime";
+import {
+  type CustomProvider,
+  defineApiKeyProviderExecutors,
+  defineProviderAction,
+  ProviderRequestError,
+  s,
+} from "@oomol-lab/open-connector/provider";
 
 const listContacts = defineProviderAction("custom_crm", {
   name: "list_contacts",
@@ -160,21 +161,16 @@ export const customCrm: CustomProvider = {
 A variant of a bundled provider, such as HubSpot over its REST API with an API key, is defined the same way under its
 own `service` id (for example `hubspot_rest`).
 
-Provider authors import helpers from these package subpaths:
+Import the `CustomProvider` type and authoring helpers from `@oomol-lab/open-connector/provider`. Define actions with
+`defineProviderAction` and the `s` schema helpers. For executors, choose `defineApiKeyProviderExecutors`,
+`defineOAuthProviderExecutors`, `defineBearerProviderExecutors`, or use `defineProviderExecutors` for a custom
+execution context. Use `defineProviderProxy` to expose an authenticated proxy.
 
-| Subpath                                         | Exports                                                                                |
-| ----------------------------------------------- | -------------------------------------------------------------------------------------- |
-| `@oomol-lab/open-connector/provider-definition` | `defineProviderAction`                                                                 |
-| `@oomol-lab/open-connector/json-schema`         | `s` schema helpers                                                                     |
-| `@oomol-lab/open-connector/provider-executors`  | `defineApiKeyProviderExecutors`, `defineOAuthProviderExecutors` and the other adapters |
-| `@oomol-lab/open-connector/provider-runtime`    | `providerFetch`, `createProviderFetch` and the shared request and error helpers        |
-| `@oomol-lab/open-connector/provider-proxy`      | `defineProviderProxy` for `/v1/proxy/{service}`                                        |
-| `@oomol-lab/open-connector/request`             | `assertPublicHttpUrl`, `isPrivateNetworkAccessAllowed`                                 |
-| `@oomol-lab/open-connector/types`               | `ProviderDefinition`, `ActionDefinition` and the other catalog and executor types      |
-
-Send provider requests through the `fetcher` the executor adapters pass in, together with the `signal`, and never the
-global `fetch`, so the runtime's `network` policy and `providerHttpDispatch` apply and cancelled requests stop. A
-hand-written proxy or credential validator without that context uses `providerFetch` or `createProviderFetch`.
+Provider code runs in the host process. Register providers you trust. Send requests through the executor's `fetcher`
+and pass its `signal` so the runtime applies its network policy, HTTP dispatch, and cancellation. In a credential
+validator or hand-written proxy, use `providerFetch`. For a self-hosted service on a private network, pass
+`{ allowPrivateNetwork: isPrivateNetworkAccessAllowed }` to the executor adapter or `createProviderFetch` for requests
+to the configured service instance. Throw `ProviderRequestError` to report a provider HTTP failure.
 
 Custom providers are listed and searched with the bundled catalog and use the same connection, credential validation,
 `actionPolicy`, runtime token grants and scopes, `/v1/actions`, proxy and trigger paths. Their `load` runs once, on the

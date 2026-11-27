@@ -1,3 +1,4 @@
+import type { CustomProvider } from "../provider.ts";
 import type {
   AssetsBinding,
   D1DatabaseBinding,
@@ -7,7 +8,6 @@ import type {
   R2ObjectBinding,
 } from "./cloudflare/cloudflare-bindings.ts";
 import type { CloudflareEnv } from "./cloudflare/cloudflare-env.ts";
-import type { CustomProvider } from "./connector-runtime.ts";
 
 import { Client, StreamableHTTPClientTransport } from "@modelcontextprotocol/client";
 import { afterEach, describe, expect, it, vi } from "vitest";

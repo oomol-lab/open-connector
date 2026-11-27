@@ -3,8 +3,8 @@ import type { ProviderHttpDispatchOptions } from "../core/provider-http-dispatch
 import type { ProviderNetworkPolicy } from "../core/provider-network-policy.ts";
 import type { RuntimeLogger } from "../core/types.ts";
 import type { McpOAuthClientMetadata } from "../custom-mcp/definition.ts";
+import type { CustomProvider } from "../provider.ts";
 import type { RuntimeJwtConfig } from "./api/runtime-jwt.ts";
-import type { CustomProvider } from "./custom-providers.ts";
 import type { S3TransitClientOptions } from "./files/s3-transit-files.ts";
 import type { IStagedTransitFileService } from "./files/transit-file-store.ts";
 import type { McpOutputMode } from "./mcp-settings.ts";
@@ -345,7 +345,4 @@ export async function createConnectorRuntime(options: ConnectorRuntimeOptions): 
   }
 }
 
-export type { ProviderDefinition } from "../core/types.ts";
-export type { ExecutorModule } from "../providers/provider-loader.ts";
-export type { CustomProvider } from "./custom-providers.ts";
 export type { RuntimeProviderSetup } from "./api/runtime-api.ts";

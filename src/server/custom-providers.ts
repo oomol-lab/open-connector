@@ -1,21 +1,11 @@
 import type { ProviderDefinition } from "../core/types.ts";
+import type { CustomProvider } from "../provider.ts";
 import type { ExecutorModule, ExecutorModules } from "../providers/provider-loader.ts";
 import type { TriggerKeySnapshot } from "../triggers/common/types.ts";
 import type { CustomMcpStore } from "./storage/custom-mcp-store.ts";
 
 import { PromiseCache } from "../core/promise-cache.ts";
 import { assertProviderId } from "../core/provider-id.ts";
-
-/** A provider supplied by the host, for example from a separate npm package, instead of the bundled registry. */
-export interface CustomProvider {
-  /** Catalog entry: auth, categories and action schemas. `service` must not collide with a bundled provider. */
-  definition: ProviderDefinition;
-  /**
-   * Loaded the first time an action, proxy, credential validator, trigger or OAuth operation of the provider runs.
-   * Concurrent first uses share one call; a rejected load is retried on the next use.
-   */
-  load: () => Promise<ExecutorModule>;
-}
 
 export interface CustomProviderRegistration {
   /** Executor modules of the bundled providers this entry point can run. */

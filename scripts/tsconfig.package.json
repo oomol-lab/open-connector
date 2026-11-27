@@ -6,5 +6,5 @@
     "outDir": "../dist/package/src",
     "rewriteRelativeImportExtensions": true
   },
-  "include": ["../src/server/connector-runtime.ts", "../src/server/connector-build.ts"]
+  "include": ["../src/provider.ts", "../src/server/connector-runtime.ts", "../src/server/connector-build.ts"]
 }

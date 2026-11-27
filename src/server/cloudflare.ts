@@ -1,9 +1,9 @@
 import type { CatalogStore } from "../catalog-store.ts";
+import type { CustomProvider } from "../provider.ts";
 import type { AssetsBinding, KVNamespaceBinding, R2BucketBinding } from "./cloudflare/cloudflare-bindings.ts";
 import type { CloudflareEnv } from "./cloudflare/cloudflare-env.ts";
 import type { McpOAuthHandler } from "./cloudflare/mcp-oauth.ts";
 import type { ConnectApp } from "./connect-app.ts";
-import type { CustomProvider } from "./custom-providers.ts";
 import type { Logger } from "./logger.ts";
 import type { ISecretCodec } from "./secrets/secret-codec-core.ts";
 

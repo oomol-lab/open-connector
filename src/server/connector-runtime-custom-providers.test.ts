@@ -1,5 +1,6 @@
+import type { CustomProvider } from "../provider.ts";
 import type { PollDefinition } from "../triggers/common/poll.ts";
-import type { CustomProvider, ConnectorRuntime, ConnectorRuntimeOptions } from "./connector-runtime.ts";
+import type { ConnectorRuntime, ConnectorRuntimeOptions } from "./connector-runtime.ts";
 
 import { cp, mkdtemp, mkdir, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";

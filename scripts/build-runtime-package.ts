@@ -38,26 +38,7 @@ await writeFile(
       exports: {
         ".": { types: "./src/server/connector-runtime.d.ts", import: "./src/server/connector-runtime.js" },
         "./build": { types: "./src/server/connector-build.d.ts", import: "./src/server/connector-build.js" },
-        // Authoring helpers for providers registered through the `customProviders` option.
-        "./provider-definition": {
-          types: "./src/core/provider-definition.d.ts",
-          import: "./src/core/provider-definition.js",
-        },
-        "./json-schema": { types: "./src/core/json-schema.d.ts", import: "./src/core/json-schema.js" },
-        "./provider-runtime": {
-          types: "./src/providers/provider-runtime.d.ts",
-          import: "./src/providers/provider-runtime.js",
-        },
-        "./provider-executors": {
-          types: "./src/providers/provider-executors.d.ts",
-          import: "./src/providers/provider-executors.js",
-        },
-        "./provider-proxy": {
-          types: "./src/providers/provider-proxy.d.ts",
-          import: "./src/providers/provider-proxy.js",
-        },
-        "./types": { types: "./src/core/types.d.ts", import: "./src/core/types.js" },
-        "./request": { types: "./src/core/request.d.ts", import: "./src/core/request.js" },
+        "./provider": { types: "./src/provider.d.ts", import: "./src/provider.js" },
       },
       dependencies: source.dependencies,
       engines: source.engines,
