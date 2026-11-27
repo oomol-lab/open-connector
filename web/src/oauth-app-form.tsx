@@ -26,6 +26,21 @@ interface OAuthAppDialogProps extends OAuthAppFormProps {
   onOpenChange(open: boolean): void;
 }
 
+interface OAuthClientConfigFormInput {
+  clientId: string;
+  clientSecret: string;
+  fields: CredentialField[];
+  values: Record<string, string>;
+  clearedSecrets: Record<string, boolean>;
+  config?: OAuthConfig;
+}
+
+interface OAuthClientConfigRequest extends ClientConfigFieldValues {
+  clientId: string;
+  clientSecret: string | undefined;
+  requestedScopes: string[] | undefined;
+}
+
 export function OAuthAppDialog(props: OAuthAppDialogProps): ReactNode {
   const t = useTranslate();
   return (
@@ -67,7 +82,7 @@ export function OAuthAppForm(props: OAuthAppFormProps): ReactNode {
     initialClientConfigFieldValues(clientConfigFields, props.config),
   );
   const [clearedSecrets, setClearedSecrets] = useState<Record<string, boolean>>({});
-  const sameClient = configured && clientId === props.config?.clientId;
+  const sameClient = configured && clientId.trim() == props.config?.clientId;
   const [status, setStatus] = useState<string | null>(null);
 
   useEffect(() => {
@@ -82,16 +97,17 @@ export function OAuthAppForm(props: OAuthAppFormProps): ReactNode {
     event.preventDefault();
     setStatus(t("providers.oauthClientSettings.saving"));
     try {
-      const { extra, secretExtra } = splitClientConfigFieldValues(clientConfigFields, extraValues);
-      for (const key of Object.keys(secretExtra)) {
-        if (!secretExtra[key]?.trim() && !clearedSecrets[key]) delete secretExtra[key];
-      }
-      await apiPut(`/api/oauth/configs/${props.provider.service}`, {
-        clientId,
-        clientSecret: clientSecret || undefined,
-        extra,
-        secretExtra,
-      });
+      await apiPut(
+        `/api/oauth/configs/${props.provider.service}`,
+        oauthClientConfigRequestBody({
+          clientId,
+          clientSecret,
+          fields: clientConfigFields,
+          values: extraValues,
+          clearedSecrets,
+          config: props.config,
+        }),
+      );
       setStatus(t("providers.oauthClientSettings.saved"));
       props.onRefresh();
       props.onSaved?.();
@@ -230,6 +246,23 @@ export function initialClientConfigFieldValues(
 export interface ClientConfigFieldValues {
   extra: Record<string, string>;
   secretExtra: Record<string, string>;
+}
+
+/** Preserve the same client's scope selection and omit unchanged secrets when saving the form. */
+export function oauthClientConfigRequestBody(input: OAuthClientConfigFormInput): OAuthClientConfigRequest {
+  const clientId = input.clientId.trim();
+  const sameClient = clientId == input.config?.clientId;
+  const { extra, secretExtra } = splitClientConfigFieldValues(input.fields, input.values);
+  for (const key of Object.keys(secretExtra)) {
+    if (!secretExtra[key]?.trim() && !input.clearedSecrets[key]) delete secretExtra[key];
+  }
+  return {
+    clientId,
+    clientSecret: input.clientSecret || undefined,
+    requestedScopes: sameClient ? (input.config?.requestedScopes ?? undefined) : undefined,
+    extra,
+    secretExtra,
+  };
 }
 
 export function splitClientConfigFieldValues(

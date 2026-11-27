@@ -265,7 +265,7 @@ describe("Google Drive files.list sharing capability", () => {
 });
 
 describe("Google Drive OAuth credential validation", () => {
-  it("requests only the About user field and uses its email address as the account id", async () => {
+  it("reads UserInfo and preserves the email address as the account id", async () => {
     const requests: CapturedRequest[] = [];
 
     const result = await credentialValidators.oauth2!(oauthCredential, {
@@ -274,7 +274,7 @@ describe("Google Drive OAuth credential validation", () => {
           url: new URL(String(input)),
           authorization: new Headers(init?.headers).get("authorization"),
         });
-        return Response.json({ user: { emailAddress: "someone@example.com", displayName: "Someone" } });
+        return Response.json({ sub: "google-sub", email: "someone@example.com", name: "Someone" });
       },
     });
 
@@ -282,18 +282,17 @@ describe("Google Drive OAuth credential validation", () => {
       profile: { accountId: "someone@example.com", displayName: "Someone" },
     });
     expect(requests).toHaveLength(1);
-    expect(requests[0]?.url.pathname).toBe("/drive/v3/about");
-    expect(Object.fromEntries(requests[0]!.url.searchParams)).toEqual({ fields: "user" });
+    expect(requests[0]?.url.href).toBe("https://openidconnect.googleapis.com/v1/userinfo");
     expect(requests[0]?.authorization).toBe("Bearer drive-access-token");
   });
 
-  it("falls back to the generic account id when the About user has no email address", async () => {
+  it("uses the email address as the display name when UserInfo has no name", async () => {
     const result = await credentialValidators.oauth2!(oauthCredential, {
-      fetcher: async () => Response.json({ user: { displayName: "No Mail" } }),
+      fetcher: async () => Response.json({ sub: "google-sub", email: "someone@example.com" }),
     });
 
     expect(result).toMatchObject({
-      profile: { accountId: "googledrive:oauth2", displayName: "No Mail" },
+      profile: { accountId: "someone@example.com", displayName: "someone@example.com" },
     });
   });
 });

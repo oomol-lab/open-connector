@@ -26,6 +26,7 @@ import {
   googleServiceAccountValidator,
   resolveGoogleAccessToken,
 } from "../googledrive/runtime-auth.ts";
+import { readGoogleUserInfo } from "../googledrive/runtime-userinfo.ts";
 import { defineProviderExecutors } from "../provider-executors.ts";
 import { defineProviderProxy } from "../provider-proxy.ts";
 import {
@@ -313,12 +314,12 @@ export const proxy: ProviderProxyExecutor = defineProviderProxy({
 });
 
 export const credentialValidators: CredentialValidators = {
-  async oauth2(input, { fetcher }) {
-    const profile = await getProfile("me", input.accessToken, fetcher);
+  async oauth2(input, { fetcher, signal }) {
+    const profile = await readGoogleUserInfo({ accessToken: input.accessToken, fetcher, signal });
     return {
       profile: {
-        accountId: profile.emailAddress,
-        displayName: profile.emailAddress,
+        accountId: profile.email,
+        displayName: profile.email,
       },
     };
   },

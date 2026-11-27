@@ -1,11 +1,11 @@
-import type { AuthDefinition, OAuthConfig, ProviderDefinition } from "./model";
+import type { AuthDefinition, CredentialField, OAuthConfig, ProviderDefinition } from "./model";
 
 import { I18nProvider } from "@embra/i18n/react";
 import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it, vi } from "vitest";
 import { createAppI18n } from "./i18n";
-import { OAuthAppForm } from "./oauth-app-form";
+import { OAuthAppForm, oauthClientConfigRequestBody } from "./oauth-app-form";
 
 const setupAuth: Extract<AuthDefinition, { type: "oauth2" }> = {
   type: "oauth2",
@@ -40,6 +40,57 @@ function markupFor(auth: Extract<AuthDefinition, { type: "oauth2" }>, config?: O
 }
 
 describe("OAuthAppForm", () => {
+  it.each([undefined, null, [], ["https://www.googleapis.com/auth/gmail.send", "future:scope"]])(
+    "preserves the saved scope selection when editing the same client: %j",
+    (requestedScopes) => {
+      const body = oauthClientConfigRequestBody({
+        clientId: " client ",
+        clientSecret: "replacement-secret",
+        fields: [],
+        values: {},
+        clearedSecrets: {},
+        config: { service: "gmail", configured: true, clientId: "client", requestedScopes },
+      });
+      expect(body).toMatchObject({ clientId: "client", clientSecret: "replacement-secret" });
+      expect(JSON.parse(JSON.stringify(body)).requestedScopes).toEqual(requestedScopes ?? undefined);
+    },
+  );
+
+  it("uses provider defaults when replacing the OAuth client", () => {
+    const body = oauthClientConfigRequestBody({
+      clientId: "new-client",
+      clientSecret: "secret",
+      fields: [],
+      values: {},
+      clearedSecrets: {},
+      config: { service: "gmail", configured: true, clientId: "old-client", requestedScopes: ["old-scope"] },
+    });
+    expect(JSON.parse(JSON.stringify(body))).not.toHaveProperty("requestedScopes");
+  });
+
+  it("omits unchanged secrets but preserves explicit clearing when saving scopes", () => {
+    const fields: CredentialField[] = ["kept", "cleared"].map((key) => ({
+      key,
+      label: key,
+      inputType: "password",
+      required: false,
+      secret: true,
+      location: "secretExtra",
+    }));
+    const body = oauthClientConfigRequestBody({
+      clientId: "client",
+      clientSecret: "",
+      fields,
+      values: { kept: "", cleared: "" },
+      clearedSecrets: { cleared: true },
+    });
+    expect(JSON.parse(JSON.stringify(body))).toEqual({
+      clientId: "client",
+      extra: {},
+      secretExtra: { cleared: "" },
+    });
+  });
+
   it("walks the user through registering the provider OAuth app", () => {
     const markup = markupFor(setupAuth);
 

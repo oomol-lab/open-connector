@@ -1700,6 +1700,9 @@ it("requests only drive.file when selected and preserves default Drive authoriza
     "https://www.googleapis.com/auth/drive.readonly",
     "https://www.googleapis.com/auth/drive.metadata.readonly",
     "https://www.googleapis.com/auth/drive",
+    "openid",
+    "email",
+    "profile",
   ]);
   await services.clientConfigs.upsertConfig({
     service: "googledrive",
@@ -1708,7 +1711,12 @@ it("requests only drive.file when selected and preserves default Drive authoriza
     requestedScopes: ["https://www.googleapis.com/auth/drive.file"],
   });
   const narrow = await services.flow.startAuthorization({ service: "googledrive" });
-  expect(new URL(narrow.authorizationUrl).searchParams.get("scope")).toBe("https://www.googleapis.com/auth/drive.file");
+  expect(new URL(narrow.authorizationUrl).searchParams.get("scope")?.split(" ")).toEqual([
+    "https://www.googleapis.com/auth/drive.file",
+    "openid",
+    "email",
+    "profile",
+  ]);
 });
 
 it.each([

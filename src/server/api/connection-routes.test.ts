@@ -5,6 +5,10 @@ import { afterEach, describe, expect, it, vi } from "vitest";
 import { createCatalogStore } from "../../catalog-store.ts";
 import { requestAuthorizationCodeToken } from "../../oauth/oauth-token.ts";
 import { provider as githubProvider } from "../../providers/github/definition.ts";
+import { provider as gmailProvider } from "../../providers/gmail/definition.ts";
+import { credentialValidators as gmailValidators } from "../../providers/gmail/executors.ts";
+import { provider as driveProvider } from "../../providers/googledrive/definition.ts";
+import { credentialValidators as driveValidators } from "../../providers/googledrive/executors.ts";
 import { provider as notionProvider } from "../../providers/notion/definition.ts";
 import { ProviderLoader } from "../../providers/provider-loader.ts";
 import { provider as slackProvider } from "../../providers/slack/definition.ts";
@@ -630,4 +634,71 @@ it("accepts the SP-API authorization code alias only with a valid unconsumed OAu
     ).status,
   ).toBe(200);
   expect((await call(`/oauth/callback?state=${request.stateHandle}&spapi_oauth_code=again`)).status).toBe(400);
+});
+
+// Exercise real provider validators through both console entry points, including the callback and reconnect.
+describe.each([
+  {
+    definition: gmailProvider,
+    validators: gmailValidators,
+    businessScope: "https://www.googleapis.com/auth/gmail.send",
+  },
+  {
+    definition: driveProvider,
+    validators: driveValidators,
+    businessScope: "https://www.googleapis.com/auth/drive.file",
+  },
+])("Google identity connection: $definition.service", ({ definition, validators, businessScope }) => {
+  it.each([
+    { path: "/api/oauth/authorizations", selection: "saved" },
+    { path: "/api/oauth/authorizations", selection: "empty" },
+    { path: "/api/oauth/authorizations", selection: "limited" },
+    { path: "/api/oauth/connection-requests", selection: "saved" },
+    { path: "/api/oauth/connection-requests", selection: "empty" },
+    { path: "/api/oauth/connection-requests", selection: "limited" },
+  ])("connects and reconnects with $selection scopes through $path", async ({ path, selection }) => {
+    const { service } = definition;
+    const auth = definition.auth.find((auth) => auth.type == "oauth2")!;
+    const savedScopes = [...new Set([...auth.scopes, businessScope])];
+    const requested = selection == "saved" ? undefined : selection == "empty" ? [] : [businessScope];
+    const expectedScopes = [...new Set([...(requested ?? savedScopes), ...auth.requiredScopes!])];
+    const { call, database } = await setup(
+      async () => ({ accessToken: "google-token", tokenType: "Bearer", metadata: {} }),
+      {},
+      { ...definition, actions: [] },
+      validators,
+    );
+    await database.oauthClientConfigStore.set({
+      service,
+      clientId: "client",
+      clientSecret: "secret",
+      requestedScopes: savedScopes,
+      extra: {},
+      secretExtra: {},
+    });
+    const fetcher = vi.fn<typeof fetch>(async (url, init) => {
+      expect(String(url)).toBe("https://openidconnect.googleapis.com/v1/userinfo");
+      expect(new Headers(init?.headers).get("authorization")).toBe("Bearer google-token");
+      return Response.json({ sub: "google-sub", email: "user@example.com", name: "User" });
+    });
+    vi.stubGlobal("fetch", fetcher);
+    const input = { service, connectionName: "personal", authorizationOptionIds: requested };
+    const first = await call(path, input);
+    expect(first.status).toBe(200);
+    const url = new URL((await first.json()).authorizationUrl);
+    expect(url.searchParams.get("scope")?.split(" ")).toEqual(expectedScopes);
+    expect((await call(`/oauth/callback?state=${url.searchParams.get("state")}&code=first`)).status).toBe(200);
+    const original = await database.connectionStore.get(service, "personal");
+    expect(original).toMatchObject({ credential: { profile: { accountId: "user@example.com", grantedScopes: [] } } });
+
+    const reconnect = await call("/api/oauth/connection-requests", { ...input, appId: original!.id });
+    expect(reconnect.status).toBe(200);
+    const reconnectUrl = new URL((await reconnect.json()).authorizationUrl);
+    expect(reconnectUrl.searchParams.get("scope")?.split(" ")).toEqual(expectedScopes);
+    expect((await call(`/oauth/callback?state=${reconnectUrl.searchParams.get("state")}&code=second`)).status).toBe(
+      200,
+    );
+    expect((await database.connectionStore.get(service, "personal"))?.id).toBe(original!.id);
+    expect(fetcher).toHaveBeenCalledTimes(2);
+  });
 });

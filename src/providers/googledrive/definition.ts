@@ -28,6 +28,7 @@ export const provider: ProviderDefinition = {
       tokenUrl: "https://oauth2.googleapis.com/token",
       revocationUrl: "https://oauth2.googleapis.com/revoke",
       scopes: googledriveOAuthScopes,
+      requiredScopes: ["openid", "email", "profile"],
       tokenEndpointAuthMethod: "client_secret_post",
       authorizationParams: {
         access_type: "offline",

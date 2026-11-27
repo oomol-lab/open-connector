@@ -57,6 +57,7 @@ import {
   resolveRequiredString,
   resolveSupportsAllDrives,
 } from "./runtime-shared.ts";
+import { readGoogleUserInfo } from "./runtime-userinfo.ts";
 import { googledriveOAuthScopes } from "./scopes.ts";
 import { googleDriveChanges, googleDriveChangeListener } from "./trigger-changes.ts";
 import { googleDriveFileChange } from "./trigger-on-file-change.ts";
@@ -249,21 +250,11 @@ export const executors: ProviderExecutors = defineGoogleProviderExecutors(servic
 
 export const credentialValidators: CredentialValidators = {
   async oauth2(input, { fetcher, signal }) {
-    const profile = await googleJsonRequest<{
-      user?: { emailAddress?: string; displayName?: string };
-    }>(`${driveApiBaseUrl}/about`, {
-      accessToken: input.accessToken,
-      fetcher,
-      signal,
-      // About has no top-level `emailAddress`, and Drive rejects the whole selection when any listed field is unknown.
-      query: { fields: "user" },
-    });
-    const emailAddress = profile.user?.emailAddress;
-    const displayName = profile.user?.displayName ?? emailAddress;
+    const profile = await readGoogleUserInfo({ accessToken: input.accessToken, fetcher, signal });
     return {
       profile: {
-        accountId: emailAddress ?? "googledrive:oauth2",
-        displayName: displayName ?? "Google Drive User",
+        accountId: profile.email,
+        displayName: profile.name ?? profile.email,
       },
       metadata: {
         currentAccount: profile,
