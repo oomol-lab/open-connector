@@ -95,6 +95,12 @@ export function createConsoleOAuthRoutes({
 }: ConsoleOAuthRoutesOptions): Hono {
   const app = new Hono();
 
+  /** The scope a console write gives a connection: the one the administrator names, else the one it already has. */
+  async function consoleScope(service: string, connectionName: string | undefined, requested: unknown) {
+    if (requested !== undefined && !isScope(requested)) throw new OAuthFlowError("invalid_input", scopeMessage);
+    return requested ?? (await connections.getStoredScope(service, connectionName));
+  }
+
   const writeConnectionResult = async (
     context: Context,
     operation: Promise<unknown>,
@@ -181,10 +187,9 @@ export function createConsoleOAuthRoutes({
     // The console is the only place the administrator chooses a connection name, so it also chooses the scope of a new
     // connection. Replacing an existing one keeps the scope it was stored with, and naming another scope is refused by
     // the store (`connection_scope_conflict`) rather than moving the connection.
-    const requestedScope = body.values === undefined ? undefined : body.scope;
-    if (requestedScope !== undefined && !isScope(requestedScope))
+    if (body.values !== undefined && body.scope !== undefined && !isScope(body.scope))
       return jsonError(context, 400, "invalid_input", scopeMessage);
-    const scope = requestedScope ?? (await connections.getStoredScope(service, connectionName));
+    const scope = await consoleScope(service, connectionName, body.values === undefined ? undefined : body.scope);
     if (authType === "api_key") {
       logger?.info(logContext, "connection started");
       return writeConnectionResult(
@@ -335,7 +340,7 @@ export function createConsoleOAuthRoutes({
       const authorization = await oauthFlow.startAuthorization({
         service,
         connectionName,
-        scope: await connections.getStoredScope(service, connectionName),
+        scope: await consoleScope(service, connectionName, body.scope),
         clientConfig: readOAuthClientConfigInput(body),
         authorizationOptionIds: readOptionalStringArray(body, "authorizationOptionIds"),
       });
