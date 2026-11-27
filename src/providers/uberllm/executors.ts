@@ -16,7 +16,7 @@ import {
 } from "../provider-runtime.ts";
 
 const service = "uberllm";
-const apiBaseUrl = "https://api.uberllm.dev/v1";
+const apiBaseUrl = "https://api.martllm.com/v1";
 // Reasoning model completions may exceed the shared default request timeout.
 const inferenceTimeoutMs = 300_000;
 
@@ -56,7 +56,7 @@ export const credentialValidators: CredentialValidators = {
   async apiKey(input, { fetcher, signal }) {
     await requestUberllm({ path: "/balance" }, { apiKey: input.apiKey, fetcher, signal });
     return {
-      profile: { displayName: "UberLLM API Key" },
+      profile: { displayName: "MartLLM API Key" },
       metadata: { validationEndpoint: "/balance" },
     };
   },
@@ -66,7 +66,7 @@ function requestUberllm(input: UberllmRequest, context: ApiKeyProviderContext): 
   return runProviderRequest(
     {
       signal: context.signal,
-      label: "UberLLM",
+      label: "MartLLM",
       timeoutMs: input.body === undefined ? undefined : inferenceTimeoutMs,
     },
     async (signal) => {
@@ -82,7 +82,7 @@ function requestUberllm(input: UberllmRequest, context: ApiKeyProviderContext): 
       });
       const payload = await readProviderJsonBody(response, {
         emptyBody: null,
-        invalidJsonMessage: "UberLLM returned invalid JSON",
+        invalidJsonMessage: "MartLLM returned invalid JSON",
         invalidJsonFallback: response.ok ? undefined : (text) => ({ message: text }),
       });
       if (!response.ok) {
@@ -91,12 +91,12 @@ function requestUberllm(input: UberllmRequest, context: ApiKeyProviderContext): 
           optionalString(optionalRecord(error?.error)?.message) ??
           optionalString(error?.error) ??
           optionalString(error?.message) ??
-          `UberLLM request failed with HTTP ${response.status}`;
+          `MartLLM request failed with HTTP ${response.status}`;
         throw new ProviderRequestError(response.status, message, withRetryAfterSeconds(response, payload));
       }
-      const result = requiredResponseRecord(payload, "UberLLM response");
+      const result = requiredResponseRecord(payload, "MartLLM response");
       if (input.path === "/models" && !Array.isArray(result.data)) {
-        throw providerResponseError("UberLLM returned a malformed model list");
+        throw providerResponseError("MartLLM returned a malformed model list");
       }
       return result;
     },

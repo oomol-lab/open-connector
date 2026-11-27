@@ -21,12 +21,31 @@ const publicLookup = async () => [{ address: "93.184.216.34", family: 4 as const
 type MemoryNode = ({ kind: "dir" } | { kind: "file"; data: Buffer }) & { mode?: number };
 
 const privateKeyPassphrase = " private key passphrase ";
-const userKey = utils.generateKeyPairSync("ed25519", {
-  passphrase: privateKeyPassphrase,
-  cipher: "aes256-cbc",
-  rounds: 16,
-});
-const hostKey = utils.generateKeyPairSync("ed25519");
+// Fixed test-only keys avoid ssh2 key generation stripping leading Ed25519 zero bytes.
+// https://github.com/mscdex/ssh2/issues/1513
+const userKey = {
+  public: "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIL4i1jGn28zfPB6yvp9T0+wDZIB1ZLr01nGSGtaOAFMd",
+  private: `-----BEGIN OPENSSH PRIVATE KEY-----
+b3BlbnNzaC1rZXktdjEAAAAACmFlczI1Ni1jYmMAAAAGYmNyeXB0AAAAGAAAABDS
+pKtRDGPxTFRRNgJLYUEAAAAAEAAAAAEAAAAzAAAAC3NzaC1lZDI1NTE5AAAAIL4i
+1jGn28zfPB6yvp9T0+wDZIB1ZLr01nGSGtaOAFMdAAAAkJNaQcATks2xZrHBkDEX
+sOnvwy7yrzL7Qm4JgSEMHNLeZ5g89SiEB/piw9Aqzgsv07xpI9Y0QDKbPIJyARio
+WQXCvBhdSKXu78oQxk/msdG1RKDyJpXok+Pli+nMCplTzOD5xvjQTE9EzgkB7t5z
+AQPYy8OaDV9iiWvl7E3lYbWB5a31MeeJCA2p5W3Rm/anRg==
+-----END OPENSSH PRIVATE KEY-----
+`,
+};
+const hostKey = {
+  public: "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIKOAQEXVXs2zC6jqpOj1w3prU9Mq7BfQxSLxcrjYOSl4",
+  private: `-----BEGIN OPENSSH PRIVATE KEY-----
+b3BlbnNzaC1rZXktdjEAAAAABG5vbmUAAAAEbm9uZQAAAAAAAAABAAAAMwAAAAtz
+c2gtZWQyNTUxOQAAACCjgEBF1V7Nswuo6qTo9cN6a1PTKuwX0MUi8XK42DkpeAAA
+AIhlaKQGZWikBgAAAAtzc2gtZWQyNTUxOQAAACCjgEBF1V7Nswuo6qTo9cN6a1PT
+KuwX0MUi8XK42DkpeAAAAED/eewq27yCr2x1g2Q/Rts6FDoTrACzFPO1Gb+1lNi4
+kaOAQEXVXs2zC6jqpOj1w3prU9Mq7BfQxSLxcrjYOSl4AAAAAAECAwQF
+-----END OPENSSH PRIVATE KEY-----
+`,
+};
 const hostKeyFingerprint = fingerprintOf(hostKey.public);
 
 let server: InstanceType<typeof Server>;

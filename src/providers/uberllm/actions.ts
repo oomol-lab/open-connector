@@ -9,7 +9,7 @@ const messageSchema = s.looseObject(
 );
 const modelIdSchema = s.nonEmptyString("A model ID returned by list_models, such as `deepseek/deepseek-v4-flash`.");
 const modelSchema = s.object(
-  "A model served by UberLLM, with metadata such as its owner, context length and pricing.",
+  "A model served by MartLLM, with metadata such as its owner, context length and pricing.",
   { id: s.nonEmptyString("The model ID to pass unchanged in inference requests.") },
   { required: ["id"], additionalProperties: true },
 );
@@ -19,7 +19,7 @@ export const uberllmActions: ActionDefinition[] = [
     name: "create_chat_completion",
     operationType: "read",
     description:
-      "Generate a UberLLM chat completion through the OpenAI-compatible endpoint. This is a billed, non-streaming inference request.",
+      "Generate a MartLLM chat completion through the OpenAI-compatible endpoint. This is a billed, non-streaming inference request.",
     inputSchema: s.object(
       "OpenAI-compatible chat completion parameters. Supported options depend on the selected model.",
       {
@@ -58,7 +58,7 @@ export const uberllmActions: ActionDefinition[] = [
   defineProviderAction(service, {
     name: "list_models",
     operationType: "read",
-    description: "List the model IDs UberLLM serves, with model metadata, without running inference.",
+    description: "List the model IDs MartLLM serves, with model metadata, without running inference.",
     inputSchema: s.object("No additional parameters are required.", {}),
     outputSchema: s.object(
       "The model list.",
