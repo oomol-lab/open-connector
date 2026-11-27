@@ -45,6 +45,7 @@ import { CustomMcpService } from "../custom-mcp/service.ts";
 import { MarketplaceError, MarketplaceService } from "../marketplace/marketplace-service.ts";
 import { OAuthClientConfigService } from "../oauth/oauth-client-config-service.ts";
 import { OAuthFlowService } from "../oauth/oauth-flow-service.ts";
+import { defineProviderProxy } from "../providers/provider-proxy.ts";
 import { actionInputMaxDepth, hashActionRequest, hashIdempotencyKey } from "./actions/action-idempotency.ts";
 import { ActionRunner } from "./actions/action-runner.ts";
 import { registerStaticRoutes } from "./api/static-routes.ts";
@@ -4327,6 +4328,53 @@ describe("ConnectServer", () => {
         },
       },
       meta: {},
+    });
+  });
+
+  it("returns provider error headers in the v1 failure envelope except on an unfollowed redirect", async () => {
+    const headers = { "content-type": "application/json", "retry-after": "30", "x-ratelimit-remaining": "0" };
+    const responses = [
+      new Response(JSON.stringify({ error: "slow down" }), { status: 429, headers }),
+      new Response("moved", { status: 302, headers: { "x-signed-target": "signature" } }),
+    ];
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async () => responses.shift() ?? new Response("unexpected extra request", { status: 500 })),
+    );
+    const proxy = defineProviderProxy({
+      service: "example",
+      baseUrl: "https://api.example.com/",
+      auth: { type: "bearer" },
+    });
+    const app = createTestServer([apiKeyProvider], { providerLoader: new ProxyProviderLoader(proxy) }).createApp();
+    await app.request("/api/connections/example", {
+      method: "PUT",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ authType: "api_key", values: { apiKey: "example-key" }, connectionName: "work" }),
+    });
+    const request = {
+      method: "POST",
+      headers: { "content-type": "application/json", "x-oo-connector-alias": "work" },
+      body: JSON.stringify({ endpoint: "/items", method: "GET" }),
+    };
+
+    const rateLimited = await app.request("/v1/proxy/example", request);
+    const redirected = await app.request("/v1/proxy/example", request);
+
+    expect(rateLimited.status).toBe(429);
+    await expect(rateLimited.json()).resolves.toEqual({
+      success: false,
+      errorCode: "rate_limited",
+      message: JSON.stringify({ error: "slow down" }),
+      data: { status: 429, headers },
+      meta: { service: "example" },
+    });
+    await expect(redirected.json()).resolves.toEqual({
+      success: false,
+      errorCode: "provider_error",
+      message: "provider request failed with HTTP 302",
+      data: { status: 302 },
+      meta: { service: "example" },
     });
   });
 
