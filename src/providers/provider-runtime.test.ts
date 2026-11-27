@@ -854,6 +854,46 @@ describe("provider egress SSRF guard", () => {
     expect(result).toMatchObject({ ok: false, error: { code: "insufficient_credit", details: { status: 402 } } });
   });
 
+  it("returns the provider's response headers on a proxy error the way a success returns them", async () => {
+    const headers = { "retry-after": "30", "x-ratelimit-remaining": "0", "content-type": "text/plain" };
+    stubFetchSequence([
+      new Response("ok", { status: 200, headers }),
+      new Response("slow down", { status: 429, headers }),
+    ]);
+    const proxy = defineProviderProxy({
+      service: "test_service",
+      baseUrl: "https://api.example.com/v1/",
+      auth: { type: "bearer" },
+    });
+
+    const success = await proxy({ method: "GET", endpoint: "/items" }, executionContext);
+    const failure = await proxy({ method: "GET", endpoint: "/items" }, executionContext);
+
+    expect(success).toMatchObject({ ok: true, response: { status: 200, headers } });
+    expect(failure).toEqual({
+      ok: false,
+      error: { code: "rate_limited", message: "slow down", details: { status: 429, headers, details: undefined } },
+    });
+  });
+
+  it("keeps the provider's status and headers when a provider readError throws", async () => {
+    const headers = { "retry-after": "120", "content-type": "text/html" };
+    stubFetchSequence([new Response("<html>Service Unavailable</html>", { status: 503, headers })]);
+    const proxy = defineProviderProxy({
+      service: "test_service",
+      baseUrl: "https://api.example.com/v1/",
+      auth: { type: "bearer" },
+      async readError(response) {
+        const payload = (await response.json()) as { message: string };
+        return new ProviderRequestError(response.status, payload.message);
+      },
+    });
+
+    const failure = await proxy({ method: "GET", endpoint: "/items" }, executionContext);
+
+    expect(failure).toMatchObject({ ok: false, error: { details: { status: 503, headers } } });
+  });
+
   it("keeps Z-API-style path rewrites on the provider origin", async () => {
     const calls = stubFetchSequence([new Response(JSON.stringify({ ok: true }), { status: 200 })]);
     const origins: string[] = [];

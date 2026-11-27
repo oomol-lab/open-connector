@@ -22,6 +22,7 @@ import {
   ProviderRequestError,
   basicAuthorizationHeader,
   createProviderTimeout,
+  isAbortLikeError,
   readProviderErrorTextBody,
   toProviderExecutionError,
 } from "./provider-runtime.ts";
@@ -217,11 +218,16 @@ export interface ReadProviderProxyResponseOptions {
   maxBytes?: number;
 }
 
+/** The provider's response headers as a proxy result carries them, on success and on error alike. */
+export function readProviderProxyResponseHeaders(response: Response): Record<string, string> {
+  return Object.fromEntries(response.headers.entries());
+}
+
 export async function readProviderProxyResponse(
   response: Response,
   options: ReadProviderProxyResponseOptions = {},
 ): Promise<ProxyResponse> {
-  const headers = Object.fromEntries(response.headers.entries());
+  const headers = readProviderProxyResponseHeaders(response);
   const bytes = await readBoundedResponseBytes(response, {
     maxBytes: options.maxBytes ?? defaultProviderProxyMaxResponseBytes,
     fieldName: "proxy response",
@@ -295,7 +301,15 @@ function isTextProxyContentType(contentType: string): boolean {
   );
 }
 
-export function toProviderProxyError(error: unknown, fallbackMessage: string): ProxyExecutionResult {
+/**
+ * Map a proxy failure to its result. `headers` are the provider's response headers when it answered
+ * with an error; they sit beside `details.status` exactly as a success carries them beside `status`.
+ */
+export function toProviderProxyError(
+  error: unknown,
+  fallbackMessage: string,
+  headers?: Record<string, string>,
+): ProxyExecutionResult {
   const result = toProviderExecutionError(error, fallbackMessage);
   if (result.ok) {
     return {
@@ -306,10 +320,32 @@ export function toProviderProxyError(error: unknown, fallbackMessage: string): P
       },
     };
   }
+  const failure = result.error!;
   return {
     ok: false,
-    error: result.error!,
+    error: headers ? { ...failure, details: { ...optionalRecord(failure.details), headers } } : failure,
   };
+}
+
+/**
+ * Run a provider's error parser, degrading a parser failure (such as `response.json()` on a non-JSON
+ * body) to the upstream status with a fallback message, the way the shared error reader degrades a
+ * body-read failure. A timeout or abort keeps propagating.
+ */
+async function readProviderErrorWith(
+  readError: (response: Response) => Promise<ProviderRequestError>,
+  response: Response,
+  fallbackMessage: string,
+  signal: AbortSignal,
+): Promise<ProviderRequestError> {
+  try {
+    return await readError(response);
+  } catch (error) {
+    if (signal.aborted) throw signal.reason;
+    if (isAbortLikeError(error)) throw error;
+    await response.body?.cancel().catch(() => undefined);
+    return new ProviderRequestError(response.status, fallbackMessage);
+  }
 }
 
 export function defineProviderProxy(input: ProviderProxyDefinition): ProviderProxyExecutor {
@@ -396,13 +432,21 @@ export function defineProviderProxy(input: ProviderProxyDefinition): ProviderPro
 
         const response = await egressFetch(url, init);
         if (!response.ok) {
-          // A provider error parser would surface an unfollowed redirect's body; the shared reader withholds it.
-          if (input.readError && (response.status < 300 || response.status >= 400)) {
-            throw await input.readError(response);
-          }
-          throw new ProviderRequestError(
-            response.status,
-            await readProviderProxyErrorMessage(response, `provider request failed with HTTP ${response.status}`),
+          // An unfollowed redirect's body and `Location` may carry a signed target URL: a provider error
+          // parser would surface the body, so the shared reader withholds it, and its headers stay out too.
+          const redirected = response.status >= 300 && response.status < 400;
+          const fallbackMessage = `provider request failed with HTTP ${response.status}`;
+          const error =
+            input.readError && !redirected
+              ? await readProviderErrorWith(input.readError, response, fallbackMessage, timeout.signal)
+              : new ProviderRequestError(
+                  response.status,
+                  await readProviderProxyErrorMessage(response, fallbackMessage),
+                );
+          return toProviderProxyError(
+            error,
+            "provider request failed",
+            redirected ? undefined : readProviderProxyResponseHeaders(response),
           );
         }
 
