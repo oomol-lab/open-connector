@@ -14,7 +14,7 @@ export const provider: ProviderDefinition = {
       label: "API Key",
       placeholder: "ull_...",
       description:
-        "Create an API key at https://martllm.com/signup. Requests use Bearer authentication; inference is billed per token from a prepaid balance.",
+        "Create an API key at https://martllm.com/signup. Requests use Bearer authentication; marketplace inference generally requires account credit; BYOK requests do not use MartLLM credit.",
       extraFields: [],
     },
   ],

@@ -1,67 +1,64 @@
 import type { CredentialValidators, ProviderExecutors } from "../../core/types.ts";
-import type { JsonRequestOptions } from "../http-json-runtime.ts";
-import type { ApiKeyProviderContext, ProviderActionHandlers } from "../provider-executors.ts";
+import type { ApiKeyProviderContext } from "../provider-executors.ts";
 
 import { arrayPayload, objectPayload, requestJson } from "../http-json-runtime.ts";
 import { defineApiKeyProviderExecutors } from "../provider-executors.ts";
-import { providerInputError, runProviderRequest } from "../provider-runtime.ts";
+import { ProviderRequestError, runProviderRequest, providerInputError } from "../provider-runtime.ts";
 
 const service = "worldrouter";
 const apiBaseUrl = "https://inference-api.worldrouter.ai/v1";
-const requestLabel = "WorldRouter API";
 
-function requestOptions(context: ApiKeyProviderContext): Omit<JsonRequestOptions, "path"> {
-  return {
-    providerName: requestLabel,
-    baseUrl: apiBaseUrl,
-    fetcher: context.fetcher,
-    signal: context.signal,
-    headers: { authorization: `Bearer ${context.apiKey}` },
-  };
+function requestWorldrouter(
+  context: ApiKeyProviderContext,
+  path: string,
+  body?: Record<string, unknown>,
+): Promise<unknown> {
+  return runProviderRequest(
+    { label: "WorldRouter API", signal: context.signal, timeoutMs: body ? 300_000 : undefined },
+    async (signal) => {
+      try {
+        return await requestJson({
+          providerName: "WorldRouter API",
+          baseUrl: apiBaseUrl,
+          fetcher: context.fetcher,
+          headers: { authorization: `Bearer ${context.apiKey}` },
+          signal,
+          path,
+          body,
+        });
+      } catch (error) {
+        // HTTP status alone cannot distinguish an invalid key from account or model restrictions.
+        if (error instanceof ProviderRequestError && (error.status === 401 || error.status === 403)) {
+          throw new ProviderRequestError(error.status, error.message, error.details, "provider_error");
+        }
+        throw error;
+      }
+    },
+  );
 }
 
-async function listModels(
-  context: ApiKeyProviderContext,
-  phase: "validate" | "execute",
-): Promise<Record<string, unknown>> {
-  const payload = await runProviderRequest({ label: requestLabel, signal: context.signal }, (signal) =>
-    requestJson({ ...requestOptions(context), signal, path: "/models", phase }),
-  );
-  const result = objectPayload(payload, "WorldRouter model list");
+async function listModels(context: ApiKeyProviderContext): Promise<Record<string, unknown>> {
+  const result = objectPayload(await requestWorldrouter(context, "/models"), "WorldRouter model list");
   arrayPayload(result.data, "WorldRouter model list data");
   return result;
 }
 
-const handlers: ProviderActionHandlers<
-  typeof service,
-  (input: Record<string, unknown>, context: ApiKeyProviderContext) => Promise<unknown>
-> = {
+export const executors: ProviderExecutors = defineApiKeyProviderExecutors(service, {
   list_models(_input, context) {
-    return listModels(context, "execute");
+    return listModels(context);
   },
   async create_chat_completion(input, context) {
-    if (input.stream === true) {
-      throw providerInputError("stream=true is not supported by connector actions");
-    }
-    const payload = await runProviderRequest(
-      { label: requestLabel, signal: context.signal, timeoutMs: 300_000 },
-      (signal) =>
-        requestJson({
-          ...requestOptions(context),
-          signal,
-          path: "/chat/completions",
-          body: { ...input, stream: false },
-        }),
+    if (input.stream === true) throw providerInputError("stream=true is not supported by connector actions");
+    return objectPayload(
+      await requestWorldrouter(context, "/chat/completions", { ...input, stream: false }),
+      "WorldRouter chat completion",
     );
-    return objectPayload(payload, "WorldRouter chat completion");
   },
-};
-
-export const executors: ProviderExecutors = defineApiKeyProviderExecutors(service, handlers);
+});
 
 export const credentialValidators: CredentialValidators = {
   async apiKey(input, { fetcher, signal }) {
-    await listModels({ apiKey: input.apiKey, fetcher, signal }, "validate");
+    await listModels({ apiKey: input.apiKey, fetcher, signal });
     return { metadata: { validationEndpoint: "/models" } };
   },
 };

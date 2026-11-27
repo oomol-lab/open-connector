@@ -1,5 +1,6 @@
 import type { CredentialValidationResult } from "../../core/types.ts";
 import type { ApiKeyProviderContext, ProviderActionHandlers, ProviderRuntimeHandler } from "../provider-executors.ts";
+import type { KlingSubmitInput, KlingMediaInput, KlingMediaRole, KlingMultiShotInput } from "./contract.ts";
 
 import {
   compactObject,
@@ -25,47 +26,10 @@ import {
   requiredResponseRecord,
   runProviderRequest,
 } from "../provider-runtime.ts";
-import { defaultKlingModel, klingModels, klingPromptMaxLength } from "./actions.ts";
+import { collectKlingSubmitInputIssues, serializeKlingCustomShots } from "./contract.ts";
+import { defaultKlingModel, klingModels, klingModelDefinitions } from "./models.ts";
 
 export const klingApiBaseUrl: string = "https://api-beijing.klingai.com";
-const klingResolutions = ["720p", "1080p", "4k"] as const;
-const klingAspectRatios = ["16:9", "9:16", "1:1"] as const;
-const klingAudioModes = ["off", "native", "original"] as const;
-const klingMediaRoles = ["first_frame", "last_frame", "reference_image", "reference_video", "source_video"] as const;
-
-type KlingModel = (typeof klingModels)[number];
-type KlingResolution = "720p" | "1080p" | "4k";
-type KlingAudioMode = "off" | "native" | "original";
-type KlingMediaRole = "first_frame" | "last_frame" | "reference_image" | "reference_video" | "source_video";
-
-interface KlingMediaInput {
-  role: KlingMediaRole;
-  url: string;
-  referenceId?: string;
-}
-
-interface KlingShotInput {
-  prompt: string;
-  duration: number;
-}
-
-interface KlingMultiShotInput {
-  mode: "intelligent" | "custom";
-  shots?: KlingShotInput[];
-}
-
-interface KlingSubmitInput {
-  model: KlingModel;
-  prompt?: string;
-  media: KlingMediaInput[];
-  resolution: KlingResolution;
-  aspectRatio: "16:9" | "9:16" | "1:1";
-  duration: number;
-  audioMode: KlingAudioMode;
-  multiShot?: KlingMultiShotInput;
-  watermark: boolean;
-}
-
 type KlingRequestPhase = "validate" | "submit" | "get";
 
 interface KlingRequestOptions {
@@ -124,40 +88,62 @@ export async function validateKlingCredential(
 }
 
 function readKlingSubmitInput(input: Record<string, unknown>): KlingSubmitInput {
-  const modelValue = optionalString(input.model) ?? defaultKlingModel;
-  if (!klingModels.includes(modelValue as KlingModel)) {
-    throw providerInputError(`model must be one of: ${klingModels.join(", ")}`);
-  }
-  const model = modelValue as KlingModel;
+  const model = readEnum(input.model, "model", klingModels, defaultKlingModel);
+  const { defaults } = klingModelDefinitions[model];
   const media = readKlingMedia(input.media);
   const prompt = optionalString(input.prompt);
-  const resolutionValue = optionalString(input.resolution) ?? "720p";
-  if (!klingResolutions.includes(resolutionValue as KlingResolution)) {
-    throw providerInputError(`resolution must be one of: ${klingResolutions.join(", ")}`);
-  }
-  const resolution = resolutionValue as KlingResolution;
-  const aspectRatioValue = optionalString(input.aspectRatio) ?? "16:9";
-  if (!klingAspectRatios.includes(aspectRatioValue as KlingSubmitInput["aspectRatio"])) {
-    throw providerInputError(`aspectRatio must be one of: ${klingAspectRatios.join(", ")}`);
-  }
-  const aspectRatio = aspectRatioValue as KlingSubmitInput["aspectRatio"];
-  const duration = optionalInteger(input.duration) ?? 5;
+  const resolution = readEnum(input.resolution, "resolution", ["720p", "1080p", "4k"], defaults.resolution);
+  const aspectRatio = readEnum(
+    input.aspectRatio,
+    "aspectRatio",
+    ["16:9", "9:16", "1:1", "21:9", "4:3", "3:4", "adaptive"],
+    defaults.aspectRatio,
+  );
+  const duration = optionalInteger(input.duration) ?? defaults.duration;
   const multiShot = readKlingMultiShot(input.multiShot);
-  const audioMode = readAudioMode(input.audioMode, model);
+  const audioMode = readEnum(input.audioMode, "audioMode", ["off", "native", "original"], defaults.audioMode);
   const watermark = optionalBoolean(input.watermark) ?? false;
 
-  if (duration < 3 || duration > 15) throw providerInputError("duration must be an integer from 3 through 15");
-  if (model === "kling-3.0-turbo" && resolution === "4k") {
-    throw providerInputError("kling-3.0-turbo does not support 4k resolution");
-  }
-
-  validatePromptAndMultiShot(prompt, multiShot, duration);
-  validateKlingMediaCombination(model, media, multiShot, audioMode, duration);
-
-  return { model, prompt, media, resolution, aspectRatio, duration, audioMode, multiShot, watermark };
+  const normalized = {
+    model,
+    prompt,
+    media,
+    resolution,
+    aspectRatio,
+    duration,
+    audioMode,
+    multiShot,
+    watermark,
+    dynamicRange:
+      input.dynamicRange === undefined
+        ? undefined
+        : readEnum(input.dynamicRange, "dynamicRange", ["sdr", "hdr"], undefined),
+    elements:
+      input.elements === undefined
+        ? undefined
+        : objectArray(input.elements, "elements", providerInputError).map((item) => ({
+            elementId: requiredInputString(item.elementId, "elementId"),
+            referenceId: requiredInputString(item.referenceId, "referenceId"),
+          })),
+    voices:
+      input.voices === undefined
+        ? undefined
+        : objectArray(input.voices, "voices", providerInputError).map((item) => ({
+            voiceId: requiredInputString(item.voiceId, "voiceId"),
+            referenceId: requiredInputString(item.referenceId, "referenceId"),
+          })),
+  };
+  const issue = collectKlingSubmitInputIssues(normalized)[0];
+  if (issue) throw providerInputError(issue.message);
+  return normalized;
 }
 
 function selectKlingSubmitPath(input: KlingSubmitInput): string {
+  if (
+    (input.elements?.length ?? 0) + (input.voices?.length ?? 0) > 0 ||
+    input.media.some((item) => ["reference_image", "reference_video", "source_video"].includes(item.role))
+  )
+    return `/omni-video/${input.model}`;
   if (input.model === "kling-3.0-omni") return "/omni-video/kling-3.0-omni";
   return input.media.length === 0 ? `/text-to-video/${input.model}` : `/image-to-video/${input.model}`;
 }
@@ -166,18 +152,23 @@ function buildKlingSubmitBody(input: KlingSubmitInput): Record<string, unknown> 
   const prompt = promptForKling(input);
   const hasFirstFrame = input.media.some((item) => item.role === "first_frame");
   const hasSourceVideo = input.media.some((item) => item.role === "source_video");
+  const { settings: settingsContract } = klingModelDefinitions[input.model];
+  const endpoint = selectKlingSubmitPath(input);
+  const omni = endpoint.startsWith("/omni-video/");
   const settings = compactObject({
     resolution: input.resolution,
-    aspect_ratio: hasFirstFrame || hasSourceVideo ? undefined : input.aspectRatio,
-    duration: hasSourceVideo ? undefined : input.duration,
-    audio: input.audioMode,
-    multi_shot: input.multiShot !== undefined,
+    aspect_ratio:
+      endpoint.startsWith("/image-to-video/") ||
+      (settingsContract.inheritMediaSettings && (hasFirstFrame || hasSourceVideo))
+        ? undefined
+        : input.aspectRatio,
+    duration: settingsContract.inheritMediaSettings && hasSourceVideo ? undefined : input.duration,
+    audio: settingsContract.audio === "omni" && !omni ? undefined : input.audioMode,
+    dynamic_range: input.dynamicRange,
+    multi_shot: settingsContract.multiShot ? input.multiShot !== undefined : undefined,
   });
   const options = { watermark_info: { enabled: input.watermark } };
-
-  if (input.media.length === 0 && input.model !== "kling-3.0-omni") {
-    return { prompt, settings, options };
-  }
+  if (input.media.length === 0 && !omni) return { prompt, settings, options };
 
   const contents: Array<Record<string, unknown>> = [{ type: "prompt", text: prompt }];
   for (const item of input.media) {
@@ -189,6 +180,20 @@ function buildKlingSubmitBody(input: KlingSubmitInput): Record<string, unknown> 
       }),
     );
   }
+  contents.push(
+    ...(input.elements ?? []).map((item) => ({
+      type: "element",
+      element_id: item.elementId,
+      id: item.referenceId,
+    })),
+  );
+  contents.push(
+    ...(input.voices ?? []).map((item) => ({
+      type: "voice",
+      voice_id: item.voiceId,
+      id: item.referenceId,
+    })),
+  );
   return { contents, settings, options };
 }
 
@@ -237,10 +242,12 @@ function readKlingMedia(value: unknown): KlingMediaInput[] {
   const referenceIds = new Set<string>();
   return objectArray(value, "media", providerInputError).map((item) => {
     const roleValue = requiredString(item.role, "media.role", providerInputError);
-    if (!klingMediaRoles.includes(roleValue as KlingMediaRole)) {
-      throw providerInputError(`media.role must be one of: ${klingMediaRoles.join(", ")}`);
-    }
-    const role = roleValue as KlingMediaRole;
+    const role = readEnum(
+      roleValue,
+      "media.role",
+      ["first_frame", "middle_frame", "last_frame", "reference_image", "reference_video", "source_video"],
+      undefined,
+    );
     const urlValue = requiredString(item.url, "media.url", providerInputError);
     assertPublicHttpUrl(urlValue, {
       fieldName: "media.url",
@@ -274,111 +281,14 @@ function readKlingMultiShot(value: unknown): KlingMultiShotInput | undefined {
   return { mode, shots };
 }
 
-function validatePromptAndMultiShot(
-  prompt: string | undefined,
-  multiShot: KlingMultiShotInput | undefined,
-  duration: number,
-): void {
-  if (!multiShot) {
-    if (!prompt) throw providerInputError("prompt is required when multiShot is omitted");
-    return;
-  }
-  if (multiShot.mode === "intelligent") {
-    if (!prompt) throw providerInputError("prompt is required for intelligent multiShot mode");
-    if (multiShot.shots !== undefined) throw providerInputError("multiShot.shots is only supported in custom mode");
-    return;
-  }
-  if (prompt) throw providerInputError("prompt must be omitted in custom multiShot mode");
-  if (!multiShot.shots || multiShot.shots.length < 1 || multiShot.shots.length > 6) {
-    throw providerInputError("custom multiShot mode requires from 1 through 6 shots");
-  }
-  let totalDuration = 0;
-  for (const shot of multiShot.shots) {
-    if (shot.duration < 1 || shot.duration > duration) {
-      throw providerInputError("multiShot.shots.duration must be from 1 through the total duration");
-    }
-    totalDuration += shot.duration;
-  }
-  if (totalDuration !== duration) throw providerInputError("custom shot durations must add up to duration");
-  if (Array.from(serializeKlingCustomShots(multiShot.shots)).length > klingPromptMaxLength) {
-    throw providerInputError(`serialized custom shot prompt must not exceed ${klingPromptMaxLength} characters`);
-  }
-}
-
-function validateKlingMediaCombination(
-  model: KlingModel,
-  media: KlingMediaInput[],
-  multiShot: KlingMultiShotInput | undefined,
-  audioMode: KlingAudioMode,
-  duration: number,
-): void {
-  if (media.length > 9) throw providerInputError("media supports at most 9 items");
-  const firstFrames = byRole(media, "first_frame");
-  const lastFrames = byRole(media, "last_frame");
-  const referenceImages = byRole(media, "reference_image");
-  const referenceVideos = byRole(media, "reference_video");
-  const sourceVideos = byRole(media, "source_video");
-  if (firstFrames.length > 1 || lastFrames.length > 1) {
-    throw providerInputError("media supports at most one first_frame and one last_frame");
-  }
-  if (lastFrames.length > 0 && firstFrames.length !== 1) {
-    throw providerInputError("last_frame requires exactly one first_frame");
-  }
-  if (referenceVideos.length + sourceVideos.length > 1) {
-    throw providerInputError("media supports at most one reference_video or source_video");
-  }
-
-  if (model === "kling-3.0-turbo") {
-    if (media.some((item) => item.role !== "first_frame") || firstFrames.length > 1) {
-      throw providerInputError("kling-3.0-turbo only supports text or one first_frame");
-    }
-  } else if (model === "kling-3.0") {
-    if (referenceImages.length > 0 || referenceVideos.length > 0 || sourceVideos.length > 0) {
-      throw providerInputError("kling-3.0 only supports text, first_frame, or first_frame with last_frame");
-    }
-  } else {
-    if (sourceVideos.length > 0 && (firstFrames.length > 0 || lastFrames.length > 0 || referenceVideos.length > 0)) {
-      throw providerInputError("source_video cannot be combined with frame images or reference_video");
-    }
-    if (referenceVideos.length > 0 && lastFrames.length > 0) {
-      throw providerInputError("reference_video cannot be combined with last_frame");
-    }
-    if (referenceVideos.length > 0 && firstFrames.length > 0 && referenceImages.length > 0) {
-      throw providerInputError("reference_video cannot combine first_frame with reference_image");
-    }
-    if (sourceVideos.length > 0 && multiShot) throw providerInputError("source_video does not support multiShot");
-    if (referenceVideos.length > 0 && multiShot?.mode === "custom") {
-      throw providerInputError("reference_video does not support custom multiShot mode");
-    }
-    if (referenceVideos.length > 0 && duration > 10) {
-      throw providerInputError("reference_video duration must be from 3 through 10 seconds");
-    }
-    const maximumReferenceImages = referenceVideos.length > 0 ? 4 : 7;
-    if (referenceImages.length > maximumReferenceImages) {
-      throw providerInputError(`this media mode supports at most ${maximumReferenceImages} reference_image items`);
-    }
-  }
-
-  const hasVideoInput = referenceVideos.length > 0 || sourceVideos.length > 0;
-  if (hasVideoInput && audioMode === "native") {
-    throw providerInputError("reference_video and source_video do not support native audio");
-  }
-  if (audioMode === "original" && (model !== "kling-3.0-omni" || !hasVideoInput)) {
-    throw providerInputError("original audio requires kling-3.0-omni with reference_video or source_video");
-  }
-}
-
 function promptForKling(input: KlingSubmitInput): string {
   if (input.multiShot?.mode !== "custom") return input.prompt!;
   return serializeKlingCustomShots(input.multiShot.shots!);
 }
 
-function serializeKlingCustomShots(shots: KlingShotInput[]): string {
-  return shots.map((shot, index) => `镜头 ${index + 1}, ${shot.duration}, ${shot.prompt};`).join(" ");
-}
-
 function klingMediaType(role: KlingMediaRole): string {
   switch (role) {
+    case "middle_frame":
     case "first_frame":
     case "last_frame":
       return role;
@@ -473,23 +383,6 @@ function handleKlingError(
   );
 }
 
-function readAudioMode(value: unknown, model: KlingModel): KlingAudioMode {
-  const defaultValue = model === "kling-3.0-turbo" ? "native" : "off";
-  const modeValue = optionalString(value) ?? defaultValue;
-  if (!klingAudioModes.includes(modeValue as KlingAudioMode)) {
-    throw providerInputError(`audioMode must be one of: ${klingAudioModes.join(", ")}`);
-  }
-  const mode = modeValue as KlingAudioMode;
-  if (model === "kling-3.0-turbo" && mode !== "native") {
-    throw providerInputError("kling-3.0-turbo only supports native audio");
-  }
-  return mode;
-}
-
-function byRole(media: KlingMediaInput[], role: KlingMediaRole): KlingMediaInput[] {
-  return media.filter((item) => item.role === role);
-}
-
 function readBusinessCode(value: unknown): number | undefined {
   const integer = optionalInteger(value);
   if (integer !== undefined) return integer;
@@ -497,4 +390,17 @@ function readBusinessCode(value: unknown): number | undefined {
   if (!text) return undefined;
   const number = Number(text);
   return Number.isInteger(number) ? number : undefined;
+}
+
+function readEnum<const TValue extends string>(
+  value: unknown,
+  fieldName: string,
+  values: readonly TValue[],
+  defaultValue: TValue | undefined,
+): TValue {
+  const normalized = optionalString(value);
+  if (normalized === undefined && defaultValue !== undefined) return defaultValue;
+  const matched = values.find((item) => item === normalized);
+  if (!matched) throw providerInputError(`${fieldName} must be one of: ${values.join(", ")}`);
+  return matched;
 }

@@ -17,6 +17,7 @@ import { executors as deepgramExecutors } from "./deepgram/executors.ts";
 import { credentialValidators as dovetailValidators } from "./dovetail/executors.ts";
 import { executors as figmaExecutors } from "./figma/executors.ts";
 import { executors as helpdeskExecutors } from "./helpdesk/executors.ts";
+import { executors as linkfoxAiExecutors } from "./linkfox_ai/executors.ts";
 import { executors as mondayExecutors } from "./monday/executors.ts";
 import { executors as onomeoExecutors } from "./onomeo/executors.ts";
 import { ProviderRequestError, toProviderExecutionError } from "./provider-runtime.ts";
@@ -36,6 +37,7 @@ import { executors as sellerspriteExecutors } from "./sellersprite/executors.ts"
 import { executors as teableExecutors } from "./teable/executors.ts";
 import { assertTikHubEndpointEligible } from "./tikhub/endpoint-policy.ts";
 import { proxy as walmartMarketplaceProxy } from "./walmart_marketplace/executors.ts";
+import { executors as worldrouterExecutors } from "./worldrouter/executors.ts";
 import { proxy as youzanProxy } from "./youzan/executors.ts";
 import { executors as zoomExecutors } from "./zoom/executors.ts";
 
@@ -469,4 +471,34 @@ it("Salesforge actions, validation and proxy retain upstream text errors", async
     message: "Workspace access suspended",
     code: "provider_error",
   });
+});
+
+it.each([401, 403])("WorldRouter keeps ambiguous HTTP %i failures out of credential recovery", async (status) => {
+  const result = await runExpiredCredential(
+    {
+      service: "worldrouter",
+      executors: worldrouterExecutors,
+      actionId: "worldrouter.list_models",
+      credential: apiKeyCredential,
+    },
+    status,
+  );
+  expect(result).toMatchObject({ ok: false, error: { code: "provider_error" } });
+});
+
+it.each([
+  [400, { msg: "Invalid request" }, "invalid_input"],
+  [404, {}, "invalid_input"],
+  [409, {}, "invalid_input"],
+  [422, {}, "invalid_input"],
+  [500, {}, "provider_error"],
+  [200, { code: 99999 }, "provider_error"],
+  [401, {}, "provider_error"],
+  [403, { msgKey: "PLAN_LIMIT" }, "provider_error"],
+  [200, { code: 30009, msgKey: "ERR_AUTHENTICATION_FAIL" }, "authorization_failed"],
+])("LinkFox uses business evidence for credential recovery (HTTP %i)", async (status, payload, code) => {
+  vi.stubGlobal("fetch", async () => Response.json(payload, { status: Number(status) }));
+  expect(
+    await linkfoxAiExecutors["linkfox_ai.get_plan_info"]!({}, { getCredential: async () => apiKeyCredential }),
+  ).toMatchObject({ ok: false, error: { code } });
 });
