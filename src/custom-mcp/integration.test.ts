@@ -586,3 +586,30 @@ it("deletes a stored record hidden by a base provider and leaves that provider's
   expect((await request(app, "/api/custom-mcp/builtin", "DELETE")).status).toBe(404);
   expect((await request(app, "/api/custom-mcp/unknown", "DELETE")).status).toBe(404);
 });
+
+it("keeps a record created after the request's catalog snapshot when deleting it", async () => {
+  const app = await createApp();
+  expect(await (await request(app, "/api/custom-mcp")).json()).toEqual([]);
+  const store = database.customMcpStore;
+  const version = store.version.bind(store);
+  vi.spyOn(store, "version").mockImplementationOnce(async () => {
+    const snapshotVersion = await version();
+    // Another runtime registers the service after this request read its catalog version.
+    await store.create({
+      service: "late",
+      displayName: "Late MCP",
+      endpoint: "https://mcp.example.com/mcp",
+      transport: "streamable_http",
+      auth: { type: "none" },
+      enabled: true,
+      revision: "late",
+    });
+    await database.connectionStore.set("late", "work", { authType: "no_auth" });
+    return snapshotVersion;
+  });
+  const response = await request(app, "/api/custom-mcp/late", "DELETE");
+  expect(response.status).toBe(404);
+  await expect(response.json()).resolves.toMatchObject({ error: { code: "unknown_service" } });
+  expect((await store.list()).map((record) => record.service)).toEqual(["late"]);
+  expect(await database.connectionStore.get("late", "work")).toBeDefined();
+});
