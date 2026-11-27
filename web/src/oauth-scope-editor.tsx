@@ -9,8 +9,6 @@ import { StringArrayInput } from "./components/ui/string-array-input";
 import { normalizeOAuthScopes, toggleOAuthScope } from "./oauth-scopes";
 
 interface OAuthScopeSelection {
-  requestedScopes: string[] | undefined;
-  scopes: string[];
   selectedScopes: string[];
   custom: boolean;
   setCustom(enabled: boolean): void;
@@ -24,7 +22,10 @@ interface OAuthScopeEditorProps {
   selection: OAuthScopeSelection;
 }
 
-export function useOAuthScopeSelection(defaultScopes: string[] | undefined): OAuthScopeSelection {
+export function useOAuthScopeSelection(
+  defaultScopes: string[] | undefined,
+  requiredScopes: string[] = [],
+): OAuthScopeSelection {
   const [requestedScopes, setScopes] = useState<string[] | undefined>();
   const [custom, setCustom] = useState(false);
   const scopes = requestedScopes ?? defaultScopes ?? [];
@@ -33,9 +34,7 @@ export function useOAuthScopeSelection(defaultScopes: string[] | undefined): OAu
     setCustom(false);
   }, [defaultScopes]);
   return {
-    requestedScopes,
-    scopes,
-    selectedScopes: normalizeOAuthScopes(scopes),
+    selectedScopes: normalizeOAuthScopes([...scopes, ...requiredScopes]),
     custom,
     setCustom(enabled) {
       setCustom(enabled);
@@ -52,7 +51,9 @@ export function OAuthScopeEditor({ options, selection, requiredScopes }: OAuthSc
   const t = useTranslate();
   const id = useId();
   const showBasicPermissions =
-    selection.custom && selection.selectedScopes.length === 0 && Boolean(requiredScopes?.length);
+    selection.custom &&
+    Boolean(requiredScopes?.length) &&
+    selection.selectedScopes.every((scope) => requiredScopes?.includes(scope));
   return (
     <div className="grid min-w-0 gap-4">
       {options?.length ? (
@@ -114,6 +115,7 @@ export function OAuthScopeEditor({ options, selection, requiredScopes }: OAuthSc
               aria-describedby={showBasicPermissions ? `${id}-help` : undefined}
               value={selection.selectedScopes}
               readOnly={!selection.custom}
+              readOnlyItems={requiredScopes}
               removeLabel={(scope) => t("providers.oauthClientSettings.removeScope", { scope })}
               onChange={selection.setScopes}
               placeholder={t("providers.oauthClientSettings.scopePlaceholder")}

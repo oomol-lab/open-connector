@@ -206,6 +206,8 @@ both `requestedScopes` and the resulting `effectiveScopes`, which describe a fut
 The connection form displays only curated extra permissions, such as GitHub repository deletion.
 These options have localized labels and descriptions and extend the defaults when selected.
 Use advanced scope settings to replace the default request with your own list.
+Editing the same OAuth client's credentials in the console preserves its saved scope selection;
+replacing the client uses provider defaults.
 
 For Google Drive, configure the optional `drive.file` scope to access only files created by the app
 or explicitly selected/shared with the app by the user:

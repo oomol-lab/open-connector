@@ -1749,7 +1749,7 @@ function ConnectionForm(props: ConnectionFormProps): ReactNode {
   const authorizationOptions = remote ? undefined : oauthAuth?.authorizationOptions;
   const defaultScopes =
     props.oauthClientMode === "manual" ? oauthAuth?.scopes : (props.oauthConfig?.effectiveScopes ?? oauthAuth?.scopes);
-  const scopeSelection = useOAuthScopeSelection(defaultScopes);
+  const scopeSelection = useOAuthScopeSelection(defaultScopes, oauthAuth?.requiredScopes);
   const [manualClientId, setManualClientId] = useState("");
   const [manualClientSecret, setManualClientSecret] = useState("");
   const manualClientConfigFields = useMemo(() => clientConfigFieldsFor(props.auth), [props.auth]);
@@ -1842,6 +1842,7 @@ function ConnectionForm(props: ConnectionFormProps): ReactNode {
       } else {
         const manual = props.oauthClientMode === "manual" && !remote;
         const trackRequest = remote || Boolean(props.connection && props.oauthConfig?.oauthSource?.mode === "saas");
+        const authorizationOptionIds = remote ? undefined : scopeSelection.selectedScopes;
         const result = !trackRequest
           ? await apiPost<{ authorizationUrl: string; connectionRequestId?: string; expiresAt?: string }>(
               "/api/oauth/authorizations",
@@ -1849,7 +1850,7 @@ function ConnectionForm(props: ConnectionFormProps): ReactNode {
                 props.provider.service,
                 connectionName,
                 manual ? { auth: props.auth, values: manualValues } : undefined,
-                scopeSelection.requestedScopes,
+                authorizationOptionIds,
               ),
             )
           : await apiPost<{ authorizationUrl: string; connectionRequestId: string; expiresAt: string }>(
@@ -1858,7 +1859,7 @@ function ConnectionForm(props: ConnectionFormProps): ReactNode {
                 service: props.provider.service,
                 connectionName,
                 appId: props.connection?.id,
-                authorizationOptionIds: normalizeOAuthScopes(scopeSelection.requestedScopes),
+                authorizationOptionIds,
               },
             );
         setAuthorizationUrl(result.authorizationUrl);

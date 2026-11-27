@@ -12,6 +12,7 @@ interface StringArrayInputProps {
   "onChange": (value: string[]) => void;
   "removeLabel": (value: string) => string;
   "readOnly"?: boolean;
+  "readOnlyItems"?: readonly string[];
   "placeholder"?: string;
   "value": string[];
 }
@@ -23,6 +24,7 @@ export function StringArrayInput({
   onChange,
   placeholder,
   readOnly = false,
+  readOnlyItems,
   removeLabel,
   value,
 }: StringArrayInputProps) {
@@ -55,7 +57,7 @@ export function StringArrayInput({
           <span className="truncate" title={item}>
             {item}
           </span>
-          {!readOnly ? (
+          {!readOnly && !readOnlyItems?.includes(item) ? (
             <Button
               type="button"
               variant="ghost"
@@ -107,7 +109,8 @@ export function StringArrayInput({
             commit(draft);
           }
           if (event.key === "Backspace" && !draft && value.length) {
-            onChange(value.slice(0, -1));
+            const lastEditableIndex = value.findLastIndex((item) => !readOnlyItems?.includes(item));
+            if (lastEditableIndex >= 0) onChange(value.toSpliced(lastEditableIndex, 1));
           }
         }}
         onPaste={(event) => {

@@ -5,6 +5,7 @@ import { createElement } from "react";
 import { renderToStaticMarkup } from "react-dom/server";
 import { MemoryRouter, Route, Routes } from "react-router";
 import { afterEach, describe, expect, it, vi } from "vitest";
+import { apiPost } from "./api";
 import { createAppI18n } from "./i18n";
 import { clientConfigFieldsFor, initialClientConfigFieldValues, splitClientConfigFieldValues } from "./oauth-app-form";
 import {
@@ -25,6 +26,29 @@ import {
   startOAuthRefreshPolling,
   validateNewConnectionName,
 } from "./providers-page";
+
+const connectionForm = vi.hoisted(() => ({
+  submit: undefined as ((event: { preventDefault(): void }) => void) | undefined,
+}));
+
+// Capture the rendered form's submit handler while keeping real React hooks and SSR rendering.
+vi.mock("react/jsx-dev-runtime", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("react/jsx-dev-runtime")>();
+  return {
+    ...actual,
+    jsxDEV(...args: Parameters<typeof actual.jsxDEV>) {
+      const [type, props] = args;
+      const form = props as { className?: string; onSubmit?: typeof connectionForm.submit };
+      if (type == "form" && form.className == "form-grid connection-form") connectionForm.submit = form.onSubmit;
+      return actual.jsxDEV(...args);
+    },
+  };
+});
+
+vi.mock("./api", async (importOriginal) => ({
+  ...(await importOriginal<typeof import("./api")>()),
+  apiPost: vi.fn().mockResolvedValue({ authorizationUrl: "" }),
+}));
 
 afterEach(() => {
   vi.useRealTimers();
@@ -801,6 +825,56 @@ const providerData: AppData = {
   runtimeTokens: [],
   runs: [],
 };
+
+it.each(["local", "saas"])("submits the displayed scopes only for local OAuth: %s", async (source) => {
+  const scopes = [
+    "https://www.googleapis.com/auth/gmail.readonly",
+    "https://www.googleapis.com/auth/gmail.modify",
+    "https://www.googleapis.com/auth/gmail.send",
+    "https://www.googleapis.com/auth/gmail.labels",
+    "https://www.googleapis.com/auth/gmail.settings.basic",
+  ];
+  const requiredScopes = ["openid", "email"];
+  const remote = source == "saas";
+  const data: AppData = {
+    ...providerData,
+    providers: [{ ...oauthProvider, auth: [{ type: "oauth2", scopes, requiredScopes }] }],
+    connections: [],
+    oauthConfigs: [
+      {
+        service: "gmail",
+        configured: true,
+        clientId: "client",
+        requestedScopes: scopes,
+        effectiveScopes: scopes,
+        oauthSource:
+          source == "local"
+            ? { mode: "local" }
+            : {
+                mode: "saas",
+                managedProjectId: "project",
+                projectId: "remote",
+                providerConfigId: "config",
+              },
+      },
+    ],
+  };
+  connectionForm.submit = undefined;
+  vi.mocked(apiPost).mockClear();
+  const markup = renderProvidersPage(data, "/providers/gmail");
+  if (!remote) for (const scope of [...scopes, ...requiredScopes]) expect(markup).toContain(scope);
+  expect(connectionForm.submit).toBeDefined();
+  connectionForm.submit!({ preventDefault() {} });
+  await Promise.resolve();
+  expect(apiPost).toHaveBeenCalledOnce();
+  const [path, body] = vi.mocked(apiPost).mock.calls[0]!;
+  expect(path).toBe(source == "local" ? "/api/oauth/authorizations" : "/api/oauth/connection-requests");
+  expect(JSON.parse(JSON.stringify(body))).toEqual({
+    service: "gmail",
+    connectionName: "default",
+    authorizationOptionIds: remote ? undefined : [...scopes, ...requiredScopes],
+  });
+});
 
 function renderProvidersPage(data: AppData, initialEntry: string): string {
   return renderToStaticMarkup(
