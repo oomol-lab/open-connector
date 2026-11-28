@@ -3,6 +3,7 @@ import type { IOAuthClientConfigStore, OAuthClientConfig } from "./oauth-client-
 
 import { describe, expect, it } from "vitest";
 import { createCatalogStore } from "../catalog-store.ts";
+import { readOAuthClientEnvironment } from "./oauth-client-config-environment.ts";
 import { OAuthClientConfigService } from "./oauth-client-config-service.ts";
 
 describe("OAuthClientConfigService", () => {
@@ -394,6 +395,184 @@ describe("OAuthClientConfigService", () => {
       service.normalizeConfig("example", { clientId: "client-id", clientSecret: "client-secret", redirectUri })
         .redirectUri,
     ).toBe(redirectUri);
+  });
+});
+
+describe("OAuthClientConfigService environment clients", () => {
+  function createService(
+    environment: Record<string, unknown>,
+    store: IOAuthClientConfigStore = new MemoryOAuthClientConfigStore(),
+    providers: ProviderDefinition[] = [oauthProvider("example"), oauthProvider("other"), noAuthProvider],
+  ): OAuthClientConfigService {
+    const catalog = createCatalogStore(providers);
+    return new OAuthClientConfigService({
+      catalog,
+      origin: "http://localhost:3000",
+      store,
+      environmentClients: readOAuthClientEnvironment(environment, catalog.providers),
+    });
+  }
+
+  it("uses an OAUTH_<SERVICE>_CLIENT_ID and _CLIENT_SECRET pair as the application client", async () => {
+    const service = createService({
+      OAUTH_EXAMPLE_CLIENT_ID: " env-client ",
+      OAUTH_EXAMPLE_CLIENT_SECRET: "env-secret",
+    });
+
+    await expect(service.getConfig("example")).resolves.toEqual({
+      service: "example",
+      clientId: "env-client",
+      clientSecret: "env-secret",
+      requestedScopes: undefined,
+      redirectUri: undefined,
+      extra: {},
+      secretExtra: {},
+    });
+    await expect(service.getSummary("example")).resolves.toMatchObject({
+      configured: true,
+      clientId: "env-client",
+      configSource: "environment",
+    });
+  });
+
+  it("keeps stored configs unchanged when no environment client is set", async () => {
+    const store = new MemoryOAuthClientConfigStore();
+    const service = createService({ OAUTH_KV: {}, OOMOL_CONNECT_ADMIN_TOKEN: "token" }, store);
+
+    await expect(service.getSummary("example")).resolves.toMatchObject({ configured: false, configSource: null });
+    await service.upsertConfig({ service: "example", clientId: "stored-client", clientSecret: "stored-secret" });
+    await expect(service.getConfig("example")).resolves.toMatchObject({
+      clientId: "stored-client",
+      clientSecret: "stored-secret",
+    });
+    await expect(service.getSummary("example")).resolves.toMatchObject({ configSource: "stored" });
+    await expect(service.deleteConfig("example")).resolves.toEqual({ service: "example", configured: false });
+    await expect(service.getConfig("example")).resolves.toBeUndefined();
+  });
+
+  it("lets the environment shadow a stored config and refuses admin writes for that service", async () => {
+    const store = new MemoryOAuthClientConfigStore();
+    await store.set({
+      service: "example",
+      clientId: "stored-client",
+      clientSecret: "stored-secret",
+      extra: {},
+      secretExtra: {},
+    });
+    const service = createService(
+      { OAUTH_EXAMPLE_CLIENT_ID: "env-client", OAUTH_EXAMPLE_CLIENT_SECRET: "env-secret" },
+      store,
+    );
+
+    await expect(service.getConfig("example")).resolves.toMatchObject({ clientId: "env-client" });
+    const refusal = expect.objectContaining({
+      code: "oauth_client_config_from_environment",
+      message: expect.stringContaining("OAUTH_EXAMPLE_CLIENT_ID"),
+    });
+    await expect(
+      service.upsertConfig({ service: "example", clientId: "new-client", clientSecret: "new-secret" }),
+    ).rejects.toThrow(refusal);
+    await expect(service.deleteConfig("example")).rejects.toThrow(refusal);
+    expect(await store.get("example")).toMatchObject({ clientId: "stored-client" });
+
+    await service.upsertConfig({ service: "other", clientId: "other-client", clientSecret: "other-secret" });
+    await expect(service.getSummary("other")).resolves.toMatchObject({ configSource: "stored" });
+  });
+
+  it("lists environment clients as configured with their source and never returns a secret", async () => {
+    const store = new MemoryOAuthClientConfigStore();
+    await store.set({
+      service: "other",
+      clientId: "stored-client",
+      clientSecret: "stored-secret",
+      extra: {},
+      secretExtra: {},
+    });
+    const service = createService(
+      { OAUTH_EXAMPLE_CLIENT_ID: "env-client", OAUTH_EXAMPLE_CLIENT_SECRET: "env-secret" },
+      store,
+    );
+
+    const configs = await service.listConfigs();
+    expect(configs).toMatchObject([
+      { service: "example", configured: true, clientId: "env-client", configSource: "environment" },
+      { service: "other", configured: true, clientId: "stored-client", configSource: "stored" },
+    ]);
+    expect(JSON.stringify(configs)).not.toContain("env-secret");
+    expect(JSON.stringify(configs)).not.toContain("stored-secret");
+  });
+
+  it.each([
+    [
+      { OAUTH_EXAMPLE_CLIENT_ID: "env-client" },
+      "OAUTH_EXAMPLE_CLIENT_SECRET is required when OAUTH_EXAMPLE_CLIENT_ID is set.",
+    ],
+    [
+      { OAUTH_EXAMPLE_CLIENT_SECRET: "env-secret" },
+      "OAUTH_EXAMPLE_CLIENT_ID is required when OAUTH_EXAMPLE_CLIENT_SECRET is set.",
+    ],
+    [
+      { OAUTH_EXAMPLE_CLIENT_ID: "env-client", OAUTH_EXAMPLE_CLIENT_SECRET: " " },
+      "OAUTH_EXAMPLE_CLIENT_SECRET is required when OAUTH_EXAMPLE_CLIENT_ID is set.",
+    ],
+  ])("fails at startup for a half pair (%j)", (environment, message) => {
+    expect(() => createService(environment)).toThrow(message);
+  });
+
+  it("accepts a client id alone for a public client", async () => {
+    const provider = oauthProvider("public_client");
+    const auth = provider.auth[0]!;
+    if (auth.type !== "oauth2") throw new Error("Expected OAuth fixture");
+    auth.tokenEndpointAuthMethod = "none";
+    const service = createService({ OAUTH_PUBLIC_CLIENT_CLIENT_ID: "public-id" }, undefined, [provider]);
+
+    await expect(service.getConfig("public_client")).resolves.toMatchObject({
+      clientId: "public-id",
+      clientSecret: "",
+    });
+  });
+
+  it.each([
+    [{ OAUTH_MISSING_CLIENT_ID: "id", OAUTH_MISSING_CLIENT_SECRET: "secret" }, "OAUTH_MISSING_CLIENT_ID"],
+    [{ OAUTH_example_CLIENT_ID: "id", OAUTH_example_CLIENT_SECRET: "secret" }, "OAUTH_example_CLIENT_ID"],
+    [{ OAUTH_PUBLIC_CLIENT_ID: "id", OAUTH_PUBLIC_CLIENT_SECRET: "secret" }, "public does not support oauth2"],
+  ])("fails at startup for a variable that names no OAuth2 provider (%j)", (environment, message) => {
+    expect(() => createService(environment)).toThrow(message);
+  });
+
+  it("ignores other OAUTH_ variables such as the OAUTH_KV binding", async () => {
+    const service = createService({ OAUTH_KV: {}, OAUTH_ISSUER: "https://issuer.example.com" });
+    await expect(service.getConfig("example")).resolves.toBeUndefined();
+  });
+
+  it("maps a hyphen in a service id to an underscore and refuses an ambiguous name", async () => {
+    const service = createService({ OAUTH_MY_APP_CLIENT_ID: "id", OAUTH_MY_APP_CLIENT_SECRET: "secret" }, undefined, [
+      oauthProvider("my-app"),
+    ]);
+    await expect(service.getConfig("my-app")).resolves.toMatchObject({ clientId: "id" });
+
+    expect(() =>
+      createService({ OAUTH_MY_APP_CLIENT_ID: "id", OAUTH_MY_APP_CLIENT_SECRET: "secret" }, undefined, [
+        oauthProvider("my-app"),
+        oauthProvider("my_app"),
+      ]),
+    ).toThrow("OAUTH_MY_APP_CLIENT_ID is ambiguous: it is the client id of my-app and the client id of my_app.");
+  });
+
+  it("fails at startup for a non-string value or a required client field the environment does not set", () => {
+    expect(() =>
+      createService({ OAUTH_EXAMPLE_CLIENT_ID: { id: "x" }, OAUTH_EXAMPLE_CLIENT_SECRET: "secret" }),
+    ).toThrow("OAUTH_EXAMPLE_CLIENT_ID must be a string.");
+
+    const provider = oauthProvider("tenant_app");
+    const auth = provider.auth[0]!;
+    if (auth.type !== "oauth2") throw new Error("Expected OAuth fixture");
+    auth.clientConfigFields = [{ key: "tenant", label: "Tenant", inputType: "text", required: true, secret: false }];
+    expect(() =>
+      createService({ OAUTH_TENANT_APP_CLIENT_ID: "id", OAUTH_TENANT_APP_CLIENT_SECRET: "secret" }, undefined, [
+        provider,
+      ]),
+    ).toThrow("OAUTH_TENANT_APP_TENANT is required to configure tenant_app from the environment.");
   });
 });
 

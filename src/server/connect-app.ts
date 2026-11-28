@@ -20,6 +20,7 @@ import { CustomMcpCatalog } from "../custom-mcp/catalog.ts";
 import { CustomMcpLoader } from "../custom-mcp/loader.ts";
 import { CustomMcpService } from "../custom-mcp/service.ts";
 import { MarketplaceService } from "../marketplace/marketplace-service.ts";
+import { readOAuthClientEnvironment } from "../oauth/oauth-client-config-environment.ts";
 import { OAuthClientConfigService } from "../oauth/oauth-client-config-service.ts";
 import { OAuthCredentialRefreshService } from "../oauth/oauth-credential-refresh-service.ts";
 import { OAuthFlowService } from "../oauth/oauth-flow-service.ts";
@@ -66,6 +67,11 @@ export interface ConnectAppOptions {
    */
   trustProxyHeaders?: boolean;
   allowedCustomOAuth?: string[];
+  /**
+   * Variables to read `OAUTH_<SERVICE>_*` application OAuth clients from, such as the
+   * Worker env. Only services of `catalog` qualify, so a stored custom MCP server keeps its own client.
+   */
+  oauthClientEnvironment?: object;
   verifyRuntimeJwt?: RuntimeJwtVerifier;
   actionPolicy?: ActionPolicyService;
   registerStaticRoutes?: (app: Hono) => void;
@@ -151,6 +157,7 @@ export async function createConnectApp(options: ConnectAppOptions): Promise<Conn
     origin: options.publicOrigin,
     store: options.runtimeDatabase.oauthClientConfigStore,
     isCustomClientConfigAvailable: (service) => options.secretCodec.encrypted && isCustomClientConfigAllowed(service),
+    environmentClients: readOAuthClientEnvironment(options.oauthClientEnvironment ?? {}, options.catalog.providers),
   });
   const customMcp = new CustomMcpService({
     catalog,

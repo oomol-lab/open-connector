@@ -29,6 +29,11 @@ export interface CloudflareEnv {
   OOMOL_CONNECT_TRANSIT_FILE_MAX_BYTES?: string;
   OOMOL_CONNECT_RUN_LIMIT?: string;
   OOMOL_CONNECT_OAUTH_CLOSE_DELAY_SECONDS?: string;
+  /**
+   * Application OAuth client of a service: `OAUTH_<SERVICE>_CLIENT_ID`, `_CLIENT_SECRET`, `_SCOPES`,
+   * `_REDIRECT_URI` and `OAUTH_<SERVICE>_<FIELD>` per client config field. See docs/cloudflare.md.
+   */
+  [name: `OAUTH_${string}_${string}`]: string | undefined;
 }
 
 export function resolvePublicOrigin(request: Request, env: CloudflareEnv): string {

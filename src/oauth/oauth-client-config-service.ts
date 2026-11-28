@@ -1,5 +1,6 @@
 import type { CatalogStore } from "../catalog-store.ts";
 import type { OAuth2AuthDefinition, OAuthClientConfigFieldDefinition } from "../core/types.ts";
+import type { EnvironmentOAuthClient } from "./oauth-client-config-environment.ts";
 
 import { optionalRecord, optionalString, optionalStringArray } from "../core/cast.ts";
 import { normalizeCredentialValues } from "../core/credential-fields.ts";
@@ -37,6 +38,12 @@ export interface OAuthClientConfigInput {
 }
 
 /**
+ * Where the application OAuth client of a service comes from: deployment environment variables, or the
+ * config stored through the admin API.
+ */
+export type OAuthClientConfigSource = "environment" | "stored";
+
+/**
  * OAuth client config summary safe to return to the local console.
  */
 export interface OAuthClientConfigSummary {
@@ -54,6 +61,8 @@ export interface OAuthClientConfigSummary {
   requestedScopes: string[] | null;
   effectiveScopes: string[];
   extra: Record<string, string>;
+  /** Source of the effective client, or null when none is configured. */
+  configSource: OAuthClientConfigSource | null;
 }
 
 export interface OAuthClientConfigServiceOptions {
@@ -61,6 +70,11 @@ export interface OAuthClientConfigServiceOptions {
   origin: string;
   store: IOAuthClientConfigStore;
   isCustomClientConfigAvailable?: (service: string) => boolean;
+  /**
+   * Application clients set by the deployment environment. Each one takes precedence over a stored
+   * config for its service, and the admin API refuses to change or delete that service's config.
+   */
+  environmentClients?: readonly EnvironmentOAuthClient[];
 }
 
 /**
@@ -86,12 +100,23 @@ export class OAuthClientConfigService {
   private readonly origin: string;
   private readonly store: IOAuthClientConfigStore;
   private readonly isCustomClientConfigAvailable: (service: string) => boolean;
+  private readonly environmentClients = new Map<
+    string,
+    { client: EnvironmentOAuthClient; config: OAuthClientConfig }
+  >();
 
+  /**
+   * Throws, naming the variable, when an environment client fails the validation an admin API write of the same
+   * values would fail.
+   */
   constructor(input: OAuthClientConfigServiceOptions) {
     this.catalog = input.catalog;
     this.origin = input.origin.replace(/\/$/, "");
     this.store = input.store;
     this.isCustomClientConfigAvailable = input.isCustomClientConfigAvailable ?? (() => false);
+    for (const client of input.environmentClients ?? []) {
+      this.environmentClients.set(client.service, { client, config: this.normalizeEnvironmentClient(client) });
+    }
   }
 
   async listConfigs(): Promise<OAuthClientConfigSummary[]> {
@@ -101,26 +126,24 @@ export class OAuthClientConfigService {
         this.toSummary(
           provider.service,
           provider.auth,
-          normalizeStoredOAuthClientConfig(configured.get(provider.service)),
+          this.resolveConfig(provider.service, configured.get(provider.service)),
         ),
       )
       .sort((left, right) => Number(right.configured) - Number(left.configured));
   }
 
   async getSummary(service: string): Promise<OAuthClientConfigSummary> {
-    return this.toSummary(
-      service,
-      this.getOAuthDefinition(service),
-      normalizeStoredOAuthClientConfig(await this.store.get(service)),
-    );
+    const auth = this.getOAuthDefinition(service);
+    return this.toSummary(service, auth, await this.readConfig(service));
   }
 
   async getConfig(service: string): Promise<OAuthClientConfig | undefined> {
     this.getOAuthDefinition(service);
-    return normalizeStoredOAuthClientConfig(await this.store.get(service));
+    return (await this.readConfig(service)).config;
   }
 
   async upsertConfig(input: OAuthClientConfigInput & { service: string }): Promise<OAuthClientConfigSummary> {
+    this.assertNotFromEnvironment(input.service);
     const previous = await this.getConfig(input.service);
     const sameClient = previous?.clientId === input.clientId.trim();
     const secretExtra: Record<string, unknown> = sameClient ? { ...previous?.secretExtra } : {};
@@ -137,7 +160,7 @@ export class OAuthClientConfigService {
       secretExtra,
     });
     await this.store.set(config);
-    return this.toSummary(input.service, this.getOAuthDefinition(input.service), config);
+    return this.toSummary(input.service, this.getOAuthDefinition(input.service), { config, source: "stored" });
   }
 
   normalizeConfig(
@@ -181,6 +204,7 @@ export class OAuthClientConfigService {
 
   async deleteConfig(service: string): Promise<{ service: string; configured: false }> {
     this.getOAuthDefinition(service);
+    this.assertNotFromEnvironment(service);
     await this.store.delete(service);
     return { service, configured: false };
   }
@@ -227,6 +251,61 @@ export class OAuthClientConfigService {
     return resolveRequestedOAuthScopes(auth, config.requestedScopes);
   }
 
+  /** The environment client of a service, which shadows its stored config, else the stored config. */
+  private async readConfig(service: string): Promise<ResolvedOAuthClientConfig> {
+    return this.resolveConfig(
+      service,
+      this.environmentClients.has(service) ? undefined : await this.store.get(service),
+    );
+  }
+
+  private resolveConfig(service: string, stored: OAuthClientConfig | undefined): ResolvedOAuthClientConfig {
+    const environment = this.environmentClients.get(service)?.config;
+    if (environment) return { config: environment, source: "environment" };
+    const config = normalizeStoredOAuthClientConfig(stored);
+    return { config, source: config ? "stored" : null };
+  }
+
+  /**
+   * Validate an environment client exactly as an admin API write of the same values. The redirect URI is
+   * checked on its own first so the error can name its variable.
+   */
+  private normalizeEnvironmentClient(client: EnvironmentOAuthClient): OAuthClientConfig {
+    const fail = (variable: string, error: unknown): never => {
+      if (!(error instanceof OAuthClientConfigError)) throw error;
+      throw new Error(`${variable} cannot configure ${client.service}: ${error.message}`);
+    };
+    try {
+      normalizeRedirectUri(client.redirectUri);
+    } catch (error) {
+      fail(client.redirectUriVariable, error);
+    }
+    try {
+      return this.normalizeConfig(
+        client.service,
+        {
+          clientId: client.clientId,
+          clientSecret: client.clientSecret,
+          requestedScopes: client.requestedScopes,
+          redirectUri: client.redirectUri,
+          extra: client.fields,
+        },
+        client.auth,
+      );
+    } catch (error) {
+      return fail(`${client.prefix}_*`, error);
+    }
+  }
+
+  private assertNotFromEnvironment(service: string): void {
+    const client = this.environmentClients.get(service)?.client;
+    if (!client) return;
+    throw new OAuthClientConfigError(
+      "oauth_client_config_from_environment",
+      `The ${service} OAuth client is set by ${client.clientIdVariable} and the other ${client.prefix}_ variables; change those variables instead.`,
+    );
+  }
+
   private listOAuthProviders(): Array<{ service: string; auth: OAuth2AuthDefinition }> {
     return this.catalog.providers.flatMap((provider) => {
       const auth = provider.auth.find((auth) => auth.type === "oauth2");
@@ -237,7 +316,7 @@ export class OAuthClientConfigService {
   private toSummary(
     service: string,
     auth: OAuth2AuthDefinition,
-    config: OAuthClientConfig | undefined,
+    { config, source }: ResolvedOAuthClientConfig,
   ): OAuthClientConfigSummary {
     return {
       service,
@@ -260,9 +339,19 @@ export class OAuthClientConfigService {
       auth,
       requestedScopes: config?.requestedScopes ?? null,
       effectiveScopes: resolveRequestedOAuthScopes(auth, config?.requestedScopes),
-      extra: config?.extra ?? {},
+      // An environment client never lists a secret field; a stored config lists `extra` as it always has.
+      extra:
+        source === "environment"
+          ? omitSecretClientConfigFields(auth.clientConfigFields, config?.extra ?? {})
+          : (config?.extra ?? {}),
+      configSource: source,
     };
   }
+}
+
+interface ResolvedOAuthClientConfig {
+  config: OAuthClientConfig | undefined;
+  source: OAuthClientConfigSource | null;
 }
 
 /** Read a connection-scoped OAuth client config stored in credential metadata. */
@@ -316,6 +405,15 @@ function pickClientConfigFieldValues(
     output[field.key] = values[field.key] ?? field.defaultValue;
   }
   return output;
+}
+
+/** Public extra values without any field the provider declares secret, for an environment client's summary. */
+function omitSecretClientConfigFields(
+  fields: OAuthClientConfigFieldDefinition[] | undefined,
+  extra: Record<string, string>,
+): Record<string, string> {
+  const secret = new Set((fields ?? []).filter((field) => field.secret).map((field) => field.key));
+  return Object.fromEntries(Object.entries(extra).filter(([key]) => !secret.has(key)));
 }
 
 function assertNoUnexpectedClientConfigFields(
